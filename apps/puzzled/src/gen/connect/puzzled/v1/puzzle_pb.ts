@@ -19,7 +19,7 @@ import { file_google_protobuf_cpp_features } from '@bufbuild/protobuf/wkt'
 export const file_puzzled_v1_puzzle: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		'ChdwdXp6bGVkL3YxL3B1enpsZS5wcm90bxIKcHV6emxlZC52MSJHChBHZXRQdXp6bGVSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIMCgRzZWVkGAIgASgDEhIKCmRpZmZpY3VsdHkYAyABKAkidwoRR2V0UHV6emxlUmVzcG9uc2USEQoJZ2FtZV9zbHVnGAEgASgJEgwKBHNlZWQYAiABKAMSEgoKZGlmZmljdWx0eRgDIAEoCRIYChBwdXp6bGVfZGF0YV9qc29uGAQgASgJEg0KBXNsaWNlGAYgASgJSgQIBRAGInQKD0dldERhaWx5UmVxdWVzdBIRCglnYW1lX3NsdWcYASABKAkSEgoKZGlmZmljdWx0eRgCIAEoCRIYCglwdXp6bGVfaWQYAyABKAlCBaoBAggBEhoKC3B1enpsZV9kYXRlGAUgASgJQgWqAQIIAUoECAQQBSJwCg9EYWlseUNvbXBsZXRpb24SDgoGc3RhdHVzGAEgASgJEhQKBXNjb3JlGAIgASgNQgWqAQIIARIXCghhdHRlbXB0cxgDIAEoDUIFqgECCAESHgoPY29tcGxldGVkX2F0X21zGAQgASgDQgWqAQIIASKlAgoQR2V0RGFpbHlSZXNwb25zZRIRCglnYW1lX3NsdWcYASABKAkSFQoNcHV6emxlX251bWJlchgCIAEoDRITCgtwdXp6bGVfZGF0ZRgDIAEoCRIYCglwdXp6bGVfaWQYBCABKAlCBaoBAggBEhIKCmRpZmZpY3VsdHkYBSABKAkSFQoNaGFzX2NvbXBsZXRlZBgGIAEoCBIQCghjYW5fcGxheRgHIAEoCBIMCgRtb2RlGAggASgJEg0KBXNsaWNlGAkgASgJEgwKBHN0dWIYCiABKAgSGAoQcHV6emxlX2RhdGFfanNvbhgLIAEoCRI2ChFjb21wbGV0ZWRfc2Vzc2lvbhgMIAEoCzIbLnB1enpsZWQudjEuRGFpbHlDb21wbGV0aW9uIskBChJTdWJtaXRHdWVzc1JlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEhIKCmRpZmZpY3VsdHkYAyABKAkSDgoGc3RhdHVzGAQgASgJEhAKCGF0dGVtcHRzGAUgASgNEhUKDXRpbWVfc3BlbnRfbXMYBiABKAQSFwoPc3VibWlzc2lvbl9qc29uGAcgASgJEhgKCXB1enpsZV9pZBgIIAEoCUIFqgECCAESGgoLcHV6emxlX2RhdGUYCSABKAlCBaoBAggBSgQIAhADIogBChNTdWJtaXRHdWVzc1Jlc3BvbnNlEg0KBXZhbGlkGAEgASgIEg4KBnN0YXR1cxgCIAEoCRIUCgVzY29yZRgDIAEoDUIFqgECCAESEQoJZ2FtZV9zbHVnGAQgASgJEhQKBWVycm9yGAYgASgJQgWqAQIIARINCgVzbGljZRgHIAEoCUoECAUQBjLwAQoNUHV6emxlU2VydmljZRJICglHZXRQdXp6bGUSHC5wdXp6bGVkLnYxLkdldFB1enpsZVJlcXVlc3QaHS5wdXp6bGVkLnYxLkdldFB1enpsZVJlc3BvbnNlEkUKCEdldERhaWx5EhsucHV6emxlZC52MS5HZXREYWlseVJlcXVlc3QaHC5wdXp6bGVkLnYxLkdldERhaWx5UmVzcG9uc2USTgoLU3VibWl0R3Vlc3MSHi5wdXp6bGVkLnYxLlN1Ym1pdEd1ZXNzUmVxdWVzdBofLnB1enpsZWQudjEuU3VibWl0R3Vlc3NSZXNwb25zZUIUkgMRCAIQARgBIAIoATABwj4CEANiCGVkaXRpb25zcOkH',
+		'ChdwdXp6bGVkL3YxL3B1enpsZS5wcm90bxIKcHV6emxlZC52MSJHChBHZXRQdXp6bGVSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIMCgRzZWVkGAIgASgDEhIKCmRpZmZpY3VsdHkYAyABKAkidwoRR2V0UHV6emxlUmVzcG9uc2USEQoJZ2FtZV9zbHVnGAEgASgJEgwKBHNlZWQYAiABKAMSEgoKZGlmZmljdWx0eRgDIAEoCRIYChBwdXp6bGVfZGF0YV9qc29uGAQgASgJEg0KBXNsaWNlGAYgASgJSgQIBRAGInQKD0dldERhaWx5UmVxdWVzdBIRCglnYW1lX3NsdWcYASABKAkSEgoKZGlmZmljdWx0eRgCIAEoCRIYCglwdXp6bGVfaWQYAyABKAlCBaoBAggBEhoKC3B1enpsZV9kYXRlGAUgASgJQgWqAQIIAUoECAQQBSJwCg9EYWlseUNvbXBsZXRpb24SDgoGc3RhdHVzGAEgASgJEhQKBXNjb3JlGAIgASgNQgWqAQIIARIXCghhdHRlbXB0cxgDIAEoDUIFqgECCAESHgoPY29tcGxldGVkX2F0X21zGAQgASgDQgWqAQIIASKlAgoQR2V0RGFpbHlSZXNwb25zZRIRCglnYW1lX3NsdWcYASABKAkSFQoNcHV6emxlX251bWJlchgCIAEoDRITCgtwdXp6bGVfZGF0ZRgDIAEoCRIYCglwdXp6bGVfaWQYBCABKAlCBaoBAggBEhIKCmRpZmZpY3VsdHkYBSABKAkSFQoNaGFzX2NvbXBsZXRlZBgGIAEoCBIQCghjYW5fcGxheRgHIAEoCBIMCgRtb2RlGAggASgJEg0KBXNsaWNlGAkgASgJEgwKBHN0dWIYCiABKAgSGAoQcHV6emxlX2RhdGFfanNvbhgLIAEoCRI2ChFjb21wbGV0ZWRfc2Vzc2lvbhgMIAEoCzIbLnB1enpsZWQudjEuRGFpbHlDb21wbGV0aW9uIskBChJTdWJtaXRHdWVzc1JlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEhIKCmRpZmZpY3VsdHkYAyABKAkSDgoGc3RhdHVzGAQgASgJEhAKCGF0dGVtcHRzGAUgASgNEhUKDXRpbWVfc3BlbnRfbXMYBiABKAQSFwoPc3VibWlzc2lvbl9qc29uGAcgASgJEhgKCXB1enpsZV9pZBgIIAEoCUIFqgECCAESGgoLcHV6emxlX2RhdGUYCSABKAlCBaoBAggBSgQIAhADIqQBChNTdWJtaXRHdWVzc1Jlc3BvbnNlEg0KBXZhbGlkGAEgASgIEg4KBnN0YXR1cxgCIAEoCRIUCgVzY29yZRgDIAEoDUIFqgECCAESEQoJZ2FtZV9zbHVnGAQgASgJEhQKBWVycm9yGAYgASgJQgWqAQIIARINCgVzbGljZRgHIAEoCRIaCgtyZXZlYWxfanNvbhgIIAEoCUIFqgECCAFKBAgFEAYihAEKEUNoZWNrR3Vlc3NSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRISCgpkaWZmaWN1bHR5GAIgASgJEhgKCXB1enpsZV9pZBgDIAEoCUIFqgECCAESGgoLcHV6emxlX2RhdGUYBCABKAlCBaoBAggBEhIKCmd1ZXNzX2pzb24YBSABKAkiKQoSQ2hlY2tHdWVzc1Jlc3BvbnNlEhMKC3Jlc3VsdF9qc29uGAEgASgJMr0CCg1QdXp6bGVTZXJ2aWNlEkgKCUdldFB1enpsZRIcLnB1enpsZWQudjEuR2V0UHV6emxlUmVxdWVzdBodLnB1enpsZWQudjEuR2V0UHV6emxlUmVzcG9uc2USRQoIR2V0RGFpbHkSGy5wdXp6bGVkLnYxLkdldERhaWx5UmVxdWVzdBocLnB1enpsZWQudjEuR2V0RGFpbHlSZXNwb25zZRJOCgtTdWJtaXRHdWVzcxIeLnB1enpsZWQudjEuU3VibWl0R3Vlc3NSZXF1ZXN0Gh8ucHV6emxlZC52MS5TdWJtaXRHdWVzc1Jlc3BvbnNlEksKCkNoZWNrR3Vlc3MSHS5wdXp6bGVkLnYxLkNoZWNrR3Vlc3NSZXF1ZXN0Gh4ucHV6emxlZC52MS5DaGVja0d1ZXNzUmVzcG9uc2VCFJIDEQgCEAEYASACKAEwAcI+AhADYghlZGl0aW9uc3DpBw',
 		[file_google_protobuf_cpp_features],
 	)
 
@@ -327,6 +327,14 @@ export type SubmitGuessResponse = Message<'puzzled.v1.SubmitGuessResponse'> & {
 	 * @generated from field: string slice = 7;
 	 */
 	slice: string
+
+	/**
+	 * The answer, sent only once this finish is accepted (the player's one
+	 * finish for the day), so a result card can show it. Never sent earlier.
+	 *
+	 * @generated from field: string reveal_json = 8 [features.field_presence = EXPLICIT];
+	 */
+	revealJson: string
 }
 
 /**
@@ -336,6 +344,70 @@ export type SubmitGuessResponse = Message<'puzzled.v1.SubmitGuessResponse'> & {
 export const SubmitGuessResponseSchema: GenMessage<SubmitGuessResponse> =
 	/*@__PURE__*/
 	messageDesc(file_puzzled_v1_puzzle, 6)
+
+/**
+ * CheckGuess grades one in-game guess against the served puzzle, so the
+ * client never holds the answer (word-guess, word-groups).
+ *
+ * @generated from message puzzled.v1.CheckGuessRequest
+ */
+export type CheckGuessRequest = Message<'puzzled.v1.CheckGuessRequest'> & {
+	/**
+	 * @generated from field: string game_slug = 1;
+	 */
+	gameSlug: string
+
+	/**
+	 * @generated from field: string difficulty = 2;
+	 */
+	difficulty: string
+
+	/**
+	 * @generated from field: string puzzle_id = 3 [features.field_presence = EXPLICIT];
+	 */
+	puzzleId: string
+
+	/**
+	 * @generated from field: string puzzle_date = 4 [features.field_presence = EXPLICIT];
+	 */
+	puzzleDate: string
+
+	/**
+	 * word-guess: {"word":"crane"}. word-groups: {"words":[4 words],"solved":[category names]}.
+	 *
+	 * @generated from field: string guess_json = 5;
+	 */
+	guessJson: string
+}
+
+/**
+ * Describes the message puzzled.v1.CheckGuessRequest.
+ * Use `create(CheckGuessRequestSchema)` to create a new message.
+ */
+export const CheckGuessRequestSchema: GenMessage<CheckGuessRequest> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_puzzle, 7)
+
+/**
+ * @generated from message puzzled.v1.CheckGuessResponse
+ */
+export type CheckGuessResponse = Message<'puzzled.v1.CheckGuessResponse'> & {
+	/**
+	 * word-guess: {"tiles":["correct"|"present"|"absent" x5]}.
+	 * word-groups: {"correct":bool,"oneAway":bool,"category":{name,words,level}?}.
+	 *
+	 * @generated from field: string result_json = 1;
+	 */
+	resultJson: string
+}
+
+/**
+ * Describes the message puzzled.v1.CheckGuessResponse.
+ * Use `create(CheckGuessResponseSchema)` to create a new message.
+ */
+export const CheckGuessResponseSchema: GenMessage<CheckGuessResponse> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_puzzle, 8)
 
 /**
  * @generated from service puzzled.v1.PuzzleService
@@ -364,5 +436,13 @@ export const PuzzleService: GenService<{
 		methodKind: 'unary'
 		input: typeof SubmitGuessRequestSchema
 		output: typeof SubmitGuessResponseSchema
+	}
+	/**
+	 * @generated from rpc puzzled.v1.PuzzleService.CheckGuess
+	 */
+	checkGuess: {
+		methodKind: 'unary'
+		input: typeof CheckGuessRequestSchema
+		output: typeof CheckGuessResponseSchema
 	}
 }> = /*@__PURE__*/ serviceDesc(file_puzzled_v1_puzzle, 0)

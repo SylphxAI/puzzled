@@ -11,10 +11,11 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
+import { checkGuess } from '@/lib/connect/puzzle-client'
 import { ConnectionsIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { MistakeDots, SolvedCategory, WordGrid } from './components'
-import type { ConnectionsPuzzleData, ConnectionsSolution } from './types'
+import type { Category, ConnectionsPuzzleData, ConnectionsSolution } from './types'
 import { useWordGroups } from './use-word-groups'
 
 type Props = {
@@ -28,21 +29,24 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	const t = useTranslations('games.wordGroups')
 	const tCommon = useTranslations('common')
 
-	// Type-safe puzzle parsing via config - no type assertions needed
-	const [initialPuzzle] = useState(() => {
-		const parsed = parsePuzzleDataClient<ConnectionsPuzzleData, ConnectionsSolution>(puzzleData)
-		// Convert to ConnectionsPuzzle format for useWordGroups hook
-		return {
-			id: puzzleId || `daily-${new Date().toISOString().split('T')[0]}`,
-			date: new Date().toISOString().split('T')[0],
-			categories: parsed.solution.categories as [
-				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
-				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
-				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
-				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
-			],
-		}
-	})
+	// The client holds only the sixteen words; the server grades each guess
+	// and reveals the groups only with the accepted finish (#246).
+	const [words] = useState(
+		() =>
+			parsePuzzleDataClient<ConnectionsPuzzleData, ConnectionsSolution>(puzzleData).puzzleData
+				.words ?? [],
+	)
+	const [revealedCategories, setRevealedCategories] = useState<Category[]>([])
+	const grade = useCallback(
+		async (guess: string[], solved: string[]) =>
+			(await checkGuess({
+				gameSlug: 'word-groups',
+				guess: { words: guess, solved },
+				puzzleId,
+				puzzleDate,
+			})) as { correct: boolean; oneAway: boolean; category?: Category },
+		[puzzleId, puzzleDate],
+	)
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -68,7 +72,6 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	})
 
 	const {
-		puzzle,
 		selectedWords,
 		solvedCategories,
 		remainingWords,
@@ -81,7 +84,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		submitGuess,
 		shuffle,
 		canSubmit,
-	} = useWordGroups(initialPuzzle)
+	} = useWordGroups(words, grade, () => showToastMessage(tCommon('error')))
 
 	// ==========================================
 	// Game-specific state (not consolidated)
@@ -126,6 +129,9 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				foundCategories: solvedCategories.map((cat) => cat.words),
 				mistakes,
 			},
+		}).then((finish) => {
+			const categories = (finish.reveal as { categories?: Category[] } | undefined)?.categories
+			if (Array.isArray(categories)) setRevealedCategories(categories)
 		})
 	}
 
@@ -154,7 +160,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				// Find which category each guess word belongs to
 				return guess
 					.map((word) => {
-						for (const category of puzzle.categories) {
+						for (const category of [...solvedCategories, ...revealedCategories]) {
 							if (category.words.includes(word)) {
 								const level = category.level
 								// Distinctive Puzzled colors: Rose, Teal, Amber, Fuchsia
@@ -282,7 +288,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				onShare={handleShare}
 				missedCategories={
 					gameStatus === 'lost'
-						? puzzle.categories.filter((cat) => !solvedCategories.some((s) => s.name === cat.name))
+						? revealedCategories.filter((cat) => !solvedCategories.some((s) => s.name === cat.name))
 						: undefined
 				}
 			/>

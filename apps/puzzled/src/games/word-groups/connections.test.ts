@@ -10,7 +10,12 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import type { Category, ConnectionsPuzzle, ConnectionsState } from './types'
+import type { Category, ConnectionsPuzzle, ConnectionsState as LiveState } from './types'
+
+// The live game grades on the server (CheckGuess); these tests keep the
+// reference grading rule next to a local copy of the answer.
+type ConnectionsState = Omit<LiveState, 'grading'> & { puzzle: ConnectionsPuzzle }
+
 import { MAX_MISTAKES, WORDS_PER_CATEGORY } from './types'
 
 // ==========================================

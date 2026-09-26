@@ -74,9 +74,12 @@ function updateKeyboardState(
 	return updated
 }
 
-function createInitialState(solution: string): WordleState {
+// The live game grades on the server (CheckGuess); these tests keep the
+// reference grading rule next to a local copy of the answer.
+function createInitialState(solution: string): WordleState & { solution: string } {
 	return {
 		solution,
+		grading: false,
 		guesses: [],
 		currentGuess: '',
 		gameStatus: 'playing',

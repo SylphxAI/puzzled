@@ -12,10 +12,11 @@ import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import type { ResultCardTile } from '@/features/daily/lib/result-card'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
+import { checkGuess } from '@/lib/connect/puzzle-client'
 import { WordleIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { GameBoard, Keyboard } from './components'
-import type { WordlePuzzleData, WordleSolution } from './types'
+import type { TileState, WordlePuzzleData, WordleSolution } from './types'
 import { WORD_LENGTH } from './types'
 import { type SubmitResult, useWordGuess } from './use-word-guess'
 
@@ -70,6 +71,24 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 	const submitResultHandlerRef = useRef<(result: SubmitResult) => void>(() => {})
 	const gameEndedRef = useRef(false)
 
+	// The server grades each guess and reveals the answer only with the
+	// accepted finish (#246); the client never holds it.
+	const [revealedWord, setRevealedWord] = useState('')
+	const grade = useCallback(
+		async (word: string): Promise<TileState[]> => {
+			const result = (await checkGuess({
+				gameSlug: 'word-guess',
+				guess: { word },
+				puzzleId,
+				puzzleDate,
+			})) as { tiles?: TileState['status'][] }
+			const tiles = result.tiles ?? []
+			if (tiles.length !== word.length) throw new Error('grade_failed')
+			return tiles.map((status, i) => ({ letter: word[i] ?? '', status }))
+		},
+		[puzzleId, puzzleDate],
+	)
+
 	const {
 		guesses,
 		evaluations,
@@ -77,11 +96,10 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		currentRow,
 		gameStatus,
 		keyboardState,
-		solution,
 		addLetter,
 		deleteLetter,
 		trySubmitGuess,
-	} = useWordGuess(puzzle.solution.word, (result) => submitResultHandlerRef.current(result))
+	} = useWordGuess(grade, (result) => submitResultHandlerRef.current(result))
 
 	// Help click handler for header
 	const handleHelpClick = useCallback(() => {
@@ -109,6 +127,10 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				triggerSound('error')
 				triggerHaptic('error')
 				triggerShake()
+			} else if (result === 'grade_failed') {
+				showToastMsg(tCommon('error'))
+				triggerSound('error')
+				triggerHaptic('error')
 			} else if (result === 'not_in_word_list') {
 				showToastMsg(t('messages.notInWordList'))
 				triggerSound('error')
@@ -116,7 +138,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				triggerShake()
 			}
 		},
-		[t, showToastMsg, triggerShake],
+		[t, tCommon, showToastMsg, triggerShake],
 	)
 
 	// Keep ref in sync with latest handler
@@ -137,6 +159,9 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				attempts: guesses.length,
 				maxAttempts: 6,
 				data: { guesses },
+			}).then((finish) => {
+				const word = (finish.reveal as { word?: unknown } | undefined)?.word
+				if (typeof word === 'string') setRevealedWord(word)
 			})
 		}
 	}, [gameStatus, guesses, endGame])
@@ -287,7 +312,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 					maxAttempts: 6,
 					timeSpentMs: startTime ? Date.now() - startTime : 0,
 				}}
-				solution={solution}
+				solution={revealedWord}
 				mode={mode}
 				pattern={cardPattern}
 				onShare={handleShare}

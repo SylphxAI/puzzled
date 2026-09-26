@@ -203,6 +203,8 @@ export type SaveResultOutput = {
 	slice: string
 	authority: 'connect'
 	error?: string
+	/** The answer, sent by the server only with an accepted finish. */
+	reveal?: unknown
 }
 
 /**
@@ -210,6 +212,15 @@ export type SaveResultOutput = {
  * authority). Extracted from `useSaveResult` so the submit path can be exercised
  * without a React renderer; `idempotencyKey` rides through to the wire.
  */
+function parseReveal(json: string | undefined): unknown {
+	if (!json) return undefined
+	try {
+		return JSON.parse(json)
+	} catch {
+		return undefined
+	}
+}
+
 export async function submitSaveResult(input: SaveResultInput): Promise<SaveResultOutput> {
 	// Sole Connect authority: PuzzleService.SubmitGuess. No REST fallback.
 	if (input.status !== 'won' && input.status !== 'lost') {
@@ -239,6 +250,7 @@ export async function submitSaveResult(input: SaveResultInput): Promise<SaveResu
 			slice: r.slice || 'S2-puzzle-solution-connect',
 			authority: 'connect' as const,
 			error: r.error,
+			reveal: parseReveal(r.revealJson),
 		}
 	}
 	if (isAlreadyPlayedError(admit.error)) {

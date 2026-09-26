@@ -31,7 +31,8 @@ export type TileState = {
 export type GameStatus = 'playing' | 'won' | 'lost'
 
 export type WordleState = {
-	solution: string
+	/** A guess is being graded by the server; input waits. */
+	grading: boolean
 	guesses: string[]
 	currentGuess: string
 	gameStatus: GameStatus
@@ -43,8 +44,9 @@ export type WordleState = {
 export type WordleAction =
 	| { type: 'ADD_LETTER'; letter: string }
 	| { type: 'DELETE_LETTER' }
-	| { type: 'SUBMIT_GUESS' }
-	| { type: 'RESET'; solution: string }
+	| { type: 'GRADING'; grading: boolean }
+	| { type: 'APPLY_GUESS'; guess: string; evaluation: TileState[] }
+	| { type: 'RESET' }
 
 export const WORD_LENGTH = 5
 export const MAX_GUESSES = 6
