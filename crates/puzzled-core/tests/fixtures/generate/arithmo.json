@@ -1,0 +1,26 @@
+[
+	{
+		"seed": 20250101,
+		"difficulty": null,
+		"puzzleData": { "length": 8 },
+		"solution": { "equation": "119/7=17" }
+	},
+	{
+		"seed": 20260226,
+		"difficulty": null,
+		"puzzleData": { "length": 8 },
+		"solution": { "equation": "6*39=234" }
+	},
+	{
+		"seed": 20260926,
+		"difficulty": null,
+		"puzzleData": { "length": 8 },
+		"solution": { "equation": "90-37=53" }
+	},
+	{
+		"seed": 20261231,
+		"difficulty": null,
+		"puzzleData": { "length": 8 },
+		"solution": { "equation": "99-72=27" }
+	}
+]

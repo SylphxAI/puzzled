@@ -2,6 +2,7 @@
 
 pub mod application;
 pub mod domain;
+pub mod generate;
 
 pub use application::game_flows;
 pub use domain::arithmo;

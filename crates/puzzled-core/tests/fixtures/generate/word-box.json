@@ -1,0 +1,66 @@
+[
+	{
+		"seed": 20250101,
+		"difficulty": null,
+		"puzzleData": {
+			"box": {
+				"top": ["N", "R", "F"],
+				"right": ["B", "O", "G"],
+				"bottom": ["C", "U", "M"],
+				"left": ["A", "L", "H"]
+			}
+		},
+		"solution": {
+			"words": ["MACROFAUNA", "ABA", "ABCOULOMB", "BACH", "HOMBURG"],
+			"allLetters": ["N", "R", "F", "B", "O", "G", "C", "U", "M", "A", "L", "H"]
+		}
+	},
+	{
+		"seed": 20260226,
+		"difficulty": null,
+		"puzzleData": {
+			"box": {
+				"top": ["Y", "E", "Z"],
+				"right": ["R", "P", "X"],
+				"bottom": ["V", "K", "H"],
+				"left": ["I", "T", "O"]
+			}
+		},
+		"solution": {
+			"words": ["HYPERTROPHY", "YIKE", "EREV", "VEXER", "RHIZOPHORE"],
+			"allLetters": ["Y", "E", "Z", "R", "P", "X", "V", "K", "H", "I", "T", "O"]
+		}
+	},
+	{
+		"seed": 20260926,
+		"difficulty": null,
+		"puzzleData": {
+			"box": {
+				"top": ["G", "L", "U"],
+				"right": ["J", "S", "O"],
+				"bottom": ["M", "X", "D"],
+				"left": ["A", "P", "R"]
+			}
+		},
+		"solution": {
+			"words": ["SAUROPODOUS", "SAG", "GAL", "LOGJAM", "MALAX"],
+			"allLetters": ["G", "L", "U", "J", "S", "O", "M", "X", "D", "A", "P", "R"]
+		}
+	},
+	{
+		"seed": 20261231,
+		"difficulty": null,
+		"puzzleData": {
+			"box": {
+				"top": ["M", "Y", "H"],
+				"right": ["A", "U", "G"],
+				"bottom": ["O", "D", "P"],
+				"left": ["R", "B", "Z"]
+			}
+		},
+		"solution": {
+			"words": ["HAPHAZARDRY", "YABA", "ABAMP", "PAPADUM", "MOG"],
+			"allLetters": ["M", "Y", "H", "A", "U", "G", "O", "D", "P", "R", "B", "Z"]
+		}
+	}
+]
