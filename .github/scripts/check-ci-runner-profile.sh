@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Fails when any workflow job selects a runner we do not own (owner
-# standards/dx.md: every CI job runs on our own runners, public or private).
-# Allowed: sylphx-linux-{standard,large,xlarge,2xlarge}, and the macOS class
-# as a label array holding self-hosted, sylphx and macos. Anything else,
-# including GitHub-hosted labels (ubuntu-*, windows-*, macos-*), expressions
-# and multi-line selections, fails closed.
+# Fails when a workflow job selects a runner that could bill us (owner
+# standards/dx.md). This repository is public, so GitHub's standard hosted
+# runners are free here and allowed: ubuntu-latest / ubuntu-NN.NN[-arm],
+# windows-latest / windows-NNNN / windows-11-arm, macos-latest / macos-NN.
+# GitHub's larger and GPU runners (custom names, macos-NN-large/-xlarge) are
+# billed even for public repositories and fail. Our own runners pass:
+# sylphx-linux-{standard,large,xlarge,2xlarge}, and the macOS class as a label
+# array holding self-hosted, sylphx and macos. Anything else, including
+# expressions and multi-line selections, fails closed.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -19,11 +22,14 @@ while IFS= read -r -d '' workflow; do
     if [[ "$value" =~ ^sylphx-linux-(standard|large|xlarge|2xlarge)$ ]]; then
       continue
     fi
+    if [[ "$value" =~ ^(ubuntu-(latest|[0-9]+\.[0-9]+(-arm)?)|windows-(latest|[0-9]{4}|11-arm)|macos-(latest|[0-9]+))$ ]]; then
+      continue
+    fi
     if [[ "$value" =~ ^\[.*\]$ && "$value" != *'${{'* && ",${value//[][ ]/}," == *,self-hosted,* \
       && ",${value//[][ ]/}," == *,sylphx,* && ",${value//[][ ]/}," == *,macos,* ]]; then
       continue
     fi
-    printf '%s:%s: runner %q is not one of ours; use sylphx-linux-standard (or the macOS class)\n' \
+    printf '%s:%s: runner %q is neither ours nor a free standard GitHub-hosted runner\n' \
       "${workflow#"$root"/}" "$line" "$value" >&2
     errors=1
   done < <(grep -nE '^[[:space:]]*runs-on:' "$workflow" \
@@ -35,4 +41,4 @@ if [[ "$found" -eq 0 ]]; then
   exit 1
 fi
 [[ "$errors" -eq 0 ]] || exit 1
-echo "OK: every workflow job runs on our own runners"
+echo "OK: no workflow job selects a billed runner"

@@ -175,7 +175,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4.2.2
 
-      - name: Every job runs on our own runners
+      - name: No job selects a billed runner
         run: bash .github/scripts/check-ci-runner-profile.sh
 
       - name: Setup Atlas
