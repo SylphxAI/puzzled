@@ -11,12 +11,11 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import type { ResultCardTile } from '@/features/daily/lib/result-card'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { checkGuess } from '@/lib/connect/puzzle-client'
 import { WordleIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { GameBoard, Keyboard } from './components'
-import type { TileState, WordlePuzzleData, WordleSolution } from './types'
+import type { TileState } from './types'
 import { WORD_LENGTH } from './types'
 import { type SubmitResult, useWordGuess } from './use-word-guess'
 
@@ -27,14 +26,9 @@ type Props = {
 	puzzleDate?: string
 }
 
-export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function WordGuessGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 	const t = useTranslations('games.wordGuess')
 	const tCommon = useTranslations('common')
-
-	// Get puzzle from server data (client-safe - no config import)
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<WordlePuzzleData, WordleSolution>(puzzleData),
-	)
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
