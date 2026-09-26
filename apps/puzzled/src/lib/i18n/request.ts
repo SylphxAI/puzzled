@@ -33,6 +33,7 @@ import enUSModes from '@/messages/en-US/modes.json'
 import enUSNav from '@/messages/en-US/nav.json'
 import enUSOnboarding from '@/messages/en-US/onboarding.json'
 import enUSPagination from '@/messages/en-US/pagination.json'
+import enUSPlus from '@/messages/en-US/plus.json'
 import enUSPwa from '@/messages/en-US/pwa.json'
 import enUSReauth from '@/messages/en-US/reauth.json'
 import enUSSettings from '@/messages/en-US/settings.json'
@@ -59,6 +60,7 @@ import zhCNModes from '@/messages/zh-CN/modes.json'
 import zhCNNav from '@/messages/zh-CN/nav.json'
 import zhCNOnboarding from '@/messages/zh-CN/onboarding.json'
 import zhCNPagination from '@/messages/zh-CN/pagination.json'
+import zhCNPlus from '@/messages/zh-CN/plus.json'
 import zhCNPwa from '@/messages/zh-CN/pwa.json'
 import zhCNReauth from '@/messages/zh-CN/reauth.json'
 import zhCNSettings from '@/messages/zh-CN/settings.json'
@@ -85,6 +87,7 @@ import zhHKModes from '@/messages/zh-HK/modes.json'
 import zhHKNav from '@/messages/zh-HK/nav.json'
 import zhHKOnboarding from '@/messages/zh-HK/onboarding.json'
 import zhHKPagination from '@/messages/zh-HK/pagination.json'
+import zhHKPlus from '@/messages/zh-HK/plus.json'
 import zhHKPwa from '@/messages/zh-HK/pwa.json'
 import zhHKReauth from '@/messages/zh-HK/reauth.json'
 import zhHKSettings from '@/messages/zh-HK/settings.json'
@@ -124,6 +127,7 @@ interface LocaleMessages {
 	archive: Messages
 	legal: Messages
 	pagination: Messages
+	plus: Messages
 	achievements: Messages
 	calendar: Messages
 	catalog: Messages
@@ -159,6 +163,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		archive: enUSArchive,
 		legal: enUSLegal,
 		pagination: enUSPagination,
+		plus: enUSPlus,
 		achievements: enUSAchievements,
 		calendar: enUSCalendar,
 		catalog: enUSCatalog,
@@ -194,6 +199,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		archive: zhHKArchive,
 		legal: zhHKLegal,
 		pagination: zhHKPagination,
+		plus: zhHKPlus,
 		achievements: zhHKAchievements,
 		calendar: zhHKCalendar,
 		catalog: zhHKCatalog,
@@ -237,6 +243,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		archive: zhCNArchive,
 		legal: zhCNLegal,
 		pagination: zhCNPagination,
+		plus: zhCNPlus,
 		achievements: zhCNAchievements,
 		calendar: zhCNCalendar,
 		catalog: zhCNCatalog,

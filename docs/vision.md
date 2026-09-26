@@ -12,6 +12,13 @@ Puzzled is the default daily home for light, positive, brain-training play — m
 
 Catalog ambition is unbounded: every game that fits the daily light brain ritual (word, logic, pattern, mini crossword, sudoku family, spatial, and light entertainment oracle formats labeled as play) should eventually live here under the single module protocol (day key in `Asia/Hong_Kong`, run, finish, result card, entitlement). Capability ambition is not unbounded sprawl.
 
+## Money
+
+Today's featured puzzle stays free for everyone. Puzzled Plus, a subscription
+in the NYT Games class, opens every game, every past day, stats for every game
+and a family plan. The commercial policy (prices, cancellation, entitlement)
+is [`north-star/MONETIZATION.md`](north-star/MONETIZATION.md).
+
 ## Users and their jobs
 
 - **Daily player** who wants a short uplifting mental break in minutes and to share a non-spoiler result.

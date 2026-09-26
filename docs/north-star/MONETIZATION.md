@@ -1,137 +1,142 @@
-# Monetization — free floor and subscription
+# Monetization: free daily puzzle and Puzzled Plus
 
-**Status:** Direction only; nothing is sold today  
-**Revision:** 2026-09-25  
-**Model:** SaaS subscription (Games-class), habit before wall; not live  
-**Billing authority:** none. The Sylphx commerce service this relied on does not exist, so the paid tier, pricing page, checkout, billing portal and referrals were removed on 2026-09-25 and every feature is free. Whether to sell a paid tier again is open issue [#235](https://github.com/SylphxAI/puzzled/issues/235); a return uses Stripe (the merchant-payments exception in the owner architecture standard), not a Sylphx service.
-
----
-
-## 1. Economic thesis
-
-Users do not pay for “a puzzle.”  
-They pay for **continuity of a habit they already love**: history, depth, breadth, polish, and freedom from friction.
-
-Therefore:
-
-1. **Free path must create daily puzzle completers** without payment.  
-2. **Paid path multiplies value for users habituated to daily puzzle completion.**  
-3. **Never sell the solution** or charge mid-failure of the free daily attempt.
+**Status:** Normative commercial policy (owner `standards/commercial.md`)
+**Revision:** 2026-09-26 (issue [#235](https://github.com/SylphxAI/puzzled/issues/235) decided: sell a paid tier)
+**Model:** Consumer subscription in the NYT Games class. Today's featured puzzle is free; Puzzled Plus opens everything else.
+**Seller:** Sylphx Limited, England and Wales, company 16438428, 128 City Road, London EC1V 2NX. VAT GB 502 7862 95.
+**Billing system:** Stripe (the merchant-payments exception in the owner architecture standard). Stripe holds the live prices, customers, subscriptions, invoices and refunds. Puzzled's api owns the entitlement and an append-only money ledger.
 
 ---
 
-## 2. Free tier (floor — non-negotiable)
+## 1. Objective
 
-Every calendar day, without an active subscription, a user **must** be able to:
+Earn subscription revenue from players who already have the daily habit,
+without taking anything away from the free daily puzzle. There are no ads and
+no other revenue source (owner direction, 2026-09-26).
 
-| Right | Detail |
-|-------|--------|
-| **Finish ≥1 puzzle_ritual** | Featured free rotation and/or always-free modules |
-| **See a result card** | Share without paywall |
-| **Start as guest** | Account optional for first ritual |
-| **Understand the product** | Home explains today’s rituals |
+Players do not pay for "a puzzle". They pay for more of a habit they already
+have: every game, every past day, stats across all of it, and sharing it with
+family.
 
-**Forbidden:**
+1. The free path must keep creating daily puzzle completers without payment.
+2. The paid path multiplies value for players who already come back daily.
+3. Never sell the solution, and never charge in the middle of a free attempt.
 
-- Removing all free daily finishes to “force conversion.”  
-- Ads that break play inputs or fake close buttons.  
-- Pretend-free that requires card details before first finish.
+## 2. What is free and what is paid
 
-**Ads (if any):** secondary revenue only; never the reason free finish is miserable. Prefer subscription cleanliness as brand default.
+| | Free (everyone, guests included) | Puzzled Plus |
+|---|---|---|
+| Today's featured puzzle (the day's rotation game, `Asia/Hong_Kong` day key) | Yes | Yes |
+| Every other game, today | No | Yes, all of them |
+| Past days (archive) | No | Every past day |
+| Stats and streaks | For what you play | For every game |
+| Family plan | No | Family plan: up to 4 people, each with their own stats |
 
----
+- The Rust api is the only admission point
+  (`PuzzleConnectService::enforce_play_access`, rule in
+  `puzzled-core` `billing_access::policy::play_access`). A refused request is
+  403 `plus_required` (another game) or `plus_required_archive` (a past day);
+  the web renders the unlock path from the same rule, never a dead end.
+- An entitlement read that fails refuses paid play (fail closed to the free
+  floor). The free daily puzzle never reads billing.
+- While Stripe is not configured, nothing is sold, so nothing is locked.
+- Nothing a player has finished is ever taken away: results and stats stay
+  whether or not they subscribe.
 
-## 3. Premium value (what money buys)
+## 3. Price
 
-| Capability | Free | Premium |
-|------------|------|---------|
-| Today’s free-rotation / free modules | Yes | Yes |
-| Additional today’s modules (if gated) | Limited | Full suite |
-| Archive / past day_keys | No or tiny sample | Full |
-| Practice / unlimited undated | Limited | Full |
-| Advanced stats & history export | Basic | Full |
-| Streak cosmetics / freezes | Basic / limited freezes | Expanded (if offered) |
-| Early access to new modules | No or delayed | Yes (optional) |
-| Ad-free | N/A or ads | Yes |
+Set against the market on 2026-09-26, read that day:
 
-Exact matrix per module is declared in registry metadata; **server enforces**.
+| Competitor | Published price (2026-09-26) | Source |
+|---|---|---|
+| NYT Games (US) | App Store in-app "Games - Monthly" US$5.99 (also a US$4.99 variant); crossword yearly US$39.99 | apps.apple.com/us/app/nyt-games-word-number-logic/id307569751 |
+| NYT Games (US, web) | US$6 every 4 weeks or US$50 a year; Games Family US$10 a month for up to 4 people (monthly only) | Nieman Lab 2025-09-08, Axios 2025-09-08; nytimes.com/subscription/games is script-rendered and could not be read directly |
+| NYT Games (UK) | App Store "Games - Monthly" £2.99 | apps.apple.com/gb/app/nyt-games-word-number-logic/id307569751 |
+| Times Puzzles (UK) | £3.99, £4.99 or £6.99 a month after a 7-day trial | apps.apple.com/gb/app/times-puzzles/id1531296302 |
 
-### ADR-170 alignment
+Positioning: our breadth (19 games in the registry) matches the market, but the brand is
+weaker than NYT's, so we price a little under NYT in dollars and at the low
+end of Times Puzzles in pounds. We do not undercut on cost.
 
-- Archive reads and non-rotation games may require premium.  
-- Daily free-rotation game uses **product day-key** rotation (`Asia/Hong_Kong`, same SSOT as daily puzzle completers; free game flips at HKT midnight, not UTC). Remains free for everyone including guests.  
-- Subscription lookup: Platform billing; **fail-closed to free** on uncertainty (Security × Correctness: do not grant premium on errors; do not block free floor on billing outages—billing outage degrades *premium only*).
+| Plan | USD | GBP |
+|---|---|---|
+| Puzzled Plus, monthly | 4.99 | 3.99 |
+| Puzzled Plus, yearly | 39.99 | 32.99 |
+| Puzzled Plus Family (up to 4 people), monthly | 7.99 | 6.49 |
+| Puzzled Plus Family, yearly | 64.99 | 52.99 |
 
----
+- Prices include VAT (Stripe `tax_behavior=inclusive`). The pricing page shows
+  pounds for `en-GB` and dollars elsewhere, and checkout charges the currency
+  shown.
+- The live price is the Stripe price under each lookup key
+  (`puzzled_individual_monthly`, `puzzled_individual_yearly`,
+  `puzzled_family_monthly`, `puzzled_family_yearly`); `scripts/stripe-setup.ts`
+  writes them. The pricing page reads them through `BillingService.ListPlans`
+  and never prints a hard-coded amount.
+- A price change creates a new Stripe price that takes over the lookup key;
+  existing subscribers keep their price until they change plan. Players get
+  at least 30 days' notice before a new price applies to their renewal.
+- No free trial and no discount codes at launch.
 
-## 4. Packaging (product)
+## 4. Cancellation, refunds and UK consumer law
 
-| Package | Intent |
-|---------|--------|
-| **Free** | Habit + viral |
-| **Puzzled Plus** (name TBD) | Full suite + archive + stats |
-| **Future family/edu** | Only after Plus is coherent—do not split SKUs early |
+- Cancel at any time in Settings > Subscription. Access runs to the end of the
+  paid period and nothing more is charged.
+- Cancellation right: an account's first subscription can be cancelled within
+  14 days of starting it for a full refund, however much was played
+  (Consumer Contracts Regulations 2013). The api refunds every paid invoice of
+  that subscription through Stripe, ends access at once, and appends negative
+  ledger rows. A later subscription has no refund window.
+- The Stripe Customer Portal handles payment methods, invoices and plan
+  changes; cancellation stays in Settings so the refund rule applies.
+- An account with a subscription that still renews cannot be erased until it
+  is cancelled. On erasure, subscription and ledger rows are kept for six
+  years (UK tax records) with the player id removed.
+- Terms, Privacy and checkout name Sylphx Limited, state VAT-inclusive prices,
+  automatic renewal, the 14-day right, and UK GDPR with the ICO.
 
-Pricing: set commercially; document live price in ops, not in this doctrine file.  
-**Economy:** price changes are commercial; entitlement *rules* are product doctrine.
+## 5. Money and entitlement (commercial standard)
 
----
+- Stripe webhooks (`POST /webhooks/stripe`) are signature-verified and treated
+  as hints: each event is read back from Stripe before a row changes.
+  Returning from checkout also reads the subscription back
+  (`GetSubscription{refresh}`), so access never waits on a webhook.
+- `billing_subscriptions` holds the last read-back state per subscription;
+  entitlement is derived from it (`active`, `trialing` or `past_due` inside the
+  paid period). A row whose period has passed while Stripe still calls it live
+  is read back before it can lock a player out.
+- `billing_ledger` is append-only: one row per paid invoice and per refund,
+  signed integer minor units, unique per Stripe source id.
+- Family: the family-plan subscriber gets an invite link; up to 3 others join
+  with their own accounts. The subscriber can remove members and reset the
+  link. Members lose access when the plan ends.
 
-## 5. Conversion moments (ethical)
+## 6. Conversion moments (ethical)
 
-Preferred:
+Allowed: the unlock panel on a paid game or past day (with today's free game
+beside it), the archive page, and the pricing page linked from the footer.
 
-- After several daily-puzzle-completer days: “Unlock your history.”  
-- On archive tap: the gate as shipped is **hard** and server-rendered — a guest
-  meets sign-in, a signed-in account without entitlement meets the upgrade path,
-  and neither sees a day list or a board (`PUZ-PLUS`, `apps/puzzled/src/app/`
-  `[locale]/(main)/archive/page.tsx` + `features/daily/lib/archive-access.ts`).
-  The soft gate described here is **not built**: a preview must not render or
-  serve past-day content without entitlement. If a preview is wanted, scope it as
-  metadata-only (how many days the archive holds, never a playable board) before
-  it lands.  
-- On advanced stats: soft gate.
+Not allowed: fake urgency, streak guilt, hiding the free daily puzzle behind a
+paywall, or card details before the first free finish.
 
-Disallowed:
+## 7. Metrics (supporting, not the North Star)
 
-- Fake urgency timers on first session.  
-- Guilt copy about streaks to force pay.  
-- Hiding the free daily behind a blurred paywall.
+See [METRICS-TREE.md](METRICS-TREE.md): paid conversion among players with
+many completion days, paid retention and churn, and Plus attach on archive and
+unlock views. Revenue does not replace daily puzzle completers as the North
+Star.
 
----
+## 8. Channels
 
-## 6. Metrics (supporting, not NSM)
+- Web: Stripe Checkout (live).
+- App Store and Google Play in-app purchase: not built. When a store app
+  ships, its purchases must write the same entitlement (a store-receipt
+  adapter beside the Stripe one), and the Sylphx platform may take this over
+  (see the program's billing path and the `platform-request` issue linked
+  from issue #235).
 
-See [METRICS-TREE.md](METRICS-TREE.md):
+## 9. Cost of catalog growth
 
-- Free → trial/paid conversion among users with high daily-puzzle-completer density  
-- Paid retention / churn  
-- Premium attach rate on archive intents  
-
-**Do not** make revenue the North Star while daily puzzle completers are unproven.
-
----
-
-## 7. Cost of catalog growth (Economy)
-
-Each new module incurs:
-
-| Budget | Examples |
-|--------|----------|
-| Content | Daily generation, editorial QA |
-| Verification | Tests, validators, play oracle |
-| Attention | Home surface space, support |
-| Runtime | API/DB load |
-| Reversal | Ability to disable module without bricking app |
-
-Ship modules when expected **daily-puzzle-completer lift or paid lift** justifies those budgets—or when they are strategic protocol proofs.  
-“We can build it in a day” is not a cost story.
-
----
-
-## 8. Platform billing integration
-
-- Entitlement source of truth: Platform subscription APIs.  
-- Web uses Platform SDK; api verifies with service credentials as designed.  
-- No parallel in-house card vault in the Puzzled app.  
-- Refunds/chargebacks: Platform policies; app respects entitlement revocation promptly.
+Each new module costs content, verification, attention, runtime and a way to
+disable it without breaking the app. Ship modules when the expected lift in
+daily puzzle completers or paid conversion justifies that.

@@ -11,7 +11,42 @@ use uuid::Uuid;
 /// Every (table, column) that stores a player id, with the statement that
 /// erases it. Rows matching the player are deleted, including audit rows where
 /// they are the subject or the actor.
+///
+/// Money facts are the exception: a subscription row and a ledger row are kept
+/// for accounting (UK tax records), with the player id cleared so they no
+/// longer identify the player. The erasure call refuses while a subscription
+/// still renews, so nothing is charged to an erased account.
 pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
+    (
+        "billing_customers",
+        "user_id",
+        r#"DELETE FROM "billing_customers" WHERE "user_id" = $1"#,
+    ),
+    (
+        "billing_ledger",
+        "user_id",
+        r#"UPDATE "billing_ledger" SET "user_id" = NULL WHERE "user_id" = $1"#,
+    ),
+    (
+        "billing_subscriptions",
+        "user_id",
+        r#"UPDATE "billing_subscriptions" SET "user_id" = NULL WHERE "user_id" = $1"#,
+    ),
+    (
+        "family_members",
+        "owner_user_id",
+        r#"DELETE FROM "family_members" WHERE "owner_user_id" = $1"#,
+    ),
+    (
+        "family_members",
+        "member_user_id",
+        r#"DELETE FROM "family_members" WHERE "member_user_id" = $1"#,
+    ),
+    (
+        "family_groups",
+        "owner_user_id",
+        r#"DELETE FROM "family_groups" WHERE "owner_user_id" = $1"#,
+    ),
     (
         "announcement_dismissals",
         "user_id",
@@ -157,10 +192,12 @@ mod tests {
     #[test]
     fn each_statement_erases_its_own_column() {
         for (table, column, statement) in USER_KEYED_COLUMNS {
-            assert_eq!(
-                *statement,
-                format!(r#"DELETE FROM "{table}" WHERE "{column}" = $1"#),
-            );
+            let delete = format!(r#"DELETE FROM "{table}" WHERE "{column}" = $1"#);
+            // Money facts keep the row and drop the player id.
+            let unlink = format!(r#"UPDATE "{table}" SET "{column}" = NULL WHERE "{column}" = $1"#);
+            let is_money = matches!(*table, "billing_ledger" | "billing_subscriptions");
+            let expected = if is_money { unlink } else { delete };
+            assert_eq!(*statement, expected);
         }
     }
 

@@ -16,6 +16,11 @@ import { cookies } from 'next/headers'
 import { cache } from 'react'
 import { loadDailyCompletionMap } from '@/features/daily/lib/daily-completion'
 import {
+	BillingService,
+	GetSubscriptionRequestSchema,
+	ListPlansRequestSchema,
+} from '@/gen/connect/puzzled/v1/billing_pb'
+import {
 	GamificationService,
 	GetStreakInfoRequestSchema,
 } from '@/gen/connect/puzzled/v1/gamification_pb'
@@ -33,6 +38,7 @@ import {
 	mapTodaysPuzzle,
 	type TodaysPuzzle,
 } from '@/lib/api/domain/daily'
+import { OPEN_ACCESS, type PlusAccess } from '@/lib/billing/plus'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
 import { logger } from '@/lib/logger'
 import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
@@ -265,3 +271,43 @@ export const getServerTodayOverview = cache(
 		}
 	},
 )
+
+// ==========================================
+// Puzzled Plus (BillingService)
+// ==========================================
+
+/** The price list; guests can read it. */
+export const getServerPlans = cache(async () => {
+	const transport = await getServerTransport()
+	return createClient(BillingService, transport).listPlans(create(ListPlansRequestSchema, {}))
+})
+
+/** The signed-in account's subscription; `refresh` reads it back from Stripe first. */
+export const getServerSubscription = cache(async (refresh = false) => {
+	const transport = await getServerTransport()
+	return createClient(BillingService, transport).getSubscription(
+		create(GetSubscriptionRequestSchema, { refresh }),
+	)
+})
+
+/**
+ * Sales state and the viewer's entitlement, for choosing what a page shows.
+ * A failed read shows nothing locked; Connect still refuses paid play itself.
+ */
+export const getServerPlusAccess = cache(async (signedIn: boolean): Promise<PlusAccess> => {
+	if (signedIn) {
+		try {
+			const res = await getServerSubscription()
+			return { salesOpen: res.salesOpen, entitled: res.entitled }
+		} catch (error) {
+			logger.warn('plus.subscription-read-failed', { error })
+		}
+	}
+	try {
+		const plans = await getServerPlans()
+		return { salesOpen: plans.salesOpen, entitled: false }
+	} catch (error) {
+		logger.warn('plus.plans-read-failed', { error })
+		return OPEN_ACCESS
+	}
+})

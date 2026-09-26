@@ -23,6 +23,7 @@ export const CLIENT_NAMESPACES = [
 	'modes',
 	'nav',
 	'onboarding',
+	'plus',
 	'pwa',
 	'share',
 	'stats',

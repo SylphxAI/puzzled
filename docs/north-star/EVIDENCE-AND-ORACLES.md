@@ -86,7 +86,7 @@ After finish:
 | **P2** | Share card → land as new guest → play same day | New potential daily puzzle completers |
 | **P3** | Second module same day | Optional; does not break P1 |
 | **P4** | Auth: sign in → streak/history visible | No identity spoof |
-| **P5** | Archive: open a past day | Served; a future day is refused |
+| **P5** | Archive: open a past day | Served with Puzzled Plus (or while Plus is not on sale); otherwise 403 `plus_required_archive` with an unlock path; a future day is refused |
 | **P6** | Health: api `/healthz` + web ready | Deploy liveness |
 | **P7** | Admin: list games / basic ops | Operator path |
 

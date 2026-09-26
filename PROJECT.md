@@ -17,7 +17,7 @@ Sylphx deployment manifest, pure game rules, and application workflows.
 | **Catalog** | Unbounded *class* of light daily puzzles + honest entertainment oracles |
 | **Basis** | Day key · game module · ritual run · result card · entitlement |
 | **NSM** | Distinct users who complete ≥1 puzzle ritual per product day |
-| **Money** | Everything free; no paid tier is sold (paid tier is an open decision) |
+| **Money** | Today's featured puzzle free; Puzzled Plus subscription (Stripe) opens every game, the archive and a family plan ([policy](docs/north-star/MONETIZATION.md)) |
 
 Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilities.md](docs/capabilities.md). Field contract: [docs/north-star/README.md](docs/north-star/README.md).
 
@@ -33,11 +33,13 @@ Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilitie
 
 ## Architecture
 
-- **api** (Rust, `crates/puzzled-server`): sole backend. Connect RPC only —
-  Health, Puzzle, Stats, Preferences, Gamification, Admin, Jobs. Identity from
-  Platform JWT (Bearer or session cookie).
+- **api** (Rust, `crates/puzzled-server`): sole backend. Connect RPC —
+  Health, Puzzle, Stats, Preferences, Gamification, Admin, Jobs, Billing —
+  plus the Stripe webhook (`POST /webhooks/stripe`). Identity from Platform
+  JWT (Bearer or session cookie). Puzzled Plus entitlement and the money
+  ledger live here; Stripe is the payment processor.
 - **web** (Next.js, `apps/puzzled`): presentation only. Generated Connect
-  client; Platform SDK for auth/flags/AI. No backend authority, no billing.
+  client; Platform SDK for auth/flags/AI. No backend authority.
 - **core** (`crates/puzzled-core`): pure game rules, validation, scoring,
   policy.
 - **Content**: `apps/puzzled/scripts/generate-content.ts` imports day-keyed

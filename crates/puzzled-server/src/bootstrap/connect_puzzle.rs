@@ -17,6 +17,7 @@ use connectrpc::{
 use serde_json::Value;
 use tracing::warn;
 
+use puzzled_core::billing_access::policy::play_access;
 use puzzled_core::puzzle_play::application::submission_validation::{
     validate_submission, SubmissionEnvelope,
 };
@@ -26,13 +27,16 @@ use puzzled_core::puzzle_play::crossword_generate::{
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
-use puzzled_core::puzzle_play::game_slugs::{canonicalize_game_slug, is_valid_game_slug};
+use puzzled_core::puzzle_play::game_slugs::{
+    canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
+};
 use puzzled_core::puzzle_play::queens_generate::generate_queens_puzzle_with_size;
 use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
 use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
+use crate::capabilities::billing::service::entitlement;
 use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::{
     fetch_daily_puzzle, fetch_puzzle_by_id,
 };
@@ -98,19 +102,46 @@ impl PuzzleConnectService {
         Ok(())
     }
 
-    /// Admit a served puzzle date: today or any past product day.
+    /// Admit a served puzzle (Puzzled Plus gate, the one admission point).
     ///
-    /// Every game and every past day is open to every player; Puzzled sells no
-    /// paid tier. A future day is refused so no one can read tomorrow's
-    /// solution early.
-    fn enforce_play_access(date: NaiveDate) -> Result<(), ConnectError> {
-        if date > product_day_key(Utc::now()) {
+    /// A future day is refused so no one can read tomorrow's solution early.
+    /// Today's featured game is free to everyone; every other game and every
+    /// past day needs Puzzled Plus once it is on sale. While Stripe is not
+    /// configured nothing is sold, so nothing is locked. An entitlement read
+    /// that fails refuses (fail closed to the free floor).
+    async fn enforce_play_access(
+        &self,
+        user_id: Option<&str>,
+        game_slug: &str,
+        date: NaiveDate,
+    ) -> Result<(), ConnectError> {
+        let today = product_day_key(Utc::now());
+        if date > today {
             return Err(ConnectError::new(
                 ErrorCode::InvalidArgument,
                 "future_puzzle_date",
             ));
         }
-        Ok(())
+        let is_today = date == today;
+        let free_today = is_game_free_today(game_slug, today);
+        let sales_open = self.state.sales_open();
+        if play_access(sales_open, false, is_today, free_today).is_ok() {
+            return Ok(());
+        }
+        let entitled = match (user_id, &self.state.pool) {
+            (Some(uid), Some(pool)) => {
+                match entitlement(pool, self.state.stripe.as_ref(), uid).await {
+                    Ok(found) => found.entitled,
+                    Err(error) => {
+                        warn!(%error, "entitlement read failed; refusing paid play");
+                        false
+                    }
+                }
+            }
+            _ => false,
+        };
+        play_access(sales_open, entitled, is_today, free_today)
+            .map_err(|denied| ConnectError::new(ErrorCode::PermissionDenied, denied.code()))
     }
 }
 
@@ -291,7 +322,8 @@ impl PuzzleService for PuzzleConnectService {
         let puzzle_date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
         let is_archive = puzzle_date != today;
 
-        Self::enforce_play_access(puzzle_date)?;
+        self.enforce_play_access(identity.as_deref(), game_slug, puzzle_date)
+            .await?;
 
         // Resolve the served puzzle: stored row first, then documented
         // deterministic generators (every FREE_GAME_ROTATION slug).
@@ -445,7 +477,8 @@ impl PuzzleService for PuzzleConnectService {
         let now = Utc::now();
         let today = product_day_key(now);
         let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
-        Self::enforce_play_access(date)?;
+        self.enforce_play_access(Some(&uid), game_slug, date)
+            .await?;
         let difficulty = {
             let d = req.difficulty.trim();
             if d.is_empty() {

@@ -10,6 +10,10 @@
 				]
 			},
 			{
+				"value": "2026-09-26",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
 				"value": "Account",
 				"keys": [
 					"settings.account.title",
@@ -34,6 +38,7 @@
 				"keys": [
 					"admin.announcements.active",
 					"admin.plans.active",
+					"plus.subscription.status.active",
 					"settings.notifications.overview.enabled"
 				]
 			},
@@ -351,6 +356,10 @@
 				"keys": ["auth.forgotPassword", "auth.forgotPasswordTitle"]
 			},
 			{
+				"value": "Free",
+				"keys": ["daily.freeToday", "plus.pricing.freeTitle"]
+			},
+			{
 				"value": "Free puzzle every day",
 				"keys": ["home.hero.ogBadge", "home.hero.trustFree"]
 			},
@@ -405,7 +414,11 @@
 			},
 			{
 				"value": "Inactive",
-				"keys": ["admin.announcements.inactive", "admin.plans.inactive"]
+				"keys": [
+					"admin.announcements.inactive",
+					"admin.plans.inactive",
+					"plus.subscription.status.other"
+				]
 			},
 			{
 				"value": "Last Updated",
@@ -452,6 +465,10 @@
 			{
 				"value": "Mistakes",
 				"keys": ["gameResult.mistakes", "share.card.mistakesLabel"]
+			},
+			{
+				"value": "Monthly",
+				"keys": ["admin.plans.monthly", "plus.pricing.monthly"]
 			},
 			{
 				"value": "Name",
@@ -585,6 +602,10 @@
 				]
 			},
 			{
+				"value": "Player",
+				"keys": ["leaderboard.columns.player", "plus.family.unnamed"]
+			},
+			{
 				"value": "Preferences",
 				"keys": [
 					"settings.nav.preferences",
@@ -699,6 +720,10 @@
 			{
 				"value": "Regenerate Codes",
 				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
+			},
+			{
+				"value": "Remove",
+				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
 			},
 			{
 				"value": "Remove Admin",
@@ -841,6 +866,10 @@
 			{
 				"value": "Sign Up",
 				"keys": ["auth.signUp", "common.signUp"]
+			},
+			{
+				"value": "Sign in",
+				"keys": ["archive.signInCta", "plus.unlock.signIn"]
 			},
 			{
 				"value": "Sign out",
@@ -1063,6 +1092,10 @@
 				]
 			},
 			{
+				"value": "2026-09-26",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
 				"value": "Account",
 				"keys": [
 					"settings.account.title",
@@ -1087,6 +1120,7 @@
 				"keys": [
 					"admin.announcements.active",
 					"admin.plans.active",
+					"plus.subscription.status.active",
 					"settings.notifications.overview.enabled"
 				]
 			},
@@ -1404,6 +1438,10 @@
 				"keys": ["auth.forgotPassword", "auth.forgotPasswordTitle"]
 			},
 			{
+				"value": "Free",
+				"keys": ["daily.freeToday", "plus.pricing.freeTitle"]
+			},
+			{
 				"value": "Free puzzle every day",
 				"keys": ["home.hero.ogBadge", "home.hero.trustFree"]
 			},
@@ -1458,7 +1496,11 @@
 			},
 			{
 				"value": "Inactive",
-				"keys": ["admin.announcements.inactive", "admin.plans.inactive"]
+				"keys": [
+					"admin.announcements.inactive",
+					"admin.plans.inactive",
+					"plus.subscription.status.other"
+				]
 			},
 			{
 				"value": "Last Updated",
@@ -1505,6 +1547,10 @@
 			{
 				"value": "Mistakes",
 				"keys": ["gameResult.mistakes", "share.card.mistakesLabel"]
+			},
+			{
+				"value": "Monthly",
+				"keys": ["admin.plans.monthly", "plus.pricing.monthly"]
 			},
 			{
 				"value": "Name",
@@ -1638,6 +1684,10 @@
 				]
 			},
 			{
+				"value": "Player",
+				"keys": ["leaderboard.columns.player", "plus.family.unnamed"]
+			},
+			{
 				"value": "Preferences",
 				"keys": [
 					"settings.nav.preferences",
@@ -1752,6 +1802,10 @@
 			{
 				"value": "Regenerate Codes",
 				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
+			},
+			{
+				"value": "Remove",
+				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
 			},
 			{
 				"value": "Remove Admin",
@@ -1894,6 +1948,10 @@
 			{
 				"value": "Sign Up",
 				"keys": ["auth.signUp", "common.signUp"]
+			},
+			{
+				"value": "Sign in",
+				"keys": ["archive.signInCta", "plus.unlock.signIn"]
 			},
 			{
 				"value": "Sign out",
@@ -2114,6 +2172,10 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
+			},
+			{
+				"value": "2026-09-26",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "24-48 小時內回覆",
@@ -2368,6 +2430,10 @@
 					"settings.notifications.push.saving",
 					"settings.profile.saving"
 				]
+			},
+			{
+				"value": "免費",
+				"keys": ["admin.users.free", "plus.pricing.freeTitle"]
 			},
 			{
 				"value": "全部",
@@ -2819,6 +2885,10 @@
 				"keys": ["admin.dlq.table.status", "gameResult.status"]
 			},
 			{
+				"value": "玩家",
+				"keys": ["leaderboard.columns.player", "plus.family.unnamed"]
+			},
+			{
 				"value": "玩家卡",
 				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
 			},
@@ -2837,7 +2907,8 @@
 					"admin.auditLogs.actions.login",
 					"archive.signInCta",
 					"auth.signIn",
-					"common.signIn"
+					"common.signIn",
+					"plus.unlock.signIn"
 				]
 			},
 			{
@@ -2883,6 +2954,10 @@
 				"keys": ["consent.learnMore", "support.resources.privacy.title"]
 			},
 			{
+				"value": "移除",
+				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
+			},
+			{
 				"value": "稽核日誌",
 				"keys": ["admin.auditLogs.title", "admin.sidebar.auditLogs"]
 			},
@@ -2917,6 +2992,14 @@
 					"settings.overview.security.good",
 					"settings.security.securityCheckup.scoreGood"
 				]
+			},
+			{
+				"value": "複製連結",
+				"keys": ["plus.family.copy", "settings.playerCard.copyLink"]
+			},
+			{
+				"value": "訂閱",
+				"keys": ["plus.pricing.subscribe", "plus.subscription.title"]
 			},
 			{
 				"value": "設定",
@@ -3140,6 +3223,10 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
+			},
+			{
+				"value": "2026-09-26",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "24-48 小時內回覆",
@@ -3394,6 +3481,10 @@
 					"settings.notifications.push.saving",
 					"settings.profile.saving"
 				]
+			},
+			{
+				"value": "免費",
+				"keys": ["admin.users.free", "plus.pricing.freeTitle"]
 			},
 			{
 				"value": "全部",
@@ -3849,6 +3940,10 @@
 				"keys": ["admin.dlq.table.status", "gameResult.status"]
 			},
 			{
+				"value": "玩家",
+				"keys": ["leaderboard.columns.player", "plus.family.unnamed"]
+			},
+			{
 				"value": "玩家卡",
 				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
 			},
@@ -3867,7 +3962,8 @@
 					"admin.auditLogs.actions.login",
 					"archive.signInCta",
 					"auth.signIn",
-					"common.signIn"
+					"common.signIn",
+					"plus.unlock.signIn"
 				]
 			},
 			{
@@ -3898,6 +3994,10 @@
 			{
 				"value": "確認",
 				"keys": ["common.confirm", "settings.security.confirm"]
+			},
+			{
+				"value": "移除",
+				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
 			},
 			{
 				"value": "稽核日誌",
@@ -3934,6 +4034,14 @@
 					"settings.overview.security.good",
 					"settings.security.securityCheckup.scoreGood"
 				]
+			},
+			{
+				"value": "複製連結",
+				"keys": ["plus.family.copy", "settings.playerCard.copyLink"]
+			},
+			{
+				"value": "訂閱",
+				"keys": ["plus.pricing.subscribe", "plus.subscription.title"]
 			},
 			{
 				"value": "設定",
@@ -4170,6 +4278,10 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
+			},
+			{
+				"value": "2026-09-26",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "24-48 小时内回复",
@@ -4426,6 +4538,10 @@
 				]
 			},
 			{
+				"value": "免费",
+				"keys": ["admin.users.free", "plus.pricing.freeTitle"]
+			},
+			{
 				"value": "全部",
 				"keys": ["catalog.filterAll", "leaderboard.period.all"]
 			},
@@ -4546,6 +4662,10 @@
 			{
 				"value": "启用双重验证",
 				"keys": ["settings.security.enableMfa", "settings.securityScore.checks.enableTwoFactor"]
+			},
+			{
+				"value": "复制链接",
+				"keys": ["plus.family.copy", "settings.playerCard.copyLink"]
 			},
 			{
 				"value": "天",
@@ -4956,6 +5076,10 @@
 				"keys": ["admin.dlq.table.status", "gameResult.status"]
 			},
 			{
+				"value": "玩家",
+				"keys": ["leaderboard.columns.player", "plus.family.unnamed"]
+			},
+			{
 				"value": "玩家卡",
 				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
 			},
@@ -4978,12 +5102,17 @@
 					"admin.auditLogs.actions.login",
 					"archive.signInCta",
 					"auth.signIn",
-					"common.signIn"
+					"common.signIn",
+					"plus.unlock.signIn"
 				]
 			},
 			{
 				"value": "确认",
 				"keys": ["common.confirm", "settings.security.confirm"]
+			},
+			{
+				"value": "移除",
+				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
 			},
 			{
 				"value": "管理操作",
@@ -5025,6 +5154,10 @@
 					"settings.overview.security.good",
 					"settings.security.securityCheckup.scoreGood"
 				]
+			},
+			{
+				"value": "订阅",
+				"keys": ["plus.pricing.subscribe", "plus.subscription.title"]
 			},
 			{
 				"value": "让你的个人资料显示在 puzzled.gg/u/{username}",

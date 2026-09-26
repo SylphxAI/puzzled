@@ -10,6 +10,7 @@
 
 import { relations, sql } from 'drizzle-orm'
 import {
+	bigint,
 	boolean,
 	index,
 	integer,
@@ -593,6 +594,80 @@ export const webhookEvents = pgTable(
 		index('webhook_events_event_idx').on(table.eventId),
 		index('webhook_events_resource_created_idx').on(table.resourceId, table.eventCreatedAt),
 	],
+)
+
+// ==========================================
+// PUZZLED PLUS (Stripe is the processor; these rows own entitlement and money)
+// ==========================================
+
+/** One Stripe customer per account. */
+export const billingCustomers = pgTable('billing_customers', {
+	/** Platform user ID (no FK) */
+	userId: uuid('user_id').primaryKey(),
+	stripeCustomerId: text('stripe_customer_id').notNull().unique(),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+/**
+ * The last state read back from Stripe for each subscription. Entitlement is
+ * derived from these rows; a webhook is only a hint to read Stripe again.
+ */
+export const billingSubscriptions = pgTable(
+	'billing_subscriptions',
+	{
+		stripeSubscriptionId: text('stripe_subscription_id').primaryKey(),
+		/** Platform user ID (no FK); null once the account is erased */
+		userId: uuid('user_id'),
+		stripeCustomerId: text('stripe_customer_id').notNull(),
+		planId: text('plan_id').notNull(),
+		status: text('status').notNull(),
+		currentPeriodEnd: timestamp('current_period_end').notNull(),
+		cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
+		startedAt: timestamp('started_at').notNull(),
+		updatedAt: timestamp('updated_at').defaultNow().notNull(),
+	},
+	(table) => [index('billing_subscriptions_user_id_idx').on(table.userId)],
+)
+
+/**
+ * Append-only money ledger: one row per Stripe payment (invoice) or refund.
+ * Amounts are signed integer minor units; a refund is a new negative row.
+ */
+export const billingLedger = pgTable(
+	'billing_ledger',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		/** Stripe invoice id (payment) or refund id (refund) */
+		sourceId: text('source_id').notNull().unique(),
+		kind: text('kind').notNull(),
+		/** Platform user ID (no FK); null once the account is erased */
+		userId: uuid('user_id'),
+		stripeCustomerId: text('stripe_customer_id').notNull(),
+		stripeSubscriptionId: text('stripe_subscription_id'),
+		currency: text('currency').notNull(),
+		amountMinor: bigint('amount_minor', { mode: 'number' }).notNull(),
+		occurredAt: timestamp('occurred_at').notNull(),
+		recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+	},
+	(table) => [index('billing_ledger_user_id_idx').on(table.userId)],
+)
+
+/** A family plan owner and the invite code members join with. */
+export const familyGroups = pgTable('family_groups', {
+	ownerUserId: uuid('owner_user_id').primaryKey(),
+	inviteCode: text('invite_code').notNull().unique(),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+/** Members of a family plan (the owner is not listed here). */
+export const familyMembers = pgTable(
+	'family_members',
+	{
+		memberUserId: uuid('member_user_id').primaryKey(),
+		ownerUserId: uuid('owner_user_id').notNull(),
+		joinedAt: timestamp('joined_at').defaultNow().notNull(),
+	},
+	(table) => [index('family_members_owner_user_id_idx').on(table.ownerUserId)],
 )
 
 // ==========================================

@@ -22,6 +22,9 @@ pub use capabilities::identity_access::contract::{
 };
 
 #[cfg(test)]
+mod billing_flow_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use axum::body::{to_bytes, Body};

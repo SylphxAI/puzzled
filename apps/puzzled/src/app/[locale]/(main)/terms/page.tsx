@@ -45,6 +45,11 @@ export default async function TermsPage({ params }: Props) {
 			paragraphs: [t('sections.acceptance.content')],
 		},
 		{
+			id: 'seller',
+			title: t('sections.seller.title'),
+			paragraphs: [t('sections.seller.content')],
+		},
+		{
 			id: 'service',
 			title: t('sections.service.title'),
 			paragraphs: [t('sections.service.content')],
@@ -57,6 +62,20 @@ export default async function TermsPage({ params }: Props) {
 				t('sections.accounts.items.accurate'),
 				t('sections.accounts.items.secure'),
 				t('sections.accounts.items.responsible'),
+			],
+		},
+		{
+			id: 'subscriptions',
+			title: t('sections.subscriptions.title'),
+			paragraphs: [t('sections.subscriptions.content')],
+			bullets: [
+				t('sections.subscriptions.items.billing'),
+				t('sections.subscriptions.items.renewal'),
+				t('sections.subscriptions.items.cancellation'),
+				t('sections.subscriptions.items.refund'),
+				t('sections.subscriptions.items.price'),
+				t('sections.subscriptions.items.family'),
+				t('sections.subscriptions.items.statutory'),
 			],
 		},
 		{
