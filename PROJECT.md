@@ -35,8 +35,10 @@ Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilitie
 
 - **api** (Rust, `crates/puzzled-server`): sole backend. Connect RPC —
   Health, Puzzle, Stats, Preferences, Gamification, Admin, Jobs, Billing —
-  plus the Stripe webhook (`POST /webhooks/stripe`). Identity from Platform
-  JWT (Bearer or session cookie). Puzzled Plus entitlement and the money
+  plus the Stripe webhook (`POST /webhooks/stripe`). Identity: a Sylphx
+  Auth end-user session (the web's `sylphx_identity_session` cookie or a
+  Bearer), checked once per request with Auth (`/v1/sessions/current`,
+  cached 60 s) by the router middleware. Puzzled Plus entitlement and the money
   ledger live here; Stripe is the payment processor.
 - **web** (Next.js, `apps/puzzled`): presentation only. Generated Connect
   client; Platform SDK for auth/flags/AI. No backend authority.

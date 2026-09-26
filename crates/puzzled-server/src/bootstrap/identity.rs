@@ -75,6 +75,12 @@ fn resolve_guest(headers: &axum::http::HeaderMap) -> Option<VerifiedIdentity> {
 }
 
 fn verify(headers: &axum::http::HeaderMap) -> Result<VerifiedIdentity, ConnectError> {
+    // A Sylphx Auth end-user session, already checked by the router middleware.
+    if let Some(identity) =
+        crate::capabilities::identity_access::adapters::auth_session::verified_identity(headers)
+    {
+        return Ok(identity);
+    }
     if let Some(token) = extract_bearer(headers) {
         return verify_platform_jwt(&token)
             .map_err(|err| ConnectError::new(ErrorCode::Unauthenticated, err.message()));

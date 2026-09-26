@@ -182,6 +182,7 @@ export async function destIdentityJson<T>(
 		method?: string
 		credential?: string
 		body?: unknown
+		headers?: Record<string, string>
 	} = {},
 ): Promise<T> {
 	return destJson<T>(origin, path, init)

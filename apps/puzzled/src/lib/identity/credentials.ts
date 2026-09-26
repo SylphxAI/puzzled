@@ -12,13 +12,13 @@ export function destProductCredential(
 export function destIdentityCredential(
 	env: Record<string, string | undefined> = process.env,
 ): string | undefined {
-	return destProductCredential(['IDENTITY_API_KEY'], env)
+	return destProductCredential(['SYLPHX_AUTH_SECRET_KEY', 'IDENTITY_API_KEY'], env)
 }
 
 export function destIdentityProjectId(
 	env: Record<string, string | undefined> = process.env,
 ): string | undefined {
-	return destProductCredential(['IDENTITY_ORGANIZATION_ID'], env)
+	return destProductCredential(['SYLPHX_AUTH_ORGANIZATION_ID', 'IDENTITY_ORGANIZATION_ID'], env)
 }
 
 export function destEventsCredential(

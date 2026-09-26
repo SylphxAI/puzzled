@@ -244,6 +244,11 @@ export function useSignUpForm(
 					body: JSON.stringify({ email, password, name }),
 				})
 				if (!response.ok) throw new Error('sign-up failed')
+				const result = await readJson(response)
+				if (result.signedIn === true) {
+					window.location.assign('/')
+					return
+				}
 				setStep('verify-email')
 			} catch (err) {
 				setError(err instanceof Error ? err.message : 'sign-up failed')
