@@ -16,11 +16,10 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { NonogramIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic } from '@/shared/hooks'
 import { NonogramGrid } from './components'
-import type { NonogramPuzzleData, NonogramSolution } from './types'
+import { parseNonogramClientPayload } from './parse-client'
 import { useNonogram } from './use-nonogram'
 
 type Props = {
@@ -33,10 +32,8 @@ type Props = {
 export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.nonogram')
 
-	// Get puzzle from server data or generate from seed (deterministic)
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<NonogramPuzzleData, NonogramSolution>(puzzleData),
-	)
+	// Served without the solution; the clues judge each line and the finish (#246).
+	const [puzzle] = useState(() => parseNonogramClientPayload(puzzleData))
 
 	const {
 		isReady,
@@ -65,7 +62,7 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	// Initialize game when puzzle is ready
 	useEffect(() => {
 		if (puzzle && !isReady) {
-			game.init(puzzle.puzzleData, puzzle.solution.grid)
+			game.init(puzzle)
 		}
 	}, [puzzle, isReady, game.init]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -182,7 +179,7 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 			{/* Header with help button */}
 			<div className="flex w-full max-w-sm items-center justify-between">
 				<div className="text-sm text-muted-foreground">
-					{t('name')} {puzzle.puzzleData.theme && `• ${puzzle.puzzleData.theme}`}
+					{t('name')} {puzzle.theme && `• ${puzzle.theme}`}
 				</div>
 				<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
 					<HelpCircle className="h-4 w-4" />

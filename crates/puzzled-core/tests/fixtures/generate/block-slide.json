@@ -1,0 +1,317 @@
+[
+	{
+		"seed": 20250101,
+		"difficulty": "easy",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 0, "y": 1, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 3, "y": 1, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "b", "x": 2, "y": 4, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "c", "x": 2, "y": 0, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "d", "x": 3, "y": 3, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "e", "x": 0, "y": 3, "width": 1, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 11
+		},
+		"solution": { "minMoves": 11 }
+	},
+	{
+		"seed": 20250102,
+		"difficulty": "medium",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 1, "y": 1, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 2, "y": 3, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "b", "x": 2, "y": 4, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "c", "x": 1, "y": 0, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "d", "x": 0, "y": 0, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "e", "x": 0, "y": 4, "width": 2, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 17
+		},
+		"solution": { "minMoves": 17 }
+	},
+	{
+		"seed": 20250103,
+		"difficulty": "hard",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 1, "y": 0, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 3, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "b", "x": 1, "y": 4, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "c", "x": 3, "y": 0, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "d", "x": 1, "y": 3, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "e", "x": 0, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "f", "x": 0, "y": 1, "width": 1, "height": 2, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 39
+		},
+		"solution": { "minMoves": 39 }
+	},
+	{
+		"seed": 20260226,
+		"difficulty": "easy",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 2, "y": 0, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 0, "y": 3, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "b", "x": 1, "y": 3, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "c", "x": 2, "y": 4, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "d", "x": 2, "y": 3, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "e", "x": 0, "y": 2, "width": 2, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 15
+		},
+		"solution": { "minMoves": 15 }
+	},
+	{
+		"seed": 20260227,
+		"difficulty": "medium",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 2, "y": 1, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 0, "y": 4, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "b", "x": 2, "y": 4, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "c", "x": 3, "y": 3, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "d", "x": 1, "y": 2, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "e", "x": 0, "y": 2, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "f", "x": 0, "y": 0, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "g", "x": 1, "y": 0, "width": 1, "height": 2, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 20
+		},
+		"solution": { "minMoves": 20 }
+	},
+	{
+		"seed": 20260228,
+		"difficulty": "hard",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 2, "y": 1, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 0, "y": 0, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "b", "x": 2, "y": 3, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "c", "x": 0, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "d", "x": 1, "y": 1, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "e", "x": 1, "y": 0, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "f", "x": 3, "y": 0, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "g", "x": 1, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "h", "x": 0, "y": 2, "width": 1, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 37
+		},
+		"solution": { "minMoves": 37 }
+	},
+	{
+		"seed": 20260926,
+		"difficulty": "easy",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 0, "y": 0, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 2, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "b", "x": 3, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "c", "x": 2, "y": 0, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "d", "x": 1, "y": 2, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "e", "x": 3, "y": 2, "width": 1, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 10
+		},
+		"solution": { "minMoves": 10 }
+	},
+	{
+		"seed": 20260927,
+		"difficulty": "medium",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 1, "y": 1, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 2, "y": 3, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "b", "x": 2, "y": 4, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "c", "x": 0, "y": 3, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "d", "x": 0, "y": 0, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "e", "x": 0, "y": 2, "width": 1, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 16
+		},
+		"solution": { "minMoves": 16 }
+	},
+	{
+		"seed": 20260928,
+		"difficulty": "hard",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 2, "y": 1, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 0, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "b", "x": 2, "y": 4, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "c", "x": 2, "y": 3, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "d", "x": 0, "y": 2, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "e", "x": 0, "y": 1, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "f", "x": 1, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "g", "x": 3, "y": 0, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "h", "x": 0, "y": 0, "width": 1, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 66
+		},
+		"solution": { "minMoves": 66 }
+	},
+	{
+		"seed": 20261001,
+		"difficulty": "easy",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 0, "y": 0, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 2, "y": 2, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "b", "x": 2, "y": 0, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "c", "x": 1, "y": 4, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "d", "x": 3, "y": 0, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "e", "x": 2, "y": 3, "width": 2, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 13
+		},
+		"solution": { "minMoves": 13 }
+	},
+	{
+		"seed": 20261002,
+		"difficulty": "medium",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 1, "y": 0, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 3, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "b", "x": 1, "y": 2, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "c", "x": 0, "y": 4, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "d", "x": 0, "y": 1, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "e", "x": 2, "y": 2, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "f", "x": 0, "y": 3, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "g", "x": 0, "y": 2, "width": 1, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 31
+		},
+		"solution": { "minMoves": 31 }
+	},
+	{
+		"seed": 20261003,
+		"difficulty": "hard",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 0, "y": 1, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 2, "y": 1, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "b", "x": 2, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "c", "x": 0, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "d", "x": 1, "y": 0, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "e", "x": 0, "y": 0, "width": 1, "height": 1, "isTarget": false },
+				{ "id": "f", "x": 2, "y": 2, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "g", "x": 3, "y": 3, "width": 1, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 52
+		},
+		"solution": { "minMoves": 52 }
+	},
+	{
+		"seed": 20261231,
+		"difficulty": "easy",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 0, "y": 0, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 2, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "b", "x": 2, "y": 0, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "c", "x": 3, "y": 2, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "d", "x": 0, "y": 3, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "e", "x": 2, "y": 2, "width": 1, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 13
+		},
+		"solution": { "minMoves": 13 }
+	},
+	{
+		"seed": 20261232,
+		"difficulty": "medium",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 2, "y": 0, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 0, "y": 1, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "b", "x": 1, "y": 4, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "c", "x": 1, "y": 3, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "d", "x": 0, "y": 2, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "e", "x": 3, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "f", "x": 2, "y": 2, "width": 2, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 34
+		},
+		"solution": { "minMoves": 34 }
+	},
+	{
+		"seed": 20261233,
+		"difficulty": "hard",
+		"puzzleData": {
+			"blocks": [
+				{ "id": "target", "x": 1, "y": 0, "width": 2, "height": 2, "isTarget": true },
+				{ "id": "a", "x": 1, "y": 3, "width": 2, "height": 1, "isTarget": false },
+				{ "id": "b", "x": 3, "y": 3, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "c", "x": 3, "y": 1, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "d", "x": 0, "y": 2, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "e", "x": 0, "y": 0, "width": 1, "height": 2, "isTarget": false },
+				{ "id": "f", "x": 0, "y": 4, "width": 2, "height": 1, "isTarget": false }
+			],
+			"gridWidth": 4,
+			"gridHeight": 5,
+			"exitX": 1,
+			"exitY": 3,
+			"minMoves": 37
+		},
+		"solution": { "minMoves": 37 }
+	}
+]

@@ -44,6 +44,8 @@ export type SaveResultResponse = {
 	success: boolean
 	score?: number
 	error?: string
+	/** The answer, sent by the server only with an accepted finish. */
+	reveal?: unknown
 }
 
 export function useSaveGameResult(gameSlug: string) {
@@ -170,6 +172,7 @@ export function useSaveGameResult(gameSlug: string) {
 				return {
 					success: response.success,
 					score: response.score,
+					reveal: response.reveal,
 				}
 			} catch (err) {
 				// On error, allow retry by resetting the flag

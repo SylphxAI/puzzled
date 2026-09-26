@@ -1,36 +1,43 @@
 /**
  * Cryptogram Game Hook
- * Manages game state for the letter substitution puzzle
+ * Manages game state for the letter substitution puzzle.
+ *
+ * The client never holds the plaintext: once every letter is filled the
+ * server checks the decoding, and hints come from the server
+ * (`PuzzleService.CheckGuess`).
  */
 
-import { useCallback, useReducer } from 'react'
-import type {
-	CryptogramGameState,
-	CryptogramPuzzleData,
-	CryptogramSolution,
-	PlayerGuesses,
-} from './types'
-import { countCorrect, getUniqueLetters, isSolved, MAX_HINTS } from './types'
+import { useCallback, useEffect, useReducer, useRef } from 'react'
+import type { CryptogramGameState, CryptogramPuzzleData, PlayerGuesses } from './types'
+import { getUniqueLetters, MAX_HINTS } from './types'
+
+/** Server grading: is this full decoding right, and the next hint letter. */
+export type CryptogramGrader = {
+	checkSolved: (guesses: PlayerGuesses) => Promise<boolean>
+	hint: (
+		guesses: PlayerGuesses,
+		revealed: string[],
+	) => Promise<{ encrypted: string; letter: string } | null>
+}
 
 type CryptogramAction =
 	| { type: 'SET_GUESS'; encryptedLetter: string; guessedLetter: string }
 	| { type: 'CLEAR_GUESS'; encryptedLetter: string }
-	| { type: 'USE_HINT' }
+	| { type: 'REVEAL'; encryptedLetter: string; letter: string }
+	| { type: 'CHECKED'; solved: boolean; guesses: PlayerGuesses }
 	| { type: 'SELECT_LETTER'; encryptedLetter: string | null }
 	| { type: 'RESET' }
 
-function createInitialState(
-	puzzleData: CryptogramPuzzleData,
-	_solution: CryptogramSolution,
-): CryptogramGameState {
-	const uniqueLetters = getUniqueLetters(puzzleData.encryptedText)
-	const guesses: PlayerGuesses = {}
+export type CryptogramClientState = CryptogramGameState & {
+	/** Every letter is filled and the server said the decoding is not right. */
+	lastCheckWrong: boolean
+}
 
-	// Initialize all encrypted letters with empty guesses
-	for (const letter of uniqueLetters) {
+function createInitialState(puzzleData: CryptogramPuzzleData): CryptogramClientState {
+	const guesses: PlayerGuesses = {}
+	for (const letter of getUniqueLetters(puzzleData.encryptedText)) {
 		guesses[letter] = ''
 	}
-
 	return {
 		guesses,
 		selectedLetter: null,
@@ -39,113 +46,89 @@ function createInitialState(
 		gameStatus: 'playing',
 		startTime: null,
 		endTime: null,
+		lastCheckWrong: false,
 	}
 }
 
-function cryptogramReducer(
-	state: CryptogramGameState,
+export function isFullyFilled(guesses: PlayerGuesses): boolean {
+	const values = Object.values(guesses)
+	return values.length > 0 && values.every((value) => value !== '')
+}
+
+export function cryptogramReducer(
+	state: CryptogramClientState,
 	action: CryptogramAction,
 	puzzleData: CryptogramPuzzleData,
-	solution: CryptogramSolution,
-): CryptogramGameState {
+): CryptogramClientState {
 	switch (action.type) {
 		case 'SET_GUESS': {
 			if (state.gameStatus !== 'playing') return state
-
 			const encrypted = action.encryptedLetter.toUpperCase()
 			const guessed = action.guessedLetter.toUpperCase()
-
 			// Don't allow changing revealed letters
 			if (state.revealedLetters.includes(encrypted)) return state
 
-			// Check if this guess is already used for another letter
-			// (letter can only map to one decryption)
-			const existingEntries = Object.entries(state.guesses)
-			const conflictEntry = existingEntries.find(
+			// A decryption letter can map from only one encrypted letter.
+			const conflict = Object.entries(state.guesses).find(
 				([key, val]) =>
 					val === guessed && key !== encrypted && !state.revealedLetters.includes(key),
 			)
-
-			const newGuesses = { ...state.guesses }
-
-			// If this letter is used elsewhere, clear the old one
-			if (conflictEntry) {
-				newGuesses[conflictEntry[0]] = ''
-			}
-
-			newGuesses[encrypted] = guessed
-
-			// Check win condition
-			const isWin = isSolved(puzzleData.encryptedText, newGuesses, solution.reverseCipher)
-
+			const guesses = { ...state.guesses }
+			if (conflict) guesses[conflict[0]] = ''
+			guesses[encrypted] = guessed
 			return {
 				...state,
-				guesses: newGuesses,
+				guesses,
 				startTime: state.startTime ?? Date.now(),
-				gameStatus: isWin ? 'won' : 'playing',
-				endTime: isWin ? Date.now() : state.endTime,
+				lastCheckWrong: false,
 			}
 		}
 
 		case 'CLEAR_GUESS': {
 			if (state.gameStatus !== 'playing') return state
-
 			const encrypted = action.encryptedLetter.toUpperCase()
-
-			// Don't allow clearing revealed letters
 			if (state.revealedLetters.includes(encrypted)) return state
-
-			const newGuesses = { ...state.guesses, [encrypted]: '' }
-
 			return {
 				...state,
-				guesses: newGuesses,
+				guesses: { ...state.guesses, [encrypted]: '' },
+				lastCheckWrong: false,
 			}
 		}
 
-		case 'USE_HINT': {
-			if (state.gameStatus !== 'playing') return state
-			if (state.hintsUsed >= MAX_HINTS) return state
-
-			// Find an encrypted letter that hasn't been correctly guessed or revealed
-			const uniqueLetters = getUniqueLetters(puzzleData.encryptedText)
-			const unsolvedLetter = uniqueLetters.find((encrypted) => {
-				const correct = solution.reverseCipher[encrypted]
-				const current = state.guesses[encrypted]
-				return current !== correct && !state.revealedLetters.includes(encrypted)
-			})
-
-			if (!unsolvedLetter) return state
-
-			// Reveal this letter
-			const correctLetter = solution.reverseCipher[unsolvedLetter]
-			const newGuesses = { ...state.guesses, [unsolvedLetter]: correctLetter }
-			const newRevealed = [...state.revealedLetters, unsolvedLetter]
-
-			// Check win condition
-			const isWin = isSolved(puzzleData.encryptedText, newGuesses, solution.reverseCipher)
-
+		case 'REVEAL': {
+			if (state.gameStatus !== 'playing' || state.hintsUsed >= MAX_HINTS) return state
+			const encrypted = action.encryptedLetter.toUpperCase()
+			const letter = action.letter.toUpperCase()
+			const guesses = { ...state.guesses }
+			// The revealed letter can no longer stand for another encrypted letter.
+			for (const [key, val] of Object.entries(guesses)) {
+				if (val === letter && key !== encrypted) guesses[key] = ''
+			}
+			guesses[encrypted] = letter
 			return {
 				...state,
-				guesses: newGuesses,
-				revealedLetters: newRevealed,
+				guesses,
+				revealedLetters: [...state.revealedLetters, encrypted],
 				hintsUsed: state.hintsUsed + 1,
 				startTime: state.startTime ?? Date.now(),
-				gameStatus: isWin ? 'won' : 'playing',
-				endTime: isWin ? Date.now() : state.endTime,
+				lastCheckWrong: false,
 			}
 		}
 
-		case 'SELECT_LETTER': {
-			return {
-				...state,
-				selectedLetter: action.encryptedLetter,
-			}
+		case 'CHECKED': {
+			if (state.gameStatus !== 'playing') return state
+			// A result for guesses the player has since changed is stale.
+			if (JSON.stringify(action.guesses) !== JSON.stringify(state.guesses)) return state
+			return action.solved
+				? { ...state, gameStatus: 'won', endTime: Date.now(), lastCheckWrong: false }
+				: { ...state, lastCheckWrong: true }
 		}
 
-		case 'RESET': {
-			return createInitialState(puzzleData, solution)
-		}
+		case 'SELECT_LETTER':
+			return { ...state, selectedLetter: action.encryptedLetter }
+
+		case 'RESET':
+			return createInitialState(puzzleData)
 
 		default:
 			return state
@@ -153,25 +136,46 @@ function cryptogramReducer(
 }
 
 export type UseCryptogramReturn = {
-	state: CryptogramGameState
+	state: CryptogramClientState
 	setGuess: (encryptedLetter: string, guessedLetter: string) => void
 	clearGuess: (encryptedLetter: string) => void
 	useHint: () => void
 	selectLetter: (encryptedLetter: string | null) => void
 	reset: () => void
-	getProgress: () => { correct: number; total: number }
+	/** Letters filled so far; correctness is only known when the server says solved. */
+	getProgress: () => { filled: number; total: number }
 	canUseHint: boolean
 }
 
 export function useCryptogram(
 	puzzleData: CryptogramPuzzleData,
-	solution: CryptogramSolution,
+	grader: CryptogramGrader,
+	onGradeFailed?: () => void,
 ): UseCryptogramReturn {
 	const [state, dispatch] = useReducer(
-		(s: CryptogramGameState, a: CryptogramAction) => cryptogramReducer(s, a, puzzleData, solution),
-		{ puzzleData, solution },
-		({ puzzleData, solution }) => createInitialState(puzzleData, solution),
+		(s: CryptogramClientState, a: CryptogramAction) => cryptogramReducer(s, a, puzzleData),
+		puzzleData,
+		createInitialState,
 	)
+	const hintPending = useRef(false)
+
+	// Ask the server once the decoding is complete.
+	useEffect(() => {
+		if (state.gameStatus !== 'playing' || !isFullyFilled(state.guesses)) return
+		const guesses = state.guesses
+		let cancelled = false
+		grader.checkSolved(guesses).then(
+			(solved) => {
+				if (!cancelled) dispatch({ type: 'CHECKED', solved, guesses })
+			},
+			() => {
+				if (!cancelled) onGradeFailed?.()
+			},
+		)
+		return () => {
+			cancelled = true
+		}
+	}, [state.guesses, state.gameStatus, grader, onGradeFailed])
 
 	const setGuess = useCallback((encryptedLetter: string, guessedLetter: string) => {
 		dispatch({ type: 'SET_GUESS', encryptedLetter, guessedLetter })
@@ -181,9 +185,24 @@ export function useCryptogram(
 		dispatch({ type: 'CLEAR_GUESS', encryptedLetter })
 	}, [])
 
+	const canUseHint = state.hintsUsed < MAX_HINTS && state.gameStatus === 'playing'
+
 	const useHint = useCallback(() => {
-		dispatch({ type: 'USE_HINT' })
-	}, [])
+		if (!canUseHint || hintPending.current) return
+		hintPending.current = true
+		grader.hint(state.guesses, state.revealedLetters).then(
+			(revealed) => {
+				hintPending.current = false
+				if (revealed) {
+					dispatch({ type: 'REVEAL', encryptedLetter: revealed.encrypted, letter: revealed.letter })
+				}
+			},
+			() => {
+				hintPending.current = false
+				onGradeFailed?.()
+			},
+		)
+	}, [canUseHint, grader, state.guesses, state.revealedLetters, onGradeFailed])
 
 	const selectLetter = useCallback((encryptedLetter: string | null) => {
 		dispatch({ type: 'SELECT_LETTER', encryptedLetter })
@@ -194,12 +213,9 @@ export function useCryptogram(
 	}, [])
 
 	const getProgress = useCallback(() => {
-		const uniqueLetters = getUniqueLetters(puzzleData.encryptedText)
-		const correct = countCorrect(puzzleData.encryptedText, state.guesses, solution.reverseCipher)
-		return { correct, total: uniqueLetters.length }
-	}, [puzzleData.encryptedText, state.guesses, solution.reverseCipher])
-
-	const canUseHint = state.hintsUsed < MAX_HINTS && state.gameStatus === 'playing'
+		const values = Object.values(state.guesses)
+		return { filled: values.filter((v) => v !== '').length, total: values.length }
+	}, [state.guesses])
 
 	return {
 		state,

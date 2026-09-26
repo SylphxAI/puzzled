@@ -1,0 +1,388 @@
+[
+	{
+		"seed": 20250101,
+		"difficulty": "easy",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[1, 1], [2, 2], [2, 2], [2, 2], [6], [8], [10], [4], [2], [2]],
+			"colClues": [[2, 1], [2, 2], [5], [5], [6], [6], [5], [5], [2, 2], [2, 1]],
+			"theme": "Star"
+		},
+		"solution": {
+			"grid": [
+				[true, false, false, false, false, false, false, false, false, true],
+				[true, true, false, false, false, false, false, false, true, true],
+				[false, true, true, false, false, false, false, true, true, false],
+				[false, false, true, true, false, false, true, true, false, false],
+				[false, false, true, true, true, true, true, true, false, false],
+				[false, true, true, true, true, true, true, true, true, false],
+				[true, true, true, true, true, true, true, true, true, true],
+				[false, false, false, true, true, true, true, false, false, false],
+				[false, false, false, false, true, true, false, false, false, false],
+				[false, false, false, false, true, true, false, false, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20250102,
+		"difficulty": "medium",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[4], [4], [4], [3], [4], [4], [3], [4], [4], [4]],
+			"colClues": [[2], [6], [8], [10], [3, 3], [2, 2], [1, 1], [0], [0], [0]],
+			"theme": "Moon"
+		},
+		"solution": {
+			"grid": [
+				[false, false, false, true, true, true, true, false, false, false],
+				[false, false, true, true, true, true, false, false, false, false],
+				[false, true, true, true, true, false, false, false, false, false],
+				[false, true, true, true, false, false, false, false, false, false],
+				[true, true, true, true, false, false, false, false, false, false],
+				[true, true, true, true, false, false, false, false, false, false],
+				[false, true, true, true, false, false, false, false, false, false],
+				[false, true, true, true, true, false, false, false, false, false],
+				[false, false, true, true, true, true, false, false, false, false],
+				[false, false, false, true, true, true, true, false, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20250103,
+		"difficulty": "hard",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[2], [1, 2, 1], [1, 4, 1], [6], [10], [10], [6], [1, 4, 1], [1, 2, 1], [2]],
+			"colClues": [[1, 2, 1], [1, 2, 1], [4], [6], [10], [10], [6], [4], [1, 2, 1], [1, 2, 1]],
+			"theme": "Sun"
+		},
+		"solution": {
+			"grid": [
+				[false, false, false, false, true, true, false, false, false, false],
+				[true, false, false, false, true, true, false, false, false, true],
+				[false, true, false, true, true, true, true, false, true, false],
+				[false, false, true, true, true, true, true, true, false, false],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[false, false, true, true, true, true, true, true, false, false],
+				[false, true, false, true, true, true, true, false, true, false],
+				[true, false, false, false, true, true, false, false, false, true],
+				[false, false, false, false, true, true, false, false, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20260226,
+		"difficulty": "easy",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[1], [3], [3], [10], [10], [3], [3], [5], [1, 1], [0]],
+			"colClues": [[2], [2], [2, 2], [7], [8], [7], [2, 2], [2], [2], [2]],
+			"theme": "Plane"
+		},
+		"solution": {
+			"grid": [
+				[false, false, false, false, true, false, false, false, false, false],
+				[false, false, false, true, true, true, false, false, false, false],
+				[false, false, false, true, true, true, false, false, false, false],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[false, false, false, true, true, true, false, false, false, false],
+				[false, false, false, true, true, true, false, false, false, false],
+				[false, false, true, true, true, true, true, false, false, false],
+				[false, false, true, false, false, false, true, false, false, false],
+				[false, false, false, false, false, false, false, false, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20260227,
+		"difficulty": "medium",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[1, 1], [1, 1], [1, 4, 1], [10], [8], [6], [2, 2], [6], [4], [2]],
+			"colClues": [[2], [2], [5], [9], [4, 3], [4, 3], [9], [5], [2], [2]],
+			"theme": "Rocket"
+		},
+		"solution": {
+			"grid": [
+				[false, false, false, true, false, false, true, false, false, false],
+				[false, false, false, true, false, false, true, false, false, false],
+				[true, false, false, true, true, true, true, false, false, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[false, true, true, true, true, true, true, true, true, false],
+				[false, false, true, true, true, true, true, true, false, false],
+				[false, false, true, true, false, false, true, true, false, false],
+				[false, false, true, true, true, true, true, true, false, false],
+				[false, false, false, true, true, true, true, false, false, false],
+				[false, false, false, false, true, true, false, false, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20260228,
+		"difficulty": "hard",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[4], [2, 2], [2, 2], [2, 2], [8], [8], [2, 2], [2, 2], [2, 2], [0]],
+			"colClues": [[0], [7], [8], [2, 2], [1, 2], [1, 2], [2, 2], [8], [7], [0]],
+			"theme": "A"
+		},
+		"solution": {
+			"grid": [
+				[false, false, false, true, true, true, true, false, false, false],
+				[false, false, true, true, false, false, true, true, false, false],
+				[false, true, true, false, false, false, false, true, true, false],
+				[false, true, true, false, false, false, false, true, true, false],
+				[false, true, true, true, true, true, true, true, true, false],
+				[false, true, true, true, true, true, true, true, true, false],
+				[false, true, true, false, false, false, false, true, true, false],
+				[false, true, true, false, false, false, false, true, true, false],
+				[false, true, true, false, false, false, false, true, true, false],
+				[false, false, false, false, false, false, false, false, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20260926,
+		"difficulty": "easy",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[6], [8], [10], [1, 2, 1], [10], [10], [2, 4, 2], [3, 3], [8], [6]],
+			"colClues": [
+				[6],
+				[2, 5],
+				[3, 2, 3],
+				[3, 3, 2],
+				[7, 2],
+				[7, 2],
+				[3, 3, 2],
+				[3, 2, 3],
+				[2, 5],
+				[6]
+			],
+			"theme": "Cool"
+		},
+		"solution": {
+			"grid": [
+				[false, false, true, true, true, true, true, true, false, false],
+				[false, true, true, true, true, true, true, true, true, false],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, false, false, false, true, true, false, false, false, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, false, true, true, true, true, false, true, true],
+				[true, true, true, false, false, false, false, true, true, true],
+				[false, true, true, true, true, true, true, true, true, false],
+				[false, false, true, true, true, true, true, true, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20260927,
+		"difficulty": "medium",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[1, 2, 1], [2, 4, 2], [10], [10], [10], [10], [2, 2, 2], [2, 2, 2], [8], [6]],
+			"colClues": [[8], [8], [4, 2], [5, 2], [10], [10], [5, 2], [4, 2], [8], [8]],
+			"theme": "Ghost"
+		},
+		"solution": {
+			"grid": [
+				[true, false, false, false, true, true, false, false, false, true],
+				[true, true, false, true, true, true, true, false, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, false, false, true, true, false, false, true, true],
+				[true, true, false, false, true, true, false, false, true, true],
+				[false, true, true, true, true, true, true, true, true, false],
+				[false, false, true, true, true, true, true, true, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20260928,
+		"difficulty": "hard",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[6], [8], [2, 2, 2], [2, 2, 2], [10], [4, 4], [8], [1, 2, 1], [1, 2, 1], [0]],
+			"colClues": [[4], [6], [2, 5], [2, 3], [5, 3], [5, 3], [2, 3], [2, 5], [6], [4]],
+			"theme": "Skull"
+		},
+		"solution": {
+			"grid": [
+				[false, false, true, true, true, true, true, true, false, false],
+				[false, true, true, true, true, true, true, true, true, false],
+				[true, true, false, false, true, true, false, false, true, true],
+				[true, true, false, false, true, true, false, false, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, false, false, true, true, true, true],
+				[false, true, true, true, true, true, true, true, true, false],
+				[false, false, true, false, true, true, false, true, false, false],
+				[false, false, true, false, true, true, false, true, false, false],
+				[false, false, false, false, false, false, false, false, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20261001,
+		"difficulty": "easy",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[2], [10], [10], [10], [10], [10], [10], [8], [8], [2]],
+			"colClues": [[6], [8], [8], [8], [10], [10], [8], [8], [8], [6]],
+			"theme": "Gift"
+		},
+		"solution": {
+			"grid": [
+				[false, false, false, false, true, true, false, false, false, false],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[false, true, true, true, true, true, true, true, true, false],
+				[false, true, true, true, true, true, true, true, true, false],
+				[false, false, false, false, true, true, false, false, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20261002,
+		"difficulty": "medium",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[2], [4], [6], [6], [8], [8], [10], [10], [0], [2]],
+			"colClues": [[2], [4], [6], [7], [8, 1], [8, 1], [7], [6], [4], [2]],
+			"theme": "Bell"
+		},
+		"solution": {
+			"grid": [
+				[false, false, false, false, true, true, false, false, false, false],
+				[false, false, false, true, true, true, true, false, false, false],
+				[false, false, true, true, true, true, true, true, false, false],
+				[false, false, true, true, true, true, true, true, false, false],
+				[false, true, true, true, true, true, true, true, true, false],
+				[false, true, true, true, true, true, true, true, true, false],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[false, false, false, false, false, false, false, false, false, false],
+				[false, false, false, false, true, true, false, false, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20261003,
+		"difficulty": "hard",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[0], [0], [10], [10], [10], [1, 4, 1], [8], [3, 3], [3, 3], [1, 1]],
+			"colClues": [[3], [7], [3, 4], [7], [5], [5], [7], [3, 4], [7], [3]],
+			"theme": "Crown"
+		},
+		"solution": {
+			"grid": [
+				[false, false, false, false, false, false, false, false, false, false],
+				[false, false, false, false, false, false, false, false, false, false],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[false, true, false, true, true, true, true, false, true, false],
+				[false, true, true, true, true, true, true, true, true, false],
+				[false, true, true, true, false, false, true, true, true, false],
+				[false, true, true, true, false, false, true, true, true, false],
+				[false, false, true, false, false, false, false, true, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20261231,
+		"difficulty": "easy",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[2], [1, 2, 1], [1, 4, 1], [6], [10], [10], [6], [1, 4, 1], [1, 2, 1], [2]],
+			"colClues": [[1, 2, 1], [1, 2, 1], [4], [6], [10], [10], [6], [4], [1, 2, 1], [1, 2, 1]],
+			"theme": "Sun"
+		},
+		"solution": {
+			"grid": [
+				[false, false, false, false, true, true, false, false, false, false],
+				[true, false, false, false, true, true, false, false, false, true],
+				[false, true, false, true, true, true, true, false, true, false],
+				[false, false, true, true, true, true, true, true, false, false],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[false, false, true, true, true, true, true, true, false, false],
+				[false, true, false, true, true, true, true, false, true, false],
+				[true, false, false, false, true, true, false, false, false, true],
+				[false, false, false, false, true, true, false, false, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20261232,
+		"difficulty": "medium",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[4], [4], [4], [4], [7], [4], [3], [2], [1], [0]],
+			"colClues": [[0], [0], [1], [2, 5], [3, 4], [7], [5], [3], [2], [1]],
+			"theme": "Lightning"
+		},
+		"solution": {
+			"grid": [
+				[false, false, true, true, true, true, false, false, false, false],
+				[false, false, false, true, true, true, true, false, false, false],
+				[false, false, false, false, true, true, true, true, false, false],
+				[false, false, false, false, false, true, true, true, true, false],
+				[false, false, false, true, true, true, true, true, true, true],
+				[false, false, false, true, true, true, true, false, false, false],
+				[false, false, false, true, true, true, false, false, false, false],
+				[false, false, false, true, true, false, false, false, false, false],
+				[false, false, false, true, false, false, false, false, false, false],
+				[false, false, false, false, false, false, false, false, false, false]
+			]
+		}
+	},
+	{
+		"seed": 20261233,
+		"difficulty": "hard",
+		"puzzleData": {
+			"width": 10,
+			"height": 10,
+			"rowClues": [[0], [0], [0], [8], [10], [10], [2, 5], [4], [2], [0]],
+			"colClues": [[2], [4], [4], [3], [5], [6], [6], [5], [4], [2]],
+			"theme": "Cloud"
+		},
+		"solution": {
+			"grid": [
+				[false, false, false, false, false, false, false, false, false, false],
+				[false, false, false, false, false, false, false, false, false, false],
+				[false, false, false, false, false, false, false, false, false, false],
+				[false, true, true, true, true, true, true, true, true, false],
+				[true, true, true, true, true, true, true, true, true, true],
+				[true, true, true, true, true, true, true, true, true, true],
+				[false, true, true, false, true, true, true, true, true, false],
+				[false, false, false, false, true, true, true, true, false, false],
+				[false, false, false, false, false, true, true, false, false, false],
+				[false, false, false, false, false, false, false, false, false, false]
+			]
+		}
+	}
+]

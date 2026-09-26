@@ -10,11 +10,12 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
+import { checkGuess } from '@/lib/connect/puzzle-client'
 import { SpellingBeeIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { CurrentWord, Honeycomb, RankDisplay, WordList } from './components'
-import type { SpellingBeePuzzleClientData } from './types'
+import { parseWordHiveClientPayload } from './parse-client'
+import type { WordHiveGrade } from './types'
 import { type SubmitResult, useWordHive } from './use-word-hive'
 
 type Props = {
@@ -28,11 +29,26 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	const t = useTranslations('games.wordHive')
 	const tCommon = useTranslations('common')
 
-	// Parse puzzle data from server using client-safe parser
-	const [initialPuzzle] = useState(() => {
-		const parsed = parsePuzzleDataClient<SpellingBeePuzzleClientData, unknown>(puzzleData)
-		return parsed.puzzleData
-	})
+	// The letters and counts only; each word is graded on the server (#246).
+	const [initialPuzzle] = useState(() => parseWordHiveClientPayload(puzzleData))
+	const grade = useCallback(
+		async (word: string): Promise<WordHiveGrade> => {
+			const result = (await checkGuess({
+				gameSlug: 'word-hive',
+				guess: { word },
+				puzzleId,
+				puzzleDate,
+			})) as Partial<WordHiveGrade>
+			if (typeof result.valid !== 'boolean') throw new Error('grade_failed')
+			return {
+				valid: result.valid,
+				pangram: result.pangram === true,
+				totalWords: Number(result.totalWords) || 0,
+				totalPangrams: Number(result.totalPangrams) || 0,
+			}
+		},
+		[puzzleId, puzzleDate],
+	)
 
 	const {
 		isReady,
@@ -62,7 +78,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 
 	const submitResultHandlerRef = useRef<(result: SubmitResult) => void>(() => {})
 
-	const game = useWordHive(initialPuzzle, (result) => submitResultHandlerRef.current(result))
+	const game = useWordHive(initialPuzzle, grade, (result) => submitResultHandlerRef.current(result))
 
 	const handleHelpClick = useCallback(() => {
 		setShowHelpModal(true)
@@ -123,9 +139,17 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 					triggerHaptic('error')
 					triggerShake()
 					break
+				case 'grade_failed':
+					showToastMsg(tCommon('error'))
+					triggerSound('error')
+					triggerHaptic('error')
+					break
+				case 'pending':
+					// Graded by the server; the outcome arrives as its own result.
+					break
 			}
 		},
-		[t, showToastMsg, triggerShake],
+		[t, tCommon, showToastMsg, triggerShake],
 	)
 
 	submitResultHandlerRef.current = handleSubmitResult

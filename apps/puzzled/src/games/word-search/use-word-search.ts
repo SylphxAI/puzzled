@@ -4,13 +4,9 @@
  */
 
 import { useCallback, useReducer } from 'react'
-import type {
-	Position,
-	WordSearchGameState,
-	WordSearchPuzzleData,
-	WordSearchSolution,
-} from './types'
-import { getWordFromPositions, isSolved } from './types'
+import type { WordSearchClientData } from './parse-client'
+import type { PlacedWord, Position, WordSearchGameState } from './types'
+import { directionOf, getWordFromPositions, isSolved } from './types'
 
 type WordSearchAction =
 	| { type: 'START_SELECTION'; position: Position }
@@ -22,6 +18,7 @@ type WordSearchAction =
 function createInitialState(): WordSearchGameState {
 	return {
 		foundWords: [],
+		foundPlacements: [],
 		selectionStart: null,
 		selectionEnd: null,
 		gameStatus: 'playing',
@@ -33,8 +30,7 @@ function createInitialState(): WordSearchGameState {
 function wordSearchReducer(
 	state: WordSearchGameState,
 	action: WordSearchAction,
-	puzzleData: WordSearchPuzzleData,
-	solution: WordSearchSolution,
+	puzzle: WordSearchClientData,
 ): WordSearchGameState {
 	switch (action.type) {
 		case 'START_SELECTION': {
@@ -67,7 +63,7 @@ function wordSearchReducer(
 			}
 
 			// Get the word from the selection
-			const word = getWordFromPositions(puzzleData.grid, state.selectionStart, state.selectionEnd)
+			const word = getWordFromPositions(puzzle.grid, state.selectionStart, state.selectionEnd)
 
 			// Also check reversed word
 			const reversedWord = word ? word.split('').reverse().join('') : null
@@ -75,11 +71,11 @@ function wordSearchReducer(
 			let foundWord: string | null = null
 
 			// Check if it's a valid word (forward or backward)
-			if (word && solution.words.includes(word) && !state.foundWords.includes(word)) {
+			if (word && puzzle.words.includes(word) && !state.foundWords.includes(word)) {
 				foundWord = word
 			} else if (
 				reversedWord &&
-				solution.words.includes(reversedWord) &&
+				puzzle.words.includes(reversedWord) &&
 				!state.foundWords.includes(reversedWord)
 			) {
 				foundWord = reversedWord
@@ -87,11 +83,24 @@ function wordSearchReducer(
 
 			if (foundWord) {
 				const newFoundWords = [...state.foundWords, foundWord]
-				const isWin = isSolved(newFoundWords, solution.words.length)
+				const isWin = isSolved(newFoundWords, puzzle.words.length)
+				// Record where the player found it: forward reads start→end,
+				// a reversed match reads end→start.
+				const [start, end] =
+					foundWord === word
+						? [state.selectionStart, state.selectionEnd]
+						: [state.selectionEnd, state.selectionStart]
+				const placement: PlacedWord = {
+					word: foundWord,
+					start,
+					end,
+					direction: directionOf(start, end),
+				}
 
 				return {
 					...state,
 					foundWords: newFoundWords,
+					foundPlacements: [...state.foundPlacements, placement],
 					selectionStart: null,
 					selectionEnd: null,
 					gameStatus: isWin ? 'won' : 'playing',
@@ -109,10 +118,10 @@ function wordSearchReducer(
 		case 'FIND_WORD': {
 			if (state.gameStatus !== 'playing') return state
 			if (state.foundWords.includes(action.word)) return state
-			if (!solution.words.includes(action.word)) return state
+			if (!puzzle.words.includes(action.word)) return state
 
 			const newFoundWords = [...state.foundWords, action.word]
-			const isWin = isSolved(newFoundWords, solution.words.length)
+			const isWin = isSolved(newFoundWords, puzzle.words.length)
 
 			return {
 				...state,
@@ -139,15 +148,12 @@ export type UseWordSearchReturn = {
 	endSelection: () => void
 	reset: () => void
 	getProgress: () => { found: number; total: number }
-	getWordPlacements: () => WordSearchSolution['placements']
+	getWordPlacements: () => PlacedWord[]
 }
 
-export function useWordSearch(
-	puzzleData: WordSearchPuzzleData,
-	solution: WordSearchSolution,
-): UseWordSearchReturn {
+export function useWordSearch(puzzle: WordSearchClientData): UseWordSearchReturn {
 	const [state, dispatch] = useReducer(
-		(s: WordSearchGameState, a: WordSearchAction) => wordSearchReducer(s, a, puzzleData, solution),
+		(s: WordSearchGameState, a: WordSearchAction) => wordSearchReducer(s, a, puzzle),
 		null,
 		createInitialState,
 	)
@@ -171,13 +177,11 @@ export function useWordSearch(
 	const getProgress = useCallback(() => {
 		return {
 			found: state.foundWords.length,
-			total: solution.words.length,
+			total: puzzle.words.length,
 		}
-	}, [state.foundWords.length, solution.words.length])
+	}, [state.foundWords.length, puzzle.words.length])
 
-	const getWordPlacements = useCallback(() => {
-		return solution.placements.filter((p) => state.foundWords.includes(p.word))
-	}, [solution.placements, state.foundWords])
+	const getWordPlacements = useCallback(() => state.foundPlacements, [state.foundPlacements])
 
 	return {
 		state,

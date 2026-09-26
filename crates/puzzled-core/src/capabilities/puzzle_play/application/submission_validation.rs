@@ -802,7 +802,18 @@ fn word_box(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) ->
     let Ok(sub) = serde_json::from_value::<WordBoxSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Missing words data");
     };
-    let Some(all_letters) = solution.get("allLetters").and_then(Value::as_str) else {
+    // The generator stores the twelve letters as an array of one-letter
+    // strings; an older shape stored one string. Accept both.
+    let all_letters: Option<String> = match solution.get("allLetters") {
+        Some(Value::String(s)) => Some(s.clone()),
+        Some(Value::Array(items)) => items
+            .iter()
+            .map(|v| v.as_str().map(str::to_string))
+            .collect::<Option<Vec<String>>>()
+            .map(|parts| parts.concat()),
+        _ => None,
+    };
+    let Some(all_letters) = all_letters else {
         return SubmissionVerdict::invalid("Missing allLetters solution");
     };
     let letters: Vec<char> = all_letters.chars().collect();
@@ -1530,6 +1541,29 @@ mod tests {
         );
         assert!(v.valid, "{v:?}");
         assert_eq!(v.status, Some(SubmissionStatus::Lost));
+    }
+
+    #[test]
+    fn word_box_accepts_the_generator_letter_array() {
+        let solution = json!({ "allLetters": ["A","B","C","D","E","F","G","H","I","J","K","L"] });
+        let string_shape = json!({ "allLetters": "ABCDEFGHIJKL" });
+        let env = SubmissionEnvelope {
+            status: SubmissionStatus::Won,
+            attempts: 1,
+            time_spent_ms: 1,
+            data: json!({ "words": ["ABCD"] }),
+        };
+        // Both shapes read the same letters, so both give the same verdict.
+        assert_eq!(
+            validate_submission("word-box", &json!({}), &solution, &env),
+            validate_submission("word-box", &json!({}), &string_shape, &env)
+        );
+        assert_ne!(
+            validate_submission("word-box", &json!({}), &solution, &env)
+                .error
+                .as_deref(),
+            Some("Missing allLetters solution")
+        );
     }
 
     #[test]

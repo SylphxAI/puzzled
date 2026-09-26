@@ -66,10 +66,16 @@ clean-break end state that replaces all of it.
 
 ### 4. Content model
 
-- Runtime generation is deleted. `scripts/generate-content.ts` is a standalone
-  content tool (procedural + LLM via existing generators) that imports daily
-  puzzles ahead of time into the content store. The api service serves and
-  validates from that store.
+- Since 2026-09-26 (#246) the api owns generation: every game has a pure,
+  seeded Rust generator (`puzzled-core` `puzzle_play::generate`, byte parity
+  with the TS generators, each puzzle self-checked by its validator and
+  killer-sudoku proven unique). The daily pipeline stores 14 days ahead and
+  the 30-day archive on a Compute schedule (signed tick receipt) and at
+  start-up, generates and stores a missing day on first read, and alerts
+  when fewer than 3 days are stored ahead. The TS content tool is deleted.
+- Word games are graded per guess on the server (`PuzzleService.CheckGuess`,
+  capped at the game's guess limit), and the answer is returned only with an
+  accepted finish (`SubmitGuessResponse.reveal_json`).
 - `streak-at-risk` is not an app job: streak state is platform-owned and
   campaigns belong to platform engagement tooling.
 

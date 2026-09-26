@@ -127,6 +127,8 @@ export type GameEndResult = {
 	score?: number
 	error?: string
 	alreadyPlayed?: boolean
+	/** The answer, returned by the server only with an accepted finish. */
+	reveal?: unknown
 }
 
 export interface UseGameSessionReturn {
@@ -295,6 +297,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 						score: result.score,
 						error: result.error,
 						alreadyPlayed,
+						reveal: result.reveal,
 					}
 				} catch (error) {
 					logger.error('game-session.save-failed', { gameSlug, error })

@@ -96,6 +96,8 @@ export type WordSearchGuessResult = {
 export type WordSearchGameState = {
 	/** Words found by the player */
 	foundWords: string[]
+	/** Where the player found each word (their own selections) */
+	foundPlacements: PlacedWord[]
 	/** Current selection start (while dragging) */
 	selectionStart: Position | null
 	/** Current selection end (while dragging) */
@@ -180,6 +182,16 @@ export function getWordFromPositions(
 /**
  * Check if puzzle is solved
  */
+/** The placement direction of a straight selection from `start` to `end`. */
+export function directionOf(start: Position, end: Position): Direction {
+	const dr = Math.sign(end.row - start.row)
+	const dc = Math.sign(end.col - start.col)
+	if (dr === 0) return dc < 0 ? 'horizontal-reverse' : 'horizontal'
+	if (dc === 0) return dr < 0 ? 'vertical-reverse' : 'vertical'
+	if (dr > 0) return dc > 0 ? 'diagonal-down' : 'diagonal-up-reverse'
+	return dc > 0 ? 'diagonal-up' : 'diagonal-down-reverse'
+}
+
 export function isSolved(foundWords: string[], totalWords: number): boolean {
 	return foundWords.length === totalWords
 }

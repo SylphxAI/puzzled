@@ -6,6 +6,7 @@ import { create } from '@bufbuild/protobuf'
 import { type Client, createClient } from '@connectrpc/connect'
 import { IDEMPOTENCY_KEY_HEADER } from '@/lib/idempotency-key'
 import {
+	CheckGuessRequestSchema,
 	GetDailyRequestSchema,
 	type GetDailyResponse,
 	GetPuzzleRequestSchema,
@@ -105,4 +106,32 @@ export async function submitGuess(
 		}),
 		idempotencyKey ? { headers: { [IDEMPOTENCY_KEY_HEADER]: idempotencyKey } } : undefined,
 	)
+}
+
+/**
+ * Grade one in-game guess on the server (word-guess, word-groups), so the
+ * client never holds the answer. The server caps graded guesses at the game's
+ * own limit.
+ */
+export async function checkGuess(
+	input: {
+		gameSlug: string
+		guess: unknown
+		puzzleId?: string
+		puzzleDate?: string
+		difficulty?: string
+	},
+	client?: PuzzleServiceClient,
+): Promise<unknown> {
+	const c = client ?? createPuzzleServiceClient()
+	const response = await c.checkGuess(
+		create(CheckGuessRequestSchema, {
+			gameSlug: input.gameSlug.trim(),
+			difficulty: (input.difficulty ?? '').trim(),
+			puzzleId: input.puzzleId?.trim() || undefined,
+			puzzleDate: input.puzzleDate?.trim() || undefined,
+			guessJson: JSON.stringify(input.guess),
+		}),
+	)
+	return JSON.parse(response.resultJson)
 }

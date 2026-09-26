@@ -1,0 +1,131 @@
+[
+	{
+		"seed": 20250101,
+		"difficulty": null,
+		"puzzleData": {
+			"size": 6,
+			"initialGrid": [
+				["moon", "sun", "moon", null, "sun", "moon"],
+				[null, "moon", "moon", null, null, "sun"],
+				[null, null, null, null, null, null],
+				["moon", null, null, "moon", null, null],
+				[null, null, null, null, null, null],
+				["sun", null, null, null, null, "moon"]
+			]
+		},
+		"solution": {
+			"grid": [
+				["moon", "sun", "moon", "sun", "sun", "moon"],
+				["sun", "moon", "moon", "sun", "moon", "sun"],
+				["sun", "moon", "sun", "moon", "moon", "sun"],
+				["moon", "sun", "sun", "moon", "sun", "moon"],
+				["moon", "sun", "moon", "sun", "moon", "sun"],
+				["sun", "moon", "sun", "moon", "sun", "moon"]
+			]
+		}
+	},
+	{
+		"seed": 20260226,
+		"difficulty": null,
+		"puzzleData": {
+			"size": 6,
+			"initialGrid": [
+				["sun", null, null, "sun", "sun", null],
+				["sun", null, null, null, null, null],
+				["moon", null, null, null, null, null],
+				[null, null, "sun", null, null, null],
+				[null, "sun", null, null, null, "sun"],
+				[null, "moon", "sun", "moon", null, "sun"]
+			]
+		},
+		"solution": {
+			"grid": [
+				["sun", "moon", "moon", "sun", "sun", "moon"],
+				["sun", "sun", "moon", "sun", "moon", "moon"],
+				["moon", "sun", "sun", "moon", "moon", "sun"],
+				["sun", "moon", "sun", "moon", "sun", "moon"],
+				["moon", "sun", "moon", "sun", "moon", "sun"],
+				["moon", "moon", "sun", "moon", "sun", "sun"]
+			]
+		}
+	},
+	{
+		"seed": 20260926,
+		"difficulty": null,
+		"puzzleData": {
+			"size": 6,
+			"initialGrid": [
+				[null, null, null, null, null, null],
+				[null, "sun", null, "moon", null, "sun"],
+				["sun", "moon", null, "sun", null, null],
+				[null, null, null, null, null, null],
+				[null, null, null, "sun", null, "moon"],
+				["moon", null, "sun", null, "sun", "sun"]
+			]
+		},
+		"solution": {
+			"grid": [
+				["sun", "sun", "moon", "sun", "moon", "moon"],
+				["moon", "sun", "moon", "moon", "sun", "sun"],
+				["sun", "moon", "sun", "sun", "moon", "moon"],
+				["sun", "moon", "sun", "moon", "moon", "sun"],
+				["moon", "sun", "moon", "sun", "sun", "moon"],
+				["moon", "moon", "sun", "moon", "sun", "sun"]
+			]
+		}
+	},
+	{
+		"seed": 20261001,
+		"difficulty": null,
+		"puzzleData": {
+			"size": 8,
+			"initialGrid": [
+				[null, "moon", null, "sun", null, "moon", null, "sun"],
+				[null, null, null, "sun", null, null, null, null],
+				["sun", "sun", null, "moon", null, "moon", "sun", null],
+				[null, "moon", null, null, null, null, "sun", "sun"],
+				["moon", "moon", "sun", null, null, null, null, "sun"],
+				[null, null, null, "sun", null, null, "sun", "moon"],
+				[null, null, null, "moon", null, null, null, null],
+				[null, null, "moon", null, null, null, null, null]
+			]
+		},
+		"solution": {
+			"grid": [
+				["moon", "moon", "sun", "sun", "moon", "moon", "sun", "sun"],
+				["sun", "sun", "moon", "sun", "moon", "sun", "moon", "moon"],
+				["sun", "sun", "moon", "moon", "sun", "moon", "sun", "moon"],
+				["moon", "moon", "sun", "moon", "sun", "moon", "sun", "sun"],
+				["moon", "moon", "sun", "sun", "moon", "sun", "moon", "sun"],
+				["sun", "sun", "moon", "sun", "moon", "moon", "sun", "moon"],
+				["sun", "moon", "sun", "moon", "sun", "sun", "moon", "moon"],
+				["moon", "sun", "moon", "moon", "sun", "sun", "moon", "sun"]
+			]
+		}
+	},
+	{
+		"seed": 20261231,
+		"difficulty": null,
+		"puzzleData": {
+			"size": 6,
+			"initialGrid": [
+				[null, null, null, "sun", "sun", null],
+				[null, "sun", null, null, "moon", null],
+				[null, "moon", null, "moon", "sun", null],
+				[null, null, "sun", "sun", null, null],
+				[null, null, "moon", null, null, "sun"],
+				[null, null, null, "moon", null, null]
+			]
+		},
+		"solution": {
+			"grid": [
+				["moon", "sun", "moon", "sun", "sun", "moon"],
+				["sun", "sun", "moon", "sun", "moon", "moon"],
+				["moon", "moon", "sun", "moon", "sun", "sun"],
+				["sun", "moon", "sun", "sun", "moon", "moon"],
+				["moon", "sun", "moon", "moon", "sun", "sun"],
+				["sun", "moon", "sun", "moon", "moon", "sun"]
+			]
+		}
+	}
+]

@@ -152,24 +152,16 @@ pub fn validate_and_score(
         };
     }
 
-    let mut all_correct = true;
     for (row_idx, row) in grid.iter().enumerate() {
         if row.len() != grid_size {
             return GameResult::Invalid {
                 error: format!("Invalid row {row_idx} dimensions"),
             };
         }
-        for (col_idx, &submitted) in row.iter().enumerate() {
-            let expected = solution
-                .get(row_idx)
-                .and_then(|r| r.get(col_idx))
-                .copied()
-                .unwrap_or(false);
-            if submitted != expected {
-                all_correct = false;
-            }
-        }
     }
+    // Solved means every row and column meets its clue. Some pictures have a
+    // second arrangement that meets every clue; that is a correct answer too.
+    let all_correct = generate_clues(grid) == generate_clues(solution);
 
     if claimed == SubmissionStatus::Won && !all_correct {
         return GameResult::Invalid {
@@ -198,6 +190,25 @@ pub fn validate_and_score(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn any_grid_meeting_every_clue_wins() {
+        // Two diagonal pictures share the clues [1],[1] / [1],[1].
+        let stored = vec![vec![true, false], vec![false, true]];
+        let other = vec![vec![false, true], vec![true, false]];
+        let wrong = vec![vec![true, true], vec![false, false]];
+        assert!(matches!(
+            validate_and_score(&stored, Some(&other), 0, 1000, SubmissionStatus::Won),
+            GameResult::Valid {
+                status: SubmissionStatus::Won,
+                ..
+            }
+        ));
+        assert!(matches!(
+            validate_and_score(&stored, Some(&wrong), 0, 1000, SubmissionStatus::Won),
+            GameResult::Invalid { .. }
+        ));
+    }
 
     #[test]
     fn simple_clues() {

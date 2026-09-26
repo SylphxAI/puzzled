@@ -16,9 +16,9 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { cn } from '@/lib/utils'
-import type { Cell, NumberPathPuzzleData, NumberPathSolution } from './types'
+import { parseNumberPathClientPayload } from './parse-client'
+import type { Cell } from './types'
 import { cellsEqual } from './types'
 import { useNumberPath } from './use-number-path'
 
@@ -33,9 +33,7 @@ export function NumberPathGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	const t = useTranslations('games.numberPath')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<NumberPathPuzzleData, NumberPathSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseNumberPathClientPayload(puzzleData))
 
 	const {
 		isReady,
@@ -57,11 +55,11 @@ export function NumberPathGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
 
-	const game = useNumberPath(puzzle.puzzleData)
+	const game = useNumberPath(puzzle)
 	const gameEndedRef = useRef(false)
 	const gridRef = useRef<HTMLDivElement>(null)
 	const draggingRef = useRef(false)
-	const size = puzzle.puzzleData.size
+	const size = puzzle.size
 	const playing = game.state.gameStatus === 'playing'
 
 	useEffect(() => {
@@ -212,7 +210,7 @@ export function NumberPathGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 						className="grid h-full w-full gap-0"
 						style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
 					>
-						{puzzle.puzzleData.clues.map((row, r) =>
+						{puzzle.clues.map((row, r) =>
 							row.map((clue, c) => {
 								const cell = { row: r, col: c }
 								const visit = game.visitNumber(cell)

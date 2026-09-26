@@ -6,40 +6,11 @@ import type { LetterStatus, TileState, WordleAction, WordleState } from './types
 import { MAX_GUESSES, WORD_LENGTH } from './types'
 import { isValidWord } from './words'
 
-function evaluateGuess(guess: string, solution: string): TileState[] {
-	const result: TileState[] = []
-	// Normalize case - solution is UPPERCASE, guess is lowercase
-	const solutionLetters = solution.toLowerCase().split('')
-	const guessLetters = guess.toLowerCase().split('')
-
-	// Track which solution letters have been "used"
-	const used = new Array(WORD_LENGTH).fill(false)
-
-	// First pass: mark correct letters
-	for (let i = 0; i < WORD_LENGTH; i++) {
-		if (guessLetters[i] === solutionLetters[i]) {
-			result[i] = { letter: guessLetters[i], status: 'correct' }
-			used[i] = true
-		} else {
-			result[i] = { letter: guessLetters[i], status: 'absent' }
-		}
-	}
-
-	// Second pass: mark present letters
-	for (let i = 0; i < WORD_LENGTH; i++) {
-		if (result[i].status !== 'correct') {
-			for (let j = 0; j < WORD_LENGTH; j++) {
-				if (!used[j] && guessLetters[i] === solutionLetters[j]) {
-					result[i] = { letter: guessLetters[i], status: 'present' }
-					used[j] = true
-					break
-				}
-			}
-		}
-	}
-
-	return result
-}
+/**
+ * Grades one guess. The server holds the answer (`PuzzleService.CheckGuess`);
+ * the client never does.
+ */
+export type GradeGuess = (word: string) => Promise<TileState[]>
 
 function updateKeyboardState(
 	current: Record<string, LetterStatus>,
@@ -86,21 +57,24 @@ function wordleReducer(state: WordleState, action: WordleAction): WordleState {
 			}
 		}
 
-		case 'SUBMIT_GUESS': {
+		case 'GRADING': {
+			return { ...state, grading: action.grading }
+		}
+
+		case 'APPLY_GUESS': {
 			if (state.gameStatus !== 'playing') return state
-			if (state.currentGuess.length !== WORD_LENGTH) return state
-			if (!isValidWord(state.currentGuess)) return state
+			const newGuesses = [...state.guesses, action.guess]
+			const newEvaluations = [...state.evaluations, action.evaluation]
+			const newKeyboardState = updateKeyboardState(state.keyboardState, action.evaluation)
 
-			const evaluation = evaluateGuess(state.currentGuess, state.solution)
-			const newGuesses = [...state.guesses, state.currentGuess]
-			const newEvaluations = [...state.evaluations, evaluation]
-			const newKeyboardState = updateKeyboardState(state.keyboardState, evaluation)
-
-			const isWin = state.currentGuess.toLowerCase() === state.solution.toLowerCase()
+			const isWin =
+				action.evaluation.length === WORD_LENGTH &&
+				action.evaluation.every((tile) => tile.status === 'correct')
 			const isLoss = !isWin && newGuesses.length >= MAX_GUESSES
 
 			return {
 				...state,
+				grading: false,
 				guesses: newGuesses,
 				evaluations: newEvaluations,
 				keyboardState: newKeyboardState,
@@ -111,7 +85,7 @@ function wordleReducer(state: WordleState, action: WordleAction): WordleState {
 		}
 
 		case 'RESET': {
-			return createInitialState(action.solution)
+			return createInitialState()
 		}
 
 		default:
@@ -119,9 +93,9 @@ function wordleReducer(state: WordleState, action: WordleAction): WordleState {
 	}
 }
 
-function createInitialState(solution: string): WordleState {
+function createInitialState(): WordleState {
 	return {
-		solution,
+		grading: false,
 		guesses: [],
 		currentGuess: '',
 		gameStatus: 'playing',
@@ -131,13 +105,15 @@ function createInitialState(solution: string): WordleState {
 	}
 }
 
-export type SubmitResult = 'success' | 'not_enough_letters' | 'not_in_word_list' | 'game_over'
+export type SubmitResult =
+	| 'success'
+	| 'not_enough_letters'
+	| 'not_in_word_list'
+	| 'game_over'
+	| 'grade_failed'
 
-export function useWordGuess(
-	initialSolution: string,
-	onSubmitResult?: (result: SubmitResult) => void,
-) {
-	const [state, dispatch] = useReducer(wordleReducer, initialSolution, createInitialState)
+export function useWordGuess(grade: GradeGuess, onSubmitResult?: (result: SubmitResult) => void) {
+	const [state, dispatch] = useReducer(wordleReducer, undefined, createInitialState)
 
 	const addLetter = useCallback((letter: string) => {
 		dispatch({ type: 'ADD_LETTER', letter })
@@ -147,18 +123,26 @@ export function useWordGuess(
 		dispatch({ type: 'DELETE_LETTER' })
 	}, [])
 
-	// Submit with validation feedback
+	// Submit with validation feedback; the server grades the guess.
 	const trySubmitGuess = useCallback((): SubmitResult => {
-		if (state.gameStatus !== 'playing') return 'game_over'
+		if (state.gameStatus !== 'playing' || state.grading) return 'game_over'
 		if (state.currentGuess.length !== WORD_LENGTH) return 'not_enough_letters'
 		if (!isValidWord(state.currentGuess)) return 'not_in_word_list'
 
-		dispatch({ type: 'SUBMIT_GUESS' })
+		const guess = state.currentGuess
+		dispatch({ type: 'GRADING', grading: true })
+		grade(guess).then(
+			(evaluation) => dispatch({ type: 'APPLY_GUESS', guess, evaluation }),
+			() => {
+				dispatch({ type: 'GRADING', grading: false })
+				onSubmitResult?.('grade_failed')
+			},
+		)
 		return 'success'
-	}, [state.gameStatus, state.currentGuess])
+	}, [state.gameStatus, state.grading, state.currentGuess, grade, onSubmitResult])
 
-	const reset = useCallback((solution: string) => {
-		dispatch({ type: 'RESET', solution })
+	const reset = useCallback(() => {
+		dispatch({ type: 'RESET' })
 	}, [])
 
 	// Handle keyboard input - uses trySubmitGuess for validation feedback

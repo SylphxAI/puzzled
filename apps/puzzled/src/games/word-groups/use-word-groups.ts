@@ -1,55 +1,23 @@
 'use client'
 
 import { useCallback, useReducer } from 'react'
-import { getAllWords, shuffleArray } from './puzzles'
-import type { Category, ConnectionsAction, ConnectionsPuzzle, ConnectionsState } from './types'
+import { shuffleArray } from './puzzles'
+import type { ConnectionsAction, ConnectionsState, GradeGroupGuess } from './types'
 import { MAX_MISTAKES, WORDS_PER_CATEGORY } from './types'
 
-function findMatchingCategory(
-	selectedWords: string[],
-	puzzle: ConnectionsPuzzle,
-	solvedCategories: Category[],
-): Category | null {
-	const solvedNames = new Set(solvedCategories.map((c) => c.name))
-
-	for (const category of puzzle.categories) {
-		if (solvedNames.has(category.name)) continue
-
-		const categoryWords = new Set(category.words)
-		const allMatch = selectedWords.every((word) => categoryWords.has(word))
-
-		if (allMatch && selectedWords.length === WORDS_PER_CATEGORY) {
-			return category
-		}
-	}
-
-	return null
-}
-
-function countMatchingWords(
-	selectedWords: string[],
-	puzzle: ConnectionsPuzzle,
-	solvedCategories: Category[] = [],
-): number {
-	let maxMatching = 0
-	const solvedNames = new Set(solvedCategories.map((c) => c.name))
-
-	for (const category of puzzle.categories) {
-		// Skip already solved categories to avoid false one-away detection
-		if (solvedNames.has(category.name)) continue
-
-		const categoryWords = new Set(category.words)
-		const matching = selectedWords.filter((word) => categoryWords.has(word)).length
-		maxMatching = Math.max(maxMatching, matching)
-	}
-
-	return maxMatching
+/** Has this set of four words been guessed before (in any order)? */
+function isRepeatGuess(selected: string[], history: string[][]): boolean {
+	const sorted = [...selected].sort()
+	return history.some((previous) => {
+		const prior = [...previous].sort()
+		return prior.length === sorted.length && sorted.every((word, i) => word === prior[i])
+	})
 }
 
 function connectionsReducer(state: ConnectionsState, action: ConnectionsAction): ConnectionsState {
 	switch (action.type) {
 		case 'SELECT_WORD': {
-			if (state.gameStatus !== 'playing') return state
+			if (state.gameStatus !== 'playing' || state.grading) return state
 			if (state.selectedWords.length >= WORDS_PER_CATEGORY) return state
 			if (state.selectedWords.includes(action.word)) return state
 
@@ -61,7 +29,7 @@ function connectionsReducer(state: ConnectionsState, action: ConnectionsAction):
 		}
 
 		case 'DESELECT_WORD': {
-			if (state.gameStatus !== 'playing') return state
+			if (state.gameStatus !== 'playing' || state.grading) return state
 
 			return {
 				...state,
@@ -70,76 +38,49 @@ function connectionsReducer(state: ConnectionsState, action: ConnectionsAction):
 		}
 
 		case 'CLEAR_SELECTION': {
+			if (state.grading) return state
 			return {
 				...state,
 				selectedWords: [],
 			}
 		}
 
-		case 'SUBMIT_GUESS': {
+		case 'GRADING': {
+			return { ...state, grading: action.grading }
+		}
+
+		case 'DUPLICATE_GUESS': {
+			// Already guessed this combination: not a mistake, just clear.
+			return { ...state, selectedWords: [], lastGuessWasOneAway: false }
+		}
+
+		case 'APPLY_GUESS': {
 			if (state.gameStatus !== 'playing') return state
-			if (state.selectedWords.length !== WORDS_PER_CATEGORY) return state
+			const history = [...state.guessHistory, action.guess]
 
-			// Check for duplicate guess - compare sorted arrays
-			const sortedSelected = [...state.selectedWords].sort()
-			const isDuplicate = state.guessHistory.some((previousGuess) => {
-				const sortedPrevious = [...previousGuess].sort()
-				return (
-					sortedSelected.length === sortedPrevious.length &&
-					sortedSelected.every((word, i) => word === sortedPrevious[i])
-				)
-			})
-			if (isDuplicate) {
-				// Already guessed this combination - don't count as a mistake, just clear selection
+			if (action.category) {
+				const solvedCategories = [...state.solvedCategories, action.category]
 				return {
 					...state,
+					grading: false,
+					solvedCategories,
+					remainingWords: state.remainingWords.filter((w) => !action.guess.includes(w)),
 					selectedWords: [],
+					guessHistory: history,
+					gameStatus: solvedCategories.length === 4 ? 'won' : 'playing',
 					lastGuessWasOneAway: false,
 				}
 			}
 
-			const matchingCategory = findMatchingCategory(
-				state.selectedWords,
-				state.puzzle,
-				state.solvedCategories,
-			)
-
-			if (matchingCategory) {
-				const newSolvedCategories = [...state.solvedCategories, matchingCategory]
-				const newRemainingWords = state.remainingWords.filter(
-					(w) => !state.selectedWords.includes(w),
-				)
-
-				const isWon = newSolvedCategories.length === 4
-
-				return {
-					...state,
-					solvedCategories: newSolvedCategories,
-					remainingWords: newRemainingWords,
-					selectedWords: [],
-					guessHistory: [...state.guessHistory, state.selectedWords],
-					gameStatus: isWon ? 'won' : 'playing',
-					lastGuessWasOneAway: false,
-				}
-			}
-
-			// Wrong guess - check if it was "one away"
-			const matchingCount = countMatchingWords(
-				state.selectedWords,
-				state.puzzle,
-				state.solvedCategories,
-			)
-			const wasOneAway = matchingCount === 3
-			const newMistakes = state.mistakes + 1
-			const isLost = newMistakes >= MAX_MISTAKES
-
+			const mistakes = state.mistakes + 1
 			return {
 				...state,
-				mistakes: newMistakes,
+				grading: false,
+				mistakes,
 				selectedWords: [],
-				guessHistory: [...state.guessHistory, state.selectedWords],
-				gameStatus: isLost ? 'lost' : 'playing',
-				lastGuessWasOneAway: wasOneAway,
+				guessHistory: history,
+				gameStatus: mistakes >= MAX_MISTAKES ? 'lost' : 'playing',
+				lastGuessWasOneAway: action.oneAway,
 			}
 		}
 
@@ -153,7 +94,7 @@ function connectionsReducer(state: ConnectionsState, action: ConnectionsAction):
 		}
 
 		case 'RESET': {
-			return createInitialState(action.puzzle)
+			return createInitialState(action.words)
 		}
 
 		default:
@@ -161,12 +102,12 @@ function connectionsReducer(state: ConnectionsState, action: ConnectionsAction):
 	}
 }
 
-function createInitialState(puzzle: ConnectionsPuzzle): ConnectionsState {
+function createInitialState(words: string[]): ConnectionsState {
 	return {
-		puzzle,
+		grading: false,
 		selectedWords: [],
 		solvedCategories: [],
-		remainingWords: getAllWords(puzzle),
+		remainingWords: shuffleArray(words),
 		mistakes: 0,
 		gameStatus: 'playing',
 		guessHistory: [],
@@ -174,8 +115,12 @@ function createInitialState(puzzle: ConnectionsPuzzle): ConnectionsState {
 	}
 }
 
-export function useWordGroups(initialPuzzle: ConnectionsPuzzle) {
-	const [state, dispatch] = useReducer(connectionsReducer, initialPuzzle, createInitialState)
+/**
+ * Word groups played against the server: each guess is graded by
+ * `PuzzleService.CheckGuess`; the client holds only the sixteen words.
+ */
+export function useWordGroups(words: string[], grade: GradeGroupGuess, onGradeFailed?: () => void) {
+	const [state, dispatch] = useReducer(connectionsReducer, words, createInitialState)
 
 	const selectWord = useCallback((word: string) => {
 		dispatch({ type: 'SELECT_WORD', word })
@@ -201,21 +146,39 @@ export function useWordGroups(initialPuzzle: ConnectionsPuzzle) {
 	}, [])
 
 	const submitGuess = useCallback(() => {
-		dispatch({ type: 'SUBMIT_GUESS' })
-	}, [])
+		if (state.gameStatus !== 'playing' || state.grading) return
+		if (state.selectedWords.length !== WORDS_PER_CATEGORY) return
+		if (isRepeatGuess(state.selectedWords, state.guessHistory)) {
+			dispatch({ type: 'DUPLICATE_GUESS' })
+			return
+		}
+		const guess = [...state.selectedWords]
+		dispatch({ type: 'GRADING', grading: true })
+		grade(
+			guess,
+			state.solvedCategories.map((c) => c.name),
+		).then(
+			(result) =>
+				dispatch({
+					type: 'APPLY_GUESS',
+					guess,
+					category: result.correct && result.category ? result.category : null,
+					oneAway: result.oneAway,
+				}),
+			() => {
+				dispatch({ type: 'GRADING', grading: false })
+				onGradeFailed?.()
+			},
+		)
+	}, [state, grade, onGradeFailed])
 
 	const shuffle = useCallback(() => {
 		dispatch({ type: 'SHUFFLE' })
 	}, [])
 
-	const reset = useCallback((puzzle: ConnectionsPuzzle) => {
-		dispatch({ type: 'RESET', puzzle })
+	const reset = useCallback((next: string[]) => {
+		dispatch({ type: 'RESET', words: next })
 	}, [])
-
-	// Check if current selection is "one away" (for preview hint)
-	const isCurrentSelectionOneAway =
-		state.selectedWords.length === WORDS_PER_CATEGORY &&
-		countMatchingWords(state.selectedWords, state.puzzle, state.solvedCategories) === 3
 
 	return {
 		...state,
@@ -226,7 +189,9 @@ export function useWordGroups(initialPuzzle: ConnectionsPuzzle) {
 		submitGuess,
 		shuffle,
 		reset,
-		isCurrentSelectionOneAway,
-		canSubmit: state.selectedWords.length === WORDS_PER_CATEGORY,
+		// A preview needs the answer, which the client no longer holds; the
+		// graded result still reports "one away" after each guess.
+		isCurrentSelectionOneAway: false,
+		canSubmit: state.selectedWords.length === WORDS_PER_CATEGORY && !state.grading,
 	}
 }

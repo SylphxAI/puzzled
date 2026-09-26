@@ -1,0 +1,394 @@
+[
+	{
+		"seed": 20250101,
+		"difficulty": null,
+		"puzzleData": {
+			"grid": [
+				["H", "C", "H", "Z", "D", "P", "G", "R", "I", "L"],
+				["O", "A", "F", "A", "M", "E", "L", "O", "D", "Y"],
+				["K", "J", "R", "P", "R", "A", "H", "Y", "U", "I"],
+				["Q", "C", "N", "M", "G", "M", "W", "S", "T", "O"],
+				["Z", "G", "H", "A", "O", "Q", "O", "A", "R", "X"],
+				["S", "V", "U", "O", "B", "N", "E", "N", "N", "U"],
+				["F", "C", "I", "I", "R", "B", "I", "F", "Y", "E"],
+				["N", "Q", "B", "B", "T", "U", "L", "C", "C", "P"],
+				["I", "R", "J", "X", "E", "A", "S", "I", "A", "G"],
+				["X", "B", "K", "N", "Y", "Y", "R", "R", "W", "N"]
+			],
+			"theme": "Music",
+			"wordCount": 8
+		},
+		"solution": {
+			"words": ["BEAT", "HARMONICA", "CHORUS", "MELODY", "GUITAR", "BANJO", "HARP", "HARMONY"],
+			"placements": [
+				{
+					"word": "BEAT",
+					"start": { "row": 6, "col": 5 },
+					"end": { "row": 3, "col": 8 },
+					"direction": "diagonal-up"
+				},
+				{
+					"word": "HARMONICA",
+					"start": { "row": 0, "col": 0 },
+					"end": { "row": 8, "col": 8 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "CHORUS",
+					"start": { "row": 3, "col": 1 },
+					"end": { "row": 8, "col": 6 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "MELODY",
+					"start": { "row": 1, "col": 4 },
+					"end": { "row": 1, "col": 9 },
+					"direction": "horizontal"
+				},
+				{
+					"word": "GUITAR",
+					"start": { "row": 4, "col": 1 },
+					"end": { "row": 9, "col": 6 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "BANJO",
+					"start": { "row": 5, "col": 4 },
+					"end": { "row": 1, "col": 0 },
+					"direction": "diagonal-down-reverse"
+				},
+				{
+					"word": "HARP",
+					"start": { "row": 2, "col": 6 },
+					"end": { "row": 2, "col": 3 },
+					"direction": "horizontal-reverse"
+				},
+				{
+					"word": "HARMONY",
+					"start": { "row": 0, "col": 2 },
+					"end": { "row": 6, "col": 8 },
+					"direction": "diagonal-down"
+				}
+			]
+		}
+	},
+	{
+		"seed": 20260226,
+		"difficulty": null,
+		"puzzleData": {
+			"grid": [
+				["A", "Q", "G", "Q", "P", "T", "H", "W", "V", "S"],
+				["W", "J", "Z", "Q", "V", "M", "A", "L", "L", "S"],
+				["W", "G", "B", "L", "I", "Z", "Z", "A", "R", "D"],
+				["T", "W", "S", "L", "K", "E", "V", "S", "T", "N"],
+				["T", "I", "G", "T", "I", "F", "O", "G", "G", "Y"],
+				["V", "A", "E", "F", "O", "A", "T", "O", "O", "C"],
+				["R", "A", "I", "N", "Y", "R", "H", "O", "K", "T"],
+				["B", "R", "E", "E", "Z", "E", "M", "P", "K", "V"],
+				["L", "L", "A", "B", "L", "G", "I", "N", "H", "V"],
+				["L", "I", "G", "H", "T", "N", "I", "N", "G", "T"]
+			],
+			"theme": "Weather",
+			"wordCount": 7
+		},
+		"solution": {
+			"words": ["BREEZE", "FOGGY", "RAINY", "BLIZZARD", "STORM", "HAIL", "LIGHTNING"],
+			"placements": [
+				{
+					"word": "BREEZE",
+					"start": { "row": 7, "col": 0 },
+					"end": { "row": 7, "col": 5 },
+					"direction": "horizontal"
+				},
+				{
+					"word": "FOGGY",
+					"start": { "row": 4, "col": 5 },
+					"end": { "row": 4, "col": 9 },
+					"direction": "horizontal"
+				},
+				{
+					"word": "RAINY",
+					"start": { "row": 6, "col": 0 },
+					"end": { "row": 6, "col": 4 },
+					"direction": "horizontal"
+				},
+				{
+					"word": "BLIZZARD",
+					"start": { "row": 2, "col": 2 },
+					"end": { "row": 2, "col": 9 },
+					"direction": "horizontal"
+				},
+				{
+					"word": "STORM",
+					"start": { "row": 3, "col": 2 },
+					"end": { "row": 7, "col": 6 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "HAIL",
+					"start": { "row": 6, "col": 6 },
+					"end": { "row": 3, "col": 3 },
+					"direction": "diagonal-down-reverse"
+				},
+				{
+					"word": "LIGHTNING",
+					"start": { "row": 9, "col": 0 },
+					"end": { "row": 9, "col": 8 },
+					"direction": "horizontal"
+				}
+			]
+		}
+	},
+	{
+		"seed": 20260926,
+		"difficulty": null,
+		"puzzleData": {
+			"grid": [
+				["M", "O", "I", "R", "L", "Y", "M", "E", "I", "C"],
+				["U", "J", "G", "W", "A", "T", "Q", "T", "G", "L"],
+				["L", "M", "O", "N", "I", "E", "D", "A", "H", "P"],
+				["P", "G", "X", "R", "A", "K", "P", "D", "H", "G"],
+				["V", "U", "X", "C", "A", "M", "A", "A", "V", "J"],
+				["X", "A", "Z", "C", "H", "N", "L", "S", "S", "J"],
+				["P", "V", "E", "V", "G", "E", "G", "X", "D", "M"],
+				["U", "A", "B", "X", "T", "Y", "R", "E", "M", "N"],
+				["R", "P", "A", "P", "A", "Y", "A", "R", "X", "V"],
+				["A", "C", "O", "C", "O", "N", "U", "T", "Y", "U"]
+			],
+			"theme": "Fruits",
+			"wordCount": 10
+		},
+		"solution": {
+			"words": [
+				"CHERRY",
+				"PLUM",
+				"GUAVA",
+				"PAPAYA",
+				"ORANGE",
+				"PEAR",
+				"COCONUT",
+				"MANGO",
+				"KIWI",
+				"DATE"
+			],
+			"placements": [
+				{
+					"word": "CHERRY",
+					"start": { "row": 4, "col": 3 },
+					"end": { "row": 9, "col": 8 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "PLUM",
+					"start": { "row": 3, "col": 0 },
+					"end": { "row": 0, "col": 0 },
+					"direction": "vertical-reverse"
+				},
+				{
+					"word": "GUAVA",
+					"start": { "row": 3, "col": 1 },
+					"end": { "row": 7, "col": 1 },
+					"direction": "vertical"
+				},
+				{
+					"word": "PAPAYA",
+					"start": { "row": 8, "col": 1 },
+					"end": { "row": 8, "col": 6 },
+					"direction": "horizontal"
+				},
+				{
+					"word": "ORANGE",
+					"start": { "row": 2, "col": 2 },
+					"end": { "row": 7, "col": 7 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "PEAR",
+					"start": { "row": 3, "col": 6 },
+					"end": { "row": 0, "col": 3 },
+					"direction": "diagonal-down-reverse"
+				},
+				{
+					"word": "COCONUT",
+					"start": { "row": 9, "col": 1 },
+					"end": { "row": 9, "col": 7 },
+					"direction": "horizontal"
+				},
+				{
+					"word": "MANGO",
+					"start": { "row": 4, "col": 5 },
+					"end": { "row": 0, "col": 1 },
+					"direction": "diagonal-down-reverse"
+				},
+				{
+					"word": "KIWI",
+					"start": { "row": 3, "col": 5 },
+					"end": { "row": 0, "col": 2 },
+					"direction": "diagonal-down-reverse"
+				},
+				{
+					"word": "DATE",
+					"start": { "row": 3, "col": 7 },
+					"end": { "row": 0, "col": 7 },
+					"direction": "vertical-reverse"
+				}
+			]
+		}
+	},
+	{
+		"seed": 20261001,
+		"difficulty": null,
+		"puzzleData": {
+			"grid": [
+				["R", "P", "C", "W", "O", "T", "T", "M", "G", "K"],
+				["C", "K", "B", "H", "S", "U", "S", "H", "I", "R"],
+				["O", "A", "Z", "Z", "I", "P", "M", "Q", "Q", "K"],
+				["O", "G", "C", "M", "S", "C", "M", "V", "U", "P"],
+				["K", "X", "H", "H", "T", "G", "K", "D", "Q", "R"],
+				["I", "I", "E", "O", "E", "G", "R", "E", "P", "E"],
+				["E", "F", "E", "H", "A", "G", "R", "I", "N", "T"],
+				["W", "B", "S", "Y", "K", "P", "L", "J", "C", "Z"],
+				["J", "T", "E", "I", "H", "E", "N", "Z", "G", "E"],
+				["T", "X", "G", "T", "A", "C", "O", "O", "P", "L"]
+			],
+			"theme": "Food",
+			"wordCount": 9
+		},
+		"solution": {
+			"words": [
+				"PIZZA",
+				"STEAK",
+				"TACO",
+				"CHICKEN",
+				"CHEESE",
+				"COOKIE",
+				"RICE",
+				"PRETZEL",
+				"SUSHI"
+			],
+			"placements": [
+				{
+					"word": "PIZZA",
+					"start": { "row": 2, "col": 5 },
+					"end": { "row": 2, "col": 1 },
+					"direction": "horizontal-reverse"
+				},
+				{
+					"word": "STEAK",
+					"start": { "row": 3, "col": 4 },
+					"end": { "row": 7, "col": 4 },
+					"direction": "vertical"
+				},
+				{
+					"word": "TACO",
+					"start": { "row": 9, "col": 3 },
+					"end": { "row": 9, "col": 6 },
+					"direction": "horizontal"
+				},
+				{
+					"word": "CHICKEN",
+					"start": { "row": 0, "col": 2 },
+					"end": { "row": 6, "col": 8 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "CHEESE",
+					"start": { "row": 3, "col": 2 },
+					"end": { "row": 8, "col": 2 },
+					"direction": "vertical"
+				},
+				{
+					"word": "COOKIE",
+					"start": { "row": 1, "col": 0 },
+					"end": { "row": 6, "col": 0 },
+					"direction": "vertical"
+				},
+				{
+					"word": "RICE",
+					"start": { "row": 5, "col": 6 },
+					"end": { "row": 8, "col": 9 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "PRETZEL",
+					"start": { "row": 3, "col": 9 },
+					"end": { "row": 9, "col": 9 },
+					"direction": "vertical"
+				},
+				{
+					"word": "SUSHI",
+					"start": { "row": 1, "col": 4 },
+					"end": { "row": 1, "col": 8 },
+					"direction": "horizontal"
+				}
+			]
+		}
+	},
+	{
+		"seed": 20261231,
+		"difficulty": null,
+		"puzzleData": {
+			"grid": [
+				["E", "B", "I", "B", "E", "O", "F", "G", "P", "D"],
+				["Y", "J", "O", "Y", "R", "M", "A", "L", "O", "E"],
+				["D", "U", "O", "L", "C", "O", "A", "Z", "U", "J"],
+				["W", "D", "L", "T", "Z", "G", "W", "I", "U", "W"],
+				["B", "L", "R", "O", "A", "N", "I", "S", "L", "O"],
+				["R", "V", "W", "U", "P", "B", "S", "O", "E", "B"],
+				["Q", "K", "P", "T", "S", "S", "L", "E", "C", "R"],
+				["A", "I", "N", "T", "E", "R", "N", "E", "T", "T"],
+				["M", "E", "D", "O", "M", "K", "I", "K", "T", "T"],
+				["B", "L", "U", "E", "T", "O", "O", "T", "H", "C"]
+			],
+			"theme": "Technology",
+			"wordCount": 7
+		},
+		"solution": {
+			"words": ["INTERNET", "CLOUD", "BROWSER", "TABLET", "BLUETOOTH", "EMAIL", "MODEM"],
+			"placements": [
+				{
+					"word": "INTERNET",
+					"start": { "row": 7, "col": 1 },
+					"end": { "row": 7, "col": 8 },
+					"direction": "horizontal"
+				},
+				{
+					"word": "CLOUD",
+					"start": { "row": 2, "col": 4 },
+					"end": { "row": 2, "col": 0 },
+					"direction": "horizontal-reverse"
+				},
+				{
+					"word": "BROWSER",
+					"start": { "row": 0, "col": 3 },
+					"end": { "row": 6, "col": 9 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "TABLET",
+					"start": { "row": 3, "col": 3 },
+					"end": { "row": 8, "col": 8 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "BLUETOOTH",
+					"start": { "row": 9, "col": 0 },
+					"end": { "row": 9, "col": 8 },
+					"direction": "horizontal"
+				},
+				{
+					"word": "EMAIL",
+					"start": { "row": 0, "col": 4 },
+					"end": { "row": 4, "col": 8 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "MODEM",
+					"start": { "row": 8, "col": 4 },
+					"end": { "row": 8, "col": 0 },
+					"direction": "horizontal-reverse"
+				}
+			]
+		}
+	}
+]

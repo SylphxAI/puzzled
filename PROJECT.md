@@ -44,9 +44,12 @@ Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilitie
   client; Platform SDK for auth/flags/AI. No backend authority.
 - **core** (`crates/puzzled-core`): pure game rules, validation, scoring,
   policy.
-- **Content**: `apps/puzzled/scripts/generate-content.ts` imports day-keyed
-  puzzles into the content store (`daily_puzzles`); the api serves and
-  validates from it. No client-trusted solutions.
+- **Content**: the api's daily-puzzle pipeline (`capabilities/daily_pipeline`,
+  generators in `puzzled-core` `puzzle_play::generate`) stores every game's
+  puzzle 14 days ahead and backfills the 30-day archive, on a Compute schedule
+  and at start-up; a missing day is generated and stored on first read. The
+  api serves and grades from `daily_puzzles`; word games are graded per guess
+  (`CheckGuess`). No client-held answers.
 - **DB**: Atlas-managed Postgres; single runtime writer is the api service.
 
 ## Delivery

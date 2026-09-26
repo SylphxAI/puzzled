@@ -5,8 +5,9 @@
 
 // A single board's state
 export type BoardState = {
-	targetWord: string
 	guesses: string[]
+	/** The server's grading of each guess on this board (the word stays hidden). */
+	results: GuessResult[]
 	solved: boolean
 	solvedOnGuess: number | null
 }
@@ -29,6 +30,8 @@ export type QuordleSolution = {
 
 // Game state
 export type QuordleGameState = {
+	/** A guess is being graded by the server; input waits. */
+	grading: boolean
 	boards: [BoardState, BoardState, BoardState, BoardState]
 	currentGuess: string
 	guessHistory: string[]
@@ -93,6 +96,14 @@ export function getBestStatus(statuses: LetterStatus[]): LetterStatus {
 	if (statuses.includes('absent')) return 'absent'
 	return 'empty'
 }
+
+/**
+ * Grades one guess on all four boards. The server holds the words
+ * (`PuzzleService.CheckGuess`); the client never does.
+ */
+export type GradeQuadGuess = (
+	word: string,
+) => Promise<[GuessResult, GuessResult, GuessResult, GuessResult]>
 
 /**
  * Check if all boards are solved

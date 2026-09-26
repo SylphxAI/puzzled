@@ -4,13 +4,7 @@
  */
 
 import { useCallback, useReducer } from 'react'
-import type {
-	Cage,
-	KillerCell,
-	KillerSudokuGameState,
-	KillerSudokuPuzzleData,
-	KillerSudokuSolution,
-} from './types'
+import type { Cage, KillerCell, KillerSudokuGameState, KillerSudokuPuzzleData } from './types'
 import { getCellConflicts, isSolved } from './types'
 
 type KillerSudokuAction =
@@ -189,10 +183,7 @@ export type UseKillerSudokuReturn = {
 	getCageForCell: (row: number, col: number) => Cage | undefined
 }
 
-export function useKillerSudoku(
-	puzzleData: KillerSudokuPuzzleData,
-	_solution: KillerSudokuSolution,
-): UseKillerSudokuReturn {
+export function useKillerSudoku(puzzleData: KillerSudokuPuzzleData): UseKillerSudokuReturn {
 	const [state, dispatch] = useReducer(
 		(s: KillerSudokuGameState, a: KillerSudokuAction) => killerSudokuReducer(s, a, puzzleData),
 		puzzleData,

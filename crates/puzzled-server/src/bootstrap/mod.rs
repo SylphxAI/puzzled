@@ -1,5 +1,6 @@
 //! Composition root: app state, router, health, lifecycle.
 
+mod compute_ticks;
 mod connect_admin;
 mod connect_billing;
 mod connect_gamification;

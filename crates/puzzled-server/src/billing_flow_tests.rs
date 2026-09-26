@@ -252,7 +252,7 @@ fn complete_checkout(
 
 // ---- harness -------------------------------------------------------------------
 
-async fn fresh_database() -> Option<PgPool> {
+pub(crate) async fn fresh_database() -> Option<PgPool> {
     let Ok(admin_url) = std::env::var("PUZZLED_TEST_DATABASE_URL") else {
         assert!(
             std::env::var("PUZZLED_REQUIRE_DB_TESTS").is_err(),

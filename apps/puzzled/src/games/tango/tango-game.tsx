@@ -16,9 +16,8 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { cn } from '@/lib/utils'
-import type { TangoPuzzleData, TangoSolution } from './types'
+import { parseTangoClientPayload } from './parse-client'
 import { useTango } from './use-tango'
 
 type Props = {
@@ -32,7 +31,8 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 	const t = useTranslations('games.tango')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() => parsePuzzleDataClient<TangoPuzzleData, TangoSolution>(puzzleData))
+	// Served without the solution; the rules judge the finish (#246).
+	const [puzzle] = useState(() => parseTangoClientPayload(puzzleData))
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {
@@ -55,7 +55,7 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
 
-	const game = useTango(puzzle.puzzleData, puzzle.solution)
+	const game = useTango(puzzle)
 	const conflicts = game.getConflicts()
 	const conflictSet = new Set(conflicts.map((c) => `${c.row},${c.col}`))
 	const gameEndedRef = useRef(false)

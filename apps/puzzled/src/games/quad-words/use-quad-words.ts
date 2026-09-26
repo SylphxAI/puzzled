@@ -1,55 +1,38 @@
 /**
  * Quordle Game Hook
- * Manages game state for the 4-word puzzle game
+ * Manages game state for the 4-word puzzle game. The server grades each
+ * guess (`PuzzleService.CheckGuess`); the four words never reach the client.
  */
 
 import { useCallback, useReducer } from 'react'
 import type {
 	BoardState,
+	GradeQuadGuess,
 	GuessResult,
 	LetterStatus,
 	QuordleGameState,
-	QuordlePuzzleData,
-	QuordleSolution,
 } from './types'
-import { allBoardsSolved, evaluateGuess, getBestStatus, MAX_GUESSES } from './types'
+import { allBoardsSolved, getBestStatus, MAX_GUESSES } from './types'
 
 type QuordleAction =
 	| { type: 'ADD_LETTER'; letter: string }
 	| { type: 'DELETE_LETTER' }
-	| { type: 'SUBMIT_GUESS'; isValidWord: boolean }
+	| { type: 'GRADING'; grading: boolean }
+	| {
+			type: 'APPLY_GUESS'
+			guess: string
+			results: [GuessResult, GuessResult, GuessResult, GuessResult]
+	  }
 	| { type: 'RESET' }
 
-function createInitialState(puzzleData: QuordlePuzzleData): QuordleGameState {
-	const boards: [BoardState, BoardState, BoardState, BoardState] = [
-		{
-			targetWord: puzzleData.words[0].toUpperCase(),
-			guesses: [],
-			solved: false,
-			solvedOnGuess: null,
-		},
-		{
-			targetWord: puzzleData.words[1].toUpperCase(),
-			guesses: [],
-			solved: false,
-			solvedOnGuess: null,
-		},
-		{
-			targetWord: puzzleData.words[2].toUpperCase(),
-			guesses: [],
-			solved: false,
-			solvedOnGuess: null,
-		},
-		{
-			targetWord: puzzleData.words[3].toUpperCase(),
-			guesses: [],
-			solved: false,
-			solvedOnGuess: null,
-		},
-	]
+function emptyBoard(): BoardState {
+	return { guesses: [], results: [], solved: false, solvedOnGuess: null }
+}
 
+export function createInitialState(): QuordleGameState {
 	return {
-		boards,
+		grading: false,
+		boards: [emptyBoard(), emptyBoard(), emptyBoard(), emptyBoard()],
 		currentGuess: '',
 		guessHistory: [],
 		gameStatus: 'playing',
@@ -86,14 +69,10 @@ function updateKeyboardStatus(
 	return newMap
 }
 
-function quordleReducer(
-	state: QuordleGameState,
-	action: QuordleAction,
-	puzzleData: QuordlePuzzleData,
-): QuordleGameState {
+export function quordleReducer(state: QuordleGameState, action: QuordleAction): QuordleGameState {
 	switch (action.type) {
 		case 'ADD_LETTER': {
-			if (state.gameStatus !== 'playing') return state
+			if (state.gameStatus !== 'playing' || state.grading) return state
 			if (state.currentGuess.length >= 5) return state
 
 			return {
@@ -104,7 +83,7 @@ function quordleReducer(
 		}
 
 		case 'DELETE_LETTER': {
-			if (state.gameStatus !== 'playing') return state
+			if (state.gameStatus !== 'playing' || state.grading) return state
 			if (state.currentGuess.length === 0) return state
 
 			return {
@@ -113,33 +92,34 @@ function quordleReducer(
 			}
 		}
 
-		case 'SUBMIT_GUESS': {
+		case 'GRADING': {
+			return { ...state, grading: action.grading }
+		}
+
+		case 'APPLY_GUESS': {
 			if (state.gameStatus !== 'playing') return state
-			if (state.currentGuess.length !== 5) return state
-			if (!action.isValidWord) return state
 
-			const guess = state.currentGuess.toUpperCase()
+			const guess = action.guess.toUpperCase()
 			const guessNumber = state.guessHistory.length + 1
+			const { results } = action
 
-			// Evaluate against all boards
-			const results = state.boards.map((board) => evaluateGuess(guess, board.targetWord))
-
-			// Update boards
+			// Update boards; a solved board keeps its last result.
 			const newBoards = state.boards.map((board, i) => {
 				if (board.solved) return board
 
 				const result = results[i]
-				const isCorrect = result.every((s) => s === 'correct')
+				const isCorrect = result.length === 5 && result.every((s) => s === 'correct')
 
 				return {
 					...board,
 					guesses: [...board.guesses, guess],
+					results: [...board.results, result],
 					solved: isCorrect,
 					solvedOnGuess: isCorrect ? guessNumber : null,
 				}
 			}) as [BoardState, BoardState, BoardState, BoardState]
 
-			// Update keyboard
+			// Update keyboard (every board's grading, as before)
 			const newKeyboardStatus = updateKeyboardStatus(state.keyboardStatus, guess, results)
 
 			// Check game end
@@ -155,6 +135,7 @@ function quordleReducer(
 
 			return {
 				...state,
+				grading: false,
 				boards: newBoards,
 				currentGuess: '',
 				guessHistory: [...state.guessHistory, guess],
@@ -165,7 +146,7 @@ function quordleReducer(
 		}
 
 		case 'RESET': {
-			return createInitialState(puzzleData)
+			return createInitialState()
 		}
 
 		default:
@@ -184,15 +165,8 @@ export type UseQuordleReturn = {
 	getSolvedCount: () => number
 }
 
-export function useQuadWords(
-	puzzleData: QuordlePuzzleData,
-	_solution: QuordleSolution,
-): UseQuordleReturn {
-	const [state, dispatch] = useReducer(
-		(s: QuordleGameState, a: QuordleAction) => quordleReducer(s, a, puzzleData),
-		puzzleData,
-		createInitialState,
-	)
+export function useQuadWords(grade: GradeQuadGuess, onGradeFailed?: () => void): UseQuordleReturn {
+	const [state, dispatch] = useReducer(quordleReducer, undefined, createInitialState)
 
 	const addLetter = useCallback((letter: string) => {
 		dispatch({ type: 'ADD_LETTER', letter })
@@ -204,6 +178,9 @@ export function useQuadWords(
 
 	const submitGuess = useCallback(
 		(isValidWord: boolean): { success: boolean; error?: string } => {
+			if (state.gameStatus !== 'playing' || state.grading) {
+				return { success: false, error: 'Please wait' }
+			}
 			if (state.currentGuess.length !== 5) {
 				return { success: false, error: 'Not enough letters' }
 			}
@@ -212,10 +189,18 @@ export function useQuadWords(
 				return { success: false, error: 'Not in word list' }
 			}
 
-			dispatch({ type: 'SUBMIT_GUESS', isValidWord })
+			const guess = state.currentGuess
+			dispatch({ type: 'GRADING', grading: true })
+			grade(guess).then(
+				(results) => dispatch({ type: 'APPLY_GUESS', guess, results }),
+				() => {
+					dispatch({ type: 'GRADING', grading: false })
+					onGradeFailed?.()
+				},
+			)
 			return { success: true }
 		},
-		[state.currentGuess],
+		[state.gameStatus, state.grading, state.currentGuess, grade, onGradeFailed],
 	)
 
 	const reset = useCallback(() => {
@@ -224,10 +209,7 @@ export function useQuadWords(
 
 	const getGuessResult = useCallback(
 		(boardIndex: number, guessIndex: number): GuessResult | null => {
-			const board = state.boards[boardIndex]
-			if (!board || guessIndex >= board.guesses.length) return null
-
-			return evaluateGuess(board.guesses[guessIndex], board.targetWord)
+			return state.boards[boardIndex]?.results[guessIndex] ?? null
 		},
 		[state.boards],
 	)

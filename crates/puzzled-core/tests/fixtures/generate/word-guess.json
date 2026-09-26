@@ -1,0 +1,32 @@
+[
+	{
+		"seed": 20250101,
+		"difficulty": null,
+		"puzzleData": { "wordLength": 5, "maxAttempts": 6 },
+		"solution": { "word": "FORTY" }
+	},
+	{
+		"seed": 20260226,
+		"difficulty": null,
+		"puzzleData": { "wordLength": 5, "maxAttempts": 6 },
+		"solution": { "word": "SCARE" }
+	},
+	{
+		"seed": 20260926,
+		"difficulty": null,
+		"puzzleData": { "wordLength": 5, "maxAttempts": 6 },
+		"solution": { "word": "ALARM" }
+	},
+	{
+		"seed": 20261001,
+		"difficulty": null,
+		"puzzleData": { "wordLength": 5, "maxAttempts": 6 },
+		"solution": { "word": "ATTIC" }
+	},
+	{
+		"seed": 20261231,
+		"difficulty": null,
+		"puzzleData": { "wordLength": 5, "maxAttempts": 6 },
+		"solution": { "word": "CHAIN" }
+	}
+]

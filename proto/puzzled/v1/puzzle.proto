@@ -93,10 +93,31 @@ message SubmitGuessResponse {
   string error = 6 [features.field_presence = EXPLICIT];
   string slice = 7;
   reserved 5; // seed removed with the request field
+  // The answer, sent only once this finish is accepted (the player's one
+  // finish for the day), so a result card can show it. Never sent earlier.
+  string reveal_json = 8 [features.field_presence = EXPLICIT];
+}
+
+// CheckGuess grades one in-game guess against the served puzzle, so the
+// client never holds the answer (word-guess, word-groups).
+message CheckGuessRequest {
+  string game_slug = 1;
+  string difficulty = 2;
+  string puzzle_id = 3 [features.field_presence = EXPLICIT];
+  string puzzle_date = 4 [features.field_presence = EXPLICIT];
+  // word-guess: {"word":"crane"}. word-groups: {"words":[4 words],"solved":[category names]}.
+  string guess_json = 5;
+}
+
+message CheckGuessResponse {
+  // word-guess: {"tiles":["correct"|"present"|"absent" x5]}.
+  // word-groups: {"correct":bool,"oneAway":bool,"category":{name,words,level}?}.
+  string result_json = 1;
 }
 
 service PuzzleService {
   rpc GetPuzzle(GetPuzzleRequest) returns (GetPuzzleResponse);
   rpc GetDaily(GetDailyRequest) returns (GetDailyResponse);
   rpc SubmitGuess(SubmitGuessRequest) returns (SubmitGuessResponse);
+  rpc CheckGuess(CheckGuessRequest) returns (CheckGuessResponse);
 }

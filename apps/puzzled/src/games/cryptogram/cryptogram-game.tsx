@@ -8,7 +8,7 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { HelpCircle, Lightbulb, Play, RotateCcw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
@@ -16,12 +16,12 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
+import { checkGuess } from '@/lib/connect/puzzle-client'
 import { cn } from '@/lib/utils'
 import { triggerHaptic } from '@/shared/hooks'
-import type { CryptogramPuzzleData, CryptogramSolution } from './types'
+import { parseCryptogramClientPayload } from './parse-client'
 import { ALPHABET, MAX_HINTS } from './types'
-import { useCryptogram } from './use-cryptogram'
+import { type CryptogramGrader, useCryptogram } from './use-cryptogram'
 
 type Props = {
 	mode?: 'daily' | 'archive'
@@ -33,9 +33,8 @@ type Props = {
 export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<CryptogramPuzzleData, CryptogramSolution>(puzzleData),
-	)
+	// The served payload carries no plaintext; the server grades (#246).
+	const [puzzle] = useState(() => ({ puzzleData: parseCryptogramClientPayload(puzzleData) }))
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {
@@ -58,7 +57,34 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
 
-	const game = useCryptogram(puzzle.puzzleData, puzzle.solution)
+	const grader = useMemo<CryptogramGrader>(
+		() => ({
+			checkSolved: async (guesses) => {
+				const result = (await checkGuess({
+					gameSlug: 'cryptogram',
+					guess: { guesses },
+					puzzleId,
+					puzzleDate,
+				})) as { solved?: boolean }
+				return result.solved === true
+			},
+			hint: async (guesses, revealed) => {
+				const result = (await checkGuess({
+					gameSlug: 'cryptogram',
+					guess: { hint: true, guesses, revealed },
+					puzzleId,
+					puzzleDate,
+				})) as { encrypted?: string | null; letter?: string }
+				return result.encrypted && result.letter
+					? { encrypted: result.encrypted, letter: result.letter }
+					: null
+			},
+		}),
+		[puzzleId, puzzleDate],
+	)
+	const [gradeFailed, setGradeFailed] = useState(false)
+	const handleGradeFailed = useCallback(() => setGradeFailed(true), [])
+	const game = useCryptogram(puzzle.puzzleData, grader, handleGradeFailed)
 	const progress = game.getProgress()
 	const gameEndedRef = useRef(false)
 
@@ -156,8 +182,16 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 					<div className="flex flex-col">
 						<span className="text-sm text-muted-foreground">Cryptogram</span>
 						<span className="text-xs text-muted-foreground">
-							{progress.correct}/{progress.total} letters
+							{progress.filled}/{progress.total} letters
 						</span>
+						{game.state.lastCheckWrong ? (
+							<output className="text-xs text-destructive">
+								Not solved yet: some letters are wrong.
+							</output>
+						) : null}
+						{gradeFailed ? (
+							<output className="text-xs text-destructive">{tCommon('error')}</output>
+						) : null}
 					</div>
 					<div className="flex gap-2">
 						<Button

@@ -16,11 +16,10 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { BlockSlideIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { Board } from './components/board'
-import type { BlockSlidePuzzle as BlockSlideClientData, BlockSlideSolution } from './types'
+import { parseBlockSlideClientPayload } from './parse-client'
 import { useBlockSlide } from './use-block-slide'
 
 type Props = {
@@ -34,10 +33,7 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	const t = useTranslations('games.blockSlide')
 
 	// Get puzzle from server data
-	const [puzzle] = useState(() => {
-		const parsed = parsePuzzleDataClient<BlockSlideClientData, BlockSlideSolution>(puzzleData)
-		return parsed.puzzleData
-	})
+	const [puzzle] = useState(() => parseBlockSlideClientPayload(puzzleData))
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {
