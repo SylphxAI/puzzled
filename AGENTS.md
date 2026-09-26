@@ -45,7 +45,9 @@ The **Rust backend cutover is complete** (ADR-170):
 2. The Next.js service is presentation-only: no DB writes, no job execution,
    no email/push delivery, no REST API surface.
 3. Do not reintroduce TypeScript backend authority (jobs, generation, REST)
-   — the content tool (`apps/puzzled/scripts/generate-content.ts`) is the only
-   non-Rust backend-adjacent code and it is a standalone tool, not a service.
+   — daily puzzles are generated, validated and stored by the Rust pipeline
+   (`crates/puzzled-server/src/capabilities/daily_pipeline`). The TS
+   generators remain only as the parity oracle for the Rust ports
+   (`apps/puzzled/scripts/export-generator-fixtures.ts`).
 4. Do not reintroduce the REST `/api/v1` surface or a Hono client layer; the
    sole transport is Connect RPC.

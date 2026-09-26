@@ -75,6 +75,35 @@
 		}
 	},
 	{
+		"seed": 20261001,
+		"difficulty": null,
+		"puzzleData": {
+			"size": 8,
+			"initialGrid": [
+				[null, "moon", null, "sun", null, "moon", null, "sun"],
+				[null, null, null, "sun", null, null, null, null],
+				["sun", "sun", null, "moon", null, "moon", "sun", null],
+				[null, "moon", null, null, null, null, "sun", "sun"],
+				["moon", "moon", "sun", null, null, null, null, "sun"],
+				[null, null, null, "sun", null, null, "sun", "moon"],
+				[null, null, null, "moon", null, null, null, null],
+				[null, null, "moon", null, null, null, null, null]
+			]
+		},
+		"solution": {
+			"grid": [
+				["moon", "moon", "sun", "sun", "moon", "moon", "sun", "sun"],
+				["sun", "sun", "moon", "sun", "moon", "sun", "moon", "moon"],
+				["sun", "sun", "moon", "moon", "sun", "moon", "sun", "moon"],
+				["moon", "moon", "sun", "moon", "sun", "moon", "sun", "sun"],
+				["moon", "moon", "sun", "sun", "moon", "sun", "moon", "sun"],
+				["sun", "sun", "moon", "sun", "moon", "moon", "sun", "moon"],
+				["sun", "moon", "sun", "moon", "sun", "sun", "moon", "moon"],
+				["moon", "sun", "moon", "moon", "sun", "sun", "moon", "sun"]
+			]
+		}
+	},
+	{
 		"seed": 20261231,
 		"difficulty": null,
 		"puzzleData": {

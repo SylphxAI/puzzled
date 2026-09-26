@@ -75,6 +75,31 @@
 		}
 	},
 	{
+		"seed": 20261001,
+		"difficulty": null,
+		"puzzleData": {
+			"cards": [
+				{ "id": 0, "shape": "diamond", "color": "purple", "fill": "striped", "count": 3 },
+				{ "id": 1, "shape": "oval", "color": "red", "fill": "solid", "count": 1 },
+				{ "id": 2, "shape": "oval", "color": "green", "fill": "solid", "count": 1 },
+				{ "id": 3, "shape": "oval", "color": "green", "fill": "striped", "count": 3 },
+				{ "id": 4, "shape": "oval", "color": "green", "fill": "solid", "count": 2 },
+				{ "id": 5, "shape": "squiggle", "color": "green", "fill": "solid", "count": 1 },
+				{ "id": 6, "shape": "diamond", "color": "green", "fill": "solid", "count": 2 },
+				{ "id": 7, "shape": "diamond", "color": "green", "fill": "striped", "count": 2 },
+				{ "id": 8, "shape": "squiggle", "color": "green", "fill": "empty", "count": 1 },
+				{ "id": 9, "shape": "squiggle", "color": "green", "fill": "empty", "count": 2 },
+				{ "id": 10, "shape": "oval", "color": "green", "fill": "solid", "count": 3 },
+				{ "id": 11, "shape": "oval", "color": "red", "fill": "empty", "count": 1 }
+			],
+			"totalSets": 6
+		},
+		"solution": {
+			"validSets": [[0, 1, 9], [2, 4, 10], [3, 6, 8], [4, 7, 9], [5, 6, 10], [7, 8, 10]],
+			"totalSets": 6
+		}
+	},
+	{
 		"seed": 20261231,
 		"difficulty": null,
 		"puzzleData": {

@@ -53,6 +53,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             pool.clone(),
         );
 
+    // Daily puzzles: fill 14 days ahead and the archive at start-up; the
+    // Compute schedule keeps it filled (issue #246).
+    let _daily_fill =
+        puzzled_server::capabilities::daily_pipeline::spawn_startup_fill(pool.clone());
+
     let stripe = puzzled_server::capabilities::billing::adapters::stripe::Stripe::from_env();
     match &stripe {
         Some(stripe) if stripe.live_mode() => {

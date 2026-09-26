@@ -6,6 +6,7 @@ use sqlx::PgPool;
 
 use crate::capabilities::billing::adapters::stripe::Stripe;
 use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
+use crate::shared::tick_receipt::TickVerifier;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -15,6 +16,8 @@ pub struct AppState {
     pub stripe: Option<Stripe>,
     /// Sylphx Auth end-user session checks.
     pub auth: AuthSessions,
+    /// Admission for Compute schedule ticks (signed receipts).
+    pub ticks: TickVerifier,
 }
 
 impl AppState {
@@ -25,7 +28,14 @@ impl AppState {
             pool,
             stripe: None,
             auth: AuthSessions::from_env(),
+            ticks: TickVerifier::from_env(),
         }
+    }
+
+    #[must_use]
+    pub fn with_ticks(mut self, ticks: TickVerifier) -> Self {
+        self.ticks = ticks;
+        self
     }
 
     #[must_use]

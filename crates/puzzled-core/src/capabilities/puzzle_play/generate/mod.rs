@@ -87,7 +87,7 @@ pub fn generate_seeded(
 ) -> Result<(Value, Value), String> {
     use super::domain::{
         crossword_generate::generate_crossword_puzzle,
-        queens_generate::generate_queens_puzzle_with_size, sudoku::generate_sudoku_puzzle,
+        queens_generate::try_generate_queens_puzzle_with_size, sudoku::generate_sudoku_puzzle,
         word_groups_generate::generate_word_groups_puzzle,
         word_guess_generate::generate_word_guess_puzzle,
     };
@@ -111,7 +111,7 @@ pub fn generate_seeded(
                 Some("hard") => 8,
                 _ => 6,
             };
-            Ok(generate_queens_puzzle_with_size(seed, size))
+            try_generate_queens_puzzle_with_size(seed, size)
         }
         "crossword" => Ok(generate_crossword_puzzle(seed)),
         "word-groups" => Ok(generate_word_groups_puzzle(seed)),

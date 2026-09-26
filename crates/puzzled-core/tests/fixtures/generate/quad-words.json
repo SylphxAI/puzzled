@@ -18,6 +18,12 @@
 		"solution": { "words": ["SKULL", "POINT", "SINCE", "SLIDE"] }
 	},
 	{
+		"seed": 20261001,
+		"difficulty": null,
+		"puzzleData": { "words": ["NEVER", "CANDY", "WHILE", "COURT"] },
+		"solution": { "words": ["NEVER", "CANDY", "WHILE", "COURT"] }
+	},
+	{
 		"seed": 20261231,
 		"difficulty": null,
 		"puzzleData": { "words": ["ROMAN", "DAIRY", "APPLY", "STAKE"] },

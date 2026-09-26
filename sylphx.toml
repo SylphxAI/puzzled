@@ -89,3 +89,34 @@ path = "/healthz"
 strategy = "dockerfile"
 dockerfile = "crates/puzzled-server/Dockerfile"
 context = "."
+
+# Scheduled work (Compute). Each tick carries Compute's signed receipt for its
+# exact URL, verified against Compute's published keys
+# (crates/puzzled-server/src/shared/tick_receipt.rs); no shared secret.
+#
+# Daily puzzles (#246): store every game's puzzle 14 days ahead and backfill
+# the 30-day archive; a low buffer alerts. The api also runs this at start-up.
+[[compute.schedules]]
+id = "puzzled-daily-puzzles"
+idempotency_key = "puzzled-daily-puzzles-v1"
+service = "api"
+path = "/internal/compute/daily-puzzles"
+calendar = { kind = "cron", expression = "7 * * * *", timezone = "UTC" }
+overlap = "skip"
+catch_up = "last_only"
+target = { kind = "http", method = "POST", signed = true }
+retry = { max_attempts = 3 }
+pause = false
+
+# Audit-log retention: IPs stripped after 30 days, rows deleted after a year.
+[[compute.schedules]]
+id = "puzzled-audit-log-retention"
+idempotency_key = "puzzled-audit-log-retention-v1"
+service = "api"
+path = "/internal/compute/audit-log-retention"
+calendar = { kind = "cron", expression = "23 3 * * *", timezone = "UTC" }
+overlap = "skip"
+catch_up = "skip"
+target = { kind = "http", method = "POST", signed = true }
+retry = { max_attempts = 3 }
+pause = false

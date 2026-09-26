@@ -11,26 +11,13 @@ use connectrpc::{
 };
 
 use super::state::AppState;
-use crate::capabilities::identity_access::adapters::platform_jwt::extract_bearer;
 use crate::capabilities::jobs::adapters::jobs_db;
 use crate::proto::puzzled::v1::{JobsService, RunRetentionJobRequest, RunRetentionJobResponse};
 use crate::shared::dest_http::{
-    dest_email_connector_id, dest_email_delivery, dest_events_credential, dest_events_deliver,
-    dest_push_connector_id, dest_push_delivery,
+    dest_email_connector_id, dest_email_delivery, dest_events_deliver, dest_push_connector_id,
+    dest_push_delivery,
 };
-
-fn constant_time_eq(a: &str, b: &str) -> bool {
-    let ha = sha256(a.as_bytes());
-    let hb = sha256(b.as_bytes());
-    ha == hb
-}
-
-fn sha256(input: &[u8]) -> [u8; 32] {
-    use sha2::Digest;
-    let mut hasher = sha2::Sha256::new();
-    hasher.update(input);
-    hasher.finalize().into()
-}
+use crate::shared::tick_receipt::TickError;
 
 #[derive(Clone)]
 pub struct JobsConnectService {
@@ -42,22 +29,20 @@ impl JobsConnectService {
         Self { state }
     }
 
-    fn verify_dest_events_credential(&self, ctx: &RequestContext) -> Result<(), ConnectError> {
-        let expected = dest_events_credential().unwrap_or_default();
-        if expected.is_empty() {
-            return Err(ConnectError::new(
-                ErrorCode::Unavailable,
-                "events_dest_not_configured",
-            ));
-        }
-        let provided = extract_bearer(ctx.headers()).unwrap_or_default();
-        if !constant_time_eq(&provided, &expected) {
-            return Err(ConnectError::new(
-                ErrorCode::Unauthenticated,
-                "invalid_dest_credential",
-            ));
-        }
-        Ok(())
+    /// Admit a scheduled call: Compute's signed tick receipt for this exact
+    /// URL. The Events product key used before was never set in production,
+    /// so every call was refused; a shared bearer is not an admission.
+    async fn admit_tick(&self, ctx: &RequestContext) -> Result<(), ConnectError> {
+        self.state
+            .ticks
+            .admit(ctx.headers(), "/puzzled.v1.JobsService/RunRetentionJob")
+            .await
+            .map_err(|error| match error {
+                TickError::Unavailable => {
+                    ConnectError::new(ErrorCode::Unavailable, "tick_receipt_unavailable")
+                }
+                _ => ConnectError::new(ErrorCode::Unauthenticated, "tick_receipt_invalid"),
+            })
     }
 
     async fn run_daily_reminder(&self) -> Result<u32, Vec<String>> {
@@ -138,7 +123,7 @@ impl JobsService for JobsConnectService {
         ctx: RequestContext,
         request: ServiceRequest<'_, RunRetentionJobRequest>,
     ) -> ServiceResult<RunRetentionJobResponse> {
-        self.verify_dest_events_credential(&ctx)?;
+        self.admit_tick(&ctx).await?;
         let req = request.to_owned_message();
         let (ok, processed, errors) = match req.name.trim() {
             "daily-reminder" => match self.run_daily_reminder().await {

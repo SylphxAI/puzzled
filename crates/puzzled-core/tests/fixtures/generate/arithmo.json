@@ -18,6 +18,12 @@
 		"solution": { "equation": "90-37=53" }
 	},
 	{
+		"seed": 20261001,
+		"difficulty": null,
+		"puzzleData": { "length": 8 },
+		"solution": { "equation": "17+27=44" }
+	},
+	{
 		"seed": 20261231,
 		"difficulty": null,
 		"puzzleData": { "length": 8 },

@@ -110,6 +110,42 @@
 		"error": "Queens: Failed to generate puzzle with unique solution for seed 20260928 after 10 attempts"
 	},
 	{
+		"seed": 20261001,
+		"difficulty": "easy",
+		"puzzleData": {
+			"size": 5,
+			"regions": [
+				[0, 0, 0, 0, 2],
+				[0, 1, 1, 2, 2],
+				[0, 1, 1, 2, 2],
+				[0, 3, 3, 2, 2],
+				[0, 4, 4, 4, 4]
+			]
+		},
+		"solution": { "queens": [[0, 0], [1, 2], [2, 4], [3, 1], [4, 3]] }
+	},
+	{
+		"seed": 20261002,
+		"difficulty": "medium",
+		"puzzleData": {
+			"size": 6,
+			"regions": [
+				[0, 0, 0, 0, 0, 0],
+				[0, 0, 1, 1, 1, 0],
+				[2, 0, 0, 0, 1, 1],
+				[2, 0, 3, 5, 5, 4],
+				[5, 5, 5, 5, 5, 4],
+				[5, 5, 5, 5, 5, 5]
+			]
+		},
+		"solution": { "queens": [[0, 1], [1, 4], [2, 0], [3, 2], [4, 5], [5, 3]] }
+	},
+	{
+		"seed": 20261003,
+		"difficulty": "hard",
+		"error": "Queens: Failed to generate puzzle with unique solution for seed 20261003 after 10 attempts"
+	},
+	{
 		"seed": 20261231,
 		"difficulty": "easy",
 		"puzzleData": {

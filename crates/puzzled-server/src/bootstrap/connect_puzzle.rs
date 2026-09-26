@@ -8,6 +8,7 @@
 //!   pure dispatch, and persists the verified result. Client seeds/verdicts
 //!   are never trusted.
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use chrono::{NaiveDate, Utc};
@@ -18,35 +19,30 @@ use serde_json::Value;
 use tracing::warn;
 
 use puzzled_core::billing_access::policy::play_access;
+use puzzled_core::puzzle_play::application::guess_grading::{grade_guess, grades_guesses};
 use puzzled_core::puzzle_play::application::submission_validation::{
     validate_submission, SubmissionEnvelope,
 };
-use puzzled_core::puzzle_play::crossword_generate::{
-    client_safe_puzzle_data, generate_crossword_puzzle,
-};
-use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
+use puzzled_core::puzzle_play::crossword_generate::client_safe_puzzle_data;
+use puzzled_core::puzzle_play::daily_time::product_day_key;
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
 use puzzled_core::puzzle_play::game_slugs::{
     canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
 };
-use puzzled_core::puzzle_play::queens_generate::generate_queens_puzzle_with_size;
-use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
-use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
 use crate::capabilities::billing::service::entitlement;
-use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::{
-    fetch_daily_puzzle, fetch_puzzle_by_id,
-};
+use crate::capabilities::daily_pipeline;
+use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::fetch_puzzle_by_id;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
     adopt_guest_sessions, has_completed_session, has_ritual_completion, load_completed_session,
     persist_validated_session,
 };
 use crate::proto::puzzled::v1::{
-    DailyCompletion, GetDailyRequest, GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse,
-    PuzzleService, SubmitGuessRequest, SubmitGuessResponse,
+    CheckGuessRequest, CheckGuessResponse, DailyCompletion, GetDailyRequest, GetDailyResponse,
+    GetPuzzleRequest, GetPuzzleResponse, PuzzleService, SubmitGuessRequest, SubmitGuessResponse,
 };
 
 const SLICE_PUZZLE: &str = "S2-puzzle-connect";
@@ -56,11 +52,43 @@ const SLICE_SUBMIT: &str = "S2-puzzle-solution-connect";
 #[derive(Clone)]
 pub struct PuzzleConnectService {
     state: AppState,
+    /// Graded guesses per (player, game, day, difficulty), capped at the
+    /// game's own guess limit so CheckGuess cannot be used to search for the
+    /// answer. Per process and per day; cleared when the day changes.
+    guesses: Arc<std::sync::Mutex<(NaiveDate, HashMap<String, u32>)>>,
+}
+
+/// Graded guesses a player gets per puzzle.
+fn guess_limit(game_slug: &str) -> u32 {
+    match game_slug {
+        "word-guess" => 6,
+        // Four groups plus four mistakes.
+        _ => 8,
+    }
 }
 
 impl PuzzleConnectService {
     pub fn new(state: AppState) -> Self {
-        Self { state }
+        Self {
+            state,
+            guesses: Arc::new(std::sync::Mutex::new((NaiveDate::MIN, HashMap::new()))),
+        }
+    }
+
+    /// Count one graded guess; false once the player has used the game's limit.
+    fn take_guess(&self, key: String, today: NaiveDate, limit: u32) -> bool {
+        let Ok(mut guard) = self.guesses.lock() else {
+            return false;
+        };
+        if guard.0 != today {
+            *guard = (today, HashMap::new());
+        }
+        let used = guard.1.entry(key).or_insert(0);
+        if *used >= limit {
+            return false;
+        }
+        *used += 1;
+        true
     }
 
     fn identity(&self, ctx: &RequestContext) -> Result<Option<String>, ConnectError> {
@@ -186,71 +214,8 @@ fn sudoku_puzzle_data(seed: i64, difficulty: SudokuDifficulty) -> Value {
     serde_json::to_value(&generated.puzzle_data).unwrap_or(Value::Null)
 }
 
-fn sudoku_solution(seed: i64, difficulty: SudokuDifficulty) -> Value {
-    let generated = generate_sudoku_puzzle(seed, difficulty);
-    serde_json::to_value(&generated.solution).unwrap_or(Value::Null)
-}
-
 /// Deterministic mini-crossword fallback when no stored row exists.
 /// Free rotation includes crossword; free floor must not depend on pre-seed.
-fn crossword_puzzle_data(seed: i64) -> Value {
-    generate_crossword_puzzle(seed).0
-}
-
-fn crossword_solution(seed: i64) -> Value {
-    generate_crossword_puzzle(seed).1
-}
-
-/// Deterministic word-groups fallback when no stored row exists.
-/// Free rotation includes word-groups; free floor must not depend on pre-seed.
-fn word_groups_puzzle_data(seed: i64) -> Value {
-    generate_word_groups_puzzle(seed).0
-}
-
-fn word_groups_solution(seed: i64) -> Value {
-    generate_word_groups_puzzle(seed).1
-}
-
-/// On-server deterministic fallback for free-floor modules that ship a pure generator.
-/// Content store remains preferred when a row exists.
-fn deterministic_daily(
-    game_slug: &str,
-    seed: i64,
-    difficulty: Option<&str>,
-) -> Option<(Value, Option<Value>)> {
-    match game_slug {
-        "sudoku" => {
-            let diff = parse_difficulty(difficulty.unwrap_or("medium"));
-            Some((
-                sudoku_puzzle_data(seed, diff),
-                Some(sudoku_solution(seed, diff)),
-            ))
-        }
-        "crossword" => Some((crossword_puzzle_data(seed), Some(crossword_solution(seed)))),
-        "word-groups" => Some((
-            word_groups_puzzle_data(seed),
-            Some(word_groups_solution(seed)),
-        )),
-        "word-guess" => {
-            let (data, sol) = generate_word_guess_puzzle(seed);
-            Some((data, Some(sol)))
-        }
-        "crowns" | "queens" => {
-            let (data, sol) = generate_queens_puzzle_with_size(seed, queens_board_size(difficulty));
-            Some((data, Some(sol)))
-        }
-        _ => None,
-    }
-}
-
-fn queens_board_size(difficulty: Option<&str>) -> usize {
-    match difficulty.map(str::trim).unwrap_or("medium") {
-        "easy" => 5,
-        "hard" => 8,
-        _ => 6,
-    }
-}
-
 fn date_from_string(raw: Option<&str>) -> Option<NaiveDate> {
     let raw = raw?.trim();
     if raw.is_empty() {
@@ -329,29 +294,22 @@ impl PuzzleService for PuzzleConnectService {
         self.enforce_play_access(identity.as_deref(), game_slug, puzzle_date)
             .await?;
 
-        // Resolve the served puzzle: stored row first, then documented
-        // deterministic generators (every FREE_GAME_ROTATION slug).
-        let mut puzzle_data: Option<Value> = None;
-        let mut puzzle_id: Option<String> = None;
-        let mut stub = true;
-        if let Some(pool) = &self.state.pool {
-            match fetch_daily_puzzle(pool, game_slug, puzzle_date, difficulty.as_deref()).await {
-                Ok(Some(p)) => {
-                    puzzle_data = Some(p.puzzle_data);
-                    puzzle_id = Some(p.id.to_string());
-                    stub = false;
-                }
-                Ok(None) => {}
-                Err(error) => warn!(%error, "get_daily puzzle lookup failed"),
+        // The stored puzzle for this day, generated and stored first on a miss
+        // (daily pipeline, #246). Every game has one.
+        let (puzzle_data, puzzle_id, stub) = match daily_pipeline::resolve(
+            self.state.pool.as_ref(),
+            game_slug,
+            puzzle_date,
+            difficulty.as_deref(),
+        )
+        .await
+        {
+            Ok(found) => (Some(found.puzzle_data), found.id, false),
+            Err(error) => {
+                warn!(%error, game_slug, %puzzle_date, "get_daily puzzle unavailable");
+                (None, None, true)
             }
-        }
-        if puzzle_data.is_none() {
-            let seed = i64::from(get_puzzle_number(puzzle_date, None));
-            if let Some((data, _)) = deterministic_daily(game_slug, seed, difficulty.as_deref()) {
-                puzzle_data = Some(data);
-                stub = false;
-            }
-        }
+        };
 
         // Completion is server-derived from the user's sessions.
         let completed_session = match (identity.as_deref(), &self.state.pool) {
@@ -492,12 +450,12 @@ impl PuzzleService for PuzzleConnectService {
             }
         };
 
-        // Resolve the served puzzle: stored row by id, else by date, else
-        // deterministic free-floor generators. The client's seed is never authority.
-        let seed = i64::from(get_puzzle_number(date, None));
-        let (puzzle_data, solution, resolved_id) = if let Some(pid) = req.puzzle_id.as_deref() {
-            match &self.state.pool {
-                Some(pool) => match fetch_puzzle_by_id(pool, pid).await {
+        // The served puzzle: the stored row by id, else the day's stored
+        // puzzle (generated and stored on a miss). The client's seed is never
+        // authority.
+        let (puzzle_data, solution, resolved_id) =
+            match (req.puzzle_id.as_deref(), &self.state.pool) {
+                (Some(pid), Some(pool)) => match fetch_puzzle_by_id(pool, pid).await {
                     Ok(Some(p)) if p.game_slug == game_slug => {
                         (p.puzzle_data, p.solution, Some(p.id.to_string()))
                     }
@@ -518,38 +476,21 @@ impl PuzzleService for PuzzleConnectService {
                         ));
                     }
                 },
-                None => match deterministic_daily(game_slug, seed, difficulty.as_deref()) {
-                    Some((data, sol)) => (data, sol, None),
-                    None => {
+                _ => match daily_pipeline::resolve(
+                    self.state.pool.as_ref(),
+                    game_slug,
+                    date,
+                    difficulty.as_deref(),
+                )
+                .await
+                {
+                    Ok(found) => (found.puzzle_data, Some(found.solution), found.id),
+                    Err(error) => {
+                        warn!(%error, "submit puzzle unavailable");
                         return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
                     }
                 },
-            }
-        } else if let Some(pool) = &self.state.pool {
-            match fetch_daily_puzzle(pool, game_slug, date, difficulty.as_deref()).await {
-                Ok(Some(p)) => (p.puzzle_data, p.solution, Some(p.id.to_string())),
-                Ok(None) => match deterministic_daily(game_slug, seed, difficulty.as_deref()) {
-                    Some((data, sol)) => (data, sol, None),
-                    None => {
-                        return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
-                    }
-                },
-                Err(error) => {
-                    warn!(%error, "submit puzzle lookup failed");
-                    return Err(ConnectError::new(
-                        ErrorCode::Internal,
-                        "puzzle_lookup_failed",
-                    ));
-                }
-            }
-        } else {
-            match deterministic_daily(game_slug, seed, difficulty.as_deref()) {
-                Some((data, sol)) => (data, sol, None),
-                None => {
-                    return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
-                }
-            }
-        };
+            };
 
         let Some(solution) = solution else {
             return Err(ConnectError::new(
@@ -674,6 +615,57 @@ impl PuzzleService for PuzzleConnectService {
             game_slug: game_slug.to_string(),
             error: None,
             slice: SLICE_SUBMIT.to_string(),
+            // The finish is accepted, so the answer may be shown now.
+            reveal_json: Some(solution.to_string()),
+            ..Default::default()
+        })
+    }
+
+    async fn check_guess(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, CheckGuessRequest>,
+    ) -> ServiceResult<CheckGuessResponse> {
+        let req = request.to_owned_message();
+        let game_slug = canonicalize_game_slug(req.game_slug.trim());
+        if !grades_guesses(game_slug) {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "game_not_graded_per_guess",
+            ));
+        }
+        let uid = self.identity_for_submit(&ctx)?;
+        let today = product_day_key(Utc::now());
+        let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
+        self.enforce_play_access(Some(&uid), game_slug, date)
+            .await?;
+        let difficulty = Some(req.difficulty.trim()).filter(|d| !d.is_empty());
+        let key = format!("{uid}|{game_slug}|{date}|{}", difficulty.unwrap_or(""));
+        if !self.take_guess(key, today, guess_limit(game_slug)) {
+            return Err(ConnectError::new(
+                ErrorCode::ResourceExhausted,
+                "guess_limit_reached",
+            ));
+        }
+        let guess: Value = serde_json::from_str(&req.guess_json)
+            .map_err(|_| ConnectError::new(ErrorCode::InvalidArgument, "invalid_guess_json"))?;
+        let puzzle = match (req.puzzle_id.as_deref(), &self.state.pool) {
+            (Some(pid), Some(pool)) => match fetch_puzzle_by_id(pool, pid).await {
+                Ok(Some(p)) if p.game_slug == game_slug => p.solution,
+                _ => None,
+            },
+            _ => daily_pipeline::resolve(self.state.pool.as_ref(), game_slug, date, difficulty)
+                .await
+                .ok()
+                .map(|found| found.solution),
+        };
+        let Some(solution) = puzzle else {
+            return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
+        };
+        let result = grade_guess(game_slug, &solution, &guess)
+            .map_err(|error| ConnectError::new(ErrorCode::InvalidArgument, error))?;
+        Response::ok(CheckGuessResponse {
+            result_json: result.to_string(),
             ..Default::default()
         })
     }

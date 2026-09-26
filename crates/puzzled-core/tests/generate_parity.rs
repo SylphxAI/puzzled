@@ -34,10 +34,35 @@ fn check(slug: &str) {
                 .unwrap_or_else(|e| panic!("{slug} seed {seed} (TS failed): {e}"));
             continue;
         }
-        assert_eq!(
-            data, case["puzzleData"],
-            "{slug} seed {seed} {difficulty:?}: puzzle data differs from TS"
-        );
+        if slug == "killer-sudoku" && data != case["puzzleData"] {
+            // TS never checked uniqueness and some of its puzzles have two
+            // solutions. The port keeps TS's cages and givens and only adds
+            // givens until exactly one solution remains.
+            assert_eq!(
+                data["cages"], case["puzzleData"]["cages"],
+                "{slug} seed {seed}: cages"
+            );
+            let ours = data["grid"].as_array().cloned().unwrap_or_default();
+            let theirs = case["puzzleData"]["grid"]
+                .as_array()
+                .cloned()
+                .unwrap_or_default();
+            for (r, row) in theirs.iter().enumerate() {
+                for (c, cell) in row.as_array().into_iter().flatten().enumerate() {
+                    if !cell.is_null() {
+                        assert_eq!(
+                            &ours[r][c], cell,
+                            "{slug} seed {seed}: TS given at {r},{c} kept"
+                        );
+                    }
+                }
+            }
+        } else {
+            assert_eq!(
+                data, case["puzzleData"],
+                "{slug} seed {seed} {difficulty:?}: puzzle data differs from TS"
+            );
+        }
         assert_eq!(
             solution, case["solution"],
             "{slug} seed {seed} {difficulty:?}: solution differs from TS"

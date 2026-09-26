@@ -1798,6 +1798,7 @@ dependencies = [
  "chrono",
  "connectrpc",
  "connectrpc-build",
+ "ed25519-dalek",
  "jsonwebtoken",
  "puzzled-core",
  "rand 0.10.3",

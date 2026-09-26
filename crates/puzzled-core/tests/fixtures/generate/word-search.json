@@ -236,6 +236,95 @@
 		}
 	},
 	{
+		"seed": 20261001,
+		"difficulty": null,
+		"puzzleData": {
+			"grid": [
+				["R", "P", "C", "W", "O", "T", "T", "M", "G", "K"],
+				["C", "K", "B", "H", "S", "U", "S", "H", "I", "R"],
+				["O", "A", "Z", "Z", "I", "P", "M", "Q", "Q", "K"],
+				["O", "G", "C", "M", "S", "C", "M", "V", "U", "P"],
+				["K", "X", "H", "H", "T", "G", "K", "D", "Q", "R"],
+				["I", "I", "E", "O", "E", "G", "R", "E", "P", "E"],
+				["E", "F", "E", "H", "A", "G", "R", "I", "N", "T"],
+				["W", "B", "S", "Y", "K", "P", "L", "J", "C", "Z"],
+				["J", "T", "E", "I", "H", "E", "N", "Z", "G", "E"],
+				["T", "X", "G", "T", "A", "C", "O", "O", "P", "L"]
+			],
+			"theme": "Food",
+			"wordCount": 9
+		},
+		"solution": {
+			"words": [
+				"PIZZA",
+				"STEAK",
+				"TACO",
+				"CHICKEN",
+				"CHEESE",
+				"COOKIE",
+				"RICE",
+				"PRETZEL",
+				"SUSHI"
+			],
+			"placements": [
+				{
+					"word": "PIZZA",
+					"start": { "row": 2, "col": 5 },
+					"end": { "row": 2, "col": 1 },
+					"direction": "horizontal-reverse"
+				},
+				{
+					"word": "STEAK",
+					"start": { "row": 3, "col": 4 },
+					"end": { "row": 7, "col": 4 },
+					"direction": "vertical"
+				},
+				{
+					"word": "TACO",
+					"start": { "row": 9, "col": 3 },
+					"end": { "row": 9, "col": 6 },
+					"direction": "horizontal"
+				},
+				{
+					"word": "CHICKEN",
+					"start": { "row": 0, "col": 2 },
+					"end": { "row": 6, "col": 8 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "CHEESE",
+					"start": { "row": 3, "col": 2 },
+					"end": { "row": 8, "col": 2 },
+					"direction": "vertical"
+				},
+				{
+					"word": "COOKIE",
+					"start": { "row": 1, "col": 0 },
+					"end": { "row": 6, "col": 0 },
+					"direction": "vertical"
+				},
+				{
+					"word": "RICE",
+					"start": { "row": 5, "col": 6 },
+					"end": { "row": 8, "col": 9 },
+					"direction": "diagonal-down"
+				},
+				{
+					"word": "PRETZEL",
+					"start": { "row": 3, "col": 9 },
+					"end": { "row": 9, "col": 9 },
+					"direction": "vertical"
+				},
+				{
+					"word": "SUSHI",
+					"start": { "row": 1, "col": 4 },
+					"end": { "row": 1, "col": 8 },
+					"direction": "horizontal"
+				}
+			]
+		}
+	},
+	{
 		"seed": 20261231,
 		"difficulty": null,
 		"puzzleData": {

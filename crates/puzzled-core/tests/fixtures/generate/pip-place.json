@@ -97,6 +97,38 @@
 		}
 	},
 	{
+		"seed": 20261001,
+		"difficulty": null,
+		"puzzleData": {
+			"maxPip": 3,
+			"rows": 4,
+			"cols": 5,
+			"regionOf": [[0, 1, 1, 1, 1], [0, 2, 2, 2, 3], [0, 4, 5, 5, 3], [4, 4, 4, 5, 3]],
+			"regions": [
+				{ "id": 0, "kind": "unequal", "value": null },
+				{ "id": 1, "kind": "sum", "value": 8 },
+				{ "id": 2, "kind": "sum", "value": 3 },
+				{ "id": 3, "kind": "sum", "value": 5 },
+				{ "id": 4, "kind": "free", "value": null },
+				{ "id": 5, "kind": "free", "value": null }
+			]
+		},
+		"solution": {
+			"tiles": [
+				{ "a": { "row": 0, "col": 0 }, "b": { "row": 0, "col": 1 }, "pa": 1, "pb": 1 },
+				{ "a": { "row": 0, "col": 2 }, "b": { "row": 0, "col": 3 }, "pa": 3, "pb": 2 },
+				{ "a": { "row": 0, "col": 4 }, "b": { "row": 1, "col": 4 }, "pa": 2, "pb": 2 },
+				{ "a": { "row": 1, "col": 0 }, "b": { "row": 1, "col": 1 }, "pa": 0, "pb": 0 },
+				{ "a": { "row": 1, "col": 2 }, "b": { "row": 2, "col": 2 }, "pa": 3, "pb": 3 },
+				{ "a": { "row": 1, "col": 3 }, "b": { "row": 2, "col": 3 }, "pa": 0, "pb": 1 },
+				{ "a": { "row": 2, "col": 0 }, "b": { "row": 2, "col": 1 }, "pa": 2, "pb": 0 },
+				{ "a": { "row": 2, "col": 4 }, "b": { "row": 3, "col": 4 }, "pa": 2, "pb": 1 },
+				{ "a": { "row": 3, "col": 0 }, "b": { "row": 3, "col": 1 }, "pa": 0, "pb": 3 },
+				{ "a": { "row": 3, "col": 2 }, "b": { "row": 3, "col": 3 }, "pa": 3, "pb": 1 }
+			]
+		}
+	},
+	{
 		"seed": 20261231,
 		"difficulty": null,
 		"puzzleData": {

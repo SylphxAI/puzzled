@@ -14,7 +14,8 @@ import { join } from 'node:path'
 import { GAME_CONFIGS } from '../src/games/registry'
 
 const OUT = join(import.meta.dir, '../../../crates/puzzled-core/tests/fixtures/generate')
-const DATES = [20250101, 20260226, 20260926, 20261231]
+// 20261001: seed % 7 >= 5, so duo draws its 8x8 board.
+const DATES = [20250101, 20260226, 20260926, 20261001, 20261231]
 const CANONICAL: Record<string, string> = { queens: 'crowns', tango: 'duo' }
 
 mkdirSync(OUT, { recursive: true })

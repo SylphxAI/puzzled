@@ -18,6 +18,12 @@
 		"solution": { "path": ["bake", "bale", "ball", "bull", "bulk"] }
 	},
 	{
+		"seed": 20261001,
+		"difficulty": null,
+		"puzzleData": { "startWord": "palm", "endWord": "sled", "wordLength": 4, "minSteps": 7 },
+		"solution": { "path": ["palm", "pale", "sale", "sane", "sand", "send", "seed", "sled"] }
+	},
+	{
 		"seed": 20261231,
 		"difficulty": null,
 		"puzzleData": { "startWord": "got", "endWord": "zed", "wordLength": 3, "minSteps": 4 },
