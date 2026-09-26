@@ -65,12 +65,12 @@
 		"medium": "中等",
 		"hard": "困難",
 		"tricky": "棘手",
-		"selectDifficulty": "Select Difficulty",
-		"chooseDifficulty": "Choose your challenge level",
-		"playOtherDifficulties": "Play Other Difficulties",
-		"easyDescription": "Perfect for warming up",
-		"mediumDescription": "A balanced challenge",
-		"hardDescription": "Test your limits"
+		"selectDifficulty": "揀難度",
+		"chooseDifficulty": "揀你想玩嘅難度",
+		"playOtherDifficulties": "玩其他難度",
+		"easyDescription": "啱啱好熱身",
+		"mediumDescription": "有啲挑戰",
+		"hardDescription": "考吓你嘅極限"
 	},
 	"help": "玩法",
 	"menu": "更多",
