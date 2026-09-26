@@ -12,7 +12,7 @@ import 'server-only'
 import { create } from '@bufbuild/protobuf'
 import { createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
 import { loadDailyCompletionMap } from '@/features/daily/lib/daily-completion'
 import {
@@ -72,12 +72,20 @@ export type UserStats = {
 async function getServerTransport() {
 	const cookieStore = await cookies()
 	const cookie = cookieStore.toString()
+	// The api checks the Sylphx Auth session with Auth, which binds it to the
+	// browser's User-Agent.
+	const userAgent = (await headers()).get('user-agent')?.trim()
 	const baseUrl = resolveServerConnectBaseUrl()
 	return createConnectTransport({
 		baseUrl,
 		useBinaryFormat: false,
-		fetch: ((input: RequestInfo | URL, init?: RequestInit) =>
-			fetch(input, mergeServerConnectInit(init, cookie))) as typeof fetch,
+		fetch: ((input: RequestInfo | URL, init?: RequestInit) => {
+			const merged = mergeServerConnectInit(init, cookie)
+			if (!userAgent) return fetch(input, merged)
+			const forwarded = new Headers(merged.headers)
+			forwarded.set('user-agent', userAgent)
+			return fetch(input, { ...merged, headers: forwarded })
+		}) as typeof fetch,
 	})
 }
 

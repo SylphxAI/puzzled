@@ -5,6 +5,7 @@ use std::time::Instant;
 use sqlx::PgPool;
 
 use crate::capabilities::billing::adapters::stripe::Stripe;
+use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -12,6 +13,8 @@ pub struct AppState {
     pub pool: Option<PgPool>,
     /// Stripe, when Puzzled Plus is on sale. None: nothing is sold or locked.
     pub stripe: Option<Stripe>,
+    /// Sylphx Auth end-user session checks.
+    pub auth: AuthSessions,
 }
 
 impl AppState {
@@ -21,7 +24,14 @@ impl AppState {
             started_at: Instant::now(),
             pool,
             stripe: None,
+            auth: AuthSessions::from_env(),
         }
+    }
+
+    #[must_use]
+    pub fn with_auth(mut self, auth: AuthSessions) -> Self {
+        self.auth = auth;
+        self
     }
 
     #[must_use]

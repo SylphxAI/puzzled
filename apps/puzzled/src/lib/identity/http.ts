@@ -13,7 +13,7 @@ export function identityFail(status: number, error: string) {
 }
 
 export function identityOrigin(): string {
-	return destIdentityOrigin(env.IDENTITY_API_ORIGIN)
+	return destIdentityOrigin(process.env.SYLPHX_AUTH_URL ?? env.IDENTITY_API_ORIGIN)
 }
 
 export function destDevice(request: Request) {

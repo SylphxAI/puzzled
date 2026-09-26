@@ -13,13 +13,14 @@ import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
 import { logger } from '@/lib/logger'
 
 /**
- * After a sign-up, ask the api to store the landing's campaign tags on the new
+ * After a new account's first sign-in, ask the api to store the landing's campaign tags on the new
  * account (first touch). Only the attribution cookie is forwarded. A failure
  * is logged and never fails the sign-up.
  */
 export async function recordSignupAttribution(
 	accessToken: string | undefined,
 	cookieHeader: string | null,
+	userAgent: string,
 ): Promise<void> {
 	if (!accessToken || !cookieHeader || !hasAttributionCookie(cookieHeader)) return
 	const cookie = cookieHeader
@@ -35,6 +36,8 @@ export async function recordSignupAttribution(
 				const merged = mergeServerConnectInit(init, cookie, 3000)
 				const headers = new Headers(merged.headers)
 				headers.set('authorization', `Bearer ${accessToken}`)
+				// Auth binds the session to the browser's User-Agent.
+				headers.set('user-agent', userAgent)
 				return fetch(input, { ...merged, headers })
 			}) as typeof fetch,
 		})

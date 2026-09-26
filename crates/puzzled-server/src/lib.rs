@@ -22,6 +22,8 @@ pub use capabilities::identity_access::contract::{
 };
 
 #[cfg(test)]
+mod auth_session_tests;
+#[cfg(test)]
 mod billing_flow_tests;
 
 #[cfg(test)]

@@ -1,64 +1,33 @@
 import { NextResponse } from 'next/server'
-import {
-	destAdmissionResponse,
-	destDevice,
-	destIdentityCall,
-	destSessionChallengeId,
-	identityFail,
-	issueSessionCookie,
-} from '@/lib/identity/http'
+import { AuthCallError, authConfig, passwordTicket } from '@/lib/identity/client-auth'
+import { authFail, completeSignIn, userAgentOf } from '@/lib/identity/sign-in'
 
+/** Email + password sign-in through the Auth client API (server mode). */
 export async function POST(request: Request) {
+	const config = authConfig()
+	if (!config) return authFail(503, 'identity_unconfigured')
 	const body = (await request.json().catch(() => null)) as {
 		email?: string
 		password?: string
 	} | null
 	const email = body?.email?.trim()
-	const password = body?.password?.trim()
-	if (!email || !password) {
-		return identityFail(400, 'invalid_login')
-	}
-	const admission = destAdmissionResponse()
-	if (!admission.ok) return admission.response
-	let begun: unknown
+	const password = body?.password ?? ''
+	if (!email || !password) return authFail(400, 'invalid_login')
 	try {
-		begun = await destIdentityCall('/v1/authentication/begin', {
-			method: 'POST',
-			credential: admission.credential,
-			body: {
-				project_id: admission.projectId,
-				principal_hint: email,
-				purpose: 'login',
-				device: destDevice(request),
-			},
+		const ticket = await passwordTicket(config, {
+			email,
+			password,
+			userAgent: userAgentOf(request),
 		})
-	} catch {
-		return identityFail(401, 'identity_begin_failed')
-	}
-	const challengeId = destSessionChallengeId(begun)
-	if (!challengeId) {
-		return identityFail(401, 'identity_begin_failed')
-	}
-	try {
-		const completed = await destIdentityCall('/v1/authentication/complete', {
-			method: 'POST',
-			credential: admission.credential,
-			body: {
-				idempotency_key: crypto.randomUUID(),
-				challenge_id: challengeId,
-				factor_proofs: [
-					{
-						factor_type: 'password',
-						factor_id: '',
-						response: password,
-					},
-				],
-			},
-		})
-		const token = await issueSessionCookie(completed)
-		if (!token) return identityFail(401, 'identity_rejected')
+		await completeSignIn(config, request, ticket)
 		return NextResponse.json({ authority: 'sylphx-identity' })
-	} catch {
-		return identityFail(401, 'identity_rejected')
+	} catch (error) {
+		if (error instanceof AuthCallError && error.status === 429) {
+			return authFail(429, 'locked_out')
+		}
+		if (error instanceof AuthCallError && error.code === 'mfa_required') {
+			return authFail(401, 'mfa_required')
+		}
+		return authFail(401, 'identity_rejected')
 	}
 }

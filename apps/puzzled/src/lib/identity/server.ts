@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { env } from '../env'
 import { destIdentityCredential, destIdentityProjectId } from './credentials'
 import {
@@ -14,11 +14,16 @@ export const SESSION_COOKIE = 'sylphx_identity_session'
 export type { IdentityUser }
 
 function identityOrigin(): string {
-	return destIdentityOrigin(env.IDENTITY_API_ORIGIN)
+	return destIdentityOrigin(process.env.SYLPHX_AUTH_URL ?? env.IDENTITY_API_ORIGIN)
 }
 
 export async function sessionToken(): Promise<string | undefined> {
 	return (await cookies()).get(SESSION_COOKIE)?.value
+}
+
+/** The browser's User-Agent: Auth binds a session to it. */
+export async function browserUserAgent(): Promise<string> {
+	return (await headers()).get('user-agent')?.trim() || 'puzzled-web'
 }
 
 export async function currentUser(): Promise<IdentityUser | null> {
@@ -27,6 +32,7 @@ export async function currentUser(): Promise<IdentityUser | null> {
 	try {
 		const current = await destIdentityJson(identityOrigin(), '/v1/sessions/current', {
 			credential: token,
+			headers: { 'user-agent': await browserUserAgent() },
 		})
 		return destIdentityUser(current)
 	} catch {
@@ -69,6 +75,7 @@ export async function revokeCurrentSessions(): Promise<void> {
 		await destIdentityJson(identityOrigin(), '/v1/sessions/revoke-all', {
 			method: 'POST',
 			credential: token,
+			headers: { 'user-agent': await browserUserAgent() },
 			body: { idempotency_key: crypto.randomUUID(), reason: 'sign-out' },
 		})
 	} catch {
