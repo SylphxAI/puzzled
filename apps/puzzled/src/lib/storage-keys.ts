@@ -38,13 +38,6 @@ export const GUEST_GAMES_KEY = 'puzzled:guest:games'
 export const GUEST_DAY_ID_KEY = 'puzzled:guest:day-id'
 
 // ==========================================
-// Analytics & Session
-// ==========================================
-export const ANALYTICS_OFFLINE_QUEUE_KEY = 'puzzled:analytics:offline-queue'
-export const SESSION_START_KEY = 'puzzled:session:start'
-export const SESSION_ID_KEY = 'puzzled:session:id'
-
-// ==========================================
 // Game Session (dynamic per game)
 // ==========================================
 /**

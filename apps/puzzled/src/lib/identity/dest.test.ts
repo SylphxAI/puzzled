@@ -1,10 +1,6 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test'
 import { getAppConfig } from './app-config'
-import {
-	destEventsCredential,
-	destIdentityProjectId,
-	destObservabilityCredential,
-} from './credentials'
+import { destEventsCredential, destIdentityProjectId } from './credentials'
 import {
 	DEST_PEELS,
 	destIdentityJson,
@@ -12,7 +8,7 @@ import {
 	destIdentityPrincipal,
 	destJson,
 } from './dest'
-import { destEventsJson, destObservabilityJson, destSessionReplayChunksPath } from './peels'
+import { destEventsJson } from './peels'
 
 const originalFetch = globalThis.fetch
 
@@ -26,7 +22,6 @@ describe('Identity dest HTTP', () => {
 		delete process.env.SYLPHX_AUTH_SECRET_KEY
 		delete process.env.SYLPHX_PUBLISHABLE_KEY
 		delete process.env.EVENTS_API_KEY
-		delete process.env.OBSERVABILITY_API_KEY
 	})
 
 	test('parses dest snake_case principal_id', () => {
@@ -71,8 +66,8 @@ describe('Identity dest HTTP', () => {
 
 	test('destJson refuses Binding headers', async () => {
 		await expect(
-			destJson('https://api.observability.sylphx.com', '/v1/analytics:track', {
-				credential: 'obs_key',
+			destJson('https://api.events.sylphx.com', '/v1/devices', {
+				credential: 'events_key',
 				headers: { 'sylphx-project-binding': 'binding-jws' },
 			}),
 		).rejects.toThrow('Binding')
@@ -94,9 +89,8 @@ describe('Identity dest HTTP', () => {
 		expect(config.consentTypes).toContain('analytics')
 	})
 
-	test('Events and Observability dest peels accept product credentials', async () => {
+	test('the Events dest peel accepts its product credential', async () => {
 		process.env.EVENTS_API_KEY = 'events_key_a'
-		process.env.OBSERVABILITY_API_KEY = 'obs_key_a'
 		const fetchMock = mockFetch({ ok: true, body: { devices: [] } })
 		await destEventsJson('/v1/devices', {
 			method: 'POST',
@@ -109,22 +103,11 @@ describe('Identity dest HTTP', () => {
 				},
 			},
 		})
-		await destObservabilityJson('/v1/analytics:track', {
-			method: 'POST',
-			body: {
-				idempotency_key: 'idem-track',
-				event: { event: 'puzzle_complete', name: 'puzzle_complete' },
-			},
-		})
 		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
 			'https://api.events.sylphx.com/v1/devices',
-			'https://api.observability.sylphx.com/v1/analytics:track',
 		])
 		expect((fetchMock.mock.calls[0]?.[1] as RequestInit).headers).toEqual(
 			expect.objectContaining({ Authorization: 'Bearer events_key_a' }),
-		)
-		expect((fetchMock.mock.calls[1]?.[1] as RequestInit).headers).toEqual(
-			expect.objectContaining({ Authorization: 'Bearer obs_key_a' }),
 		)
 	})
 
@@ -135,10 +118,8 @@ describe('Identity dest HTTP', () => {
 			SYLPHX_SECRET_KEY: 'sk_prod_x',
 		}
 		expect(destEventsCredential(sibling)).toBeUndefined()
-		expect(destObservabilityCredential(sibling)).toBeUndefined()
 		expect(destIdentityProjectId(sibling)).toBeUndefined()
 		expect(destIdentityProjectId({ SYLPHX_AUTH_ORGANIZATION_ID: 'org_x' })).toBe('org_x')
-		expect(destSessionReplayChunksPath('session-a')).toBe('/v1/session-replays/session-a:chunks')
 	})
 
 	test('no dest peel names a commerce product', () => {

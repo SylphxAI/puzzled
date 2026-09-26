@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { useGameAnalytics } from '@/features/analytics'
 import type { PuzzleDifficulty } from '@/games/types'
 import { useSaveResult } from '@/lib/api'
 import { PlatformContext, useSafeUser } from '@/lib/identity/react'
@@ -53,7 +52,6 @@ export function useSaveGameResult(gameSlug: string) {
 	const [status, setStatus] = useState<SaveStatus>('idle')
 	const [error, setError] = useState<string | null>(null)
 	const savedRef = useRef(false)
-	const { trackGameComplete } = useGameAnalytics()
 
 	// SDK Platform context for leaderboard score submission
 	const platformContext = useContext(PlatformContext)
@@ -105,18 +103,6 @@ export function useSaveGameResult(gameSlug: string) {
 					puzzleDate: input.puzzleDate,
 					difficulty: input.difficulty,
 					data: input.data,
-				})
-
-				// Track game completion via SDK analytics
-				trackGameComplete({
-					game: gameSlug,
-					status: input.status,
-					attempts: input.attempts,
-					timeSpentMs: input.timeSpentMs,
-					score: response.score,
-					mode: input.mode ?? 'daily',
-					difficulty: input.difficulty,
-					puzzleId: input.puzzleId,
 				})
 
 				// Leaderboards only for authenticated users. Streak is a Rust
@@ -181,7 +167,7 @@ export function useSaveGameResult(gameSlug: string) {
 				return { success: false, error: errorMessage }
 			}
 		},
-		[userId, gameSlug, mutation, trackGameComplete, platformContext],
+		[userId, gameSlug, mutation, platformContext],
 	)
 
 	const reset = useCallback(() => {

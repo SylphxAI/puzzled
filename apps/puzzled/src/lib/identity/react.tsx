@@ -346,22 +346,6 @@ export function useResetPasswordForm(opts?: {
 	}
 }
 
-export function useAnalytics() {
-	return {
-		track: async (event?: string, props?: Record<string, unknown>) => {
-			if (!event?.trim()) return
-			await fetch('/api/observability/analytics', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				credentials: 'same-origin',
-				body: JSON.stringify({ event, properties: props }),
-			})
-		},
-	}
-}
-export function useSafeAnalytics() {
-	return useAnalytics()
-}
 export function useSafeConsent() {
 	const [consent, setConsent] = useState<Record<string, boolean>>({})
 	const [hasConsented, setHasConsented] = useState(false)
@@ -513,64 +497,6 @@ export function useSafeAchievements() {
 	}
 }
 
-export function useSessionReplay(opts?: {
-	onError?: (error: { message: string }) => void
-	autoStart?: boolean
-	userId?: string
-	[key: string]: unknown
-}) {
-	const [sessionId, setSessionId] = useState<string | null>(null)
-	const [isRecording, setIsRecording] = useState(false)
-	const start = useCallback(async () => {
-		const nextId = sessionId ?? crypto.randomUUID()
-		const response = await fetch('/api/observability/session-replays', {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			credentials: 'same-origin',
-			body: JSON.stringify({ sessionId: nextId, consent: true, masked: true }),
-		})
-		if (!response.ok) {
-			opts?.onError?.({ message: 'observability_replay_failed' })
-			return
-		}
-		setSessionId(nextId)
-		setIsRecording(true)
-	}, [opts, sessionId])
-	const stop = useCallback(() => {
-		setIsRecording(false)
-	}, [])
-	useEffect(() => {
-		if (opts?.autoStart) void start()
-	}, [opts?.autoStart, start])
-	const mark = useCallback(
-		async (kind: string, payload?: unknown) => {
-			if (!sessionId) return
-			await fetch('/api/observability/session-replays', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				credentials: 'same-origin',
-				body: JSON.stringify({
-					sessionId,
-					chunk: { sequence: Date.now(), payload: JSON.stringify({ kind, payload }) },
-				}),
-			}).catch((error) => {
-				opts?.onError?.({
-					message: error instanceof Error ? error.message : 'observability_replay_failed',
-				})
-			})
-		},
-		[opts, sessionId],
-	)
-	return {
-		start,
-		stop,
-		sessionId,
-		isRecording,
-		markError: (...args: unknown[]) => void mark('error', args),
-		markNavigation: (...args: unknown[]) => void mark('navigation', args),
-		markConversion: (...args: unknown[]) => void mark('conversion', args),
-	}
-}
 export const PlatformContext = createContext({
 	submitScore: async (_board?: string, _score?: number, _metadata?: unknown, _opts?: unknown) =>
 		undefined,
@@ -684,26 +610,4 @@ export const OAuthIcons: Record<string, (props: { className?: string }) => React
 	},
 )
 export type OAuthProvider = string
-export type PrivacyMode = string
-export type SessionReplayConfig = {
-	sampling?: { rate?: number; alwaysRecordErrors?: boolean }
-	privacyMode?: PrivacyMode
-	maskSelectors?: string[]
-	blockSelectors?: string[]
-	autoStart?: boolean
-	stopOnUnmount?: boolean
-	uploadEndpoint?: string
-	userId?: string
-	enabled?: boolean
-	errorCorrelation?: unknown
-	rageClickDetection?: boolean
-	deadClickDetection?: boolean
-	networkCapture?: boolean
-	consoleCapture?: boolean
-	maxDuration?: number
-	compress?: boolean
-	batchSize?: number
-	uploadInterval?: number
-	onError?: (error: { message: string }) => void
-}
 export type { AppConfig }

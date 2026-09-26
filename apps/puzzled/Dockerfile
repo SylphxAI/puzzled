@@ -26,6 +26,11 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 SKIP_ENV_VALIDATION=1
 
 # 5. Build Puzzled
 RUN cd apps/puzzled && bun run build
+# Browser source maps leave the served static directory (the site must never
+# serve source); the server uploads them at startup (docs/observability.md).
+RUN cd apps/puzzled/.next/static && mkdir -p ../source-maps && find . -name '*.map' -exec sh -c \
+      'mkdir -p "../source-maps/$(dirname "$1")" && mv "$1" "../source-maps/$1"' _ {} \; \
+    && test -z "$(find . -name '*.map')"
 
 FROM node:22-alpine AS runner
 WORKDIR /app
@@ -40,6 +45,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/public ./apps/puzzle
 COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/static ./apps/puzzled/.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/source-maps ./apps/puzzled/.next/source-maps
+COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/source-maps ./.next/source-maps
 COPY --chown=nextjs:nodejs apps/puzzled/start-web.cjs ./start-web.cjs
 EXPOSE 3000
 # start-web.cjs binds HOSTNAME=0.0.0.0 and honors Knative PORT.

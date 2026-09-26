@@ -50,7 +50,7 @@ export function reportError(error: unknown, tags: Record<string, string | undefi
 		const body = JSON.stringify({
 			type: err.name,
 			message: err.message || err.name,
-			stack: err.stack?.slice(0, 8000),
+			stack: err.stack?.slice(0, 16_000),
 			path: path(),
 			breadcrumbs: state.crumbs,
 			tags: cleanTags,

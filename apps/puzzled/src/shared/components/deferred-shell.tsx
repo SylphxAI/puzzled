@@ -9,15 +9,11 @@
  * initial route bundle:
  *
  * - the toast host (sonner runtime),
- * - session replay and the web-vitals reporter,
  * - achievement toasts and the PWA install prompt.
  *
  * Every path is bounded: the mount happens at the earliest of `load` + idle,
  * DOMContentLoaded + 2 s, 4 s after first paint, or the first interaction —
- * so a hung subresource can delay the chrome but can never drop it. Consent
- * behaviour is unchanged: analytics only fire after the banner recorded an
- * explicit opt-in (the gate lives at the send site, see
- * `features/analytics/lib/web-vitals*`).
+ * so a hung subresource can delay the chrome but can never drop it.
  */
 
 import dynamic from 'next/dynamic'
@@ -31,9 +27,6 @@ captureInstallPrompt()
 const loadChunk = () => import('./deferred-chunk')
 
 const ChunkToaster = dynamic(() => loadChunk().then((module) => module.DeferredToaster), {
-	ssr: false,
-})
-const ChunkMonitoring = dynamic(() => loadChunk().then((module) => module.DeferredMonitoring), {
 	ssr: false,
 })
 const ChunkOverlays = dynamic(() => loadChunk().then((module) => module.DeferredOverlays), {
@@ -145,15 +138,6 @@ export function DeferredToaster() {
 	return (
 		<DeferredMount>
 			<ChunkToaster />
-		</DeferredMount>
-	)
-}
-
-/** Session replay and web-vitals reporter. */
-export function DeferredMonitoring() {
-	return (
-		<DeferredMount>
-			<ChunkMonitoring />
 		</DeferredMount>
 	)
 }

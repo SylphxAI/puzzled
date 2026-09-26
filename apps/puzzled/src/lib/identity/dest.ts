@@ -1,12 +1,10 @@
 const IDENTITY_API_ORIGIN = 'https://api.sylphx.com'
 const EVENTS_API_ORIGIN = 'https://api.events.sylphx.com'
-const OBSERVABILITY_API_ORIGIN = 'https://api.observability.sylphx.com'
 const AI_API_ORIGIN = 'https://api.models.sylphx.ai/v1'
 
 export const DEST_PEELS = {
 	identity: IDENTITY_API_ORIGIN,
 	events: EVENTS_API_ORIGIN,
-	observability: OBSERVABILITY_API_ORIGIN,
 	ai: AI_API_ORIGIN,
 } as const
 
@@ -82,10 +80,6 @@ export function destIdentityOrigin(raw?: string | null): string {
 
 export function destEventsOrigin(raw?: string | null): string {
 	return destPeelOrigin(EVENTS_API_ORIGIN, raw)
-}
-
-export function destObservabilityOrigin(raw?: string | null): string {
-	return destPeelOrigin(OBSERVABILITY_API_ORIGIN, raw)
 }
 
 function readText(value: unknown, keys: string[]): string | undefined {

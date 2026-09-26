@@ -3,7 +3,6 @@ import localFont from 'next/font/local'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
-import { WebVitalsReporter } from '@/features/analytics/components/web-vitals-reporter'
 import { ErrorCapture } from '@/features/monitoring/components/error-capture'
 import { ApiProvider } from '@/lib/api/provider'
 import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
@@ -12,7 +11,7 @@ import { getAppConfig } from '@/lib/identity/app-config'
 import { EMPTY_APP_CONFIG } from '@/lib/identity/dest'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
-import { DeferredMonitoring, DeferredToaster } from '@/shared/components/deferred-shell'
+import { DeferredToaster } from '@/shared/components/deferred-shell'
 import { PlatformProvider } from '@/shared/components/platform'
 import { ThemeProvider } from '@/shared/components/theme'
 import '../globals.css'
@@ -247,15 +246,8 @@ export default async function LocaleLayout({ children, params }: Props) {
 								{children}
 							</NextIntlClientProvider>
 						</ApiProvider>
-						{/*
-						 * Attached at first paint, not on idle: Event Timing only reports the
-						 * interactions it observed, and INP would be biased by a late mount.
-						 * Delivery is still batched and only leaves on page hide.
-						 */}
-						<WebVitalsReporter />
-						{/* Off the first paint: hosted toasts and session replay */}
+						{/* Off the first paint: hosted toasts */}
 						<DeferredToaster />
-						<DeferredMonitoring />
 					</PlatformProvider>
 				</ThemeProvider>
 			</body>

@@ -96,11 +96,6 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		description: 'Events dest origin override',
 	},
 	{
-		name: 'OBSERVABILITY_API_ORIGIN',
-		required: false,
-		description: 'Observability dest origin override',
-	},
-	{
 		name: 'AI_API_ORIGIN',
 		required: false,
 		description: 'Models dest origin override',
@@ -125,11 +120,6 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		name: 'EVENTS_API_KEY',
 		required: false,
 		description: 'Events product key; required when Events is called',
-	},
-	{
-		name: 'OBSERVABILITY_API_KEY',
-		required: false,
-		description: 'Observability product key; required when replay is called',
 	},
 	{
 		name: 'AI_API_KEY',
@@ -274,10 +264,6 @@ export const env = {
 	get EVENTS_API_ORIGIN(): string | undefined {
 		return process.env.EVENTS_API_ORIGIN
 	},
-	/** Observability dest origin override */
-	get OBSERVABILITY_API_ORIGIN(): string | undefined {
-		return process.env.OBSERVABILITY_API_ORIGIN
-	},
 	/** Models dest origin override */
 	get AI_API_ORIGIN(): string | undefined {
 		return process.env.AI_API_ORIGIN
@@ -293,10 +279,6 @@ export const env = {
 	/** Events product key */
 	get EVENTS_API_KEY(): string | undefined {
 		return process.env.EVENTS_API_KEY
-	},
-	/** Observability product key */
-	get OBSERVABILITY_API_KEY(): string | undefined {
-		return process.env.OBSERVABILITY_API_KEY
 	},
 	/** Models product key */
 	get AI_API_KEY(): string | undefined {
