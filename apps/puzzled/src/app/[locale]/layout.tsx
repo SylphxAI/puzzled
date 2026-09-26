@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { WebVitalsReporter } from '@/features/analytics/components/web-vitals-reporter'
+import { ErrorCapture } from '@/features/monitoring/components/error-capture'
 import { ApiProvider } from '@/lib/api/provider'
 import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
 import { routing } from '@/lib/i18n/routing'
@@ -269,6 +270,8 @@ export default async function LocaleLayout({ children, params }: Props) {
 				<JsonLd baseUrl={baseUrl} />
 			</head>
 			<body className="antialiased">
+				{/* At first paint, outside the providers, so early errors are captured too. */}
+				<ErrorCapture />
 				<ThemeProvider>
 					<PlatformProvider appId={config.app.id} config={config}>
 						<ApiProvider>
@@ -282,7 +285,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 						 * Delivery is still batched and only leaves on page hide.
 						 */}
 						<WebVitalsReporter />
-						{/* Off the first paint: hosted toasts and the observability client */}
+						{/* Off the first paint: hosted toasts and session replay */}
 						<DeferredToaster />
 						<DeferredMonitoring />
 					</PlatformProvider>

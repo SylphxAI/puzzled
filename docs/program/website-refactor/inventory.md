@@ -73,7 +73,7 @@ Every admin route carries `robots: noindex` from `admin/layout.tsx` and is crawl
 
 ### Route handlers (not pages)
 
-`/api/admin/models`, `/api/commerce/{achievements,referrals}`, `/api/email/unsubscribe`, `/api/events/{devices,inbox}`, `/api/identity/{billing,billing/checkout,billing/portal,consent,login,logout,oidc/begin,recovery,recovery/complete,session,sessions,signup}`, `/api/observability/{analytics,error-events,session-replays}`. The `/api` prefix is crawl-blocked.
+`/api/admin/models`, `/api/commerce/{achievements,referrals}`, `/api/email/unsubscribe`, `/api/events/{devices,inbox}`, `/api/identity/{billing,billing/checkout,billing/portal,consent,login,logout,oidc/begin,recovery,recovery/complete,session,sessions,signup}`, `/api/observability/{analytics,errors,session-replays,test}`. The `/api` prefix is crawl-blocked.
 
 ### Generated documents and images
 

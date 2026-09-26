@@ -2,7 +2,8 @@
 //! dual-oracle of `packages/sdk/src/lib/monitoring/error-tracking/pii-scrubber.ts`
 //! high-precision string redaction half.
 //!
-//! Sentry transport I/O remains FE residual.
+//! Error transport is not here: server and browser errors go to Sylphx
+//! Observability, which scrubs again before capture (docs/observability.md).
 //! NO authority_rust / ts_deleted invent.
 
 /// Replacement tokens (TS scrubber replacements).

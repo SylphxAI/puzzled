@@ -512,37 +512,7 @@ export function useSafeAchievements() {
 		isConfigured: true,
 	}
 }
-export function useGlobalErrorHandler(opts?: {
-	handleErrors?: boolean
-	handleRejections?: boolean
-	onCapture?: (eventId?: string) => void
-}) {
-	useEffect(() => {
-		if (opts?.handleErrors === false && opts.handleRejections === false) return
-		const capture = (message: string) => {
-			void fetch('/api/observability/error-events', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				credentials: 'same-origin',
-				body: JSON.stringify({ message, service: 'puzzled-web' }),
-			})
-				.then(async (response) => {
-					const body = await readJson(response)
-					opts?.onCapture?.(typeof body.eventId === 'string' ? body.eventId : undefined)
-				})
-				.catch(() => undefined)
-		}
-		const onError = (event: ErrorEvent) => capture(event.message)
-		const onRejection = (event: PromiseRejectionEvent) =>
-			capture(event.reason instanceof Error ? event.reason.message : String(event.reason))
-		if (opts?.handleErrors !== false) window.addEventListener('error', onError)
-		if (opts?.handleRejections !== false) window.addEventListener('unhandledrejection', onRejection)
-		return () => {
-			window.removeEventListener('error', onError)
-			window.removeEventListener('unhandledrejection', onRejection)
-		}
-	}, [opts])
-}
+
 export function useSessionReplay(opts?: {
 	onError?: (error: { message: string }) => void
 	autoStart?: boolean

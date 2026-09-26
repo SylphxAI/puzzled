@@ -30,6 +30,7 @@
 					"game": "Game data: scores, statistics, streaks, and game history",
 					"payment": "Payment information: processed securely through Stripe",
 					"technical": "Technical data: IP address, browser type, and device information",
+					"errors": "Error reports: when a page or our server fails, we record the error message, stack trace and page path (never the query string, email addresses or anything you typed) in Sylphx Observability, our own error-monitoring service, to find and fix the fault",
 					"referral": "Referral tags: if you arrive through a link that carries campaign tags (utm_ parameters or a referral id, for example from another Sylphx product), and you have accepted analytics cookies, we keep those tags for 30 days in a first-party cookie and store them with your account and subscription if you sign up or subscribe. We use them only to know which link brought you; we do not sell or share them."
 				}
 			},

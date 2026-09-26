@@ -1,7 +1,7 @@
 /**
  * Monitoring Feature
  *
- * Session replay and error tracking for debugging and UX analysis.
+ * Session replay and browser error capture (Sylphx Observability).
  *
  * Features:
  * - Session replay with automatic PII detection
@@ -36,7 +36,7 @@
 // Components
 // ============================================
 
-export { GlobalErrorHandler, SessionReplayProvider } from './components'
+export { ErrorCapture, SessionReplayProvider } from './components'
 
 // ============================================
 // Hooks

@@ -11,6 +11,7 @@ pub mod proto {
 }
 
 pub mod capabilities;
+pub mod observability;
 pub mod shared;
 
 pub use bootstrap::{http_port, request_shutdown, router, shutdown_signal, AppState};
@@ -142,6 +143,23 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
         let json = body_json(response).await;
         assert_eq!(json["status"], "ok");
+    }
+
+    #[tokio::test]
+    async fn observability_test_trigger_is_hidden_without_the_key() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_request(
+                Method::POST,
+                "/observability/test",
+                Body::from(r#"{"nonce":"x"}"#),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("observability test request: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]
