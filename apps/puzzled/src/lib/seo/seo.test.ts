@@ -92,6 +92,7 @@ describe('route truth table', () => {
 			'/verify-email',
 			'/unsubscribe',
 			'/challenge',
+			'/family',
 		])
 	})
 
