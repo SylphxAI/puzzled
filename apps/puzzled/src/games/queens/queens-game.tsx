@@ -102,7 +102,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 			<Card className="mx-auto w-full max-w-md">
 				<CardHeader className="text-center">
 					<div className="mb-2 flex justify-center">
-						<Crown className="h-12 w-12 text-violet-500" />
+						<Crown className="h-12 w-12 text-foreground" />
 					</div>
 					<CardTitle>{t('name')}</CardTitle>
 					<p className="text-sm text-muted-foreground">{t('description')}</p>
@@ -178,15 +178,15 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 										cellSize,
 										'flex items-center justify-center rounded-md border transition-all',
 										REGION_COLORS[region % REGION_COLORS.length],
-										isSelected && 'ring-2 ring-primary ring-offset-1',
-										hasConflict && 'ring-2 ring-red-500',
+										isSelected && 'ring-2 ring-inset ring-[#1a1712]',
+										hasConflict && 'ring-2 ring-inset ring-destructive',
 										game.state.isComplete && 'pointer-events-none',
 									)}
 								>
 									{hasQueen && (
 										<Crown
-											className={cn('h-6 w-6', hasConflict ? 'text-red-600' : 'text-foreground')}
-											fill={hasConflict ? 'rgb(220 38 38)' : 'currentColor'}
+											className={cn('h-6 w-6', hasConflict ? 'text-destructive' : 'text-[#1a1712]')}
+											fill="currentColor"
 										/>
 									)}
 								</button>

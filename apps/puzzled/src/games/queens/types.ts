@@ -46,16 +46,17 @@ export type QueensGameState = {
 }
 
 // Region colors for visualization
+/** The brand's pastel fields: distinct regions, the same in light and dark. */
 export const REGION_COLORS = [
-	'bg-red-400/70 dark:bg-red-500/50',
-	'bg-blue-400/70 dark:bg-blue-500/50',
-	'bg-green-400/70 dark:bg-green-500/50',
-	'bg-yellow-400/70 dark:bg-yellow-500/50',
-	'bg-purple-400/70 dark:bg-purple-500/50',
-	'bg-pink-400/70 dark:bg-pink-500/50',
-	'bg-orange-400/70 dark:bg-orange-500/50',
-	'bg-cyan-400/70 dark:bg-cyan-500/50',
-	'bg-indigo-400/70 dark:bg-indigo-500/50',
+	'bg-[#f0aba3]',
+	'bg-[#aec6f2]',
+	'bg-[#a8d5b5]',
+	'bg-[#f5d36b]',
+	'bg-[#c6b9f2]',
+	'bg-[#f3b8d0]',
+	'bg-[#f5bd8e]',
+	'bg-[#a6d8dd]',
+	'bg-[#cfe39a]',
 ]
 
 /**

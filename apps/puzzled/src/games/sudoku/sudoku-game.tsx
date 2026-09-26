@@ -12,7 +12,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
-import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
@@ -55,7 +54,6 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 	})
 
 	// Game-specific state
-	const [showHelpModal, setShowHelpModal] = useState(false)
 	const gameEndedRef = useRef(false)
 
 	// Game hook
@@ -129,17 +127,7 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 			<Celebration show={showCelebration} />
 
 			{/* Game container - single width constraint, no internal padding */}
-			<div className="flex w-full max-w-[280px] flex-col gap-3 xs:max-w-[320px] sm:max-w-[360px] sm:gap-4">
-				{/* Header with help button */}
-				<div className="flex w-full items-center justify-between">
-					<div className="text-sm text-muted-foreground">
-						{t('name')} ({t(`difficulty.${puzzle.difficulty}`)})
-					</div>
-					<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
-						<HelpCircle className="h-4 w-4" />
-					</Button>
-				</div>
-
+			<div className="flex w-full max-w-[26rem] flex-col gap-4">
 				{/* Grid */}
 				<SudokuGrid
 					userGrid={game.state.userGrid}
@@ -157,13 +145,6 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 					disabled={game.state.isComplete}
 				/>
 			</div>
-
-			{/* Help Modal */}
-			<HowToPlayModal
-				open={showHelpModal}
-				onClose={() => setShowHelpModal(false)}
-				gameSlug="sudoku"
-			/>
 
 			{/* Game Result Modal */}
 			<GameResultModal

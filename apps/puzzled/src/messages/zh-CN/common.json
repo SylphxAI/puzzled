@@ -65,13 +65,14 @@
 		"medium": "中等",
 		"hard": "困难",
 		"tricky": "棘手",
-		"selectDifficulty": "Select Difficulty",
-		"chooseDifficulty": "Choose your challenge level",
-		"playOtherDifficulties": "Play Other Difficulties",
-		"easyDescription": "Perfect for warming up",
-		"mediumDescription": "A balanced challenge",
-		"hardDescription": "Test your limits"
+		"selectDifficulty": "选择难度",
+		"chooseDifficulty": "选择你的挑战难度",
+		"playOtherDifficulties": "玩其他难度",
+		"easyDescription": "适合热身",
+		"mediumDescription": "难度适中",
+		"hardDescription": "挑战你的极限"
 	},
 	"help": "玩法",
-	"menu": "更多"
+	"menu": "更多",
+	"reset": "重新开始"
 }

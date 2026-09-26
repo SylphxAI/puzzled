@@ -73,5 +73,6 @@
 		"hardDescription": "Test your limits"
 	},
 	"help": "How to play",
-	"menu": "More"
+	"menu": "More",
+	"reset": "Start over"
 }

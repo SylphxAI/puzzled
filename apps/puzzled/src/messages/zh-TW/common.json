@@ -6,5 +6,12 @@
 		"browseCta": "看全部遊戲"
 	},
 	"soundOn": "音效開（點一下靜音）",
-	"soundOff": "音效關（點一下開啟）"
+	"soundOff": "音效關（點一下開啟）",
+	"difficulty": {
+		"selectDifficulty": "選擇難度",
+		"chooseDifficulty": "選擇你的挑戰難度",
+		"easyDescription": "適合暖身",
+		"mediumDescription": "難度適中",
+		"hardDescription": "挑戰你的極限"
+	}
 }
