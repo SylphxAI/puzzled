@@ -93,8 +93,11 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 				category={category}
 			/>
 
-			<section className="pb-12 md:pb-16" aria-label={t('suiteTitle')}>
+			<section className="pb-12 md:pb-16" aria-labelledby="catalog-suite">
 				<div className="page-shell-wide">
+					<h2 id="catalog-suite" className="sr-only">
+						{t('suiteTitle')}
+					</h2>
 					{visibleEntries.length === 0 ? (
 						<div className="mt-5 rounded-3xl border border-dashed border-border px-6 py-12 text-center">
 							<p className="font-display text-lg">{t('emptyTitle')}</p>

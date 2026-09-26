@@ -107,13 +107,14 @@ export function LanguageSwitcher({
 							isPending && 'pointer-events-none opacity-50',
 							className,
 						)}
-						aria-label={t('changeLanguage')}
+						// WCAG 2.5.3: the name starts with the visible label.
+						aria-label={`${localeNames[locale]}, ${t('changeLanguage')}`}
 					>
 						<span className="flex items-center gap-3">
 							<Languages className="h-5 w-5 shrink-0" aria-hidden="true" />
 							<span className="truncate">{localeNames[locale]}</span>
 						</span>
-						<ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+						<ChevronDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
 					</Button>
 				</DropdownMenuTrigger>
 				<LanguageDropdownContent
@@ -138,7 +139,7 @@ export function LanguageSwitcher({
 						isPending && 'pointer-events-none opacity-50',
 						className,
 					)}
-					aria-label={t('changeLanguage')}
+					aria-label={`${localeShortNames[locale]}, ${t('changeLanguage')}`}
 				>
 					<Languages className="h-4 w-4" aria-hidden="true" />
 					<span>{localeShortNames[locale]}</span>
