@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import http from 'node:http'
-import { mergeServerConnectInit, SERVER_CONNECT_TIMEOUT_MS } from './connect-fetch'
+import {
+	forwardableUserAgent,
+	mergeServerConnectInit,
+	SERVER_CONNECT_TIMEOUT_MS,
+} from './connect-fetch'
 
 function listenHang(): Promise<{ port: number; close: () => Promise<void> }> {
 	return new Promise((resolve, reject) => {
@@ -73,5 +77,23 @@ describe('mergeServerConnectInit', () => {
 		} finally {
 			await hang.close()
 		}
+	})
+})
+
+describe('forwardableUserAgent', () => {
+	test('a browser User-Agent is forwarded', () => {
+		expect(forwardableUserAgent(' Mozilla/5.0 (X11) ')).toBe('Mozilla/5.0 (X11)')
+		expect(
+			new Headers(mergeServerConnectInit(undefined, '', 1000, 'Mozilla/5.0').headers).get(
+				'user-agent',
+			),
+		).toBe('Mozilla/5.0')
+	})
+
+	test('a Kubernetes probe or an empty value is not', () => {
+		expect(forwardableUserAgent('kube-probe/1.33')).toBeNull()
+		expect(forwardableUserAgent('kube-probe//')).toBeNull()
+		expect(forwardableUserAgent('')).toBeNull()
+		expect(forwardableUserAgent(null)).toBeNull()
 	})
 })

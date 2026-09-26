@@ -31,7 +31,7 @@ import {
 	GetUserStatsRequestSchema,
 	StatsService,
 } from '@/gen/connect/puzzled/v1/stats_pb'
-import { mergeServerConnectInit } from '@/lib/api/connect-fetch'
+import { mergeServerConnectInit, SERVER_CONNECT_TIMEOUT_MS } from '@/lib/api/connect-fetch'
 import {
 	type DailyStatus,
 	mapDailyStatus,
@@ -74,18 +74,16 @@ async function getServerTransport() {
 	const cookie = cookieStore.toString()
 	// The api checks the Sylphx Auth session with Auth, which binds it to the
 	// browser's User-Agent.
-	const userAgent = (await headers()).get('user-agent')?.trim()
+	const userAgent = (await headers()).get('user-agent')
 	const baseUrl = resolveServerConnectBaseUrl()
 	return createConnectTransport({
 		baseUrl,
 		useBinaryFormat: false,
-		fetch: ((input: RequestInfo | URL, init?: RequestInit) => {
-			const merged = mergeServerConnectInit(init, cookie)
-			if (!userAgent) return fetch(input, merged)
-			const forwarded = new Headers(merged.headers)
-			forwarded.set('user-agent', userAgent)
-			return fetch(input, { ...merged, headers: forwarded })
-		}) as typeof fetch,
+		fetch: ((input: RequestInfo | URL, init?: RequestInit) =>
+			fetch(
+				input,
+				mergeServerConnectInit(init, cookie, SERVER_CONNECT_TIMEOUT_MS, userAgent),
+			)) as typeof fetch,
 	})
 }
 

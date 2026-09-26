@@ -68,10 +68,12 @@ const EXPECTED_DAILY = {
 // --- server surface ---------------------------------------------------------
 
 const realNextHeaders = await import('next/headers')
+/** The User-Agent of the page request being rendered. */
+let pageUserAgent = 'test-browser'
 mock.module('next/headers', () => ({
 	...realNextHeaders,
 	// The server transport forwards the browser's User-Agent (Auth sessions).
-	headers: async () => new Headers({ 'user-agent': 'test-browser' }),
+	headers: async () => new Headers({ 'user-agent': pageUserAgent }),
 	cookies: async () => ({
 		toString: () => 'puzzled_guest_id=guest-1',
 		get: (name: string) => (name === 'puzzled_guest_id' ? { name, value: 'guest-1' } : undefined),
@@ -84,10 +86,11 @@ const previousInternalUrl = process.env[ENV_KEY]
 process.env[ENV_KEY] = 'http://api.internal.test'
 
 const realFetch = globalThis.fetch
-const requests: { url: string; body: string; cookie: string }[] = []
+const requests: { url: string; body: string; cookie: string; userAgent: string | null }[] = []
 afterEach(() => {
 	globalThis.fetch = realFetch
 	requests.length = 0
+	pageUserAgent = 'test-browser'
 })
 
 function bodyText(body: RequestInit['body']): string {
@@ -103,6 +106,7 @@ function stubConnectFetch(response: GetDailyResponse) {
 			url: String(input),
 			body: bodyText(init?.body),
 			cookie: new Headers(init?.headers).get('cookie') ?? '',
+			userAgent: new Headers(init?.headers).get('user-agent'),
 		})
 		return new Response(JSON.stringify(toJson(GetDailyResponseSchema, response)), {
 			status: 200,
@@ -111,7 +115,31 @@ function stubConnectFetch(response: GetDailyResponse) {
 	}) as typeof fetch
 }
 
-const { getServerDailyStatus, getServerTodaysPuzzle } = await import('@/lib/api/server')
+const { getServerDailyStatus, getServerPersonalDailyResults, getServerTodaysPuzzle } = await import(
+	'@/lib/api/server'
+)
+
+describe('home page personal results: GetDaily as the home page calls it', () => {
+	const gameSlugs = ['sudoku', 'word-guess', 'nonogram']
+
+	test('one GetDaily per game, each naming its game, with the browser User-Agent', async () => {
+		stubConnectFetch(fixture())
+		const out = await getServerPersonalDailyResults({ gameSlugs, isGuest: true })
+		expect(Object.keys(out).sort()).toEqual([...gameSlugs].sort())
+		expect(Object.values(out).every((r) => r.statusAvailable)).toBe(true)
+		expect(requests.map((r) => JSON.parse(r.body).gameSlug).sort()).toEqual([...gameSlugs].sort())
+		expect(requests.every((r) => r.userAgent === 'test-browser')).toBe(true)
+	})
+
+	test('a platform probe rendering the page does not pass its User-Agent to the api', async () => {
+		// Knative's queue-proxy answers any kube-probe/ request itself with a 400.
+		pageUserAgent = 'kube-probe/1.33'
+		stubConnectFetch(fixture())
+		await getServerPersonalDailyResults({ gameSlugs, isGuest: true })
+		expect(requests.length).toBe(gameSlugs.length)
+		expect(requests.some((r) => /kube-probe/i.test(r.userAgent ?? ''))).toBe(false)
+	})
+})
 
 describe('getServerDailyStatus against a Connect fixture', () => {
 	test('maps the fixture to the pinned DailyStatus (server cache()d accessor)', async () => {
