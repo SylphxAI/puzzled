@@ -213,8 +213,13 @@ fn alert_if_low(report: &FillReport) {
                 report.failed.len()
             ),
             route: Some("daily-pipeline".into()),
-            stack: (!report.failed.is_empty()).then(|| report.failed.join("\n")),
-            tags: vec![("job".into(), "daily-puzzles".into())],
+            tags: std::iter::once(("job".into(), "daily-puzzles".into()))
+                .chain(
+                    (!report.failed.is_empty())
+                        .then(|| ("failed".into(), report.failed.join("\n").chars().take(1000).collect())),
+                )
+                .collect(),
+            ..crate::observability::ErrorReport::default()
         });
     }
 }
