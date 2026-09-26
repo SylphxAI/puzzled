@@ -34,7 +34,7 @@
 		"@connectrpc/connect": "^2.0.0",
 		"@connectrpc/connect-query": "^2.0.0",
 		"@connectrpc/connect-web": "^2.0.0",
-		"@iconify/react": "^5.2.0",
+		"@iconify/react": "^6.0.0",
 		"@sylphx/sdk": "^0.31.0",
 		"@sylphx/ui": "workspace:*",
 		"@tanstack/react-query": "^5.90.20",
