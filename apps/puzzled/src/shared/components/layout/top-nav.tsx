@@ -16,22 +16,21 @@ type TopNavProps = {
 }
 
 /**
- * The single shell header.
- *
- * It replaces the previous split model (desktop-only top nav plus a
- * page-local mobile header) so every surface shares one navigation, one
- * focus order, and one set of account controls.
+ * The shell header: a translucent bar with the lockup, the day's destinations
+ * as editorial text links (an ink underline marks the current one), and the
+ * account controls. On a phone the destinations move to the tab bar and the
+ * header keeps only the lockup, the streak and the menu.
  */
 export function TopNav({ currentStreak = 0 }: TopNavProps) {
 	const t = useTranslations()
 	const pathname = usePathname()
 
 	return (
-		<header className="sticky top-0 z-header border-b border-border/70 bg-background/80 backdrop-blur-xl">
-			<div className="page-shell-wide flex h-16 items-center gap-3">
+		<header className="pt-safe sticky top-0 z-header border-b border-hairline bg-background/80 backdrop-blur-xl backdrop-saturate-150">
+			<div className="page-shell-wide flex h-14 items-center gap-2 md:h-16">
 				<Logo size="md" />
 
-				<nav className="ml-2 hidden items-center gap-0.5 md:flex" aria-label={t('nav.main')}>
+				<nav className="ml-6 hidden items-center gap-1 md:flex" aria-label={t('nav.main')}>
 					{NAV_ITEMS.filter((item) => item.showInTopNav).map(({ href, labelKey }) => {
 						const isActive = isActivePath(pathname, href)
 						return (
@@ -40,11 +39,11 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 								href={href}
 								aria-current={isActive ? 'page' : undefined}
 								className={cn(
-									// min-h-11 keeps the primary nav at the 44px company target.
-									'inline-flex min-h-11 items-center rounded-full px-3.5 text-sm font-semibold transition-colors',
+									'relative inline-flex min-h-11 items-center px-3 text-[15px] font-medium transition-colors',
+									'after:absolute after:inset-x-3 after:bottom-1.5 after:h-0.5 after:rounded-full after:bg-foreground after:transition-transform after:duration-medium after:ease-out',
 									isActive
-										? 'bg-primary/10 text-primary'
-										: 'text-muted-foreground hover:bg-muted hover:text-foreground',
+										? 'text-foreground after:scale-x-100'
+										: 'text-muted-foreground after:scale-x-0 hover:text-foreground',
 								)}
 							>
 								{t(`nav.${labelKey}`)}
@@ -53,11 +52,11 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 					})}
 				</nav>
 
-				<div className="ml-auto flex items-center gap-1.5">
+				<div className="ml-auto flex items-center gap-1">
 					{currentStreak > 0 && (
 						<Link
 							href="/stats"
-							className="flex h-11 min-w-11 items-center gap-1.5 rounded-full bg-stat-streak/10 px-3 text-sm font-semibold text-stat-streak transition-colors hover:bg-stat-streak/15"
+							className="pressable flex h-11 min-w-11 items-center gap-1 rounded-full px-3 text-sm font-semibold text-stat-streak"
 							aria-label={t('stats.streakLabel', { days: currentStreak })}
 						>
 							<Flame className="h-4 w-4" aria-hidden="true" />
@@ -65,7 +64,21 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 						</Link>
 					)}
 
-					<div className="hidden items-center gap-1 md:flex">
+					<Link
+						href="/pricing"
+						className={cn(
+							'hidden h-9 items-center rounded-full border border-border px-3.5 text-sm font-semibold transition-colors hover:border-foreground/30 lg:inline-flex',
+							isActivePath(pathname, '/pricing') && 'border-foreground/40',
+						)}
+					>
+						<span
+							className="mr-1.5 inline-block h-2 w-2 rounded-[2px] bg-accent-warm"
+							aria-hidden="true"
+						/>
+						{t('nav.plus')}
+					</Link>
+
+					<div className="hidden items-center md:flex">
 						<ThemeToggleCompact />
 						<LanguageSwitcher />
 					</div>

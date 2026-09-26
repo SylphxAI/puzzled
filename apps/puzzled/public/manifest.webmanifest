@@ -1,13 +1,13 @@
 {
 	"name": "Puzzled",
 	"short_name": "Puzzled",
-	"description": "Daily brain games and puzzles. One free puzzle every day — word, logic, number and spatial play.",
+	"description": "Daily word, logic and number puzzles. One free puzzle every day, no account needed.",
 	"id": "/",
 	"scope": "/",
 	"start_url": "/",
 	"display": "standalone",
-	"background_color": "#ffffff",
-	"theme_color": "#4f46e5",
+	"background_color": "#f7f4ee",
+	"theme_color": "#1a1712",
 	"orientation": "portrait-primary",
 	"icons": [
 		{

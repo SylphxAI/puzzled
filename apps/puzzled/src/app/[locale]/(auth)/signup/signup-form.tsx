@@ -69,9 +69,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 				<span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
 					<MailCheck className="h-7 w-7 text-primary" aria-hidden="true" />
 				</span>
-				<h1 className="mt-4 font-display text-2xl font-extrabold tracking-tight">
-					{t('checkYourEmail')}
-				</h1>
+				<h1 className="mt-4 font-display text-2xl">{t('checkYourEmail')}</h1>
 				<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
 					{t('verificationSent')}
 				</p>
@@ -99,7 +97,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 
 	return (
 		<div className="surface-card p-5 sm:p-7">
-			<h1 className="font-display text-2xl font-extrabold tracking-tight">{t('createAccount')}</h1>
+			<h1 className="font-display text-2xl">{t('createAccount')}</h1>
 			<p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{t('joinToContinue')}</p>
 
 			<div className="mt-6">

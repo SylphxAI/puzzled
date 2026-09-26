@@ -54,21 +54,21 @@ export async function AuthShell({ locale, children }: AuthShellProps) {
 
 					<div className="relative">
 						<Logo size="lg" tone="inverse" />
-						<h2 className="mt-10 max-w-md font-display text-3xl font-extrabold leading-tight text-balance xl:text-4xl">
+						<h2 className="mt-10 max-w-md font-display text-3xl leading-tight text-balance xl:text-4xl">
 							{t('brandPanel.title')}
 						</h2>
-						<p className="mt-3 max-w-md text-sm leading-relaxed text-indigo-100/80">
+						<p className="mt-3 max-w-md text-sm leading-relaxed text-foreground/80">
 							{t('brandPanel.body')}
 						</p>
 
 						<div className="mt-8 max-w-md rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-							<p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-200">
+							<p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
 								{t('brandPanel.proofLabel')}
 							</p>
-							<p className="mt-1.5 font-display text-lg font-bold">
+							<p className="mt-1.5 font-display text-lg">
 								{t('brandPanel.proofGame', { game: freeGameName })}
 							</p>
-							<p className="mt-1 text-sm text-indigo-100/80">
+							<p className="mt-1 text-sm text-foreground/80">
 								{playersToday === null
 									? t('brandPanel.proofNoCount')
 									: playersToday === 0
@@ -86,10 +86,10 @@ export async function AuthShell({ locale, children }: AuthShellProps) {
 							</Link>
 						</div>
 
-						<ul className="mt-8 max-w-md space-y-2 text-sm text-indigo-100/80">
+						<ul className="mt-8 max-w-md space-y-2 text-sm text-foreground/80">
 							{trustPoints.map((point) => (
 								<li key={point} className="flex items-start gap-2">
-									<Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
+									<Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
 									{point}
 								</li>
 							))}

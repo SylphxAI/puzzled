@@ -1,24 +1,22 @@
 import { cn } from '@/lib/utils'
 
 /**
- * Puzzled brand mark.
+ * Puzzled brand mark and wordmark.
  *
- * Four rounded tiles on the midnight ink ground, the last one lit amber - the
- * piece you are looking for. It mirrors public/brand/mark.svg so the app, the
- * OG card and the raster favicons stay one shape, and plain rectangles need no
- * gradient ids when several marks render on one page.
+ * The mark is a question-mark hook whose dot is a single amber tile: the
+ * piece you are looking for. It mirrors public/brand/mark.svg (64-unit
+ * canvas), so the app, the OG card and the raster icons stay one shape.
+ * The ground and hook read the primary tokens, so the tile is ink on paper
+ * and paper on charcoal without a second asset.
  */
 
-const INK = '#0e1226'
-const PAPER = '#faf6ef'
-const AMBER = '#fbbf24'
+export const MARK_HOOK_PATH = 'M21 23a11 11 0 1 1 16.5 9.53Q32 35.6 32 39'
+export const MARK_AMBER = '#F4B42A'
 
-const PIECES = [
-	{ x: 1.5, y: 1.5, accent: false },
-	{ x: 13.5, y: 1.5, accent: false },
-	{ x: 1.5, y: 13.5, accent: false },
-	{ x: 13.5, y: 13.5, accent: true },
-] as const
+/** Fraunces 620 outline of "Puzzled" (public/brand/wordmark.svg). */
+export const WORDMARK_VIEWBOX = '62 -1487 6216 1512'
+export const WORDMARK_PATH =
+	'M1229.6 -881.2Q1229.6 -745.6 1166.9 -645.4Q1104.3 -545.2 991 -490.7Q877.7 -436.1 725.1 -436.1Q621.7 -436.1 536.7 -459.8Q451.7 -483.5 383.7 -528.5L394.1 -604.9Q439.6 -574.4 481.2 -556.3Q522.9 -538.2 562.9 -530.6Q603 -523.1 641.6 -523.1Q725.5 -523.1 791.4 -565.5Q857.3 -607.9 895.8 -689.8Q934.4 -771.7 934.4 -890.4Q934.4 -1023.3 888.5 -1119.5Q842.6 -1215.7 760.5 -1268Q678.5 -1320.3 570.9 -1320.3H496.4V-146.1Q496.4 -123.8 506.6 -111.7Q516.8 -99.6 538.7 -93.8L618.9 -78.2Q634.6 -73.7 642.3 -64.7Q649.9 -55.8 649.9 -38.4Q649.9 -20.3 639 -10.1Q628 0 606.1 0H106.9Q85.4 0 74 -10.1Q62.5 -20.3 62.5 -38.7Q62.5 -67.9 93.8 -80.4L159.5 -94.1Q182 -101.4 191.6 -113.4Q201.2 -125.4 201.2 -145.3V-1252.5Q201.2 -1273.8 191.7 -1286.3Q182.1 -1298.8 160.3 -1305.9L92.7 -1319.9Q62.5 -1331.9 62.5 -1361.3Q62.5 -1380.2 73.8 -1390.1Q85.1 -1400 106.5 -1400H576.8Q779.5 -1400 925.7 -1333.4Q1071.9 -1266.8 1150.7 -1149.9Q1229.6 -1032.9 1229.6 -881.2Z M1917.2 -77.8V-170.7L1913.6 -176.4V-700.9Q1913.6 -720.6 1908.2 -729.1Q1902.7 -737.7 1889.7 -741.2L1840.3 -743.1Q1827.3 -748.3 1821.9 -755.5Q1816.4 -762.8 1816.4 -773.7Q1816.4 -786.2 1824.2 -794.9Q1831.9 -803.5 1850.4 -810.5L2072.7 -880Q2097.2 -889.1 2110.3 -892.2Q2123.5 -895.3 2135 -895.3Q2152.3 -895.3 2161.3 -884.5Q2170.2 -873.7 2170.2 -856.3V-131.9Q2170.2 -105.5 2177 -93.3Q2183.9 -81.2 2198.6 -76.3L2237.9 -67.3Q2250.3 -61.2 2256.1 -53Q2262 -44.8 2262 -32.4Q2262 -17.2 2252.5 -8.6Q2243.1 0 2226.1 0H1994.2Q1956.4 0 1936.8 -21Q1917.2 -42 1917.2 -77.8ZM1354.6 -244V-700.9Q1354.6 -720.6 1349 -729.1Q1343.4 -737.7 1330.2 -741.2L1280.9 -743.1Q1267.9 -748.3 1262.4 -755.5Q1257 -762.8 1257 -773.7Q1257 -786.2 1264.8 -794.9Q1272.5 -803.5 1291 -810.5L1513.6 -880Q1538.5 -889.1 1551.4 -892.2Q1564.4 -895.3 1575.9 -895.3Q1593.2 -895.3 1602.2 -884.5Q1611.1 -873.7 1611.1 -856.3V-290.3Q1611.1 -210.2 1646.3 -170.8Q1681.5 -131.5 1740.8 -131.5Q1780.7 -131.5 1822.3 -149.9Q1863.9 -168.4 1906.3 -207.9L1939.4 -238.4L1971.3 -199.3L1933.4 -162.8Q1830.1 -63.2 1745.2 -21.4Q1660.3 20.5 1584.3 20.5Q1481.9 20.5 1418.2 -46.4Q1354.6 -113.3 1354.6 -244Z M3033.7 -783.3 2562.2 -29.1 2520.4 -66H2754.5Q2803.5 -66 2838.5 -79.5Q2873.4 -93 2905.3 -128.7Q2937.1 -164.4 2975 -229.6L3014.9 -302.9Q3023.8 -317.9 3034.5 -323.5Q3045.3 -329.2 3059.4 -325.5Q3072.2 -322.4 3077.6 -311.9Q3083 -301.4 3079.2 -284.1L3025.6 -15.4Q3020.9 6.4 3012.7 15.4Q3004.6 24.4 2991.8 24.4Q2973.3 24.4 2953.7 12.2Q2934.1 0 2893.8 0H2354.8Q2325.7 0 2312.6 -11.7Q2299.5 -23.5 2299.5 -43.4Q2299.5 -55.7 2304.3 -67.8Q2309 -80 2319.2 -95.6L2793 -850L2836.9 -813.5H2596.4Q2556.8 -813.5 2527.4 -802.2Q2498.1 -791 2471.9 -761.6Q2445.7 -732.2 2414.9 -677.4L2373.7 -602Q2364.9 -586.7 2353.2 -581.1Q2341.5 -575.5 2328 -579Q2314.4 -582.8 2309.7 -593.2Q2304.9 -603.6 2308.2 -620.6L2357.3 -864.1Q2361.7 -885.6 2369.7 -894.2Q2377.8 -902.8 2392.1 -902.8Q2409.7 -902.8 2429 -891.1Q2448.2 -879.4 2486.9 -879.4H3011Q3035.8 -879.4 3047.3 -870.2Q3058.9 -861 3058.9 -842.3Q3058.9 -830.3 3053.3 -817.4Q3047.7 -804.5 3033.7 -783.3Z M3852.7 -783.3 3381.2 -29.1 3339.4 -66H3573.5Q3622.5 -66 3657.5 -79.5Q3692.4 -93 3724.3 -128.7Q3756.1 -164.4 3794 -229.6L3833.9 -302.9Q3842.8 -317.9 3853.5 -323.5Q3864.3 -329.2 3878.4 -325.5Q3891.2 -322.4 3896.6 -311.9Q3902 -301.4 3898.2 -284.1L3844.6 -15.4Q3839.9 6.4 3831.7 15.4Q3823.6 24.4 3810.8 24.4Q3792.3 24.4 3772.7 12.2Q3753.1 0 3712.8 0H3173.8Q3144.7 0 3131.6 -11.7Q3118.5 -23.5 3118.5 -43.4Q3118.5 -55.7 3123.3 -67.8Q3128 -80 3138.2 -95.6L3612 -850L3655.9 -813.5H3415.4Q3375.8 -813.5 3346.4 -802.2Q3317.1 -791 3290.9 -761.6Q3264.7 -732.2 3233.9 -677.4L3192.7 -602Q3183.9 -586.7 3172.2 -581.1Q3160.5 -575.5 3147 -579Q3133.4 -582.8 3128.7 -593.2Q3123.9 -603.6 3127.2 -620.6L3176.3 -864.1Q3180.7 -885.6 3188.7 -894.2Q3196.8 -902.8 3211.1 -902.8Q3228.7 -902.8 3248 -891.1Q3267.2 -879.4 3305.9 -879.4H3830Q3854.8 -879.4 3866.3 -870.2Q3877.9 -861 3877.9 -842.3Q3877.9 -830.3 3872.3 -817.4Q3866.7 -804.5 3852.7 -783.3Z M4291.6 -1448V-131.9Q4291.6 -105.3 4298.2 -93.3Q4304.8 -81.4 4320 -76.3L4359.3 -67.3Q4371.7 -61.2 4377.6 -53Q4383.4 -44.8 4383.4 -32.4Q4383.4 -17.2 4374 -8.6Q4364.5 0 4347.5 0H3978.1Q3961.8 0 3952.2 -8.6Q3942.6 -17.2 3942.6 -32.4Q3942.6 -44.7 3948.8 -53Q3955 -61.3 3967.7 -67.6L4006.7 -76.3Q4022.2 -81.4 4028.7 -93.3Q4035.1 -105.3 4035.1 -131.5V-1292.5Q4035.1 -1312.2 4029.6 -1320.8Q4024.1 -1329.4 4011.1 -1332.9L3961.7 -1334.8Q3948.8 -1339.9 3943.3 -1347.2Q3937.9 -1354.5 3937.9 -1365.4Q3937.9 -1377.9 3945.6 -1386.5Q3953.4 -1395.1 3971.8 -1402.1L4194.1 -1471.7Q4219 -1480.8 4231.9 -1483.9Q4244.9 -1487 4256.4 -1487Q4273.8 -1487 4282.7 -1476.2Q4291.6 -1465.4 4291.6 -1448Z M5242.4 -539.6Q5242.4 -501.6 5221.9 -480.8Q5201.4 -460 5162.7 -460H4595.8V-519.7H4946.8Q4983.2 -519.7 4983.2 -557.6Q4983.2 -690.6 4940 -757.1Q4896.8 -823.5 4833.6 -823.5Q4781.7 -823.5 4742.2 -790.2Q4702.8 -756.8 4680.4 -689.5Q4658 -622.3 4658 -520.5Q4658 -333.9 4738.8 -240.1Q4819.6 -146.2 4950.7 -146.2Q5040.2 -146.2 5105 -191.5Q5169.9 -236.9 5190.9 -310.2Q5199.3 -321.1 5206.4 -325.3Q5213.6 -329.4 5219.9 -329.4Q5228.6 -329.4 5234.4 -322.5Q5240.3 -315.6 5239.7 -300.3Q5235.2 -212.8 5185.3 -140Q5135.4 -67.2 5049.9 -23.6Q4964.4 20 4853 20Q4723.5 20 4626.5 -35.9Q4529.5 -91.8 4475.6 -192.8Q4421.8 -293.8 4421.8 -427.6Q4421.8 -565.7 4475.1 -672.3Q4528.4 -778.9 4628.4 -839.3Q4728.4 -899.8 4866.9 -899.8Q4981.5 -899.8 5065.7 -852.6Q5149.9 -805.5 5196.1 -723.9Q5242.4 -642.4 5242.4 -539.6Z M5935.6 -146.1 5929.6 -152.1V-1292.5Q5929.6 -1312.2 5924.1 -1320.8Q5918.6 -1329.4 5905.6 -1332.9L5856.2 -1334.8Q5843.2 -1339.9 5837.8 -1347.2Q5832.4 -1354.5 5832.4 -1365.4Q5832.4 -1377.9 5840.1 -1386.5Q5847.9 -1395.1 5866.3 -1402.1L6088.6 -1471.7Q6113.5 -1480.8 6126.4 -1483.9Q6139.4 -1487 6150.9 -1487Q6168.2 -1487 6177.2 -1476.2Q6186.1 -1465.4 6186.1 -1448V-131.9Q6186.1 -105.5 6193.1 -93.5Q6200.1 -81.5 6214.5 -76.3L6253.8 -67.3Q6265.9 -60.8 6271.9 -52.8Q6277.9 -44.8 6277.9 -32.4Q6277.9 -17.2 6268.5 -8.6Q6259 0 6242 0H6010.1Q5978 0 5956.8 -20.7Q5935.6 -41.5 5935.6 -74.6ZM5300.8 -415.2Q5300.8 -568 5355.9 -676.3Q5411 -784.5 5505.7 -842Q5600.3 -899.4 5718.9 -899.4Q5820.9 -899.4 5892.3 -855.3Q5963.7 -811.1 6009.2 -730.6L5964.5 -677.2Q5931.4 -743.9 5882.9 -776.7Q5834.4 -809.5 5772.5 -809.5Q5713.3 -809.5 5666 -771Q5618.7 -732.5 5591.1 -651.3Q5563.6 -570 5563.6 -441.5Q5563.6 -321.9 5589.2 -243.7Q5614.9 -165.6 5659.9 -127.5Q5704.9 -89.4 5762.9 -89.4Q5819.6 -89.4 5871.1 -122.9Q5922.6 -156.5 5964.5 -225.8L5992.7 -185.7Q5923.1 -83.5 5842.5 -31.8Q5761.8 20 5661.1 20Q5555 20 5473.6 -32.7Q5392.2 -85.4 5346.5 -183.2Q5300.8 -281.1 5300.8 -415.2Z'
 
 export type BrandMarkTone = 'tile' | 'mono' | 'inverse'
 
@@ -32,10 +30,8 @@ type BrandMarkProps = {
 }
 
 /**
- * `tile` paints the ink container with warm paper pieces (the app icon),
- * `inverse` draws the pieces for ink backgrounds, and `mono` is a single
- * currentColor mark with the fourth piece hollowed out, so it holds on both
- * paper and ink.
+ * `tile` is the app icon (primary ground, contrasting hook), `inverse` swaps
+ * ground and hook for ink bands, and `mono` is the bare glyph in currentColor.
  */
 export function BrandMark({
 	size = 32,
@@ -43,55 +39,60 @@ export function BrandMark({
 	className,
 	decorative = true,
 }: BrandMarkProps) {
-	const mono = tone === 'mono'
+	const ground =
+		tone === 'tile'
+			? 'var(--color-primary, #1a1712)'
+			: tone === 'inverse'
+				? 'var(--color-ink-foreground, #f7f3ea)'
+				: 'none'
+	const hook =
+		tone === 'tile'
+			? 'var(--color-primary-foreground, #fbf9f4)'
+			: tone === 'inverse'
+				? 'var(--color-ink, #1a1712)'
+				: 'currentColor'
 	return (
-		<span
-			className={cn('inline-flex shrink-0 items-center justify-center', className)}
-			style={{
-				width: size,
-				height: size,
-				borderRadius: Math.round(size * 0.22),
-				background: tone === 'tile' ? INK : undefined,
-			}}
+		<svg
+			viewBox="0 0 64 64"
+			width={size}
+			height={size}
+			className={cn('shrink-0', className)}
+			aria-hidden={decorative}
+			role={decorative ? undefined : 'img'}
+			aria-label={decorative ? undefined : 'Puzzled'}
 		>
-			<svg
-				viewBox="0 0 26 26"
-				width={Math.round(size * 0.68)}
-				height={Math.round(size * 0.68)}
-				aria-hidden={decorative}
-				role={decorative ? undefined : 'img'}
-				aria-label={decorative ? undefined : 'Puzzled'}
-			>
-				{PIECES.map((piece) => {
-					if (mono && piece.accent) {
-						return (
-							<rect
-								key={`${piece.x}-${piece.y}`}
-								x={piece.x}
-								y={piece.y}
-								width={11}
-								height={11}
-								rx={3.2}
-								fill="none"
-								stroke="currentColor"
-								strokeWidth={2}
-							/>
-						)
-					}
-					const fill = piece.accent ? AMBER : mono ? 'currentColor' : PAPER
-					return (
-						<rect
-							key={`${piece.x}-${piece.y}`}
-							x={piece.x}
-							y={piece.y}
-							width={11}
-							height={11}
-							rx={3.2}
-							fill={fill}
-						/>
-					)
-				})}
-			</svg>
-		</span>
+			{tone !== 'mono' && <rect width="64" height="64" rx="14" fill={ground} />}
+			<path
+				d={MARK_HOOK_PATH}
+				fill="none"
+				stroke={hook}
+				strokeWidth={8}
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			/>
+			<rect x="27" y="46" width="10" height="10" rx="2.6" fill={MARK_AMBER} />
+		</svg>
+	)
+}
+
+type WordmarkProps = {
+	/** Cap-to-baseline height in CSS pixels. */
+	height?: number
+	className?: string
+}
+
+/** The outlined wordmark in currentColor; it never waits on a web font. */
+export function Wordmark({ height = 22, className }: WordmarkProps) {
+	const [, , w, h] = WORDMARK_VIEWBOX.split(' ').map(Number)
+	return (
+		<svg
+			viewBox={WORDMARK_VIEWBOX}
+			height={height}
+			width={Math.round((height * (w ?? 1)) / (h ?? 1))}
+			className={cn('shrink-0', className)}
+			aria-hidden="true"
+		>
+			<path d={WORDMARK_PATH} fill="currentColor" />
+		</svg>
 	)
 }

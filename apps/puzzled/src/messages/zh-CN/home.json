@@ -11,9 +11,6 @@
 	"hero": {
 		"guestTitle": "每天一题，免费开玩",
 		"streakChip": "连续 {days} 天",
-		"trustFree": "每天都有免费谜题",
-		"trustAccount": "无需注册",
-		"trustReset": "香港时间午夜更新",
 		"playersToday": "今天已有 {count} 位玩家完成",
 		"progressRingLabel": "今天已完成 {done} / {total} 题",
 		"progressUnverified": "暂时读不到你的进度。你仍然可以玩，提交时我们会核对你的完成记录。",
@@ -47,16 +44,6 @@
 		"body": "同样的仪式，全新的题目。",
 		"cta": "查看目录"
 	},
-	"how": {
-		"title": "Puzzled 怎么运作",
-		"subtitle": "每天一题免费，想深入玩还有完整阵容。每个游戏都遵循同一个仪式：当天题目、一次完成、可以分享的成绩。",
-		"step1Title": "打开今天的谜题",
-		"step1Body": "每天有一个游戏免费，无需注册。登录只是为了保存连续纪录和统计。",
-		"step2Title": "按自己的节奏解题",
-		"step2Body": "大多数谜题两到十五分钟完成。想热身或挑战，可以选择难度。",
-		"step3Title": "养成习惯，顺手分享",
-		"step3Body": "完成即可延续连续纪录，再发一张无剧透成绩卡给朋友较量。"
-	},
 	"faq": {
 		"title": "常见问题",
 		"subtitle": "用最短篇幅说清楚 Puzzled。",
@@ -85,12 +72,6 @@
 			"answer": "十九个每日游戏，涵盖文字、逻辑、数字、空间和轻松娱乐，全部遵循同一个每日仪式。"
 		}
 	},
-	"final": {
-		"title": "下一段五分钟的解谜时光",
-		"body": "今天的免费谜题已经开放。想玩更多，还有 {count} 个游戏等你。",
-		"play": "玩 {game}",
-		"explore": "探索目录"
-	},
 	"todaysPuzzles": "今日谜题",
 	"day": {
 		"puzzleNumber": "第 {number} 题",
@@ -106,8 +87,6 @@
 		"playAgain": "再玩一次",
 		"browseAll": "浏览所有游戏",
 		"finishersToday": "今天已有 {count} 人完成",
-		"previewLabel": "今天的棋盘",
-		"previewNote": "今天的{game}，以空白呈现。不剧透 — 只显示棋盘形状，不显示答案。",
 		"freeToday": "今天免费"
 	}
 }

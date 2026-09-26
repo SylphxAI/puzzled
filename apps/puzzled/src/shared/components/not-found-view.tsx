@@ -62,8 +62,8 @@ export async function buildNotFoundContent(locale: string): Promise<NotFoundCont
  * The unmatched-route document is rendered without any layout, so it never
  * receives the app stylesheet — a self-contained stylesheet keeps both cases
  * identical instead of shipping an unstyled page to the one audience that is
- * already lost. Values mirror `globals.css` (brand gradient, ink/slate text,
- * 44px targets) with a dark-mode variant.
+ * already lost. Values mirror the tokens in `globals.css` (paper, ink, the
+ * serif display face, 44px targets) with a dark-mode variant.
  *
  * Play-first: the dead end still offers today's free puzzle, then the
  * catalogue, then the way home — every target is a real, indexable route and
@@ -124,49 +124,42 @@ export function NotFoundView({
  */
 const NOT_FOUND_STYLES = `
 .nf-shell {
+	--nf-paper: #f7f4ee; --nf-ink: #1a1712; --nf-muted: #5f584c; --nf-line: #e4ded2; --nf-card: #ffffff;
 	display: flex;
 	min-height: 100vh;
 	align-items: center;
 	justify-content: center;
 	padding: 4rem 1rem;
-	background: #ffffff;
-	color: #0f172a;
-	font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+	background: var(--nf-paper);
+	color: var(--nf-ink);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Noto Sans TC", sans-serif;
 	-webkit-font-smoothing: antialiased;
 }
-.nf-card { width: 100%; max-width: 34rem; text-align: center; }
-.nf-mark {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 64px;
-	height: 64px;
-	border-radius: 19px;
-	background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
-	box-shadow: 0 8px 24px rgba(99, 102, 241, 0.28);
-}
-.nf-mark svg rect { fill: #ffffff; }
+.nf-card { width: 100%; max-width: 32rem; text-align: center; }
+.nf-mark { display: inline-flex; }
 .nf-eyebrow {
 	margin: 1.5rem 0 0;
 	font-size: 0.75rem;
-	font-weight: 700;
-	letter-spacing: 0.3em;
+	font-weight: 600;
+	letter-spacing: 0.12em;
 	text-transform: uppercase;
-	color: #64748b;
+	color: var(--nf-muted);
 }
 .nf-title {
-	margin: 0.75rem 0 0;
-	font-size: 1.875rem;
-	line-height: 1.15;
-	font-weight: 800;
-	letter-spacing: -0.02em;
+	margin: 0.5rem 0 0;
+	font-family: var(--font-display-family), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+	font-size: 2.25rem;
+	line-height: 1.08;
+	font-weight: 600;
+	letter-spacing: -0.015em;
+	text-wrap: balance;
 }
 .nf-description {
 	margin: 1rem auto 0;
 	max-width: 26rem;
-	font-size: 1rem;
-	line-height: 1.6;
-	color: #475569;
+	font-size: 1.0625rem;
+	line-height: 1.55;
+	color: var(--nf-muted);
 }
 .nf-actions {
 	margin-top: 2rem;
@@ -180,27 +173,23 @@ const NOT_FOUND_STYLES = `
 	align-items: center;
 	justify-content: center;
 	gap: 0.5rem;
-	min-height: 2.75rem;
+	min-height: 3rem;
 	padding: 0 1.5rem;
-	border-radius: 1rem;
-	font-size: 0.875rem;
+	border-radius: 999px;
+	font-size: 0.9375rem;
 	font-weight: 600;
 	text-decoration: none;
+	transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.nf-cta-primary {
-	background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
-	color: #ffffff;
-	box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
-}
-.nf-cta-secondary { border: 1px solid #e2e8f0; background: #ffffff; color: #0f172a; }
-.nf-cta-secondary:hover { background: #f1f5f9; }
-.nf-cta-primary:hover { filter: brightness(1.05); }
+.nf-cta:active { transform: scale(0.97); }
+.nf-cta-primary { background: var(--nf-ink); color: var(--nf-paper); }
+.nf-cta-secondary { border: 1px solid var(--nf-line); background: var(--nf-card); color: var(--nf-ink); }
 .nf-links {
-	margin-top: 1.5rem;
+	margin-top: 1.25rem;
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
-	gap: 0.5rem 1rem;
+	gap: 0.25rem 1rem;
 }
 .nf-link {
 	display: inline-flex;
@@ -208,29 +197,21 @@ const NOT_FOUND_STYLES = `
 	gap: 0.375rem;
 	min-height: 2.75rem;
 	padding: 0 0.5rem;
-	font-size: 0.875rem;
-	font-weight: 600;
-	color: #64748b;
+	font-size: 0.9375rem;
+	font-weight: 500;
+	color: var(--nf-muted);
 	text-decoration: none;
 }
-.nf-link:hover { color: #0f172a; }
-.nf-cta:focus-visible, .nf-link:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+.nf-link:hover { color: var(--nf-ink); }
+.nf-cta:focus-visible, .nf-link:focus-visible { outline: 2px solid #2458d6; outline-offset: 2px; }
 .nf-icon { width: 1rem; height: 1rem; flex: none; }
 @media (min-width: 640px) {
-	.nf-title { font-size: 2.25rem; }
+	.nf-title { font-size: 3rem; }
 	.nf-actions { flex-direction: row; }
 }
 @media (prefers-color-scheme: dark) {
-	.nf-shell { background: #0f172a; color: #f8fafc; }
-	.nf-eyebrow, .nf-link { color: #94a3b8; }
-	.nf-description { color: #cbd5e1; }
-	.nf-cta-secondary { border-color: #334155; background: #1e293b; color: #f8fafc; }
-	.nf-cta-secondary:hover { background: #273449; }
-	.nf-link:hover { color: #f8fafc; }
+	.nf-shell { --nf-paper: #121110; --nf-ink: #f2eee6; --nf-muted: #aaa396; --nf-line: #2f2c27; --nf-card: #1c1b18; }
 }
-.dark .nf-shell { background: #0f172a; color: #f8fafc; }
-.dark .nf-eyebrow, .dark .nf-link { color: #94a3b8; }
-.dark .nf-description { color: #cbd5e1; }
-.dark .nf-cta-secondary { border-color: #334155; background: #1e293b; color: #f8fafc; }
-.dark .nf-link:hover { color: #f8fafc; }
+.dark .nf-shell { --nf-paper: #121110; --nf-ink: #f2eee6; --nf-muted: #aaa396; --nf-line: #2f2c27; --nf-card: #1c1b18; }
+.light .nf-shell { --nf-paper: #f7f4ee; --nf-ink: #1a1712; --nf-muted: #5f584c; --nf-line: #e4ded2; --nf-card: #ffffff; }
 `

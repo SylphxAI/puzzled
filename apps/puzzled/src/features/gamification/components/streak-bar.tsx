@@ -74,9 +74,9 @@ export function StreakBar({
 			glow: '',
 		},
 		bronze: {
-			text: 'text-amber-600 dark:text-amber-400',
-			bg: 'bg-amber-500/20',
-			bar: 'bg-gradient-to-r from-amber-500 to-amber-600',
+			text: 'text-accent-warm-foreground',
+			bg: 'bg-accent-warm/20',
+			bar: 'bg-gradient-to-r from-accent-warm to-accent-warm',
 			glow: '',
 		},
 		silver: {
@@ -86,15 +86,15 @@ export function StreakBar({
 			glow: '',
 		},
 		gold: {
-			text: 'text-yellow-500 dark:text-yellow-400',
-			bg: 'bg-yellow-500/20',
-			bar: 'bg-gradient-to-r from-yellow-400 to-yellow-600',
+			text: 'text-accent-warm-foreground',
+			bg: 'bg-accent-warm/20',
+			bar: 'bg-gradient-to-r from-accent-warm to-accent-warm',
 			glow: 'animate-streak-pulse',
 		},
 		legendary: {
-			text: 'text-orange-500 dark:text-orange-400',
-			bg: 'bg-orange-500/20',
-			bar: 'bg-gradient-to-r from-orange-400 via-red-500 to-orange-600',
+			text: 'text-stat-streak',
+			bg: 'bg-stat-streak/20',
+			bar: 'bg-gradient-to-r from-stat-streak via-destructive to-stat-streak',
 			glow: 'animate-streak-pulse animate-milestone-glow',
 		},
 	}
@@ -110,7 +110,7 @@ export function StreakBar({
 				<Flame
 					className={cn(
 						'h-4 w-4',
-						currentStreak > 0 ? 'text-orange-500' : 'text-muted-foreground',
+						currentStreak > 0 ? 'text-stat-streak' : 'text-muted-foreground',
 						currentStreak >= 7 && 'animate-streak-pulse',
 					)}
 					aria-hidden="true"
@@ -159,7 +159,7 @@ export function StreakBar({
 							<Flame
 								className={cn(
 									'h-8 w-8',
-									currentStreak > 0 ? 'text-orange-500' : 'text-muted-foreground',
+									currentStreak > 0 ? 'text-stat-streak' : 'text-muted-foreground',
 								)}
 								aria-hidden="true"
 							/>
@@ -189,8 +189,8 @@ export function StreakBar({
 						<div
 							className={cn(
 								'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold',
-								'bg-gradient-to-r from-orange-500/20 to-red-500/20',
-								'border border-orange-500/30',
+								'bg-gradient-to-r from-stat-streak/20 to-destructive/20',
+								'border border-stat-streak/30',
 								style.text,
 								'animate-milestone-glow',
 							)}
@@ -240,7 +240,7 @@ export function StreakBar({
 				<Flame
 					className={cn(
 						'h-5 w-5',
-						currentStreak > 0 ? 'text-orange-500' : 'text-muted-foreground',
+						currentStreak > 0 ? 'text-stat-streak' : 'text-muted-foreground',
 						currentStreak >= 7 && 'animate-streak-pulse',
 					)}
 					aria-hidden="true"

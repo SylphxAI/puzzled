@@ -1,17 +1,14 @@
 /**
- * Game Color Theme System
+ * Game colour themes.
  *
- * Centralized color definitions for all games.
- * ALL classes are static strings - Tailwind tree-shaking works correctly.
+ * Each game owns one flat pastel field with an ink glyph on it, the way a
+ * puzzle book colours its sections: the field identifies the game, and the
+ * shell around it stays ink and paper. `text` is the deep form of the hue
+ * for small text on paper (AA), and the pastel itself on charcoal.
  *
- * To add a new theme:
- * 1. Add to GameColorTheme union type
- * 2. Add entry to GAME_COLOR_THEMES with all required classes
+ * ALL classes are literal strings so Tailwind can see them.
  */
 
-/**
- * Available color themes for games
- */
 export type GameColorTheme =
 	| 'emerald' // word-guess
 	| 'cyan' // sudoku, word-search, word-box
@@ -25,181 +22,207 @@ export type GameColorTheme =
 	| 'lime' // arithmo
 	| 'slate' // block-slide, number-path
 
-/**
- * Complete set of Tailwind classes for a color theme
- * All values are STATIC STRINGS - no runtime construction
- */
 export interface GameColorClasses {
-	/** Gradient for buttons, cards, icons (e.g., 'from-emerald-500 to-green-600') */
+	/** Kept for gradient call sites: a flat field (from = to). */
 	gradient: string
-	/** Solid background (e.g., 'bg-emerald-500') */
+	/** Solid field. */
 	bg: string
-	/** Light/transparent background (e.g., 'bg-emerald-500/10') */
+	/** Soft tint of the field. */
 	bgLight: string
-	/** Text color (e.g., 'text-emerald-500') */
+	/** The hue as small text: deep on paper, pastel on charcoal. */
 	text: string
-	/** Ring/outline color (e.g., 'ring-emerald-500/30') */
+	/** Ring in the hue. */
 	ring: string
-	/** Border color (e.g., 'border-emerald-500') */
+	/** Border in the hue. */
 	border: string
-	/** Radial gradient pattern for card backgrounds */
+	/** Card texture; flat by design. */
 	pattern: string
-	/** Accent stripe along the tile's top edge (static class string). */
+	/** Accent stripe (the field). */
 	stripe: string
-	/** Hover glow ring in the module's own hue (static class string). */
+	/** Hover emphasis (neutral lift; the field carries the hue). */
 	glow: string
+	/** Glyph and text colour placed on the field. */
+	onField: string
+	/** Raw field colour for inline styles and generated images. */
+	hex: string
+	/** Raw deep hue (the `text` colour on paper) for generated images. */
+	deepHex: string
 }
 
-/**
- * Static color class definitions for each theme
- *
- * CRITICAL: All values MUST be literal strings.
- * DO NOT use template literals or string concatenation.
- * This ensures Tailwind can tree-shake unused classes.
- */
 const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 	emerald: {
-		gradient: 'from-emerald-500 to-green-600',
-		bg: 'bg-emerald-500',
-		bgLight: 'bg-emerald-500/10',
-		text: 'text-emerald-500',
-		ring: 'ring-emerald-500/30',
-		border: 'border-emerald-500',
-		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(16,185,129,0.15),transparent_50%)]',
-		stripe: 'bg-emerald-500',
-		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(16,185,129,0.45)] hover:ring-2 hover:ring-emerald-500/60',
+		gradient: 'from-[#a8d5b5] to-[#a8d5b5]',
+		bg: 'bg-[#a8d5b5]',
+		bgLight: 'bg-[#a8d5b5]/30',
+		text: 'text-[#1d6b3d] dark:text-[#a8d5b5]',
+		ring: 'ring-[#a8d5b5]',
+		border: 'border-[#a8d5b5]',
+		pattern: '',
+		stripe: 'bg-[#a8d5b5]',
+		glow: 'hover:shadow-lift',
+		onField: 'text-[#1a1712] [--icon-accent:#1a1712]',
+		deepHex: '#1d6b3d',
+		hex: '#a8d5b5',
 	},
 	cyan: {
-		gradient: 'from-cyan-500 to-teal-600',
-		bg: 'bg-cyan-500',
-		bgLight: 'bg-cyan-500/10',
-		text: 'text-cyan-500',
-		ring: 'ring-cyan-500/30',
-		border: 'border-cyan-500',
-		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.15),transparent_50%)]',
-		stripe: 'bg-cyan-500',
-		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(6,182,212,0.45)] hover:ring-2 hover:ring-cyan-500/60',
+		gradient: 'from-[#a6d8dd] to-[#a6d8dd]',
+		bg: 'bg-[#a6d8dd]',
+		bgLight: 'bg-[#a6d8dd]/30',
+		text: 'text-[#0e5f68] dark:text-[#a6d8dd]',
+		ring: 'ring-[#a6d8dd]',
+		border: 'border-[#a6d8dd]',
+		pattern: '',
+		stripe: 'bg-[#a6d8dd]',
+		glow: 'hover:shadow-lift',
+		onField: 'text-[#1a1712] [--icon-accent:#1a1712]',
+		deepHex: '#0e5f68',
+		hex: '#a6d8dd',
 	},
 	violet: {
-		gradient: 'from-violet-500 to-purple-600',
-		bg: 'bg-violet-500',
-		bgLight: 'bg-violet-500/10',
-		text: 'text-violet-500',
-		ring: 'ring-violet-500/30',
-		border: 'border-violet-500',
-		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(139,92,246,0.15),transparent_50%)]',
-		stripe: 'bg-violet-500',
-		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(139,92,246,0.45)] hover:ring-2 hover:ring-violet-500/60',
+		gradient: 'from-[#c6b9f2] to-[#c6b9f2]',
+		bg: 'bg-[#c6b9f2]',
+		bgLight: 'bg-[#c6b9f2]/30',
+		text: 'text-[#4b37a6] dark:text-[#c6b9f2]',
+		ring: 'ring-[#c6b9f2]',
+		border: 'border-[#c6b9f2]',
+		pattern: '',
+		stripe: 'bg-[#c6b9f2]',
+		glow: 'hover:shadow-lift',
+		onField: 'text-[#1a1712] [--icon-accent:#1a1712]',
+		deepHex: '#4b37a6',
+		hex: '#c6b9f2',
 	},
 	amber: {
-		gradient: 'from-amber-500 to-orange-600',
-		bg: 'bg-amber-500',
-		bgLight: 'bg-amber-500/10',
-		text: 'text-amber-500',
-		ring: 'ring-amber-500/30',
-		border: 'border-amber-500',
-		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(245,158,11,0.15),transparent_50%)]',
-		stripe: 'bg-amber-500',
-		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(245,158,11,0.45)] hover:ring-2 hover:ring-amber-500/60',
+		gradient: 'from-[#f5d36b] to-[#f5d36b]',
+		bg: 'bg-[#f5d36b]',
+		bgLight: 'bg-[#f5d36b]/30',
+		text: 'text-[#6e4a00] dark:text-[#f5d36b]',
+		ring: 'ring-[#f5d36b]',
+		border: 'border-[#f5d36b]',
+		pattern: '',
+		stripe: 'bg-[#f5d36b]',
+		glow: 'hover:shadow-lift',
+		onField: 'text-[#1a1712] [--icon-accent:#1a1712]',
+		deepHex: '#6e4a00',
+		hex: '#f5d36b',
 	},
 	pink: {
-		gradient: 'from-pink-500 to-rose-600',
-		bg: 'bg-pink-500',
-		bgLight: 'bg-pink-500/10',
-		text: 'text-pink-500',
-		ring: 'ring-pink-500/30',
-		border: 'border-pink-500',
-		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(236,72,153,0.15),transparent_50%)]',
-		stripe: 'bg-pink-500',
-		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(236,72,153,0.45)] hover:ring-2 hover:ring-pink-500/60',
+		gradient: 'from-[#f3b8d0] to-[#f3b8d0]',
+		bg: 'bg-[#f3b8d0]',
+		bgLight: 'bg-[#f3b8d0]/30',
+		text: 'text-[#9a2a5c] dark:text-[#f3b8d0]',
+		ring: 'ring-[#f3b8d0]',
+		border: 'border-[#f3b8d0]',
+		pattern: '',
+		stripe: 'bg-[#f3b8d0]',
+		glow: 'hover:shadow-lift',
+		onField: 'text-[#1a1712] [--icon-accent:#1a1712]',
+		deepHex: '#9a2a5c',
+		hex: '#f3b8d0',
 	},
 	rose: {
-		gradient: 'from-rose-500 to-pink-600',
-		bg: 'bg-rose-500',
-		bgLight: 'bg-rose-500/10',
-		text: 'text-rose-500',
-		ring: 'ring-rose-500/30',
-		border: 'border-rose-500',
-		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(244,63,94,0.15),transparent_50%)]',
-		stripe: 'bg-rose-500',
-		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(244,63,94,0.45)] hover:ring-2 hover:ring-rose-500/60',
+		gradient: 'from-[#f0aba3] to-[#f0aba3]',
+		bg: 'bg-[#f0aba3]',
+		bgLight: 'bg-[#f0aba3]/30',
+		text: 'text-[#9b2f24] dark:text-[#f0aba3]',
+		ring: 'ring-[#f0aba3]',
+		border: 'border-[#f0aba3]',
+		pattern: '',
+		stripe: 'bg-[#f0aba3]',
+		glow: 'hover:shadow-lift',
+		onField: 'text-[#1a1712] [--icon-accent:#1a1712]',
+		deepHex: '#9b2f24',
+		hex: '#f0aba3',
 	},
 	blue: {
-		gradient: 'from-blue-500 to-indigo-600',
-		bg: 'bg-blue-500',
-		bgLight: 'bg-blue-500/10',
-		text: 'text-blue-500',
-		ring: 'ring-blue-500/30',
-		border: 'border-blue-500',
-		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.15),transparent_50%)]',
-		stripe: 'bg-blue-500',
-		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(59,130,246,0.45)] hover:ring-2 hover:ring-blue-500/60',
+		gradient: 'from-[#aec6f2] to-[#aec6f2]',
+		bg: 'bg-[#aec6f2]',
+		bgLight: 'bg-[#aec6f2]/30',
+		text: 'text-[#2045a0] dark:text-[#aec6f2]',
+		ring: 'ring-[#aec6f2]',
+		border: 'border-[#aec6f2]',
+		pattern: '',
+		stripe: 'bg-[#aec6f2]',
+		glow: 'hover:shadow-lift',
+		onField: 'text-[#1a1712] [--icon-accent:#1a1712]',
+		deepHex: '#2045a0',
+		hex: '#aec6f2',
 	},
 	sky: {
-		gradient: 'from-sky-500 to-blue-600',
-		bg: 'bg-sky-500',
-		bgLight: 'bg-sky-500/10',
-		text: 'text-sky-500',
-		ring: 'ring-sky-500/30',
-		border: 'border-sky-500',
-		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(14,165,233,0.15),transparent_50%)]',
-		stripe: 'bg-sky-500',
-		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(14,165,233,0.45)] hover:ring-2 hover:ring-sky-500/60',
+		gradient: 'from-[#b5ddf4] to-[#b5ddf4]',
+		bg: 'bg-[#b5ddf4]',
+		bgLight: 'bg-[#b5ddf4]/30',
+		text: 'text-[#0f5a85] dark:text-[#b5ddf4]',
+		ring: 'ring-[#b5ddf4]',
+		border: 'border-[#b5ddf4]',
+		pattern: '',
+		stripe: 'bg-[#b5ddf4]',
+		glow: 'hover:shadow-lift',
+		onField: 'text-[#1a1712] [--icon-accent:#1a1712]',
+		deepHex: '#0f5a85',
+		hex: '#b5ddf4',
 	},
 	orange: {
-		gradient: 'from-orange-500 to-red-600',
-		bg: 'bg-orange-500',
-		bgLight: 'bg-orange-500/10',
-		text: 'text-orange-500',
-		ring: 'ring-orange-500/30',
-		border: 'border-orange-500',
-		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(249,115,22,0.15),transparent_50%)]',
-		stripe: 'bg-orange-500',
-		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(249,115,22,0.45)] hover:ring-2 hover:ring-orange-500/60',
+		gradient: 'from-[#f5bd8e] to-[#f5bd8e]',
+		bg: 'bg-[#f5bd8e]',
+		bgLight: 'bg-[#f5bd8e]/30',
+		text: 'text-[#8e3f0c] dark:text-[#f5bd8e]',
+		ring: 'ring-[#f5bd8e]',
+		border: 'border-[#f5bd8e]',
+		pattern: '',
+		stripe: 'bg-[#f5bd8e]',
+		glow: 'hover:shadow-lift',
+		onField: 'text-[#1a1712] [--icon-accent:#1a1712]',
+		deepHex: '#8e3f0c',
+		hex: '#f5bd8e',
 	},
 	lime: {
-		gradient: 'from-lime-500 to-green-600',
-		bg: 'bg-lime-500',
-		bgLight: 'bg-lime-500/10',
-		text: 'text-lime-500',
-		ring: 'ring-lime-500/30',
-		border: 'border-lime-500',
-		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(132,204,22,0.15),transparent_50%)]',
-		stripe: 'bg-lime-500',
-		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(132,204,22,0.45)] hover:ring-2 hover:ring-lime-500/60',
+		gradient: 'from-[#cfe39a] to-[#cfe39a]',
+		bg: 'bg-[#cfe39a]',
+		bgLight: 'bg-[#cfe39a]/30',
+		text: 'text-[#4a6512] dark:text-[#cfe39a]',
+		ring: 'ring-[#cfe39a]',
+		border: 'border-[#cfe39a]',
+		pattern: '',
+		stripe: 'bg-[#cfe39a]',
+		glow: 'hover:shadow-lift',
+		onField: 'text-[#1a1712] [--icon-accent:#1a1712]',
+		deepHex: '#4a6512',
+		hex: '#cfe39a',
 	},
 	slate: {
-		gradient: 'from-slate-500 to-gray-600',
-		bg: 'bg-slate-500',
-		bgLight: 'bg-slate-500/10',
-		text: 'text-slate-500',
-		ring: 'ring-slate-500/30',
-		border: 'border-slate-500',
-		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(100,116,139,0.15),transparent_50%)]',
-		stripe: 'bg-slate-500',
-		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(100,116,139,0.45)] hover:ring-2 hover:ring-slate-500/60',
+		gradient: 'from-[#cfc9bc] to-[#cfc9bc]',
+		bg: 'bg-[#cfc9bc]',
+		bgLight: 'bg-[#cfc9bc]/30',
+		text: 'text-[#4f4a40] dark:text-[#cfc9bc]',
+		ring: 'ring-[#cfc9bc]',
+		border: 'border-[#cfc9bc]',
+		pattern: '',
+		stripe: 'bg-[#cfc9bc]',
+		glow: 'hover:shadow-lift',
+		onField: 'text-[#1a1712] [--icon-accent:#1a1712]',
+		deepHex: '#4f4a40',
+		hex: '#cfc9bc',
 	},
-} as const
+}
 
-/**
- * Get color classes for a theme
- * Returns all pre-defined static Tailwind classes for the theme
- */
+/** Color classes for a theme. */
 export function getGameColors(theme: GameColorTheme): GameColorClasses {
 	return GAME_COLOR_THEMES[theme]
 }
 
-/**
- * Default colors for fallback (uses primary color)
- */
+/** Fallback when a module has no theme: ink field, paper glyph. */
 export const DEFAULT_GAME_COLORS: GameColorClasses = {
-	gradient: 'from-primary to-primary/70',
+	gradient: 'from-primary to-primary',
 	bg: 'bg-primary',
-	bgLight: 'bg-primary/10',
-	text: 'text-primary',
-	ring: 'ring-primary/30',
-	border: 'border-primary',
+	bgLight: 'bg-muted',
+	text: 'text-foreground',
+	ring: 'ring-border',
+	border: 'border-border',
 	pattern: '',
 	stripe: 'bg-primary',
 	glow: 'hover:shadow-lift',
+	onField: 'text-primary-foreground',
+	hex: '#1a1712',
+	deepHex: '#1a1712',
 }

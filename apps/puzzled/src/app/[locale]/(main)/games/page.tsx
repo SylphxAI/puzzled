@@ -1,8 +1,5 @@
-import { ArrowRight, Play } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { CatalogExplainer } from '@/features/catalog/components/catalog-explainer'
 import { CatalogFaq } from '@/features/catalog/components/catalog-faq'
-import { CatalogFeatured } from '@/features/catalog/components/catalog-featured'
 import { CatalogHero } from '@/features/catalog/components/catalog-hero'
 import {
 	buildCatalogEntries,
@@ -73,7 +70,6 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 	const category = parseCatalogCategory(categoryParam)
 	const visibleEntries = filterCatalogEntries(entries, { query, category })
 
-	const freeEntry = entries.find((entry) => entry.freeToday)
 	const origin = await getRequestSiteOrigin()
 	const itemList = {
 		'@context': 'https://schema.org',
@@ -97,39 +93,21 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 				category={category}
 			/>
 
-			{freeEntry && (
-				<CatalogFeatured
-					slug={freeEntry.slug}
-					name={freeEntry.title}
-					tagline={freeEntry.tagline}
-					duration={freeEntry.duration}
-					highlight={freeEntry.highlight}
-					theme={freeEntry.theme}
-				/>
-			)}
-
-			<section className="section-block">
+			<section className="pb-12 md:pb-16" aria-label={t('suiteTitle')}>
 				<div className="page-shell-wide">
-					<h2 className="font-display text-2xl font-extrabold tracking-tight md:text-3xl">
-						{t('suiteTitle')}
-					</h2>
-					<p className="mt-2 max-w-2xl text-muted-foreground">
-						{t('suiteBody', { count: entries.length })}
-					</p>
-
 					{visibleEntries.length === 0 ? (
-						<div className="mt-6 rounded-3xl border border-dashed border-border px-6 py-12 text-center">
-							<p className="font-display text-lg font-bold">{t('emptyTitle')}</p>
+						<div className="mt-5 rounded-3xl border border-dashed border-border px-6 py-12 text-center">
+							<p className="font-display text-lg">{t('emptyTitle')}</p>
 							<p className="mt-1 text-sm text-muted-foreground">{t('emptyDescription')}</p>
 							<Link
 								href="/games"
-								className="mt-4 inline-flex h-11 items-center rounded-xl border border-border px-4 text-sm font-semibold transition-colors hover:border-primary/30 hover:text-primary"
+								className="pressable mt-4 inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
 							>
 								{t('clearFilter')}
 							</Link>
 						</div>
 					) : (
-						<ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+						<ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
 							{visibleEntries.map((entry, index) => (
 								<li key={entry.slug} className="h-full">
 									<GameTile
@@ -153,41 +131,11 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 				</div>
 			</section>
 
-			<CatalogExplainer gameCount={entries.length} />
 			<CatalogFaq />
-
-			<section className="pb-12 md:pb-16">
-				<div className="page-shell-wide">
-					<div className="flex flex-col items-center gap-4 rounded-3xl border border-border/70 bg-surface-muted/60 px-6 py-8 text-center">
-						<h2 className="font-display text-2xl font-extrabold tracking-tight">
-							{t('closing.title')}
-						</h2>
-						<p className="max-w-xl text-sm text-muted-foreground">{t('closing.body')}</p>
-						<div className="flex flex-wrap items-center justify-center gap-3">
-							{freeEntry && (
-								<Link
-									href={`/games/${freeEntry.slug}`}
-									className="inline-flex h-12 items-center gap-2 rounded-2xl bg-primary px-6 font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
-								>
-									<Play className="h-4 w-4" aria-hidden="true" />
-									{t('closing.play', { game: freeEntry.title })}
-								</Link>
-							)}
-							<Link
-								href="/"
-								className="inline-flex h-12 items-center gap-2 rounded-2xl border border-border bg-background px-5 font-semibold transition-colors hover:border-primary/30 hover:text-primary"
-							>
-								{t('closing.home')}
-								<ArrowRight className="h-4 w-4" aria-hidden="true" />
-							</Link>
-						</div>
-					</div>
-				</div>
-			</section>
 
 			<script
 				type="application/ld+json"
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD with trusted registry content
+				// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD built from the registry and translations
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }}
 			/>
 		</main>

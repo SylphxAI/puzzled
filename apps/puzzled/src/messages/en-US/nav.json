@@ -9,5 +9,9 @@
 	"support": "Support",
 	"menuTitle": "Menu",
 	"openMenu": "Open navigation menu",
-	"closeMenu": "Close navigation menu"
+	"closeMenu": "Close navigation menu",
+	"today": "Today",
+	"account": "Account",
+	"plus": "Puzzled Plus",
+	"plusShort": "Plus"
 }

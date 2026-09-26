@@ -76,7 +76,7 @@ export function ProgressRing({
 			</svg>
 			<span className="absolute inset-0 flex flex-col items-center justify-center">
 				{label ?? (
-					<span className="font-display text-lg font-extrabold tnum">
+					<span className="font-display text-lg tnum">
 						{value}
 						<span className="text-muted-foreground">/{max}</span>
 					</span>

@@ -25,5 +25,8 @@
 	"completedNoResult": "You already finished today's puzzle. Result details aren't available right now.",
 	"statusUnknown": "Status unknown",
 	"difficultyStatusUnverified": "We couldn't verify which levels you've finished today. The server checks before you start.",
-	"todaysFreeGame": "Play today's free puzzle"
+	"todaysFreeGame": "Play today's free puzzle",
+	"notReadyTitle": "Today's {game} isn't ready yet",
+	"notReadyBody": "There is no {game} puzzle for today yet. Today's free puzzle is ready to play.",
+	"notReadyCta": "Play today's free puzzle"
 }

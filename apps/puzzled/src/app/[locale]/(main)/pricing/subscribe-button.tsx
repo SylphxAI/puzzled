@@ -22,7 +22,7 @@ export function SubscribeButton({ planId, currency, locale, signedIn, subscribed
 	const [busy, setBusy] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const buttonClass =
-		'inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60'
+		'pressable inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60'
 
 	if (!signedIn) {
 		return (

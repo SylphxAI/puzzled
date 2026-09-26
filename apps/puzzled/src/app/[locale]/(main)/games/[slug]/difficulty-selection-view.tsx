@@ -1,9 +1,7 @@
 'use client'
 
-import { Card, CardContent } from '@sylphx/ui'
-import { Check, ChevronRight, Gauge } from 'lucide-react'
+import { Check, ChevronRight } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { DifficultyBadge } from '@/features/daily/components'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
@@ -34,42 +32,11 @@ export function DifficultySelectionView({
 	const t = useTranslations('common.difficulty')
 	const tDaily = useTranslations('daily')
 
-	const difficultyConfig: Record<
-		PuzzleDifficulty,
-		{
-			label: string
-			description: string
-			color: string
-			bgColor: string
-			borderColor: string
-			hoverBg: string
-		}
-	> = {
-		easy: {
-			label: t('easy'),
-			description: t('easyDescription'),
-			color: 'text-emerald-700 dark:text-emerald-400',
-			bgColor: 'bg-emerald-500/10',
-			borderColor: 'border-emerald-500/20 hover:border-emerald-500/40',
-			hoverBg: 'hover:bg-emerald-500/10',
-		},
-		medium: {
-			label: t('medium'),
-			description: t('mediumDescription'),
-			color: 'text-amber-800 dark:text-amber-400',
-			bgColor: 'bg-amber-500/5',
-			borderColor: 'border-amber-500/20 hover:border-amber-500/40',
-			hoverBg: 'hover:bg-amber-500/10',
-		},
-		hard: {
-			label: t('hard'),
-			description: t('hardDescription'),
-			color: 'text-red-700 dark:text-red-400',
-			bgColor: 'bg-red-500/5',
-			borderColor: 'border-red-500/20 hover:border-red-500/40',
-			hoverBg: 'hover:bg-red-500/10',
-		},
-	}
+	const levels = [
+		{ level: 'easy', label: t('easy'), description: t('easyDescription'), bars: 1 },
+		{ level: 'medium', label: t('medium'), description: t('mediumDescription'), bars: 2 },
+		{ level: 'hard', label: t('hard'), description: t('hardDescription'), bars: 3 },
+	] as const
 
 	const allCompleted =
 		completionStatus.easy === true &&
@@ -82,115 +49,78 @@ export function DifficultySelectionView({
 	].filter((status) => status === true).length
 
 	return (
-		<div className="flex flex-1 flex-col">
-			<div className="flex flex-1 flex-col items-center justify-center">
-				<div className="w-full max-w-md">
-					{/* Header */}
-					<div className="mb-6 text-center">
-						<div className="mb-3 flex items-center justify-center gap-2">
-							<Gauge className="h-6 w-6 text-primary" />
-							<h2 className="font-display text-xl font-extrabold tracking-tight">{gameName}</h2>
-						</div>
-						<p className="text-sm text-muted-foreground">{t('chooseDifficulty')}</p>
-						{completedCount > 0 && (
-							<p className="mt-2 text-xs text-muted-foreground">
-								{completedCount}/3 {tDaily('completed')}
-							</p>
-						)}
-						{!completionStatusVerified && (
-							<output className="mt-2 block text-xs text-muted-foreground">
-								{tDaily('difficultyStatusUnverified')}
-							</output>
-						)}
-					</div>
+		<div className="flex flex-1 flex-col items-center">
+			<div className="w-full max-w-md">
+				<div className="mb-4 text-center">
+					<h2 className="font-display text-2xl">{gameName}</h2>
+					<p className="mt-1 text-[15px] text-muted-foreground">{t('chooseDifficulty')}</p>
+					{completedCount > 0 && (
+						<p className="numeral mt-1 text-xs text-muted-foreground">
+							{completedCount}/3 {tDaily('completed')}
+						</p>
+					)}
+					{!completionStatusVerified && (
+						<output className="mt-2 block text-xs text-muted-foreground">
+							{tDaily('difficultyStatusUnverified')}
+						</output>
+					)}
+				</div>
 
-					{/* Difficulty Options */}
-					<div className="flex flex-col gap-3">
-						{(['easy', 'medium', 'hard'] as const).map((level) => {
-							const config = difficultyConfig[level]
-							const isCompleted = completionStatus[level]
-
-							return (
-								<Link key={level} href={`/games/${gameSlug}?difficulty=${level}`} className="group">
-									<Card
-										className={cn(
-											'border-2 transition-all',
-											config.borderColor,
-											config.bgColor,
-											config.hoverBg,
-											isCompleted && 'opacity-75',
-										)}
-									>
-										<CardContent className="flex items-center gap-4 p-4">
-											{/* Completion indicator */}
-											<div
+				<ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+					{levels.map(({ level, label, description, bars }) => {
+						const isCompleted = completionStatus[level]
+						return (
+							<li key={level}>
+								<Link
+									href={`/games/${gameSlug}?difficulty=${level}`}
+									className="group flex min-h-16 items-center gap-4 px-4 py-3 transition-colors hover:bg-muted active:bg-accent"
+								>
+									<span className="flex h-6 items-end gap-0.5" aria-hidden="true">
+										{[1, 2, 3].map((bar) => (
+											<span
+												key={bar}
 												className={cn(
-													'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
-													isCompleted ? 'bg-emerald-500/20' : config.bgColor,
-												)}
-											>
-												{isCompleted ? (
-													<Check className="h-5 w-5 text-emerald-500" />
-												) : (
-													<DifficultyBadge
-														difficulty={level}
-														className="h-auto px-0 py-0 text-sm font-bold"
-													/>
-												)}
-											</div>
-
-											{/* Content */}
-											<div className="flex-1">
-												<div className="flex items-center gap-2">
-													<span className={cn('font-semibold', config.color)}>{config.label}</span>
-													{isCompleted === true && (
-														<span className="text-xs text-emerald-700 dark:text-emerald-400">
-															✓ Done
-														</span>
-													)}
-													{isCompleted === null && (
-														<span className="text-xs text-muted-foreground">
-															{tDaily('statusUnknown')}
-														</span>
-													)}
-												</div>
-												<p className="text-sm text-muted-foreground">{config.description}</p>
-											</div>
-
-											{/* Arrow */}
-											<ChevronRight
-												className={cn(
-													'h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-0.5',
-													config.color,
+													'w-1.5 rounded-full',
+													bar === 1 ? 'h-2.5' : bar === 2 ? 'h-4' : 'h-6',
+													bar <= bars ? 'bg-foreground' : 'bg-border',
 												)}
 											/>
-										</CardContent>
-									</Card>
+										))}
+									</span>
+									<span className="min-w-0 flex-1">
+										<span className="flex items-center gap-2 text-[16px] font-semibold">
+											{label}
+											{isCompleted === null && (
+												<span className="text-xs font-normal text-muted-foreground">
+													{tDaily('statusUnknown')}
+												</span>
+											)}
+										</span>
+										<span className="block text-sm text-muted-foreground">{description}</span>
+									</span>
+									{isCompleted === true ? (
+										<span className="flex h-7 w-7 items-center justify-center rounded-full bg-success text-success-foreground">
+											<Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
+											<span className="sr-only">{tDaily('completed')}</span>
+										</span>
+									) : (
+										<ChevronRight
+											className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+											aria-hidden="true"
+										/>
+									)}
 								</Link>
-							)
-						})}
-					</div>
+							</li>
+						)
+					})}
+				</ul>
 
-					{/* All completed message */}
-					{allCompleted && (
-						<div className="mt-6 rounded-xl bg-emerald-500/15 p-4 text-center">
-							<p className="font-medium text-emerald-700 dark:text-emerald-400">
-								🎉 {tDaily('allCompleteMessage')}
-							</p>
-							<p className="mt-1 text-sm text-muted-foreground">{tDaily('comeBackTomorrow')}</p>
-						</div>
-					)}
-
-					{/* Back link */}
-					<div className="mt-6 text-center">
-						<Link
-							href="/"
-							className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-						>
-							← {tDaily('backToHome')}
-						</Link>
+				{allCompleted && (
+					<div className="mt-4 rounded-2xl bg-muted p-4 text-center">
+						<p className="font-semibold">{tDaily('allCompleteMessage')}</p>
+						<p className="mt-1 text-sm text-muted-foreground">{tDaily('comeBackTomorrow')}</p>
 					</div>
-				</div>
+				)}
 			</div>
 		</div>
 	)

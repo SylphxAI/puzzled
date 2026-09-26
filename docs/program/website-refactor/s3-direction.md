@@ -1,5 +1,7 @@
 # PZ S3 — direction: the day, and the tokens it needs
 
+> **Superseded 2026-09-26.** The token slice, the display face and the day-surface layout below were replaced by the full redesign recorded in [`docs/design/README.md`](../../design/README.md). This file stays as the record of the S3 diagnosis.
+
 **Status:** program SSOT for stage S3's design direction. Design intent plus the observations that
 establish it — this document is **not** evidence that anything is implemented, deployed or live.
 **Scope:** the `apps/puzzled` web surface.

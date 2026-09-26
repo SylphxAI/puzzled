@@ -71,7 +71,7 @@ export function BoundaryErrorView({
 					{icon ?? <AlertTriangle className="h-7 w-7 text-destructive" aria-hidden="true" />}
 				</span>
 
-				<h1 className="font-display text-2xl font-extrabold tracking-tight">{title}</h1>
+				<h1 className="font-display text-2xl">{title}</h1>
 				<p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
 				{detail ? <p className="mt-2 text-sm text-destructive break-words">{detail}</p> : null}
 				{children}

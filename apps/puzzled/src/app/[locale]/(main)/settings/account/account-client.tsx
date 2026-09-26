@@ -75,7 +75,7 @@ export function AccountSettingsContent() {
 				) : user ? (
 					<div className="flex items-start gap-4">
 						<span
-							className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 font-display text-base font-extrabold text-primary"
+							className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 font-display text-base text-primary"
 							aria-hidden="true"
 						>
 							{initials(displayName)}
@@ -86,7 +86,7 @@ export function AccountSettingsContent() {
 								<p className="mt-0.5 truncate text-sm text-muted-foreground">{user.email}</p>
 							) : null}
 							{user.emailVerified ? (
-								<span className="chip mt-2 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+								<span className="chip mt-2 bg-success/10 text-success">
 									<BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
 									{t('playerCard.verified')}
 								</span>

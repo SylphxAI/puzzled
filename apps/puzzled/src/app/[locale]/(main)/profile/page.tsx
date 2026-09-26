@@ -97,9 +97,7 @@ export default async function ProfilePage({ params }: Props) {
 					description={t('playerCard.pageDescription')}
 					chips={
 						user.emailVerified ? (
-							<span className="chip bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-								{t('playerCard.verified')}
-							</span>
+							<span className="chip bg-success/10 text-success">{t('playerCard.verified')}</span>
 						) : null
 					}
 				/>
@@ -111,13 +109,13 @@ export default async function ProfilePage({ params }: Props) {
 					>
 						<div className="flex items-start gap-4">
 							<span
-								className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 font-display text-xl font-extrabold text-white"
+								className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-muted via-muted to-fuchsia-500 font-display text-xl text-white"
 								aria-hidden="true"
 							>
 								{initials(displayName)}
 							</span>
 							<div className="min-w-0">
-								<p className="font-display text-lg font-bold">{displayName}</p>
+								<p className="font-display text-lg">{displayName}</p>
 								{user.email ? (
 									<p className="mt-0.5 truncate text-sm text-muted-foreground">{user.email}</p>
 								) : null}
@@ -141,7 +139,7 @@ export default async function ProfilePage({ params }: Props) {
 								</dt>
 								<dd
 									className={cn(
-										'mt-1 font-display text-2xl font-extrabold tnum',
+										'mt-1 font-display text-2xl tnum',
 										finished === null && 'text-muted-foreground',
 									)}
 								>
@@ -152,7 +150,7 @@ export default async function ProfilePage({ params }: Props) {
 								<dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
 									{t('playerCard.stats.winRate')}
 								</dt>
-								<dd className="mt-1 font-display text-2xl font-extrabold tnum">
+								<dd className="mt-1 font-display text-2xl tnum">
 									{stats === null || won === null || finished === null
 										? t('playerCard.notLoaded')
 										: finished > 0
@@ -165,7 +163,7 @@ export default async function ProfilePage({ params }: Props) {
 									<Flame className="h-3.5 w-3.5 text-stat-streak" aria-hidden="true" />
 									{t('playerCard.stats.streak')}
 								</dt>
-								<dd className="mt-1 font-display text-2xl font-extrabold tnum">
+								<dd className="mt-1 font-display text-2xl tnum">
 									{streak === null ? t('playerCard.notLoaded') : streak.currentStreak}
 								</dd>
 							</div>

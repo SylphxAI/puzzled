@@ -106,7 +106,7 @@ export async function LeaderboardBoard({
 											scope="row"
 											className={cn(
 												'px-4 py-3 text-left font-semibold tnum md:px-5',
-												entry.rank === 1 && 'text-amber-600 dark:text-amber-400',
+												entry.rank === 1 && 'text-accent-warm-foreground',
 											)}
 										>
 											<span className="flex items-center gap-1.5">

@@ -16,11 +16,10 @@ type CatalogHeroProps = {
 }
 
 const FILTER_CHIP =
-	'inline-flex h-11 items-center rounded-full border px-4 text-sm font-semibold transition-colors'
+	'pressable inline-flex h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold transition-colors'
 
-const FILTER_CHIP_ACTIVE = 'border-primary bg-primary/10 text-primary'
-const FILTER_CHIP_IDLE =
-	'border-border bg-background/70 text-muted-foreground hover:border-primary/30 hover:text-primary'
+const FILTER_CHIP_ACTIVE = 'bg-primary text-primary-foreground'
+const FILTER_CHIP_IDLE = 'bg-muted text-foreground hover:bg-accent'
 
 /**
  * Catalog hero: the suite promise, the title filter and the category filter.
@@ -47,41 +46,45 @@ export async function CatalogHero({ gameCount, visibleCount, query, category }: 
 	]
 
 	return (
-		<section className="relative overflow-hidden border-b border-border/60 bg-aurora">
-			<div className="page-shell-wide pb-8 pt-8 md:pb-10 md:pt-12">
-				<p className="chip bg-background/70 text-muted-foreground">{t('heroEyebrow')}</p>
-				<h1 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-balance md:text-4xl">
+		<section className="relative">
+			<div className="page-shell-wide pb-4 pt-8 md:pt-12">
+				<p className="eyebrow">{t('heroEyebrow')}</p>
+				<h1 className="mt-2 font-display text-[2.125rem] leading-[1.06] text-balance sm:text-5xl">
 					{t('title')}
 				</h1>
-				<p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+				<p className="mt-3 max-w-2xl text-[17px] leading-relaxed text-muted-foreground">
 					{t('subtitle', { count: gameCount })}
 				</p>
 
 				<search className="mt-6 block">
-					<form className="flex w-full max-w-xl items-stretch gap-2">
+					<form className="relative w-full max-w-xl">
 						<label htmlFor="catalog-q" className="sr-only">
 							{t('searchLabel')}
 						</label>
+						<Search
+							className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+							aria-hidden="true"
+						/>
 						<input
 							id="catalog-q"
 							type="search"
 							name="q"
 							defaultValue={query}
 							placeholder={t('searchPlaceholder')}
-							className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-background/90 px-3.5 text-sm outline-none transition-colors focus:border-primary"
+							enterKeyHint="search"
+							className="h-11 w-full rounded-xl border border-transparent bg-muted pl-10 pr-24 text-[16px] outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:bg-card"
 						/>
 						{category !== 'all' && <input type="hidden" name="category" value={category} />}
 						<button
 							type="submit"
-							className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border border-border bg-background/90 px-4 text-sm font-semibold transition-colors hover:border-primary/30 hover:text-primary"
+							className="absolute right-1 top-1 inline-flex h-9 items-center rounded-lg px-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
 						>
-							<Search className="h-4 w-4" aria-hidden="true" />
 							{t('searchSubmit')}
 						</button>
 					</form>
 				</search>
 
-				<fieldset className="mt-4 flex flex-wrap items-center gap-2 border-0 p-0">
+				<fieldset className="no-scrollbar -mx-4 mt-3 flex items-center gap-2 overflow-x-auto border-0 px-4 py-1 md:mx-0 md:px-0">
 					<legend className="sr-only">{t('filterLabel')}</legend>
 					{filterOptions.map((option) => (
 						<Link
@@ -98,10 +101,13 @@ export async function CatalogHero({ gameCount, visibleCount, query, category }: 
 					))}
 				</fieldset>
 
-				<div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+				<div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
 					<output>{t('showing', { count: visibleCount, total: gameCount })}</output>
 					{filtersActive && (
-						<Link href="/games" className="font-semibold text-primary hover:underline">
+						<Link
+							href="/games"
+							className="font-semibold text-foreground underline underline-offset-4"
+						>
 							{t('clearFilter')}
 						</Link>
 					)}

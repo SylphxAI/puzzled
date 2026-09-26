@@ -43,10 +43,7 @@ export function MarketingSection({
 					<div className="flex flex-wrap items-end justify-between gap-4">
 						<div>
 							{title && (
-								<h2
-									id={headingId}
-									className="font-display text-2xl font-extrabold tracking-tight text-balance md:text-3xl"
-								>
+								<h2 id={headingId} className="font-display text-2xl text-balance md:text-3xl">
 									{title}
 								</h2>
 							)}

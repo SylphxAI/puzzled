@@ -73,8 +73,8 @@ async function TopNavChrome() {
  */
 function TopNavSkeleton() {
 	return (
-		<header className="sticky top-0 z-header border-b border-border/70 bg-background/80 backdrop-blur-xl">
-			<div className="page-shell-wide flex h-16 items-center gap-3">
+		<header className="pt-safe sticky top-0 z-header border-b border-hairline bg-background/80 backdrop-blur-xl">
+			<div className="page-shell-wide flex h-14 items-center gap-3 md:h-16">
 				<div className="h-8 w-32 animate-pulse rounded-lg bg-muted" />
 				<div className="ml-auto flex items-center gap-1.5">
 					<div className="h-9 w-9 animate-pulse rounded-full bg-muted" />

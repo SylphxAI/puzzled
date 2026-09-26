@@ -32,9 +32,7 @@ function DayCell({ day, title }: { day: CalendarDay; title: string }) {
 			className={cn(
 				'h-3.5 w-3.5 rounded-[4px] border',
 				day.finishedCount === 0 && 'border-border bg-surface-muted',
-				day.finishedCount > 0 &&
-					won &&
-					'border-transparent bg-gradient-to-br from-indigo-500 to-violet-500',
+				day.finishedCount > 0 && won && 'border-transparent bg-gradient-to-br from-muted to-muted',
 				day.finishedCount > 0 && !won && 'border-primary/40 bg-primary/15',
 			)}
 		>
@@ -119,7 +117,7 @@ export async function FinishCalendarCard({ calendar, locale }: FinishCalendarCar
 					<ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
 						<li className="flex items-center gap-1.5">
 							<span
-								className="h-3.5 w-3.5 rounded-[4px] bg-gradient-to-br from-indigo-500 to-violet-500"
+								className="h-3.5 w-3.5 rounded-[4px] bg-gradient-to-br from-muted to-muted"
 								aria-hidden="true"
 							/>
 							{t('calendar.legendWon')}

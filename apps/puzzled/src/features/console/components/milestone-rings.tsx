@@ -15,11 +15,11 @@ export type Milestone = {
 }
 
 const TIER_CLASSES: Record<AchievementTier, string> = {
-	bronze: 'bg-amber-700/10 text-amber-800 dark:text-amber-500',
+	bronze: 'bg-accent-warm/10 text-accent-warm-foreground',
 	silver: 'bg-slate-500/10 text-slate-600 dark:text-slate-300',
-	gold: 'bg-amber-500/15 text-amber-800 dark:text-amber-400',
+	gold: 'bg-accent-warm/15 text-accent-warm-foreground',
 	platinum: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-300',
-	diamond: 'bg-violet-500/10 text-violet-700 dark:text-violet-300',
+	diamond: 'bg-muted text-foreground',
 }
 
 type MilestoneRingsCardProps = {

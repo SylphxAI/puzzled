@@ -48,12 +48,8 @@ export function ConsoleHeader({
 		<div className={cn('animate-enter', className)}>
 			<div className="flex flex-wrap items-start justify-between gap-4">
 				<div className="min-w-0">
-					{eyebrow ? (
-						<p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-							{eyebrow}
-						</p>
-					) : null}
-					<Heading className="mt-1 font-display text-2xl font-extrabold tracking-tight md:text-3xl">
+					{eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+					<Heading className="mt-1.5 font-display text-[2.125rem] leading-[1.06] sm:text-5xl">
 						{title}
 					</Heading>
 					{description ? (
@@ -93,7 +89,7 @@ export function ConsoleCard({
 		<section className={cn('surface-card overflow-hidden', className)}>
 			<div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/70 px-4 py-4 md:px-5">
 				<div className="min-w-0">
-					<h2 className="font-display text-base font-bold tracking-tight">{title}</h2>
+					<h2 className="font-display text-xl leading-tight">{title}</h2>
 					{description ? (
 						<p className="mt-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
 					) : null}
@@ -121,7 +117,7 @@ const STAT_TONES: Record<NonNullable<ConsoleStatProps['tone']>, string> = {
 	brand: 'text-primary',
 	streak: 'text-accent-warm',
 	win: 'text-stat-winrate',
-	best: 'text-amber-500',
+	best: 'text-accent-warm-foreground',
 }
 
 export function ConsoleStat({
@@ -133,7 +129,7 @@ export function ConsoleStat({
 	tone = 'brand',
 }: ConsoleStatProps) {
 	return (
-		<div className="rounded-2xl border border-border/70 bg-surface-muted/60 p-4">
+		<div className="rounded-2xl border border-border bg-card p-4 shadow-card">
 			<div className="flex items-center gap-2">
 				<Icon className={cn('h-4 w-4', STAT_TONES[tone])} aria-hidden="true" />
 				<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -141,7 +137,7 @@ export function ConsoleStat({
 				</p>
 			</div>
 			<p
-				className="mt-2 font-display text-2xl font-extrabold tnum numeral"
+				className="mt-2 font-display text-[2rem] leading-none tnum"
 				aria-hidden={srValue ? 'true' : undefined}
 			>
 				{value}
@@ -183,7 +179,7 @@ export function HonestNotice({
 			className={cn(
 				'rounded-2xl border p-4 md:p-5',
 				tone === 'attention'
-					? 'border-amber-500/30 bg-amber-500/5'
+					? 'border-accent-warm/30 bg-accent-warm/5'
 					: 'border-border/70 bg-surface-muted/60',
 				className,
 			)}
@@ -193,13 +189,13 @@ export function HonestNotice({
 					<span
 						className={cn(
 							'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
-							tone === 'attention' ? 'bg-amber-500/10' : 'bg-muted',
+							tone === 'attention' ? 'bg-accent-warm/10' : 'bg-muted',
 						)}
 					>
 						<Icon
 							className={cn(
 								'h-5 w-5',
-								tone === 'attention' ? 'text-amber-600 dark:text-amber-400' : 'text-primary',
+								tone === 'attention' ? 'text-accent-warm-foreground' : 'text-primary',
 							)}
 							aria-hidden="true"
 						/>

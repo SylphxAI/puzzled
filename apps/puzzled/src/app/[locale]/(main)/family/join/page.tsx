@@ -34,7 +34,7 @@ export default async function JoinFamilyPage({ params, searchParams }: Props) {
 	return (
 		<main className="page-shell flex-1 py-10">
 			<div className="surface-card mx-auto max-w-lg space-y-4 p-6">
-				<h1 className="font-display text-2xl font-extrabold">{t('joinTitle')}</h1>
+				<h1 className="font-display text-2xl">{t('joinTitle')}</h1>
 				<p className="text-sm text-muted-foreground">{t('joinBody')}</p>
 				{user ? (
 					<JoinFamilyButton code={code} />

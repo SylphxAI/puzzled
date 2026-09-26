@@ -23,14 +23,14 @@ const MODE_CONFIG: Record<
 	daily: {
 		icon: Target,
 		labelKey: 'daily',
-		bgColor: 'bg-emerald-500/10',
-		textColor: 'text-emerald-700 dark:text-emerald-400',
+		bgColor: 'bg-success/10',
+		textColor: 'text-success',
 	},
 	archive: {
 		icon: Calendar,
 		labelKey: 'archive',
-		bgColor: 'bg-blue-500/10',
-		textColor: 'text-blue-600 dark:text-blue-400',
+		bgColor: 'bg-info/10',
+		textColor: 'text-info',
 	},
 }
 

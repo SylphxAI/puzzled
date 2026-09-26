@@ -25,5 +25,8 @@
 	"completedNoResult": "你已完成今日谜题，暂时无法显示结果详情。",
 	"statusUnknown": "状态未确认",
 	"difficultyStatusUnverified": "无法确认你今日已完成哪些难度，系统会在你开始前核对。",
-	"todaysFreeGame": "玩今日免费谜题"
+	"todaysFreeGame": "玩今日免费谜题",
+	"notReadyTitle": "今天的{game}还没准备好",
+	"notReadyBody": "今天还没有{game}谜题。今天的免费谜题已经可以玩了。",
+	"notReadyCta": "玩今天的免费谜题"
 }

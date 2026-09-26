@@ -25,7 +25,6 @@
 	"featuredPlay": "Play {game}",
 	"featuredNote": "Open to everyone today — no account needed. Tomorrow another puzzle takes its place.",
 	"suiteTitle": "The whole suite",
-	"suiteBody": "All {count} puzzles are open to everyone, every day, on the same daily set.",
 	"ritual": {
 		"title": "How a Puzzled day works",
 		"body": "One puzzle day, one shared set, the same for every player.",
@@ -55,12 +54,6 @@
 			"question": "Can I share a result without spoiling it?",
 			"answer": "Yes. Result cards show the puzzle, the day and your solving pattern — never the solution."
 		}
-	},
-	"closing": {
-		"title": "Today's puzzle is waiting",
-		"body": "Every puzzle is open every day. Start with today's pick, or play the whole suite.",
-		"play": "Play {game}",
-		"home": "Back to home"
 	},
 	"breadcrumbLabel": "Breadcrumb",
 	"gamePage": {

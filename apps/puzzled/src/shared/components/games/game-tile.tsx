@@ -1,4 +1,4 @@
-import { Check, Sparkles } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
@@ -30,9 +30,9 @@ type GameTileProps = {
 }
 
 /**
- * Catalog/home tile for one daily module.
- *
- * The title owns the stretched link so the whole tile is one target.
+ * One daily game as a card: the game's pastel field with its glyph in ink,
+ * then the name in the display face and one line about it. The title owns a
+ * stretched link, so the whole card is one target with one accessible name.
  */
 export function GameTile({
 	slug,
@@ -53,57 +53,50 @@ export function GameTile({
 	return (
 		<div
 			className={cn(
-				'group animate-enter relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-card transition duration-200',
-				'hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background',
-				colors.glow,
+				'group animate-enter surface-card-hover relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card',
+				'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background',
 				className,
 			)}
-			style={{ '--enter-delay': `${Math.min(index, 8) * 45}ms` } as React.CSSProperties}
+			style={{ '--enter-delay': `${Math.min(index, 8) * 40}ms` } as React.CSSProperties}
 		>
 			<div
-				className={cn('pointer-events-none absolute inset-0 opacity-70', colors.pattern)}
-				aria-hidden="true"
-			/>
-			{/* The module's own hue: an accent stripe the shell never repaints. */}
-			<div className={cn('absolute inset-x-0 top-0 h-1', colors.stripe)} aria-hidden="true" />
-
-			<div className="relative flex items-start justify-between gap-3">
-				<span
-					className={cn(
-						'flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-sm ring-2 ring-inset ring-white/25 transition-transform duration-200 group-hover:scale-105',
-						colors.gradient,
-					)}
-				>
-					<GameIcon slug={slug} size={24} />
-				</span>
-
+				className={cn(
+					'relative flex aspect-[16/10] items-center justify-center',
+					colors.bg,
+					colors.onField,
+				)}
+			>
+				<GameIcon
+					slug={slug}
+					size={52}
+					className="h-11 w-11 transition-transform md:h-14 md:w-14 duration-medium ease-out group-hover:scale-110"
+				/>
 				{free && (
-					<span className="chip bg-emerald-500/12 text-emerald-700 dark:text-emerald-400">
-						<Sparkles className="h-3 w-3" aria-hidden="true" />
+					<span className="absolute left-2.5 top-2.5 rounded-full bg-[#1a1712] px-2 py-0.5 text-[11px] font-semibold text-[#fbf9f4]">
 						{labels.freeToday}
 					</span>
 				)}
 				{solved && (
-					<span className="chip bg-emerald-500/12 text-emerald-700 dark:text-emerald-400">
-						<Check className="h-3 w-3" aria-hidden="true" />
+					<span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-[#1a1712]">
+						<Check className="h-3 w-3" strokeWidth={3} aria-hidden="true" />
 						{score ? score : labels.playAgain}
 					</span>
 				)}
 			</div>
 
-			<h3 className="relative mt-3.5 font-display text-base font-bold leading-tight">
-				<Link href={`/games/${slug}`} className="outline-none after:absolute after:inset-0">
-					{name}
-				</Link>
-			</h3>
-
-			<p className="relative mt-1 line-clamp-2 flex-1 text-sm text-muted-foreground">{tagline}</p>
-
-			<div className="relative mt-3 flex items-center justify-between gap-2 text-xs">
-				<span className="font-medium text-muted-foreground">{meta}</span>
-				<span className={cn('font-semibold', colors.text)}>
-					{solved ? labels.playAgain : labels.play} →
-				</span>
+			<div className="flex flex-1 flex-col p-3.5 sm:p-4">
+				<h3 className="font-display text-[1.0625rem] leading-tight sm:text-lg">
+					<Link href={`/games/${slug}`} className="outline-none after:absolute after:inset-0">
+						{name}
+					</Link>
+				</h3>
+				<p className="mt-1 line-clamp-2 flex-1 text-[13px] leading-snug text-muted-foreground sm:text-sm">
+					{tagline}
+				</p>
+				<p className="mt-2.5 truncate text-xs text-muted-foreground">
+					{meta}
+					<span className="sr-only"> — {solved ? labels.playAgain : labels.play}</span>
+				</p>
 			</div>
 		</div>
 	)

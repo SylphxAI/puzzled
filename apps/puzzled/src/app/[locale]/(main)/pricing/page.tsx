@@ -16,6 +16,7 @@ import { Link } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
+import { cn } from '@/lib/utils'
 import { SubscribeButton } from './subscribe-button'
 
 type Props = {
@@ -94,7 +95,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 				actions={
 					<Link
 						href={`/games/${freeSlug}`}
-						className="inline-flex h-12 items-center gap-2 rounded-2xl border border-border bg-background/80 px-5 font-semibold backdrop-blur transition-colors hover:border-primary/30 hover:text-primary"
+						className="pressable inline-flex h-12 items-center gap-2 rounded-full border border-border bg-card px-5 font-semibold transition-colors hover:bg-muted"
 					>
 						<Play className="h-4 w-4" aria-hidden="true" />
 						{t('playFree', { game: freeName })}
@@ -110,23 +111,38 @@ export default async function PricingPage({ params, searchParams }: Props) {
 				) : null}
 
 				{cards.length === 0 ? (
-					<div className="surface-card max-w-xl p-6">
-						<h2 className="font-display text-xl font-extrabold">{t('closedTitle')}</h2>
-						<p className="mt-2 text-sm text-muted-foreground">{t('closedBody')}</p>
+					<div className="surface-card max-w-xl p-6 sm:p-7">
+						<p className="flex items-center gap-2 text-sm font-semibold">
+							<span
+								className="inline-block h-2.5 w-2.5 rounded-[3px] bg-accent-warm"
+								aria-hidden="true"
+							/>
+							{tPlus('name')}
+						</p>
+						<h2 className="mt-2 font-display text-2xl">{t('closedTitle')}</h2>
+						<p className="mt-2 text-[15px] text-muted-foreground">{t('closedBody')}</p>
+						<ul className="mt-5 space-y-2.5 border-t border-border pt-5">
+							{includes(true).map((line) => (
+								<li key={line} className="flex items-start gap-2.5 text-[15px]">
+									<Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+									{line}
+								</li>
+							))}
+						</ul>
 					</div>
 				) : (
 					<>
 						<ul className="grid gap-4 lg:grid-cols-3">
-							<li className="surface-card flex flex-col p-5 sm:p-6">
-								<h2 className="font-display text-xl font-extrabold">{t('freeTitle')}</h2>
+							<li className="flex flex-col rounded-2xl border border-border p-5 sm:p-6">
+								<h2 className="font-display text-xl">{t('freeTitle')}</h2>
 								<p className="mt-1 text-sm text-muted-foreground">{t('freeBody')}</p>
-								<p className="mt-5 font-display text-3xl font-extrabold tnum">
+								<p className="mt-5 font-display text-3xl tnum">
 									{formatPrice(0, currency, locale)}
 								</p>
 								<div className="mt-auto pt-5">
 									<Link
 										href={`/games/${freeSlug}`}
-										className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-background px-5 font-semibold transition-colors hover:border-primary/30 hover:text-primary"
+										className="pressable inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-border bg-card px-5 font-semibold transition-colors hover:bg-muted"
 									>
 										<Play className="h-4 w-4" aria-hidden="true" />
 										{t('playFree', { game: freeName })}
@@ -139,16 +155,28 @@ export default async function PricingPage({ params, searchParams }: Props) {
 								const saving =
 									month && year ? yearlySavingPercent(month.amountMinor, year.amountMinor) : null
 								return (
-									<li key={group.title} className="surface-card flex flex-col p-5 sm:p-6">
-										<h2 className="font-display text-xl font-extrabold">{group.title}</h2>
+									<li
+										key={group.title}
+										className={cn(
+											'surface-card flex flex-col p-5 sm:p-6',
+											!group.family && 'border-2 border-foreground shadow-lg',
+										)}
+									>
+										<h2 className="flex items-center gap-2 font-display text-xl">
+											{!group.family ? (
+												<span
+													className="inline-block h-2.5 w-2.5 rounded-[3px] bg-accent-warm"
+													aria-hidden="true"
+												/>
+											) : null}
+											{group.title}
+										</h2>
 										<p className="mt-1 text-sm text-muted-foreground">{group.body}</p>
 										<dl className="mt-5 space-y-1">
 											{month ? (
 												<div className="flex flex-wrap items-baseline gap-1.5">
 													<dt className="sr-only">{t('monthly')}</dt>
-													<dd className="font-display text-3xl font-extrabold tnum">
-														{priceLine(month)}
-													</dd>
+													<dd className="font-display text-4xl tnum">{priceLine(month)}</dd>
 													<dd className="text-sm text-muted-foreground">{t('perMonth')}</dd>
 												</div>
 											) : null}
@@ -158,7 +186,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 													<dd className="font-semibold tnum">{priceLine(year)}</dd>
 													<dd className="text-muted-foreground">{t('perYear')}</dd>
 													{saving ? (
-														<dd className="chip bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200">
+														<dd className="chip bg-success/15 text-success">
 															{t('saving', { percent: saving })}
 														</dd>
 													) : null}
@@ -172,7 +200,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 													className="flex items-start gap-2.5 text-sm text-muted-foreground"
 												>
 													<Check
-														className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+														className="mt-0.5 h-4 w-4 shrink-0 text-success"
 														aria-hidden="true"
 													/>
 													{line}

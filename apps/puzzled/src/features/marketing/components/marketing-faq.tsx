@@ -96,7 +96,7 @@ export async function MarketingFaq({
 				{title && (
 					<h2
 						id={headingId}
-						className="font-display text-2xl font-extrabold tracking-tight text-balance md:text-3xl"
+						className="font-display text-[1.625rem] leading-tight text-balance md:text-3xl"
 					>
 						{title}
 					</h2>
@@ -106,24 +106,21 @@ export async function MarketingFaq({
 				)}
 				<div
 					className={cn(
-						'grid gap-3',
-						(title || subtitle) && 'mt-6',
-						columns === 2 && 'md:grid-cols-2',
+						'grid border-t border-border',
+						(title || subtitle) && 'mt-5',
+						columns === 2 && 'md:grid-cols-2 md:gap-x-10',
 					)}
 				>
 					{resolvedItems.map((item) => (
-						<details
-							key={item.question}
-							className="group rounded-2xl border border-border/70 bg-card px-4 py-1 open:shadow-card"
-						>
-							<summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 py-3 font-display text-base font-bold marker:content-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+						<details key={item.question} className="group border-b border-border">
+							<summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3.5 text-[15px] font-semibold marker:content-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
 								{item.question}
 								<ChevronDown
-									className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+									className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-medium ease-out group-open:rotate-180"
 									aria-hidden="true"
 								/>
 							</summary>
-							<p className="pb-4 pr-6 text-sm leading-relaxed text-muted-foreground">
+							<p className="pb-4 pr-8 text-[15px] leading-relaxed text-muted-foreground">
 								{item.answer}
 							</p>
 						</details>

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono, Plus_Jakarta_Sans, Space_Grotesk } from 'next/font/google'
+import localFont from 'next/font/local'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
@@ -17,51 +17,22 @@ import { PlatformProvider } from '@/shared/components/platform'
 import { ThemeProvider } from '@/shared/components/theme'
 import '../globals.css'
 
-const inter = Inter({
-	variable: '--font-sans-family',
-	subsets: ['latin'],
-	display: 'swap',
-})
-
 /**
- * Display face for headings, the wordmark and hero copy.
- * Friendlier geometry than the body face without hurting legibility.
+ * The display face: Fraunces (SIL OFL), instanced for display sizes and
+ * subset to Latin (see public/fonts/README.md). Body text uses the platform
+ * UI face, so this is the only web font and it is preloaded for the headline.
  */
-const plusJakarta = Plus_Jakarta_Sans({
+const fraunces = localFont({
+	src: '../fonts/fraunces-display.woff2',
 	variable: '--font-display-family',
-	subsets: ['latin'],
+	weight: '500 700',
 	display: 'swap',
-	weight: ['600', '700', '800'],
-})
-
-/**
- * Display face for the day surface only (`.day-surface`).
- *
- * The trio below is the default SaaS stack — Inter for body, Plus Jakarta for
- * headings, JetBrains Mono for code — with no dedicated numeral voice, in a
- * product where the streak, the timer and the puzzle number are the drama. This
- * face is scoped to the day surface so the direction can be judged before it
- * spreads; `preload: false` keeps it off the critical path (the hero text still
- * paints in the first frame with the fallback face, because the type is not
- * opacity-animated).
- */
-const spaceGrotesk = Space_Grotesk({
-	variable: '--font-day-display-family',
-	subsets: ['latin'],
-	display: 'swap',
-	preload: false,
-})
-
-const jetbrainsMono = JetBrains_Mono({
-	variable: '--font-mono-family',
-	subsets: ['latin'],
-	display: 'swap',
-	// Only game rule snippets use the mono face; never block first paint for it.
-	preload: false,
+	preload: true,
+	adjustFontFallback: 'Times New Roman',
 })
 
 const SITE_DESCRIPTION =
-	'Daily puzzles to challenge your mind. Play Five, Threads, Crowns, Duo, and more. Free every day.'
+	'Daily word, logic and number puzzles. One free puzzle every day, no account needed.'
 const SITE_KEYWORDS = [
 	'games',
 	'puzzles',
@@ -111,8 +82,8 @@ export const viewport: Viewport = {
 	initialScale: 1,
 	viewportFit: 'cover', // Required for safe area insets on iOS PWA
 	themeColor: [
-		{ media: '(prefers-color-scheme: light)', color: '#ffffff' },
-		{ media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+		{ media: '(prefers-color-scheme: light)', color: '#f7f4ee' },
+		{ media: '(prefers-color-scheme: dark)', color: '#121110' },
 	],
 }
 
@@ -191,17 +162,14 @@ export default async function LocaleLayout({ children, params }: Props) {
 	])
 
 	return (
-		<html
-			lang={locale}
-			suppressHydrationWarning
-			className={`${inter.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable}`}
-		>
+		<html lang={locale} suppressHydrationWarning className={fraunces.variable}>
 			<head>
 				{/* Color scheme for proper dark mode handling */}
 				<meta name="color-scheme" content="light dark" />
 				{/* Favicon icons */}
 				<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 				<link rel="icon" href="/favicon.png" type="image/png" sizes="32x32" />
+				<link rel="mask-icon" href="/brand/mark-mono.svg" color="#1a1712" />
 				<link rel="icon" href="/favicon.ico" sizes="48x48" />
 				<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 				{/*

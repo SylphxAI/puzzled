@@ -1,36 +1,69 @@
-import { BarChart3, CalendarDays, Gamepad2, Home, Tag, Trophy, User } from 'lucide-react'
+import {
+	CalendarDays,
+	ChartNoAxesColumn,
+	CircleUserRound,
+	LayoutGrid,
+	LifeBuoy,
+	Sparkles,
+	Sun,
+	Trophy,
+} from 'lucide-react'
 import type { ComponentType } from 'react'
 
 export type NavItem = {
 	href: string
 	/** Translation key inside the `nav` namespace. */
 	labelKey: string
-	icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>
-	/** Highlighted in the mobile bottom bar. */
+	icon: ComponentType<{
+		className?: string
+		strokeWidth?: number
+		'aria-hidden'?: boolean | 'true' | 'false'
+	}>
+	/** A tab in the phone tab bar. */
 	showInBottomNav?: boolean
-	/** Shown in the desktop top bar. Account-only surfaces stay out of it. */
+	/** Shown in the desktop top bar. Account surfaces stay in the account menu. */
 	showInTopNav?: boolean
 }
 
 /**
- * One navigation model for every shell surface (top nav, mobile sheet, bottom
- * bar). Order is the reading order a guest sees: play first, deepen later.
+ * One navigation model for every shell surface (top bar, phone tab bar,
+ * menu sheet). It follows the player's day: today's puzzles, the catalogue,
+ * past days, their record, and their account.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
-	{ href: '/', labelKey: 'home', icon: Home, showInBottomNav: true, showInTopNav: true },
-	{ href: '/games', labelKey: 'games', icon: Gamepad2, showInBottomNav: true, showInTopNav: true },
-	{ href: '/stats', labelKey: 'stats', icon: BarChart3, showInBottomNav: true, showInTopNav: true },
-	// Past product days: open to every signed-in player; a guest is asked to sign in.
-	{ href: '/archive', labelKey: 'archive', icon: CalendarDays, showInTopNav: true },
-	{ href: '/leaderboard', labelKey: 'leaderboard', icon: Trophy, showInTopNav: true },
-	{ href: '/profile', labelKey: 'profile', icon: User, showInBottomNav: true },
+	{ href: '/', labelKey: 'today', icon: Sun, showInBottomNav: true, showInTopNav: true },
+	{
+		href: '/games',
+		labelKey: 'games',
+		icon: LayoutGrid,
+		showInBottomNav: true,
+		showInTopNav: true,
+	},
+	{
+		href: '/archive',
+		labelKey: 'archive',
+		icon: CalendarDays,
+		showInBottomNav: true,
+		showInTopNav: true,
+	},
+	{
+		href: '/stats',
+		labelKey: 'stats',
+		icon: ChartNoAxesColumn,
+		showInBottomNav: true,
+		showInTopNav: true,
+	},
+	{ href: '/profile', labelKey: 'account', icon: CircleUserRound, showInBottomNav: true },
 ] as const
 
-export const SUPPORT_NAV_ITEM: NavItem = {
-	href: '/support',
-	labelKey: 'support',
-	icon: Tag,
-}
+/** Secondary destinations: the menu sheet and the footer, never a tab. */
+export const SECONDARY_NAV_ITEMS: readonly NavItem[] = [
+	{ href: '/pricing', labelKey: 'plus', icon: Sparkles },
+	{ href: '/leaderboard', labelKey: 'leaderboard', icon: Trophy },
+	{ href: '/support', labelKey: 'support', icon: LifeBuoy },
+] as const
+
+export const SUPPORT_NAV_ITEM: NavItem = SECONDARY_NAV_ITEMS[2] as NavItem
 
 /** True when `pathname` is inside `href` (with `/` matching only the root). */
 export function isActivePath(pathname: string | null, href: string): boolean {
