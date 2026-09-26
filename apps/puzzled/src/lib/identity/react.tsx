@@ -10,6 +10,7 @@ import {
 	useMemo,
 	useRef,
 	useState,
+	useSyncExternalStore,
 } from 'react'
 import { type AppConfig, DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type IdentityUser } from './dest'
 
@@ -23,14 +24,17 @@ type AuthState = {
 	signInWithOAuth?: (input: { provider: string; redirectUrl?: string }) => Promise<void>
 }
 
-const AuthContext = createContext<AuthState>({
+/** What the server renders: the session is unknown until the browser asks. */
+const SERVER_AUTH_STATE: AuthState = {
 	user: null,
 	isLoading: true,
 	isLoaded: false,
 	isSignedIn: false,
 	isConfigured: true,
 	signOut: async () => undefined,
-})
+}
+
+const AuthContext = createContext<AuthState>(SERVER_AUTH_STATE)
 
 const AppConfigContext = createContext<AppConfig>(EMPTY_APP_CONFIG)
 
@@ -124,8 +128,27 @@ export function PlatformProvider(props: {
 	return <SylphxProvider {...props}>{props.children}</SylphxProvider>
 }
 
+const noSubscription = () => () => undefined
+
+/**
+ * False while React hydrates server HTML, true afterwards.
+ *
+ * The session resolves in an effect, and can do so before a streamed Suspense
+ * boundary (the top nav) has hydrated. Rendering the resolved state there would
+ * not match the server's loading markup (React #418), so hydrating renders see
+ * the server state and switch right after.
+ */
+function useHydrated(): boolean {
+	return useSyncExternalStore(
+		noSubscription,
+		() => true,
+		() => false,
+	)
+}
+
 export function useSafeUser() {
-	const ctx = useContext(AuthContext)
+	const context = useContext(AuthContext)
+	const ctx = useHydrated() ? context : SERVER_AUTH_STATE
 	return {
 		user: ctx.user,
 		isLoading: ctx.isLoading,
