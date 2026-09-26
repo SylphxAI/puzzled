@@ -9,6 +9,8 @@ import {
 	archivePlayPath,
 } from '@/features/daily/lib/archive-days'
 import { getAllGameMetadata } from '@/games/registry'
+import { getServerPlusAccess } from '@/lib/api/server'
+import { OPEN_ACCESS } from '@/lib/billing/plus'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
@@ -56,8 +58,9 @@ function formatDayKey(dayKey: string, locale: string): string {
  * The archive index (`/archive`) — the surface that lets a player reach past
  * product days.
  *
- * A guest is pointed at sign-in (the archive is per-identity); every signed-in
- * account sees the day list. Every row links the dated play route,
+ * A guest is pointed at sign-in (the archive is per-identity); a signed-in
+ * account sees the day list, or the Puzzled Plus path once Plus is on sale and
+ * the account has none. Every row links the dated play route,
  * `/games/<slug>?mode=archive&date=YYYY-MM-DD`, which Connect admits or refuses
  * on its own — this page decides nothing about play.
  *
@@ -74,6 +77,12 @@ export default async function ArchivePage({ params }: Props) {
 
 	const user = await withPresentationDeadline(currentUser(), null)
 	const isGuest = !user?.id
+	// Past days need Puzzled Plus once it is on sale; Connect enforces it too.
+	const access = isGuest
+		? OPEN_ACCESS
+		: await withPresentationDeadline(getServerPlusAccess(true), OPEN_ACCESS)
+	const locked = !isGuest && access.salesOpen && !access.entitled
+	const tPlus = await getTranslations('plus.unlock')
 
 	const todaysFreeGame = getTodaysFreeGame()
 	const freeName = tGames(`${slugToCamelCase(todaysFreeGame)}.name`, {
@@ -81,14 +90,15 @@ export default async function ArchivePage({ params }: Props) {
 	})
 
 	const moduleNames = new Map(getAllGameMetadata().map((game) => [game.slug, game.name]))
-	const days = !isGuest
-		? archiveDays(productDayKey()).map((day) => ({
-				...day,
-				name: tGames(`${slugToCamelCase(day.gameSlug)}.name`, {
-					defaultValue: moduleNames.get(day.gameSlug) ?? day.gameSlug,
-				}),
-			}))
-		: []
+	const days =
+		!isGuest && !locked
+			? archiveDays(productDayKey()).map((day) => ({
+					...day,
+					name: tGames(`${slugToCamelCase(day.gameSlug)}.name`, {
+						defaultValue: moduleNames.get(day.gameSlug) ?? day.gameSlug,
+					}),
+				}))
+			: []
 
 	return (
 		<main className="flex-1">
@@ -113,6 +123,32 @@ export default async function ArchivePage({ params }: Props) {
 									className="inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
 								>
 									{t('signInCta')}
+								</Link>
+								<Link
+									href={`/games/${todaysFreeGame}`}
+									className="inline-flex h-11 items-center rounded-xl border border-border px-5 text-sm font-semibold transition-colors hover:border-primary/30 hover:text-primary"
+								>
+									{t('playFreeToday', { game: freeName })}
+								</Link>
+							</div>
+						</CardContent>
+					</Card>
+				) : locked ? (
+					<Card className="mt-8 max-w-xl">
+						<CardContent className="flex flex-col gap-4 p-6">
+							<div className="flex items-center gap-3">
+								<Lock className="h-5 w-5 text-primary" aria-hidden="true" />
+								<h2 className="font-display text-lg font-bold">{tPlus('archiveTitle')}</h2>
+							</div>
+							<p className="text-sm text-muted-foreground">
+								{tPlus('body', { game: freeName, count: getAllGameMetadata().length })}
+							</p>
+							<div className="flex flex-wrap items-center gap-3">
+								<Link
+									href="/pricing"
+									className="inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
+								>
+									{tPlus('cta')}
 								</Link>
 								<Link
 									href={`/games/${todaysFreeGame}`}

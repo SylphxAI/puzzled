@@ -1,0 +1,152 @@
+edition = "2024";
+
+package puzzled.v1;
+
+option features.field_presence = IMPLICIT;
+option features.enum_type = OPEN;
+option features.repeated_field_encoding = PACKED;
+option features.utf8_validation = VERIFY;
+option features.message_encoding = LENGTH_PREFIXED;
+option features.json_format = ALLOW;
+option features.(pb.cpp).string_type = STRING;
+
+import "google/protobuf/cpp_features.proto";
+
+// BillingService: Puzzled Plus, the subscription that opens every game and
+// the archive. Stripe is the payment processor; this service owns the
+// entitlement and the append-only ledger. Identity comes from the verified
+// Platform JWT; the request body never carries a user id. Prices are read
+// from Stripe, never copied into the client.
+
+message Plan {
+  // Stable plan id: individual_monthly, individual_yearly, family_monthly,
+  // family_yearly.
+  string id = 1;
+  bool family = 2;
+  // month | year
+  string interval = 3;
+  // Prices per currency, tax included.
+  repeated PlanPrice prices = 4;
+}
+
+message PlanPrice {
+  // ISO 4217 lower case (usd, gbp).
+  string currency = 1;
+  int64 unit_amount_minor = 2;
+}
+
+message ListPlansRequest {}
+
+message ListPlansResponse {
+  // False while the store is not configured: nothing is sold and nothing is
+  // locked.
+  bool sales_open = 1;
+  repeated Plan plans = 2;
+  uint32 family_max_members = 3;
+  uint32 cancellation_days = 4;
+}
+
+message FamilyMember {
+  string user_id = 1;
+  string display_name = 2;
+  bool owner = 3;
+  int64 joined_at_ms = 4;
+}
+
+message Family {
+  // owner | member
+  string role = 1;
+  repeated FamilyMember members = 2;
+  uint32 max_members = 3;
+  // Present for the owner only.
+  string invite_code = 4 [features.field_presence = EXPLICIT];
+}
+
+message GetSubscriptionRequest {
+  // Read the subscription back from Stripe before answering (after checkout).
+  bool refresh = 1;
+}
+
+message GetSubscriptionResponse {
+  bool sales_open = 1;
+  // The account may play every game and the archive.
+  bool entitled = 2;
+  // none | plus (own subscription) | family (member of a family plan)
+  string source = 3;
+  // Own subscription: plan id, Stripe status, period end.
+  string plan_id = 4 [features.field_presence = EXPLICIT];
+  string status = 5 [features.field_presence = EXPLICIT];
+  int64 current_period_end_ms = 6 [features.field_presence = EXPLICIT];
+  bool cancel_at_period_end = 7;
+  // Cancelling before this time refunds the first payment in full.
+  int64 refund_until_ms = 8 [features.field_presence = EXPLICIT];
+  Family family = 9;
+}
+
+message CreateCheckoutRequest {
+  string plan_id = 1;
+  // BCP 47 locale path segment for return URLs (en-US, zh-HK, ...).
+  string locale = 2;
+  // Preferred currency (usd, gbp). Empty lets the server choose.
+  string currency = 3;
+}
+
+message CreateCheckoutResponse {
+  string url = 1;
+}
+
+message CreatePortalRequest {
+  string locale = 1;
+}
+
+message CreatePortalResponse {
+  string url = 1;
+}
+
+message CancelSubscriptionRequest {}
+
+message CancelSubscriptionResponse {
+  // True when the cancellation fell inside the cancellation window and the
+  // first payment was refunded; access ended immediately.
+  bool refunded = 1;
+  int64 access_ends_at_ms = 2;
+}
+
+message ResumeSubscriptionRequest {}
+
+message ResumeSubscriptionResponse {}
+
+message JoinFamilyRequest {
+  string invite_code = 1;
+}
+
+message JoinFamilyResponse {}
+
+message LeaveFamilyRequest {}
+
+message LeaveFamilyResponse {}
+
+message RemoveFamilyMemberRequest {
+  string user_id = 1;
+}
+
+message RemoveFamilyMemberResponse {}
+
+message ResetFamilyInviteRequest {}
+
+message ResetFamilyInviteResponse {
+  string invite_code = 1;
+}
+
+service BillingService {
+  rpc ListPlans(ListPlansRequest) returns (ListPlansResponse);
+  rpc GetSubscription(GetSubscriptionRequest) returns (GetSubscriptionResponse);
+  rpc CreateCheckout(CreateCheckoutRequest) returns (CreateCheckoutResponse);
+  rpc CreatePortal(CreatePortalRequest) returns (CreatePortalResponse);
+  rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
+  rpc ResumeSubscription(ResumeSubscriptionRequest) returns (ResumeSubscriptionResponse);
+  rpc JoinFamily(JoinFamilyRequest) returns (JoinFamilyResponse);
+  rpc LeaveFamily(LeaveFamilyRequest) returns (LeaveFamilyResponse);
+  rpc RemoveFamilyMember(RemoveFamilyMemberRequest) returns (RemoveFamilyMemberResponse);
+  rpc ResetFamilyInvite(ResetFamilyInviteRequest) returns (ResetFamilyInviteResponse);
+}

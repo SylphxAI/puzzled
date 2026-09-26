@@ -52,7 +52,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             pool.clone(),
         );
 
-    let state = AppState::new(pool);
+    let stripe = puzzled_server::capabilities::billing::adapters::stripe::Stripe::from_env();
+    match &stripe {
+        Some(stripe) if stripe.live_mode() => {
+            info!("Stripe configured (live mode); Plus is on sale once prices exist")
+        }
+        Some(_) => info!("Stripe configured (test mode); Plus is on sale once prices exist"),
+        None => info!("Stripe not configured: Puzzled Plus is not on sale and nothing is locked"),
+    }
+    let state = AppState::new(pool).with_stripe(stripe);
     let slice = if state.pool.is_some() { "S1" } else { "S0" };
     let port = http_port();
     let listener = TcpListener::bind(("0.0.0.0", port)).await?;

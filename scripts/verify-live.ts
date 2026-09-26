@@ -124,6 +124,12 @@ type Options = {
 	selfTest: boolean
 	/** Pinned clock for the self-test; live runs use the host clock. */
 	now?: Date
+	/**
+	 * Puzzled Plus is on sale (BillingService.ListPlans). Then only today's pick
+	 * and today are free: other modules answer 403 `plus_required` and past
+	 * days 403 `plus_required_archive` for an anonymous caller.
+	 */
+	salesOpen?: boolean
 }
 
 type HttpResult = {
@@ -1000,10 +1006,31 @@ type SlugVerdict = 'served' | 'violation' | 'indeterminate'
  * is the only served shape; a 4xx / unexpected status is a violation and a
  * 5xx / transport error is indeterminate (never rounded to a pass).
  */
-function classifySlugResult(result: ConnectResult): SlugVerdict {
-	if (result.httpStatus === 200) return 'served'
+function classifySlugResult(result: ConnectResult, expectLocked = false): SlugVerdict {
 	if (result.httpStatus === null || result.httpStatus >= 500) return 'indeterminate'
+	if (expectLocked) {
+		// Plus on sale: a paid module must refuse an anonymous caller, never serve.
+		return result.httpStatus === 403 && result.connectMessage === 'plus_required'
+			? 'served'
+			: 'violation'
+	}
+	if (result.httpStatus === 200) return 'served'
 	return 'violation'
+}
+
+/** BillingService.ListPlans `salesOpen`; an unreadable answer counts as closed. */
+async function readSalesOpen(base: string, timeoutMs: number): Promise<boolean> {
+	const result = await httpRequest(`${base}/puzzled.v1.BillingService/ListPlans`, {
+		method: 'POST',
+		headers: {
+			'content-type': 'application/json',
+			'connect-protocol-version': '1',
+			accept: 'application/json',
+		},
+		body: '{}',
+		timeoutMs,
+	})
+	return result.httpStatus === 200 && asRecord(result.bodyJson)?.salesOpen === true
 }
 
 async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult> {
@@ -1041,7 +1068,10 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 	}
 	const verdicts = results.map((entry) => ({
 		slug: entry.slug,
-		verdict: classifySlugResult(entry.result),
+		verdict: classifySlugResult(
+			entry.result,
+			Boolean(options.salesOpen) && entry.slug !== featuredSlug,
+		),
 		httpStatus: entry.result.httpStatus,
 		connectCode: entry.result.connectCode,
 		connectMessage: entry.result.connectMessage,
@@ -1075,7 +1105,9 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 			'every-rotation-module-served-200',
 			violations.length > 0 ? 'fail' : allServed ? 'pass' : 'unknown',
 			allServed
-				? `all ${served.length} rotation modules → 200 (today's pick = ${featuredSlug})`
+				? options.salesOpen
+					? `today's pick ${featuredSlug} → 200; the other ${served.length - 1} → 403 plus_required (Puzzled Plus on sale)`
+					: `all ${served.length} rotation modules → 200 (today's pick = ${featuredSlug})`
 				: `${verdictText}${
 						indeterminate.length > 0
 							? ' — indeterminate responses mean serving could not be observed this run'
@@ -1604,14 +1636,19 @@ async function checkArchiveOpen(
 	const futureRefused = future.httpStatus === 400 && future.connectMessage === 'future_puzzle_date'
 	const subResults: SubResult[] = [
 		sub(
-			'archive-served-anonymous',
+			options.salesOpen ? 'archive-locked-anonymous' : 'archive-served-anonymous',
 			// A 5xx/transport failure is not evidence about archive serving
-			// (same rule as the rotation probes): unknown, never a pass.
+			// (same rule as the rotation probes): unknown, never a pass. With
+			// Puzzled Plus on sale a past day is refused, not served.
 			archive.httpStatus === null || archive.httpStatus >= 500
 				? 'unknown'
-				: archive.httpStatus === 200
-					? 'pass'
-					: 'fail',
+				: options.salesOpen
+					? archive.httpStatus === 403 && archive.connectMessage === 'plus_required_archive'
+						? 'pass'
+						: 'fail'
+					: archive.httpStatus === 200
+						? 'pass'
+						: 'fail',
 			`anonymous GetDaily(${archiveSlug}, puzzleDate=${pastDate}) → ${archive.httpStatus ?? archive.error}${
 				archive.connectMessage ? `:${archive.connectMessage}` : ''
 			}`,
@@ -2581,6 +2618,9 @@ async function runReport(options: Options): Promise<{ report: Report }> {
 	const healthz = await checkHealthz(options.base, options.timeoutMs, options.expectedSha)
 	const healthzSha = asString(healthz.evidence.gitCommitSha)
 	const readyz = await checkReadyz(options.base, healthzSha, options.timeoutMs)
+	if (options.salesOpen === undefined) {
+		options.salesOpen = await readSalesOpen(options.base, options.timeoutMs)
+	}
 	const discovery = await checkFreeSlugDiscovery(options)
 	const serve = await checkDailyServe(discovery, options.guest, options.guestProvided)
 	const web = await checkWebDocument(options, discovery)

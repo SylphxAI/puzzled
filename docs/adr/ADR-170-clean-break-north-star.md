@@ -75,14 +75,19 @@ clean-break end state that replaces all of it.
 
 ### 5. Play admission (server-enforced)
 
-- Superseded 2026-09-25: there is no premium gate. Puzzled sells no paid tier,
-  and the commerce service the gate read does not exist. Every module and
-  every past day is served to every player, guests included; a future
-  `puzzle_date` is refused (`future_puzzle_date`) so no one reads tomorrow's
-  solution early.
-- The featured rotation ("today's pick", **product day-key** day-of-year
-  rotation in `Asia/Hong_Kong`, same SSOT as daily puzzle completers) only
-  chooses what home and the catalog lead with.
+- A future `puzzle_date` is refused (`future_puzzle_date`) so no one reads
+  tomorrow's solution early.
+- Today's featured game (**product day-key** day-of-year rotation in
+  `Asia/Hong_Kong`, same SSOT as daily puzzle completers) is free to every
+  player, guests included, and never reads billing.
+- Since 2026-09-26 (issue #235), every other game and every past day needs
+  Puzzled Plus once it is on sale: `PuzzleConnectService::enforce_play_access`
+  reads the account's entitlement from the api's own billing tables (Stripe
+  read-backs; `docs/north-star/MONETIZATION.md`) and refuses with
+  `plus_required` / `plus_required_archive`. A failed read refuses (fail closed
+  to the free floor). While Stripe is not configured nothing is sold and
+  nothing is locked. The 2026-09-25 removal of the old Sylphx commerce gate
+  stands; this gate reads no Sylphx service.
 
 ### 5.1 Ritual completion / daily puzzle completers instrumentation (S0)
 

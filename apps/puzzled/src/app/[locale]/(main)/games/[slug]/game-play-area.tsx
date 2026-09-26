@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server'
+import { GameUnlockPanel } from '@/features/catalog/components/game-unlock-panel'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import { deriveDifficultyCompletionStatus } from '@/features/daily/lib/difficulty-completion'
 import type { GameSlug } from '@/games/registry'
@@ -6,10 +7,12 @@ import type { PuzzleDifficulty } from '@/games/types'
 import {
 	type DailyStatus,
 	getServerDailyStatus,
+	getServerPlusAccess,
 	getServerStreakInfo,
 	hasServerProgressIdentity,
 	type StreakInfo,
 } from '@/lib/api/server'
+import { isPlayLocked } from '@/lib/billing/plus'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
@@ -27,6 +30,11 @@ type GamePlayAreaProps = {
 	supportsDifficulty: boolean
 	/** A signed-in account made this request. */
 	hasUser: boolean
+	/** Today's free module and its name, for the unlock panel. */
+	freeGameSlug: string
+	freeGameName: string
+	/** Registered module count, for the unlock panel copy. */
+	gameCount: number
 	/**
 	 * Archive day key resolved from the query string by the page. Connect admits
 	 * or refuses the read for this day; the client never widens it.
@@ -37,9 +45,10 @@ type GamePlayAreaProps = {
 /**
  * The interactive part of a module page.
  *
- * Every module is open to every player; this component renders the play flow:
- * the difficulty chooser, the server board, the client GetDaily fallback and
- * the completed card.
+ * Renders the play flow (the difficulty chooser, the server board, the client
+ * GetDaily fallback and the completed card) or, when Puzzled Plus is on sale
+ * and the viewer cannot open this game or day, the unlock panel. Connect
+ * enforces the same rule (`plus_required`); this only picks what to show.
  *
  * It renders inside a Suspense boundary, so a slow Connect read streams behind
  * the skeleton instead of delaying the page's own content — and, because the
@@ -54,9 +63,27 @@ export async function GamePlayArea({
 	difficulty,
 	supportsDifficulty,
 	hasUser,
+	freeGameSlug,
+	freeGameName,
+	gameCount,
 	dateParam,
 }: GamePlayAreaProps) {
 	const tDaily = await getTranslations('daily')
+
+	const access = await getServerPlusAccess(hasUser)
+	const archive = mode === 'archive' && Boolean(dateParam)
+	if (isPlayLocked(access, { slug, freeSlug: freeGameSlug, archive })) {
+		return (
+			<GameUnlockPanel
+				slug={slug}
+				archive={archive}
+				gameCount={gameCount}
+				isGuest={!hasUser}
+				freeGameSlug={freeGameSlug}
+				freeGameName={freeGameName}
+			/>
+		)
+	}
 
 	if (supportsDifficulty && !difficulty && mode === 'daily') {
 		// GetDaily is identity-agnostic: session cookie or puzzled_guest_id.

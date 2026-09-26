@@ -128,7 +128,7 @@ Historical example: [history/pr64-attestation.md](history/pr64-attestation.md).
 | P2 | Share land → play |
 | P3 | Multi-module same day (if suite claims multi) |
 | P4 | Auth history/streak path |
-| P5 | Archive: past days served to every player; future days refused |
+| P5 | Archive: past days served with Puzzled Plus (every player while Plus is not on sale), refused with an unlock path otherwise; future days refused |
 | P6 | api health + web serve |
 | P7 | Admin games list (if admin ships) |
 

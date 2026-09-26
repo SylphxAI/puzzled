@@ -1,6 +1,15 @@
 'use client'
 
-import { Bell, LayoutDashboard, Palette, Shield, ShieldCheck, User, UserCircle } from 'lucide-react'
+import {
+	Bell,
+	CreditCard,
+	LayoutDashboard,
+	Palette,
+	Shield,
+	ShieldCheck,
+	User,
+	UserCircle,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
@@ -9,6 +18,7 @@ const SETTINGS_LINKS = [
 	{ href: '/settings', key: 'overview', icon: LayoutDashboard },
 	{ href: '/settings/profile', key: 'profile', icon: UserCircle },
 	{ href: '/settings/account', key: 'account', icon: User },
+	{ href: '/settings/subscription', key: 'subscription', icon: CreditCard },
 	{ href: '/settings/preferences', key: 'preferences', icon: Palette },
 	{ href: '/settings/notifications', key: 'notifications', icon: Bell },
 	{ href: '/settings/security', key: 'security', icon: ShieldCheck },
@@ -23,6 +33,7 @@ const SETTINGS_LINKS = [
  */
 export function SettingsNav() {
 	const t = useTranslations('settings')
+	const tPlus = useTranslations('plus.subscription')
 	const pathname = usePathname()
 
 	return (
@@ -47,7 +58,7 @@ export function SettingsNav() {
 								)}
 							>
 								<Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-								{t(`nav.${key}`)}
+								{key === 'subscription' ? tPlus('title') : t(`nav.${key}`)}
 							</Link>
 						</li>
 					)

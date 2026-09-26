@@ -2,7 +2,7 @@
 	"privacy": {
 		"title": "隐私政策",
 		"lastUpdated": "最后更新",
-		"revision": "2024-12-15",
+		"revision": "2026-09-26",
 		"eyebrow": "法律文件",
 		"lead": "本政策说明 Puzzled 收集哪些数据、为何收集，以及你可以如何就此联系我们。",
 		"toc": {
@@ -17,6 +17,10 @@
 			"intro": {
 				"title": "简介",
 				"content": "Puzzled（「我们」）尊重您的隐私并致力于保护您的个人数据。本隐私政策说明我们如何在您使用服务时收集、使用和保护您的信息。"
+			},
+			"controller": {
+				"title": "谁负责你的数据",
+				"content": "根据英国 GDPR 及《2018 年数据保护法》，Sylphx Limited（公司编号 16438428，128 City Road, London EC1V 2NX, United Kingdom）是你个人数据的控制者。"
 			},
 			"dataCollection": {
 				"title": "我们收集的数据",
@@ -38,6 +42,10 @@
 					"legal": "遵守法律义务"
 				}
 			},
+			"payments": {
+				"title": "付款",
+				"content": "你订阅时，由 Stripe 处理付款；我们不会收到你的完整卡号。为遵守英国税务和会计法规，我们会保留你的订阅、付款和退款记录（金额、日期和 Stripe 参考编号）六年。如果你删除账户，这些记录会在移除你的玩家 ID 后保留。"
+			},
 			"thirdParty": {
 				"title": "第三方服务",
 				"content": "我们与受信任的第三方服务合作：",
@@ -56,7 +64,8 @@
 					"access": "访问您的个人数据",
 					"correct": "更正不正确的数据",
 					"delete": "要求删除您的数据",
-					"export": "导出您的数据"
+					"export": "导出您的数据",
+					"complain": "如果你对我们处理数据的方式不满意，可以向英国信息专员办公室（ico.org.uk）投诉"
 				}
 			},
 			"contact": {
@@ -68,7 +77,7 @@
 	"terms": {
 		"title": "服务条款",
 		"lastUpdated": "最后更新",
-		"revision": "2026-09-25",
+		"revision": "2026-09-26",
 		"eyebrow": "法律文件",
 		"lead": "本条款列出使用 Puzzled 时适用的规则，包括账户、订阅与行为规范。",
 		"toc": {
@@ -84,6 +93,10 @@
 				"title": "条款接受",
 				"content": "使用 Puzzled 即表示您同意受这些服务条款的约束。如果您不同意这些条款，请勿使用我们的服务。"
 			},
+			"seller": {
+				"title": "我们是谁",
+				"content": "Puzzled 由 Sylphx Limited 提供。Sylphx Limited 是一家在英格兰及威尔士注册的公司（公司编号 16438428），注册地址为 128 City Road, London EC1V 2NX, United Kingdom，增值税号为 GB 502 7862 95。"
+			},
 			"service": {
 				"title": "我们的服务",
 				"content": "Puzzled 提供每日益智游戏和挑战。我们保留随时修改、暂停或停止任何部分服务的权利。"
@@ -95,6 +108,19 @@
 					"accurate": "提供准确完整的信息",
 					"secure": "保护您的登录凭证安全",
 					"responsible": "对您账户下的所有活动负责"
+				}
+			},
+			"subscriptions": {
+				"title": "Puzzled Plus 订阅",
+				"content": "今日精选谜题免费。Puzzled Plus 是可选的付费订阅，开放全部游戏、往日题库，以及每款游戏的统计。",
+				"items": {
+					"billing": "付款前会显示价格，价格已按适用情况包含增值税。Stripe 会在你订阅时以及每个按月或按年周期开始时收款。",
+					"renewal": "订阅会自动续期，直到你取消。你可以随时在“设置 > 订阅”中取消；你可使用至已付款周期结束，之后不会再扣费。",
+					"cancellation": "取消权：首次订阅开始后 14 天内取消，可获全额退款，无论你玩了多少。请在“设置 > 订阅”中取消或发邮件联系我们。",
+					"refund": "14 天后，已使用部分的周期不予退款，但法律要求或因我们的问题导致你无法使用 Puzzled 的情况除外。",
+					"price": "如我们调整价格，会在新价格适用于你下次续期前至少 30 天通知你，你可以在此之前取消。",
+					"family": "家庭方案适用于订阅者及其邀请的最多三位人士。订阅者可随时移除成员。",
+					"statutory": "本条款不影响你作为消费者的法定权利。"
 				}
 			},
 			"conduct": {

@@ -2,7 +2,7 @@
 	"privacy": {
 		"title": "Privacy Policy",
 		"lastUpdated": "Last Updated",
-		"revision": "2024-12-15",
+		"revision": "2026-09-26",
 		"eyebrow": "Legal",
 		"lead": "This policy explains what data Puzzled collects, why it is collected, and how to contact us about it.",
 		"toc": {
@@ -17,6 +17,10 @@
 			"intro": {
 				"title": "Introduction",
 				"content": "Puzzled (\"we\", \"us\", or \"our\") respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our services."
+			},
+			"controller": {
+				"title": "Who is responsible for your data",
+				"content": "Sylphx Limited (company number 16438428, 128 City Road, London EC1V 2NX, United Kingdom) is the controller of your personal data under the UK GDPR and the Data Protection Act 2018."
 			},
 			"dataCollection": {
 				"title": "Data We Collect",
@@ -38,6 +42,10 @@
 					"legal": "Comply with legal obligations"
 				}
 			},
+			"payments": {
+				"title": "Payments",
+				"content": "When you subscribe, Stripe processes your payment; we never receive your full card number. We keep a record of your subscription, payments and refunds (amounts, dates and Stripe references) for six years to meet UK tax and accounting law. If you delete your account, these records are kept without your player ID."
+			},
 			"thirdParty": {
 				"title": "Third-Party Services",
 				"content": "We work with trusted third-party services:",
@@ -56,7 +64,8 @@
 					"access": "Access your personal data",
 					"correct": "Correct inaccurate data",
 					"delete": "Request deletion of your data",
-					"export": "Export your data"
+					"export": "Export your data",
+					"complain": "Complain to the Information Commissioner's Office (ico.org.uk) if you are unhappy with how we handle your data"
 				}
 			},
 			"contact": {
@@ -68,9 +77,9 @@
 	"terms": {
 		"title": "Terms of Service",
 		"lastUpdated": "Last Updated",
-		"revision": "2026-09-25",
+		"revision": "2026-09-26",
 		"eyebrow": "Legal",
-		"lead": "These terms set out the rules that apply when you use Puzzled, including accounts and conduct.",
+		"lead": "These terms set out the rules that apply when you use Puzzled, including accounts, Puzzled Plus subscriptions and conduct.",
 		"toc": {
 			"title": "On this page"
 		},
@@ -84,6 +93,10 @@
 				"title": "Acceptance of Terms",
 				"content": "By accessing or using Puzzled, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services."
 			},
+			"seller": {
+				"title": "Who we are",
+				"content": "Puzzled is provided by Sylphx Limited, a company registered in England and Wales (company number 16438428). Registered office: 128 City Road, London EC1V 2NX, United Kingdom. VAT number: GB 502 7862 95."
+			},
 			"service": {
 				"title": "Our Service",
 				"content": "Puzzled provides daily puzzle games and challenges. We reserve the right to modify, suspend, or discontinue any part of our service at any time."
@@ -95,6 +108,19 @@
 					"accurate": "Provide accurate and complete information",
 					"secure": "Keep your login credentials secure",
 					"responsible": "Be responsible for all activity under your account"
+				}
+			},
+			"subscriptions": {
+				"title": "Puzzled Plus subscriptions",
+				"content": "Today's featured puzzle is free. Puzzled Plus is an optional paid subscription that opens every game, the archive of past days, and stats for every game.",
+				"items": {
+					"billing": "Prices are shown before you pay and include VAT where it applies. Stripe takes payment when you subscribe and at the start of each monthly or yearly period.",
+					"renewal": "Your subscription renews automatically until you cancel. You can cancel at any time in Settings > Subscription; you keep access until the end of the period you have paid for and are not charged again.",
+					"cancellation": "Cancellation right: you may cancel your first subscription within 14 days of starting it and get a full refund, however much you have played. Cancel in Settings > Subscription or email us.",
+					"refund": "After those 14 days we do not refund part-used periods, except where the law requires it or a fault on our side stopped you from using Puzzled.",
+					"price": "If we change the price, we tell you at least 30 days before it applies to your next renewal, and you can cancel before then.",
+					"family": "A family plan covers the subscriber and up to three people they invite. The subscriber can remove people at any time.",
+					"statutory": "Nothing in these terms affects your statutory rights as a consumer."
 				}
 			},
 			"conduct": {

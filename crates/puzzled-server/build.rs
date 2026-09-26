@@ -8,6 +8,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     connectrpc_build::Config::new()
         .files(&[
             proto_root.join("puzzled/v1/admin.proto"),
+            proto_root.join("puzzled/v1/billing.proto"),
             proto_root.join("puzzled/v1/gamification.proto"),
             proto_root.join("puzzled/v1/health.proto"),
             proto_root.join("puzzled/v1/jobs.proto"),

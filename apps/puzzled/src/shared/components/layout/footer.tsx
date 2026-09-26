@@ -19,6 +19,7 @@ export async function Footer() {
 	const t = await getTranslations('footer')
 	const tNav = await getTranslations('nav')
 	const tGame = await getTranslations()
+	const tPlus = await getTranslations('plus')
 	const games = getAllGameMetadata().slice(0, FOOTER_GAME_LIMIT)
 	const currentYear = new Date().getFullYear()
 
@@ -66,6 +67,14 @@ export async function Footer() {
 					<nav aria-label={t('productHeading')} className="text-sm">
 						<h2 className="font-display text-sm font-bold text-white">{t('productHeading')}</h2>
 						<ul className="mt-3 space-y-0">
+							<li>
+								<Link
+									href="/pricing"
+									className="-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-white/70 transition-colors hover:text-white"
+								>
+									{tPlus('name')}
+								</Link>
+							</li>
 							<li>
 								<Link
 									href="/stats"

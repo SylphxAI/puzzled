@@ -359,6 +359,24 @@ impl PreferencesService for PreferencesConnectService {
                 "account_deletion_unavailable",
             ));
         };
+        // A subscription that still renews would keep charging an erased
+        // account: the player cancels it first (Settings > Subscription).
+        let entitlement = crate::capabilities::billing::service::entitlement(
+            pool,
+            self.state.stripe.as_ref(),
+            &identity.user_id,
+        )
+        .await
+        .map_err(|error| {
+            tracing::warn!(%error, "subscription check before erasure failed");
+            ConnectError::new(ErrorCode::Unavailable, "account_deletion_unavailable")
+        })?;
+        if entitlement.own.is_some_and(|own| !own.cancel_at_period_end) {
+            return Err(ConnectError::new(
+                ErrorCode::FailedPrecondition,
+                "cancel_subscription_first",
+            ));
+        }
         match delete_account_data(pool, &identity.user_id).await {
             Ok(rows_deleted) => {
                 tracing::info!(rows_deleted, "account data erased");

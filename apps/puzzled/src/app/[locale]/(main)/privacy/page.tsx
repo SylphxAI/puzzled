@@ -56,6 +56,11 @@ export default async function PrivacyPage({ params }: Props) {
 			paragraphs: [t('sections.intro.content')],
 		},
 		{
+			id: 'controller',
+			title: t('sections.controller.title'),
+			paragraphs: [t('sections.controller.content')],
+		},
+		{
 			id: 'dataCollection',
 			title: t('sections.dataCollection.title'),
 			paragraphs: [t('sections.dataCollection.content')],
@@ -76,6 +81,11 @@ export default async function PrivacyPage({ params }: Props) {
 				t('sections.dataUse.items.communicate'),
 				t('sections.dataUse.items.legal'),
 			],
+		},
+		{
+			id: 'payments',
+			title: t('sections.payments.title'),
+			paragraphs: [t('sections.payments.content')],
 		},
 		{
 			id: 'thirdParty',
@@ -101,6 +111,7 @@ export default async function PrivacyPage({ params }: Props) {
 				t('sections.rights.items.correct'),
 				t('sections.rights.items.delete'),
 				t('sections.rights.items.export'),
+				t('sections.rights.items.complain'),
 			],
 		},
 		{

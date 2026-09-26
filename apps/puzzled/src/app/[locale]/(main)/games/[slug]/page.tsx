@@ -9,7 +9,7 @@ import { gameSupportsDifficulty, getAllGameMetadata, getGameSlugs } from '@/game
 import type { PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
-import { canonicalizeGameSlug, slugToCamelCase } from '@/lib/game-slug'
+import { canonicalizeGameSlug, playerTitle, slugToCamelCase } from '@/lib/game-slug'
 import { difficultyLabelKey } from '@/lib/i18n/difficulty'
 import { currentUser } from '@/lib/identity/server'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
@@ -77,8 +77,9 @@ export async function generateMetadata({ params }: Props) {
  * today's ritual. The registry guard runs first, before any Suspense boundary,
  * so an unknown slug is a 404 with no rendered shell. Everything else is server-rendered for
  * every viewer — hero, rules, tips, FAQ and related modules — while the
- * interactive part streams behind a skeleton. Every module is open to every
- * player, guests included.
+ * interactive part streams behind a skeleton. Today's featured module is open
+ * to every player, guests included; the rest need Puzzled Plus once it is on
+ * sale, and end in an honest unlock path instead of a dead end.
  */
 export default async function GamePage({ params, searchParams }: Props) {
 	const { locale, slug } = await params
@@ -174,6 +175,13 @@ export default async function GamePage({ params, searchParams }: Props) {
 						difficulty={difficulty}
 						supportsDifficulty={supportsDifficulty}
 						hasUser={Boolean(user)}
+						freeGameSlug={todaysFreeGame}
+						freeGameName={readMessage(
+							tGames,
+							`${slugToCamelCase(todaysFreeGame)}.name`,
+							playerTitle(todaysFreeGame),
+						)}
+						gameCount={getAllGameMetadata().length}
 						dateParam={puzzleDate}
 					/>
 				</Suspense>

@@ -31,6 +31,7 @@ export type PublicRoute = {
 export const PUBLIC_ROUTES: readonly PublicRoute[] = [
 	{ path: '/', changeFrequency: 'daily', priority: 1 },
 	{ path: '/games', changeFrequency: 'daily', priority: 0.9 },
+	{ path: '/pricing', changeFrequency: 'weekly', priority: 0.7 },
 	{ path: '/support', changeFrequency: 'monthly', priority: 0.6 },
 	{ path: '/privacy', changeFrequency: 'yearly', priority: 0.3 },
 	{ path: '/terms', changeFrequency: 'yearly', priority: 0.3 },
@@ -74,6 +75,7 @@ export const NOINDEX_ROUTE_PREFIXES = [
 	'/verify-email',
 	'/unsubscribe',
 	'/challenge',
+	'/family',
 ] as const
 
 /**
