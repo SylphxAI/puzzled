@@ -124,8 +124,12 @@ impl PuzzleConnectService {
         }
         let is_today = date == today;
         let free_today = is_game_free_today(game_slug, today);
-        let sales_open = self.state.sales_open();
-        if play_access(sales_open, false, is_today, free_today).is_ok() {
+        // The free daily puzzle is decided without any billing read.
+        if play_access(true, false, is_today, free_today).is_ok() {
+            return Ok(());
+        }
+        let sales_open = self.state.sales_open().await;
+        if !sales_open {
             return Ok(());
         }
         let entitled = match (user_id, &self.state.pool) {

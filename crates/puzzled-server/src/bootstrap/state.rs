@@ -30,10 +30,21 @@ impl AppState {
         self
     }
 
-    /// Puzzled Plus is on sale: Stripe and the database are both configured.
-    #[must_use]
-    pub fn sales_open(&self) -> bool {
-        self.stripe.is_some() && self.pool.is_some()
+    /// Puzzled Plus is on sale: Stripe and the database are configured and
+    /// Stripe publishes at least one Puzzled Plus price (cached five minutes).
+    /// A Stripe read that fails counts as on sale, so paid play fails closed;
+    /// the free daily puzzle never asks.
+    pub async fn sales_open(&self) -> bool {
+        match (&self.pool, &self.stripe) {
+            (Some(_), Some(stripe)) => match stripe.prices().await {
+                Ok(prices) => !prices.is_empty(),
+                Err(error) => {
+                    tracing::warn!(%error, "Stripe price read failed; treating Plus as on sale");
+                    true
+                }
+            },
+            _ => false,
+        }
     }
 
     #[must_use]

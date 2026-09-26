@@ -182,7 +182,7 @@ impl BillingService for BillingConnectService {
         let identity = require_identity(&ctx)?;
         let req = request.to_owned_message();
         let mut response = GetSubscriptionResponse {
-            sales_open: self.state.sales_open(),
+            sales_open: self.state.sales_open().await,
             source: "none".to_string(),
             ..Default::default()
         };

@@ -54,8 +54,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let stripe = puzzled_server::capabilities::billing::adapters::stripe::Stripe::from_env();
     match &stripe {
-        Some(stripe) if stripe.live_mode() => info!("Puzzled Plus on sale (Stripe live mode)"),
-        Some(_) => info!("Puzzled Plus on sale (Stripe test mode)"),
+        Some(stripe) if stripe.live_mode() => {
+            info!("Stripe configured (live mode); Plus is on sale once prices exist")
+        }
+        Some(_) => info!("Stripe configured (test mode); Plus is on sale once prices exist"),
         None => info!("Stripe not configured: Puzzled Plus is not on sale and nothing is locked"),
     }
     let state = AppState::new(pool).with_stripe(stripe);
