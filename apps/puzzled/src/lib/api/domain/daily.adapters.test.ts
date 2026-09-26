@@ -70,6 +70,8 @@ const EXPECTED_DAILY = {
 const realNextHeaders = await import('next/headers')
 mock.module('next/headers', () => ({
 	...realNextHeaders,
+	// The server transport forwards the browser's User-Agent (Auth sessions).
+	headers: async () => new Headers({ 'user-agent': 'test-browser' }),
 	cookies: async () => ({
 		toString: () => 'puzzled_guest_id=guest-1',
 		get: (name: string) => (name === 'puzzled_guest_id' ? { name, value: 'guest-1' } : undefined),
