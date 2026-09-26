@@ -20,6 +20,18 @@ const DEV_DEFAULT_BASE = 'http://127.0.0.1:3001'
 
 const IS_SERVER = typeof window === 'undefined' && typeof process !== 'undefined'
 
+/**
+ * The environment the resolver reads by default. In the browser bundle Next.js
+ * inlines only direct `process.env.NODE_ENV` reads; the `process.env` object
+ * itself is empty there, so an empty default sent production browsers to the
+ * local-dev API address.
+ */
+export function defaultConnectEnv(
+	isServer: boolean = IS_SERVER,
+): Record<string, string | undefined> {
+	return isServer ? process.env : { NODE_ENV: process.env.NODE_ENV }
+}
+
 export function normalizeConnectBaseUrl(raw: string): string {
 	const trimmed = raw.trim().replace(/\/$/, '')
 	// '' means same-origin (browser) / relative (server); never rewrite it.
@@ -31,7 +43,7 @@ export function normalizeConnectBaseUrl(raw: string): string {
 export type ConnectRuntime = { isServer: boolean }
 
 export function resolveConnectBaseUrl(
-	env: Record<string, string | undefined> = IS_SERVER ? process.env : {},
+	env: Record<string, string | undefined> = defaultConnectEnv(),
 	runtime: ConnectRuntime = { isServer: IS_SERVER },
 ): string {
 	// Server-side private web -> api URL injected by the platform (sylphx.toml connect graph).

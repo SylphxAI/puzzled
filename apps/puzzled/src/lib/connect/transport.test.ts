@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import {
+	defaultConnectEnv,
 	getConnectTransport,
 	normalizeConnectBaseUrl,
 	resetConnectTransportCache,
@@ -65,5 +66,11 @@ describe('Connect protocol transport', () => {
 		expect(resolveConnectBaseUrl({} as Record<string, string>, { isServer: false })).toBe(
 			'http://127.0.0.1:3001',
 		)
+	})
+
+	test('the browser default environment carries NODE_ENV', () => {
+		const env = defaultConnectEnv(false)
+		expect(env.NODE_ENV).toBe(process.env.NODE_ENV)
+		expect(resolveConnectBaseUrl({ ...env, NODE_ENV: 'production' }, { isServer: false })).toBe('')
 	})
 })
