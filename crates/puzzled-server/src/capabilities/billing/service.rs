@@ -15,8 +15,11 @@ use puzzled_core::billing_access::policy::{
     Cancellation,
 };
 
+use puzzled_core::attribution::Attribution;
+
 use super::adapters::billing_db::{self, SubscriptionRow};
 use super::adapters::stripe::{path_segment, Stripe, StripeSubscription};
+use crate::capabilities::preferences::adapters::attribution_db::attribution_for_user;
 
 /// Where the account's access comes from.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -207,6 +210,7 @@ pub async fn create_checkout(
     plan_id: &str,
     locale: &str,
     currency: &str,
+    landing: Option<&Attribution>,
 ) -> Result<String, CheckoutError> {
     if !is_known_plan(plan_id) {
         return Err(CheckoutError::UnknownPlan);
@@ -260,6 +264,21 @@ pub async fn create_checkout(
                 .into(),
         ),
     ];
+    // First-touch tags: the account's own (recorded at sign-up) win over the
+    // cookie on this request. They ride on the Stripe subscription, which is
+    // read back into `billing_subscriptions.attribution`.
+    let stored = attribution_for_user(pool, user_id)
+        .await
+        .map_err(CheckoutError::Failed)?;
+    if let Some(tags) = stored.as_ref().or(landing) {
+        for (key, value) in tags.metadata_pairs() {
+            form.push((
+                format!("subscription_data[metadata][{key}]"),
+                value.to_string(),
+            ));
+            form.push((format!("metadata[{key}]"), value.to_string()));
+        }
+    }
     let currency = currency.trim().to_ascii_lowercase();
     if price.amounts.iter().any(|(code, _)| *code == currency) {
         form.push(("currency".into(), currency));

@@ -87,14 +87,16 @@ pub async fn upsert_subscription(
     sqlx::query(
         r#"INSERT INTO "billing_subscriptions"
              ("stripe_subscription_id", "user_id", "stripe_customer_id", "plan_id", "status",
-              "current_period_end", "cancel_at_period_end", "started_at", "updated_at")
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now())
+              "current_period_end", "cancel_at_period_end", "started_at", "updated_at",
+              "attribution")
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9)
            ON CONFLICT ("stripe_subscription_id") DO UPDATE SET
              "user_id" = COALESCE("billing_subscriptions"."user_id", EXCLUDED."user_id"),
              "plan_id" = EXCLUDED."plan_id",
              "status" = EXCLUDED."status",
              "current_period_end" = EXCLUDED."current_period_end",
              "cancel_at_period_end" = EXCLUDED."cancel_at_period_end",
+             "attribution" = COALESCE("billing_subscriptions"."attribution", EXCLUDED."attribution"),
              "updated_at" = now()"#,
     )
     .bind(&sub.id)
@@ -105,6 +107,7 @@ pub async fn upsert_subscription(
     .bind(naive(sub.current_period_end))
     .bind(sub.cancel_at_period_end)
     .bind(naive(sub.start_date))
+    .bind(&sub.attribution)
     .execute(pool)
     .await
     .map_err(|e| format!("billing subscription write failed: {e}"))?;
