@@ -28,7 +28,7 @@ import {
 } from '@/lib/seo/routes'
 
 // Deterministic origin for the documents and metadata under test.
-process.env.NEXT_PUBLIC_APP_URL = 'https://puzzled.gg'
+process.env.SYLPHX_PUBLIC_URL = 'https://puzzled.gg'
 
 const BASE = 'https://puzzled.gg'
 const LOCALE_PREFIX = /^\/(en-GB|zh-HK|zh-TW|zh-CN)(?=\/|$)/

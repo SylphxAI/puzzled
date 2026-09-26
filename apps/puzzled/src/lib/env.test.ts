@@ -78,12 +78,12 @@ describe('env accessors (SSOT)', () => {
 		const names = KNOWN_VARS.map((entry) => entry.name)
 		expect(new Set(names).size).toBe(names.length)
 		expect(names).toContain('NODE_ENV')
-		expect(names).toContain('NEXT_PUBLIC_APP_URL')
+		expect(names).toContain('SYLPHX_PUBLIC_URL')
 		expect(names).toContain('ADMIN_SECRET')
 		expect(names).toContain('EMAIL_UNSUBSCRIBE_SECRET')
 		expect(names).toContain('REDIS_URL')
 		expect(names).toContain('DATABASE_URL')
-		expect(names).toContain('IDENTITY_API_KEY')
+		expect(names).toContain('SYLPHX_AUTH_SECRET_KEY')
 	})
 
 	test('accessors are raw and lazy: no defaults, value read at call time', () => {

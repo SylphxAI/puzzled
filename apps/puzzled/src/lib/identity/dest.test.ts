@@ -22,8 +22,9 @@ mock.module('next/cache', () => ({ unstable_cache: <T>(load: T) => load }))
 describe('Identity dest HTTP', () => {
 	afterEach(() => {
 		globalThis.fetch = originalFetch
-		delete process.env.IDENTITY_API_ORIGIN
-		delete process.env.IDENTITY_API_KEY
+		delete process.env.SYLPHX_AUTH_URL
+		delete process.env.SYLPHX_AUTH_SECRET_KEY
+		delete process.env.SYLPHX_PUBLISHABLE_KEY
 		delete process.env.EVENTS_API_KEY
 		delete process.env.OBSERVABILITY_API_KEY
 	})
@@ -77,17 +78,17 @@ describe('Identity dest HTTP', () => {
 		).rejects.toThrow('Binding')
 	})
 
-	test('getAppConfig lists dest Identity OIDC federations', async () => {
-		process.env.IDENTITY_API_KEY = 'identity_org_key_a'
+	test("getAppConfig lists the social providers from Auth's client config", async () => {
+		process.env.SYLPHX_AUTH_SECRET_KEY = 'identity_org_key_a'
+		process.env.SYLPHX_PUBLISHABLE_KEY = 'sylphx_pk_test_a'
 		const fetchMock = mockFetch({
 			ok: true,
-			body: { providers: [{ federation_id: 'google' }] },
+			body: { social: [{ provider: 'google', name: 'Google' }] },
 		})
 		const config = await getAppConfig()
-		// Identity is the only config read; Puzzled sells no paid tier, so no
-		// price list is fetched from anywhere.
+		// Auth's client config is the only config read.
 		expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
-			'https://api.sylphx.com/v1/oidc/federations:list',
+			'https://api.sylphx.com/v1/client/config?publishable_key=sylphx_pk_test_a',
 		])
 		expect(config.oauthProviders).toEqual(['google'])
 		expect(config.consentTypes).toContain('analytics')
@@ -129,14 +130,14 @@ describe('Identity dest HTTP', () => {
 
 	test('each dest product uses its own credential without sibling fallback', () => {
 		const sibling = {
-			IDENTITY_API_KEY: 'identity_org_key_a',
+			SYLPHX_AUTH_SECRET_KEY: 'identity_org_key_a',
 			SYLPHX_PROJECT_ID: 'proj_x',
 			SYLPHX_SECRET_KEY: 'sk_prod_x',
 		}
 		expect(destEventsCredential(sibling)).toBeUndefined()
 		expect(destObservabilityCredential(sibling)).toBeUndefined()
 		expect(destIdentityProjectId(sibling)).toBeUndefined()
-		expect(destIdentityProjectId({ IDENTITY_ORGANIZATION_ID: 'org_x' })).toBe('org_x')
+		expect(destIdentityProjectId({ SYLPHX_AUTH_ORGANIZATION_ID: 'org_x' })).toBe('org_x')
 		expect(destSessionReplayChunksPath('session-a')).toBe('/v1/session-replays/session-a:chunks')
 	})
 

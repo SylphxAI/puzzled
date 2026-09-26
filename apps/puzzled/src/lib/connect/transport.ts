@@ -6,7 +6,6 @@
  * - Browser: same-origin '' by default — the Sylphx edge routes
  *   /puzzled.v1.* path_prefixes to the api service (sylphx.toml).
  * - Server (SSR/node): API_INTERNAL_URL (platform-injected private web -> api).
- * - Explicit override: NEXT_PUBLIC_CONNECT_URL (public absolute URL).
  * - Local dev: http://127.0.0.1:3001 (puzzled-server).
  *
  * Guest free-ritual: interceptor attaches X-Puzzled-Guest-Id when a browser
@@ -38,11 +37,6 @@ export function resolveConnectBaseUrl(
 	// Server-side private web -> api URL injected by the platform (sylphx.toml connect graph).
 	if (runtime.isServer && env.API_INTERNAL_URL?.trim()) {
 		return normalizeConnectBaseUrl(env.API_INTERNAL_URL)
-	}
-	// Explicit public override for the browser. Server SSR must not use it:
-	// fetching puzzled.gg from GET `/` deadlocks a not-Ready Knative revision.
-	if (!runtime.isServer && env.NEXT_PUBLIC_CONNECT_URL?.trim()) {
-		return normalizeConnectBaseUrl(env.NEXT_PUBLIC_CONNECT_URL)
 	}
 	// Production browser: same-origin — the edge routes /puzzled.v1.* to api.
 	if (!runtime.isServer && env.NODE_ENV === 'production') {

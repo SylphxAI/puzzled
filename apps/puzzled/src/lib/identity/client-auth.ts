@@ -36,10 +36,7 @@ function envValue(names: readonly string[], env: Record<string, string | undefin
 export function authConfig(
 	env: Record<string, string | undefined> = process.env,
 ): AuthConfig | null {
-	const publishableKey = envValue(
-		['SYLPHX_PUBLISHABLE_KEY', 'NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY'],
-		env,
-	)
+	const publishableKey = envValue(['SYLPHX_PUBLISHABLE_KEY'], env)
 	const secretKey = envValue(['SYLPHX_AUTH_SECRET_KEY'], env)
 	if (!publishableKey || !secretKey) return null
 	const url = (envValue(['SYLPHX_AUTH_URL'], env) ?? DEFAULT_AUTH_URL).replace(/\/+$/, '')
@@ -176,6 +173,27 @@ export async function sessionTimes(
 		principalCreatedAt: num(body.session?.principal?.created_at_unix_seconds),
 		sessionCreatedAt: num(body.session?.created_at_unix_seconds),
 	}
+}
+
+/**
+ * Social providers the instance can use now (`GET /v1/client/config`), e.g.
+ * `["google"]`. Empty while Auth is not enabled or on any failure.
+ */
+export async function socialProviders(config: AuthConfig): Promise<string[]> {
+	const query = new URLSearchParams({ publishable_key: config.publishableKey })
+	const response = await fetch(`${config.url}/v1/client/config?${query}`, {
+		signal: AbortSignal.timeout(5_000),
+	})
+	if (!response.ok) return []
+	let body: { social?: Array<{ provider?: unknown }> } = {}
+	try {
+		body = JSON.parse(await response.text())
+	} catch {
+		return []
+	}
+	return (body.social ?? []).flatMap((entry) =>
+		typeof entry.provider === 'string' && entry.provider ? [entry.provider] : [],
+	)
 }
 
 /** Auth's Google start door; Auth returns to `returnUrl` with `sylphx_ticket`. */

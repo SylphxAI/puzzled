@@ -303,7 +303,7 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: 'true'
           NODE_ENV: production
-          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+          SYLPHX_PUBLIC_URL: https://puzzled.gg
 
       # The one web build: the SEO, a11y and Lighthouse harnesses serve this
       # artifact instead of each running next build again.
@@ -480,7 +480,7 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: 'true'
           NODE_ENV: production
-          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+          SYLPHX_PUBLIC_URL: https://puzzled.gg
         run: |
           set -euo pipefail
           bun run start -p 3014 > "$RUNNER_TEMP/serve-seo.log" 2>&1 &
@@ -570,7 +570,7 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: 'true'
           NODE_ENV: production
-          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+          SYLPHX_PUBLIC_URL: https://puzzled.gg
         run: |
           set -euo pipefail
           bun run start -p 3015 > "$RUNNER_TEMP/serve-a11y.log" 2>&1 &
@@ -703,7 +703,7 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: 'true'
           NODE_ENV: production
-          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+          SYLPHX_PUBLIC_URL: https://puzzled.gg
         run: bun run lighthouse
 
       - name: Upload the Lighthouse report

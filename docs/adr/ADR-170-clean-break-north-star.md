@@ -35,7 +35,7 @@ clean-break end state that replaces all of it.
   for service callers. `x-user-id`-style client identity is never trusted.
 - Transport resolution: production browser = same-origin (edge-routed
   path_prefixes); server = `API_INTERNAL_URL`; explicit
-  `NEXT_PUBLIC_CONNECT_URL` override; dev = `127.0.0.1:3001`.
+  no public override; dev = `127.0.0.1:3001`.
 
 ### 2. Play: server-authoritative
 

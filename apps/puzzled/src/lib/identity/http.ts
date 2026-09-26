@@ -13,7 +13,7 @@ export function identityFail(status: number, error: string) {
 }
 
 export function identityOrigin(): string {
-	return destIdentityOrigin(process.env.SYLPHX_AUTH_URL ?? env.IDENTITY_API_ORIGIN)
+	return destIdentityOrigin(env.SYLPHX_AUTH_URL)
 }
 
 export function destDevice(request: Request) {
@@ -31,9 +31,9 @@ export function destAdmissionResponse():
 		return { ok: true, ...identityDestAdmission() }
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'identity_unconfigured'
-		const errorCode = message.includes('IDENTITY_API_KEY')
+		const errorCode = message.includes('SYLPHX_AUTH_SECRET_KEY')
 			? 'identity_credential_unconfigured'
-			: message.includes('IDENTITY_ORGANIZATION_ID')
+			: message.includes('SYLPHX_AUTH_ORGANIZATION_ID')
 				? 'identity_project_unconfigured'
 				: 'identity_unconfigured'
 		return { ok: false, response: identityFail(503, errorCode) }

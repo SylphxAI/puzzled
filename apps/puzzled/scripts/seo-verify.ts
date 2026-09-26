@@ -4,8 +4,8 @@
  *
  * Run from `apps/puzzled` against `next start` (never against dev):
  *
- *   NEXT_PUBLIC_APP_URL=https://puzzled.gg bun run build
- *   NEXT_PUBLIC_APP_URL=https://puzzled.gg bun run start -p 3014 &
+ *   bun run build
+ *   SYLPHX_PUBLIC_URL=https://puzzled.gg bun run start -p 3014 &
  *   bun run verify:seo --base http://localhost:3014
  *
  * What it asserts, from real HTTP responses only:

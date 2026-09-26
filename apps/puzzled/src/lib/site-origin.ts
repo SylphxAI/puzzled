@@ -3,7 +3,7 @@
  * Open Graph, JSON-LD, robots/sitemap).
  *
  * Resolution order:
- * 1. Configured origin (`NEXT_PUBLIC_APP_URL`) — trusted operator input, wins
+ * 1. Configured origin (`SYLPHX_PUBLIC_URL`, platform, runtime) — trusted, wins
  *    when set (a localhost value is ignored in production builds).
  * 2. Request headers (`x-forwarded-host`, then `host`) — accepted only when the
  *    hostname belongs to the product (puzzled.gg, *.puzzled.gg, *.sylphx.app, or
@@ -28,7 +28,7 @@ export type SiteOriginInput = {
 	forwardedHost?: string | null
 	/** Request `x-forwarded-proto` header. */
 	forwardedProto?: string | null
-	/** NEXT_PUBLIC_APP_URL. */
+	/** SYLPHX_PUBLIC_URL (set by the platform at runtime). */
 	configuredUrl?: string | null
 	/** VERCEL_URL (hostname, no scheme). */
 	vercelUrl?: string | null
