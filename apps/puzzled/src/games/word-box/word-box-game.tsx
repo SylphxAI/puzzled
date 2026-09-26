@@ -16,10 +16,9 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { cn } from '@/lib/utils'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
-import type { LetterBoxedPuzzleData, LetterBoxedSolution } from './types'
+import { parseWordBoxClientPayload } from './parse-client'
 import { useWordBox } from './use-word-box'
 
 type Props = {
@@ -33,10 +32,9 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	const t = useTranslations('games.wordBox')
 	const tCommon = useTranslations('common')
 
-	// Get puzzle from server data (client-safe - no config import)
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<LetterBoxedPuzzleData, LetterBoxedSolution>(puzzleData),
-	)
+	// The served puzzle (example solution stripped); the finish is judged by
+	// the rules and the server validates the words.
+	const [puzzle] = useState(() => ({ puzzleData: parseWordBoxClientPayload(puzzleData) }))
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -64,7 +62,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	const [toastMessage, setToastMessage] = useState('')
 	const gameEndedRef = useRef(false)
 
-	const game = useWordBox(puzzle.puzzleData, puzzle.solution)
+	const game = useWordBox(puzzle.puzzleData)
 	const box = puzzle.puzzleData.box
 
 	// Handle game completion - delegate to useGameSession

@@ -16,9 +16,8 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { cn } from '@/lib/utils'
-import type { KillerSudokuPuzzleData, KillerSudokuSolution } from './types'
+import { parseKillerSudokuClientPayload } from './parse-client'
 import { useKillerSudoku } from './use-killer-sudoku'
 
 type Props = {
@@ -32,9 +31,7 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 	const t = useTranslations('games.killerSudoku')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<KillerSudokuPuzzleData, KillerSudokuSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseKillerSudokuClientPayload(puzzleData))
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -60,7 +57,7 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const gameEndedRef = useRef(false)
 
-	const game = useKillerSudoku(puzzle.puzzleData, puzzle.solution)
+	const game = useKillerSudoku(puzzle)
 
 	// Handle game completion - delegate to useGameSession
 	if (game.state.gameStatus === 'won' && !gameEndedRef.current) {

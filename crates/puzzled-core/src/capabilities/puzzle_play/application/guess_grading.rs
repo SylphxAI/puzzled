@@ -9,7 +9,25 @@ use crate::capabilities::puzzle_play::domain::wordle_eval::{evaluate_guess, Lett
 /// Games graded one guess at a time.
 #[must_use]
 pub fn grades_guesses(game_slug: &str) -> bool {
-    matches!(game_slug, "word-guess" | "word-groups")
+    guess_limit(game_slug).is_some()
+}
+
+/// Graded guesses a player gets per puzzle and day: the game's own limit, so
+/// CheckGuess cannot be used to search for the answer.
+#[must_use]
+pub fn guess_limit(game_slug: &str) -> Option<u32> {
+    Some(match game_slug {
+        "word-guess" | "arithmo" => 6,
+        // Four groups plus four mistakes.
+        "word-groups" => 8,
+        // Nine guesses across four boards.
+        "quad-words" => 9,
+        // Full-grid checks after edits plus three hints.
+        "cryptogram" => 30,
+        // Every valid word is a separate find; a generous cap on attempts.
+        "word-hive" => 1000,
+        _ => return None,
+    })
 }
 
 /// Grade `guess` (the request's `guess_json`) against the stored solution.
@@ -17,6 +35,10 @@ pub fn grade_guess(game_slug: &str, solution: &Value, guess: &Value) -> Result<V
     match game_slug {
         "word-guess" => grade_word_guess(solution, guess),
         "word-groups" => grade_word_groups(solution, guess),
+        "arithmo" => super::grading::arithmo::grade(solution, guess),
+        "cryptogram" => super::grading::cryptogram::grade(solution, guess),
+        "quad-words" => super::grading::quad_words::grade(solution, guess),
+        "word-hive" => super::grading::word_hive::grade(solution, guess),
         other => Err(format!("{other} is not graded per guess")),
     }
 }

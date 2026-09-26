@@ -27,15 +27,42 @@ export type SpellingBeePuzzleClientData = {
 	pangrams: string[]
 }
 
+/**
+ * What the client plays from: the letters, the maximum score and the word and
+ * pangram counts. The word list stays on the server (`CheckGuess`).
+ */
+export type WordHivePlayData = {
+	centerLetter: string
+	outerLetters: string[]
+	maxScore: number
+	/** Counts; 0 until known (the server also returns them with each grade). */
+	totalWords: number
+	totalPangrams: number
+}
+
+/** One graded word (`PuzzleService.CheckGuess`). */
+export type WordHiveGrade = {
+	valid: boolean
+	pangram: boolean
+	totalWords: number
+	totalPangrams: number
+}
+
+export type GradeHiveWord = (word: string) => Promise<WordHiveGrade>
+
 export type SpellingBeeState = {
+	/** A word is being graded by the server; input waits. */
+	grading: boolean
 	centerLetter: string
 	outerLetters: string[]
 	currentWord: string
 	foundWords: string[]
+	/** Found words the server graded as pangrams. */
+	foundPangrams: string[]
 	score: number
 	maxScore: number
-	pangrams: string[]
-	validWords: string[]
+	totalWords: number
+	totalPangrams: number
 	gameStatus: GameStatus
 	rank: SpellingBeeRank
 }

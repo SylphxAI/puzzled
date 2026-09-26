@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useReducer } from 'react'
-import type { CellValue, TangoCell, TangoGameState, TangoPuzzleData, TangoSolution } from './types'
+import type { CellValue, TangoCell, TangoGameState, TangoPuzzleData } from './types'
 import { getConflicts, isSolved } from './types'
 
 type TangoAction =
@@ -110,7 +110,7 @@ export type UseTangoReturn = {
 	getConflicts: () => { row: number; col: number }[]
 }
 
-export function useTango(puzzleData: TangoPuzzleData, _solution: TangoSolution): UseTangoReturn {
+export function useTango(puzzleData: TangoPuzzleData): UseTangoReturn {
 	const [state, dispatch] = useReducer(
 		(s: TangoGameState, a: TangoAction) => tangoReducer(s, a, puzzleData),
 		puzzleData,

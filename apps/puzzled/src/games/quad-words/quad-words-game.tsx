@@ -16,11 +16,11 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
+import { checkGuess } from '@/lib/connect/puzzle-client'
 import { cn } from '@/lib/utils'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
-import type { LetterStatus, QuordlePuzzleData, QuordleSolution } from './types'
-import { evaluateGuess, MAX_GUESSES } from './types'
+import type { LetterStatus } from './types'
+import { MAX_GUESSES } from './types'
 import { useQuadWords } from './use-quad-words'
 
 type Props = {
@@ -36,12 +36,28 @@ const KEYBOARD_ROWS = [
 	['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'DEL'],
 ]
 
-export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 	const t = useTranslations('games.quadWords')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<QuordlePuzzleData, QuordleSolution>(puzzleData),
+	// The server grades each guess and reveals the four words only with the
+	// accepted finish (#246); the client never holds them.
+	const [revealedWords, setRevealedWords] = useState<string[]>([])
+	const grade = useCallback(
+		async (word: string) => {
+			const result = (await checkGuess({
+				gameSlug: 'quad-words',
+				guess: { word },
+				puzzleId,
+				puzzleDate,
+			})) as { boards?: LetterStatus[][] }
+			const boards = result.boards ?? []
+			if (boards.length !== 4 || boards.some((tiles) => tiles.length !== 5)) {
+				throw new Error('grade_failed')
+			}
+			return boards as [LetterStatus[], LetterStatus[], LetterStatus[], LetterStatus[]]
+		},
+		[puzzleId, puzzleDate],
 	)
 
 	// ==========================================
@@ -69,8 +85,11 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState('')
 	const gameEndedRef = useRef(false)
+	// Lets the grading-failure callback reach the toast declared further down.
+	const showToastRef = useRef<(message: string) => void>(() => {})
 
-	const game = useQuadWords(puzzle.puzzleData, puzzle.solution)
+	const onGradeFailed = useCallback(() => showToastRef.current(tCommon('error')), [tCommon])
+	const game = useQuadWords(grade, onGradeFailed)
 
 	// Handle game completion - delegate to useGameSession
 	if (
@@ -85,6 +104,9 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				guessHistory: game.state.guessHistory,
 				solvedBoards: game.state.boards.map((b) => b.solved),
 			},
+		}).then((finish) => {
+			const words = (finish.reveal as { words?: unknown } | undefined)?.words
+			if (Array.isArray(words)) setRevealedWords(words.map(String))
 		})
 	}
 
@@ -93,6 +115,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		setShowToast(true)
 		setTimeout(() => setShowToast(false), 2000)
 	}, [])
+	showToastRef.current = showToastMsg
 
 	const handleSubmit = useCallback(() => {
 		// For now, accept any 5-letter word. In production, validate against dictionary.
@@ -211,6 +234,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 						<QuordleBoard
 							key={boardIndex}
 							board={board}
+							revealedWord={revealedWords[boardIndex]}
 							currentGuess={game.state.currentGuess}
 							guessHistory={game.state.guessHistory}
 							isActive={!board.solved}
@@ -286,12 +310,15 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 // Individual board component
 function QuordleBoard({
 	board,
+	revealedWord,
 	currentGuess,
 	guessHistory,
 	isActive,
 }: {
+	/** Shown when the game is lost; the server reveals it with the finish. */
+	revealedWord?: string
 	board: {
-		targetWord: string
+		results: LetterStatus[][]
 		guesses: string[]
 		solved: boolean
 		solvedOnGuess: number | null
@@ -326,7 +353,7 @@ function QuordleBoard({
 					if (rowIndex < boardGuesses.length) {
 						// Past guess
 						word = boardGuesses[rowIndex]
-						results = evaluateGuess(word, board.targetWord)
+						results = board.results[rowIndex] ?? []
 					} else if (rowIndex === currentRow && isActive && !board.solved) {
 						// Current input row
 						word = currentGuess
@@ -369,7 +396,7 @@ function QuordleBoard({
 			{/* Lost indicator */}
 			{!board.solved && guessHistory.length >= MAX_GUESSES && (
 				<div className="mt-1 text-center text-xs font-medium text-destructive">
-					{board.targetWord}
+					{revealedWord ?? ''}
 				</div>
 			)}
 		</div>

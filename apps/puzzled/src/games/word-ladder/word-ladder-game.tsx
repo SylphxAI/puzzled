@@ -16,11 +16,10 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { WordLadderIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { WordLadderDisplay } from './components'
-import type { WordLadderPuzzleData, WordLadderSolution } from './types'
+import { parseWordLadderClientPayload } from './parse-client'
 import { useWordLadder } from './use-word-ladder'
 
 type Props = {
@@ -33,10 +32,9 @@ type Props = {
 export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordLadder')
 
-	// Get puzzle from server data or generate from seed (deterministic)
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<WordLadderPuzzleData, WordLadderSolution>(puzzleData),
-	)
+	// The served puzzle (solution path stripped); each step is judged by the
+	// rules and the server validates the finished path.
+	const [puzzle] = useState(() => ({ puzzleData: parseWordLadderClientPayload(puzzleData) }))
 
 	const {
 		isReady,

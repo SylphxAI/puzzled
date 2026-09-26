@@ -182,6 +182,47 @@ pub fn self_check(game_slug: &str, puzzle_data: &Value, solution: &Value) -> Res
     }
 }
 
+/// What the player is served: the stored puzzle data plus the public parts of
+/// the solution a game needs to be played. Word-search shows the list of words
+/// to find (their positions stay secret).
+#[must_use]
+pub fn served_payload(game_slug: &str, puzzle_data: &Value, solution: &Value) -> Value {
+    let mut served = puzzle_data.clone();
+    let Some(map) = served.as_object_mut() else {
+        return served;
+    };
+    match game_slug {
+        "word-search" => {
+            if let Some(words) = solution.get("words") {
+                map.insert("words".to_string(), words.clone());
+            }
+        }
+        // The stored data is the four answers; the board needs none of it.
+        "quad-words" => {
+            map.remove("words");
+        }
+        // The valid words and pangrams are the answers: serve their counts.
+        "word-hive" => {
+            let count = |key: &str| {
+                map.get(key)
+                    .and_then(Value::as_array)
+                    .map(|a| Value::from(a.len()))
+            };
+            let (words, pangrams) = (count("validWords"), count("pangrams"));
+            map.remove("validWords");
+            map.remove("pangrams");
+            if let Some(n) = words {
+                map.insert("totalWords".to_string(), n);
+            }
+            if let Some(n) = pangrams {
+                map.insert("totalPangrams".to_string(), n);
+            }
+        }
+        _ => {}
+    }
+    served
+}
+
 /// The product day's puzzle for a game and difficulty, self-checked.
 pub fn generate(
     game_slug: &str,
@@ -202,6 +243,16 @@ pub fn generate(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn word_search_serves_its_word_list_but_not_the_positions() {
+        let data = serde_json::json!({"grid": [["A"]], "theme": "t", "wordCount": 1});
+        let solution = serde_json::json!({"words": ["A"], "placements": [{"word": "A"}]});
+        let served = served_payload("word-search", &data, &solution);
+        assert_eq!(served["words"], serde_json::json!(["A"]));
+        assert!(served.get("placements").is_none());
+        assert_eq!(served_payload("sudoku", &data, &solution), data);
+    }
 
     #[test]
     fn seeds_follow_the_content_pipeline_rule() {

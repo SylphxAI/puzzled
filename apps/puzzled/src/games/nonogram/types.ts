@@ -91,6 +91,59 @@ export function generateClues(solution: boolean[][]): {
 	return { rowClues, colClues }
 }
 
+/** Filled runs of one line, written like a clue (`[0]` for an empty line). */
+export function lineRuns(filled: boolean[]): number[] {
+	const runs: number[] = []
+	let count = 0
+	for (const cell of filled) {
+		if (cell) {
+			count++
+		} else if (count > 0) {
+			runs.push(count)
+			count = 0
+		}
+	}
+	if (count > 0) runs.push(count)
+	return runs.length > 0 ? runs : [0]
+}
+
+function sameRuns(a: number[], b: number[]): boolean {
+	const norm = (runs: number[]) => (runs.length === 0 ? [0] : runs)
+	const [x, y] = [norm(a), norm(b)]
+	return x.length === y.length && x.every((value, i) => value === y[i])
+}
+
+/** Row `row` of the player's grid matches its clue (no solution needed). */
+export function isRowClueMet(
+	userGrid: CellState[][],
+	puzzle: NonogramPuzzleData,
+	row: number,
+): boolean {
+	const cells = Array.from({ length: puzzle.width }, (_, col) => userGrid[row]?.[col] === 'filled')
+	return sameRuns(lineRuns(cells), puzzle.rowClues[row] ?? [0])
+}
+
+/** Column `col` of the player's grid matches its clue (no solution needed). */
+export function isColClueMet(
+	userGrid: CellState[][],
+	puzzle: NonogramPuzzleData,
+	col: number,
+): boolean {
+	const cells = Array.from({ length: puzzle.height }, (_, row) => userGrid[row]?.[col] === 'filled')
+	return sameRuns(lineRuns(cells), puzzle.colClues[col] ?? [0])
+}
+
+/** Every row and column meets its clue: the picture is finished. */
+export function isGridClueComplete(userGrid: CellState[][], puzzle: NonogramPuzzleData): boolean {
+	for (let row = 0; row < puzzle.height; row++) {
+		if (!isRowClueMet(userGrid, puzzle, row)) return false
+	}
+	for (let col = 0; col < puzzle.width; col++) {
+		if (!isColClueMet(userGrid, puzzle, col)) return false
+	}
+	return true
+}
+
 /**
  * Check if user's grid matches the solution
  */

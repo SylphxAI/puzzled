@@ -16,11 +16,10 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { PatternMatchIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { PatternBoard } from './components/board'
-import type { PatternMatchClientData, PatternMatchSolution } from './types'
+import { parsePatternMatchClientPayload } from './parse-client'
 import { usePatternMatch } from './use-pattern-match'
 
 type Props = {
@@ -33,11 +32,8 @@ type Props = {
 export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.patternMatch')
 
-	// Parse puzzle data from server (no client-side fallback)
-	const [puzzle] = useState(() => {
-		const parsed = parsePuzzleDataClient<PatternMatchClientData, PatternMatchSolution>(puzzleData)
-		return parsed.puzzleData
-	})
+	// Served without the solution; each trio is judged by the rules (#246).
+	const [puzzle] = useState(() => parsePatternMatchClientPayload(puzzleData))
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {

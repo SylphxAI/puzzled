@@ -19,7 +19,9 @@ use serde_json::Value;
 use tracing::warn;
 
 use puzzled_core::billing_access::policy::play_access;
-use puzzled_core::puzzle_play::application::guess_grading::{grade_guess, grades_guesses};
+use puzzled_core::puzzle_play::application::guess_grading::{
+    grade_guess, grades_guesses, guess_limit,
+};
 use puzzled_core::puzzle_play::application::submission_validation::{
     validate_submission, SubmissionEnvelope,
 };
@@ -56,15 +58,6 @@ pub struct PuzzleConnectService {
     /// game's own guess limit so CheckGuess cannot be used to search for the
     /// answer. Per process and per day; cleared when the day changes.
     guesses: Arc<std::sync::Mutex<(NaiveDate, HashMap<String, u32>)>>,
-}
-
-/// Graded guesses a player gets per puzzle.
-fn guess_limit(game_slug: &str) -> u32 {
-    match game_slug {
-        "word-guess" => 6,
-        // Four groups plus four mistakes.
-        _ => 8,
-    }
 }
 
 impl PuzzleConnectService {
@@ -304,7 +297,15 @@ impl PuzzleService for PuzzleConnectService {
         )
         .await
         {
-            Ok(found) => (Some(found.puzzle_data), found.id, false),
+            Ok(found) => (
+                Some(puzzled_core::puzzle_play::generate::served_payload(
+                    game_slug,
+                    &found.puzzle_data,
+                    &found.solution,
+                )),
+                found.id,
+                false,
+            ),
             Err(error) => {
                 warn!(%error, game_slug, %puzzle_date, "get_daily puzzle unavailable");
                 (None, None, true)
@@ -641,7 +642,7 @@ impl PuzzleService for PuzzleConnectService {
             .await?;
         let difficulty = Some(req.difficulty.trim()).filter(|d| !d.is_empty());
         let key = format!("{uid}|{game_slug}|{date}|{}", difficulty.unwrap_or(""));
-        if !self.take_guess(key, today, guess_limit(game_slug)) {
+        if !self.take_guess(key, today, guess_limit(game_slug).unwrap_or(0)) {
             return Err(ConnectError::new(
                 ErrorCode::ResourceExhausted,
                 "guess_limit_reached",

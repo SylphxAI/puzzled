@@ -8,7 +8,7 @@
 
 use std::path::Path;
 
-use puzzled_core::puzzle_play::generate::{generate_seeded, self_check};
+use puzzled_core::puzzle_play::generate::{generate_seeded, self_check, served_payload};
 use serde_json::Value;
 
 fn fixtures(slug: &str) -> Vec<Value> {
@@ -95,4 +95,71 @@ parity! {
     word_hive => "word-hive",
     word_ladder => "word-ladder",
     word_search => "word-search",
+}
+
+/// Every answer string or number list in `solution` that must not reach the player.
+fn secret_values(slug: &str, solution: &Value) -> Vec<String> {
+    let mut out = Vec::new();
+    // Word-search's word list is shown to the player; its positions are not.
+    let public: &[&str] = match slug {
+        // Word-search placements repeat the public words; the secret is the
+        // positions, which never appear in the served payload.
+        "word-search" => &["words", "placements"],
+        "pattern-match" | "block-slide" => &["totalSets", "minMoves"],
+        _ => &[],
+    };
+    if let Some(map) = solution.as_object() {
+        for (key, value) in map {
+            if public.contains(&key.as_str()) {
+                continue;
+            }
+            collect_strings(value, &mut out);
+        }
+    }
+    out
+}
+
+fn collect_strings(value: &Value, out: &mut Vec<String>) {
+    match value {
+        Value::String(s) if s.len() >= 4 => out.push(s.to_uppercase()),
+        Value::Array(items) => items.iter().for_each(|v| collect_strings(v, out)),
+        Value::Object(map) => map.values().for_each(|v| collect_strings(v, out)),
+        _ => {}
+    }
+}
+
+#[test]
+fn served_payloads_never_contain_an_answer_word() {
+    for slug in [
+        "arithmo",
+        "cryptogram",
+        "quad-words",
+        "word-box",
+        "word-guess",
+        "word-hive",
+        "word-ladder",
+        "word-search",
+    ] {
+        for case in fixtures(slug) {
+            let Some(data) = case.get("puzzleData") else {
+                continue;
+            };
+            let served = served_payload(slug, data, &case["solution"])
+                .to_string()
+                .to_uppercase();
+            for secret in secret_values(slug, &case["solution"]) {
+                // The ladder's start and end words are part of the puzzle.
+                if slug == "word-ladder"
+                    && (data["startWord"].as_str().map(str::to_uppercase) == Some(secret.clone())
+                        || data["endWord"].as_str().map(str::to_uppercase) == Some(secret.clone()))
+                {
+                    continue;
+                }
+                assert!(
+                    !served.contains(&format!("\"{secret}\"")),
+                    "{slug}: served payload contains the answer {secret}"
+                );
+            }
+        }
+    }
 }

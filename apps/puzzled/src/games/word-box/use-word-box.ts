@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useReducer } from 'react'
-import type { LetterBoxedGameState, LetterBoxedPuzzleData, LetterBoxedSolution } from './types'
+import type { LetterBoxedGameState, LetterBoxedPuzzleData } from './types'
 import {
 	allLettersUsed,
 	getUsedLetters,
@@ -110,10 +110,7 @@ export type UseLetterBoxedReturn = {
 	getRemainingLetters: () => string[]
 }
 
-export function useWordBox(
-	puzzleData: LetterBoxedPuzzleData,
-	_solution: LetterBoxedSolution,
-): UseLetterBoxedReturn {
+export function useWordBox(puzzleData: LetterBoxedPuzzleData): UseLetterBoxedReturn {
 	const [state, dispatch] = useReducer(
 		(s: LetterBoxedGameState, a: LetterBoxedAction) => letterBoxedReducer(s, a, puzzleData),
 		puzzleData,

@@ -15,11 +15,11 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
+import { checkGuess } from '@/lib/connect/puzzle-client'
 import { ArithmoIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { ArithmoGrid, ArithmoKeyboard } from './components'
-import type { ArithmoPuzzleData, ArithmoSolution } from './types'
+import type { CharStatus } from './types'
 import { MAX_ATTEMPTS } from './types'
 import { useArithmo } from './use-arithmo'
 
@@ -30,12 +30,24 @@ type Props = {
 	puzzleDate?: string
 }
 
-export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function ArithmoGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 	const t = useTranslations('games.arithmo')
 
-	// Get puzzle from server data
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<ArithmoPuzzleData, ArithmoSolution>(puzzleData),
+	// The served payload holds no answer ({length}); the server grades each
+	// equation and reveals the answer only with the accepted finish (#246).
+	const [revealedEquation, setRevealedEquation] = useState('')
+	const grade = useCallback(
+		async (equation: string): Promise<CharStatus[]> => {
+			const result = (await checkGuess({
+				gameSlug: 'arithmo',
+				guess: { equation },
+				puzzleId,
+				puzzleDate,
+			})) as { tiles?: CharStatus[] }
+			if (!result.tiles || result.tiles.length !== equation.length) throw new Error('grade_failed')
+			return result.tiles
+		},
+		[puzzleId, puzzleDate],
 	)
 
 	const {
@@ -60,26 +72,25 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	const [showHelpModal, setShowHelpModal] = useState(false)
 
 	// Game hook
-	const game = useArithmo()
+	const game = useArithmo(grade, () => {
+		triggerHaptic('error')
+		triggerSound('error')
+	})
 
-	// Initialize game when puzzle is ready
+	// Initialize game when ready
 	useEffect(() => {
-		if (puzzle && !isReady) {
-			game.init(puzzle.solution.equation)
+		if (!isReady) {
+			game.init()
 		}
-	}, [puzzle, isReady, game.init]) // eslint-disable-line react-hooks/exhaustive-deps
+	}, [isReady, game.init]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Handle submit
 	const handleSubmit = useCallback(() => {
-		if (!puzzle) return
-
-		game.submitGuess(puzzle.solution.equation)
-
-		if (game.state.error) {
+		if (!game.submitGuess()) {
 			triggerHaptic('error')
 			triggerSound('error')
 		}
-	}, [game, puzzle])
+	}, [game])
 
 	// Keyboard event listener
 	useEffect(() => {
@@ -115,6 +126,9 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 			data: {
 				guesses: game.state.guesses,
 			},
+		}).then((finish) => {
+			const equation = (finish.reveal as { equation?: unknown } | undefined)?.equation
+			if (typeof equation === 'string') setRevealedEquation(equation)
 		})
 	}
 
@@ -235,7 +249,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 				onClose={() => setShowResultModal(false)}
 				gameType="arithmo"
 				status={game.state.isWon ? 'won' : 'lost'}
-				solution={game.state.isWon ? undefined : puzzle.solution.equation}
+				solution={game.state.isWon ? undefined : revealedEquation || undefined}
 				stats={{
 					attempts: game.state.guesses.length,
 					maxAttempts: MAX_ATTEMPTS,
