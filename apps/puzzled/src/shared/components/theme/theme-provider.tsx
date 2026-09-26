@@ -8,6 +8,8 @@ type ThemeProviderProps = {
 	defaultTheme?: string
 	enableSystem?: boolean
 	disableTransitionOnChange?: boolean
+	/** The request's CSP nonce, for next-themes' inline script and style. */
+	nonce?: string
 }
 
 export function ThemeProvider({

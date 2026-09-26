@@ -199,51 +199,7 @@ const nextConfig: NextConfig = {
 						key: 'X-XSS-Protection',
 						value: '1; mode=block',
 					},
-					{
-						// CSP: Restrictive policy with defense-in-depth
-						//
-						// Cloudflare Web Analytics: the zone injects
-						// `static.cloudflareinsights.com/beacon.min.js` into every HTML
-						// document and the beacon posts its RUM payload to
-						// `https://cloudflareinsights.com/cdn-cgi/rum`. Both hosts are
-						// allow-listed so the zone's own field measurement is not
-						// console-blocked on every page view.
-						//
-						// DESIGN DECISION: Using 'unsafe-inline' in script-src instead of nonces
-						//
-						// Rationale:
-						// - Nonce-based CSP requires dynamic rendering (no static page caching)
-						// - Current inline scripts are minimal and trusted:
-						//   1. Theme initialization (FOUC prevention) - static, trusted code
-						//   2. JSON-LD structured data - static schema markup
-						// - X-XSS-Protection header provides legacy browser protection
-						// - strict-dynamic would break third-party scripts (Stripe, PostHog, GTM)
-						// - Security audit rating: 8.5/10 with current configuration
-						//
-						// Nonce implementation would require:
-						// - Middleware to generate per-request nonces
-						// - All inline scripts to receive nonce prop via headers()
-						// - Loss of static page optimization
-						//
-						// Trade-off: Performance + simplicity > marginal security gain
-						// - 'unsafe-inline' in style-src (required for React inline styles, low risk)
-						// - GTM domains added per spec for marketing tags (consent-gated)
-						key: 'Content-Security-Policy',
-						value: [
-							"default-src 'self'",
-							"script-src 'self' 'unsafe-inline' https://cdn.vercel-insights.com https://*.posthog.com https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com",
-							"style-src 'self' 'unsafe-inline'",
-							"img-src 'self' data: https: blob: https://www.googletagmanager.com https://www.google-analytics.com",
-							"font-src 'self' data:",
-							"connect-src 'self' https://*.posthog.com https://sylphx.com https://*.sylphx.com https://api.stripe.com https://*.neon.tech https://www.google-analytics.com https://analytics.google.com https://cloudflareinsights.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com wss:",
-							"frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
-							"object-src 'none'",
-							"base-uri 'self'",
-							"form-action 'self'",
-							"frame-ancestors 'none'",
-							'upgrade-insecure-requests',
-						].join('; '),
-					},
+					// Content-Security-Policy is per request (nonce), set in src/proxy.ts.
 				],
 			},
 		]
