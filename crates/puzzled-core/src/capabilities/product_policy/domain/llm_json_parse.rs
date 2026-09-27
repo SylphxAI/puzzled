@@ -2,7 +2,7 @@
 //! dual-oracle residual of
 //! `apps/puzzled/src/features/puzzle-generator/lib/parse-utils.ts`
 //! `parseLlmJsonResponse` (markdown fences + embedded object).
-//! OpenRouter / generator I/O stays FE-TS residual.
+//! Model I/O (Sylphx AI Responses API) stays in the TS generator.
 //! NO authority_rust / ts_deleted.
 
 /// Strip common markdown code fences from an LLM response body.
