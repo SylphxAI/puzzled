@@ -51,7 +51,7 @@ jobs:
 
   lint-and-typecheck:
     name: Lint & Type Check
-    runs-on: sylphx-linux-standard
+    runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
@@ -107,7 +107,7 @@ jobs:
 
   security:
     name: Security Scan
-    runs-on: sylphx-linux-standard
+    runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
@@ -169,7 +169,7 @@ jobs:
 
   migrations:
     name: Migration Integrity
-    runs-on: sylphx-linux-standard
+    runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
@@ -213,7 +213,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests
-    runs-on: sylphx-linux-standard
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [lint-and-typecheck]
 
@@ -264,7 +264,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: sylphx-linux-standard
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [lint-and-typecheck, migrations, unit-tests]
 
@@ -358,7 +358,7 @@ jobs:
           cargo build --locked --release -p puzzled-server
   rust-api:
     name: Rust API
-    runs-on: sylphx-linux-standard
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       PUZZLED_REQUIRE_DB_TESTS: "1"
@@ -440,7 +440,7 @@ jobs:
 
   seo-contract:
     name: SEO Contract
-    runs-on: sylphx-linux-standard
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [build]
 
@@ -526,7 +526,7 @@ jobs:
     # Merge queue and nightly only: a full browser suite on every PR push
     # costs more than it catches before the queue does.
     if: contains(fromJSON('["merge_group", "schedule", "workflow_dispatch"]'), github.event_name)
-    runs-on: sylphx-linux-standard
+    runs-on: ubuntu-latest
     timeout-minutes: 40
     needs: [build]
 
@@ -626,7 +626,7 @@ jobs:
     name: Lighthouse Budgets
     # Merge queue and nightly only, like the a11y suite.
     if: contains(fromJSON('["merge_group", "schedule", "workflow_dispatch"]'), github.event_name)
-    runs-on: sylphx-linux-standard
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [build]
 
