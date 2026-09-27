@@ -81,8 +81,10 @@ export default async function PrivacyPage({ params }: Props) {
 				t('sections.dataUse.items.service'),
 				t('sections.dataUse.items.improve'),
 				t('sections.dataUse.items.communicate'),
+				t('sections.dataUse.items.analytics'),
 				t('sections.dataUse.items.legal'),
 			],
+			after: [t('sections.dataUse.items.noSale')],
 		},
 		{
 			id: 'payments',
@@ -98,6 +100,17 @@ export default async function PrivacyPage({ params }: Props) {
 				thirdPartyRow('Google', t('sections.thirdParty.google')),
 				thirdPartyRow('Resend', t('sections.thirdParty.resend')),
 			],
+			after: [t('sections.thirdParty.others')],
+		},
+		{
+			id: 'transfers',
+			title: t('sections.transfers.title'),
+			paragraphs: [t('sections.transfers.content')],
+		},
+		{
+			id: 'retention',
+			title: t('sections.retention.title'),
+			paragraphs: [t('sections.retention.content')],
 		},
 		{
 			id: 'cookies',
@@ -113,8 +126,27 @@ export default async function PrivacyPage({ params }: Props) {
 				t('sections.rights.items.correct'),
 				t('sections.rights.items.delete'),
 				t('sections.rights.items.export'),
+				t('sections.rights.items.restrict'),
+				t('sections.rights.items.object'),
+				t('sections.rights.items.withdraw'),
 				t('sections.rights.items.complain'),
 			],
+			after: [t('sections.rights.response')],
+		},
+		{
+			id: 'children',
+			title: t('sections.children.title'),
+			paragraphs: [t('sections.children.content')],
+		},
+		{
+			id: 'security',
+			title: t('sections.security.title'),
+			paragraphs: [t('sections.security.content')],
+		},
+		{
+			id: 'changes',
+			title: t('sections.changes.title'),
+			paragraphs: [t('sections.changes.content')],
 		},
 		{
 			id: 'contact',

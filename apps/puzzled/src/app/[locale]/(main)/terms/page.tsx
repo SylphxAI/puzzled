@@ -40,6 +40,18 @@ export default async function TermsPage({ params }: Props) {
 	// Published section order; every sentence comes from legal.json.
 	const sections: LegalSection[] = [
 		{
+			id: 'keyTerms',
+			title: t('sections.keyTerms.title'),
+			paragraphs: [t('sections.keyTerms.content')],
+			bullets: [
+				t('sections.keyTerms.items.renewal'),
+				t('sections.keyTerms.items.refunds'),
+				t('sections.keyTerms.items.changes'),
+				t('sections.keyTerms.items.suspension'),
+				t('sections.keyTerms.items.liability'),
+			],
+		},
+		{
 			id: 'acceptance',
 			title: t('sections.acceptance.title'),
 			paragraphs: [t('sections.acceptance.content')],
@@ -86,7 +98,13 @@ export default async function TermsPage({ params }: Props) {
 				t('sections.conduct.items.legal'),
 				t('sections.conduct.items.respect'),
 				t('sections.conduct.items.noCheat'),
+				t('sections.conduct.items.noInterfere'),
 			],
+		},
+		{
+			id: 'suspension',
+			title: t('sections.suspension.title'),
+			paragraphs: [t('sections.suspension.content')],
 		},
 		{
 			id: 'ip',
@@ -107,6 +125,11 @@ export default async function TermsPage({ params }: Props) {
 			id: 'changes',
 			title: t('sections.changes.title'),
 			paragraphs: [t('sections.changes.content')],
+		},
+		{
+			id: 'general',
+			title: t('sections.general.title'),
+			paragraphs: [t('sections.general.content')],
 		},
 		{
 			id: 'contact',

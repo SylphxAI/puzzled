@@ -837,7 +837,7 @@
 			"dangerZoneDescription": "會永久影響你帳戶且無法復原的操作",
 			"deleteButton": "刪除我的帳戶",
 			"warning": "此操作無法復原",
-			"warningDescription": "刪除帳戶是永久性的，你所有資料將永遠被清除。",
+			"warningDescription": "刪除帳戶是永久性的。你的帳戶及遊戲資料會被清除；法律要求我們保留的付款紀錄會在移除你的玩家 ID 後保留。",
 			"whatWillBeDeleted": "將被刪除的內容：",
 			"deleteProfile": "你的個人檔案與設定",
 			"deleteGameHistory": "所有遊戲紀錄與統計",
@@ -850,7 +850,7 @@
 			"confirmError": "請輸入 {confirmWord} 以確認",
 			"deleting": "正在刪除你的帳戶…",
 			"permanentAction": "警告：此操作不可逆",
-			"permanentActionDescription": "帳戶一經刪除便無法復原，所有資料將被永久清除。",
+			"permanentActionDescription": "帳戶一經刪除便無法復原，你的帳戶及遊戲資料將被永久清除。",
 			"verifyTitle": "驗證你的身分",
 			"verifyDescription": "為保障安全，請先驗證身分再刪除帳戶。"
 		},

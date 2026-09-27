@@ -5,7 +5,7 @@
 		"eyebrow": "Support",
 		"lead": "Email the support team about your account, progress or a bug. One inbox, read by people — there is no phone line and no live chat.",
 		"factHuman": "Replies from the support team",
-		"factReply": "Response within 24-48 hours",
+		"factReply": "Usually replies within 24-48 hours",
 		"emailCta": "Email support",
 		"faqCta": "Read the FAQ"
 	},
@@ -30,7 +30,7 @@
 		"note": "There is no phone line and no live chat — email is the only support channel, and the people who can check your account are there."
 	},
 	"email": {
-		"responseTime": "Response within 24-48 hours"
+		"responseTime": "Usually replies within 24-48 hours"
 	},
 	"faq": {
 		"title": "Questions this page can answer",

@@ -3,7 +3,7 @@
 **Status:** Normative commercial policy (owner `standards/commercial.md`)
 **Revision:** 2026-09-26 (issue [#235](https://github.com/SylphxAI/puzzled/issues/235) decided: sell a paid tier)
 **Model:** Consumer subscription in the NYT Games class. Today's featured puzzle is free; Puzzled Plus opens everything else.
-**Seller:** Sylphx Limited, England and Wales, company 16438428, 128 City Road, London EC1V 2NX. VAT GB 502 7862 95.
+**Seller:** Sylphx Limited, England and Wales, company 16438428, registered office 128 City Road, London EC1V 2NX. VAT GB 502 7862 95.
 **Billing system:** Sylphx Money, the platform's payments service (company decision 2026-09-26): its catalogue, hosted checkout, subscription state, entitlements API, portal, Stripe Tax and ledger. **Status: dormant.** The direct-Stripe code from #237 (its Stripe details are in sections 3–5 below) is deployed but closed: no Stripe keys were ever set, so nothing is sold and nothing is locked, and there are 0 payers. It is replaced by Money in one migration, not switched on; the prices and rules in this policy carry over.
 
 ---
