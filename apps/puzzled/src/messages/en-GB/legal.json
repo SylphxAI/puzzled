@@ -5,14 +5,23 @@
 			"body": "The Terms of Service cover accounts, subscriptions and conduct. Support helps with account and billing questions."
 		},
 		"sections": {
-			"dataUse": {
-				"items": {
-					"improve": "Improve and personalise your experience"
-				}
+			"thirdParty": {
+				"others": "We may also share data with our hosting providers, professional advisers, authorities where the law requires it, and a buyer or successor if our business or Puzzled is sold or reorganised."
+			},
+			"security": {
+				"content": "We protect personal data with appropriate technical and organisational measures, but no service is completely secure. If a personal data breach occurs, we notify the Information Commissioner's Office where the law requires, and we tell you directly where the breach is likely to result in a high risk to your rights and freedoms."
 			}
 		}
 	},
 	"terms": {
-		"lead": "These terms set out the rules that apply when you use Puzzled, including accounts, subscriptions and conduct."
+		"lead": "These terms set out the rules that apply when you use Puzzled, including accounts, subscriptions and conduct.",
+		"sections": {
+			"ip": {
+				"content": "All games, content, and materials on Puzzled are our property or licensed to us. You may not copy, modify, or distribute any content without permission. You give us a worldwide, royalty-free licence to use your display name, profile picture and results to run Puzzled, including leaderboards and shared results, and a perpetual, irrevocable licence to use any feedback you send us."
+			},
+			"general": {
+				"content": "We may transfer our rights and obligations under these terms to another organisation, for example if Puzzled is sold; we will tell you, and you can cancel if you are unhappy. You may not transfer yours. If a court finds part of these terms unenforceable, the rest stays in force. If we do not enforce a term straight away, we can still enforce it later. These terms are governed by the law of England and Wales. You can bring a claim in the courts of England and Wales, or in your local courts if you live in Scotland, Northern Ireland or another country, and you keep the protection of the mandatory consumer law of the place you live."
+			}
+		}
 	}
 }

@@ -837,7 +837,7 @@
 			"dangerZoneDescription": "会永久影响你账户且无法撤销的操作",
 			"deleteButton": "删除我的账户",
 			"warning": "此操作无法撤销",
-			"warningDescription": "删除账户是永久性的，你所有数据将永远被清除。",
+			"warningDescription": "删除账户是永久性的。你的账户和游戏数据会被清除；法律要求我们保留的付款记录会在移除你的玩家 ID 后保留。",
 			"whatWillBeDeleted": "将被删除的内容：",
 			"deleteProfile": "你的个人资料和设置",
 			"deleteGameHistory": "所有游戏记录和统计",
@@ -850,7 +850,7 @@
 			"confirmError": "请输入 {confirmWord} 以确认",
 			"deleting": "正在删除你的账户…",
 			"permanentAction": "警告：此操作无法撤销",
-			"permanentActionDescription": "账户一经删除便无法恢复，所有数据将被永久清除。",
+			"permanentActionDescription": "账户一经删除便无法恢复，你的账户和游戏数据将被永久清除。",
 			"verifyTitle": "验证你的身份",
 			"verifyDescription": "为了保障安全，请先验证身份再删除账户。"
 		},

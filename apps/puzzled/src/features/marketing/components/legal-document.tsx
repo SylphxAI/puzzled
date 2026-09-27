@@ -13,6 +13,8 @@ export type LegalSection = {
 	paragraphs: readonly ReactNode[]
 	/** Bullet list, preserved verbatim from the published document. */
 	bullets?: readonly ReactNode[]
+	/** Paragraphs that follow the bullet list. */
+	after?: readonly ReactNode[]
 	/** Address of the contact section, rendered as a `mailto:` link. */
 	contactEmail?: string
 }
@@ -133,6 +135,11 @@ export function LegalDocument({
 											))}
 										</ul>
 									)}
+									{section.after?.map((paragraph, index) => (
+										<p key={index} className="text-base leading-relaxed text-muted-foreground">
+											{paragraph}
+										</p>
+									))}
 									{section.contactEmail && (
 										<p>
 											{/*

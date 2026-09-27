@@ -837,7 +837,7 @@
 			"dangerZoneDescription": "Irreversible actions that permanently affect your account",
 			"deleteButton": "Delete My Account",
 			"warning": "This action cannot be undone",
-			"warningDescription": "Deleting your account is permanent. All your data will be erased forever.",
+			"warningDescription": "Deleting your account is permanent. Your account and game data are erased; payment records the law requires us to keep are kept without your player ID.",
 			"whatWillBeDeleted": "What will be deleted:",
 			"deleteProfile": "Your profile and settings",
 			"deleteGameHistory": "All game history and statistics",
@@ -850,7 +850,7 @@
 			"confirmError": "Please type {confirmWord} to confirm",
 			"deleting": "Deleting your account...",
 			"permanentAction": "Warning: This is permanent",
-			"permanentActionDescription": "Once deleted, your account cannot be recovered. All data will be permanently erased.",
+			"permanentActionDescription": "Once deleted, your account cannot be recovered. Your account and game data will be permanently erased.",
 			"verifyTitle": "Verify Your Identity",
 			"verifyDescription": "For your security, please verify your identity before deleting your account."
 		},

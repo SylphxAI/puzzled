@@ -187,10 +187,10 @@
 			"title": "刪除帳號",
 			"dangerZoneDescription": "會永久影響你帳號且無法復原的操作",
 			"deleteButton": "刪除我的帳號",
-			"warningDescription": "刪除帳號是永久性的，你所有資料將永遠被清除。",
+			"warningDescription": "刪除帳號是永久性的。你的帳號及遊戲資料會被清除；法律要求我們保留的付款紀錄會在移除你的玩家 ID 後保留。",
 			"confirmButton": "永久刪除帳號",
 			"deleting": "正在刪除你的帳號…",
-			"permanentActionDescription": "帳號一經刪除便無法復原，所有資料將被永久清除。",
+			"permanentActionDescription": "帳號一經刪除便無法復原，你的帳號及遊戲資料將被永久清除。",
 			"verifyDescription": "為保障安全，請先驗證身分再刪除帳號。"
 		},
 		"centreDescription": "隱私與資料控制在你的帳戶中心管理。"
