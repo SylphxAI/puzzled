@@ -18,7 +18,9 @@ Catalog ambition is unbounded: every game that fits the daily light brain ritual
 Today's featured puzzle stays free for everyone. Puzzled Plus, a subscription
 in the NYT Games class, opens every game, every past day, stats for every game
 and a family plan. The commercial policy (prices, cancellation, entitlement)
-is [`north-star/MONETIZATION.md`](north-star/MONETIZATION.md).
+is [`north-star/MONETIZATION.md`](north-star/MONETIZATION.md). Payments,
+subscription state and entitlements go through Sylphx Money, the platform's
+payments service; the product builds no billing of its own.
 
 ## Users and their jobs
 

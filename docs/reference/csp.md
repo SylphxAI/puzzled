@@ -31,7 +31,7 @@ form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   (`force-dynamic`, `private, no-store`), so the nonce costs no caching.
 - **`worker-src 'self'`** is explicit because `'strict-dynamic'` ignores
   `'self'` in `script-src`, which is the service worker's fallback.
-- **No third-party scripts.** Checkout is a redirect to Stripe Checkout, and
+- **No third-party scripts.** Checkout is a redirect to a hosted checkout page, and
   analytics and replays are gone, so Stripe, PostHog, Vercel, GTM, Neon and
   Cloudflare hosts are no longer listed.
 
