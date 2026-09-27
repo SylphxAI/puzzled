@@ -20,7 +20,8 @@ in the NYT Games class, opens every game, every past day, stats for every game
 and a family plan. The commercial policy (prices, cancellation, entitlement)
 is [`north-star/MONETIZATION.md`](north-star/MONETIZATION.md). Payments,
 subscription state and entitlements go through Sylphx Money, the platform's
-payments service; the product builds no billing of its own.
+payments service; the product builds no billing of its own. Today billing is dormant: the direct-Stripe code from #237 is deployed but
+closed (no keys, nothing sold, nothing locked) and moves to Sylphx Money.
 
 ## Users and their jobs
 

@@ -1,33 +1,44 @@
-# Puzzled identity graph
+# Puzzled capabilities
 
 Clients consume owner ADR-038: peer generated SDKs and peer credentials on dest peels. Mega-clients and `{project}.api.sylphx.com` are not dest.
 
-**Status:** Identity registry. Not live proof.
+**Status:** Capability table (owner `standards/docs.md` format).
 **Scope:** Puzzled — daily light brain-ritual suite (Connect Rust authority + content store).
 **North Star package:** [`north-star/README.md`](north-star/README.md) + [`north-star/RITUAL-AND-MODULE-PROTOCOL.md`](north-star/RITUAL-AND-MODULE-PROTOCOL.md)
 **Cite:** the **ID** column.
 
-This file is the identity graph. It is not a PRD, ADR index, or live grade. Destination stays in [`vision.md`](vision.md). Field law subordinate to that destination stays in `north-star/`, `adr/ADR-170*`, `apps/puzzled`, and the Connect `PuzzleService`. The north-star package is migration input and field contract; if it conflicts with `vision.md` or this graph, vision and this graph win.
+This file is the capability table. It is not a PRD or ADR index. Destination stays in [`vision.md`](vision.md). Field law subordinate to that destination stays in `north-star/`, `adr/ADR-170*`, `apps/puzzled`, and the Connect `PuzzleService`. The north-star package is migration input and field contract; if it conflicts with `vision.md` or this graph, vision and this graph win.
 
 ```text
-ID | Identity | Fate | Depends on | Done when
+ID | Capability | Status | Code | Depends on
 ```
 
-## Graph
+Status is what a live end-to-end test measured (owner `standards/docs.md`),
+last on production web `4f540e3f`, 2026-09-26/27: a guest fetched and finished
+every game's daily puzzle, and a browser loaded every game page.
 
-| ID | Identity | Fate | Depends on | Done when |
+## Table
+
+| ID | Capability | Status | Code | Depends on |
 | --- | --- | --- | --- | --- |
-| PUZ-MODULE | Module protocol (day key, finish, card, entitlement) | live | — | `product_day_key` in `Asia/Hong_Kong`, `puzzle_ritual` or `entertainment_oracle` admission, daily content store serve or documented deterministic generator fallback, server-authoritative `SubmitGuess` validate, one finish per `(user, module, day_key)`, non-spoiler common chrome + deep link — validated at the live layer. |
-| PUZ-DAILY | Daily ritual play (catalog under one protocol) | live | PUZ-MODULE | Any admitted module completes in ~5–15 min as a daily ritual with finish honesty and result card at the live layer; catalog unbounded, exposure small. |
-| PUZ-FREE | Free daily finish floor | live | PUZ-MODULE | Every product day a guest can start and finish ≥1 `puzzle_ritual` without payment or account, with a result card, at the live layer. Featured rotation ("today's pick") uses the product day-key (`Asia/Hong_Kong`, flips at HKT midnight). No billing read sits on the play path. |
-| PUZ-NSM | daily puzzle completers | live | PUZ-MODULE | Distinct users with ≥1 server-accepted qualifying `puzzle_ritual` finish on product day D (`Asia/Hong_Kong`) are recomputable from canonical records, excluding archive, practice, entertainment-oracle, admin, dry-run, and duplicate ticks, at the live layer. |
-| PUZ-HABIT | Gentle return habit | live | PUZ-FREE | A player can return the next product day without push and find today's ritual; streaks and milestones derive from accepted day progress; an ordinary missed day does not erase unrelated history, paid access, or identity; no dark-pattern streak punishment, at the live layer. |
-| PUZ-SHARE | Viral share loop (non-spoiler) | live | PUZ-DAILY | `formatRitualShareText` + module+`date=` link produces correct non-spoiler share without leaking the solution at the live layer; home does not dump full catalog on cold users. |
-| PUZ-CONTENT | Daily-puzzle pipeline and server grading | live | PUZ-MODULE | The api generates and stores every game's puzzle 14 days ahead and keeps the 30-day archive (19 games), on the hourly Compute schedule and at start-up, generating a missing day on first read; word games are graded per guess (`CheckGuess`), clients play from a solution-free payload, and the answer returns only with the accepted finish, at the live layer. |
-| PUZ-PLUS | Puzzled Plus: every game, archive, stats, family | dormant | PUZ-FREE, Sylphx Money | Decided 2026-09-26 in [#235](https://github.com/SylphxAI/puzzled/issues/235); policy in [MONETIZATION.md](north-star/MONETIZATION.md). The Stripe-based code from #237 is deployed but closed (no keys, nothing sold, nothing locked). Done when a player buys the market-priced subscription through Sylphx Money's hosted checkout, Money's entitlements API unlocks every game and past day, the 14-day first-subscription refund and period-end cancellation hold, a family plan shares with up to 4 people, the free daily puzzle never reads billing and a failed entitlement read refuses paid play, at the live layer. |
-| PUZ-OBS | Errors to Sylphx Observability | live | — | Server, api and browser errors are captured through the Sylphx SDK (no third-party error SDK); capture is accepted once Puzzled's environment key carries `observability:ingest` (SylphxAI/cloud#9450), at the live layer. |
-| PUZ-ORIGIN | Original content authority | live | PUZ-MODULE | Daily puzzles are original or public-domain; no third-party publisher daily grid is taken; entertainment oracles are play, not advice, at the source layer. |
-| PUZ-MARKS | Third-party marks as slugs/titles | dead | — | Marks `Wordle/Connections/Strands/Spelling Bee/Letter Boxed/Queens/Tango` and obvious misspellings as player titles or slugs carry no fate; canonical slugs are `crowns`/`duo` with inbound aliases only. |
+| PUZ-MODULE | Module protocol: day key (`Asia/Hong_Kong`), server-authoritative finish, result card, entitlement check | supported | `crates/puzzled-server/src/capabilities/puzzle_play`, `crates/puzzled-core/src/capabilities` | — |
+| PUZ-DAILY | Daily play: 19 games under one protocol, each finishable in about 5–15 minutes | supported | `apps/puzzled/src/features/daily`, `crates/puzzled-server/src/capabilities/puzzle_play` | PUZ-MODULE |
+| PUZ-CONTENT | Daily-puzzle pipeline and server grading: every game stored 14 days ahead plus the 30-day archive, hourly Compute tick and start-up; guesses graded on the server (`CheckGuess`); the answer returns only with the accepted finish | supported | `crates/puzzled-server/src/capabilities/daily_pipeline` | PUZ-MODULE |
+| PUZ-FREE | Free daily puzzle: a guest finishes today's featured puzzle without payment or account; no billing read on the play path | supported | `apps/puzzled/src/lib/free-rotation.ts`, `crates/puzzled-server/src/capabilities/puzzle_play` | PUZ-MODULE |
+| PUZ-SHARE | Share a result card without spoilers, with a `?date=` deep link | supported | `apps/puzzled/src/features/daily/lib/share-text.ts` | PUZ-DAILY |
+| PUZ-HABIT | Gentle return habit: streaks and milestones from accepted days, no punishment for a missed day | partial | `apps/puzzled/src/lib/streak-info.ts`, `crates/puzzled-server/src/capabilities/gamification` | PUZ-FREE |
+| PUZ-ACCOUNT | Sign-in with Sylphx Auth; results follow the account | blocked-on-platform | `crates/puzzled-server/src/capabilities/identity_access`, `apps/puzzled/src/lib/identity` | PUZ-MODULE |
+| PUZ-NSM | Daily puzzle completers, recomputable from finish records | supported | `crates/puzzled-server/src/capabilities/puzzle_play/adapters/game_sessions_db.rs` | PUZ-MODULE |
+| PUZ-PLUS | Puzzled Plus: every game, archive, stats, family plan. Dormant: the direct-Stripe code from #237 is deployed but closed (no keys, 0 payers); it is replaced by Sylphx Money's checkout and entitlements API, not switched on | blocked-on-platform | `crates/puzzled-server/src/capabilities/billing`, `apps/puzzled/src/lib/billing` | PUZ-FREE |
+| PUZ-OBS | Errors to Sylphx Observability through the Sylphx SDK; capture is refused (403) until Puzzled's key carries `observability:ingest` (SylphxAI/cloud#9450) | blocked-on-platform | `apps/puzzled/src/lib/observability`, `crates/puzzled-server/src/observability.rs` | — |
+| PUZ-ORIGIN | Original or public-domain puzzles only; entertainment formats are play, not advice | supported | `crates/puzzled-core/src/capabilities` | PUZ-MODULE |
+| PUZ-MARKS | Third-party marks (Wordle, Connections, Strands, Spelling Bee, Letter Boxed, Queens, Tango) as titles or slugs; canonical slugs are `crowns`/`duo` with inbound aliases only | retired | — | — |
+
+Platform issues: PUZ-ACCOUNT waits on the Auth keys reaching web
+(SylphxAI/cloud#9216); PUZ-PLUS waits on Sylphx Money's customer payments
+(SylphxAI/cloud#9152) and the Money migration guide; PUZ-OBS waits on
+SylphxAI/cloud#9450. PUZ-HABIT is partial because signed-in streaks cannot be
+tested until PUZ-ACCOUNT works.
 
 ## Release boundary (GOV-017)
 
@@ -73,7 +84,7 @@ not live proof. Facts not establishable here are `Unknown`, never green.
   Hono, client `isComplete`) — Connect `PuzzleService` is sole
   (`PUZ-MODULE`, vision). Never a third-party publisher daily grid
   (`PUZ-ORIGIN`). Never third-party marks as player titles or slugs
-  (`PUZ-MARKS` `dead`). Never kube, HTTPRoute, or Journal `spec`
+  (`PUZ-MARKS` `retired`). Never kube, HTTPRoute, or Journal `spec`
   writes. Never `{project}.api.sylphx.com` or a mega-client (ADR-038;
   CUTOVER retires `puzzled.api.sylphx.com`). Never a GitHub check
   name, webhook receipt, or deploy-status projection as Release
