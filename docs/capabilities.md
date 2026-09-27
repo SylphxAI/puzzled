@@ -23,7 +23,9 @@ ID | Identity | Fate | Depends on | Done when
 | PUZ-NSM | daily puzzle completers | live | PUZ-MODULE | Distinct users with ≥1 server-accepted qualifying `puzzle_ritual` finish on product day D (`Asia/Hong_Kong`) are recomputable from canonical records, excluding archive, practice, entertainment-oracle, admin, dry-run, and duplicate ticks, at the live layer. |
 | PUZ-HABIT | Gentle return habit | live | PUZ-FREE | A player can return the next product day without push and find today's ritual; streaks and milestones derive from accepted day progress; an ordinary missed day does not erase unrelated history, paid access, or identity; no dark-pattern streak punishment, at the live layer. |
 | PUZ-SHARE | Viral share loop (non-spoiler) | live | PUZ-DAILY | `formatRitualShareText` + module+`date=` link produces correct non-spoiler share without leaking the solution at the live layer; home does not dump full catalog on cold users. |
-| PUZ-PLUS | Puzzled Plus: every game, archive, stats, family | live | PUZ-FREE | Decided 2026-09-26 in [#235](https://github.com/SylphxAI/puzzled/issues/235); policy in [MONETIZATION.md](north-star/MONETIZATION.md). A player buys a market-priced subscription through Stripe Checkout; the signature-verified webhook and the post-checkout read-back unlock every game and past day in the api's own entitlement; cancelling within 14 days of the first subscription refunds it and locks again, later cancellation runs to period end; a family plan shares with up to 4 people; the ledger records each payment and refund once; the free daily puzzle never reads billing and a failed entitlement read refuses paid play; never sell the solution, at the live layer. |
+| PUZ-CONTENT | Daily-puzzle pipeline and server grading | live | PUZ-MODULE | The api generates and stores every game's puzzle 14 days ahead and keeps the 30-day archive (19 games), on the hourly Compute schedule and at start-up, generating a missing day on first read; word games are graded per guess (`CheckGuess`), clients play from a solution-free payload, and the answer returns only with the accepted finish, at the live layer. |
+| PUZ-PLUS | Puzzled Plus: every game, archive, stats, family | dormant | PUZ-FREE, Sylphx Money | Decided 2026-09-26 in [#235](https://github.com/SylphxAI/puzzled/issues/235); policy in [MONETIZATION.md](north-star/MONETIZATION.md). The Stripe-based code from #237 is deployed but closed (no keys, nothing sold, nothing locked). Done when a player buys the market-priced subscription through Sylphx Money's hosted checkout, Money's entitlements API unlocks every game and past day, the 14-day first-subscription refund and period-end cancellation hold, a family plan shares with up to 4 people, the free daily puzzle never reads billing and a failed entitlement read refuses paid play, at the live layer. |
+| PUZ-OBS | Errors to Sylphx Observability | live | — | Server, api and browser errors are captured through the Sylphx SDK (no third-party error SDK); capture is accepted once Puzzled's environment key carries `observability:ingest` (SylphxAI/cloud#9450), at the live layer. |
 | PUZ-ORIGIN | Original content authority | live | PUZ-MODULE | Daily puzzles are original or public-domain; no third-party publisher daily grid is taken; entertainment oracles are play, not advice, at the source layer. |
 | PUZ-MARKS | Third-party marks as slugs/titles | dead | — | Marks `Wordle/Connections/Strands/Spelling Bee/Letter Boxed/Queens/Tango` and obvious misspellings as player titles or slugs carry no fate; canonical slugs are `crowns`/`duo` with inbound aliases only. |
 
@@ -56,13 +58,12 @@ not live proof. Facts not establishable here are `Unknown`, never green.
   production Release is not named in this graph — `Unknown`. Leftover
   Vercel is not a writer. `preview_deploys = true` is preview
   autoDeploy only; it is not production Promote.
-- **Consumed receipts:** Connect caller identity from a product JWT
-  (README: historical "Platform JWT"). This graph has no Identity
-  edge, so whether those tokens are Sylphx Identity receipts is
-  `Unknown`. Apps Deployment and Hands realization receipts for the
-  `sylphx.toml` services, consumed as a customer, not owned. Whether
-  Compute Schedule/Tick receipts are bound for JobsService callbacks
-  is `Unknown`.
+- **Consumed receipts:** a Sylphx Auth end-user session (the web's
+  session cookie or a Bearer), checked with Auth once per request.
+  Apps Deployment and Hands realization receipts for the
+  `sylphx.toml` services, consumed as a customer, not owned. Compute's
+  signed tick receipts (EdDSA JWT, `aud` equal to the exact URL) are the
+  only admission for JobsService and the `/internal/compute/*` routes.
 - **Runtime effects:** serve daily content; validate and persist one
   finish per `(user, module, day_key)`; emit non-spoiler share text
   and `date=` links; run JobsService retention handlers as product
@@ -82,8 +83,6 @@ not live proof. Facts not establishable here are `Unknown`, never green.
   dest over `vision.md` and this graph.
 
 Unknown in this declaration: the authority admitting this product's
-own production Release; whether the Connect JWT is an Identity
-receipt; whether Compute Schedule receipts are bound for JobsService;
-whether the current production Release matches `sylphx.toml` or passes
+own production Release; whether the current production Release matches `sylphx.toml` or passes
 the public probe. Document GET 200 is not that probe. Those are live-
 or owning-lease facts, not greened here.

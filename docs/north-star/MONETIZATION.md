@@ -4,7 +4,7 @@
 **Revision:** 2026-09-26 (issue [#235](https://github.com/SylphxAI/puzzled/issues/235) decided: sell a paid tier)
 **Model:** Consumer subscription in the NYT Games class. Today's featured puzzle is free; Puzzled Plus opens everything else.
 **Seller:** Sylphx Limited, England and Wales, company 16438428, 128 City Road, London EC1V 2NX. VAT GB 502 7862 95.
-**Billing system:** Stripe (the merchant-payments exception in the owner architecture standard). Stripe holds the live prices, customers, subscriptions, invoices and refunds. Puzzled's api owns the entitlement and an append-only money ledger.
+**Billing system:** Sylphx Money, the platform's payments service (company decision 2026-09-26): its catalogue, hosted checkout, subscription state, entitlements API, portal, Stripe Tax and ledger. **Status: dormant.** The direct-Stripe code from #237 (its Stripe details are in sections 3–5 below) is deployed but closed: no Stripe keys were ever set, so nothing is sold and nothing is locked, and there are 0 payers. It is replaced by Money in one migration, not switched on; the prices and rules in this policy carry over.
 
 ---
 
@@ -141,12 +141,10 @@ Star.
 
 ## 8. Channels
 
-- Web: Stripe Checkout (live).
+- Web: Sylphx Money hosted checkout (planned). The Stripe Checkout path from #237 is dormant.
 - App Store and Google Play in-app purchase: not built. When a store app
-  ships, its purchases must write the same entitlement (a store-receipt
-  adapter beside the Stripe one), and the Sylphx platform may take this over
-  (see the program's billing path and the `platform-request` issue linked
-  from issue #235).
+  ships, Sylphx Money validates its receipts and serves the same
+  entitlement.
 
 ## 9. Cost of catalog growth
 

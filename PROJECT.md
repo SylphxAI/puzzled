@@ -17,7 +17,7 @@ Sylphx deployment manifest, pure game rules, and application workflows.
 | **Catalog** | Unbounded *class* of light daily puzzles + honest entertainment oracles |
 | **Basis** | Day key · game module · ritual run · result card · entitlement |
 | **NSM** | Distinct users who complete ≥1 puzzle ritual per product day |
-| **Money** | Today's featured puzzle free; Puzzled Plus subscription (Stripe) opens every game, the archive and a family plan ([policy](docs/north-star/MONETIZATION.md)) |
+| **Money** | Today's featured puzzle free; Puzzled Plus subscription opens every game, the archive and a family plan ([policy](docs/north-star/MONETIZATION.md)). Built but dormant: not on sale until billing moves to Sylphx Money |
 
 Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilities.md](docs/capabilities.md). Field contract: [docs/north-star/README.md](docs/north-star/README.md).
 
@@ -35,11 +35,13 @@ Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilitie
 
 - **api** (Rust, `crates/puzzled-server`): sole backend. Connect RPC —
   Health, Puzzle, Stats, Preferences, Gamification, Admin, Jobs, Billing —
-  plus the Stripe webhook (`POST /webhooks/stripe`). Identity: a Sylphx
+  plus the dormant Stripe webhook (`POST /webhooks/stripe`). Identity: a Sylphx
   Auth end-user session (the web's `sylphx_identity_session` cookie or a
   Bearer), checked once per request with Auth (`/v1/sessions/current`,
-  cached 60 s) by the router middleware. Puzzled Plus entitlement and the money
-  ledger live here; Stripe is the payment processor.
+  cached 60 s) by the router middleware. The Puzzled Plus entitlement, money
+  ledger and Stripe adapter live here but are dormant (no Stripe keys, 0
+  payers); they are replaced by Sylphx Money's checkout, entitlements API and
+  ledger, not switched on.
 - **web** (Next.js, `apps/puzzled`): presentation only. Generated Connect
   client; Platform SDK for auth/flags/AI. No backend authority.
 - **core** (`crates/puzzled-core`): pure game rules, validation, scoring,
@@ -55,7 +57,8 @@ Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilitie
 ## Delivery
 
 CI runs lint/typecheck, buf + platform-boundary gates, migration integrity,
-unit tests (app + Rust), and real builds (web `next build` + Rust release).
+unit tests (app + Rust), and real builds (web `next build` + Rust release),
+all on our own runners (`sylphx-linux-standard`; owner `standards/dx.md`).
 
 **Delivery authority** (games catalog, free ritual floor, merge rejects):  
 [docs/north-star/DELIVERY-AUTHORITY.md](docs/north-star/DELIVERY-AUTHORITY.md).
