@@ -30,6 +30,12 @@ export const SOUND_ENABLED_KEY = 'puzzled:sound:enabled'
 export const PWA_PROMPT_DISMISSED_KEY = 'puzzled:pwa:prompt-dismissed'
 
 // ==========================================
+// Share challenge
+// ==========================================
+/** The share a visitor opened ({ shareId, gameSlug, dayKey }); read by the result screen to show both results. */
+export const CHALLENGE_KEY = 'puzzled:challenge:share'
+
+// ==========================================
 // Guest User Data
 // ==========================================
 export const GUEST_ONBOARDING_KEY = 'puzzled:guest:onboarding'

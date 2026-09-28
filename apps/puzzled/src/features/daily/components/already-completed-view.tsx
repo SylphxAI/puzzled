@@ -5,11 +5,16 @@ import { Check, ChevronRight, Clock, Flame, Gauge, Share2, Target, Trophy, X } f
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
+import { useWarmShareId } from '@/features/daily/hooks/use-share-id'
+import { buildResultCard, resultCardStringsFrom } from '@/features/daily/lib/result-card'
+import { getHowToPlayConfig } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
-import { cn } from '@/lib/utils'
+import { cn, getBaseUrl } from '@/lib/utils'
+import { ChallengeComparison } from './challenge-comparison'
 import { DifficultyBadge } from './difficulty-selector'
 import { NextPuzzleCountdown } from './next-puzzle-countdown'
+import { TomorrowGameLine } from './tomorrow-game-line'
 
 /**
  * Format puzzle date for display (e.g., "Dec 18" or locale-appropriate short format)
@@ -70,6 +75,7 @@ export function AlreadyCompletedView({
 	const t = useTranslations('daily')
 	const tCommon = useTranslations('common')
 	const tResult = useTranslations('gameResult')
+	const tShareCard = useTranslations('share.card')
 	const tDifficulty = useTranslations('common.difficulty')
 	const [showToast, setShowToast] = useState(false)
 	const [animate, setAnimate] = useState(false)
@@ -85,6 +91,7 @@ export function AlreadyCompletedView({
 	// Get difficulty label for share text
 	const difficultyLabel = difficulty ? tDifficulty(difficulty) : null
 
+	useWarmShareId(gameSlug, puzzleDate, true)
 	const shareResult = useResultShare()
 	const handleShare = async () => {
 		// Non-spoiler card: module + day deep link only (no solution / grid).
@@ -209,6 +216,24 @@ export function AlreadyCompletedView({
 				</CardContent>
 			</Card>
 
+			{/* "Beat my result": both results, when a share link for this puzzle was opened. */}
+			<ChallengeComparison
+				mine={buildResultCard({
+					origin: getBaseUrl('origin'),
+					gameSlug,
+					gameName,
+					theme: getHowToPlayConfig(gameSlug)?.display.theme ?? 'slate',
+					mode: 'daily',
+					status: session.status,
+					locale,
+					puzzleDate,
+					attempts: session.attempts > 0 ? session.attempts : null,
+					score: session.score,
+				})}
+				strings={resultCardStringsFrom((key) => tShareCard.raw(key) as string)}
+				gameName={gameName}
+			/>
+
 			{/* Share Button - Prominent */}
 			<Button
 				onClick={handleShare}
@@ -248,7 +273,8 @@ export function AlreadyCompletedView({
 						<span className="font-medium">{t('nextPuzzle')}</span>
 					</div>
 					<NextPuzzleCountdown variant="default" showLabel={false} className="items-center" />
-					<p className="mt-3 text-xs text-muted-foreground">{t('comeBackTomorrow')}</p>
+					<TomorrowGameLine className="mt-3" />
+					<p className="mt-1 text-xs text-muted-foreground">{t('comeBackTomorrow')}</p>
 				</CardContent>
 			</Card>
 

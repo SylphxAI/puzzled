@@ -19,7 +19,7 @@ import { file_google_protobuf_cpp_features } from '@bufbuild/protobuf/wkt'
 export const file_puzzled_v1_puzzle: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		'ChdwdXp6bGVkL3YxL3B1enpsZS5wcm90bxIKcHV6emxlZC52MSJHChBHZXRQdXp6bGVSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIMCgRzZWVkGAIgASgDEhIKCmRpZmZpY3VsdHkYAyABKAkidwoRR2V0UHV6emxlUmVzcG9uc2USEQoJZ2FtZV9zbHVnGAEgASgJEgwKBHNlZWQYAiABKAMSEgoKZGlmZmljdWx0eRgDIAEoCRIYChBwdXp6bGVfZGF0YV9qc29uGAQgASgJEg0KBXNsaWNlGAYgASgJSgQIBRAGInQKD0dldERhaWx5UmVxdWVzdBIRCglnYW1lX3NsdWcYASABKAkSEgoKZGlmZmljdWx0eRgCIAEoCRIYCglwdXp6bGVfaWQYAyABKAlCBaoBAggBEhoKC3B1enpsZV9kYXRlGAUgASgJQgWqAQIIAUoECAQQBSJwCg9EYWlseUNvbXBsZXRpb24SDgoGc3RhdHVzGAEgASgJEhQKBXNjb3JlGAIgASgNQgWqAQIIARIXCghhdHRlbXB0cxgDIAEoDUIFqgECCAESHgoPY29tcGxldGVkX2F0X21zGAQgASgDQgWqAQIIASKlAgoQR2V0RGFpbHlSZXNwb25zZRIRCglnYW1lX3NsdWcYASABKAkSFQoNcHV6emxlX251bWJlchgCIAEoDRITCgtwdXp6bGVfZGF0ZRgDIAEoCRIYCglwdXp6bGVfaWQYBCABKAlCBaoBAggBEhIKCmRpZmZpY3VsdHkYBSABKAkSFQoNaGFzX2NvbXBsZXRlZBgGIAEoCBIQCghjYW5fcGxheRgHIAEoCBIMCgRtb2RlGAggASgJEg0KBXNsaWNlGAkgASgJEgwKBHN0dWIYCiABKAgSGAoQcHV6emxlX2RhdGFfanNvbhgLIAEoCRI2ChFjb21wbGV0ZWRfc2Vzc2lvbhgMIAEoCzIbLnB1enpsZWQudjEuRGFpbHlDb21wbGV0aW9uIskBChJTdWJtaXRHdWVzc1JlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEhIKCmRpZmZpY3VsdHkYAyABKAkSDgoGc3RhdHVzGAQgASgJEhAKCGF0dGVtcHRzGAUgASgNEhUKDXRpbWVfc3BlbnRfbXMYBiABKAQSFwoPc3VibWlzc2lvbl9qc29uGAcgASgJEhgKCXB1enpsZV9pZBgIIAEoCUIFqgECCAESGgoLcHV6emxlX2RhdGUYCSABKAlCBaoBAggBSgQIAhADIqQBChNTdWJtaXRHdWVzc1Jlc3BvbnNlEg0KBXZhbGlkGAEgASgIEg4KBnN0YXR1cxgCIAEoCRIUCgVzY29yZRgDIAEoDUIFqgECCAESEQoJZ2FtZV9zbHVnGAQgASgJEhQKBWVycm9yGAYgASgJQgWqAQIIARINCgVzbGljZRgHIAEoCRIaCgtyZXZlYWxfanNvbhgIIAEoCUIFqgECCAFKBAgFEAYihAEKEUNoZWNrR3Vlc3NSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRISCgpkaWZmaWN1bHR5GAIgASgJEhgKCXB1enpsZV9pZBgDIAEoCUIFqgECCAESGgoLcHV6emxlX2RhdGUYBCABKAlCBaoBAggBEhIKCmd1ZXNzX2pzb24YBSABKAkiKQoSQ2hlY2tHdWVzc1Jlc3BvbnNlEhMKC3Jlc3VsdF9qc29uGAEgASgJMr0CCg1QdXp6bGVTZXJ2aWNlEkgKCUdldFB1enpsZRIcLnB1enpsZWQudjEuR2V0UHV6emxlUmVxdWVzdBodLnB1enpsZWQudjEuR2V0UHV6emxlUmVzcG9uc2USRQoIR2V0RGFpbHkSGy5wdXp6bGVkLnYxLkdldERhaWx5UmVxdWVzdBocLnB1enpsZWQudjEuR2V0RGFpbHlSZXNwb25zZRJOCgtTdWJtaXRHdWVzcxIeLnB1enpsZWQudjEuU3VibWl0R3Vlc3NSZXF1ZXN0Gh8ucHV6emxlZC52MS5TdWJtaXRHdWVzc1Jlc3BvbnNlEksKCkNoZWNrR3Vlc3MSHS5wdXp6bGVkLnYxLkNoZWNrR3Vlc3NSZXF1ZXN0Gh4ucHV6emxlZC52MS5DaGVja0d1ZXNzUmVzcG9uc2VCFJIDEQgCEAEYASACKAEwAcI+AhADYghlZGl0aW9uc3DpBw',
+		'ChdwdXp6bGVkL3YxL3B1enpsZS5wcm90bxIKcHV6emxlZC52MSJHChBHZXRQdXp6bGVSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIMCgRzZWVkGAIgASgDEhIKCmRpZmZpY3VsdHkYAyABKAkidwoRR2V0UHV6emxlUmVzcG9uc2USEQoJZ2FtZV9zbHVnGAEgASgJEgwKBHNlZWQYAiABKAMSEgoKZGlmZmljdWx0eRgDIAEoCRIYChBwdXp6bGVfZGF0YV9qc29uGAQgASgJEg0KBXNsaWNlGAYgASgJSgQIBRAGInQKD0dldERhaWx5UmVxdWVzdBIRCglnYW1lX3NsdWcYASABKAkSEgoKZGlmZmljdWx0eRgCIAEoCRIYCglwdXp6bGVfaWQYAyABKAlCBaoBAggBEhoKC3B1enpsZV9kYXRlGAUgASgJQgWqAQIIAUoECAQQBSJwCg9EYWlseUNvbXBsZXRpb24SDgoGc3RhdHVzGAEgASgJEhQKBXNjb3JlGAIgASgNQgWqAQIIARIXCghhdHRlbXB0cxgDIAEoDUIFqgECCAESHgoPY29tcGxldGVkX2F0X21zGAQgASgDQgWqAQIIASKlAgoQR2V0RGFpbHlSZXNwb25zZRIRCglnYW1lX3NsdWcYASABKAkSFQoNcHV6emxlX251bWJlchgCIAEoDRITCgtwdXp6bGVfZGF0ZRgDIAEoCRIYCglwdXp6bGVfaWQYBCABKAlCBaoBAggBEhIKCmRpZmZpY3VsdHkYBSABKAkSFQoNaGFzX2NvbXBsZXRlZBgGIAEoCBIQCghjYW5fcGxheRgHIAEoCBIMCgRtb2RlGAggASgJEg0KBXNsaWNlGAkgASgJEgwKBHN0dWIYCiABKAgSGAoQcHV6emxlX2RhdGFfanNvbhgLIAEoCRI2ChFjb21wbGV0ZWRfc2Vzc2lvbhgMIAEoCzIbLnB1enpsZWQudjEuRGFpbHlDb21wbGV0aW9uIskBChJTdWJtaXRHdWVzc1JlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEhIKCmRpZmZpY3VsdHkYAyABKAkSDgoGc3RhdHVzGAQgASgJEhAKCGF0dGVtcHRzGAUgASgNEhUKDXRpbWVfc3BlbnRfbXMYBiABKAQSFwoPc3VibWlzc2lvbl9qc29uGAcgASgJEhgKCXB1enpsZV9pZBgIIAEoCUIFqgECCAESGgoLcHV6emxlX2RhdGUYCSABKAlCBaoBAggBSgQIAhADIqQBChNTdWJtaXRHdWVzc1Jlc3BvbnNlEg0KBXZhbGlkGAEgASgIEg4KBnN0YXR1cxgCIAEoCRIUCgVzY29yZRgDIAEoDUIFqgECCAESEQoJZ2FtZV9zbHVnGAQgASgJEhQKBWVycm9yGAYgASgJQgWqAQIIARINCgVzbGljZRgHIAEoCRIaCgtyZXZlYWxfanNvbhgIIAEoCUIFqgECCAFKBAgFEAYihAEKEUNoZWNrR3Vlc3NSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRISCgpkaWZmaWN1bHR5GAIgASgJEhgKCXB1enpsZV9pZBgDIAEoCUIFqgECCAESGgoLcHV6emxlX2RhdGUYBCABKAlCBaoBAggBEhIKCmd1ZXNzX2pzb24YBSABKAkiKQoSQ2hlY2tHdWVzc1Jlc3BvbnNlEhMKC3Jlc3VsdF9qc29uGAEgASgJIlAKElNoYXJlUmVzdWx0UmVxdWVzdBIRCglnYW1lX3NsdWcYASABKAkSGgoLcHV6emxlX2RhdGUYAiABKAlCBaoBAggBEgsKA3RhcBgDIAEoCCInChNTaGFyZVJlc3VsdFJlc3BvbnNlEhAKCHNoYXJlX2lkGAEgASgJIioKFkdldFNoYXJlZFJlc3VsdFJlcXVlc3QSEAoIc2hhcmVfaWQYASABKAkiqwEKF0dldFNoYXJlZFJlc3VsdFJlc3BvbnNlEhEKCWdhbWVfc2x1ZxgBIAEoCRITCgtwdXp6bGVfZGF0ZRgCIAEoCRISCgpkaWZmaWN1bHR5GAMgASgJEg4KBnN0YXR1cxgEIAEoCRIQCghhdHRlbXB0cxgFIAEoDRIUCgVzY29yZRgGIAEoDUIFqgECCAESHAoNdGltZV9zcGVudF9tcxgHIAEoBEIFqgECCAEy6QMKDVB1enpsZVNlcnZpY2USSAoJR2V0UHV6emxlEhwucHV6emxlZC52MS5HZXRQdXp6bGVSZXF1ZXN0Gh0ucHV6emxlZC52MS5HZXRQdXp6bGVSZXNwb25zZRJFCghHZXREYWlseRIbLnB1enpsZWQudjEuR2V0RGFpbHlSZXF1ZXN0GhwucHV6emxlZC52MS5HZXREYWlseVJlc3BvbnNlEk4KC1N1Ym1pdEd1ZXNzEh4ucHV6emxlZC52MS5TdWJtaXRHdWVzc1JlcXVlc3QaHy5wdXp6bGVkLnYxLlN1Ym1pdEd1ZXNzUmVzcG9uc2USSwoKQ2hlY2tHdWVzcxIdLnB1enpsZWQudjEuQ2hlY2tHdWVzc1JlcXVlc3QaHi5wdXp6bGVkLnYxLkNoZWNrR3Vlc3NSZXNwb25zZRJOCgtTaGFyZVJlc3VsdBIeLnB1enpsZWQudjEuU2hhcmVSZXN1bHRSZXF1ZXN0Gh8ucHV6emxlZC52MS5TaGFyZVJlc3VsdFJlc3BvbnNlEloKD0dldFNoYXJlZFJlc3VsdBIiLnB1enpsZWQudjEuR2V0U2hhcmVkUmVzdWx0UmVxdWVzdBojLnB1enpsZWQudjEuR2V0U2hhcmVkUmVzdWx0UmVzcG9uc2VCFJIDEQgCEAEYASACKAEwAcI+AhADYghlZGl0aW9uc3DpBw',
 		[file_google_protobuf_cpp_features],
 	)
 
@@ -410,6 +410,130 @@ export const CheckGuessResponseSchema: GenMessage<CheckGuessResponse> =
 	messageDesc(file_puzzled_v1_puzzle, 8)
 
 /**
+ * ShareResult returns the id the share link carries as `ref` for the signed-in
+ * or guest player's accepted daily finish, creating it on first call (the result
+ * screen calls it when it shows, so the share tap needs no round trip). `tap`
+ * also counts one share. The server reads the finish itself; the client sends
+ * no result facts.
+ *
+ * @generated from message puzzled.v1.ShareResultRequest
+ */
+export type ShareResultRequest = Message<'puzzled.v1.ShareResultRequest'> & {
+	/**
+	 * @generated from field: string game_slug = 1;
+	 */
+	gameSlug: string
+
+	/**
+	 * Product day (YYYY-MM-DD); default = today.
+	 *
+	 * @generated from field: string puzzle_date = 2 [features.field_presence = EXPLICIT];
+	 */
+	puzzleDate: string
+
+	/**
+	 * @generated from field: bool tap = 3;
+	 */
+	tap: boolean
+}
+
+/**
+ * Describes the message puzzled.v1.ShareResultRequest.
+ * Use `create(ShareResultRequestSchema)` to create a new message.
+ */
+export const ShareResultRequestSchema: GenMessage<ShareResultRequest> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_puzzle, 9)
+
+/**
+ * @generated from message puzzled.v1.ShareResultResponse
+ */
+export type ShareResultResponse = Message<'puzzled.v1.ShareResultResponse'> & {
+	/**
+	 * @generated from field: string share_id = 1;
+	 */
+	shareId: string
+}
+
+/**
+ * Describes the message puzzled.v1.ShareResultResponse.
+ * Use `create(ShareResultResponseSchema)` to create a new message.
+ */
+export const ShareResultResponseSchema: GenMessage<ShareResultResponse> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_puzzle, 10)
+
+/**
+ * GetSharedResult reads one shared result for the public landing page. No
+ * identity is needed. It carries only what a result card shows: never the
+ * solution, a grid, or who shared it.
+ *
+ * @generated from message puzzled.v1.GetSharedResultRequest
+ */
+export type GetSharedResultRequest = Message<'puzzled.v1.GetSharedResultRequest'> & {
+	/**
+	 * @generated from field: string share_id = 1;
+	 */
+	shareId: string
+}
+
+/**
+ * Describes the message puzzled.v1.GetSharedResultRequest.
+ * Use `create(GetSharedResultRequestSchema)` to create a new message.
+ */
+export const GetSharedResultRequestSchema: GenMessage<GetSharedResultRequest> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_puzzle, 11)
+
+/**
+ * @generated from message puzzled.v1.GetSharedResultResponse
+ */
+export type GetSharedResultResponse = Message<'puzzled.v1.GetSharedResultResponse'> & {
+	/**
+	 * @generated from field: string game_slug = 1;
+	 */
+	gameSlug: string
+
+	/**
+	 * @generated from field: string puzzle_date = 2;
+	 */
+	puzzleDate: string
+
+	/**
+	 * @generated from field: string difficulty = 3;
+	 */
+	difficulty: string
+
+	/**
+	 * @generated from field: string status = 4;
+	 */
+	status: string
+
+	/**
+	 * @generated from field: uint32 attempts = 5;
+	 */
+	attempts: number
+
+	/**
+	 * @generated from field: uint32 score = 6 [features.field_presence = EXPLICIT];
+	 */
+	score: number
+
+	/**
+	 * @generated from field: uint64 time_spent_ms = 7 [features.field_presence = EXPLICIT];
+	 */
+	timeSpentMs: bigint
+}
+
+/**
+ * Describes the message puzzled.v1.GetSharedResultResponse.
+ * Use `create(GetSharedResultResponseSchema)` to create a new message.
+ */
+export const GetSharedResultResponseSchema: GenMessage<GetSharedResultResponse> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_puzzle, 12)
+
+/**
  * @generated from service puzzled.v1.PuzzleService
  */
 export const PuzzleService: GenService<{
@@ -444,5 +568,21 @@ export const PuzzleService: GenService<{
 		methodKind: 'unary'
 		input: typeof CheckGuessRequestSchema
 		output: typeof CheckGuessResponseSchema
+	}
+	/**
+	 * @generated from rpc puzzled.v1.PuzzleService.ShareResult
+	 */
+	shareResult: {
+		methodKind: 'unary'
+		input: typeof ShareResultRequestSchema
+		output: typeof ShareResultResponseSchema
+	}
+	/**
+	 * @generated from rpc puzzled.v1.PuzzleService.GetSharedResult
+	 */
+	getSharedResult: {
+		methodKind: 'unary'
+		input: typeof GetSharedResultRequestSchema
+		output: typeof GetSharedResultResponseSchema
 	}
 }> = /*@__PURE__*/ serviceDesc(file_puzzled_v1_puzzle, 0)

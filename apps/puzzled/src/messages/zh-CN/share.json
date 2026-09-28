@@ -29,5 +29,21 @@
 		"altDetailsTemplate": " {details}。",
 		"altLinkTemplate": " 一起玩：{link}",
 		"detailSeparator": "、"
+	},
+	"challenge": {
+		"title": "并排比较",
+		"theirs": "对方的结果",
+		"yours": "你的结果"
+	},
+	"landing": {
+		"metaTitle": "分享的谜题成绩",
+		"ogTitle": "{game}：一个等你挑战的成绩",
+		"metaDescription": "查看朋友的成绩，然后免费玩今天的 Puzzled 谜题。",
+		"eyebrow": "朋友分享了一个成绩",
+		"titleSame": "你能超过他吗？",
+		"titleOther": "看看对方的成绩，再玩今天的谜题",
+		"bodySame": "同一道题、同一天。免费玩，无需注册，完成后并排查看两个成绩。",
+		"bodyOther": "这道题来自另一天。今天的免费谜题已准备好，无需注册。",
+		"note": "分享的成绩不会包含答案。"
 	}
 }

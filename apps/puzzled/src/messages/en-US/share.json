@@ -29,5 +29,21 @@
 		"altDetailsTemplate": " {details}.",
 		"altLinkTemplate": " Play: {link}",
 		"detailSeparator": ", "
+	},
+	"challenge": {
+		"title": "Side by side",
+		"theirs": "Their result",
+		"yours": "Your result"
+	},
+	"landing": {
+		"metaTitle": "A shared puzzle result",
+		"ogTitle": "{game}: a result to beat",
+		"metaDescription": "See a friend's result, then play today's Puzzled puzzle free.",
+		"eyebrow": "A friend shared a result",
+		"titleSame": "Can you beat it?",
+		"titleOther": "See how it went, then play today's puzzle",
+		"bodySame": "Same puzzle, same day. Play it free, no account needed, and see both results side by side.",
+		"bodyOther": "That puzzle is from another day. Today's free puzzle is ready, no account needed.",
+		"note": "Shared results never include the answer."
 	}
 }

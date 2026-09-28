@@ -4,6 +4,7 @@ import {
 	ritualShareDeepLink,
 	ritualSharePath,
 	shareHost,
+	shareLandingPath,
 	shareTextLooksNonSpoiler,
 } from './share-text'
 
@@ -106,5 +107,37 @@ describe('formatRitualShareText', () => {
 		})
 		expect(text).toContain('⏱️ 1:23')
 		expect(text).toContain('puzzled.gg/games/sudoku?mode=archive&date=2026-08-12')
+	})
+})
+
+describe('share landing link (ref = server-issued share id)', () => {
+	const SHARE_ID = '0b6f5d6e-2c8a-4a53-9f0e-6a4d3f1c9e11'
+
+	test('a share id makes the link the landing carrying it as ref', () => {
+		expect(shareLandingPath(SHARE_ID)).toBe(`/daily?ref=${SHARE_ID}`)
+		expect(ritualShareDeepLink('https://puzzled.gg', 'sudoku', '2026-08-12', SHARE_ID)).toBe(
+			`puzzled.gg/daily?ref=${SHARE_ID}`,
+		)
+	})
+
+	test('without a share id the module link is kept', () => {
+		expect(ritualShareDeepLink('https://puzzled.gg', 'sudoku', '2026-08-12', '  ')).toBe(
+			'puzzled.gg/games/sudoku?mode=archive&date=2026-08-12',
+		)
+	})
+
+	test('the shared text carries the ref link and nothing that spoils', () => {
+		const text = formatRitualShareText({
+			origin: 'https://puzzled.gg',
+			gameSlug: 'word-guess',
+			gameName: 'Word Guess',
+			puzzleDate: '2026-09-28',
+			status: 'won',
+			attempts: 3,
+			shareId: SHARE_ID,
+		})
+		expect(text).toContain(`puzzled.gg/daily?ref=${SHARE_ID}`)
+		expect(text).toContain('3 attempts')
+		expect(shareTextLooksNonSpoiler(text)).toBe(true)
 	})
 })

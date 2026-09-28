@@ -30,6 +30,8 @@ mod auth_session_tests;
 mod billing_flow_tests;
 #[cfg(test)]
 mod daily_pipeline_tests;
+#[cfg(test)]
+mod result_shares_tests;
 
 #[cfg(test)]
 mod tests {

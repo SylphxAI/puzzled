@@ -94,6 +94,11 @@ export function productDayKey(now: Date = new Date()): string {
 	return formatDayKey(hkt.getUTCFullYear(), hkt.getUTCMonth() + 1, hkt.getUTCDate())
 }
 
+/** The product day after the one `now` is in. */
+export function nextProductDayKey(now: Date = new Date()): string {
+	return productDayKey(new Date(now.getTime() + DAY_MS))
+}
+
 /** 0-based day-of-year for a `YYYY-MM-DD` civil date (Jan 1 = 0). */
 export function ordinal0FromDayKey(dayKey: string): number {
 	const parts = parseDayKey(dayKey)

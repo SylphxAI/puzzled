@@ -688,6 +688,34 @@ export const accountAttribution = pgTable('account_attribution', {
 	recordedAt: timestamp('recorded_at').defaultNow().notNull(),
 })
 
+/**
+ * A shared daily result. The share link carries `id` as `ref`; the row holds
+ * only what the result card shows (never a solution), and `share_count` counts
+ * share taps. One row per player, module and product day.
+ */
+export const resultShares = pgTable(
+	'result_shares',
+	{
+		/** UUIDv7 minted by the api */
+		id: uuid('id').primaryKey(),
+		/** Platform user ID or guest-day ID (no FK) */
+		userId: uuid('user_id').notNull(),
+		gameSlug: text('game_slug').notNull(),
+		dayKey: text('day_key').notNull(),
+		difficulty: text('difficulty'),
+		status: text('status').notNull(),
+		attempts: integer('attempts').notNull(),
+		score: integer('score'),
+		timeSpentMs: integer('time_spent_ms'),
+		shareCount: integer('share_count').default(0).notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+		lastSharedAt: timestamp('last_shared_at').defaultNow().notNull(),
+	},
+	(table) => [
+		uniqueIndex('result_shares_user_game_day_uidx').on(table.userId, table.gameSlug, table.dayKey),
+	],
+)
+
 /** A family plan owner and the invite code members join with. */
 export const familyGroups = pgTable('family_groups', {
 	ownerUserId: uuid('owner_user_id').primaryKey(),

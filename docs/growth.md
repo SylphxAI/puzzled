@@ -30,7 +30,7 @@ Measured today: recomputable from `game_sessions` (`compute_drc`); no dashboard 
 | Input | Measured today | Missing |
 | --- | --- | --- |
 | D7 ritual retention ([METRICS-TREE.md](north-star/METRICS-TREE.md) 2.1) | Derivable from the same finish rows | A cohort report: Signal analytics (cloud#9511) or a scheduled SQL job |
-| Share-landing new completers (shares → landings → first finishes) | Landings keep `utm_*`/`ref` first-touch after consent | No share event is recorded; the card's link carries no sharer reference |
+| Share-landing new completers (shares → landings → first finishes) | `result_shares.share_count`; landings keep `ref` (the share id) first-touch after consent | Landing counts before consent (no cookie); a dashboard |
 | Weekly ritualists → Puzzled Plus conversion | Weekly ritualists (`compute_hrc`) | Conversion: Plus is dormant until Sylphx Money subscriptions (cloud#9152) |
 
 ## Ranked backlog
@@ -51,13 +51,18 @@ Measured today: recomputable from `game_sessions` (`compute_drc`); no dashboard 
 
 ## Build now
 
-1. **Share landing + share event** — record a `share` event in the api (count only, no content) and
-   give the card's link a sharer reference (`ref=<result id>`); `/daily?date=…&ref=…` shows the
-   sharer's non-spoiler card above "Play today" (`apps/puzzled/src/features/daily`, `crates/puzzled-server`).
-2. **Challenge link** — a server-issued result id in the link; after the friend finishes, the result
-   screen shows both non-spoiler results (`features/daily/lib/result-share.ts`, `PuzzleService`).
-3. **Tomorrow teaser** — "Tomorrow: <featured game>" from the stored rotation on the result screen and
-   already-played view (`game-result.tsx`, `already-completed-view.tsx`).
+Items 1 to 3 are built (share landing, challenge link, tomorrow teaser); this section lists what is left.
+
+- **Share landing.** `ShareResult` (PuzzleService) writes `result_shares` from the player's own accepted
+  finish and returns its id; the link is `/daily?ref=<id>`, so the first-touch cookie credits the visit
+  and any sign-up to the share (`account_attribution.ref`). `share_count` counts share taps. The
+  landing (`features/daily/components/shared-result-landing.tsx`) reads `GetSharedResult`, which
+  returns only card facts. Measure: `result_shares` joined to `account_attribution.ref`.
+- **Challenge.** The landing remembers the share in the browser; the result screen and the
+  already-played view show both results when the same module and day are finished.
+- **Tomorrow teaser.** `getTomorrowsFreeGame` in `lib/free-rotation.ts` reads the rotation for the next
+  product day; the home page uses the same function.
+
 4. **Save-your-streak ask** — server decides from streak length and recovery methods; client renders
    a quiet mark, then a card at the result screen, capped per week (`gamification`, `identity`).
 5. **Usual-time reminder** — schedule the existing `daily-reminder` job per player at their median

@@ -27,7 +27,7 @@ import {
 	type PersonalDailyResult,
 	type StreakInfo,
 } from '@/lib/api/server'
-import { FREE_GAME_ROTATION, getTodaysFreeGame } from '@/lib/free-rotation'
+import { getTodaysFreeGame, getTomorrowsFreeGame } from '@/lib/free-rotation'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { currentUser, type IdentityUser } from '@/lib/identity/server'
 import { logger } from '@/lib/logger'
@@ -280,8 +280,7 @@ export default async function HomePage({ params }: Props) {
 	// placeholder for, rather than guest copy that may be wrong for a member?
 	const hasProgressIdentity = await hasServerProgressIdentity()
 	const todaysFreeGame = getTodaysFreeGame()
-	const todayIndex = FREE_GAME_ROTATION.indexOf(todaysFreeGame)
-	const tomorrowsFreeGame = FREE_GAME_ROTATION[(todayIndex + 1) % FREE_GAME_ROTATION.length]
+	const tomorrowsFreeGame = getTomorrowsFreeGame()
 
 	const gameMetadata = getAllGameMetadata()
 	const metadataBySlug = new Map(gameMetadata.map((game) => [game.slug, game]))
