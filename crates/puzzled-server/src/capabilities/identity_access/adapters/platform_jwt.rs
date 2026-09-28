@@ -3,7 +3,7 @@
 //!
 //! Caller-supplied `x-user-id` is never trusted as identity. Protected routes
 //! must present a Bearer JWT whose signature verifies against Platform JWKS
-//! (or an explicit test/dev decoding key). `sub` is the only accepted user id.
+//! (production has no pinned-key override). `sub` is the only accepted user id.
 //!
 //! JWKS is fetched off the request path: [`spawn_jwks_refresher`] runs one
 //! async task that loads the key set at startup, refreshes it every
@@ -155,6 +155,13 @@ fn request_jwks_refresh() {
 }
 
 #[cfg(test)]
+fn clear_jwks_for_test() {
+    *JWKS_CACHE
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+}
+
+#[cfg(test)]
 static TEST_DECODING_KEY_PEM: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
 
 /// Shared lock so tests that install/clear the process-local test key do not
@@ -216,25 +223,6 @@ fn test_decoding_key() -> Option<DecodingKey> {
     DecodingKey::from_rsa_pem(pem.as_bytes()).ok()
 }
 
-/// Parse `PLATFORM_JWT_PUBLIC_KEY_PEM`, tolerating JSON-escaped newlines.
-///
-/// Returns `None` when the value is not a loadable RSA PEM so callers can fall
-/// through to JWKS instead of failing closed on a corrupted env secret.
-fn decoding_key_from_pem_env(pem: &str) -> Option<DecodingKey> {
-    let trimmed = pem.trim();
-    if trimmed.is_empty() {
-        return None;
-    }
-    // Prefer real newlines; also accept literal `\n` sequences from secret JSON.
-    let candidates = [trimmed.to_string(), trimmed.replace("\\n", "\n")];
-    for candidate in candidates {
-        if let Ok(key) = DecodingKey::from_rsa_pem(candidate.as_bytes()) {
-            return Some(key);
-        }
-    }
-    None
-}
-
 /// Extract Bearer token from Authorization header only (cookies may be opaque
 /// session ids — those are not Platform JWTs and fail closed here).
 #[must_use]
@@ -288,7 +276,9 @@ fn validation_config_inner(
     issuer: Option<String>,
     enforce: bool,
 ) -> Result<Validation, JwtError> {
+    // Exactly RS256: `none` and HS* (public key as HMAC secret) are refused.
     let mut v = Validation::new(Algorithm::RS256);
+    v.algorithms = vec![Algorithm::RS256];
     v.validate_exp = true;
     match audience {
         Some(aud) => v.set_audience(&[aud]),
@@ -339,7 +329,9 @@ fn jwks_cache_from_document(doc: JwksDocument) -> Result<JwksCache, JwtError> {
     let mut keys = HashMap::new();
     let mut unkeyed = Vec::new();
     for jwk in doc.keys {
-        if jwk.kty != "RSA" {
+        // Only RSA keys that declare RS256 (or no alg) are accepted; verification
+        // is pinned to RS256, so any other declared alg would never verify.
+        if jwk.kty != "RSA" || jwk.alg.as_deref().is_some_and(|a| a != "RS256") {
             continue;
         }
         let Some(n) = jwk.n.as_deref() else { continue };
@@ -361,25 +353,14 @@ fn jwks_cache_from_document(doc: JwksDocument) -> Result<JwksCache, JwtError> {
     Ok(JwksCache { keys, unkeyed })
 }
 
-/// True when `PLATFORM_JWT_PUBLIC_KEY_PEM` holds a loadable key, so JWKS is never consulted.
-fn static_pem_configured() -> bool {
-    std::env::var("PLATFORM_JWT_PUBLIC_KEY_PEM")
-        .ok()
-        .and_then(|pem| decoding_key_from_pem_env(&pem))
-        .is_some()
-}
-
 /// Start the JWKS refresher on the current tokio runtime.
 ///
-/// Returns `None` when a static PEM key is configured (JWKS unused). Call once
-/// from the composition root. The first fetch starts immediately; later ones
+/// Returns `None` only if the HTTP client cannot be built. Call once from the
+/// composition root. The first fetch starts immediately; later ones
 /// run every `JWKS_CACHE_TTL`, on an early-refresh request (no sooner than
 /// `JWKS_MIN_REFRESH_INTERVAL` after the last fetch), or on retry backoff after
 /// a failure. The last good key set keeps serving while a refresh fails.
 pub fn spawn_jwks_refresher() -> Option<tokio::task::JoinHandle<()>> {
-    if static_pem_configured() {
-        return None;
-    }
     let client = match reqwest::Client::builder()
         .timeout(JWKS_FETCH_TIMEOUT)
         .build()
@@ -460,25 +441,6 @@ pub fn verify_platform_jwt(token: &str) -> Result<VerifiedIdentity, JwtError> {
             email: claims.email.clone(),
             is_admin: is_admin_from_claims(&claims),
         });
-    }
-
-    // Optional static PEM via env for single-tenant / offline.
-    // Platform secret injection may store PEM with literal `\n` (JSON-escaped).
-    // Accept real newlines and escaped form. On parse failure, fall through to
-    // JWKS — a broken PEM must not mask a working key set (live residual:
-    // literal `\n` PEM → identity_required_for_submit for all Bearer JWTs).
-    if let Ok(pem) = std::env::var("PLATFORM_JWT_PUBLIC_KEY_PEM") {
-        if !pem.trim().is_empty() {
-            if let Some(key) = decoding_key_from_pem_env(&pem) {
-                let claims = decode_with_key(token, &key)?;
-                return Ok(VerifiedIdentity {
-                    user_id: claims.sub.trim().to_string(),
-                    display_name: claims.name.clone(),
-                    email: claims.email.clone(),
-                    is_admin: is_admin_from_claims(&claims),
-                });
-            }
-        }
     }
 
     let Some(cache) = jwks_snapshot() else {
@@ -670,9 +632,7 @@ mod tests {
     fn unloaded_jwks_fails_closed_without_fetching_inline() {
         let _g = lock();
         clear_test_decoding_key();
-        if std::env::var("PLATFORM_JWT_PUBLIC_KEY_PEM").is_ok() {
-            return; // static PEM path; JWKS not consulted
-        }
+        clear_jwks_for_test();
         let token = {
             let claims = MintClaims {
                 sub: "cold_start".into(),
@@ -708,31 +668,159 @@ mod tests {
         clear_test_decoding_key();
     }
 
+    const TEST_N: &str = "nHAYL32Ej3o2Ub7lyRntvTpe-rQi9GgfznwVv5MY5xawWwyEzfNPoPbcEO_RZ4tAloF-F0ZYq_LZzlSQdNeR4r3pkJUS9kl-3DF6D8dzzBcOpLx2g70Arw2gtL5qIPF43v8RsAlnjgacpwwDv_vzTb8K0dgNMbmdacduabkEVXuDj5zn6AVi_RmB5LcK5KyXxoNW0Lf1Day2St8gOZj_pH0MYE37Eaa105fYPmO8h-fV2yg00pbss1K1PvTbwspfS4AZD9vdleyXKFoBXHciM4vXgHn5GlFZJ1V5A_kVFc74xsWNHAH-M8tHR2u4-yxCYg4efdcWi68SAqqYUkfKIQ";
+
+    fn test_jwks(kid: &str, alg: Option<&str>) -> JwksDocument {
+        let mut key = serde_json::json!({"kty": "RSA", "kid": kid, "n": TEST_N, "e": "AQAB"});
+        if let Some(alg) = alg {
+            key["alg"] = alg.into();
+        }
+        serde_json::from_value(serde_json::json!({ "keys": [key] })).expect("jwks doc")
+    }
+
+    fn mint_with_kid(kid: &str, sub: &str) -> String {
+        let claims = MintClaims {
+            sub: sub.into(),
+            name: "Jwks".into(),
+            exp: chrono::Utc::now().timestamp() + 3600,
+            scope: None,
+        };
+        let mut header = JwtHeader::new(Algorithm::RS256);
+        header.kid = Some(kid.into());
+        let enc = EncodingKey::from_rsa_pem(TEST_PRIV_PEM.as_bytes()).expect("enc");
+        encode(&header, &claims, &enc).expect("mint")
+    }
+
+    /// Consume any pending early-refresh permit so a test starts from "none requested".
+    fn refresh_requested() -> bool {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_time()
+            .build()
+            .expect("rt");
+        rt.block_on(async {
+            tokio::time::timeout(Duration::from_millis(20), jwks_refresh_signal().notified())
+                .await
+                .is_ok()
+        })
+    }
+
     #[test]
-    fn pem_env_accepts_literal_backslash_n() {
+    fn token_verifies_against_jwks_key() {
         let _g = lock();
         clear_test_decoding_key();
-        let escaped = TEST_PUB_PEM.replace('\n', "\\n");
-        assert!(
-            escaped.contains("\\n") && !escaped.contains('\n'),
-            "fixture must be single-line escaped form"
-        );
-        let key = decoding_key_from_pem_env(&escaped).expect("escaped PEM must load");
-        let token = {
-            install_test_decoding_key_pem(TEST_PUB_PEM).expect("install");
-            let claims = MintClaims {
-                sub: "escaped_pem_user".into(),
-                name: "Escaped".into(),
-                exp: chrono::Utc::now().timestamp() + 3600,
-                scope: None,
-            };
-            let enc = EncodingKey::from_rsa_pem(TEST_PRIV_PEM.as_bytes()).expect("enc");
-            encode(&JwtHeader::new(Algorithm::RS256), &claims, &enc).expect("mint")
-        };
+        store_jwks(jwks_cache_from_document(test_jwks("k1", Some("RS256"))).expect("cache"));
+        let _ = refresh_requested();
+        let id = verify_platform_jwt(&mint_with_kid("k1", "jwks_user")).expect("verified");
+        assert_eq!(id.user_id, "jwks_user");
+        assert!(!refresh_requested(), "known kid must not trigger a refetch");
+        clear_jwks_for_test();
+    }
+
+    #[test]
+    fn unknown_kid_requests_one_refetch() {
+        let _g = lock();
         clear_test_decoding_key();
-        let claims = decode_with_key(&token, &key).expect("decode with escaped PEM key");
-        assert_eq!(claims.sub, "escaped_pem_user");
-        // Garbage PEM falls through (None) rather than panicking.
-        assert!(decoding_key_from_pem_env("not-a-pem").is_none());
+        store_jwks(jwks_cache_from_document(test_jwks("k1", None)).expect("cache"));
+        let _ = refresh_requested();
+        // Verifies via the fallback key scan, but the rotation signal must fire once.
+        let _ = verify_platform_jwt(&mint_with_kid("rotated", "u"));
+        let _ = verify_platform_jwt(&mint_with_kid("rotated", "u"));
+        assert!(refresh_requested(), "unknown kid must request a refetch");
+        assert!(!refresh_requested(), "requests coalesce into one permit");
+        clear_jwks_for_test();
+    }
+
+    #[test]
+    fn fetch_jwks_reads_document_over_http() {
+        let _g = lock();
+        let body = serde_json::json!({"keys": [{"kty":"RSA","kid":"k1","n":TEST_N,"e":"AQAB"}]})
+            .to_string();
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("rt");
+        let cache = rt.block_on(async {
+            use tokio::io::{AsyncReadExt, AsyncWriteExt};
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind");
+            let addr = listener.local_addr().expect("addr");
+            tokio::spawn(async move {
+                let (mut sock, _) = listener.accept().await.expect("accept");
+                let mut buf = [0u8; 1024];
+                let _ = sock.read(&mut buf).await;
+                let resp = format!(
+                    "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{}",
+                    body.len(),
+                    body
+                );
+                sock.write_all(resp.as_bytes()).await.expect("write");
+            });
+            fetch_jwks(&reqwest::Client::new(), &format!("http://{addr}/jwks.json"))
+                .await
+                .expect("fetch")
+        });
+        assert!(cache.keys.contains_key("k1"));
+    }
+
+    #[test]
+    fn jwk_declaring_other_algorithm_is_skipped() {
+        assert!(matches!(
+            jwks_cache_from_document(test_jwks("k1", Some("RS512"))),
+            Err(JwtError::JwksUnavailable(_))
+        ));
+    }
+
+    #[test]
+    fn env_pinned_key_is_ignored_in_production_path() {
+        let _g = lock();
+        clear_test_decoding_key();
+        clear_jwks_for_test();
+        // SAFETY-free on edition 2021; guarded by the shared test lock.
+        std::env::set_var("PLATFORM_JWT_PUBLIC_KEY_PEM", TEST_PUB_PEM);
+        // A token signed by the env-pinned key must NOT verify without JWKS.
+        let token = mint_with_kid("k1", "pinned_attacker");
+        let err = verify_platform_jwt(&token).unwrap_err();
+        assert!(matches!(err, JwtError::JwksUnavailable(_)), "got {err:?}");
+        // And with a JWKS holding a different key it must fail too.
+        let other = serde_json::from_value(serde_json::json!({"keys": [{
+            "kty":"RSA","kid":"k1","e":"AQAB",
+            "n":"qN9GfKa3xA32VKRG51lgzYMrRaqWVekUl_KG24NBoE5bWNtLx9XMfIHfpDXsEoiAhx8ZVosziI3U3Cp2CNKWXxF4qm0o6CsMpbEeeHEJ9qrbh_NvKTfomRHUjAk3s9V7LikBP-8iXOJ03fN281t2T3AtOLt26XjhPIbT3MFzGiLiPanylAmF7H78emfbBVNuCtpOAcwTljC4K3iP90SHEDkBTcMbYxps83a45tGefz5R-8sv6n5gCWlo98QgDVefd_B_IzMMzWikBmJqVmsJ7IdMcnJEbvxsDxg_WqdNVzhCAG2BSo9wsp5SPZNKq4s7d8-i-tafBSTbBKJi4Qwk3w"
+        }]})).expect("doc");
+        store_jwks(jwks_cache_from_document(other).expect("cache"));
+        assert!(verify_platform_jwt(&token).is_err());
+        std::env::remove_var("PLATFORM_JWT_PUBLIC_KEY_PEM");
+        clear_jwks_for_test();
+    }
+
+    #[test]
+    fn algorithm_confusion_is_refused() {
+        use base64::Engine as _;
+        let _g = lock();
+        clear_test_decoding_key();
+        store_jwks(jwks_cache_from_document(test_jwks("k1", None)).expect("cache"));
+        let exp = chrono::Utc::now().timestamp() + 3600;
+        let b64 = |v: serde_json::Value| {
+            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(v.to_string())
+        };
+        // alg=none, unsigned.
+        let none = format!(
+            "{}.{}.",
+            b64(serde_json::json!({"alg":"none","typ":"JWT","kid":"k1"})),
+            b64(serde_json::json!({"sub":"evil","exp":exp}))
+        );
+        assert!(verify_platform_jwt(&none).is_err(), "alg=none accepted");
+        // HS256 signed with the public key PEM as the HMAC secret.
+        let mut header = JwtHeader::new(Algorithm::HS256);
+        header.kid = Some("k1".into());
+        let hs = encode(
+            &header,
+            &serde_json::json!({"sub":"evil","exp":exp}),
+            &EncodingKey::from_secret(TEST_PUB_PEM.as_bytes()),
+        )
+        .expect("mint hs256");
+        assert!(
+            verify_platform_jwt(&hs).is_err(),
+            "HS256 with public key accepted"
+        );
+        clear_jwks_for_test();
     }
 }
