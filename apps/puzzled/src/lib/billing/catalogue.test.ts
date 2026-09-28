@@ -162,6 +162,15 @@ describe('commercial catalogue', () => {
 			}
 		}
 		expect(FEATURES.family.implies).toContain('plus')
+		// A product's prices grant the same map, so the declaration is the same
+		// whether Money reads it per product or per price.
+		for (const product of PRODUCTS) {
+			const maps = PLANS.filter((plan) => plan.product === product.id).map((plan) =>
+				JSON.stringify(Object.entries(plan.grants).sort()),
+			)
+			expect(maps.length, product.id).toBeGreaterThan(0)
+			expect(new Set(maps).size, product.id).toBe(1)
+		}
 		// The seat count lives in the file's `seats` grant and nowhere else.
 		expect(planSeats(planById('family_monthly')!)).toBe(FAMILY_MAX_MEMBERS)
 		expect(FAMILY_MAX_MEMBERS).toBe(Number(planById('family_monthly')!.grants.seats))
