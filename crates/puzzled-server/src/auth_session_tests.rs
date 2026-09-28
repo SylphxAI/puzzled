@@ -138,3 +138,81 @@ async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
     .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 }
+
+/// The Auth subject to player map against a real database: both subject forms
+/// reach the same player, the new form is never decoded, and the id map export
+/// links a player whose subject changed while they were away.
+#[tokio::test]
+async fn both_auth_subject_forms_reach_the_same_player() {
+    use crate::capabilities::identity_access::adapters::auth_subjects::{
+        player_for, LINK_FROM_ID_MAP, SPLIT_PLAYERS_AFTER_LINK,
+    };
+    let Some(pool) = crate::billing_flow_tests::fresh_database().await else {
+        return;
+    };
+    const OLD: &str = "principal-0199aa10-7b2c-7d3e-8f00-1234567890ab";
+    const NEW: &str = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    let existing = uuid::Uuid::parse_str("0199aa10-7b2c-7d3e-8f00-1234567890ab").unwrap();
+
+    // Today's form keeps the player id Puzzled always derived, now as a row.
+    assert_eq!(player_for(&pool, OLD, None).await.unwrap(), existing);
+    assert_eq!(player_for(&pool, OLD, None).await.unwrap(), existing);
+
+    // After Auth's cut the new form, with the legacy subject, is the same player.
+    assert_eq!(player_for(&pool, NEW, Some(OLD)).await.unwrap(), existing);
+    // And stays so without it.
+    assert_eq!(player_for(&pool, NEW, None).await.unwrap(), existing);
+
+    // A new person gets a fresh UUIDv7, stable across sign-ins.
+    let fresh = player_for(&pool, "usr_01kmp4wyhhfgxsyrjvh8e0tkkg", None)
+        .await
+        .unwrap();
+    assert_eq!(fresh.get_version_num(), 7);
+    assert_eq!(
+        player_for(&pool, "usr_01kmp4wyhhfgxsyrjvh8e0tkkg", None)
+            .await
+            .unwrap(),
+        fresh
+    );
+
+    // A player away through the cut: linked from the id map export. One who
+    // was first seen in the new form without the legacy subject is listed.
+    let away_old = "principal-0199aa10-7b2c-7d3e-8f00-00000000000a";
+    let away_new = "usr_01kmp4wyhhfgxsyrjvh8e0t00a";
+    let split_old = "principal-0199aa10-7b2c-7d3e-8f00-00000000000b";
+    let split_new = "usr_01kmp4wyhhfgxsyrjvh8e0t00b";
+    let split_player = player_for(&pool, split_new, None).await.unwrap();
+    let mut tx = pool.begin().await.unwrap();
+    sqlx::query("CREATE TEMP TABLE id_map_import (old_text text, new_text text) ON COMMIT DROP")
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    for (old, new) in [(OLD, NEW), (away_old, away_new), (split_old, split_new)] {
+        sqlx::query("INSERT INTO id_map_import VALUES ($1, $2)")
+            .bind(old)
+            .bind(new)
+            .execute(&mut *tx)
+            .await
+            .unwrap();
+    }
+    sqlx::query(LINK_FROM_ID_MAP)
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    let split: Vec<(String, String)> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "SELECT old_text, new_text FROM ({SPLIT_PLAYERS_AFTER_LINK}) q"
+    )))
+    .fetch_all(&mut *tx)
+    .await
+    .unwrap();
+    tx.commit().await.unwrap();
+    assert_eq!(split, [(split_old.to_string(), split_new.to_string())]);
+    assert_eq!(
+        player_for(&pool, away_new, None).await.unwrap(),
+        uuid::Uuid::parse_str("0199aa10-7b2c-7d3e-8f00-00000000000a").unwrap()
+    );
+    assert_eq!(
+        player_for(&pool, split_new, None).await.unwrap(),
+        split_player
+    );
+}
