@@ -92,6 +92,12 @@ jobs:
         run: bun run lint
         working-directory: apps/puzzled
 
+      # The brand home is the source of truth for the mark, the icons and the
+      # brand colours: fails when a master changed without a rebuild, or when a
+      # surface file in public/ stopped being a copy of the brand file.
+      - name: Brand home is current (masters, generated files, surface copies)
+        run: python3 brand/build.py --check
+
       - name: Proto contract gate (buf lint + breaking)
         run: bun run check:proto-buf
 

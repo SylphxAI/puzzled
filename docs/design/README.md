@@ -3,8 +3,11 @@
 **Status:** current brand and interface system, landed 2026-09-26. It replaces the
 "midnight study x arcade" direction in `notes/redesign-spec.md` and the S3 token
 slice in `docs/program/website-refactor/s3-direction.md`.
-**Code:** tokens live in `apps/puzzled/src/app/globals.css` (`@theme` and `.dark`); a
-token change updates this file in the same pull request.
+**Code:** the brand colours resolve from [`brand/tokens.css`](../../brand/tokens.css),
+whose source is `brand/tokens.json` ([usage sheet](../../brand/README.md)); the rest
+of the tokens live in `apps/puzzled/src/app/globals.css` (`@theme` and `.dark`). A
+colour change lands in `brand/tokens.json` first, then here and in `globals.css`, in
+the same pull request.
 
 ## Brand
 
@@ -25,18 +28,22 @@ token change updates this file in the same pull request.
 
 ### Mark and wordmark
 
-| Asset | File | Notes |
-| --- | --- | --- |
-| Symbol (app icon) | `apps/puzzled/public/brand/mark.svg` | A question-mark hook whose dot is one amber tile: the piece you are looking for. 64-unit canvas, 8-unit stroke, round caps |
-| Symbol, one colour | `apps/puzzled/public/brand/mark-mono.svg` | `currentColor`; also the Safari pinned-tab mask |
-| Wordmark | `apps/puzzled/public/brand/wordmark.svg` | "Puzzled" in Fraunces at weight 620, as outlines (no font needed) |
-| Favicon | `apps/puzzled/public/favicon.svg` | Switches to a paper tile in dark mode |
-| Raster icons | `apps/puzzled/public/icons/*`, `favicon.ico`, `favicon.png`, `apple-touch-icon.png` | `bun run generate:brand-icons` renders them from `mark.svg` (rounded, square for iOS, maskable with a safe zone) |
-| Social image | `apps/puzzled/src/app/[locale]/og/route.tsx` | 1200×630, paper ground; the right panel takes the game's colour, or ink for site pages |
-| Result card | `apps/puzzled/src/features/daily/lib/result-card-render.ts` | 1080×1080 PNG, paper ground and the game's colour band; no solution can reach it |
+The mark is a question-mark hook whose dot is one amber tile: the piece you are
+looking for. 64-unit canvas, 8-unit stroke, round caps. The wordmark is "Puzzled"
+in Fraunces at weight 620, as outlines (no font needed).
+
+The masters, the generated icons, the tokens and where each file came from live in
+[`brand/`](../../brand/README.md), the brand's usage sheet. It lists what each file
+is for and which surface copies it.
 
 React renders the mark and wordmark through `BrandMark` and `Wordmark` in
 `src/shared/components/brand/mark.tsx`, which share their path data with the OG route.
+Those inline copies, the 1200×630 Open Graph route
+(`src/app/[locale]/og/route.tsx`, paper ground, the right panel in the game's colour
+or ink for site pages) and the 1080×1080 result card
+(`src/features/daily/lib/result-card-render.ts`, paper ground and the game's colour
+band, no solution can reach it) are still drawn in code; the brand usage sheet lists
+them under "Surfaces still to move".
 
 ## Tokens
 
@@ -54,6 +61,9 @@ React renders the mark and wordmark through `BrandMark` and `Wordmark` in
 | Accent text | `#6e4a00` | `#f7cf73` | text that carries the accent |
 | Focus ring | `#2458d6` | `#7ea6ff` | 2px, offset 2px |
 | Success / error / info | `#176a3b` / `#a82b23` / `#2458d6` | `#6fcf8e` / `#f27b70` / `#7ea6ff` | states |
+
+The hex values above are the record of why each role exists; the values the code
+resolves are the tokens in [`brand/tokens.json`](../../brand/tokens.json).
 
 Dark mode is its own warm charcoal palette, not an inversion. The pastel game fields
 keep their colour in dark mode, as printed colour does.
