@@ -9,73 +9,14 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server'
-import { RateLimiterRedis } from 'rate-limiter-flexible'
-import { env } from '@/lib/env'
 import { auth } from '@/lib/identity/server'
 import { logger } from '@/lib/logger'
-import { redis } from '@/lib/redis'
 import { isAdminRole } from '@/lib/roles'
-
-/**
- * Constant-time string comparison to prevent timing attacks
- */
-function secureCompare(a: string, b: string): boolean {
-	if (typeof a !== 'string' || typeof b !== 'string') {
-		return false
-	}
-
-	const encoder = new TextEncoder()
-	const aBytes = encoder.encode(a)
-	const bBytes = encoder.encode(b)
-
-	const maxLen = Math.max(aBytes.length, bBytes.length)
-	let result = aBytes.length === bBytes.length ? 0 : 1
-
-	for (let i = 0; i < maxLen; i++) {
-		const aByte = i < aBytes.length ? aBytes[i] : 0
-		const bByte = i < bBytes.length ? bBytes[i] : 0
-		result |= aByte ^ bByte
-	}
-
-	return result === 0
-}
-
-// Strict rate limiting for admin secret attempts (3 per hour per IP).
-// Construct on first use so importing this module does not require REDIS_URL at web boot.
-let _adminSecretLimiter: RateLimiterRedis | null = null
-
-function getAdminSecretLimiter(): RateLimiterRedis {
-	if (!_adminSecretLimiter) {
-		_adminSecretLimiter = new RateLimiterRedis({
-			storeClient: redis,
-			keyPrefix: 'puzzled:admin-secret',
-			points: 3,
-			duration: 3600, // 1 hour
-		})
-	}
-	return _adminSecretLimiter
-}
-
-const adminSecretRatelimit = {
-	async limit(identifier: string): Promise<{ success: boolean }> {
-		try {
-			await getAdminSecretLimiter().consume(identifier)
-			return { success: true }
-		} catch {
-			return { success: false }
-		}
-	},
-}
 
 /**
  * Log admin access attempts for security auditing
  */
-async function logAdminAccess(
-	method: 'secret' | 'session',
-	success: boolean,
-	ip: string,
-	userId?: string,
-) {
+async function logAdminAccess(method: 'session', success: boolean, ip: string, userId?: string) {
 	const timestamp = new Date().toISOString()
 	const logEntry = {
 		timestamp,
@@ -85,7 +26,7 @@ async function logAdminAccess(
 		userId: userId || 'anonymous',
 	}
 	logger.warn('admin.access-attempt', logEntry)
-	// Record the attempt in audit_logs; Redis stays the rate-limit counter only.
+	// Record the attempt in audit_logs.
 	const { logAdminAccessAttempt } = await import('@/lib/audit')
 	await logAdminAccessAttempt({ method, success, ip, userId })
 }
@@ -93,37 +34,13 @@ async function logAdminAccess(
 /** Admin check result */
 export type AdminCheckResult =
 	| { allowed: true; userId: string }
-	| { allowed: false; reason: 'unauthorized' | 'rate_limited' }
+	| { allowed: false; reason: 'unauthorized' }
 
 /**
  * Check if request is from an admin
  */
 export async function checkAdminWithMfa(request: NextRequest): Promise<AdminCheckResult> {
 	const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
-
-	// Check header secret first (for programmatic access)
-	const adminSecret = request.headers.get('x-admin-secret')
-	if (adminSecret) {
-		const { success: rateLimitOk } = await adminSecretRatelimit.limit(ip)
-		if (!rateLimitOk) {
-			await logAdminAccess('secret', false, ip)
-			return { allowed: false, reason: 'rate_limited' }
-		}
-
-		if (!env.ADMIN_SECRET) {
-			await logAdminAccess('secret', false, ip)
-			return { allowed: false, reason: 'unauthorized' }
-		}
-
-		const isValidSecret = secureCompare(adminSecret, env.ADMIN_SECRET)
-		await logAdminAccess('secret', isValidSecret, ip)
-
-		if (!isValidSecret) {
-			return { allowed: false, reason: 'unauthorized' }
-		}
-
-		return { allowed: true, userId: 'admin-secret' }
-	}
 
 	// Check session-based auth
 	try {
@@ -152,10 +69,5 @@ function unauthorized() {
 export function adminCheckResponse(result: AdminCheckResult): NextResponse | null {
 	if (result.allowed) return null
 
-	switch (result.reason) {
-		case 'rate_limited':
-			return NextResponse.json({ error: 'Too many attempts' }, { status: 429 })
-		default:
-			return unauthorized()
-	}
+	return unauthorized()
 }

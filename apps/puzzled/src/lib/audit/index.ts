@@ -59,10 +59,10 @@ export async function logAdminAction(
 }
 
 /**
- * Log an admin access attempt (secret or session based)
+ * Log an admin access attempt (admin session)
  */
 export async function logAdminAccessAttempt(attempt: {
-	method: 'secret' | 'session'
+	method: 'session'
 	success: boolean
 	ip: string
 	userId?: string

@@ -56,21 +56,6 @@ describe('web presentation boot env', () => {
 			}),
 		).not.toThrow()
 	})
-
-	test('redis module import does not require REDIS_URL', async () => {
-		const previous = process.env.REDIS_URL
-		delete process.env.REDIS_URL
-		try {
-			const mod = await import('./redis')
-			expect(typeof mod.ratelimit.limit).toBe('function')
-		} finally {
-			if (previous === undefined) {
-				delete process.env.REDIS_URL
-			} else {
-				process.env.REDIS_URL = previous
-			}
-		}
-	})
 })
 
 describe('env accessors (SSOT)', () => {
@@ -79,20 +64,18 @@ describe('env accessors (SSOT)', () => {
 		expect(new Set(names).size).toBe(names.length)
 		expect(names).toContain('NODE_ENV')
 		expect(names).toContain('SYLPHX_PUBLIC_URL')
-		expect(names).toContain('ADMIN_SECRET')
 		expect(names).toContain('EMAIL_UNSUBSCRIBE_SECRET')
-		expect(names).toContain('REDIS_URL')
 		expect(names).toContain('DATABASE_URL')
 		expect(names).toContain('SYLPHX_AUTH_SECRET_KEY')
 	})
 
 	test('accessors are raw and lazy: no defaults, value read at call time', () => {
-		const previous = { ADMIN_SECRET: process.env.ADMIN_SECRET }
+		const previous = { EMAIL_UNSUBSCRIBE_SECRET: process.env.EMAIL_UNSUBSCRIBE_SECRET }
 		try {
-			delete process.env.ADMIN_SECRET
-			expect(env.ADMIN_SECRET).toBeUndefined()
-			process.env.ADMIN_SECRET = 'secret-at-call-time'
-			expect(env.ADMIN_SECRET).toBe('secret-at-call-time')
+			delete process.env.EMAIL_UNSUBSCRIBE_SECRET
+			expect(env.EMAIL_UNSUBSCRIBE_SECRET).toBeUndefined()
+			process.env.EMAIL_UNSUBSCRIBE_SECRET = 'secret-at-call-time'
+			expect(env.EMAIL_UNSUBSCRIBE_SECRET).toBe('secret-at-call-time')
 		} finally {
 			restoreEnv(previous)
 		}
