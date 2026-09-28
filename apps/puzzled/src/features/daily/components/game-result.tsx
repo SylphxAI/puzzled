@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { ChallengeComparison } from '@/features/daily/components/challenge-comparison'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
 import { TomorrowGameLine } from '@/features/daily/components/tomorrow-game-line'
-import { useShareId } from '@/features/daily/hooks/use-share-id'
+import { countShareTap, knownShareId, useWarmShareId } from '@/features/daily/hooks/use-share-id'
 import {
 	buildResultCard,
 	type ResultCardTile,
@@ -77,7 +77,7 @@ export function GameResultCard({
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
 	const tGames = useTranslations('games')
-	const shareIdFor = useShareId()
+	useWarmShareId(gameType, puzzleDate, mode === 'daily')
 	const [cardBusy, setCardBusy] = useState(false)
 	const [cardNotice, setCardNotice] = useState<string | null>(null)
 
@@ -117,9 +117,9 @@ export function GameResultCard({
 		setCardBusy(true)
 		setCardNotice(null)
 		try {
-			// A daily finish gets a server-issued share id so the card's link is the share landing.
-			const shareId =
-				mode === 'daily' ? await shareIdFor(gameType, puzzleDate ?? productDayKey()) : undefined
+			// The id was created when this screen showed, so the link is the share landing.
+			const shareId = mode === 'daily' ? knownShareId(gameType, puzzleDate) : undefined
+			if (mode === 'daily') countShareTap(gameType, puzzleDate)
 			const result = await shareRitualResultCard({
 				model: buildCard(shareId),
 				strings: cardStrings,

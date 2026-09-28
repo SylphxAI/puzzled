@@ -696,7 +696,8 @@ export const accountAttribution = pgTable('account_attribution', {
 export const resultShares = pgTable(
 	'result_shares',
 	{
-		id: uuid('id').primaryKey().defaultRandom(),
+		/** UUIDv7 minted by the api */
+		id: uuid('id').primaryKey(),
 		/** Platform user ID or guest-day ID (no FK) */
 		userId: uuid('user_id').notNull(),
 		gameSlug: text('game_slug').notNull(),
@@ -706,7 +707,7 @@ export const resultShares = pgTable(
 		attempts: integer('attempts').notNull(),
 		score: integer('score'),
 		timeSpentMs: integer('time_spent_ms'),
-		shareCount: integer('share_count').default(1).notNull(),
+		shareCount: integer('share_count').default(0).notNull(),
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		lastSharedAt: timestamp('last_shared_at').defaultNow().notNull(),
 	},

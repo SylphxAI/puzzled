@@ -22,12 +22,14 @@ pub struct SharedResult {
     pub time_spent_ms: Option<i32>,
 }
 
-/// One row per (player, module, product day). A repeat tap reuses the row and
-/// counts one more share, so `share_count` is the number of share taps.
-const UPSERT_SHARE_SQL: &str = r#"
+/// One row per (player, module, product day), created from the player's
+/// accepted ritual finish with an id minted by the api (UUIDv7). A repeat call
+/// returns the same row: the no-op update only makes `RETURNING` yield it.
+const ENSURE_SHARE_SQL: &str = r#"
 INSERT INTO result_shares
-    (user_id, game_slug, day_key, difficulty, status, attempts, score, time_spent_ms)
-SELECT user_id, game_slug, day_key, difficulty::text, status::text, attempts, score, time_spent_ms
+    (id, user_id, game_slug, day_key, difficulty, status, attempts, score, time_spent_ms)
+SELECT $4, user_id, game_slug, day_key, difficulty::text, status::text, attempts, score,
+       time_spent_ms
 FROM game_sessions
 WHERE user_id = $1
   AND game_slug = $2
@@ -37,28 +39,41 @@ WHERE user_id = $1
 ORDER BY completed_at DESC NULLS LAST
 LIMIT 1
 ON CONFLICT (user_id, game_slug, day_key) DO UPDATE
-SET share_count = result_shares.share_count + 1,
-    last_shared_at = now()
+SET user_id = result_shares.user_id
 RETURNING id
 "#;
 
-/// Record a share of the player's finish for `game_slug` on `day_key` and
-/// return the share id; None when the player has no accepted finish for it.
+/// The share for the player's finish of `game_slug` on `day_key`, created on
+/// first call; None when the player has no accepted finish for it. With `tap`
+/// the share is also counted once (`share_count` is the number of share taps).
 pub async fn record_share(
     pool: &PgPool,
     user_id: &str,
     game_slug: &str,
     day_key: &str,
+    tap: bool,
 ) -> Result<Option<Uuid>, String> {
     let uid =
         user_id_to_storage_uuid(user_id).ok_or_else(|| format!("invalid user id: {user_id}"))?;
-    sqlx::query_scalar::<_, Uuid>(UPSERT_SHARE_SQL)
+    let id = sqlx::query_scalar::<_, Uuid>(ENSURE_SHARE_SQL)
         .bind(uid)
         .bind(game_slug)
         .bind(day_key)
+        .bind(Uuid::now_v7())
         .fetch_optional(pool)
         .await
-        .map_err(|e| format!("result share write failed: {e}"))
+        .map_err(|e| format!("result share write failed: {e}"))?;
+    if let (true, Some(id)) = (tap, id) {
+        sqlx::query(
+            r#"UPDATE result_shares
+               SET share_count = share_count + 1, last_shared_at = now() WHERE id = $1"#,
+        )
+        .bind(id)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("result share count failed: {e}"))?;
+    }
+    Ok(id)
 }
 
 /// The shared result behind a link; None for an unknown id.

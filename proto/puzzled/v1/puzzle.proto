@@ -115,13 +115,16 @@ message CheckGuessResponse {
   string result_json = 1;
 }
 
-// ShareResult records that the signed-in or guest player shared their accepted
-// daily finish and returns the id the share link carries as `ref`. The server
-// reads the finish itself; the client sends no result facts.
+// ShareResult returns the id the share link carries as `ref` for the signed-in
+// or guest player's accepted daily finish, creating it on first call (the result
+// screen calls it when it shows, so the share tap needs no round trip). `tap`
+// also counts one share. The server reads the finish itself; the client sends
+// no result facts.
 message ShareResultRequest {
   string game_slug = 1;
   // Product day (YYYY-MM-DD); default = today.
   string puzzle_date = 2 [features.field_presence = EXPLICIT];
+  bool tap = 3;
 }
 
 message ShareResultResponse {

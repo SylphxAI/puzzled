@@ -38,12 +38,12 @@ use super::state::AppState;
 use crate::capabilities::billing::service::entitlement;
 use crate::capabilities::daily_pipeline;
 use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::fetch_puzzle_by_id;
-use crate::capabilities::puzzle_play::adapters::result_shares_db::{
-    load_shared_result, record_share,
-};
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
     adopt_guest_sessions, has_completed_session, has_ritual_completion, load_completed_session,
     persist_validated_session,
+};
+use crate::capabilities::puzzle_play::adapters::result_shares_db::{
+    load_shared_result, record_share,
 };
 use crate::proto::puzzled::v1::{
     CheckGuessRequest, CheckGuessResponse, DailyCompletion, GetDailyRequest, GetDailyResponse,
@@ -688,11 +688,23 @@ impl PuzzleService for PuzzleConnectService {
         }
         let uid = self.identity_for_submit(&ctx)?;
         self.adopt_guest_progress_if_needed(&ctx).await?;
-        let day = date_from_string(req.puzzle_date.as_deref()).unwrap_or(product_day_key(Utc::now()));
+        let day =
+            date_from_string(req.puzzle_date.as_deref()).unwrap_or(product_day_key(Utc::now()));
         let Some(pool) = &self.state.pool else {
-            return Err(ConnectError::new(ErrorCode::Unavailable, "share_unavailable"));
+            return Err(ConnectError::new(
+                ErrorCode::Unavailable,
+                "share_unavailable",
+            ));
         };
-        match record_share(pool, &uid, game_slug, &day.format("%Y-%m-%d").to_string()).await {
+        match record_share(
+            pool,
+            &uid,
+            game_slug,
+            &day.format("%Y-%m-%d").to_string(),
+            req.tap,
+        )
+        .await
+        {
             Ok(Some(id)) => Response::ok(ShareResultResponse {
                 share_id: id.to_string(),
                 ..Default::default()
@@ -715,7 +727,10 @@ impl PuzzleService for PuzzleConnectService {
         let id = uuid::Uuid::parse_str(req.share_id.trim())
             .map_err(|_| ConnectError::new(ErrorCode::NotFound, "share_not_found"))?;
         let Some(pool) = &self.state.pool else {
-            return Err(ConnectError::new(ErrorCode::Unavailable, "share_unavailable"));
+            return Err(ConnectError::new(
+                ErrorCode::Unavailable,
+                "share_unavailable",
+            ));
         };
         match load_shared_result(pool, id).await {
             Ok(Some(shared)) => Response::ok(GetSharedResultResponse {

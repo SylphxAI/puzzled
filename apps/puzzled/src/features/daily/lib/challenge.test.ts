@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { create } from '@bufbuild/protobuf'
+import { create, fromJson } from '@bufbuild/protobuf'
 import { GetSharedResultResponseSchema } from '@/gen/connect/puzzled/v1/puzzle_pb'
 import { attributionCookieValue } from '@/lib/attribution'
 import { CHALLENGE_KEY } from '@/lib/storage-keys'
@@ -74,6 +74,14 @@ describe('a shared result is non-spoiler by construction', () => {
 			difficulty: null,
 		})
 		expect(toSharedResult(create(GetSharedResultResponseSchema, { status: 'lost' })).attempts).toBe(
+			null,
+		)
+	})
+
+	test('a score of 0 is a real score; an absent one is not', () => {
+		const zero = fromJson(GetSharedResultResponseSchema, { status: 'won', score: 0 })
+		expect(toSharedResult(zero).score).toBe(0)
+		expect(toSharedResult(fromJson(GetSharedResultResponseSchema, { status: 'won' })).score).toBe(
 			null,
 		)
 	})

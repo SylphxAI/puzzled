@@ -5,6 +5,7 @@ import { Check, ChevronRight, Clock, Flame, Gauge, Share2, Target, Trophy, X } f
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
+import { useWarmShareId } from '@/features/daily/hooks/use-share-id'
 import { buildResultCard, resultCardStringsFrom } from '@/features/daily/lib/result-card'
 import { getHowToPlayConfig } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -90,6 +91,7 @@ export function AlreadyCompletedView({
 	// Get difficulty label for share text
 	const difficultyLabel = difficulty ? tDifficulty(difficulty) : null
 
+	useWarmShareId(gameSlug, puzzleDate, true)
 	const shareResult = useResultShare()
 	const handleShare = async () => {
 		// Non-spoiler card: module + day deep link only (no solution / grid).

@@ -144,7 +144,7 @@ export async function checkGuess(
  * share link carries as `ref`. Rejects when there is no finish to share.
  */
 export async function shareResult(
-	input: { gameSlug: string; puzzleDate?: string },
+	input: { gameSlug: string; puzzleDate?: string; tap?: boolean },
 	client?: PuzzleServiceClient,
 ): Promise<string> {
 	const c = client ?? createPuzzleServiceClient()
@@ -152,6 +152,7 @@ export async function shareResult(
 		create(ShareResultRequestSchema, {
 			gameSlug: input.gameSlug.trim(),
 			puzzleDate: input.puzzleDate?.trim() || undefined,
+			tap: input.tap ?? false,
 		}),
 	)
 	return res.shareId

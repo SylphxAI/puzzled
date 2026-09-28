@@ -7,7 +7,11 @@
  * result screen shows both results when the visitor finishes that same module
  * on that same day.
  */
-import type { GetSharedResultResponse } from '@/gen/connect/puzzled/v1/puzzle_pb'
+import { isFieldSet } from '@bufbuild/protobuf'
+import {
+	type GetSharedResultResponse,
+	GetSharedResultResponseSchema,
+} from '@/gen/connect/puzzled/v1/puzzle_pb'
 import { CHALLENGE_KEY } from '@/lib/storage-keys'
 import { buildResultCard, type ResultCardModel } from './result-card'
 
@@ -34,11 +38,13 @@ export function toSharedResult(res: GetSharedResultResponse): SharedResult {
 		gameSlug: res.gameSlug,
 		dayKey: res.puzzleDate,
 		status: res.status === 'won' ? 'won' : 'lost',
-		// The generated client reads an absent optional number as 0, and a module
-		// that keeps no attempts, score or timer stores 0 too: 0 means "not shown".
+		// Attempts is 0 for a module that keeps none. Score and time have field
+		// presence: absent is null, and a real 0 stays 0.
 		attempts: res.attempts > 0 ? res.attempts : null,
-		score: res.score > 0 ? res.score : null,
-		timeSpentMs: Number(res.timeSpentMs) > 0 ? Number(res.timeSpentMs) : null,
+		score: isFieldSet(res, GetSharedResultResponseSchema.field.score) ? res.score : null,
+		timeSpentMs: isFieldSet(res, GetSharedResultResponseSchema.field.timeSpentMs)
+			? Number(res.timeSpentMs)
+			: null,
 		difficulty: res.difficulty || null,
 	}
 }
