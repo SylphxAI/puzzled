@@ -6,6 +6,6 @@
 CREATE TABLE "auth_subjects" (
 	"subject" text PRIMARY KEY NOT NULL, -- identifiers: allow another system's id (Sylphx Auth subject), kept as published
 	"user_id" uuid NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+	"created_at" timestamp DEFAULT now() NOT NULL
 );
 CREATE INDEX "auth_subjects_user_id_idx" ON "auth_subjects" USING btree ("user_id");

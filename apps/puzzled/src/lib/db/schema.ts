@@ -655,6 +655,22 @@ export const billingLedger = pgTable(
 )
 
 /**
+ * The Sylphx Auth subject that signs a player in, kept as the exact text Auth
+ * published (another system's id, never decoded), mapped to Puzzled's own
+ * player id. Both `principal-<uuid>` and the TypeID `usr_…` reach the same
+ * player (owner standards/identifiers.md; cloud#10008). Written by the api.
+ */
+export const authSubjects = pgTable(
+	'auth_subjects',
+	{
+		subject: text('subject').primaryKey(), // identifiers: allow another system's id (Sylphx Auth subject), kept as published
+		userId: uuid('user_id').notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+	},
+	(table) => [index('auth_subjects_user_id_idx').on(table.userId)],
+)
+
+/**
  * First-touch campaign tags (utm_*, ref) of the landing that led to sign-up,
  * one row per account, written once when the account is created.
  */
