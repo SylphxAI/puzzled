@@ -18,6 +18,8 @@ RUN cd packages/ui && bun run build
 
 # 4. Copy full source
 COPY apps/puzzled ./apps/puzzled
+# The brand home: globals.css imports brand/tokens.css.
+COPY brand ./brand
 
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 SKIP_ENV_VALIDATION=1
 
