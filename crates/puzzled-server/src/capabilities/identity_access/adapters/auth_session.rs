@@ -20,6 +20,9 @@ use axum::response::Response;
 use base64::Engine;
 use serde_json::Value;
 
+use sqlx::PgPool;
+
+use super::auth_subjects;
 use super::platform_jwt::VerifiedIdentity;
 
 /// Internal header carrying the verified end user (base64url JSON).
@@ -40,6 +43,8 @@ pub struct AuthSessions {
     http: reqwest::Client,
     auth_url: String,
     cache: Arc<Mutex<Cache>>,
+    /// Where the Auth subject to player map lives ([`super::auth_subjects`]).
+    pool: Option<PgPool>,
 }
 
 impl AuthSessions {
@@ -52,7 +57,15 @@ impl AuthSessions {
                 .unwrap_or_default(),
             auth_url: auth_url.trim_end_matches('/').to_string(),
             cache: Arc::new(Mutex::new(HashMap::new())),
+            pool: None,
         }
+    }
+
+    /// Resolve players through the database's subject map.
+    #[must_use]
+    pub fn with_pool(mut self, pool: Option<PgPool>) -> Self {
+        self.pool = pool;
+        self
     }
 
     /// `SYLPHX_AUTH_URL` (bound by Enable Auth), else `https://api.sylphx.com`.
@@ -114,7 +127,25 @@ impl AuthSessions {
         if !response.status().is_success() {
             return None;
         }
-        identity_from_session(&response.json::<Value>().await.ok()?)
+        let principal = principal_from_session(&response.json::<Value>().await.ok()?)?;
+        let user_id = match &self.pool {
+            Some(pool) => auth_subjects::player_for(
+                pool,
+                &principal.subject,
+                principal.legacy_subject.as_deref(),
+            )
+            .await
+            .map_err(|error| tracing::warn!(%error, "auth subject lookup failed"))
+            .ok()?,
+            // No database: nothing is stored, so only the old form maps.
+            None => auth_subjects::legacy_player_id(&principal.subject)?,
+        };
+        Some(VerifiedIdentity {
+            user_id: user_id.to_string(),
+            display_name: principal.display_name,
+            email: principal.email,
+            is_admin: false,
+        })
     }
 }
 
@@ -127,18 +158,21 @@ fn token_key(token: &str, user_agent: &str) -> [u8; 32] {
     hasher.finalize().into()
 }
 
-/// Puzzled's player id for an Auth principal: `principal-<uuid>` → `<uuid>`.
-#[must_use]
-pub fn user_id_for_principal(principal_id: &str) -> Option<String> {
-    let raw = principal_id
-        .strip_prefix("principal-")
-        .unwrap_or(principal_id);
-    uuid::Uuid::parse_str(raw).ok().map(|id| id.to_string())
+/// The principal a session read reports: the Auth subject as published and,
+/// during Auth's id migration (cloud#10008, cloud#10026), the subject it
+/// replaced.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SessionPrincipal {
+    pub subject: String,
+    pub legacy_subject: Option<String>,
+    pub display_name: Option<String>,
+    pub email: Option<String>,
 }
 
-/// Read `GetCurrentSessionResponse` (snake or camel case).
+/// Read `GetCurrentSessionResponse` (snake or camel case). An inactive
+/// principal is no principal.
 #[must_use]
-pub fn identity_from_session(body: &Value) -> Option<VerifiedIdentity> {
+pub fn principal_from_session(body: &Value) -> Option<SessionPrincipal> {
     let session = body.get("session").unwrap_or(body);
     let principal = session.get("principal")?;
     let text = |keys: &[&str]| {
@@ -148,16 +182,22 @@ pub fn identity_from_session(body: &Value) -> Option<VerifiedIdentity> {
             .filter(|v| !v.is_empty())
             .map(str::to_string)
     };
-    let principal_id = text(&["principal_id", "principalId"])?;
+    let subject = text(&["principal_id", "principalId"])?;
     let state = text(&["state"]);
     if state.as_deref().is_some_and(|s| s != "active") {
         return None;
     }
-    Some(VerifiedIdentity {
-        user_id: user_id_for_principal(&principal_id)?,
+    let legacy_subject = text(&[
+        "legacy_principal_id",
+        "legacyPrincipalId",
+        "sylphx_legacy_sub",
+    ])
+    .filter(|legacy| *legacy != subject);
+    Some(SessionPrincipal {
+        subject,
+        legacy_subject,
         display_name: text(&["display_name", "displayName"]),
         email: text(&["primary_email", "primaryEmail"]),
-        is_admin: false,
     })
 }
 
@@ -239,26 +279,34 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn principal_ids_map_to_player_uuids() {
-        assert_eq!(
-            user_id_for_principal("principal-0199aa10-7b2c-7d3e-8f00-1234567890ab").as_deref(),
-            Some("0199aa10-7b2c-7d3e-8f00-1234567890ab")
-        );
-        assert_eq!(user_id_for_principal("principal-not-a-uuid"), None);
-    }
-
-    #[test]
-    fn session_response_becomes_an_identity_and_inactive_users_do_not() {
+    fn session_response_becomes_a_principal_and_inactive_users_do_not() {
         let body = json!({"session": {"principal": {
             "principal_id": "principal-0199aa10-7b2c-7d3e-8f00-1234567890ab",
             "display_name": "Ada", "primary_email": "ada@example.com", "state": "active"}}});
-        let id = identity_from_session(&body).expect("identity");
-        assert_eq!(id.user_id, "0199aa10-7b2c-7d3e-8f00-1234567890ab");
-        assert_eq!(id.email.as_deref(), Some("ada@example.com"));
-        assert!(!id.is_admin);
+        let p = principal_from_session(&body).expect("principal");
+        assert_eq!(p.subject, "principal-0199aa10-7b2c-7d3e-8f00-1234567890ab");
+        assert_eq!(p.legacy_subject, None);
+        assert_eq!(p.email.as_deref(), Some("ada@example.com"));
         let revoked = json!({"session": {"principal": {
             "principal_id": "principal-0199aa10-7b2c-7d3e-8f00-1234567890ab", "state": "revoked"}}});
-        assert!(identity_from_session(&revoked).is_none());
+        assert!(principal_from_session(&revoked).is_none());
+    }
+
+    #[test]
+    fn the_new_subject_form_is_kept_verbatim_with_its_legacy_subject() {
+        let body = json!({"session": {"principal": {
+            "principal_id": "usr_01kmp4wyhhfgxsyrjvh8e0tkkf",
+            "legacy_principal_id": "principal-0199aa10-7b2c-7d3e-8f00-1234567890ab",
+            "state": "active"}}});
+        let p = principal_from_session(&body).expect("principal");
+        assert_eq!(p.subject, "usr_01kmp4wyhhfgxsyrjvh8e0tkkf");
+        assert_eq!(
+            p.legacy_subject.as_deref(),
+            Some("principal-0199aa10-7b2c-7d3e-8f00-1234567890ab")
+        );
+        // A legacy value equal to the subject carries nothing.
+        let same = json!({"principal": {"principalId": "usr_a", "sylphx_legacy_sub": "usr_a"}});
+        assert_eq!(principal_from_session(&same).unwrap().legacy_subject, None);
     }
 
     #[test]

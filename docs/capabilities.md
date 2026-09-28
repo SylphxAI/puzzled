@@ -60,6 +60,12 @@ not live proof. Facts not establishable here are `Unknown`, never green.
   autoDeploy only; it is not production Promote.
 - **Consumed receipts:** a Sylphx Auth end-user session (the web's
   session cookie or a Bearer), checked with Auth once per request.
+  The Auth subject is another system's id: `auth_subjects` maps it, as
+  the exact text Auth published, to Puzzled's own player id (`uuid`),
+  so both `principal-<uuid>` and the TypeID `usr_…` that Auth moves to
+  on 2026-10-04 (cloud#10008) reach the same player; the new form is
+  never decoded. Players away through the cut are linked from the
+  platform's id map export (`auth_subjects::LINK_FROM_ID_MAP`).
   Apps Deployment and Hands realization receipts for the
   `sylphx.toml` services, consumed as a customer, not owned. Compute's
   signed tick receipts (EdDSA JWT, `aud` equal to the exact URL) are the

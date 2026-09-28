@@ -25,9 +25,9 @@ impl AppState {
     pub fn new(pool: Option<PgPool>) -> Self {
         Self {
             started_at: Instant::now(),
+            auth: AuthSessions::from_env().with_pool(pool.clone()),
             pool,
             stripe: None,
-            auth: AuthSessions::from_env(),
             ticks: TickVerifier::from_env(),
         }
     }
