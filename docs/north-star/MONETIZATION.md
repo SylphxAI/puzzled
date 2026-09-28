@@ -67,13 +67,20 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 
 - The amounts above are declared in one file:
   `config/commercial/catalogue.json`, Puzzled's catalogue for Sylphx Money
-  (products, price keys, amounts in integer minor units per currency, features,
-  family seats, refund policy). Changing a price is one line there.
+  (products, price keys, amounts in integer minor units per currency, the
+  entitlement grants each price carries — `{"plus":"true","seats":"1"}` and
+  `{"family":"true","plus":"true","seats":"4"}`, Money's
+  `entitlement_grants:check` shape — and the refund policy). It is the
+  declaration input Money will read from, and until the cutover the source the
+  app reads. Changing a price is one line there.
 - Prices include VAT (Stripe `tax_behavior=inclusive`). The pricing page shows
   pounds for `en-GB` and dollars elsewhere, and checkout charges the currency
   shown.
-- The pricing page and `BillingService.ListPlans` render from that file, and
-  `scripts/stripe-setup.ts` publishes it to Stripe under the lookup keys
+- The pricing page and `BillingService.ListPlans` render from that file today;
+  the Money cutover replaces both reads with Money's catalogue
+  (`GET /v1/catalogs/default`) and its entitlement checks, so nothing in the
+  app holds a price or a seat count afterwards. `scripts/stripe-setup.ts`
+  publishes it to Stripe under the lookup keys
   (`puzzled_individual_monthly`, `puzzled_individual_yearly`,
   `puzzled_family_monthly`, `puzzled_family_yearly`). Sales stay closed while
   Stripe's published prices differ from the file in amount, interval, tax
