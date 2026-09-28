@@ -57,6 +57,8 @@ export interface ResultCardInput {
 	timeSpentMs?: number | null
 	currentStreak?: number | null
 	pattern?: readonly (readonly ResultCardTile[])[] | null
+	/** Server-issued share id; makes the card's link the share landing. */
+	shareId?: string | null
 }
 
 export interface ResultCardModel {
@@ -68,7 +70,7 @@ export interface ResultCardModel {
 	dayKey: string | null
 	/** Day rendered for the viewer, e.g. Sep 21, 2026; null without a day. */
 	dayDisplay: string | null
-	/** Compact deep link: puzzled.gg/games/<slug>[?mode=archive&date=...]. */
+	/** Compact link: the share landing puzzled.gg/daily?ref=<id>, else puzzled.gg/games/<slug>[?mode=archive&date=...]. */
 	deepLink: string
 	attempts: number | null
 	maxAttempts: number | null
@@ -102,6 +104,40 @@ export interface ResultCardStrings {
 	altDetailsTemplate: string
 	altLinkTemplate: string
 	detailSeparator: string
+}
+
+/**
+ * The card copy from one translator for the `share.card` block, so every
+ * surface that draws a card (the sharer's, the landing, the side-by-side
+ * result) builds the same strings the same way. The translator must return the
+ * raw template (`t.raw`): the sentences keep their `{tokens}` until
+ * `fillCardTemplate` fills them, and a formatted read throws on them.
+ */
+export function resultCardStringsFrom(
+	t: (key: keyof ResultCardStrings) => string,
+): ResultCardStrings {
+	return {
+		statusWon: t('statusWon'),
+		statusLost: t('statusLost'),
+		attemptsLabel: t('attemptsLabel'),
+		scoreLabel: t('scoreLabel'),
+		streakLabel: t('streakLabel'),
+		timeLabel: t('timeLabel'),
+		mistakesLabel: t('mistakesLabel'),
+		timeUnder1m: t('timeUnder1m'),
+		timeUnder5m: t('timeUnder5m'),
+		timeOver5m: t('timeOver5m'),
+		attemptsOf: t('attemptsOf'),
+		attemptsCount: t('attemptsCount'),
+		scorePoints: t('scorePoints'),
+		streakDays: t('streakDays'),
+		patternSummary: t('patternSummary'),
+		altOnDay: t('altOnDay'),
+		altTemplate: t('altTemplate'),
+		altDetailsTemplate: t('altDetailsTemplate'),
+		altLinkTemplate: t('altLinkTemplate'),
+		detailSeparator: t('detailSeparator'),
+	}
 }
 
 export interface ResultCardChip {
@@ -166,7 +202,12 @@ export function buildResultCard(input: ResultCardInput): ResultCardModel {
 		status: input.status === 'won' ? 'won' : 'lost',
 		dayKey,
 		dayDisplay: dayKey ? formatCardDayKey(dayKey, input.locale || 'en') : null,
-		deepLink: ritualShareDeepLink(input.origin, input.gameSlug, dayKey || undefined),
+		deepLink: ritualShareDeepLink(
+			input.origin,
+			input.gameSlug,
+			dayKey || undefined,
+			input.shareId ?? undefined,
+		),
 		attempts: nonNegativeInt(input.attempts),
 		maxAttempts: nonNegativeInt(input.maxAttempts),
 		mistakes: nonNegativeInt(input.mistakes),

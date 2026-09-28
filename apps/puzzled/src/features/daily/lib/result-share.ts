@@ -26,6 +26,8 @@ export type ResultShareFacts = {
 	statLine?: string
 	difficultyLabel?: string | null
 	currentStreak?: number
+	/** Server-issued share id (see useShareId); carried in the link as `ref`. */
+	shareId?: string
 }
 
 export type ResultShareOutcome = 'shared' | 'copied' | 'cancelled' | 'unavailable'

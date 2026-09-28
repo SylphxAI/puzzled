@@ -38,13 +38,18 @@ use super::state::AppState;
 use crate::capabilities::billing::service::entitlement;
 use crate::capabilities::daily_pipeline;
 use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::fetch_puzzle_by_id;
+use crate::capabilities::puzzle_play::adapters::result_shares_db::{
+    load_shared_result, record_share,
+};
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
     adopt_guest_sessions, has_completed_session, has_ritual_completion, load_completed_session,
     persist_validated_session,
 };
 use crate::proto::puzzled::v1::{
     CheckGuessRequest, CheckGuessResponse, DailyCompletion, GetDailyRequest, GetDailyResponse,
-    GetPuzzleRequest, GetPuzzleResponse, PuzzleService, SubmitGuessRequest, SubmitGuessResponse,
+    GetPuzzleRequest, GetPuzzleResponse, GetSharedResultRequest, GetSharedResultResponse,
+    PuzzleService, ShareResultRequest, ShareResultResponse, SubmitGuessRequest,
+    SubmitGuessResponse,
 };
 
 const SLICE_PUZZLE: &str = "S2-puzzle-connect";
@@ -669,6 +674,66 @@ impl PuzzleService for PuzzleConnectService {
             result_json: result.to_string(),
             ..Default::default()
         })
+    }
+
+    async fn share_result(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, ShareResultRequest>,
+    ) -> ServiceResult<ShareResultResponse> {
+        let req = request.to_owned_message();
+        let game_slug = canonicalize_game_slug(req.game_slug.trim());
+        if !is_valid_game_slug(game_slug) {
+            return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
+        }
+        let uid = self.identity_for_submit(&ctx)?;
+        self.adopt_guest_progress_if_needed(&ctx).await?;
+        let day = date_from_string(req.puzzle_date.as_deref()).unwrap_or(product_day_key(Utc::now()));
+        let Some(pool) = &self.state.pool else {
+            return Err(ConnectError::new(ErrorCode::Unavailable, "share_unavailable"));
+        };
+        match record_share(pool, &uid, game_slug, &day.format("%Y-%m-%d").to_string()).await {
+            Ok(Some(id)) => Response::ok(ShareResultResponse {
+                share_id: id.to_string(),
+                ..Default::default()
+            }),
+            // Nothing to share until the player has an accepted finish.
+            Ok(None) => Err(ConnectError::new(ErrorCode::NotFound, "no_finish_to_share")),
+            Err(error) => {
+                warn!(%error, "share_result failed");
+                Err(ConnectError::new(ErrorCode::Internal, "share_failed"))
+            }
+        }
+    }
+
+    async fn get_shared_result(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, GetSharedResultRequest>,
+    ) -> ServiceResult<GetSharedResultResponse> {
+        let req = request.to_owned_message();
+        let id = uuid::Uuid::parse_str(req.share_id.trim())
+            .map_err(|_| ConnectError::new(ErrorCode::NotFound, "share_not_found"))?;
+        let Some(pool) = &self.state.pool else {
+            return Err(ConnectError::new(ErrorCode::Unavailable, "share_unavailable"));
+        };
+        match load_shared_result(pool, id).await {
+            Ok(Some(shared)) => Response::ok(GetSharedResultResponse {
+                game_slug: shared.game_slug,
+                puzzle_date: shared.day_key,
+                difficulty: shared.difficulty.unwrap_or_default(),
+                status: shared.status,
+                attempts: u32::try_from(shared.attempts).unwrap_or_default(),
+                score: shared.score.and_then(|v| u32::try_from(v).ok()),
+                time_spent_ms: shared.time_spent_ms.and_then(|v| u64::try_from(v).ok()),
+                ..Default::default()
+            }),
+            Ok(None) => Err(ConnectError::new(ErrorCode::NotFound, "share_not_found")),
+            Err(error) => {
+                warn!(%error, "get_shared_result failed");
+                Err(ConnectError::new(ErrorCode::Internal, "share_read_failed"))
+            }
+        }
     }
 }
 

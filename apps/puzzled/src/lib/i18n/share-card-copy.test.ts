@@ -75,7 +75,11 @@ function walk(dir: string, out: string[] = []): string[] {
 	return out
 }
 
-/** Every 'card.*' key the source references through the share namespace. */
+/**
+ * Every 'card.*' key the source references through the share namespace: the
+ * literal tShare('card.x') reads, and the one resultCardStringsFrom(t) function
+ * that every card surface builds its strings with (t('x') reads card.x).
+ */
 function referencedCardKeys(): string[] {
 	const pattern = /tShare\('(card\.[A-Za-z0-9_]+)'\)/g
 	const keys = new Set<string>()
@@ -83,6 +87,14 @@ function referencedCardKeys(): string[] {
 		if (file.endsWith('.test.ts') || file.endsWith('.test.tsx')) continue
 		const source = readFileSync(file, 'utf8')
 		for (const match of source.matchAll(pattern)) keys.add(match[1] as string)
+		if (file.endsWith(join('features', 'daily', 'lib', 'result-card.ts'))) {
+			const body = source.slice(source.indexOf('export function resultCardStringsFrom'))
+			for (const match of body
+				.slice(0, body.indexOf('\n}\n'))
+				.matchAll(/\bt\('([A-Za-z0-9_]+)'\)/g)) {
+				keys.add(`card.${match[1]}`)
+			}
+		}
 	}
 	return [...keys].sort()
 }
