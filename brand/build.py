@@ -60,7 +60,13 @@ def render(svg_rel, w, h=None):
     from PIL import Image
     h = h or w
     png = resvg_py.svg_to_bytes(svg_path=p(svg_rel), width=w, height=h)
-    return Image.open(io.BytesIO(bytes(png))).convert('RGBA')
+    img = Image.open(io.BytesIO(bytes(png))).convert('RGBA')
+    if img.size != (w, h):   # a non-square master keeps its aspect ratio: centre it on the canvas
+        img.thumbnail((w, h), Image.LANCZOS)
+        canvas = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+        canvas.paste(img, ((w - img.width) // 2, (h - img.height) // 2))
+        img = canvas
+    return img
 
 
 def save_png(img, rel):
@@ -179,7 +185,16 @@ def write_ico(images, rel):
 # ---------------------------------------------------------------- build
 def build(resnap):
     write_tokens_css()
-    icon = SPEC['icon']
+    if 'icon' in SPEC:
+        build_icons(SPEC['icon'], resnap)
+    for r in renders():
+        img = render(r['master'], r.get('width', 1200), r.get('height', 630))
+        save_png(img if r.get('alpha') else img.convert('RGB'), r['out'])
+    copy_outputs()
+    write_provenance()
+
+
+def build_icons(icon, resnap):
     small_src = icon.get('small', icon['master'])
     palette = icon.get('palette') or list(colour_tokens().values())
     thr = icon.get('snap_threshold', 0.5)
@@ -203,11 +218,6 @@ def build(resnap):
     if icon.get('maskable'):
         for size in icon.get('maskable_sizes', [192, 512]):
             save_png(render(icon['maskable'], size), f'app-icon/icon-maskable-{size}.png')
-    for r in renders():
-        img = render(r['master'], r.get('width', 1200), r.get('height', 630))
-        save_png(img if r.get('alpha') else img.convert('RGB'), r['out'])
-    copy_outputs()
-    write_provenance()
 
 
 def renders():

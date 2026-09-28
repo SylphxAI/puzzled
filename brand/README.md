@@ -174,4 +174,6 @@ Every file's SHA-256 is in `provenance.json`.
 Not registered. Owner decision owner#781: no trademark filings before the
 product earns money. Use ™ at most, never ®.
 
-<!-- similarity: filled in by review -->
+Checked 2026-09-28 (web and app-store search, US trademark listings).
+- **Name: close match, same category.** Netflix ships "Netflix Puzzled", a daily word and logic puzzle app on iOS, Android and Tudum (launched 2025). No US trademark filing by Netflix for PUZZLED was found; "PUZZLED" is registered by Puzzled, Inc. for physical puzzles and toys (class 28, reg. 3983811), which is outside software. This is the one real risk in the portfolio: a store listing or search result can be confused with Netflix's. Noted once, not blocking (owner#781).
+- **Mark:** a question-mark hook with an amber tile for its dot. No close match found among puzzle-app icons.
