@@ -2,6 +2,7 @@
 
 **Status:** Canonical product destination
 **Identity graph:** [`capabilities.md`](capabilities.md)
+**Growth backlog:** [`growth.md`](growth.md) (ranked mechanics, North Star inputs, build-now list)
 **Design system:** [`design/README.md`](design/README.md) (brand, tokens, shell, page list)
 **North Star package:** [`north-star/README.md`](north-star/README.md) (field contract subordinate to this destination), [`north-star/VISION.md`](north-star/VISION.md) (pointer), [`north-star/NORTH-STAR-METRIC.md`](north-star/NORTH-STAR-METRIC.md)
 
