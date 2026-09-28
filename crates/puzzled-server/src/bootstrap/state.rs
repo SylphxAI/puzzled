@@ -5,6 +5,7 @@ use std::time::Instant;
 use sqlx::PgPool;
 
 use crate::capabilities::billing::adapters::stripe::Stripe;
+use crate::capabilities::identity_access::adapters::auth_erasure::AuthErasure;
 use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
 use crate::shared::tick_receipt::TickVerifier;
 
@@ -16,6 +17,10 @@ pub struct AppState {
     pub stripe: Option<Stripe>,
     /// Sylphx Auth end-user session checks.
     pub auth: AuthSessions,
+    /// Deleting a player's Sylphx Auth sign-in (privacy request). None until
+    /// Enable Auth binds the instance keys: account erasure then refuses,
+    /// rather than leaving a live sign-in behind.
+    pub erasure: Option<AuthErasure>,
     /// Admission for Compute schedule ticks (signed receipts).
     pub ticks: TickVerifier,
 }
@@ -26,6 +31,7 @@ impl AppState {
         Self {
             started_at: Instant::now(),
             auth: AuthSessions::from_env().with_pool(pool.clone()),
+            erasure: AuthErasure::from_env(),
             pool,
             stripe: None,
             ticks: TickVerifier::from_env(),
@@ -41,6 +47,12 @@ impl AppState {
     #[must_use]
     pub fn with_auth(mut self, auth: AuthSessions) -> Self {
         self.auth = auth;
+        self
+    }
+
+    #[must_use]
+    pub fn with_erasure(mut self, erasure: Option<AuthErasure>) -> Self {
+        self.erasure = erasure;
         self
     }
 

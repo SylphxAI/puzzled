@@ -56,6 +56,26 @@ pub async fn player_for(
     }
 }
 
+/// Every subject recorded for one player — the new form, the legacy form, or
+/// both during Auth's migration (cloud#10026) — so an erasure can name each
+/// one to Auth. A player with no row has never signed in through this table
+/// and was derived from the old form, which is then the only handle Auth
+/// knows.
+pub async fn subjects_naming_player(
+    pool: &PgPool,
+    player: Uuid,
+) -> Result<Vec<String>, sqlx::Error> {
+    let subjects: Vec<String> =
+        sqlx::query_scalar("SELECT subject FROM auth_subjects WHERE user_id = $1 ORDER BY subject")
+            .bind(player)
+            .fetch_all(pool)
+            .await?;
+    if subjects.is_empty() {
+        return Ok(vec![format!("principal-{player}")]);
+    }
+    Ok(subjects)
+}
+
 async fn lookup(pool: &PgPool, subject: &str) -> Result<Option<Uuid>, sqlx::Error> {
     sqlx::query_scalar("SELECT user_id FROM auth_subjects WHERE subject = $1")
         .bind(subject)
