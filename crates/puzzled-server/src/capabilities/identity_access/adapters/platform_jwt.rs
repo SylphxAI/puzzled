@@ -13,7 +13,7 @@
 //!
 //! A verification that fails because the key set is unavailable (Platform
 //! unreachable, a 5xx, keys that will not parse) is counted toward the
-//! sign-in page ([`events::SIGNIN_UNAVAILABLE`]); a refused token is not.
+//! sign-in page ([`SIGNIN_UNAVAILABLE`]); a refused token is not.
 
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock, RwLock};
@@ -23,7 +23,7 @@ use axum::http::{header, HeaderMap, StatusCode};
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::shared::pages::{events, FailureStreak};
+use crate::shared::pages::SIGNIN_UNAVAILABLE;
 
 const DEFAULT_JWKS_URL: &str = "https://api.sylphx.com/.well-known/jwks.json";
 const JWKS_CACHE_TTL: Duration = Duration::from_secs(300);
@@ -137,10 +137,6 @@ struct JwksCache {
 static JWKS_CACHE: RwLock<Option<Arc<JwksCache>>> = RwLock::new(None);
 /// Wakes the refresher early (unknown `kid`, empty cache). Permits coalesce.
 static JWKS_REFRESH: OnceLock<tokio::sync::Notify> = OnceLock::new();
-
-/// Five verifications in a row that fail because the key set is unavailable
-/// mean nobody can sign in; the next verification that completes clears it.
-static SIGNIN_UNAVAILABLE: FailureStreak = FailureStreak::new(events::SIGNIN_UNAVAILABLE, 5);
 
 fn jwks_refresh_signal() -> &'static tokio::sync::Notify {
     JWKS_REFRESH.get_or_init(tokio::sync::Notify::new)

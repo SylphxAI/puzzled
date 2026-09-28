@@ -1,6 +1,6 @@
 //! Sylphx Auth end-user sessions through the real router, against a fake Auth.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU16, AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use axum::body::Body;
@@ -14,6 +14,8 @@ use crate::capabilities::identity_access::adapters::auth_session::{
     encode_identity, AuthSessions, VERIFIED_IDENTITY_HEADER,
 };
 use crate::capabilities::identity_access::adapters::platform_jwt::VerifiedIdentity;
+use crate::shared::pages::capture::{capture, count, logged};
+use crate::shared::pages::{events, FailureStreak};
 use crate::{router, AppState};
 
 const GOOD: &str = "identity_org_session_good";
@@ -215,4 +217,106 @@ async fn both_auth_subject_forms_reach_the_same_player() {
         player_for(&pool, split_new, None).await.unwrap(),
         split_player
     );
+}
+
+/// A fake Auth that answers every session read with the status in `status`.
+async fn spawn_status_auth(status: Arc<AtomicU16>) -> String {
+    let app = Router::new().route(
+        "/v1/sessions/current",
+        get(move || {
+            let code = StatusCode::from_u16(status.load(Ordering::SeqCst)).unwrap();
+            async move {
+                if code == StatusCode::OK {
+                    (
+                        code,
+                        Json(json!({"session": {"principal": {
+                        "principal_id": "principal-0199aa10-7b2c-7d3e-8f00-1234567890ab",
+                        "state": "active"}}})),
+                    )
+                } else {
+                    (code, Json(json!({"error": "no"})))
+                }
+            }
+        }),
+    );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    format!("http://{addr}")
+}
+
+/// Both sign-in paths count on one streak: the default is the shared static.
+#[test]
+fn auth_sessions_count_on_the_shared_signin_streak() {
+    let sessions = AuthSessions::new("http://127.0.0.1:1".into());
+    assert!(std::ptr::eq(
+        sessions.streak(),
+        &crate::shared::pages::SIGNIN_UNAVAILABLE
+    ));
+}
+
+#[tokio::test]
+async fn auth_outage_pages_once_and_a_refusal_never_counts() {
+    // A streak of its own, so parallel tests cannot reset this count.
+    let streak: &'static FailureStreak =
+        Box::leak(Box::new(FailureStreak::new(events::SIGNIN_UNAVAILABLE, 5)));
+    let (buffer, _guard) = capture();
+    let status = Arc::new(AtomicU16::new(500));
+    let base = spawn_status_auth(status.clone()).await;
+    let sessions = AuthSessions::new(base).with_streak(streak);
+    let token = |n: usize| format!("identity_org_session_{n}");
+
+    // Refusals are answers: Auth is up, this token is not.
+    status.store(401, Ordering::SeqCst);
+    for n in 0..10 {
+        assert!(sessions.verify(&token(n), "UA").await.is_none());
+    }
+    status.store(403, Ordering::SeqCst);
+    for n in 10..20 {
+        assert!(sessions.verify(&token(n), "UA").await.is_none());
+    }
+    assert_eq!(count(&logged(&buffer), "severity=\"page\""), 0);
+
+    // Auth answering 500 for five different tokens (cache misses) pages once.
+    status.store(500, Ordering::SeqCst);
+    for n in 100..104 {
+        assert!(sessions.verify(&token(n), "UA").await.is_none());
+    }
+    assert_eq!(count(&logged(&buffer), "severity=\"page\""), 0);
+    assert!(sessions.verify(&token(104), "UA").await.is_none());
+    let out = logged(&buffer);
+    assert_eq!(count(&out, "severity=\"page\""), 1);
+    assert!(out.contains("event=\"puzzled_signin_unavailable\""));
+    assert!(out.contains("detail=\"http_5xx\""));
+    assert!(out.contains("failures=5"));
+
+    // Still down: one page per incident.
+    assert!(sessions.verify(&token(105), "UA").await.is_none());
+    assert_eq!(count(&logged(&buffer), "severity=\"page\""), 1);
+
+    // A 200 recovers, once.
+    status.store(200, Ordering::SeqCst);
+    assert!(sessions.verify(&token(200), "UA").await.is_some());
+    assert_eq!(
+        count(&logged(&buffer), "puzzled_signin_unavailable_recovered"),
+        1
+    );
+}
+
+#[tokio::test]
+async fn auth_not_answering_counts_as_unreachable() {
+    let streak: &'static FailureStreak =
+        Box::leak(Box::new(FailureStreak::new(events::SIGNIN_UNAVAILABLE, 2)));
+    let (buffer, _guard) = capture();
+    // Nothing listens on port 1: the request never reaches Auth.
+    let sessions = AuthSessions::new("http://127.0.0.1:1".into()).with_streak(streak);
+    for n in 0..2 {
+        assert!(sessions
+            .verify(&format!("identity_org_session_{n}"), "UA")
+            .await
+            .is_none());
+    }
+    let out = logged(&buffer);
+    assert_eq!(count(&out, "severity=\"page\""), 1);
+    assert!(out.contains("detail=\"unreachable\""));
 }

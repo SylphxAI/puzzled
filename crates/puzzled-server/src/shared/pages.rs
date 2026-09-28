@@ -17,11 +17,17 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 pub mod events {
     /// The daily puzzle job failed, so there is no puzzle for the day.
     pub const DAILY_GENERATION_FAILED: &str = "puzzled_daily_generation_failed";
-    /// Platform JWKS verification failed, so nobody can sign in.
+    /// Sign-in checks cannot get an answer (Auth or the JWKS), so nobody can sign in.
     pub const SIGNIN_UNAVAILABLE: &str = "puzzled_signin_unavailable";
     /// Entitlement reads are erroring, so paying accounts are refused.
     pub const ENTITLEMENT_CHECK_FAILED: &str = "puzzled_entitlement_check_failed";
 }
+
+/// Sign-in is one streak for both paths (Auth session bearers and platform JWT
+/// verification), so one outage is one page. Five unavailable checks in a row
+/// page; the next check that gets an answer clears it. A refused token is an
+/// answer, not a failure.
+pub static SIGNIN_UNAVAILABLE: FailureStreak = FailureStreak::new(events::SIGNIN_UNAVAILABLE, 5);
 
 #[derive(Debug, Default)]
 struct State {
@@ -87,18 +93,17 @@ impl FailureStreak {
     }
 }
 
+/// Captures this thread's tracing output, for tests that assert on page lines.
 #[cfg(test)]
-#[allow(clippy::expect_used, clippy::unwrap_used)]
-mod tests {
+#[allow(clippy::expect_used)]
+pub(crate) mod capture {
     use std::io::Write;
     use std::sync::{Arc, Mutex};
 
     use tracing_subscriber::fmt::MakeWriter;
 
-    use super::*;
-
     #[derive(Clone, Default)]
-    struct Shared(Arc<Mutex<Vec<u8>>>);
+    pub struct Shared(Arc<Mutex<Vec<u8>>>);
 
     impl Write for Shared {
         fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
@@ -117,7 +122,7 @@ mod tests {
         }
     }
 
-    fn capture() -> (Shared, tracing::subscriber::DefaultGuard) {
+    pub fn capture() -> (Shared, tracing::subscriber::DefaultGuard) {
         let buffer = Shared::default();
         let subscriber = tracing_subscriber::fmt()
             .with_writer(buffer.clone())
@@ -128,13 +133,19 @@ mod tests {
         (buffer, guard)
     }
 
-    fn logged(buffer: &Shared) -> String {
+    pub fn logged(buffer: &Shared) -> String {
         String::from_utf8(buffer.0.lock().expect("buffer").clone()).expect("utf8")
     }
 
-    fn count(haystack: &str, needle: &str) -> usize {
+    pub fn count(haystack: &str, needle: &str) -> usize {
         haystack.matches(needle).count()
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::capture::{capture, count, logged};
+    use super::*;
 
     #[test]
     fn pages_once_at_the_threshold_and_logs_recovery() {

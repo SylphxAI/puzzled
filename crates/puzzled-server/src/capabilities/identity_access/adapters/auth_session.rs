@@ -24,6 +24,7 @@ use sqlx::PgPool;
 
 use super::auth_subjects;
 use super::platform_jwt::VerifiedIdentity;
+use crate::shared::pages::{FailureStreak, SIGNIN_UNAVAILABLE};
 
 /// Internal header carrying the verified end user (base64url JSON).
 pub const VERIFIED_IDENTITY_HEADER: &str = "x-puzzled-verified-identity";
@@ -45,6 +46,8 @@ pub struct AuthSessions {
     cache: Arc<Mutex<Cache>>,
     /// Where the Auth subject to player map lives ([`super::auth_subjects`]).
     pool: Option<PgPool>,
+    /// The sign-in page streak, shared with platform JWT verification.
+    streak: &'static FailureStreak,
 }
 
 impl AuthSessions {
@@ -58,7 +61,16 @@ impl AuthSessions {
             auth_url: auth_url.trim_end_matches('/').to_string(),
             cache: Arc::new(Mutex::new(HashMap::new())),
             pool: None,
+            streak: &SIGNIN_UNAVAILABLE,
         }
+    }
+
+    /// Count sign-in failures on another streak (tests only).
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn with_streak(mut self, streak: &'static FailureStreak) -> Self {
+        self.streak = streak;
+        self
     }
 
     /// Resolve players through the database's subject map.
@@ -108,12 +120,20 @@ impl AuthSessions {
         result
     }
 
+    #[cfg(test)]
+    pub(crate) fn streak(&self) -> &'static FailureStreak {
+        self.streak
+    }
+
     fn cached(&self, key: &[u8; 32]) -> Option<Option<VerifiedIdentity>> {
         let cache = self.cache.lock().ok()?;
         let (expires, value) = cache.get(key)?;
         (*expires > Instant::now()).then(|| value.clone())
     }
 
+    /// Asks Auth about one session. Counts towards the sign-in page: Auth not
+    /// answering (transport, timeout) or answering 5xx is a failure; any other
+    /// answer, an explicit 401/403 included, means Auth is up.
     async fn fetch(&self, token: &str, user_agent: &str) -> Option<VerifiedIdentity> {
         let response = self
             .http
@@ -122,8 +142,16 @@ impl AuthSessions {
             .header(axum::http::header::USER_AGENT, user_agent)
             .send()
             .await
-            .map_err(|error| tracing::warn!(%error, "auth session check failed"))
+            .map_err(|error| {
+                tracing::warn!(%error, "auth session check failed");
+                self.streak.failed("unreachable");
+            })
             .ok()?;
+        if response.status().is_server_error() {
+            self.streak.failed("http_5xx");
+            return None;
+        }
+        self.streak.succeeded();
         if !response.status().is_success() {
             return None;
         }
