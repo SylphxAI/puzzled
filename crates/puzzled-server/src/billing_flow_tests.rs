@@ -886,7 +886,14 @@ async fn a_published_price_that_differs_from_the_catalogue_closes_sales() {
     )
     .await;
     assert_eq!(status, StatusCode::OK, "{plans}");
-    assert_eq!(plans["salesOpen"], false);
+    // A false field is omitted from proto3 JSON, so read it as false when absent.
+    assert_eq!(
+        plans
+            .get("salesOpen")
+            .and_then(Value::as_bool)
+            .unwrap_or(false),
+        false
+    );
     // The list itself is still the catalogue's declaration, not Stripe's.
     assert_eq!(
         plans["plans"].as_array().unwrap().len(),
