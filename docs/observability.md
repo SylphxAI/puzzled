@@ -3,7 +3,8 @@
 Puzzled sends server and browser errors to **Sylphx Observability**, our own
 error-monitoring service, through the Sylphx SDK on `api.sylphx.com`
 (`observability.errorGroups.capture`). There is no third-party error SDK,
-script or host.
+script or host. A must-act-now failure reaches on-call the other way, as a
+page in the api log stream: see [operations.md](operations.md).
 
 | Source | Path | Code |
 | --- | --- | --- |

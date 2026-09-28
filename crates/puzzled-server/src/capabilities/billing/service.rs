@@ -4,6 +4,10 @@
 //! Money rule (owner commercial standard): a webhook is a hint. Every state
 //! change is read back from Stripe before it is stored, and the ledger gets
 //! one append-only row per payment or refund.
+//!
+//! An entitlement read that keeps erroring pages on-call
+//! ([`events::ENTITLEMENT_CHECK_FAILED`]): callers fail closed, so a paying
+//! account is refused until the read answers.
 
 use chrono::Utc;
 use serde_json::Value;
@@ -20,6 +24,11 @@ use puzzled_core::attribution::Attribution;
 use super::adapters::billing_db::{self, SubscriptionRow};
 use super::adapters::stripe::{path_segment, Stripe, StripeSubscription};
 use crate::capabilities::preferences::adapters::attribution_db::attribution_for_user;
+use crate::shared::pages::{events, FailureStreak};
+
+/// Failed entitlement reads in a row that page on-call: the play gate fails
+/// closed, so a paying account is refused what it paid for.
+static ENTITLEMENT_CHECK: FailureStreak = FailureStreak::new(events::ENTITLEMENT_CHECK_FAILED, 5);
 
 /// Where the account's access comes from.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -96,7 +105,23 @@ async fn refresh_stale(
 }
 
 /// The account's entitlement from its own subscription or a family plan.
+///
+/// A read that errors counts towards [`events::ENTITLEMENT_CHECK_FAILED`]; a
+/// read that answers — entitled or not — clears the streak.
 pub async fn entitlement(
+    pool: &PgPool,
+    stripe: Option<&Stripe>,
+    user_id: &str,
+) -> Result<Entitlement, String> {
+    let result = entitlement_inner(pool, stripe, user_id).await;
+    match &result {
+        Ok(_) => ENTITLEMENT_CHECK.succeeded(),
+        Err(_) => ENTITLEMENT_CHECK.failed("read_failed"),
+    }
+    result
+}
+
+async fn entitlement_inner(
     pool: &PgPool,
     stripe: Option<&Stripe>,
     user_id: &str,

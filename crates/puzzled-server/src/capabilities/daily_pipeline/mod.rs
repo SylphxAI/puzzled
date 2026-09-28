@@ -11,6 +11,9 @@
 //!   stores it first, so a player never waits on the schedule.
 //! - **Alert:** a fill that leaves fewer than [`ALERT_BELOW_DAYS`] days stored
 //!   ahead for any game reports an error to Observability.
+//! - **Page:** a fill that fails, or leaves the buffer short, pages on-call
+//!   once ([`events::DAILY_GENERATION_FAILED`]); the next fill that fills the
+//!   buffer closes the page.
 //!
 //! The five games the server generated before the pipeline (sudoku,
 //! crossword, word-groups, word-guess, crowns) keep their original seeds for
@@ -26,6 +29,8 @@ use puzzled_core::puzzle_play::daily_time::get_puzzle_number;
 use puzzled_core::puzzle_play::game_slugs::{all_game_slugs, canonicalize_game_slug};
 use puzzled_core::puzzle_play::generate::{self, difficulties_for, Generated, DIFFICULTY_GAMES};
 
+use crate::shared::pages::{events, FailureStreak};
+
 pub mod store;
 
 /// Days stored ahead of today.
@@ -36,6 +41,10 @@ pub const ARCHIVE_DAYS: i64 = 30;
 pub const ALERT_BELOW_DAYS: i64 = 3;
 /// Generator version recorded on each row.
 pub const GENERATOR_VERSION: &str = "rust-v1";
+
+/// One failed fill run is a game without its puzzle for a day, so it pages
+/// straight away; the next healthy run strikes the incident out.
+static DAILY_GENERATION: FailureStreak = FailureStreak::new(events::DAILY_GENERATION_FAILED, 1);
 
 /// First product day generated with the pipeline seed for the five games the
 /// server already generated before it.
@@ -136,9 +145,32 @@ pub struct FillReport {
     pub min_days_ahead: i64,
 }
 
+impl FillReport {
+    /// The run did what the schedule asks: every puzzle stored, and the
+    /// buffer ahead deep enough.
+    #[must_use]
+    pub fn is_healthy(&self) -> bool {
+        self.failed.is_empty() && self.min_days_ahead >= ALERT_BELOW_DAYS
+    }
+}
+
 /// Store every missing puzzle from `today - ARCHIVE_DAYS` to
 /// `today + DAYS_AHEAD`, then measure the buffer and alert when it is low.
+///
+/// A run that cannot fill the buffer pages on-call once; the next healthy run
+/// closes the page (the `DAILY_GENERATION` static above).
 pub async fn fill(pool: &PgPool, today: NaiveDate) -> Result<FillReport, String> {
+    let result = fill_inner(pool, today).await;
+    match &result {
+        Ok(report) if report.is_healthy() => DAILY_GENERATION.succeeded(),
+        Ok(report) if report.failed.is_empty() => DAILY_GENERATION.failed("buffer_low"),
+        Ok(_) => DAILY_GENERATION.failed("generation_failed"),
+        Err(_) => DAILY_GENERATION.failed("store_error"),
+    }
+    result
+}
+
+async fn fill_inner(pool: &PgPool, today: NaiveDate) -> Result<FillReport, String> {
     let ahead = fill_range(pool, today, today + Duration::days(DAYS_AHEAD), today).await?;
     // The archive after the days ahead: players need today and tomorrow first.
     let archive = fill_range(pool, today - Duration::days(ARCHIVE_DAYS), today, today).await?;
@@ -204,7 +236,7 @@ pub async fn fill_range(
 }
 
 fn alert_if_low(report: &FillReport) {
-    if report.min_days_ahead < ALERT_BELOW_DAYS || !report.failed.is_empty() {
+    if !report.is_healthy() {
         crate::observability::capture(crate::observability::ErrorReport {
             exception_type: "DailyPuzzleBufferLow".into(),
             message: format!(

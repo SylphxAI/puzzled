@@ -30,9 +30,7 @@ pub async fn daily_puzzles_tick(State(state): State<AppState>, headers: HeaderMa
     let today = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
     match daily_pipeline::fill(pool, today).await {
         Ok(report) => {
-            let status = if report.failed.is_empty()
-                && report.min_days_ahead >= daily_pipeline::ALERT_BELOW_DAYS
-            {
+            let status = if report.is_healthy() {
                 StatusCode::OK
             } else {
                 // Compute retries a failed tick; the fill resumes where it stopped.
