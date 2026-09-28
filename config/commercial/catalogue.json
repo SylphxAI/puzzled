@@ -189,6 +189,7 @@
 		"No plan offers a trial or an introductory price: trial_days is 0 everywhere and no trial copy ships in plus.json or legal.json (checked 2026-09-28). The free daily puzzle is the product's only free taste.",
 		"Every price is per plan, per interval, and covers one product (individual or family); there is no per-game or per-seat purchase. seats is the number of people the price covers, the plan owner included.",
 		"provider_lookup_key is today's payment-processor key (Stripe, this repository's current path). It retires with the processor when Sylphx Money takes over; price_key is the stable key Money declares.",
-		"A price change here must be published to the processor (bun scripts/stripe-setup.ts) before it can be sold: sales stay closed while the published prices differ from this file."
+		"A price change here must be published to the processor (bun scripts/stripe-setup.ts) before it can be sold: sales stay closed while the published prices differ from this file.",
+		"The 14-day policy above is what the shipped code and legal text say today (the UK cancellation right, promised in full). The Money cutover turns it into the company line (owner decision 2026-09-28, owner#779): checkout records the immediate-supply consent line (express request plus acknowledgement), no voluntary money-back promise is made, and a refund after that is a support decision case by case. The cutover PR changes the legal text, the cancellation flow and this entry together; do not build the refund flow from this file before then."
 	]
 }
