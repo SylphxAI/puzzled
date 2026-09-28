@@ -5,6 +5,7 @@ use std::time::Instant;
 use sqlx::PgPool;
 
 use crate::capabilities::billing::adapters::stripe::Stripe;
+use crate::capabilities::billing::service;
 use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
 use crate::shared::tick_receipt::TickVerifier;
 
@@ -51,13 +52,15 @@ impl AppState {
     }
 
     /// Puzzled Plus is on sale: Stripe and the database are configured and
-    /// Stripe publishes at least one Puzzled Plus price (cached five minutes).
+    /// every plan is published at exactly the catalogue's amounts, intervals
+    /// and tax behaviour ([`service::on_sale_prices`], cached five minutes).
     /// A Stripe read that fails counts as on sale, so paid play fails closed;
     /// the free daily puzzle never asks.
     pub async fn sales_open(&self) -> bool {
         match (&self.pool, &self.stripe) {
-            (Some(_), Some(stripe)) => match stripe.prices().await {
-                Ok(prices) => !prices.is_empty(),
+            (Some(_), Some(stripe)) => match service::on_sale_prices(stripe).await {
+                Ok(Some(_)) => true,
+                Ok(None) => false,
                 Err(error) => {
                     tracing::warn!(%error, "Stripe price read failed; treating Plus as on sale");
                     true

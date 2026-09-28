@@ -7,67 +7,70 @@
  *   STRIPE_SECRET_KEY=sk_test_... bun scripts/stripe-setup.ts \
  *     [--public-url https://puzzled.gg] [--webhook-secret-out /path/file]
  *
- * Prices are the commercial policy's (docs/north-star/MONETIZATION.md): tax
- * inclusive, USD with a GBP option. A price whose amount changed gets a new
+ * Products, plans and prices come from the commercial catalogue
+ * (config/commercial/catalogue.json) and nowhere else: tax inclusive, USD base
+ * with a GBP option. A price whose amount changed in the catalogue gets a new
  * Stripe price that takes over the lookup key; the old one is archived and
- * existing subscriptions keep it until they change plan.
+ * existing subscriptions keep it until they change plan. The api serves the
+ * same catalogue and keeps sales closed while Stripe's published prices
+ * differ from it, so publishing after an edit is what makes a price live.
  *
  * The webhook signing secret is shown by Stripe only when the endpoint is
  * created. It is written to --webhook-secret-out (never printed); store it as
  * the api service's STRIPE_WEBHOOK_SECRET.
  */
 
+import catalogue from '../config/commercial/catalogue.json'
+
 const API = 'https://api.stripe.com'
 const API_VERSION = '2024-06-20'
 
+type CataloguePlan = {
+	price_key: string
+	plan_id: string
+	provider_lookup_key: string
+	product: string
+	name: Record<string, string>
+	interval: 'month' | 'year'
+	unit_amounts: Record<string, number>
+	tax_behavior: string
+}
+
 type PlanSpec = {
 	lookupKey: string
-	product: 'puzzled_plus' | 'puzzled_plus_family'
+	product: string
 	interval: 'month' | 'year'
 	usd: number
 	gbp: number
+	taxBehavior: string
 	nickname: string
 }
 
-const PRODUCTS = [
-	{ id: 'puzzled_plus', name: 'Puzzled Plus' },
-	{ id: 'puzzled_plus_family', name: 'Puzzled Plus Family' },
-] as const
+/** The English name, which is what the processor's own dashboard shows. */
+const englishName = (names: Record<string, string>): string =>
+	names['en-US'] ?? Object.values(names)[0] ?? ''
 
-const PLANS: PlanSpec[] = [
-	{
-		lookupKey: 'puzzled_individual_monthly',
-		product: 'puzzled_plus',
-		interval: 'month',
-		usd: 499,
-		gbp: 399,
-		nickname: 'Monthly',
-	},
-	{
-		lookupKey: 'puzzled_individual_yearly',
-		product: 'puzzled_plus',
-		interval: 'year',
-		usd: 3999,
-		gbp: 3299,
-		nickname: 'Yearly',
-	},
-	{
-		lookupKey: 'puzzled_family_monthly',
-		product: 'puzzled_plus_family',
-		interval: 'month',
-		usd: 799,
-		gbp: 649,
-		nickname: 'Family monthly',
-	},
-	{
-		lookupKey: 'puzzled_family_yearly',
-		product: 'puzzled_plus_family',
-		interval: 'year',
-		usd: 6499,
-		gbp: 5299,
-		nickname: 'Family yearly',
-	},
-]
+const PRODUCTS = catalogue.products.map((product) => ({
+	id: product.id,
+	name: englishName(product.name),
+}))
+
+function nickname(plan: CataloguePlan): string {
+	const interval = plan.interval === 'month' ? 'monthly' : 'yearly'
+	return plan.plan_id.startsWith('family_')
+		? `Family ${interval}`
+		: `${interval[0].toUpperCase()}${interval.slice(1)}`
+}
+
+const PLANS: PlanSpec[] = (catalogue.plans as CataloguePlan[]).map((plan) => ({
+	lookupKey: plan.provider_lookup_key,
+	product: plan.product,
+	interval: plan.interval,
+	usd: plan.unit_amounts.usd,
+	gbp: plan.unit_amounts.gbp,
+	taxBehavior: plan.tax_behavior,
+	nickname: nickname(plan),
+}))
 
 const WEBHOOK_EVENTS = [
 	'checkout.session.completed',
@@ -146,7 +149,7 @@ async function ensurePrices(): Promise<Map<string, string>> {
 			found.currency === 'usd' &&
 			options?.gbp?.unit_amount === plan.gbp &&
 			(found.recurring as { interval?: string } | undefined)?.interval === plan.interval &&
-			found.tax_behavior === 'inclusive'
+			found.tax_behavior === plan.taxBehavior
 		if (same && found.id) {
 			ids.set(plan.lookupKey, found.id)
 			console.log(`price ${plan.lookupKey}: ${found.id} unchanged`)
@@ -156,9 +159,9 @@ async function ensurePrices(): Promise<Map<string, string>> {
 			product: plan.product,
 			currency: 'usd',
 			unit_amount: String(plan.usd),
-			tax_behavior: 'inclusive',
+			tax_behavior: plan.taxBehavior,
 			'currency_options[gbp][unit_amount]': String(plan.gbp),
-			'currency_options[gbp][tax_behavior]': 'inclusive',
+			'currency_options[gbp][tax_behavior]': plan.taxBehavior,
 			'recurring[interval]': plan.interval,
 			lookup_key: plan.lookupKey,
 			transfer_lookup_key: 'true',

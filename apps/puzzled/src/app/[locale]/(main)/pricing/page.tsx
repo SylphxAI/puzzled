@@ -4,12 +4,20 @@ import { MarketingHero, MarketingSection } from '@/features/marketing/components
 import { getAllGameMetadata } from '@/games/registry'
 import { getServerPlans, getServerPlusAccess } from '@/lib/api/server'
 import {
+	brandName,
+	CANCELLATION_DAYS,
 	currencyForLocale,
-	formatPrice,
+	FAMILY_MAX_MEMBERS,
+	FREE,
+	isFamilyProduct,
+	localizedName,
+	PLANS,
 	type PlanCard,
+	PRODUCTS,
 	planCards,
-	yearlySavingPercent,
-} from '@/lib/billing/plus'
+	TERMS_PATH,
+} from '@/lib/billing/catalogue'
+import { formatPrice, yearlySavingPercent } from '@/lib/billing/plus'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
@@ -27,7 +35,6 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
 	const { locale } = await params
 	const t = await getTranslations({ locale, namespace: 'plus.pricing' })
-	const tPlus = await getTranslations({ locale, namespace: 'plus' })
 	return buildPageMetadata({
 		locale,
 		path: '/pricing',
@@ -36,15 +43,18 @@ export async function generateMetadata({ params }: Props) {
 		imagePath: ogImagePath({
 			title: t('metaTitle'),
 			subtitle: t('lead', { count: getAllGameMetadata().length }),
-			eyebrow: tPlus('name'),
+			eyebrow: brandName(locale),
 		}),
 	})
 }
 
 /**
- * Puzzled Plus plans. Every amount is Stripe's published price (ListPlans),
- * tax included, in the currency checkout will charge; nothing is hardcoded.
- * While sales are closed the page says everything is free.
+ * Puzzled Plus plans. Names, amounts, seats and the cancellation window come
+ * from the commercial catalogue (`config/commercial/catalogue.json`), in the
+ * currency checkout will charge, tax included; the api serves the same file and
+ * keeps sales closed while the payment processor's published prices differ from
+ * it, so the shown price is the charged price. While sales are closed the page
+ * says everything is free.
  */
 export default async function PricingPage({ params, searchParams }: Props) {
 	const { locale } = await params
@@ -52,7 +62,6 @@ export default async function PricingPage({ params, searchParams }: Props) {
 	setRequestLocale(locale)
 
 	const t = await getTranslations('plus.pricing')
-	const tPlus = await getTranslations('plus')
 	const tGames = await getTranslations('games')
 	const user = await withPresentationDeadline(currentUser(), null)
 	const [plans, access] = await Promise.all([
@@ -64,18 +73,26 @@ export default async function PricingPage({ params, searchParams }: Props) {
 	const freeSlug = getTodaysFreeGame()
 	const freeName = tGames(`${slugToCamelCase(freeSlug)}.name`)
 	const currency = currencyForLocale(locale)
-	const cards = plans?.salesOpen ? planCards(plans.plans, currency) : []
+	const cards = plans?.salesOpen ? planCards(currency) : []
 	const monthly = (family: boolean) =>
 		cards.find((c) => c.family === family && c.interval === 'month')
 	const yearly = (family: boolean) =>
 		cards.find((c) => c.family === family && c.interval === 'year')
-	const familyMax = plans?.familyMaxMembers ?? 4
-	const cancellationDays = plans?.cancellationDays ?? 14
+	const familyMax = FAMILY_MAX_MEMBERS
+	const cancellationDays = CANCELLATION_DAYS
 
-	const groups = [
-		{ family: false, title: tPlus('name'), body: t('individualBody') },
-		{ family: true, title: t('family'), body: t('familyBody', { count: familyMax }) },
-	]
+	// One card per product, in the catalogue's order (the single-person plan
+	// first): its shipped name, then the copy that describes it.
+	const groups = PRODUCTS.filter((product) =>
+		PLANS.some((plan) => plan.product === product.id),
+	).map((product) => {
+		const family = isFamilyProduct(product.id)
+		return {
+			family,
+			title: localizedName(product.name, locale),
+			body: family ? t('familyBody', { count: familyMax }) : t('individualBody'),
+		}
+	})
 	const includes = (family: boolean) => [
 		t('includesAllGames', { count: gameCount }),
 		t('includesArchive'),
@@ -89,7 +106,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 	return (
 		<main className="flex-1">
 			<MarketingHero
-				eyebrow={tPlus('name')}
+				eyebrow={brandName(locale)}
 				title={t('title')}
 				lead={t('lead', { count: gameCount })}
 				actions={
@@ -117,7 +134,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 								className="inline-block h-2.5 w-2.5 rounded-[3px] bg-accent-warm"
 								aria-hidden="true"
 							/>
-							{tPlus('name')}
+							{brandName(locale)}
 						</p>
 						<h2 className="mt-2 font-display text-2xl">{t('closedTitle')}</h2>
 						<p className="mt-2 text-[15px] text-muted-foreground">{t('closedBody')}</p>
@@ -134,7 +151,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 					<>
 						<ul className="grid gap-4 lg:grid-cols-3">
 							<li className="flex flex-col rounded-2xl border border-border p-5 sm:p-6">
-								<h2 className="font-display text-xl">{t('freeTitle')}</h2>
+								<h2 className="font-display text-xl">{localizedName(FREE.name, locale)}</h2>
 								<p className="mt-1 text-sm text-muted-foreground">{t('freeBody')}</p>
 								<p className="mt-5 font-display text-3xl tnum">
 									{formatPrice(0, currency, locale)}
@@ -228,7 +245,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 						</ul>
 						<p className="mt-6 max-w-3xl text-xs leading-relaxed text-muted-foreground">
 							{t('legal', { days: cancellationDays })}{' '}
-							<Link href="/terms#subscriptions" className="underline">
+							<Link href={TERMS_PATH} className="underline">
 								{t('manage')}
 							</Link>
 						</p>

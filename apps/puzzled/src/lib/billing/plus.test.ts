@@ -1,18 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import { create } from '@bufbuild/protobuf'
-import {
-	GetSubscriptionResponseSchema,
-	ListPlansResponseSchema,
-} from '@/gen/connect/puzzled/v1/billing_pb'
-import {
-	currencyForLocale,
-	formatPrice,
-	isPlayLocked,
-	isPlusRequiredError,
-	planCards,
-	subscriptionView,
-	yearlySavingPercent,
-} from './plus'
+import { GetSubscriptionResponseSchema } from '@/gen/connect/puzzled/v1/billing_pb'
+import { planById } from './catalogue'
+import { isPlayLocked, isPlusRequiredError, subscriptionView, yearlySavingPercent } from './plus'
 
 describe('Puzzled Plus presentation', () => {
 	test('nothing is locked while sales are closed or for a subscriber', () => {
@@ -34,39 +24,20 @@ describe('Puzzled Plus presentation', () => {
 		expect(isPlusRequiredError('future_puzzle_date')).toBe(false)
 	})
 
-	test('cards use the locale currency and fall back to dollars', () => {
-		const plans = create(ListPlansResponseSchema, {
-			plans: [
-				{
-					id: 'individual_monthly',
-					interval: 'month',
-					prices: [
-						{ currency: 'usd', unitAmountMinor: BigInt(499) },
-						{ currency: 'gbp', unitAmountMinor: BigInt(399) },
-					],
-				},
-				{
-					id: 'family_yearly',
-					family: true,
-					interval: 'year',
-					prices: [{ currency: 'usd', unitAmountMinor: BigInt(6499) }],
-				},
-			],
-		}).plans
-		expect(currencyForLocale('en-GB')).toBe('gbp')
-		expect(currencyForLocale('zh-HK')).toBe('usd')
-		const cards = planCards(plans, 'gbp')
-		expect(cards[0]).toEqual({
-			id: 'individual_monthly',
-			family: false,
-			interval: 'month',
-			currency: 'gbp',
-			amountMinor: 399,
-		})
-		expect(cards[1].currency).toBe('usd')
-		expect(formatPrice(399, 'gbp', 'en-GB')).toBe('£3.99')
-		expect(yearlySavingPercent(499, 3999)).toBe(33)
-		expect(yearlySavingPercent(499, 6000)).toBe(null)
+	test('the yearly saving is a whole percent of twelve monthly payments', () => {
+		const saving = (id: string, currency: string) => {
+			const monthly = planById(id.replace('_yearly', '_monthly'))!
+			const yearly = planById(id)!
+			return yearlySavingPercent(monthly.unit_amounts[currency], yearly.unit_amounts[currency])
+		}
+		expect(saving('individual_yearly', 'usd')).toBe(33)
+		expect(saving('individual_yearly', 'gbp')).toBe(31)
+		expect(saving('family_yearly', 'usd')).toBe(32)
+		expect(saving('family_yearly', 'gbp')).toBe(32)
+		// A yearly price that does not save anything shows no badge.
+		const monthly = planById('individual_monthly')!
+		expect(yearlySavingPercent(monthly.unit_amounts.usd, monthly.unit_amounts.usd * 20)).toBe(null)
+		expect(yearlySavingPercent(0, monthly.unit_amounts.usd)).toBe(null)
 	})
 
 	test('subscription view reads optional fields as null', () => {

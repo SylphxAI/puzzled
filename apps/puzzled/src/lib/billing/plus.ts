@@ -1,13 +1,14 @@
 /**
  * Puzzled Plus presentation rules. The Rust api decides access (Connect
  * `PuzzleService` refuses with `plus_required` / `plus_required_archive`);
- * these helpers only choose what the page shows, from the same facts.
+ * these helpers only form what the page shows, from the same facts.
+ *
+ * The commercial facts themselves (products, plans, prices, seats, the
+ * cancellation window) come from `./catalogue`, which reads
+ * `config/commercial/catalogue.json`; nothing here may restate them.
  */
 
-import type {
-	GetSubscriptionResponse,
-	ListPlansResponse,
-} from '@/gen/connect/puzzled/v1/billing_pb'
+import type { GetSubscriptionResponse } from '@/gen/connect/puzzled/v1/billing_pb'
 
 /** What a page needs to know about the viewer and the store. */
 export type PlusAccess = {
@@ -34,41 +35,6 @@ export function isPlusRequiredError(message: string | undefined | null): boolean
 	return Boolean(message && /plus_required/.test(message))
 }
 
-export type PlanId = 'individual_monthly' | 'individual_yearly' | 'family_monthly' | 'family_yearly'
-
-/** Currency shown for a locale: pounds for en-GB, US dollars otherwise. */
-export function currencyForLocale(locale: string): 'gbp' | 'usd' {
-	return locale.toLowerCase() === 'en-gb' ? 'gbp' : 'usd'
-}
-
-export type PlanCard = {
-	id: PlanId
-	family: boolean
-	interval: 'month' | 'year'
-	currency: string
-	/** Minor units, tax included. */
-	amountMinor: number
-}
-
-/** Plan cards in one currency; a plan without a price in it is left out. */
-export function planCards(plans: ListPlansResponse['plans'], currency: string): PlanCard[] {
-	const cards: PlanCard[] = []
-	for (const plan of plans) {
-		const price =
-			plan.prices.find((p) => p.currency === currency) ??
-			plan.prices.find((p) => p.currency === 'usd')
-		if (!price) continue
-		cards.push({
-			id: plan.id as PlanId,
-			family: plan.family,
-			interval: plan.interval === 'year' ? 'year' : 'month',
-			currency: price.currency,
-			amountMinor: Number(price.unitAmountMinor),
-		})
-	}
-	return cards
-}
-
 /** Format minor units as a price in the viewer's locale. */
 export function formatPrice(amountMinor: number, currency: string, locale: string): string {
 	return new Intl.NumberFormat(locale, {
@@ -89,7 +55,7 @@ export type SubscriptionView = {
 	salesOpen: boolean
 	entitled: boolean
 	source: 'none' | 'plus' | 'family'
-	planId: PlanId | null
+	planId: string | null
 	status: string | null
 	periodEndMs: number | null
 	cancelAtPeriodEnd: boolean
@@ -109,7 +75,7 @@ export function subscriptionView(res: GetSubscriptionResponse): SubscriptionView
 		entitled: res.entitled,
 		source,
 		// Unset optional fields read as their zero value.
-		planId: (res.planId || null) as PlanId | null,
+		planId: res.planId || null,
 		status: res.status || null,
 		periodEndMs: Number(res.currentPeriodEndMs) || null,
 		cancelAtPeriodEnd: res.cancelAtPeriodEnd,

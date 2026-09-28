@@ -16,7 +16,7 @@ use connectrpc::{
 use sqlx::PgPool;
 use tracing::warn;
 
-use puzzled_core::billing_access::policy::{is_family_plan, CANCELLATION_DAYS, FAMILY_MAX_MEMBERS};
+use puzzled_core::billing_access::policy::{cancellation_days, family_max_members, is_family_plan};
 
 use super::identity::require_identity;
 use super::state::AppState;
@@ -125,7 +125,7 @@ impl BillingConnectService {
         Ok(Family {
             role: if viewer_is_owner { "owner" } else { "member" }.to_string(),
             members,
-            max_members: FAMILY_MAX_MEMBERS,
+            max_members: family_max_members(),
             invite_code: if viewer_is_owner { invite_code } else { None },
             ..Default::default()
         })
@@ -139,38 +139,42 @@ impl BillingService for BillingConnectService {
         _ctx: RequestContext,
         _request: ServiceRequest<'_, ListPlansRequest>,
     ) -> ServiceResult<ListPlansResponse> {
+        // The price list is the catalogue's declaration — the same file the
+        // pricing page renders — and sales_open says whether the processor
+        // publishes it exactly, amounts, intervals and tax behaviour alike.
+        let catalogue = puzzled_core::billing_access::catalogue::catalogue();
         let mut response = ListPlansResponse {
             sales_open: false,
-            family_max_members: FAMILY_MAX_MEMBERS,
-            cancellation_days: CANCELLATION_DAYS,
+            family_max_members: family_max_members(),
+            cancellation_days: cancellation_days(),
+            plans: catalogue
+                .plans
+                .iter()
+                .map(|plan| Plan {
+                    id: plan.plan_id.clone(),
+                    family: is_family_plan(&plan.plan_id),
+                    interval: plan.interval.clone(),
+                    prices: catalogue
+                        .declared_prices(&plan.plan_id)
+                        .into_iter()
+                        .map(|(currency, unit_amount_minor)| PlanPrice {
+                            currency: currency.to_string(),
+                            unit_amount_minor,
+                            ..Default::default()
+                        })
+                        .collect(),
+                    ..Default::default()
+                })
+                .collect(),
             ..Default::default()
         };
         let Ok((_, stripe)) = self.store() else {
             return Response::ok(response);
         };
-        let prices = stripe
-            .prices()
+        response.sales_open = service::on_sale_prices(stripe)
             .await
-            .map_err(internal("plans_unavailable"))?;
-        response.sales_open = !prices.is_empty();
-        response.plans = prices
-            .into_iter()
-            .map(|price| Plan {
-                id: price.plan_id.to_string(),
-                family: is_family_plan(price.plan_id),
-                interval: price.interval,
-                prices: price
-                    .amounts
-                    .into_iter()
-                    .map(|(currency, unit_amount_minor)| PlanPrice {
-                        currency,
-                        unit_amount_minor,
-                        ..Default::default()
-                    })
-                    .collect(),
-                ..Default::default()
-            })
-            .collect();
+            .map_err(internal("plans_unavailable"))?
+            .is_some();
         Response::ok(response)
     }
 
@@ -371,7 +375,7 @@ impl BillingService for BillingConnectService {
                 "family_plan_inactive",
             ));
         }
-        match billing_db::join_family(pool, &owner, &identity.user_id, FAMILY_MAX_MEMBERS)
+        match billing_db::join_family(pool, &owner, &identity.user_id, family_max_members())
             .await
             .map_err(internal("family_unavailable"))?
         {

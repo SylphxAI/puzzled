@@ -1,5 +1,4 @@
 {
-	"name": "Puzzled Plus",
 	"pricing": {
 		"metaTitle": "Puzzled Plus: every game and the full archive",
 		"metaDescription": "Today's featured puzzle is free. Puzzled Plus opens every game, every past day, and a family plan.",
@@ -7,11 +6,9 @@
 		"lead": "Today's featured puzzle is free for everyone. Puzzled Plus opens all {count} games, the archive of past days, and stats for every game.",
 		"closedTitle": "Everything is free for now",
 		"closedBody": "Puzzled Plus is not on sale yet, so every game and every past day is open to everyone.",
-		"freeTitle": "Free",
 		"freeBody": "Today's featured puzzle, every day, with no account needed.",
 		"playFree": "Play today's free puzzle: {game}",
 		"individualBody": "For one player.",
-		"family": "Puzzled Plus Family",
 		"familyBody": "Up to {count} people, each with their own stats and streaks.",
 		"monthly": "Monthly",
 		"yearly": "Yearly",

@@ -65,14 +65,19 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 | Puzzled Plus Family (up to 4 people), monthly | 7.99 | 6.49 |
 | Puzzled Plus Family, yearly | 64.99 | 52.99 |
 
+- The amounts above are declared in one file:
+  `config/commercial/catalogue.json`, Puzzled's catalogue for Sylphx Money
+  (products, price keys, amounts in integer minor units per currency, features,
+  family seats, refund policy). Changing a price is one line there.
 - Prices include VAT (Stripe `tax_behavior=inclusive`). The pricing page shows
   pounds for `en-GB` and dollars elsewhere, and checkout charges the currency
   shown.
-- The live price is the Stripe price under each lookup key
+- The pricing page and `BillingService.ListPlans` render from that file, and
+  `scripts/stripe-setup.ts` publishes it to Stripe under the lookup keys
   (`puzzled_individual_monthly`, `puzzled_individual_yearly`,
-  `puzzled_family_monthly`, `puzzled_family_yearly`); `scripts/stripe-setup.ts`
-  writes them. The pricing page reads them through `BillingService.ListPlans`
-  and never prints a hard-coded amount.
+  `puzzled_family_monthly`, `puzzled_family_yearly`). Sales stay closed while
+  Stripe's published prices differ from the file in amount, interval, tax
+  behaviour or currency, so the shown price is the charged price.
 - A price change creates a new Stripe price that takes over the lookup key;
   existing subscribers keep their price until they change plan. Players get
   at least 30 days' notice before a new price applies to their renewal.

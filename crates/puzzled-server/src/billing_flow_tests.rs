@@ -29,6 +29,9 @@ const WEBHOOK_SECRET: &str = "whsec_test_flow";
 #[derive(Default)]
 struct FakeStripe {
     next: u32,
+    /// Added to every USD amount the fake publishes, so a test can make
+    /// Stripe disagree with the catalogue without editing the catalogue.
+    price_drift_usd: i64,
     customers: HashMap<String, String>,
     subscriptions: HashMap<String, Value>,
     invoices: HashMap<String, Value>,
@@ -38,19 +41,38 @@ struct FakeStripe {
 
 type Fake = Arc<Mutex<FakeStripe>>;
 
-fn price(id: &str, key: &str, usd: i64, gbp: i64, interval: &str) -> Value {
-    json!({"id": id, "lookup_key": key, "currency": "usd", "unit_amount": usd,
-           "recurring": {"interval": interval},
+/// A published price for a catalogue plan, exactly as the catalogue declares
+/// it (amounts, interval and tax behaviour alike).
+fn price(id: &str, plan_id: &str) -> Value {
+    let plan = puzzled_core::billing_access::catalogue::catalogue()
+        .plan(plan_id)
+        .unwrap();
+    let usd = plan.declared_amount("usd").unwrap();
+    let gbp = plan.declared_amount("gbp").unwrap();
+    json!({"id": id, "lookup_key": plan.provider_lookup_key, "currency": "usd",
+           "unit_amount": usd, "tax_behavior": plan.tax_behavior,
+           "recurring": {"interval": plan.interval},
            "currency_options": {"usd": {"unit_amount": usd}, "gbp": {"unit_amount": gbp}}})
 }
 
-async fn prices() -> Json<Value> {
-    Json(json!({"data": [
-        price("price_im", "puzzled_individual_monthly", 499, 399, "month"),
-        price("price_iy", "puzzled_individual_yearly", 3999, 3299, "year"),
-        price("price_fm", "puzzled_family_monthly", 799, 649, "month"),
-        price("price_fy", "puzzled_family_yearly", 6499, 5299, "year"),
-    ]}))
+async fn prices(State(fake): State<Fake>) -> Json<Value> {
+    let drift = fake.lock().unwrap().price_drift_usd;
+    let mut data = vec![
+        price("price_im", "individual_monthly"),
+        price("price_iy", "individual_yearly"),
+        price("price_fm", "family_monthly"),
+        price("price_fy", "family_yearly"),
+    ];
+    if drift != 0 {
+        // What a price edited in the dashboard looks like to the api: the
+        // catalogue is unchanged, Stripe is not.
+        for price in &mut data {
+            let usd = price["unit_amount"].as_i64().unwrap() + drift;
+            price["unit_amount"] = json!(usd);
+            price["currency_options"]["usd"]["unit_amount"] = json!(usd);
+        }
+    }
+    Json(json!({"data": data}))
 }
 
 async fn create_customer(
@@ -202,14 +224,14 @@ async fn spawn_fake(fake: Fake) -> String {
     format!("http://{addr}")
 }
 
-/// Stripe finishing a checkout: a live subscription and its paid invoice.
-fn complete_checkout(
-    fake: &Fake,
-    customer: &str,
-    user: &str,
-    lookup_key: &str,
-    amount: i64,
-) -> String {
+/// Stripe finishing a checkout: a live subscription and its paid invoice, at
+/// the catalogue's declared lookup key and amount.
+fn complete_checkout(fake: &Fake, customer: &str, user: &str, plan_id: &str) -> String {
+    let plan = puzzled_core::billing_access::catalogue::catalogue()
+        .plan(plan_id)
+        .unwrap();
+    let lookup_key = plan.provider_lookup_key.as_str();
+    let amount = plan.declared_amount("usd").unwrap();
     let mut fake = fake.lock().unwrap();
     fake.next += 1;
     let n = fake.next;
@@ -377,6 +399,14 @@ fn paid_game() -> &'static str {
     }
 }
 
+/// A declared USD amount, so ledger and invoice fixtures cannot drift from the
+/// catalogue.
+fn declared(plan_id: &str) -> i64 {
+    puzzled_core::billing_access::catalogue::catalogue()
+        .declared_amount(plan_id, "usd")
+        .unwrap()
+}
+
 async fn play(app: &Router, game: &str, token: &str) -> (StatusCode, Value) {
     call(
         app,
@@ -511,7 +541,7 @@ async fn buy_unlock_share_cancel_refund_and_lock_again() {
     let customer = form["customer"].clone();
 
     // A forged webhook changes nothing.
-    let sub = complete_checkout(&fake, &customer, buyer, "puzzled_individual_monthly", 499);
+    let sub = complete_checkout(&fake, &customer, buyer, "individual_monthly");
     let completed = json!({"id": "evt_1", "type": "checkout.session.completed", "created": 1,
                            "data": {"object": {"id": "cs_1", "subscription": sub}}});
     assert_eq!(
@@ -615,11 +645,14 @@ async fn buy_unlock_share_cancel_refund_and_lock_again() {
     .unwrap();
     assert_eq!(
         ledger,
-        vec![("payment".to_string(), 499), ("refund".to_string(), -499)]
+        vec![
+            ("payment".to_string(), declared("individual_monthly")),
+            ("refund".to_string(), -declared("individual_monthly"))
+        ]
     );
 
     // A second subscription has no refund window: cancel runs to period end.
-    let sub2 = complete_checkout(&fake, &customer, buyer, "puzzled_individual_yearly", 3999);
+    let sub2 = complete_checkout(&fake, &customer, buyer, "individual_yearly");
     let event = json!({"id": "evt_3", "type": "customer.subscription.created", "created": 3,
                        "data": {"object": {"id": sub2}}});
     assert_eq!(webhook(&app, event, WEBHOOK_SECRET).await, StatusCode::OK);
@@ -684,8 +717,7 @@ async fn buy_unlock_share_cancel_refund_and_lock_again() {
         "without an account row the landing cookie is used"
     );
     let owner_customer = fake.lock().unwrap().checkouts[1]["customer"].clone();
-    let family_sub =
-        complete_checkout(&fake, &owner_customer, owner, "puzzled_family_monthly", 799);
+    let family_sub = complete_checkout(&fake, &owner_customer, owner, "family_monthly");
     let event = json!({"id": "evt_4", "type": "customer.subscription.created", "created": 4,
                        "data": {"object": {"id": family_sub}}});
     assert_eq!(webhook(&app, event, WEBHOOK_SECRET).await, StatusCode::OK);
@@ -781,6 +813,14 @@ async fn sales_closed_sells_nothing_and_locks_nothing() {
     );
     assert_eq!(plans["familyMaxMembers"], 4);
     assert_eq!(plans["cancellationDays"], 14);
+    // The price list is the catalogue's declaration even while nothing can be
+    // sold; sales_open is what says it cannot be bought.
+    assert_eq!(
+        plans["plans"].as_array().unwrap().len(),
+        puzzled_core::billing_access::catalogue::catalogue()
+            .plans
+            .len()
+    );
     let (status, body) = call(
         &app,
         "/puzzled.v1.PuzzleService/GetDaily",
@@ -801,4 +841,88 @@ async fn sales_closed_sells_nothing_and_locks_nothing() {
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+}
+
+/// A proto int64 field as JSON: the Connect JSON mapping may carry it as a
+/// number or as a string.
+fn int64(value: &Value) -> i64 {
+    value
+        .as_i64()
+        .or_else(|| value.as_str().and_then(|text| text.parse().ok()))
+        .unwrap_or_else(|| panic!("not an int64: {value}"))
+}
+
+/// A price the catalogue does not declare — a dashboard edit, or a catalogue
+/// edit not yet published — closes sales: the list is still the declaration,
+/// checkout refuses rather than charge it, and nothing is locked because
+/// nothing can be bought.
+#[tokio::test]
+async fn a_published_price_that_differs_from_the_catalogue_closes_sales() {
+    let _key = crate::capabilities::identity_access::adapters::platform_jwt::test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let fake: Fake = Arc::new(Mutex::new(FakeStripe {
+        price_drift_usd: -100,
+        ..FakeStripe::default()
+    }));
+    let base = spawn_fake(fake.clone()).await;
+    let stripe = Stripe::new(
+        "sk_test_flow".into(),
+        WEBHOOK_SECRET.into(),
+        base,
+        "https://puzzled.test".into(),
+    );
+    let app = router(AppState::new(Some(pool.clone())).with_stripe(Some(stripe)));
+
+    let catalogue = puzzled_core::billing_access::catalogue::catalogue();
+    let (status, plans) = call(
+        &app,
+        "/puzzled.v1.BillingService/ListPlans",
+        json!({}),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{plans}");
+    assert_eq!(plans["salesOpen"], false);
+    // The list itself is still the catalogue's declaration, not Stripe's.
+    assert_eq!(
+        plans["plans"].as_array().unwrap().len(),
+        catalogue.plans.len()
+    );
+    assert_eq!(plans["plans"][0]["id"], "individual_monthly");
+    assert_eq!(
+        int64(&plans["plans"][0]["prices"][0]["unitAmountMinor"]),
+        catalogue
+            .declared_amount("individual_monthly", "usd")
+            .unwrap()
+    );
+
+    // Checkout refuses instead of charging the drifted price.
+    let buyer = "0b6f7d3e-3333-4a4a-9c9c-000000000003";
+    let buyer_token = token(buyer);
+    let (status, body) = call(
+        &app,
+        "/puzzled.v1.BillingService/CreateCheckout",
+        json!({"planId": "individual_monthly", "locale": "en-GB", "currency": "gbp"}),
+        Some(&buyer_token),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST, "{body}");
+    assert!(
+        body["message"]
+            .as_str()
+            .unwrap_or("")
+            .contains("plan_not_on_sale"),
+        "{body}"
+    );
+    assert!(fake.lock().unwrap().checkouts.is_empty());
+
+    // Nothing can be bought, so nothing is locked: paid games still play.
+    let (status, body) = play(&app, paid_game(), &buyer_token).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+
+    pool.close().await;
 }

@@ -357,10 +357,6 @@
 				"keys": ["auth.forgotPassword", "auth.forgotPasswordTitle"]
 			},
 			{
-				"value": "Free",
-				"keys": ["daily.freeToday", "plus.pricing.freeTitle"]
-			},
-			{
 				"value": "Games",
 				"keys": ["admin.games.title", "admin.sidebar.games", "nav.games"]
 			},
@@ -678,10 +674,6 @@
 			{
 				"value": "Puzzle #{number}",
 				"keys": ["daily.puzzleNumber", "home.day.puzzleNumber"]
-			},
-			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
 			},
 			{
 				"value": "Puzzled player",
@@ -1445,10 +1437,6 @@
 				"keys": ["auth.forgotPassword", "auth.forgotPasswordTitle"]
 			},
 			{
-				"value": "Free",
-				"keys": ["daily.freeToday", "plus.pricing.freeTitle"]
-			},
-			{
 				"value": "Games",
 				"keys": ["admin.games.title", "admin.sidebar.games", "nav.games"]
 			},
@@ -1766,10 +1754,6 @@
 			{
 				"value": "Puzzle #{number}",
 				"keys": ["daily.puzzleNumber", "home.day.puzzleNumber"]
-			},
-			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
 			},
 			{
 				"value": "Puzzled player",
@@ -2295,10 +2279,6 @@
 				]
 			},
 			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
-			},
-			{
 				"value": "Puzzled 玩家",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
@@ -2447,10 +2427,6 @@
 					"settings.notifications.push.saving",
 					"settings.profile.saving"
 				]
-			},
-			{
-				"value": "免費",
-				"keys": ["admin.users.free", "plus.pricing.freeTitle"]
 			},
 			{
 				"value": "全部",
@@ -3360,10 +3336,6 @@
 				]
 			},
 			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
-			},
-			{
 				"value": "Puzzled 玩家",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
@@ -3511,10 +3483,6 @@
 					"settings.notifications.push.saving",
 					"settings.profile.saving"
 				]
-			},
-			{
-				"value": "免費",
-				"keys": ["admin.users.free", "plus.pricing.freeTitle"]
 			},
 			{
 				"value": "全部",
@@ -4423,10 +4391,6 @@
 				]
 			},
 			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
-			},
-			{
 				"value": "Puzzled 玩家",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
@@ -4570,10 +4534,6 @@
 					"settings.preferences.title",
 					"settings.search.sections.preferences"
 				]
-			},
-			{
-				"value": "免费",
-				"keys": ["admin.users.free", "plus.pricing.freeTitle"]
 			},
 			{
 				"value": "全部",

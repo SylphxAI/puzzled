@@ -1,0 +1,194 @@
+{
+	"product": "puzzled",
+	"format": "sylphx-money.catalogue/1",
+	"updated": "2026-09-28",
+	"readme": "The one authored place for Puzzled's commercial facts: products, price keys, amounts, features (entitlements), family seats and the refund policy. The pricing page renders from it, scripts/stripe-setup.ts publishes it to Stripe, and the Rust api embeds it (crates/puzzled-core/src/capabilities/billing_access/catalogue.rs) and serves it from ListPlans. Sales stay closed unless the payment processor's published prices match this file exactly, so the shown price, the declared price and the charged price are the same value. Change a price here and nowhere else. Amounts are integer minor units, tax inclusive.",
+
+	"seller": {
+		"legal_name": "Sylphx Limited",
+		"company_number": "16438428",
+		"vat_number": "GB 502 7862 95",
+		"country": "GB",
+		"source": "apps/puzzled/src/messages/en-US/legal.json (terms) and the pricing page's VAT line, read 2026-09-28"
+	},
+
+	"locales": {
+		"shipped": ["en-US", "zh-HK", "zh-CN"],
+		"note": "The locales whose display names ship for these products. A name missing for the viewer's locale falls back to en-US. Marketing copy (benefit lines, legal wording) stays in the i18n messages; only the commercial names live here.",
+		"source": "apps/puzzled/src/messages/{en-US,zh-HK,zh-CN}/plus.json, read 2026-09-28"
+	},
+
+	"base_currency": "usd",
+
+	"currency_display": {
+		"by_locale": { "en-GB": "gbp" },
+		"default": "usd",
+		"rule": "the pricing page shows the locale's currency when the price publishes one, and the default currency otherwise",
+		"source": "apps/puzzled/src/lib/billing/plus.ts currencyForLocale on main 55c6e43c, read 2026-09-28"
+	},
+
+	"free": {
+		"id": "free",
+		"name": { "en-US": "Free", "zh-HK": "免費", "zh-CN": "免费" },
+		"purchasable": false,
+		"price_minor": 0,
+		"unlocks": [
+			"Today's featured game, every day, signed in or not",
+			"An account keeps progress, streaks and stats for the free daily"
+		],
+		"gated_by": "crates/puzzled-core/src/capabilities/billing_access/policy.rs play_access(): the free daily is admitted without any billing read; while sales are closed every game and past day is free too",
+		"source": "plus.name / plus.pricing.freeTitle / plus.pricing.freeBody / plus.pricing.closedBody and docs/north-star/MONETIZATION.md free floor, read 2026-09-28"
+	},
+
+	"products": [
+		{
+			"id": "puzzled_plus",
+			"name": { "en-US": "Puzzled Plus", "zh-HK": "Puzzled Plus", "zh-CN": "Puzzled Plus" },
+			"source": "scripts/stripe-setup.ts PRODUCTS and plus.name, read 2026-09-28"
+		},
+		{
+			"id": "puzzled_plus_family",
+			"name": {
+				"en-US": "Puzzled Plus Family",
+				"zh-HK": "Puzzled Plus 家庭方案",
+				"zh-CN": "Puzzled Plus 家庭方案"
+			},
+			"source": "scripts/stripe-setup.ts PRODUCTS and plus.pricing.family, read 2026-09-28"
+		}
+	],
+
+	"features": {
+		"plus": {
+			"name": { "en-US": "Puzzled Plus", "zh-HK": "Puzzled Plus", "zh-CN": "Puzzled Plus" },
+			"unlocks": [
+				"Play every game, not only today's featured one",
+				"Play any past day (the full archive)",
+				"Stats and streaks for every game"
+			],
+			"gated_by": "crates/puzzled-core/src/capabilities/billing_access/policy.rs play_access() refuses with plus_required / plus_required_archive; crates/puzzled-server/src/capabilities/billing/service.rs entitlement() decides who holds it",
+			"source": "read from the code and copy on main 55c6e43c, 2026-09-28"
+		},
+		"family": {
+			"name": {
+				"en-US": "Puzzled Plus Family",
+				"zh-HK": "Puzzled Plus 家庭方案",
+				"zh-CN": "Puzzled Plus 家庭方案"
+			},
+			"unlocks": [
+				"A seat on an active family plan, invited by its owner",
+				"Everything plus unlocks, while the plan grants access",
+				"See who is on the plan and leave it (Settings, Subscription)"
+			],
+			"implies": ["plus"],
+			"granted_by": [
+				"an invite code from the plan owner, while the owner's family plan grants access"
+			],
+			"gated_by": "crates/puzzled-server/src/capabilities/billing/adapters/billing_db.rs family_owner_of / join_family / family_members; the seat count is the family price's seats",
+			"source": "read from the code and copy on main 55c6e43c, 2026-09-28"
+		}
+	},
+
+	"plans": [
+		{
+			"price_key": "plus_individual_monthly",
+			"plan_id": "individual_monthly",
+			"provider_lookup_key": "puzzled_individual_monthly",
+			"product": "puzzled_plus",
+			"name": {
+				"en-US": "Puzzled Plus, monthly",
+				"zh-HK": "Puzzled Plus（按月）",
+				"zh-CN": "Puzzled Plus（按月）"
+			},
+			"interval": "month",
+			"unit_amounts": { "usd": 499, "gbp": 399 },
+			"tax_behavior": "inclusive",
+			"features": ["plus"],
+			"seats": 1,
+			"trial_days": 0,
+			"source": "scripts/stripe-setup.ts PLANS (main 55c6e43c, read 2026-09-28); same figures in the 2026-09-26 Money migration plan in /scratch/sylphx-apps/PLAN.md"
+		},
+		{
+			"price_key": "plus_individual_yearly",
+			"plan_id": "individual_yearly",
+			"provider_lookup_key": "puzzled_individual_yearly",
+			"product": "puzzled_plus",
+			"name": {
+				"en-US": "Puzzled Plus, yearly",
+				"zh-HK": "Puzzled Plus（按年）",
+				"zh-CN": "Puzzled Plus（按年）"
+			},
+			"interval": "year",
+			"unit_amounts": { "usd": 3999, "gbp": 3299 },
+			"tax_behavior": "inclusive",
+			"features": ["plus"],
+			"seats": 1,
+			"trial_days": 0,
+			"source": "scripts/stripe-setup.ts PLANS (main 55c6e43c, read 2026-09-28); same figures in the 2026-09-26 Money migration plan in /scratch/sylphx-apps/PLAN.md"
+		},
+		{
+			"price_key": "plus_family_monthly",
+			"plan_id": "family_monthly",
+			"provider_lookup_key": "puzzled_family_monthly",
+			"product": "puzzled_plus_family",
+			"name": {
+				"en-US": "Puzzled Plus Family, monthly",
+				"zh-HK": "Puzzled Plus 家庭方案（按月）",
+				"zh-CN": "Puzzled Plus 家庭方案（按月）"
+			},
+			"interval": "month",
+			"unit_amounts": { "usd": 799, "gbp": 649 },
+			"tax_behavior": "inclusive",
+			"features": ["plus", "family"],
+			"seats": 4,
+			"trial_days": 0,
+			"source": "scripts/stripe-setup.ts PLANS (main 55c6e43c, read 2026-09-28); seats from policy.rs FAMILY_MAX_MEMBERS; same figures in the 2026-09-26 Money migration plan in /scratch/sylphx-apps/PLAN.md"
+		},
+		{
+			"price_key": "plus_family_yearly",
+			"plan_id": "family_yearly",
+			"provider_lookup_key": "puzzled_family_yearly",
+			"product": "puzzled_plus_family",
+			"name": {
+				"en-US": "Puzzled Plus Family, yearly",
+				"zh-HK": "Puzzled Plus 家庭方案（按年）",
+				"zh-CN": "Puzzled Plus 家庭方案（按年）"
+			},
+			"interval": "year",
+			"unit_amounts": { "usd": 6499, "gbp": 5299 },
+			"tax_behavior": "inclusive",
+			"features": ["plus", "family"],
+			"seats": 4,
+			"trial_days": 0,
+			"source": "scripts/stripe-setup.ts PLANS (main 55c6e43c, read 2026-09-28); seats from policy.rs FAMILY_MAX_MEMBERS; same figures in the 2026-09-26 Money migration plan in /scratch/sylphx-apps/PLAN.md"
+		}
+	],
+
+	"policy": {
+		"terms_url": "https://puzzled.gg/terms#subscriptions",
+		"cancellation": {
+			"days": 14,
+			"applies_to": "the first subscription on an account only",
+			"refund": "cancel inside the window and it ends at once with a full refund of everything paid for it",
+			"source": "apps/puzzled/src/messages/en-US/legal.json terms#subscriptions wording (the wording itself stays in the legal text, never copied here); the window is implemented by policy.rs refund_until_ms / cancellation"
+		},
+		"after_window": {
+			"cancel": "access runs to the end of the paid period, then stops",
+			"resume": "a cancellation can be resumed until the period ends",
+			"source": "policy.rs Cancellation::AtPeriodEnd and crates/puzzled-server/src/capabilities/billing/service.rs cancel / resume"
+		},
+		"renewal": "subscriptions renew automatically until cancelled",
+		"vat": {
+			"display": "inclusive",
+			"note": "the amounts above are what the customer pays, VAT included; the processor computes the tax split",
+			"source": "the pricing page's VAT line; Stripe prices are created tax_behavior=inclusive by scripts/stripe-setup.ts"
+		},
+		"source": "read 2026-09-28 from apps/puzzled/src/messages/en-US/legal.json and plus.json on main 55c6e43c"
+	},
+
+	"notes": [
+		"No plan offers a trial or an introductory price: trial_days is 0 everywhere and no trial copy ships in plus.json or legal.json (checked 2026-09-28). The free daily puzzle is the product's only free taste.",
+		"Every price is per plan, per interval, and covers one product (individual or family); there is no per-game or per-seat purchase. seats is the number of people the price covers, the plan owner included.",
+		"provider_lookup_key is today's payment-processor key (Stripe, this repository's current path). It retires with the processor when Sylphx Money takes over; price_key is the stable key Money declares.",
+		"A price change here must be published to the processor (bun scripts/stripe-setup.ts) before it can be sold: sales stay closed while the published prices differ from this file."
+	]
+}

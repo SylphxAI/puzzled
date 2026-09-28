@@ -20,6 +20,8 @@ RUN cd packages/ui && bun run build
 COPY apps/puzzled ./apps/puzzled
 # The brand home: globals.css imports brand/tokens.css.
 COPY brand ./brand
+# The commercial catalogue: the pricing page imports it at build time.
+COPY config ./config
 
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 SKIP_ENV_VALIDATION=1
 

@@ -2,4 +2,5 @@
 //! Puzzled Plus plan facts. The shell supplies the stored subscription facts
 //! and the clock; nothing here reads Stripe or the database.
 
+pub mod catalogue;
 pub mod policy;

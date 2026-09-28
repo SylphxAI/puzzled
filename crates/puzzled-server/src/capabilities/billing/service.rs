@@ -18,7 +18,7 @@ use puzzled_core::billing_access::policy::{
 use puzzled_core::attribution::Attribution;
 
 use super::adapters::billing_db::{self, SubscriptionRow};
-use super::adapters::stripe::{path_segment, Stripe, StripeSubscription};
+use super::adapters::stripe::{path_segment, Stripe, StripePrice, StripeSubscription};
 use crate::capabilities::preferences::adapters::attribution_db::attribution_for_user;
 
 /// Where the account's access comes from.
@@ -187,6 +187,38 @@ pub async fn ensure_customer(
     billing_db::insert_customer(pool, user_id, id).await
 }
 
+/// Stripe's published prices — but only when every catalogue plan is published
+/// exactly as the commercial catalogue declares it.
+///
+/// Drift (an amount, interval or tax behaviour edited in the catalogue without
+/// publishing it, a price changed in the dashboard, a plan missing from
+/// Stripe) returns None, which closes sales: nothing is sold and nothing is
+/// locked, so the page can never show a price checkout would not charge.
+pub async fn on_sale_prices(stripe: &Stripe) -> Result<Option<Vec<StripePrice>>, String> {
+    let prices = stripe.prices().await?;
+    let catalogue = puzzled_core::billing_access::catalogue::catalogue();
+    let drifted: Vec<&str> = catalogue
+        .plans
+        .iter()
+        .filter(|plan| {
+            !prices.iter().any(|price| {
+                price.plan_id == plan.plan_id
+                    && plan.matches(&price.interval, &price.tax_behavior, &price.amounts)
+            })
+        })
+        .map(|plan| plan.plan_id.as_str())
+        .collect();
+    if !drifted.is_empty() || catalogue.plans.is_empty() {
+        warn!(
+            plans = %drifted.join(", "),
+            "published prices differ from {}; sales are closed",
+            puzzled_core::billing_access::catalogue::CATALOGUE_PATH
+        );
+        return Ok(None);
+    }
+    Ok(Some(prices))
+}
+
 /// Return-URL path prefix for a locale: en-US has none, the others use the
 /// canonical tag (`/en-GB`, `/zh-HK`), matching the web routing.
 fn locale_prefix(locale: &str) -> &'static str {
@@ -221,7 +253,11 @@ pub async fn create_checkout(
     if current.own.is_some() {
         return Err(CheckoutError::AlreadySubscribed);
     }
-    let prices = stripe.prices().await.map_err(CheckoutError::Failed)?;
+    // Only a published price that matches the catalogue may be charged.
+    let prices = on_sale_prices(stripe)
+        .await
+        .map_err(CheckoutError::Failed)?
+        .ok_or(CheckoutError::PlanNotOnSale)?;
     let price = prices
         .iter()
         .find(|p| p.plan_id == plan_id)

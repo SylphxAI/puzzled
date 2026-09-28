@@ -15,8 +15,9 @@ import "google/protobuf/cpp_features.proto";
 // BillingService: Puzzled Plus, the subscription that opens every game and
 // the archive. Stripe is the payment processor; this service owns the
 // entitlement and the append-only ledger. Identity comes from the verified
-// Platform JWT; the request body never carries a user id. Prices are read
-// from Stripe, never copied into the client.
+// Platform JWT; the request body never carries a user id. Prices come from the
+// server's commercial catalogue (config/commercial/catalogue.json) and are
+// never copied into the client.
 
 message Plan {
   // Stable plan id: individual_monthly, individual_yearly, family_monthly,

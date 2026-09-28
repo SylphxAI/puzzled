@@ -21,6 +21,8 @@ COPY crates/puzzled-core/src crates/puzzled-core/src
 COPY crates/puzzled-server/Cargo.toml crates/puzzled-server/Cargo.toml
 COPY crates/puzzled-server/build.rs crates/puzzled-server/build.rs
 COPY crates/puzzled-server/src crates/puzzled-server/src
+# The commercial catalogue: puzzled-core embeds it with include_str!.
+COPY config config
 ENV CARGO_BUILD_JOBS=2
 RUN cargo build --locked --release -p puzzled-server
 

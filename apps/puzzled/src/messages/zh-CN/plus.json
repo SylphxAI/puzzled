@@ -1,5 +1,4 @@
 {
-	"name": "Puzzled Plus",
 	"pricing": {
 		"metaTitle": "Puzzled Plus：全部游戏与完整往日题库",
 		"metaDescription": "今日精选谜题免费。Puzzled Plus 开放全部游戏、所有往日题目，并提供家庭方案。",
@@ -7,11 +6,9 @@
 		"lead": "今日精选谜题人人免费。Puzzled Plus 开放全部 {count} 款游戏、往日题库，以及每款游戏的统计。",
 		"closedTitle": "目前全部免费",
 		"closedBody": "Puzzled Plus 尚未开售，因此每款游戏和每一天的题目都向所有人开放。",
-		"freeTitle": "免费",
 		"freeBody": "每天一道今日精选谜题，无需注册账户。",
 		"playFree": "玩今日免费谜题：{game}",
 		"individualBody": "供一位玩家使用。",
-		"family": "Puzzled Plus 家庭方案",
 		"familyBody": "最多 {count} 人使用，各自保留统计和连续记录。",
 		"monthly": "按月",
 		"yearly": "按年",

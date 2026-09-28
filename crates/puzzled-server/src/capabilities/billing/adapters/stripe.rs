@@ -27,6 +27,9 @@ pub struct StripePrice {
     pub id: String,
     pub plan_id: &'static str,
     pub interval: String,
+    /// `inclusive`, `exclusive` or `unspecified`, as the price carries it;
+    /// only a price matching the catalogue's tax behaviour may be sold.
+    pub tax_behavior: String,
     /// (currency, unit amount in minor units), default currency first.
     pub amounts: Vec<(String, i64)>,
 }
@@ -161,7 +164,8 @@ impl Stripe {
         self.send(self.http.delete(url)).await
     }
 
-    /// The four Puzzled Plus prices, by lookup key; cached for five minutes.
+    /// The Puzzled Plus prices declared in the commercial catalogue, by lookup
+    /// key; cached for five minutes.
     pub async fn prices(&self) -> Result<Vec<StripePrice>, String> {
         let mut cache = self.prices.lock().await;
         if let Some((at, prices)) = cache.as_ref() {
@@ -169,17 +173,13 @@ impl Stripe {
                 return Ok(prices.clone());
             }
         }
-        let keys: Vec<String> = puzzled_core::billing_access::policy::PLAN_IDS
-            .iter()
-            .map(|plan| puzzled_core::billing_access::policy::price_lookup_key(plan))
-            .collect();
         let mut query: Vec<(&str, &str)> = vec![
             ("active", "true"),
             ("limit", "20"),
             ("expand[]", "data.currency_options"),
         ];
-        for key in &keys {
-            query.push(("lookup_keys[]", key.as_str()));
+        for key in puzzled_core::billing_access::policy::plan_lookup_keys() {
+            query.push(("lookup_keys[]", key));
         }
         let body = self.get("/v1/prices", &query).await?;
         let prices = parse_prices(&body);
@@ -258,17 +258,18 @@ pub fn parse_prices(body: &Value) -> Vec<StripePrice> {
                 id: item.get("id")?.as_str()?.to_string(),
                 plan_id,
                 interval: item.pointer("/recurring/interval")?.as_str()?.to_string(),
+                tax_behavior: item
+                    .get("tax_behavior")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+                    .to_string(),
                 amounts,
             })
         })
         .collect();
-    let order = |plan: &str| {
-        puzzled_core::billing_access::policy::PLAN_IDS
-            .iter()
-            .position(|p| *p == plan)
-            .unwrap_or(usize::MAX)
-    };
-    prices.sort_by_key(|price| order(price.plan_id));
+    prices.sort_by_key(|price| {
+        puzzled_core::billing_access::policy::plan_rank(price.plan_id).unwrap_or(usize::MAX)
+    });
     prices
 }
 
@@ -435,23 +436,35 @@ mod tests {
         ));
     }
 
+    /// A declared amount, so this fixture cannot drift from the catalogue.
+    fn declared(plan_id: &str, currency: &str) -> i64 {
+        puzzled_core::billing_access::policy::declared_amount(plan_id, currency).unwrap()
+    }
+
     #[test]
     fn prices_parse_currency_options_and_ignore_foreign_lookup_keys() {
+        let yearly_usd = declared("individual_yearly", "usd");
+        let yearly_gbp = declared("individual_yearly", "gbp");
+        let monthly_usd = declared("individual_monthly", "usd");
         let body = json!({"data": [
             {"id": "price_y", "lookup_key": "puzzled_individual_yearly", "currency": "usd",
-             "unit_amount": 3999, "recurring": {"interval": "year"},
-             "currency_options": {"usd": {"unit_amount": 3999}, "gbp": {"unit_amount": 3299}}},
+             "unit_amount": yearly_usd, "tax_behavior": "inclusive", "recurring": {"interval": "year"},
+             "currency_options": {"usd": {"unit_amount": yearly_usd}, "gbp": {"unit_amount": yearly_gbp}}},
             {"id": "price_m", "lookup_key": "puzzled_individual_monthly", "currency": "usd",
-             "unit_amount": 499, "recurring": {"interval": "month"}},
+             "unit_amount": monthly_usd, "tax_behavior": "inclusive", "recurring": {"interval": "month"}},
             {"id": "price_x", "lookup_key": "other_app", "currency": "usd",
              "unit_amount": 1, "recurring": {"interval": "month"}}
         ]});
         let prices = parse_prices(&body);
         assert_eq!(prices.len(), 2);
         assert_eq!(prices[0].plan_id, "individual_monthly");
+        assert_eq!(prices[0].tax_behavior, "inclusive");
         assert_eq!(
             prices[1].amounts,
-            vec![("usd".to_string(), 3999), ("gbp".to_string(), 3299)]
+            vec![
+                ("usd".to_string(), yearly_usd),
+                ("gbp".to_string(), yearly_gbp)
+            ]
         );
     }
 
