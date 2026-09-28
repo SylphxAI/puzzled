@@ -46,6 +46,24 @@ permissions:
 
 jobs:
   # ==========================================
+  # Repository Standards
+  # ==========================================
+
+  identifiers:
+    name: Identifiers
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Non-v7 ids on added lines (owner standards/identifiers.md)
+        uses: SylphxAI/.github/.github/actions/identifiers@e4a5ea41cbcc87cd93914f89f0d7c3981c868bf9
+
+  # ==========================================
   # Code Quality
   # ==========================================
 

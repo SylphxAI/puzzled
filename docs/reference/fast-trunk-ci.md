@@ -20,4 +20,8 @@
 
 Blocking: lint/typecheck, affected tests, schema/migration safety, narrow security.
 
+The `Identifiers` job fails an added line that mints an id, or declares a primary
+key, that is not a UUIDv7 (owner `standards/identifiers.md`); it checks only the
+lines a change adds, so existing code is not a finding.
+
 Not in source CI: production Docker/release image builds, disposable ship binaries for ordinary tips.
