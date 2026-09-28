@@ -27,6 +27,8 @@ import {
 	FAMILY_MAX_MEMBERS,
 	FEATURES,
 	FREE,
+	grantValue,
+	hasGrant,
 	isFamilyProduct,
 	localizedName,
 	PLANS,
@@ -34,6 +36,7 @@ import {
 	PRODUCTS,
 	planById,
 	planCards,
+	planSeats,
 	priceFor,
 	TERMS_PATH,
 } from './catalogue'
@@ -100,8 +103,8 @@ describe('commercial catalogue', () => {
 			expect(['month', 'year']).toContain(plan.interval)
 			expect(plan.trial_days).toBe(0)
 			expect(plan.tax_behavior).toBe('inclusive')
-			expect(plan.seats).toBeGreaterThanOrEqual(1)
-			expect(plan.features.length).toBeGreaterThan(0)
+			expect(planSeats(plan)).toBeGreaterThanOrEqual(1)
+			expect(Object.keys(plan.grants).length).toBeGreaterThan(0)
 			expect(plan.source.length).toBeGreaterThan(0)
 			for (const currency of ['usd', 'gbp']) {
 				const amount = plan.unit_amounts[currency]
@@ -123,9 +126,9 @@ describe('commercial catalogue', () => {
 	})
 
 	test('the family prices are the only multi-seat ones', () => {
-		const shared = PLANS.filter((plan) => plan.seats > 1)
+		const shared = PLANS.filter((plan) => planSeats(plan) > 1)
 		expect(shared.length).toBe(2)
-		for (const plan of shared) expect(plan.seats).toBe(FAMILY_MAX_MEMBERS)
+		for (const plan of shared) expect(planSeats(plan)).toBe(FAMILY_MAX_MEMBERS)
 		expect(isFamilyProduct('puzzled_plus_family')).toBe(true)
 		expect(isFamilyProduct('puzzled_plus')).toBe(false)
 		expect(planCards('usd').filter((card) => card.family).length).toBe(2)
@@ -135,19 +138,36 @@ describe('commercial catalogue', () => {
 	test('features are declared with the prices that grant them', () => {
 		expect(Object.keys(FEATURES)).toContain('plus')
 		expect(Object.keys(FEATURES)).toContain('family')
+		expect(Object.keys(FEATURES)).toContain('seats')
 		for (const feature of Object.values(FEATURES)) {
+			expect(['boolean', 'limit']).toContain(feature.kind)
 			expect(feature.unlocks.length).toBeGreaterThan(0)
 			expect(feature.gated_by.length).toBeGreaterThan(0)
 			expect(feature.source.length).toBeGreaterThan(0)
 		}
-		// The app's gates are these two names: every price grants `plus`, and
-		// exactly the shared prices also grant `family`.
+		// Every grant names a declared feature and carries the value its kind
+		// promises: a boolean is 'true', the seats limit is a decimal string
+		// (the shape Money's entitlement check answers in).
 		for (const plan of PLANS) {
-			expect(plan.features).toContain('plus')
-			expect(plan.features.includes('family')).toBe(plan.seats > 1)
-			for (const feature of plan.features) expect(Object.keys(FEATURES)).toContain(feature)
+			expect(hasGrant(plan, 'plus')).toBe(true)
+			expect(hasGrant(plan, 'family')).toBe(planSeats(plan) > 1)
+			for (const [feature, value] of Object.entries(plan.grants)) {
+				const declared = FEATURES[feature]
+				expect(declared, `${plan.plan_id} grants undeclared ${feature}`).toBeDefined()
+				if (declared.kind === 'boolean') expect(value, `${plan.plan_id} ${feature}`).toBe('true')
+				else expect(value, `${plan.plan_id} ${feature}`).toMatch(/^\d+$/)
+			}
+			for (const implied of FEATURES.family.implies ?? []) {
+				expect(hasGrant(plan, implied)).toBe(true)
+			}
 		}
-		for (const implied of FEATURES.family.implies ?? []) expect(FEATURES[implied]).toBeDefined()
+		expect(FEATURES.family.implies).toContain('plus')
+		// The seat count lives in the file's `seats` grant and nowhere else.
+		expect(planSeats(planById('family_monthly')!)).toBe(FAMILY_MAX_MEMBERS)
+		expect(FAMILY_MAX_MEMBERS).toBe(Number(planById('family_monthly')!.grants.seats))
+		expect(planById('individual_monthly')!.grants.seats).toBe('1')
+		expect(grantValue(planById('family_yearly')!, 'family')).toBe('true')
+		expect(grantValue(planById('individual_monthly')!, 'family')).toBeUndefined()
 		expect(FREE.purchasable).toBe(false)
 		expect(POLICY.cancellation.days).toBe(CANCELLATION_DAYS)
 	})
@@ -162,7 +182,8 @@ describe('commercial catalogue', () => {
 				expect(card.priceKey).toBe(plan.price_key)
 				expect(card.currency).toBe(currency)
 				expect(plan.interval).toBe(card.interval)
-				expect(card.family).toBe(plan.seats > 1)
+				expect(card.family).toBe(hasGrant(plan, 'family'))
+				expect(card.seats).toBe(planSeats(plan))
 			}
 		}
 		// A currency the catalogue does not publish falls back to the base one.
@@ -235,6 +256,10 @@ describe('commercial catalogue', () => {
 		expect(page).toContain('localizedName(FREE.name, locale)')
 		// Names, seats and the cancellation window have one home: the file.
 		expect(page).not.toMatch(/\?\?\s*\d+/)
+		// The seat count has one home as well: the page passes the catalogue's
+		// family seat count into the copy instead of writing a number.
+		expect(page).toContain('FAMILY_MAX_MEMBERS')
+		expect(page).not.toMatch(/count:\s*\d/)
 		expect(page).not.toContain('plans.plans')
 		expect(page).not.toContain('tPlus(')
 		expect(page).not.toContain("t('freeTitle')")

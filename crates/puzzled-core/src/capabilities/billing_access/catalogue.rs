@@ -2,15 +2,20 @@
 //! (entitlements), family seats and cancellation window.
 //!
 //! The file is `config/commercial/catalogue.json` at the repository root — the
-//! one authored place for these facts, shaped for Sylphx Money to declare as-is.
-//! It is embedded here at compile time, so changing a price is changing that
-//! file and rebuilding. The web pricing page reads the same file directly
-//! (`apps/puzzled/src/lib/billing/catalogue.ts`) and the Stripe setup script
-//! publishes it (`scripts/stripe-setup.ts`).
+//! declaration input for Sylphx Money, and until the cutover the one authored
+//! place for these facts. It is embedded here at compile time, so changing a
+//! price is changing that file and rebuilding. The web pricing page reads the
+//! same file directly (`apps/puzzled/src/lib/billing/catalogue.ts`) and the
+//! Stripe setup script publishes it (`scripts/stripe-setup.ts`).
 //!
 //! Sales stay closed unless every declared plan is published at exactly these
 //! amounts, intervals and tax behaviour ([`Catalogue::price_matches`]), so the
 //! page's price, the declared price and the charged price cannot drift apart.
+//!
+//! At the Money cutover the runtime reads end: this module is replaced by a
+//! Money catalogue client (`GET /v1/catalogs/default`) and entitlement checks
+//! (`entitlement_grants:check`), no amount or seat count is read from this
+//! repository, and the file stays as the record of what was declared.
 //!
 //! Pure facts and pure decisions: no HTTP, no database, no clock.
 
@@ -56,10 +61,14 @@ pub struct Product {
 }
 
 /// A feature as the code reads it. The catalogue describes each one further
-/// (name per locale, what it unlocks, where it is gated); the ids and their
-/// implications are what the app acts on.
+/// (name per locale, what it unlocks, where it is gated); the ids, their kind
+/// and their implications are what the app acts on.
 #[derive(Debug, Clone, Deserialize)]
 pub struct Feature {
+    /// `boolean` (granted as `"true"`) or `limit` (granted as a decimal
+    /// string, like `seats`). This is how Sylphx Money's entitlement grants
+    /// carry the value, so the declaration and the check read the same way.
+    pub kind: String,
     /// Features this one includes; `family` implies `plus`.
     #[serde(default)]
     pub implies: Vec<String>,
@@ -82,10 +91,10 @@ pub struct Plan {
     pub unit_amounts: BTreeMap<String, i64>,
     /// `inclusive`: the amount is what the customer pays, VAT included.
     pub tax_behavior: String,
-    /// Feature ids this price grants.
-    pub features: Vec<String>,
-    /// People this price covers, the plan owner included.
-    pub seats: u32,
+    /// What this price grants, feature id to value: a boolean feature is
+    /// `"true"`, the `seats` limit is a decimal string. The shape Sylphx
+    /// Money's `entitlement_grants:check` answers in.
+    pub grants: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -182,18 +191,24 @@ impl Catalogue {
             .is_some_and(|plan| plan.matches(interval, tax_behavior, amounts))
     }
 
-    /// A family plan covers more than one person.
+    /// A family plan shares its access: it grants the `family` feature.
     #[must_use]
     pub fn is_family_plan(&self, plan_id: &str) -> bool {
-        self.plan(plan_id).is_some_and(|plan| plan.seats > 1)
+        self.plan(plan_id)
+            .is_some_and(|plan| plan.has_grant("family"))
     }
 
-    /// People on one family plan, the owner included.
+    /// People on one family plan, the owner included: the largest `seats`
+    /// limit any price grants.
+    ///
+    /// At the Money cutover this value comes from
+    /// `entitlement_grants:check {feature: "seats"}` for the subscriber's own
+    /// price, not from this file.
     #[must_use]
     pub fn family_max_members(&self) -> u32 {
         self.plans
             .iter()
-            .map(|plan| plan.seats)
+            .filter_map(Plan::seats)
             .filter(|seats| *seats > 1)
             .max()
             .unwrap_or(1)
@@ -208,6 +223,27 @@ impl Catalogue {
 }
 
 impl Plan {
+    /// The value this price grants a feature, when it grants one.
+    #[must_use]
+    pub fn grant(&self, feature: &str) -> Option<&str> {
+        self.grants.get(feature).map(String::as_str)
+    }
+
+    /// Does this price grant the named boolean feature?
+    #[must_use]
+    pub fn has_grant(&self, feature: &str) -> bool {
+        self.grant(feature) == Some("true")
+    }
+
+    /// People this price covers, the plan owner included: the `seats` limit
+    /// grant, as a decimal string in the file.
+    ///
+    /// Money serves the same number at cutover; nothing in the app holds it.
+    #[must_use]
+    pub fn seats(&self) -> Option<u32> {
+        self.grant("seats")?.parse().ok()
+    }
+
     /// The declared amount in a currency, in minor units.
     #[must_use]
     pub fn declared_amount(&self, currency: &str) -> Option<i64> {
@@ -267,8 +303,28 @@ mod tests {
                 "{}",
                 plan.plan_id
             );
-            assert!(plan.seats >= 1, "{}", plan.plan_id);
-            assert!(!plan.features.is_empty(), "{}", plan.plan_id);
+            assert!(
+                plan.seats().is_some_and(|seats| seats >= 1),
+                "{}",
+                plan.plan_id
+            );
+            assert!(!plan.grants.is_empty(), "{}", plan.plan_id);
+            // Every grant names a declared feature and carries the value its
+            // kind promises: a boolean is "true", a limit is a decimal string.
+            for (feature_id, value) in &plan.grants {
+                let feature = catalogue
+                    .feature(feature_id)
+                    .unwrap_or_else(|| panic!("{} grants undeclared {feature_id}", plan.plan_id));
+                match feature.kind.as_str() {
+                    "boolean" => assert_eq!(value, "true", "{} {feature_id}", plan.plan_id),
+                    "limit" => assert!(
+                        !value.is_empty() && value.bytes().all(|byte| byte.is_ascii_digit()),
+                        "{} {feature_id} = {value}",
+                        plan.plan_id
+                    ),
+                    other => panic!("{feature_id} has unknown kind {other}"),
+                }
+            }
             for currency in ["usd", "gbp"] {
                 let amount = plan
                     .declared_amount(currency)
@@ -288,6 +344,9 @@ mod tests {
             "price keys must be unique"
         );
         assert_eq!(catalogue.cancellation_days(), 14);
+        // The family price covers four people; the code reads that number from
+        // the file's `seats` grant and holds none of its own.
+        assert_eq!(plan("family_monthly").seats(), Some(4));
         assert_eq!(catalogue.family_max_members(), 4);
         // The base currency leads every price list, and every declared amount
         // comes back out of it.
@@ -338,29 +397,25 @@ mod tests {
         assert!(catalogue.is_family_plan("family_yearly"));
         assert!(!catalogue.is_family_plan("individual_yearly"));
         assert!(!catalogue.is_family_plan("lifetime"));
-        assert_eq!(plan("family_monthly").seats, 4);
-        assert_eq!(plan("individual_monthly").seats, 1);
+        assert_eq!(plan("family_monthly").seats(), Some(4));
+        assert_eq!(plan("individual_monthly").seats(), Some(1));
         for plan in &catalogue.plans {
-            assert!(
-                plan.features.iter().any(|f| f == "plus"),
-                "{}",
-                plan.plan_id
-            );
-            for feature in &plan.features {
+            assert!(plan.has_grant("plus"), "{}", plan.plan_id);
+            for feature_id in plan.grants.keys() {
                 let declared = catalogue
-                    .feature(feature)
-                    .unwrap_or_else(|| panic!("{} grants undeclared {feature}", plan.plan_id));
+                    .feature(feature_id)
+                    .unwrap_or_else(|| panic!("{} grants undeclared {feature_id}", plan.plan_id));
                 for implied in &declared.implies {
                     assert!(
-                        plan.features.contains(implied),
-                        "{} grants {feature} but not {implied}",
+                        plan.has_grant(implied),
+                        "{} grants {feature_id} but not {implied}",
                         plan.plan_id
                     );
                 }
             }
             assert_eq!(
-                plan.features.iter().any(|f| f == "family"),
-                plan.seats > 1,
+                plan.has_grant("family"),
+                plan.seats().is_some_and(|seats| seats > 1),
                 "{}: the family feature is exactly what a shared price grants",
                 plan.plan_id
             );

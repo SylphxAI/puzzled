@@ -2,7 +2,7 @@
 	"product": "puzzled",
 	"format": "sylphx-money.catalogue/1",
 	"updated": "2026-09-28",
-	"readme": "The one authored place for Puzzled's commercial facts: products, price keys, amounts, features (entitlements), family seats and the refund policy. The pricing page renders from it, scripts/stripe-setup.ts publishes it to Stripe, and the Rust api embeds it (crates/puzzled-core/src/capabilities/billing_access/catalogue.rs) and serves it from ListPlans. Sales stay closed unless the payment processor's published prices match this file exactly, so the shown price, the declared price and the charged price are the same value. Change a price here and nowhere else. Amounts are integer minor units, tax inclusive.",
+	"readme": "The one authored place for Puzzled's commercial facts: products, price keys, amounts, features (entitlements), family seats and the refund policy. This file is the declaration input for Sylphx Money and the pre-cutover source the app reads: the pricing page renders from it, scripts/stripe-setup.ts publishes it to Stripe, and the Rust api embeds it (crates/puzzled-core/src/capabilities/billing_access/catalogue.rs) and serves it from ListPlans. Sales stay closed unless the payment processor's published prices match this file exactly, so the shown price, the declared price and the charged price are the same value. At the Money cutover the runtime reads end: the pricing page and the api read Money's catalogue (GET /v1/catalogs/default) and its entitlement checks, no amount lives in the app, and this file stays as the record of what was declared. Change a price here and nowhere else. Amounts are integer minor units, tax inclusive.",
 
 	"seller": {
 		"legal_name": "Sylphx Limited",
@@ -59,6 +59,7 @@
 
 	"features": {
 		"plus": {
+			"kind": "boolean",
 			"name": { "en-US": "Puzzled Plus", "zh-HK": "Puzzled Plus", "zh-CN": "Puzzled Plus" },
 			"unlocks": [
 				"Play every game, not only today's featured one",
@@ -69,6 +70,7 @@
 			"source": "read from the code and copy on main 55c6e43c, 2026-09-28"
 		},
 		"family": {
+			"kind": "boolean",
 			"name": {
 				"en-US": "Puzzled Plus Family",
 				"zh-HK": "Puzzled Plus 家庭方案",
@@ -83,8 +85,16 @@
 			"granted_by": [
 				"an invite code from the plan owner, while the owner's family plan grants access"
 			],
-			"gated_by": "crates/puzzled-server/src/capabilities/billing/adapters/billing_db.rs family_owner_of / join_family / family_members; the seat count is the family price's seats",
+			"gated_by": "crates/puzzled-server/src/capabilities/billing/adapters/billing_db.rs family_owner_of / join_family / family_members; how many seats the plan has is its `seats` grant",
 			"source": "read from the code and copy on main 55c6e43c, 2026-09-28"
+		},
+		"seats": {
+			"kind": "limit",
+			"name": { "en-US": "Family seats", "zh-HK": "家庭席位", "zh-CN": "家庭席位" },
+			"unlocks": ["How many people one price covers, the plan owner included"],
+			"value": "a decimal string: \"1\" or \"4\"",
+			"gated_by": "crates/puzzled-server/src/capabilities/billing/adapters/billing_db.rs join_family refuses past max_members, which comes from this grant (puzzled_core::billing_access::policy::family_max_members). At cutover the app asks Sylphx Money: entitlement_grants:check {feature: \"seats\"}",
+			"source": "crates/puzzled-core/src/capabilities/billing_access/policy.rs FAMILY_MAX_MEMBERS on main 55c6e43c (= 4), read 2026-09-28"
 		}
 	},
 
@@ -102,8 +112,7 @@
 			"interval": "month",
 			"unit_amounts": { "usd": 499, "gbp": 399 },
 			"tax_behavior": "inclusive",
-			"features": ["plus"],
-			"seats": 1,
+			"grants": { "plus": "true", "seats": "1" },
 			"trial_days": 0,
 			"source": "scripts/stripe-setup.ts PLANS (main 55c6e43c, read 2026-09-28); same figures in the 2026-09-26 Money migration plan in /scratch/sylphx-apps/PLAN.md"
 		},
@@ -120,8 +129,7 @@
 			"interval": "year",
 			"unit_amounts": { "usd": 3999, "gbp": 3299 },
 			"tax_behavior": "inclusive",
-			"features": ["plus"],
-			"seats": 1,
+			"grants": { "plus": "true", "seats": "1" },
 			"trial_days": 0,
 			"source": "scripts/stripe-setup.ts PLANS (main 55c6e43c, read 2026-09-28); same figures in the 2026-09-26 Money migration plan in /scratch/sylphx-apps/PLAN.md"
 		},
@@ -138,8 +146,7 @@
 			"interval": "month",
 			"unit_amounts": { "usd": 799, "gbp": 649 },
 			"tax_behavior": "inclusive",
-			"features": ["plus", "family"],
-			"seats": 4,
+			"grants": { "family": "true", "plus": "true", "seats": "4" },
 			"trial_days": 0,
 			"source": "scripts/stripe-setup.ts PLANS (main 55c6e43c, read 2026-09-28); seats from policy.rs FAMILY_MAX_MEMBERS; same figures in the 2026-09-26 Money migration plan in /scratch/sylphx-apps/PLAN.md"
 		},
@@ -156,8 +163,7 @@
 			"interval": "year",
 			"unit_amounts": { "usd": 6499, "gbp": 5299 },
 			"tax_behavior": "inclusive",
-			"features": ["plus", "family"],
-			"seats": 4,
+			"grants": { "family": "true", "plus": "true", "seats": "4" },
 			"trial_days": 0,
 			"source": "scripts/stripe-setup.ts PLANS (main 55c6e43c, read 2026-09-28); seats from policy.rs FAMILY_MAX_MEMBERS; same figures in the 2026-09-26 Money migration plan in /scratch/sylphx-apps/PLAN.md"
 		}
@@ -186,8 +192,9 @@
 	},
 
 	"notes": [
+		"This file is the declaration input for Sylphx Money and, until the cutover, the source the app reads. At the cutover the runtime reads move to Money: the pricing page and the api read Money's catalogue (GET /v1/catalogs/default) and its entitlement_grants:check, so no amount, name or seat number lives in the app; this file stays as the record of what was declared.",
 		"No plan offers a trial or an introductory price: trial_days is 0 everywhere and no trial copy ships in plus.json or legal.json (checked 2026-09-28). The free daily puzzle is the product's only free taste.",
-		"Every price is per plan, per interval, and covers one product (individual or family); there is no per-game or per-seat purchase. seats is the number of people the price covers, the plan owner included.",
+		"Every price is per plan, per interval, and covers one product (individual or family); there is no per-game or per-seat purchase. grants is the shape Sylphx Money's entitlement_grants:check answers in: a boolean feature is \"true\", and the `seats` limit is a decimal string (\"1\", \"4\") for how many people the price covers, the plan owner included. At cutover the app reads seats and the other entitlements from Money instead of computing them from this file; until then this file is the one source and no seat number is written anywhere else.",
 		"provider_lookup_key is today's payment-processor key (Stripe, this repository's current path). It retires with the processor when Sylphx Money takes over; price_key is the stable key Money declares.",
 		"A price change here must be published to the processor (bun scripts/stripe-setup.ts) before it can be sold: sales stay closed while the published prices differ from this file.",
 		"The 14-day policy above is what the shipped code and legal text say today (the UK cancellation right, promised in full). The Money cutover turns it into the company line (owner decision 2026-09-28, owner#779): checkout records the immediate-supply consent line (express request plus acknowledgement), no voluntary money-back promise is made, and a refund after that is a support decision case by case. The cutover PR changes the legal text, the cancellation flow and this entry together; do not build the refund flow from this file before then."
