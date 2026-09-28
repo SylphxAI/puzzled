@@ -1,12 +1,15 @@
 @import "tailwindcss";
+@import "../../../../brand/tokens.css";
 @plugin 'tailwindcss-animate';
 
 /* =============================================
    Puzzled design tokens (2026-09-26 redesign)
    =============================================
    Ink and paper, one amber accent, a serif display voice and the system
-   UI face. The record of why each value is what it is lives in
-   docs/design/system.md; change a token there and here together.
+   UI face. The brand colours resolve from brand/tokens.css (brand/tokens.json
+   is the source of truth, brand/README.md is the usage sheet); the record of
+   why each value is what it is lives in docs/design/README.md. Change a brand
+   colour there and here together.
 ============================================= */
 
 @theme {
@@ -99,21 +102,21 @@
 	--animate-accordion-up: collapsible-up 0.2s ease-out;
 
 	/* Brand. Primary is ink: the one filled action per screen. */
-	--color-primary: #1a1712;
+	--color-primary: var(--brand-color-ink);
 	--color-primary-hover: #37322a;
 	--color-primary-foreground: #fbf9f4;
-	--color-ring: #2458d6;
-	--color-secondary: #1a1712;
+	--color-ring: var(--brand-color-focus);
+	--color-secondary: var(--brand-color-ink);
 	/* Amber is the brand accent: a fill, never small text on paper. */
-	--color-accent-warm: #f4b42a;
+	--color-accent-warm: var(--brand-color-accent);
 	--color-accent-warm-soft: #fcf0d2;
-	--color-accent-warm-foreground: #6e4a00;
-	--color-ink: #1a1712;
+	--color-accent-warm-foreground: var(--brand-color-accent-text);
+	--color-ink: var(--brand-color-ink);
 	--color-ink-muted: #2a2620;
 	--color-ink-foreground: #f7f3ea;
-	--color-surface: #ffffff;
+	--color-surface: var(--brand-color-card);
 	--color-surface-muted: #f1ede4;
-	--color-surface-raised: #ffffff;
+	--color-surface-raised: var(--brand-color-card);
 
 	/* Semantic */
 	--color-success: #176a3b;
@@ -144,55 +147,55 @@
 	--color-rank-bronze: #a4661f;
 
 	/* UI (light) */
-	--color-background: #f7f4ee;
-	--color-foreground: #1a1712;
-	--color-card: #ffffff;
-	--color-card-foreground: #1a1712;
+	--color-background: var(--brand-color-paper);
+	--color-foreground: var(--brand-color-ink);
+	--color-card: var(--brand-color-card);
+	--color-card-foreground: var(--brand-color-ink);
 	--color-accent: #efeae0;
-	--color-accent-foreground: #1a1712;
+	--color-accent-foreground: var(--brand-color-ink);
 	--color-muted: #efeae0;
-	--color-muted-foreground: #5f584c;
-	--color-border: #e4ded2;
+	--color-muted-foreground: var(--brand-color-muted);
+	--color-border: var(--brand-color-border);
 	--color-input: #d9d2c4;
 	--color-hairline: rgb(26 23 18 / 0.1);
 
 	/* Keyboard */
 	--color-key: #e6e0d4;
-	--color-key-text: #1a1712;
+	--color-key-text: var(--brand-color-ink);
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Dark mode is its own palette: warm charcoal, not inverted paper. */
 .dark {
-	--color-background: #121110;
-	--color-foreground: #f2eee6;
-	--color-card: #1c1b18;
-	--color-card-foreground: #f2eee6;
+	--color-background: var(--brand-color-paper-dark);
+	--color-foreground: var(--brand-color-ink-dark);
+	--color-card: var(--brand-color-card-dark);
+	--color-card-foreground: var(--brand-color-ink-dark);
 	--color-accent: #26241f;
-	--color-accent-foreground: #f2eee6;
+	--color-accent-foreground: var(--brand-color-ink-dark);
 	--color-muted: #26241f;
-	--color-muted-foreground: #aaa396;
-	--color-border: #2f2c27;
+	--color-muted-foreground: var(--brand-color-muted-dark);
+	--color-border: var(--brand-color-border-dark);
 	--color-input: #3a3630;
 	--color-hairline: rgb(242 238 230 / 0.1);
-	--color-ring: #7ea6ff;
+	--color-ring: var(--brand-color-focus-dark);
 	--color-key: #34312b;
-	--color-key-text: #f2eee6;
-	--color-primary: #f2eee6;
+	--color-key-text: var(--brand-color-ink-dark);
+	--color-primary: var(--brand-color-ink-dark);
 	--color-primary-hover: #ffffff;
-	--color-primary-foreground: #121110;
-	--color-secondary: #f2eee6;
+	--color-primary-foreground: var(--brand-color-paper-dark);
+	--color-secondary: var(--brand-color-ink-dark);
 	--color-stat-winrate: #6fcf8e;
 	--color-stat-streak: #f39a5b;
 	--color-stat-best: #f4c55c;
-	--color-accent-warm: #f4b42a;
+	--color-accent-warm: var(--brand-color-accent);
 	--color-accent-warm-soft: rgb(244 180 42 / 0.14);
-	--color-accent-warm-foreground: #f7cf73;
+	--color-accent-warm-foreground: var(--brand-color-accent-text-dark);
 	--color-ink: #080807;
 	--color-ink-muted: #1c1b18;
 	--color-ink-foreground: #f2eee6;
-	--color-surface: #1c1b18;
+	--color-surface: var(--brand-color-card-dark);
 	--color-surface-muted: #171614;
 	--color-surface-raised: #252320;
 	--color-success: #6fcf8e;

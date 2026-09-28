@@ -6,4 +6,4 @@ Provenance: Fraunces (SIL Open Font License 1.1, see OFL.txt) from google/fonts.
   because the Open Graph route (next/og, satori) cannot read WOFF2.
 
 Both are made with fontTools (`fontTools.varLib.instancer`, then `pyftsubset`).
-The wordmark in `public/brand/wordmark.svg` is the weight-620 outline of the word "Puzzled".
+The wordmark in `brand/svg/puzzled-wordmark.svg` (repo root, see `brand/README.md`) is the weight-620 outline of the word "Puzzled".

@@ -1,0 +1,52 @@
+{
+  "name": "Puzzled",
+  "icon": {
+    "master": "svg/puzzled-app-icon.svg",
+    "small": "svg/puzzled-favicon.svg",
+    "apple_touch": "svg/puzzled-app-icon-square.svg",
+    "maskable": "svg/puzzled-maskable.svg",
+    "palette": [
+      "#1A1712",
+      "#F7F3EA",
+      "#F4B42A"
+    ],
+    "dark_map": {
+      "#1A1712": "#F7F3EA",
+      "#F7F3EA": "#1A1712"
+    },
+    "snap_threshold": 0.5,
+    "sizes": [
+      48,
+      72,
+      96,
+      128,
+      144,
+      152,
+      180,
+      192,
+      384,
+      512
+    ],
+    "maskable_sizes": [
+      512
+    ]
+  },
+  "outputs": {
+    "apps/puzzled/public/favicon.ico": "favicon/favicon.ico",
+    "apps/puzzled/public/favicon.png": "favicon/favicon-32.png",
+    "apps/puzzled/public/favicon.svg": "favicon/favicon.svg",
+    "apps/puzzled/public/apple-touch-icon.png": "app-icon/apple-touch-icon-180.png",
+    "apps/puzzled/public/icons/icon-48.png": "app-icon/icon-48.png",
+    "apps/puzzled/public/icons/icon-72.png": "app-icon/icon-72.png",
+    "apps/puzzled/public/icons/icon-96.png": "app-icon/icon-96.png",
+    "apps/puzzled/public/icons/icon-128.png": "app-icon/icon-128.png",
+    "apps/puzzled/public/icons/icon-144.png": "app-icon/icon-144.png",
+    "apps/puzzled/public/icons/icon-152.png": "app-icon/icon-152.png",
+    "apps/puzzled/public/icons/icon-192.png": "app-icon/icon-192.png",
+    "apps/puzzled/public/icons/icon-384.png": "app-icon/icon-384.png",
+    "apps/puzzled/public/icons/icon-512.png": "app-icon/icon-512.png",
+    "apps/puzzled/public/icons/icon-maskable-512.png": "app-icon/icon-maskable-512.png",
+    "apps/puzzled/public/brand/mark.svg": "svg/puzzled-symbol.svg",
+    "apps/puzzled/public/brand/mark-mono.svg": "svg/puzzled-symbol-mono.svg"
+  }
+}

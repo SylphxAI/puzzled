@@ -25,8 +25,7 @@
 		"atlas:validate": "atlas migrate validate --env local",
 		"atlas:hash": "atlas migrate hash --env local",
 		"db:studio": "drizzle-kit studio",
-		"db:export": "drizzle-kit export",
-		"generate:brand-icons": "bun run scripts/generate-brand-icons.ts"
+		"db:export": "drizzle-kit export"
 	},
 	"dependencies": {
 		"@base-ui/react": "1.8.0",
