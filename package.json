@@ -31,7 +31,7 @@
 		"@commitlint/config-conventional": "20.5.3",
 		"@types/node": "26.6.2",
 		"lefthook": "2.1.14",
-		"turbo": "2.11.2"
+		"turbo": "2.11.4"
 	},
 	"overrides": {},
 	"dependencies": {
