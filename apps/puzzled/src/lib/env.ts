@@ -53,8 +53,8 @@ const PRODUCTION_SECURITY_VARS: string[] = []
  * Every entry carries required: false because presentation boot enforces none
  * of them (see SERVER_REQUIRED above): enforcement lives where the variable is
  * used - redis/db/credential helpers throw when used unconfigured, the dest
- * peels and the origin resolver fall back, admin-api treats a missing
- * ADMIN_SECRET as unauthorized. Add a name here before reading it in src.
+ * peels and the origin resolver fall back. Add a name here before reading it
+ * in src.
  */
 export const KNOWN_VARS: readonly EnvVar[] = [
 	// Runtime / build
@@ -128,19 +128,9 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 	},
 	// Security / infra
 	{
-		name: 'ADMIN_SECRET',
-		required: false,
-		description: 'Header secret for programmatic admin access; missing denies',
-	},
-	{
 		name: 'EMAIL_UNSUBSCRIBE_SECRET',
 		required: false,
 		description: 'HMAC secret for email unsubscribe tokens',
-	},
-	{
-		name: 'REDIS_URL',
-		required: false,
-		description: 'Residual admin rate-limit KV URL; platform injects, api owns',
 	},
 	{
 		name: 'DATABASE_URL',
@@ -284,17 +274,9 @@ export const env = {
 	get AI_API_KEY(): string | undefined {
 		return process.env.AI_API_KEY
 	},
-	/** Header secret for programmatic admin access */
-	get ADMIN_SECRET(): string | undefined {
-		return process.env.ADMIN_SECRET
-	},
 	/** HMAC key for email unsubscribe tokens; dedicated, shared with no other signer */
 	get EMAIL_UNSUBSCRIBE_SECRET(): string | undefined {
 		return process.env.EMAIL_UNSUBSCRIBE_SECRET
-	},
-	/** Residual admin rate-limit KV URL */
-	get REDIS_URL(): string | undefined {
-		return process.env.REDIS_URL
 	},
 	/** Postgres connection string */
 	get DATABASE_URL(): string | undefined {

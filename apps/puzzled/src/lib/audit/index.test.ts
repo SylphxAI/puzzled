@@ -53,7 +53,7 @@ describe('logAdminAccessAttempt', () => {
 	test('inserts an admin_access row with method, success and ip', async () => {
 		inserted.length = 0
 		await logAdminAccessAttempt({
-			method: 'secret',
+			method: 'session',
 			success: false,
 			ip: '203.0.113.7',
 			userId: '11111111-2222-3333-4444-555555555555',
@@ -64,8 +64,8 @@ describe('logAdminAccessAttempt', () => {
 			actorId: '11111111-2222-3333-4444-555555555555',
 			action: 'admin_access',
 			resourceType: 'admin_access',
-			resourceId: 'secret',
-			metadata: { method: 'secret', success: false, ip: '203.0.113.7' },
+			resourceId: 'session',
+			metadata: { method: 'session', success: false, ip: '203.0.113.7' },
 			ipAddress: '203.0.113.7',
 			userAgent: 'bun-test-agent',
 		})
