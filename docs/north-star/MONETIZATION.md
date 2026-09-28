@@ -92,6 +92,10 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 - An account with a subscription that still renews cannot be erased until it
   is cancelled. On erasure, subscription and ledger rows are kept for six
   years (UK tax records) with the player id removed.
+- Erasure also deletes the player's Sylphx Auth sign-in, through Auth's
+  privacy-request API, for every subject that names the player. A refused
+  Auth deletion erases nothing: the account stays whole and the request can
+  be repeated.
 - Terms, Privacy and checkout name Sylphx Limited, state VAT-inclusive prices,
   automatic renewal, the 14-day right, and UK GDPR with the ICO.
 
