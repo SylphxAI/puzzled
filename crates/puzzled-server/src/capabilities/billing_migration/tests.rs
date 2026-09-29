@@ -362,9 +362,59 @@ async fn zero_live_rows_is_a_no_op() {
     assert_eq!(found.live, 0);
 }
 
+// ---- fake Store bucket ---------------------------------------------------------
+
+type Bucket = Arc<Mutex<HashMap<String, Vec<u8>>>>;
+
+async fn store_get(
+    State(bucket): State<Bucket>,
+    Path((_, key)): Path<(String, String)>,
+) -> (StatusCode, Json<Value>) {
+    use base64::Engine;
+    match bucket.lock().unwrap().get(&key) {
+        Some(bytes) => (
+            StatusCode::OK,
+            Json(json!({"body": base64::engine::general_purpose::STANDARD.encode(bytes)})),
+        ),
+        None => (StatusCode::NOT_FOUND, Json(json!({}))),
+    }
+}
+
+async fn store_put(
+    State(bucket): State<Bucket>,
+    Path((_, key)): Path<(String, String)>,
+    Json(body): Json<Value>,
+) -> (StatusCode, Json<Value>) {
+    use base64::Engine;
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(body["body"].as_str().unwrap())
+        .unwrap();
+    let mut bucket = bucket.lock().unwrap();
+    // Retention-locked: a key that exists is never replaced.
+    if bucket.contains_key(&key) {
+        return (StatusCode::CONFLICT, Json(json!({})));
+    }
+    bucket.insert(key, bytes);
+    (StatusCode::OK, Json(json!({})))
+}
+
+async fn fake_archive() -> (super::export::Archive, Bucket) {
+    let bucket: Bucket = Arc::default();
+    let app = Router::new()
+        .route("/v1/objects/{bucket}/{*key}", get(store_get).put(store_put))
+        .with_state(bucket.clone());
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    (
+        super::export::Archive::new(&format!("http://{addr}"), "sk_app", "billing-archive"),
+        bucket,
+    )
+}
+
 #[tokio::test]
-async fn export_writes_every_table_and_reads_it_back() {
-    let Some(pool) = crate::billing_flow_tests::fresh_database().await else {
+async fn export_writes_every_table_to_the_bucket_and_reads_it_back() {
+    let Some(pool) = crate::test_support::fresh_database().await else {
         return;
     };
     seed(&pool).await;
@@ -373,21 +423,48 @@ async fn export_writes_every_table_and_reads_it_back() {
         .execute(&pool)
         .await
         .unwrap();
-    let dir = std::env::temp_dir().join(format!("puzzled-export-{}", uuid::Uuid::now_v7()));
-    let manifest = super::export::run_export(&pool, &dir).await.unwrap();
+    let (archive, bucket) = fake_archive().await;
+    let prefix = super::export::prefix_for(chrono::NaiveDate::from_ymd_opt(2026, 9, 29).unwrap());
+    assert_eq!(prefix, "billing/2026-09-29/");
+    let manifest = super::export::run_export(&pool, &archive, &prefix)
+        .await
+        .unwrap();
     let rows = |t: &str| manifest.iter().find(|m| m.table == t).unwrap().rows;
     assert_eq!(rows("billing_subscriptions"), 4);
     assert_eq!(rows("billing_customers"), 1);
     assert_eq!(rows("billing_ledger"), 0);
-    super::export::verify_export(&pool, &dir).await.unwrap();
+    {
+        let bucket = bucket.lock().unwrap();
+        assert!(bucket.contains_key("billing/2026-09-29/manifest.tsv"));
+        assert!(bucket.contains_key("billing/2026-09-29/billing_subscriptions.ndjson"));
+    }
+    // Rerunning writes the same bytes: nothing is overwritten, nothing fails.
+    super::export::run_export(&pool, &archive, &prefix)
+        .await
+        .unwrap();
     // A row added after the export is caught by the readback.
     sqlx::query(r#"INSERT INTO "billing_customers" ("user_id", "stripe_customer_id") VALUES ($1::uuid, 'cus_2')"#)
         .bind(FAMILY)
         .execute(&pool)
         .await
         .unwrap();
-    assert!(super::export::verify_export(&pool, &dir).await.is_err());
-    let _ = std::fs::remove_dir_all(&dir);
+    assert!(super::export::verify_export(&pool, &archive, &prefix)
+        .await
+        .is_err());
+    // ... and a second export the same day refuses to overwrite the locked one.
+    assert!(super::export::run_export(&pool, &archive, &prefix)
+        .await
+        .is_err());
+}
+
+#[tokio::test]
+async fn put_once_never_replaces_different_bytes() {
+    let (archive, _) = fake_archive().await;
+    archive.put_once("a/b.ndjson", b"one\n").await.unwrap();
+    archive.put_once("a/b.ndjson", b"one\n").await.unwrap();
+    assert!(archive.put_once("a/b.ndjson", b"two\n").await.is_err());
+    assert_eq!(archive.get("a/b.ndjson").await.unwrap().unwrap(), b"one\n");
+    assert_eq!(archive.get("a/missing").await.unwrap(), None);
 }
 
 #[tokio::test]

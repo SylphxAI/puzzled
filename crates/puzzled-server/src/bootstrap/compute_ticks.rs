@@ -182,14 +182,15 @@ pub async fn migrate_export_tick(State(state): State<AppState>, headers: HeaderM
     let Some(pool) = &state.pool else {
         return unavailable("no_database");
     };
-    let dir = match export::export_dir() {
-        Ok(dir) => dir,
+    let archive = match export::Archive::from_env() {
+        Ok(archive) => archive,
         Err(error) => {
             tracing::warn!(%error, "billing export not configured");
-            return unavailable("export_dir_not_set");
+            return unavailable("archive_not_configured");
         }
     };
-    match export::run_export(pool, &dir).await {
+    let prefix = export::prefix_for(chrono::Utc::now().date_naive());
+    match export::run_export(pool, &archive, &prefix).await {
         Ok(tables) => (
             StatusCode::OK,
             Json(json!({
