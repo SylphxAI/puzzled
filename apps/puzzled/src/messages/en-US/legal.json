@@ -2,7 +2,7 @@
 	"privacy": {
 		"title": "Privacy Policy",
 		"lastUpdated": "Last Updated",
-		"revision": "2026-09-27",
+		"revision": "2026-09-29",
 		"eyebrow": "Legal",
 		"lead": "This policy explains what data Puzzled collects, why it is collected, and how to contact us about it.",
 		"toc": {
@@ -56,7 +56,7 @@
 				"money": "Payment processing and subscriptions",
 				"stripe": "Payment processing",
 				"google": "Authentication",
-				"resend": "Email delivery",
+				"mail": "Email delivery (sign-in and verification mail)",
 				"others": "We may also share data with our hosting providers, professional advisers, authorities where the law requires it, and a buyer or successor if our business or Puzzled is sold or reorganized."
 			},
 			"transfers": {
