@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
-use axum::routing::{get, post};
+use axum::routing::get;
 use axum::{Form, Json, Router};
 use serde_json::{json, Value};
 use sqlx::PgPool;
@@ -285,7 +285,15 @@ async fn grants_cancel_and_email_every_live_row_once_and_a_rerun_does_nothing() 
     assert!(text.contains("nothing changes before then"));
     assert!(text.contains("https://puzzled.test/pricing?plan="));
     assert!(!text.to_lowercase().contains("refund"));
-    assert_eq!(sent[0]["idempotency_key"], "plus-migration-sub_ind_1");
+    let mut keys: Vec<&str> = sent
+        .iter()
+        .map(|d| d["idempotency_key"].as_str().unwrap())
+        .collect();
+    keys.sort_unstable();
+    assert_eq!(
+        keys,
+        ["plus-migration-sub_fam_1", "plus-migration-sub_ind_1"]
+    );
 
     // The readback is complete.
     let found = verify(&pool, &stripe, &money).await.unwrap();
