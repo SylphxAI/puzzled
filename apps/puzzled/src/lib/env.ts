@@ -35,13 +35,7 @@ type EnvSource = Record<string, string | undefined>
 const SERVER_REQUIRED: EnvVar[] = []
 
 // Feature-specific variables (validated when feature is used)
-const FEATURE_VARS: EnvVar[] = [
-	{
-		name: 'RESEND_API_KEY',
-		required: false, // Checked at runtime by email.ts
-		description: 'Resend API key for email',
-	},
-]
+const FEATURE_VARS: EnvVar[] = []
 
 // Security-critical vars that should be set in production
 const PRODUCTION_SECURITY_VARS: string[] = []
