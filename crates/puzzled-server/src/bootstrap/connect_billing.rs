@@ -23,12 +23,11 @@ use super::state::AppState;
 use crate::capabilities::billing::adapters::billing_db::{self, JoinRefused};
 use crate::capabilities::billing::adapters::stripe::Stripe;
 use crate::capabilities::billing::service::{self, CheckoutError};
+use crate::capabilities::identity_access::adapters::platform_jwt::VerifiedIdentity;
 use crate::capabilities::money::{
     access as money_access, checkout as money_checkout, consent_db, pricing, Money,
 };
 use crate::capabilities::preferences::adapters::attribution_db::attribution_for_user;
-use puzzled_core::attribution::Attribution;
-use crate::capabilities::identity_access::adapters::platform_jwt::VerifiedIdentity;
 use crate::proto::puzzled::v1::{
     BillingService, CancelSubscriptionRequest, CancelSubscriptionResponse, CreateCheckoutRequest,
     CreateCheckoutResponse, CreatePortalRequest, CreatePortalResponse, Family, FamilyMember,
@@ -37,6 +36,7 @@ use crate::proto::puzzled::v1::{
     RemoveFamilyMemberRequest, RemoveFamilyMemberResponse, ResetFamilyInviteRequest,
     ResetFamilyInviteResponse, ResumeSubscriptionRequest, ResumeSubscriptionResponse,
 };
+use puzzled_core::attribution::Attribution;
 
 #[derive(Clone)]
 pub struct BillingConnectService {
@@ -507,8 +507,8 @@ impl BillingService for BillingConnectService {
             &identity.user_id,
             self.max_members(&owner).await,
         )
-            .await
-            .map_err(internal("family_unavailable"))?
+        .await
+        .map_err(internal("family_unavailable"))?
         {
             Ok(()) => Response::ok(JoinFamilyResponse::default()),
             Err(JoinRefused::Full) => Err(ConnectError::new(
