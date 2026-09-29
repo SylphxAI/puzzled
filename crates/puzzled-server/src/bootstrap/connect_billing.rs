@@ -337,9 +337,9 @@ impl BillingService for BillingConnectService {
             // is where it is noticed. Failing to queue never fails the read.
             if let Some(money) = money {
                 if money
-                    .subscriptions(&identity.user_id)
+                    .has_renewing_subscription(&identity.user_id)
                     .await
-                    .is_ok_and(|subs| subs.iter().any(|s| s.live()))
+                    .unwrap_or(false)
                 {
                     if let Err(error) = crate::capabilities::tryit_conversions::enqueue_purchase(
                         pool,
