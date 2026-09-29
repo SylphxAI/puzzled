@@ -10,7 +10,8 @@ use axum::routing::{get, post};
 use axum::Router;
 
 use super::compute_ticks::{
-    audit_retention_tick, daily_puzzles_tick, AUDIT_RETENTION_PATH, DAILY_PUZZLES_PATH,
+    audit_retention_tick, daily_puzzles_tick, tryit_conversions_tick, AUDIT_RETENTION_PATH,
+    DAILY_PUZZLES_PATH, TRYIT_CONVERSIONS_PATH,
 };
 use super::connect_admin::admin_connect_service;
 use super::connect_billing::{billing_connect_service, stripe_webhook};
@@ -43,6 +44,7 @@ pub fn router(state: AppState) -> Router {
         .route("/webhooks/stripe", post(stripe_webhook))
         .route(DAILY_PUZZLES_PATH, post(daily_puzzles_tick))
         .route(AUDIT_RETENTION_PATH, post(audit_retention_tick))
+        .route(TRYIT_CONVERSIONS_PATH, post(tryit_conversions_tick))
         .route("/observability/test", post(observability_test))
         .with_state(state)
         .fallback_service(connect.into_axum_service())

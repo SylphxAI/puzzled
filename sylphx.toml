@@ -121,3 +121,16 @@ catch_up = "skip"
 target = { kind = "http", method = "POST", signed = true }
 retry = { max_attempts = 3 }
 pause = false
+
+# Tryit conversions: retry sign-ups and purchases not yet reported to Tryit.
+[[compute.schedules]]
+id = "puzzled-tryit-conversions"
+idempotency_key = "puzzled-tryit-conversions-v1"
+service = "api"
+path = "/internal/compute/tryit-conversions"
+calendar = { kind = "cron", expression = "3,13,23,33,43,53 * * * *", timezone = "UTC" }
+overlap = "skip"
+catch_up = "last_only"
+target = { kind = "http", method = "POST", signed = true }
+retry = { max_attempts = 3 }
+pause = false
