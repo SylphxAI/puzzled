@@ -605,7 +605,9 @@ impl Reporter {
 /// Sends queued events one at a time until every sender is gone.
 pub async fn run_worker(client: sylphx::Client, mut queue: mpsc::Receiver<CaptureErrorRequest>) {
     while let Some(request) = queue.recv().await {
-        let call = client.observability().error_groups().capture(request);
+        let observability = client.observability();
+        let groups = observability.error_groups();
+        let call = groups.capture(request);
         match tokio::time::timeout(TIMEOUT + Duration::from_secs(1), call).await {
             Ok(Ok(_)) => {}
             Ok(Err(error)) => tracing::warn!(%error, "observability capture failed"),
