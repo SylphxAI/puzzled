@@ -67,7 +67,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None => info!("Stripe not configured: Puzzled Plus is not on sale and nothing is locked"),
     }
     let money = puzzled_server::capabilities::money::Money::from_env();
-    if money.is_some() {
+    if let Some(money) = &money {
+        // The org, project and env come from the key's own whoami.
+        if let Err(error) = money.warm().await {
+            tracing::warn!(%error, "Sylphx Money environment not resolved at start-up; retrying on use");
+        }
         info!("Sylphx Money configured: entitlements, checkout and prices come from Money");
     }
     let state = AppState::new(pool).with_stripe(stripe).with_money(money);

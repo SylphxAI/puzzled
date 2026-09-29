@@ -455,3 +455,47 @@ async fn a_failed_check_is_asked_again_after_five_seconds() {
     tokio::time::sleep(super::client::FAILED_CACHE_TTL + Duration::from_millis(300)).await;
     assert!(is_premium(&money, USER).await);
 }
+
+// ---- environment discovery --------------------------------------------------
+
+#[tokio::test]
+async fn the_environment_comes_from_the_keys_whoami_and_is_kept() {
+    let hits = Arc::new(Mutex::new(0u32));
+    let counter = hits.clone();
+    let app = Router::new()
+        .route(
+            "/v1/whoami",
+            get(move || {
+                let counter = counter.clone();
+                async move {
+                    *counter.lock().unwrap() += 1;
+                    Json(json!({"org": "acme", "project": "puz", "env": "env_x1"}))
+                }
+            }),
+        )
+        .route(
+            "/v1/orgs/acme/projects/puz/envs/env_x1/entitlement_grants:check",
+            post(|| async { Json(json!({"entitled": true})) }),
+        );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    let money = Money::discovering(&format!("http://{addr}"), "sk_app", "https://puzzled.test");
+    assert!(is_premium(&money, USER).await);
+    assert!(family_active(&money, USER).await);
+    assert_eq!(*hits.lock().unwrap(), 1, "whoami is read once");
+}
+
+#[tokio::test]
+async fn a_key_that_is_not_scoped_to_an_environment_grants_nothing() {
+    let app = Router::new().route(
+        "/v1/whoami",
+        get(|| async { Json(json!({"org": "acme", "project": "", "env": ""})) }),
+    );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    let money = Money::discovering(&format!("http://{addr}"), "sk_org", "https://puzzled.test");
+    assert!(money.warm().await.is_err());
+    assert!(!is_premium(&money, USER).await);
+}
