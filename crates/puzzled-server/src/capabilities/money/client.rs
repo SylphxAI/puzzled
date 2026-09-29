@@ -19,6 +19,9 @@ pub const GRANT_CACHE_TTL: Duration = Duration::from_secs(60);
 /// A "not entitled" answer is reused only briefly, so a buyer whose grant has
 /// just arrived is not kept waiting a full minute.
 pub const DENIED_CACHE_TTL: Duration = Duration::from_secs(10);
+/// A failed Money check is remembered as "not entitled" this long, so an
+/// outage does not turn every request into a slow timed-out call.
+pub const FAILED_CACHE_TTL: Duration = Duration::from_secs(5);
 /// How long a read catalogue is reused.
 pub const CATALOG_CACHE_TTL: Duration = Duration::from_secs(300);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(8);
@@ -235,6 +238,11 @@ impl Money {
             Ok(grant) => grant,
             Err(error) => {
                 tracing::warn!(%error, feature, "Money entitlement check failed; treating as not entitled");
+                // Cached as "not entitled" for 5 s only; a success below
+                // still follows the 60 s rule.
+                if let Ok(mut cache) = self.grants.lock() {
+                    cache.insert(key, (Instant::now() + FAILED_CACHE_TTL, Grant::denied()));
+                }
                 return Grant::denied();
             }
         };

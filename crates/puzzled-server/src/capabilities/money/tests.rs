@@ -142,7 +142,7 @@ async fn money_unavailable_fails_closed() {
 }
 
 #[tokio::test]
-async fn answers_are_cached_and_a_failure_is_not() {
+async fn answers_are_cached_and_a_failure_is_cached_briefly() {
     let (money, fake) = fake_money(200, granted()).await;
     assert!(is_premium(&money, USER).await);
     assert!(is_premium(&money, USER).await);
@@ -154,10 +154,17 @@ async fn answers_are_cached_and_a_failure_is_not() {
     // A different feature or subject is a different answer.
     assert!(family_active(&money, USER).await);
     assert_eq!(fake.lock().unwrap().checks.len(), 2);
-    // A failed call is never cached: the next read asks again.
+    // A failed call is cached as "not entitled", but only for 5 seconds.
     let (money, fake) = fake_money(503, json!({})).await;
     assert!(!is_premium(&money, USER).await);
     assert!(!is_premium(&money, USER).await);
+    assert_eq!(
+        fake.lock().unwrap().checks.len(),
+        1,
+        "an outage is not retried per request"
+    );
+    // Another feature is its own answer.
+    assert!(!family_active(&money, USER).await);
     assert_eq!(fake.lock().unwrap().checks.len(), 2);
 }
 
@@ -429,4 +436,21 @@ async fn erasure_guard_errors_when_money_is_unavailable() {
     assert!(money.has_renewing_subscription(USER).await.is_err());
     let gone = Money::new("http://127.0.0.1:1/env", "sk_test", "https://puzzled.test");
     assert!(gone.has_renewing_subscription(USER).await.is_err());
+}
+
+#[tokio::test]
+async fn a_failed_check_is_asked_again_after_five_seconds() {
+    let (money, fake) = fake_money(503, json!({})).await;
+    assert!(!is_premium(&money, USER).await);
+    tokio::time::sleep(super::client::FAILED_CACHE_TTL + Duration::from_millis(300)).await;
+    assert!(!is_premium(&money, USER).await);
+    assert_eq!(fake.lock().unwrap().checks.len(), 2);
+    // Money recovers: the next answer after the window is the real one.
+    {
+        let mut f = fake.lock().unwrap();
+        f.status = 200;
+        f.answer = granted();
+    }
+    tokio::time::sleep(super::client::FAILED_CACHE_TTL + Duration::from_millis(300)).await;
+    assert!(is_premium(&money, USER).await);
 }
