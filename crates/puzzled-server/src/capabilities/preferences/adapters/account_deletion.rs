@@ -18,6 +18,11 @@ use uuid::Uuid;
 /// still renews, so nothing is charged to an erased account.
 pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
+        "tryit_conversions",
+        "user_id",
+        r#"DELETE FROM "tryit_conversions" WHERE "user_id" = $1"#,
+    ),
+    (
         "account_attribution",
         "user_id",
         r#"DELETE FROM "account_attribution" WHERE "user_id" = $1"#,

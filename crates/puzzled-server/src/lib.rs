@@ -32,6 +32,8 @@ mod billing_flow_tests;
 mod daily_pipeline_tests;
 #[cfg(test)]
 mod result_shares_tests;
+#[cfg(test)]
+mod tryit_conversions_tests;
 
 #[cfg(test)]
 mod tests {
@@ -1254,6 +1256,7 @@ mod tests {
             "/internal/compute/billing-migration/grants",
             "/internal/compute/billing-migration/verify",
             "/internal/compute/billing-migration/export",
+            "/internal/compute/tryit-conversions",
         ] {
             let refused = router(tick_state())
                 .oneshot(tick_request(path, "{}", None))

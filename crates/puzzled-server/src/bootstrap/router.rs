@@ -11,8 +11,8 @@ use axum::Router;
 
 use super::compute_ticks::{
     audit_retention_tick, daily_puzzles_tick, migrate_export_tick, migrate_grants_tick,
-    migrate_verify_tick, AUDIT_RETENTION_PATH, DAILY_PUZZLES_PATH, MIGRATE_EXPORT_PATH,
-    MIGRATE_GRANTS_PATH, MIGRATE_VERIFY_PATH,
+    migrate_verify_tick, tryit_conversions_tick, AUDIT_RETENTION_PATH, DAILY_PUZZLES_PATH,
+    MIGRATE_EXPORT_PATH, MIGRATE_GRANTS_PATH, MIGRATE_VERIFY_PATH, TRYIT_CONVERSIONS_PATH,
 };
 use super::connect_admin::admin_connect_service;
 use super::connect_billing::{billing_connect_service, stripe_webhook};
@@ -48,6 +48,7 @@ pub fn router(state: AppState) -> Router {
         .route(MIGRATE_GRANTS_PATH, post(migrate_grants_tick))
         .route(MIGRATE_VERIFY_PATH, post(migrate_verify_tick))
         .route(MIGRATE_EXPORT_PATH, post(migrate_export_tick))
+        .route(TRYIT_CONVERSIONS_PATH, post(tryit_conversions_tick))
         .route("/observability/test", post(observability_test))
         .with_state(state)
         .fallback_service(connect.into_axum_service())

@@ -99,6 +99,25 @@ impl Attribution {
             || self.referral.is_some()
     }
 
+    /// The Tryit handoff `ref`, when this landing came from Tryit
+    /// (`utm_source=tryit`) and the value has the shape Tryit accepts back
+    /// (1-64 letters, digits, `-`, `_`). A share link's `ref` carries no
+    /// `utm_source=tryit`, so it never counts as a Tryit ref.
+    #[must_use]
+    pub fn tryit_ref(&self) -> Option<&str> {
+        let from_tryit = self
+            .source
+            .as_deref()
+            .is_some_and(|s| s.eq_ignore_ascii_case("tryit"));
+        let referral = self.referral.as_deref()?;
+        let valid = !referral.is_empty()
+            && referral.len() <= 64
+            && referral
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_');
+        (from_tryit && valid).then_some(referral)
+    }
+
     /// Tag pairs as they are named in Stripe metadata and reports.
     #[must_use]
     pub fn metadata_pairs(&self) -> Vec<(&'static str, &str)> {
@@ -149,6 +168,30 @@ mod tests {
                 ("ref", "res_123")
             ]
         );
+    }
+
+    #[test]
+    fn only_a_tryit_landing_with_a_well_formed_ref_is_a_tryit_ref() {
+        let uuid = "0198a3f2-7c1d-7e2a-9d5b-3c4e5f6a7b8c";
+        let tryit = Attribution::from_cookie(&format!("s=tryit&r={uuid}")).expect("tags");
+        assert_eq!(tryit.tryit_ref(), Some(uuid));
+        // A share link: same `ref` param, no Tryit source.
+        let share = Attribution::from_cookie(&format!("r={uuid}&p=%2Fdaily")).expect("tags");
+        assert_eq!(share.tryit_ref(), None);
+        let other = Attribution::from_cookie(&format!("s=newsletter&r={uuid}")).expect("tags");
+        assert_eq!(other.tryit_ref(), None);
+        // Tryit source without a ref, or with a ref Tryit would reject.
+        assert_eq!(
+            Attribution::from_cookie("s=tryit")
+                .expect("tags")
+                .tryit_ref(),
+            None
+        );
+        let bad = Attribution::from_cookie("s=tryit&r=a%20b").expect("tags");
+        assert_eq!(bad.tryit_ref(), None);
+        let long =
+            Attribution::from_cookie(&format!("s=tryit&r={}", "a".repeat(65))).expect("tags");
+        assert_eq!(long.tryit_ref(), None);
     }
 
     #[test]

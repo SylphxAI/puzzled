@@ -331,6 +331,26 @@ impl BillingService for BillingConnectService {
             }
         } else if entitlement.via_money {
             response.source = "plus".to_string();
+            // A Tryit-referred account's first paid subscription is queued for
+            // Tryit (one row per account and event, so this is idempotent).
+            // Money sends Puzzled no webhook, so the page the buyer returns to
+            // is where it is noticed. Failing to queue never fails the read.
+            if let Some(money) = money {
+                if money
+                    .subscriptions(&identity.user_id)
+                    .await
+                    .is_ok_and(|subs| subs.iter().any(|s| s.live()))
+                {
+                    if let Err(error) = crate::capabilities::tryit_conversions::enqueue_purchase(
+                        pool,
+                        &identity.user_id,
+                    )
+                    .await
+                    {
+                        tracing::warn!(%error, "tryit purchase not queued");
+                    }
+                }
+            }
         } else if let Some(owner) = &entitlement.family_owner {
             response.source = "family".to_string();
             response.family = self.family_view(pool, owner, false).await?.into();
