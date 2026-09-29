@@ -1,0 +1,78 @@
+# Applies config/commercial/catalogue.json to Sylphx Money: PATCH catalogs/default
+# (allow_missing) then :sync. This workflow is the ONLY writer of the catalogue:
+# no manual catalogue writes. Change the catalogue by PR to that file.
+name: Money catalogue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'config/commercial/catalogue.json'
+      - 'scripts/money-catalogue-spec.ts'
+      - '.github/workflows/money-catalogue.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One apply at a time; a newer push waits rather than racing the running one.
+concurrency:
+  group: money-catalogue
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Apply catalogue to Sylphx Money
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SYLPHX_MONEY_KEY: ${{ secrets.SYLPHX_MONEY_KEY }}
+      SYLPHX_ORG: ${{ vars.SYLPHX_ORG }}
+      SYLPHX_PROJECT: ${{ vars.SYLPHX_PROJECT }}
+      SYLPHX_ENV: ${{ vars.SYLPHX_ENV }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Require the key and the environment
+        run: |
+          missing=""
+          for name in SYLPHX_MONEY_KEY SYLPHX_ORG SYLPHX_PROJECT SYLPHX_ENV; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::missing:$missing. SYLPHX_MONEY_KEY is a secret (money:write); SYLPHX_ORG, SYLPHX_PROJECT and SYLPHX_ENV are repository variables."
+            exit 1
+          fi
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.0'
+
+      - name: Convert the catalogue into Money's spec
+        run: bun scripts/money-catalogue-spec.ts config/commercial/catalogue.json > "$RUNNER_TEMP/catalog.json"
+
+      - name: Patch catalogs/default
+        run: |
+          base="https://api.sylphx.com/v1/orgs/${SYLPHX_ORG}/projects/${SYLPHX_PROJECT}/envs/${SYLPHX_ENV}/catalogs/default"
+          code=$(curl -sS -o "$RUNNER_TEMP/patch.out" -w '%{http_code}' -X PATCH \
+            "${base}?allow_missing=true" \
+            -H "Authorization: Bearer ${SYLPHX_MONEY_KEY}" \
+            -H 'Content-Type: application/json' \
+            --data @"$RUNNER_TEMP/catalog.json")
+          if [ "$code" -ge 300 ]; then
+            echo "::error::PATCH catalogs/default answered $code"; cat "$RUNNER_TEMP/patch.out"; exit 1
+          fi
+
+      - name: Sync to the processor
+        run: |
+          base="https://api.sylphx.com/v1/orgs/${SYLPHX_ORG}/projects/${SYLPHX_PROJECT}/envs/${SYLPHX_ENV}/catalogs/default"
+          code=$(curl -sS -o "$RUNNER_TEMP/sync.out" -w '%{http_code}' -X POST \
+            "${base}:sync" \
+            -H "Authorization: Bearer ${SYLPHX_MONEY_KEY}" \
+            -H 'Content-Type: application/json' \
+            --data '{}')
+          if [ "$code" -ge 300 ]; then
+            echo "::error::POST catalogs/default:sync answered $code"; cat "$RUNNER_TEMP/sync.out"; exit 1
+          fi
