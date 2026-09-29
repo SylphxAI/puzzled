@@ -96,6 +96,7 @@ export default async function PrivacyPage({ params }: Props) {
 			title: t('sections.thirdParty.title'),
 			paragraphs: [t('sections.thirdParty.content')],
 			bullets: [
+				thirdPartyRow('Sylphx Money', t('sections.thirdParty.money')),
 				thirdPartyRow('Stripe', t('sections.thirdParty.stripe')),
 				thirdPartyRow('Google', t('sections.thirdParty.google')),
 				thirdPartyRow('Resend', t('sections.thirdParty.resend')),

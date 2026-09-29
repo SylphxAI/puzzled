@@ -716,6 +716,25 @@ export const resultShares = pgTable(
 	],
 )
 
+/**
+ * The buyer's immediate-supply consent, one row per checkout started through
+ * Sylphx Money: access now, and the 14-day cancellation right is lost.
+ */
+export const checkoutConsents = pgTable(
+	'checkout_consents',
+	{
+		id: uuid('id').defaultRandom().primaryKey(),
+		/** Platform user ID (no FK) */
+		userId: uuid('user_id').notNull(),
+		planId: text('plan_id').notNull(),
+		priceKey: text('price_key').notNull(),
+		locale: text('locale').notNull(),
+		statement: text('statement').notNull(),
+		consentedAt: timestamp('consented_at').defaultNow().notNull(),
+	},
+	(t) => [index('checkout_consents_user_id_idx').on(t.userId)],
+)
+
 /** A family plan owner and the invite code members join with. */
 export const familyGroups = pgTable('family_groups', {
 	ownerUserId: uuid('owner_user_id').primaryKey(),

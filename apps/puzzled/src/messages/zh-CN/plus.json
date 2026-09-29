@@ -30,7 +30,9 @@
 		"legal": "价格已含增值税。由 Sylphx Limited（在英格兰及威尔士注册）销售。订阅会自动续期，直到你在“设置”中取消。首次订阅后 {days} 天内取消可获全额退款。",
 		"checkoutCancelled": "已取消付款，你没有被扣费。",
 		"checkoutFailed": "无法打开付款页面，请重试。",
-		"alreadySubscribed": "你已订阅 Puzzled Plus。"
+		"alreadySubscribed": "你已订阅 Puzzled Plus。",
+		"immediateSupplyConsent": "我要立即使用，并明白我会失去 14 天取消权。",
+		"consentRequired": "请勾选方框以继续。"
 	},
 	"unlock": {
 		"title": "这款游戏属于 Puzzled Plus",
