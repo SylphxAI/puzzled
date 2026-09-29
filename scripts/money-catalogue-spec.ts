@@ -43,6 +43,10 @@ export type Spec = {
 	}[]
 }
 
+function isKind(kind: string): kind is 'boolean' | 'limit' {
+	return kind === 'boolean' || kind === 'limit'
+}
+
 function fail(message: string): never {
 	throw new Error(`catalogue: ${message}`)
 }
@@ -50,10 +54,9 @@ function fail(message: string): never {
 export function toSpec(catalogue: Catalogue): Spec {
 	const features = Object.entries(catalogue.features).map(([key, feature]) => {
 		if (!FEATURE_KEY.test(key)) fail(`feature key ${key} is not accepted by Money`)
-		if (feature.kind !== 'boolean' && feature.kind !== 'limit') {
-			fail(`feature ${key} has kind ${feature.kind}`)
-		}
-		return { key, display_name: feature.name['en-US'] ?? key, kind: feature.kind }
+		const kind = feature.kind
+		if (!isKind(kind)) fail(`feature ${key} has kind ${kind}`)
+		return { key, display_name: feature.name['en-US'] ?? key, kind }
 	})
 	const products = catalogue.products.map((product) => {
 		if (!KEY.test(product.id)) fail(`product key ${product.id} is not accepted by Money`)
