@@ -54,7 +54,7 @@ jobs:
           filter: blob:none
 
       - id: range
-        uses: SylphxAI/.github/.github/actions/ci-range@ef14d6ebecd183cafbc016ac0d98a8bb1ee316fb # SylphxAI/.github main (optimistic-merge template)
+        uses: SylphxAI/.github/.github/actions/ci-range@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
         with:
           only: ${{ inputs.lanes }}
           lanes: |
@@ -139,7 +139,7 @@ jobs:
       - name: Put cargo on PATH
         run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
 
-      - uses: SylphxAI/.github/.github/actions/rust-sccache@ef14d6ebecd183cafbc016ac0d98a8bb1ee316fb # SylphxAI/.github main (optimistic-merge template)
+      - uses: SylphxAI/.github/.github/actions/rust-sccache@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
         with:
           s3-access-key: ${{ secrets.SYLPHX_CI_CACHE_ACCESS_KEY }}
           s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
@@ -197,7 +197,7 @@ jobs:
       - name: Put cargo on PATH
         run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
 
-      - uses: SylphxAI/.github/.github/actions/rust-sccache@ef14d6ebecd183cafbc016ac0d98a8bb1ee316fb # SylphxAI/.github main (optimistic-merge template)
+      - uses: SylphxAI/.github/.github/actions/rust-sccache@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
         with:
           s3-access-key: ${{ secrets.SYLPHX_CI_CACHE_ACCESS_KEY }}
           s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
@@ -525,7 +525,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@ef14d6ebecd183cafbc016ac0d98a8bb1ee316fb # SylphxAI/.github main (optimistic-merge template)
+      - uses: SylphxAI/.github/.github/actions/needs-pass@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
         with:
           needs: ${{ toJSON(needs) }}
           required: plan
