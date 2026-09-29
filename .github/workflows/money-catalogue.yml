@@ -3,10 +3,12 @@
 # workflow is the ONLY writer of the catalogue: no manual catalogue writes.
 # Change the catalogue by PR to that file.
 #
-# No stored secret: each job trades a GitHub OIDC token (audience
-# sylphx-access) for a 15-minute money:write key bound to this repository,
-# this file's path and refs/heads/main (kernel/access/tenant-manifest.toml,
-# cloud#10444). The path of this file is pinned there: do not rename it.
+# No stored secret and no configuration: each job trades a GitHub OIDC token
+# (audience sylphx-access) for a 15-minute money:write key bound to this
+# repository, this file's path and refs/heads/main
+# (kernel/access/tenant-manifest.toml, cloud#10444). The key's own name gives
+# the org, project and env it belongs to, so none is written here. The path of
+# this file is pinned in the manifest: do not rename it.
 name: Money catalogue
 
 on:
@@ -35,9 +37,6 @@ jobs:
     timeout-minutes: 10
     env:
       ACCESS_NAME: puzzled-money-catalogue-preview
-      SYLPHX_ORG: ${{ vars.SYLPHX_ORG }}
-      SYLPHX_PROJECT: ${{ vars.SYLPHX_PROJECT }}
-      SYLPHX_ENV: ${{ vars.SYLPHX_ENV_PREVIEW || '019e5680-ca89-78d7-bdfa-218d03fb5ca8' }}
     steps:
       - uses: actions/checkout@v4.2.2
         with:
@@ -56,9 +55,6 @@ jobs:
     timeout-minutes: 10
     env:
       ACCESS_NAME: puzzled-money-catalogue-production
-      SYLPHX_ORG: ${{ vars.SYLPHX_ORG }}
-      SYLPHX_PROJECT: ${{ vars.SYLPHX_PROJECT }}
-      SYLPHX_ENV: ${{ vars.SYLPHX_ENV_PRODUCTION || '8fb1fdba-a479-415e-969a-f3578cbfd5ed' }}
     steps:
       - uses: actions/checkout@v4.2.2
         with:
