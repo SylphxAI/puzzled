@@ -29,6 +29,16 @@ cargo clippy -p puzzled-core -p puzzled-server -- -D warnings
 atlas migrate hash --dir file://apps/puzzled/atlas/migrations
 ```
 
+## CI and the merge queue
+
+The queue runs only the fast gate (`ci.yml`: lint, typecheck, secret scan,
+affected unit tests, and the migration lane when `apps/puzzled/atlas/` changes).
+`verify.yml` runs the full suite (production web build, release binary,
+database-backed Rust tests, SEO, accessibility, Lighthouse) after merge and
+nightly, and marks the commit `verified`. A draft is the compiler: it runs the
+gate only. A pull request marked ready also runs the affected suite. See
+SylphxAI/.github `docs/optimistic-merge.md`.
+
 ## Validation notes
 
 - Prefer the **narrowest** affected check before full workspace runs.
