@@ -4,7 +4,7 @@
  */
 
 import { canonicalizeGameSlug } from '@/lib/game-slug'
-import { ordinal0FromDayKey, productDayKey } from '@/lib/product-day'
+import { nextProductDayKey, ordinal0FromDayKey, productDayKey } from '@/lib/product-day'
 
 export const FREE_GAME_ROTATION = [
 	'word-guess',
@@ -24,6 +24,15 @@ export function freeGameForDayKey(dayKey: string): FreeRotationSlug {
 /** Today's free module on the product day-key calendar. */
 export function getTodaysFreeGame(now: Date = new Date()): FreeRotationSlug {
 	return freeGameForDayKey(productDayKey(now))
+}
+
+/**
+ * Tomorrow's free module: the same rotation read for the next product day, so
+ * the teaser is the schedule itself and stays right across a year boundary
+ * (the rotation index restarts with the day-of-year ordinal on 1 January).
+ */
+export function getTomorrowsFreeGame(now: Date = new Date()): FreeRotationSlug {
+	return freeGameForDayKey(nextProductDayKey(now))
 }
 
 export function isGameFreeOnDay(gameSlug: string, dayKey: string): boolean {

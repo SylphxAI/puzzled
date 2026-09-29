@@ -115,9 +115,44 @@ message CheckGuessResponse {
   string result_json = 1;
 }
 
+// ShareResult returns the id the share link carries as `ref` for the signed-in
+// or guest player's accepted daily finish, creating it on first call (the result
+// screen calls it when it shows, so the share tap needs no round trip). `tap`
+// also counts one share. The server reads the finish itself; the client sends
+// no result facts.
+message ShareResultRequest {
+  string game_slug = 1;
+  // Product day (YYYY-MM-DD); default = today.
+  string puzzle_date = 2 [features.field_presence = EXPLICIT];
+  bool tap = 3;
+}
+
+message ShareResultResponse {
+  string share_id = 1;
+}
+
+// GetSharedResult reads one shared result for the public landing page. No
+// identity is needed. It carries only what a result card shows: never the
+// solution, a grid, or who shared it.
+message GetSharedResultRequest {
+  string share_id = 1;
+}
+
+message GetSharedResultResponse {
+  string game_slug = 1;
+  string puzzle_date = 2;
+  string difficulty = 3;
+  string status = 4;
+  uint32 attempts = 5;
+  uint32 score = 6 [features.field_presence = EXPLICIT];
+  uint64 time_spent_ms = 7 [features.field_presence = EXPLICIT];
+}
+
 service PuzzleService {
   rpc GetPuzzle(GetPuzzleRequest) returns (GetPuzzleResponse);
   rpc GetDaily(GetDailyRequest) returns (GetDailyResponse);
   rpc SubmitGuess(SubmitGuessRequest) returns (SubmitGuessResponse);
   rpc CheckGuess(CheckGuessRequest) returns (CheckGuessResponse);
+  rpc ShareResult(ShareResultRequest) returns (ShareResultResponse);
+  rpc GetSharedResult(GetSharedResultRequest) returns (GetSharedResultResponse);
 }

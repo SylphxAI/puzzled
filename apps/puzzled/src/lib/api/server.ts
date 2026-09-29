@@ -14,6 +14,7 @@ import { createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
+import { type SharedResult, toSharedResult } from '@/features/daily/lib/challenge'
 import { loadDailyCompletionMap } from '@/features/daily/lib/daily-completion'
 import {
 	BillingService,
@@ -24,7 +25,11 @@ import {
 	GamificationService,
 	GetStreakInfoRequestSchema,
 } from '@/gen/connect/puzzled/v1/gamification_pb'
-import { GetDailyRequestSchema, PuzzleService } from '@/gen/connect/puzzled/v1/puzzle_pb'
+import {
+	GetDailyRequestSchema,
+	GetSharedResultRequestSchema,
+	PuzzleService,
+} from '@/gen/connect/puzzled/v1/puzzle_pb'
 import {
 	GetHistoryRequestSchema,
 	GetTodayOverviewRequestSchema,
@@ -121,6 +126,27 @@ export const getServerDailyStatus = cache(
 			}),
 		)
 		return mapDailyStatus(res, input.difficulty)
+	},
+)
+
+/**
+ * The result behind a share link, for the public landing. Null for an unknown
+ * or unreadable share, so the landing falls back to today's puzzle.
+ */
+export const getServerSharedResult = cache(
+	async (shareId: string): Promise<SharedResult | null> => {
+		try {
+			const transport = await getServerTransport()
+			const client = createClient(PuzzleService, transport)
+			return toSharedResult(
+				await client.getSharedResult(create(GetSharedResultRequestSchema, { shareId })),
+			)
+		} catch (error) {
+			logger.warn('share.read-failed', {
+				error: error instanceof Error ? error.message : String(error),
+			})
+			return null
+		}
 	},
 )
 

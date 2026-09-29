@@ -319,7 +319,7 @@ pub(crate) async fn fresh_database() -> Option<PgPool> {
     Some(pool)
 }
 
-fn token(sub: &str) -> String {
+pub(crate) fn token(sub: &str) -> String {
     use jsonwebtoken::{encode, EncodingKey, Header};
     let priv_pem = include_str!("../testdata/platform_jwt_test_priv.pem");
     let pub_pem = include_str!("../testdata/platform_jwt_test_pub.pem");

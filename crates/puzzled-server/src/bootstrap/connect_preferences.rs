@@ -5,9 +5,11 @@ use std::sync::Arc;
 use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
+use uuid::Uuid;
 
 use super::identity::require_identity;
 use super::state::AppState;
+use crate::capabilities::identity_access::adapters::auth_subjects;
 use crate::capabilities::preferences::adapters::account_deletion::delete_account_data;
 use crate::capabilities::preferences::adapters::preferences_db::{
     fetch_notification_preferences, fetch_user_preferences, upsert_notification_preferences,
@@ -395,6 +397,50 @@ impl PreferencesService for PreferencesConnectService {
                     return Err(ConnectError::new(
                         ErrorCode::Unavailable,
                         "account_deletion_unavailable",
+                    ));
+                }
+            }
+        }
+        // The player's rows are only half the person: the Sylphx Auth subject
+        // is the sign-in they came in with, so deleting the rows alone would
+        // leave a live sign-in behind a purged account (an erasure that is not
+        // an erasure). Auth's deletion is filed first — it suspends the
+        // subject and ends its sessions at once — because the subject map
+        // rows are themselves deleted below, and a failure after that would
+        // leave no name to give Auth: this order means a refused erasure
+        // leaves every row intact and the retry repeats the same Auth request
+        // (fixed idempotency key) rather than filing a second.
+        let erasure = self.state.erasure.as_ref().ok_or_else(|| {
+            tracing::error!("account erasure refused: Enable Auth is not configured");
+            ConnectError::new(ErrorCode::Unavailable, "identity_credential_unconfigured")
+        })?;
+        let player = Uuid::parse_str(&identity.user_id).map_err(|error| {
+            tracing::warn!(%error, "account erasure: identity is not a player id");
+            ConnectError::new(ErrorCode::Internal, "account_deletion_failed")
+        })?;
+        let subjects = auth_subjects::subjects_naming_player(pool, player)
+            .await
+            .map_err(|error| {
+                tracing::warn!(%error, "account erasure: subject lookup failed");
+                ConnectError::new(ErrorCode::Unavailable, "account_deletion_unavailable")
+            })?;
+        for subject in &subjects {
+            match erasure.delete_principal(subject).await {
+                Ok(Some(request_id)) => tracing::info!(
+                    subject,
+                    privacy_request_id = %request_id,
+                    "sylphx auth account deletion requested"
+                ),
+                // Auth holds no such account (already deleted, or never
+                // created): the person has nothing left to sign in with.
+                Ok(None) => {
+                    tracing::info!(subject, "sylphx auth holds no account to delete")
+                }
+                Err(error) => {
+                    tracing::error!(%error, subject, "sylphx auth account deletion failed");
+                    return Err(ConnectError::new(
+                        ErrorCode::Unavailable,
+                        "identity_account_deletion_failed",
                     ));
                 }
             }

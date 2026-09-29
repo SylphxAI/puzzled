@@ -93,6 +93,11 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
         r#"DELETE FROM "push_subscriptions" WHERE "user_id" = $1"#,
     ),
     (
+        "result_shares",
+        "user_id",
+        r#"DELETE FROM "result_shares" WHERE "user_id" = $1"#,
+    ),
+    (
         "user_display_cache",
         "user_id",
         r#"DELETE FROM "user_display_cache" WHERE "user_id" = $1"#,
