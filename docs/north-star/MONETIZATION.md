@@ -155,3 +155,12 @@ Star.
 Each new module costs content, verification, attention, runtime and a way to
 disable it without breaking the app. Ship modules when the expected lift in
 daily puzzle completers or paid conversion justifies that.
+
+## Stripe to Money subscriber migration (one-off)
+
+Every live `billing_subscriptions` row (active, trialing, past due) keeps its access when Money takes over. Money has no import, so each one is a manual grant (cloud#10420: `POST .../entitlement_grants`, a plain HTTP request with `Idempotency-Key: <old Stripe subscription id>`, the app's own server key, and a fixed body: reason `legacy stripe sub <id> migrated`, `expire_time` = the row's paid-through date). A family plan also gets `family` and the `seats` limit under keys `<id>:family` and `<id>:seats`, so its members keep access. The steps are Compute ticks, paused in `sylphx.toml`; unpause one at a time, in this order, and pause it again:
+
+1. `billing-migration/grants`: per row, list Money's grants first and skip what exists; create the grants; set the Stripe subscription to cancel at period end (the Stripe client's last use); queue one email through the product's Events email path ("Your Plus continues until <date>; nothing changes before then", with a pricing link for the same plan). Logs carry counts only. Safe to rerun.
+2. `billing-migration/verify`: readback. 200 only when every live row has its grants in Money and Stripe reports it cancelling at period end.
+3. `billing-migration/export`: the `billing_customers`, `billing_subscriptions` and `billing_ledger` rows to `PUZZLED_BILLING_EXPORT_DIR` as NDJSON with a manifest of counts and SHA-256 sums, read back against the database.
+4. Only after the export readback does the deletion PR merge (Stripe code, webhook route, `STRIPE_*` reads, the `billing_*` tables). The whole sequence needs cloud#10420 live.

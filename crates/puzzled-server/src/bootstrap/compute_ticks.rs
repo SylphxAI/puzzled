@@ -9,11 +9,15 @@ use axum::Json;
 use serde_json::json;
 
 use super::state::AppState;
+use crate::capabilities::billing_migration::{self, export, grants::EventsMailer};
 use crate::capabilities::daily_pipeline;
 use crate::capabilities::jobs::adapters::jobs_db;
 
 pub const DAILY_PUZZLES_PATH: &str = "/internal/compute/daily-puzzles";
 pub const AUDIT_RETENTION_PATH: &str = "/internal/compute/audit-log-retention";
+pub const MIGRATE_GRANTS_PATH: &str = "/internal/compute/billing-migration/grants";
+pub const MIGRATE_VERIFY_PATH: &str = "/internal/compute/billing-migration/verify";
+pub const MIGRATE_EXPORT_PATH: &str = "/internal/compute/billing-migration/export";
 
 /// Store every missing daily puzzle (14 days ahead, 30-day archive).
 pub async fn daily_puzzles_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
@@ -84,6 +88,120 @@ pub async fn audit_retention_tick(State(state): State<AppState>, headers: Header
                 Json(json!({"error": "retention_failed"})),
             )
                 .into_response()
+        }
+    }
+}
+
+fn unavailable(error: &'static str) -> Response {
+    (
+        StatusCode::SERVICE_UNAVAILABLE,
+        Json(json!({ "error": error })),
+    )
+        .into_response()
+}
+
+/// One-off, step 1 of the Stripe to Money subscriber migration: grants,
+/// cancel at period end, email. 503 when any row failed, so Compute retries
+/// (every step is idempotent).
+pub async fn migrate_grants_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    if let Err(reject) = state.ticks.admit(&headers, MIGRATE_GRANTS_PATH).await {
+        return reject.response().into_response();
+    }
+    let (Some(pool), Some(stripe), Some(money)) = (&state.pool, &state.stripe, &state.money) else {
+        return unavailable("database_stripe_and_money_required");
+    };
+    match billing_migration::run_grants(pool, stripe, money, &EventsMailer).await {
+        Ok(report) => {
+            let status = if report.failed == 0 {
+                StatusCode::OK
+            } else {
+                StatusCode::SERVICE_UNAVAILABLE
+            };
+            (
+                status,
+                Json(json!({
+                    "live": report.live,
+                    "granted": report.granted,
+                    "already_granted": report.already_granted,
+                    "cancelled": report.cancelled,
+                    "already_cancelled": report.already_cancelled,
+                    "emailed": report.emailed,
+                    "no_email": report.no_email,
+                    "skipped_ended": report.skipped_ended,
+                    "failed": report.failed,
+                })),
+            )
+                .into_response()
+        }
+        Err(error) => {
+            tracing::warn!(%error, "subscriber migration grants run failed");
+            unavailable("migration_failed")
+        }
+    }
+}
+
+/// Step 2, the readback: 200 only when every live row has its grants and
+/// cancels at period end.
+pub async fn migrate_verify_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    if let Err(reject) = state.ticks.admit(&headers, MIGRATE_VERIFY_PATH).await {
+        return reject.response().into_response();
+    }
+    let (Some(pool), Some(stripe), Some(money)) = (&state.pool, &state.stripe, &state.money) else {
+        return unavailable("database_stripe_and_money_required");
+    };
+    match billing_migration::verify(pool, stripe, money).await {
+        Ok(found) => {
+            let status = if found.complete() {
+                StatusCode::OK
+            } else {
+                StatusCode::SERVICE_UNAVAILABLE
+            };
+            (
+                status,
+                Json(json!({
+                    "live": found.live,
+                    "missing_grant": found.missing_grant,
+                    "still_renewing": found.still_renewing,
+                })),
+            )
+                .into_response()
+        }
+        Err(error) => {
+            tracing::warn!(%error, "subscriber migration readback failed");
+            unavailable("readback_failed")
+        }
+    }
+}
+
+/// Step 3: export the `billing_*` rows and read them back.
+pub async fn migrate_export_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    if let Err(reject) = state.ticks.admit(&headers, MIGRATE_EXPORT_PATH).await {
+        return reject.response().into_response();
+    }
+    let Some(pool) = &state.pool else {
+        return unavailable("no_database");
+    };
+    let dir = match export::export_dir() {
+        Ok(dir) => dir,
+        Err(error) => {
+            tracing::warn!(%error, "billing export not configured");
+            return unavailable("export_dir_not_set");
+        }
+    };
+    match export::run_export(pool, &dir).await {
+        Ok(tables) => (
+            StatusCode::OK,
+            Json(json!({
+                "tables": tables
+                    .iter()
+                    .map(|t| json!({"table": t.table, "rows": t.rows}))
+                    .collect::<Vec<_>>(),
+            })),
+        )
+            .into_response(),
+        Err(error) => {
+            tracing::warn!(%error, "billing export failed");
+            unavailable("export_failed")
         }
     }
 }

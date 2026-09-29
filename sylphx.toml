@@ -121,3 +121,43 @@ catch_up = "skip"
 target = { kind = "http", method = "POST", signed = true }
 retry = { max_attempts = 3 }
 pause = false
+
+# One-off: the Stripe to Money subscriber migration (docs/north-star/MONETIZATION.md).
+# Paused on purpose. Unpause one, let it run, pause it again, in this order:
+# grants, then verify (must answer 200), then export. Only after the export's
+# readback does the deletion PR merge. Every step is safe to rerun.
+[[compute.schedules]]
+id = "puzzled-billing-migration-grants"
+idempotency_key = "puzzled-billing-migration-grants-v1"
+service = "api"
+path = "/internal/compute/billing-migration/grants"
+calendar = { kind = "cron", expression = "*/15 * * * *", timezone = "UTC" }
+overlap = "skip"
+catch_up = "skip"
+target = { kind = "http", method = "POST", signed = true }
+retry = { max_attempts = 3 }
+pause = true
+
+[[compute.schedules]]
+id = "puzzled-billing-migration-verify"
+idempotency_key = "puzzled-billing-migration-verify-v1"
+service = "api"
+path = "/internal/compute/billing-migration/verify"
+calendar = { kind = "cron", expression = "*/15 * * * *", timezone = "UTC" }
+overlap = "skip"
+catch_up = "skip"
+target = { kind = "http", method = "POST", signed = true }
+retry = { max_attempts = 3 }
+pause = true
+
+[[compute.schedules]]
+id = "puzzled-billing-migration-export"
+idempotency_key = "puzzled-billing-migration-export-v1"
+service = "api"
+path = "/internal/compute/billing-migration/export"
+calendar = { kind = "cron", expression = "*/15 * * * *", timezone = "UTC" }
+overlap = "skip"
+catch_up = "skip"
+target = { kind = "http", method = "POST", signed = true }
+retry = { max_attempts = 3 }
+pause = true

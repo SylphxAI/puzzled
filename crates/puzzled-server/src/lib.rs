@@ -1251,6 +1251,9 @@ mod tests {
         for path in [
             "/internal/compute/daily-puzzles",
             "/internal/compute/audit-log-retention",
+            "/internal/compute/billing-migration/grants",
+            "/internal/compute/billing-migration/verify",
+            "/internal/compute/billing-migration/export",
         ] {
             let refused = router(tick_state())
                 .oneshot(tick_request(path, "{}", None))

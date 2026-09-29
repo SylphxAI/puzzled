@@ -73,6 +73,14 @@ struct CheckResponse {
     expire_time: Option<String>,
 }
 
+/// One manual grant as `GET entitlement_grants` lists it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GrantRecord {
+    pub user_id: String,
+    pub feature: String,
+    pub reason: String,
+}
+
 /// A catalogue price as `GET catalogs/default` publishes it.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CatalogPrice {
@@ -332,6 +340,79 @@ impl Money {
                 return Ok(false);
             }
         }
+    }
+
+    /// Every manual grant of `feature` in the environment: subject, feature
+    /// and reason. Pages through `entitlement_grants?filter=feature = "..."`
+    /// (the subject is matched by the caller, so a filter Money treats
+    /// loosely cannot hide or invent a match).
+    pub async fn manual_grants(&self, feature: &str) -> Result<Vec<GrantRecord>, MoneyError> {
+        let filter = format!("feature = \"{}\"", feature.replace('"', ""));
+        let mut token = String::new();
+        let mut found = Vec::new();
+        loop {
+            let mut query = vec![("filter", filter.as_str()), ("page_size", "1000")];
+            if !token.is_empty() {
+                query.push(("page_token", token.as_str()));
+            }
+            let body = self
+                .call(
+                    self.http
+                        .get(format!("{}/entitlement_grants", self.base))
+                        .query(&query),
+                )
+                .await?;
+            for grant in body
+                .get("entitlement_grants")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                found.push(GrantRecord {
+                    user_id: grant
+                        .pointer("/subject/end_user")
+                        .and_then(Value::as_str)
+                        .unwrap_or_default()
+                        .to_string(),
+                    feature: grant
+                        .get("feature")
+                        .and_then(Value::as_str)
+                        .unwrap_or_default()
+                        .to_string(),
+                    reason: grant
+                        .get("reason")
+                        .and_then(Value::as_str)
+                        .unwrap_or_default()
+                        .to_string(),
+                });
+            }
+            token = body
+                .get("next_page_token")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string();
+            if token.is_empty() {
+                return Ok(found);
+            }
+        }
+    }
+
+    /// Create one manual grant (`POST entitlement_grants`, a plain HTTP request
+    /// carrying `Idempotency-Key`: the generated SDK attaches its own key and
+    /// exposes none). The same key must always come with the same body.
+    pub async fn create_grant(
+        &self,
+        idempotency_key: &str,
+        body: &Value,
+    ) -> Result<(), MoneyError> {
+        self.call(
+            self.http
+                .post(format!("{}/entitlement_grants", self.base))
+                .header("Idempotency-Key", idempotency_key)
+                .json(body),
+        )
+        .await
+        .map(|_| ())
     }
 
     /// Create a checkout session; returns the hosted page's URL.

@@ -2,6 +2,7 @@
 
 pub mod admin;
 pub mod billing;
+pub mod billing_migration;
 pub mod daily_pipeline;
 pub mod gamification;
 pub mod identity_access;
