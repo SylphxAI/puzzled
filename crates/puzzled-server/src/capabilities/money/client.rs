@@ -498,7 +498,7 @@ impl Money {
         let body = self
             .call(
                 self.http
-                    .post(format!("{}/portal_sessions", self.base))
+                    .post(format!("{}/portal_sessions", self.env_url().await?))
                     .json(&json!({"subject": {"end_user": user_id}, "return_url": return_url})),
             )
             .await?;
@@ -515,7 +515,7 @@ impl Money {
             self.http
                 .post(format!(
                     "{}/customer_subscriptions/{}:cancel",
-                    self.base,
+                    self.env_url().await?,
                     segment(id)
                 ))
                 .json(&json!({"at_period_end": true})),
@@ -530,7 +530,7 @@ impl Money {
             self.http
                 .post(format!(
                     "{}/customer_subscriptions/{}:resume",
-                    self.base,
+                    self.env_url().await?,
                     segment(id)
                 ))
                 .json(&json!({})),
