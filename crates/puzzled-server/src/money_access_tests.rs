@@ -247,12 +247,19 @@ async fn the_billing_retire_refuses_to_run_over_data() {
         return;
     };
     // fresh_database has applied every migration, so the tables are already
-    // retired: put back the smallest shape the guard reads, under the old names.
+    // retired: put the original tables back (their DDL, up to the family
+    // tables) so the migration meets exactly what production has.
     const TABLES: [&str; 3] = [
         "billing_customers",
         "billing_subscriptions",
         "billing_ledger",
     ];
+    let migrations = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../apps/puzzled/atlas/migrations");
+    let original =
+        std::fs::read_to_string(migrations.join("20260926120000_puzzled_plus_billing.sql"))
+            .unwrap();
+    let billing_only = &original[..original.find(r#"CREATE TABLE "family_groups""#).unwrap()];
     for table in TABLES {
         sqlx::query(sqlx::AssertSqlSafe(format!(
             r#"DROP TABLE IF EXISTS "{table}__retired_20260929""#
@@ -260,18 +267,14 @@ async fn the_billing_retire_refuses_to_run_over_data() {
         .execute(&pool)
         .await
         .unwrap();
-        sqlx::query(sqlx::AssertSqlSafe(format!(
-            r#"CREATE TABLE "{table}" ("id" int)"#
-        )))
+    }
+    sqlx::raw_sql(sqlx::AssertSqlSafe(billing_only.to_string()))
         .execute(&pool)
         .await
         .unwrap();
-    }
-    let retire_sql = std::fs::read_to_string(
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../apps/puzzled/atlas/migrations/20260930000000_retire_billing_tables.sql"),
-    )
-    .unwrap();
+    let retire_sql =
+        std::fs::read_to_string(migrations.join("20260930000000_retire_billing_tables.sql"))
+            .unwrap();
     let exists = |table: String| {
         let pool = pool.clone();
         async move {
@@ -283,10 +286,13 @@ async fn the_billing_retire_refuses_to_run_over_data() {
         }
     };
 
-    sqlx::query(r#"INSERT INTO "billing_ledger" ("id") VALUES (1)"#)
-        .execute(&pool)
-        .await
-        .unwrap();
+    sqlx::query(
+        r#"INSERT INTO "billing_customers" ("user_id", "stripe_customer_id")
+           VALUES ('0b6f7d3e-1111-4a4a-9c9c-0000000000c1'::uuid, 'cus_1')"#,
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
     let refused = sqlx::raw_sql(sqlx::AssertSqlSafe(retire_sql.clone()))
         .execute(&pool)
         .await;
@@ -302,7 +308,7 @@ async fn the_billing_retire_refuses_to_run_over_data() {
         );
     }
 
-    sqlx::query(r#"DELETE FROM "billing_ledger""#)
+    sqlx::query(r#"DELETE FROM "billing_customers""#)
         .execute(&pool)
         .await
         .unwrap();

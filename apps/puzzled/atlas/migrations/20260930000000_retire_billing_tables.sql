@@ -25,3 +25,19 @@ $$;
 ALTER TABLE "billing_ledger" RENAME TO "billing_ledger__retired_20260929";
 ALTER TABLE "billing_subscriptions" RENAME TO "billing_subscriptions__retired_20260929";
 ALTER TABLE "billing_customers" RENAME TO "billing_customers__retired_20260929";
+
+-- Constraint and index names follow the tables' new names, so the Drizzle
+-- definitions of the retired tables (schema.ts) match without special cases.
+ALTER INDEX "billing_customers_pkey" RENAME TO "billing_customers__retired_20260929_pkey";
+ALTER TABLE "billing_customers__retired_20260929"
+	RENAME CONSTRAINT "billing_customers_stripe_customer_id_unique"
+	TO "billing_customers__retired_20260929_stripe_customer_id_unique";
+
+ALTER INDEX "billing_subscriptions_pkey" RENAME TO "billing_subscriptions__retired_20260929_pkey";
+ALTER INDEX "billing_subscriptions_user_id_idx" RENAME TO "billing_subscriptions__retired_20260929_user_id_idx";
+
+ALTER INDEX "billing_ledger_pkey" RENAME TO "billing_ledger__retired_20260929_pkey";
+ALTER TABLE "billing_ledger__retired_20260929"
+	RENAME CONSTRAINT "billing_ledger_source_id_unique"
+	TO "billing_ledger__retired_20260929_source_id_unique";
+ALTER INDEX "billing_ledger_user_id_idx" RENAME TO "billing_ledger__retired_20260929_user_id_idx";
