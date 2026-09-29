@@ -14,7 +14,6 @@
 		"STORAGE_*",
 		"TRIGGER_*",
 		"SYLPHX_*",
-		"BETTER_AUTH_*",
 		"GOOGLE_CLIENT_*",
 		"STRIPE_*",
 		"RESEND_*",

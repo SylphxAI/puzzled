@@ -75,11 +75,6 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		description: 'Public site origin the platform sets on each service at runtime',
 	},
 	{
-		name: 'VERCEL_URL',
-		required: false,
-		description: 'Deployment hostname used by site-origin resolution',
-	},
-	{
 		name: 'PORT',
 		required: false,
 		description: 'Listen port for the local dev site-origin fallback',
@@ -234,10 +229,6 @@ export const env = {
 	},
 	/** Configured site origin (baked at build) */
 	/** Sylphx app id for the login surface (baked at build) */
-	/** Deployment hostname fallback */
-	get VERCEL_URL(): string | undefined {
-		return process.env.VERCEL_URL
-	},
 	/** Public site origin (platform, runtime) */
 	get SYLPHX_PUBLIC_URL(): string | undefined {
 		return process.env.SYLPHX_PUBLIC_URL

@@ -116,11 +116,6 @@ const nextConfig: NextConfig = {
 				protocol: 'https',
 				hostname: 'avatars.githubusercontent.com',
 			},
-			{
-				// Vercel Blob storage for user avatars
-				protocol: 'https',
-				hostname: '*.public.blob.vercel-storage.com',
-			},
 		],
 	},
 
