@@ -180,10 +180,16 @@ mod tests {
                     }
                 }
             }
-            // DROP TABLE "t": its columns no longer exist.
-            if let Some(rest) = trimmed.strip_prefix("DROP TABLE ") {
-                if let Some(dropped) = rest.split('"').nth(1) {
-                    found.retain(|(t, _)| t != dropped);
+            // A table renamed to `..._retired_...` is empty (its migration
+            // refuses to run over rows), so it holds no player data to erase.
+            if let Some(rest) = trimmed.strip_prefix("ALTER TABLE ") {
+                let parts: Vec<&str> = rest.split('"').collect();
+                if let (Some(old), true) = (
+                    parts.get(1),
+                    parts.iter().any(|p| p.contains("RENAME TO"))
+                        && parts.get(3).is_some_and(|new| new.contains("__retired_")),
+                ) {
+                    found.retain(|(t, _)| t != old);
                 }
             }
             // ALTER TABLE "t" ADD COLUMN "user_id" ...

@@ -238,20 +238,28 @@ async fn a_family_join_is_refused_and_retryable_when_money_cannot_answer_seats()
     assert_eq!(status, StatusCode::OK, "{body}");
 }
 
-/// The drop migration refuses to run over data: a billing row means a payment
-/// happened, and the whole migration rolls back with nothing dropped.
+/// The retire migration refuses to run over data: a billing row means a
+/// payment happened, and the whole migration rolls back with nothing renamed.
+/// When the tables are empty it renames them and drops nothing.
 #[tokio::test]
-async fn the_billing_drop_refuses_to_run_over_data() {
+async fn the_billing_retire_refuses_to_run_over_data() {
     let Some(pool) = fresh_database().await else {
         return;
     };
-    // fresh_database has applied every migration, so the tables are gone:
-    // rebuild the smallest shape the guard reads.
-    for table in [
+    // fresh_database has applied every migration, so the tables are already
+    // retired: put back the smallest shape the guard reads, under the old names.
+    const TABLES: [&str; 3] = [
         "billing_customers",
         "billing_subscriptions",
         "billing_ledger",
-    ] {
+    ];
+    for table in TABLES {
+        sqlx::query(sqlx::AssertSqlSafe(format!(
+            r#"DROP TABLE IF EXISTS "{table}__retired_20260929""#
+        )))
+        .execute(&pool)
+        .await
+        .unwrap();
         sqlx::query(sqlx::AssertSqlSafe(format!(
             r#"CREATE TABLE "{table}" ("id" int)"#
         )))
@@ -259,12 +267,12 @@ async fn the_billing_drop_refuses_to_run_over_data() {
         .await
         .unwrap();
     }
-    let drop_sql = std::fs::read_to_string(
+    let retire_sql = std::fs::read_to_string(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../apps/puzzled/atlas/migrations/20260930000000_drop_billing_tables.sql"),
+            .join("../../apps/puzzled/atlas/migrations/20260930000000_retire_billing_tables.sql"),
     )
     .unwrap();
-    let exists = |table: &'static str| {
+    let exists = |table: String| {
         let pool = pool.clone();
         async move {
             sqlx::query_scalar::<_, bool>("SELECT to_regclass($1) IS NOT NULL")
@@ -279,31 +287,37 @@ async fn the_billing_drop_refuses_to_run_over_data() {
         .execute(&pool)
         .await
         .unwrap();
-    let refused = sqlx::raw_sql(sqlx::AssertSqlSafe(drop_sql.clone()))
+    let refused = sqlx::raw_sql(sqlx::AssertSqlSafe(retire_sql.clone()))
         .execute(&pool)
         .await;
-    assert!(refused.is_err(), "a row must stop the drop");
-    for table in [
-        "billing_customers",
-        "billing_subscriptions",
-        "billing_ledger",
-    ] {
-        assert!(exists(table).await, "{table} must survive a refused drop");
+    assert!(refused.is_err(), "a row must stop the retire");
+    for table in TABLES {
+        assert!(
+            exists(table.to_string()).await,
+            "{table} must survive a refused retire"
+        );
+        assert!(
+            !exists(format!("{table}__retired_20260929")).await,
+            "{table} must not be renamed by a refused retire"
+        );
     }
 
     sqlx::query(r#"DELETE FROM "billing_ledger""#)
         .execute(&pool)
         .await
         .unwrap();
-    sqlx::raw_sql(sqlx::AssertSqlSafe(drop_sql))
+    sqlx::raw_sql(sqlx::AssertSqlSafe(retire_sql))
         .execute(&pool)
         .await
         .unwrap();
-    for table in [
-        "billing_customers",
-        "billing_subscriptions",
-        "billing_ledger",
-    ] {
-        assert!(!exists(table).await, "{table} is dropped when empty");
+    for table in TABLES {
+        assert!(
+            !exists(table.to_string()).await,
+            "{table} is renamed away when empty"
+        );
+        assert!(
+            exists(format!("{table}__retired_20260929")).await,
+            "{table} is kept under its retired name, not dropped"
+        );
     }
 }
