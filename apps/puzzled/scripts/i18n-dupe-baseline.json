@@ -10,10 +10,6 @@
 				]
 			},
 			{
-				"value": "2026-09-27",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
-			},
-			{
 				"value": "Account",
 				"keys": [
 					"nav.account",
@@ -1096,10 +1092,6 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
-			},
-			{
-				"value": "2026-09-27",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "Account",
@@ -2186,10 +2178,6 @@
 				]
 			},
 			{
-				"value": "2026-09-27",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
-			},
-			{
 				"value": "All Users",
 				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
 			},
@@ -3251,10 +3239,6 @@
 				]
 			},
 			{
-				"value": "2026-09-27",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
-			},
-			{
 				"value": "All Users",
 				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
 			},
@@ -4308,10 +4292,6 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
-			},
-			{
-				"value": "2026-09-27",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "All Users",
