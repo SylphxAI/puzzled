@@ -99,17 +99,19 @@ impl BillingConnectService {
         })
     }
 
-    /// Seats on `owner`'s plan, from Money's `seats` limit. `Err`: Money could
-    /// not answer (or the owner holds no `seats` limit), so nothing is decided
-    /// from a guess.
+    /// Seats on `owner`'s plan. With Money, its `seats` limit; `Err` when Money
+    /// could not answer (or the owner holds no `seats` limit), so nothing is
+    /// decided from a guess. Without Money, only the not-yet-migrated Stripe
+    /// path exists and keeps its family size.
     async fn max_members(&self, owner: &str) -> Result<u32, ConnectError> {
-        let unavailable = || ConnectError::new(ErrorCode::Unavailable, "seats_unavailable");
-        let money = self.state.money.as_ref().ok_or_else(unavailable)?;
+        let Some(money) = self.state.money.as_ref() else {
+            return Ok(FAMILY_MAX_MEMBERS);
+        };
         money_access::seats(money, owner)
             .await
             .ok()
             .flatten()
-            .ok_or_else(unavailable)
+            .ok_or_else(|| ConnectError::new(ErrorCode::Unavailable, "seats_unavailable"))
     }
 
     /// A Money checkout: the buyer's consent is recorded, then the server
