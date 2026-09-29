@@ -10,9 +10,8 @@
  *    loopback in dev). Anything else (spoofed `Host`/`X-Forwarded-Host` such as
  *    evil.com) is ignored. `www.puzzled.gg` normalizes to the apex. Public hosts
  *    are always https; `x-forwarded-proto` only allows http for loopback dev.
- * 3. VERCEL_URL (platform-provided deployment hostname).
- * 4. Deterministic production origin — never localhost from a production build.
- * 5. http://localhost:<PORT|3000> only for local dev/test.
+ * 3. Deterministic production origin — never localhost from a production build.
+ * 4. http://localhost:<PORT|3000> only for local dev/test.
  *
  * The pure resolver is separate from the `next/headers` wrapper
  * (site-origin.server.ts) so the behavior is mechanically testable without a
@@ -30,8 +29,6 @@ export type SiteOriginInput = {
 	forwardedProto?: string | null
 	/** SYLPHX_PUBLIC_URL (set by the platform at runtime). */
 	configuredUrl?: string | null
-	/** VERCEL_URL (hostname, no scheme). */
-	vercelUrl?: string | null
 	/** Node environment (env.NODE_ENV at the call site). */
 	nodeEnv?: string | null
 	/** Listen port for the local dev fallback (env.PORT at the call site). */
@@ -149,13 +146,7 @@ export function resolveSiteOrigin(input: SiteOriginInput = {}): string {
 		return hostToOrigin(owned, port, proto)
 	}
 
-	// 3. Platform-provided deployment hostname.
-	const vercel = normalizeOriginCandidate(input.vercelUrl)
-	if (vercel && !(isProduction && originIsLoopback(vercel))) {
-		return vercel
-	}
-
-	// 4./5. Deterministic production origin, then local dev fallback.
+	// 3./4. Deterministic production origin, then local dev fallback.
 	if (isProduction) return PRODUCTION_SITE_ORIGIN
 	const port = input.port?.trim()
 	return `http://localhost:${port && /^\d+$/.test(port) ? port : DEFAULT_DEV_PORT}`

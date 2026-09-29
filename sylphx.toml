@@ -12,6 +12,8 @@ context = "."
 # PR previews are admitted (ADR-170 deploy-layer proof); project policy,
 # labels, and capacity gates still apply on the platform side.
 preview_deploys = true
+merge = "optimistic"
+on_red = "notify"
 
 # Project-level schema gate (ADR-089 / DEPLOY-GUIDE). Ephemeral Job runs once
 # per push BEFORE writer services roll. Supersedes web-only release_command:

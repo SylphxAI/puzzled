@@ -99,7 +99,7 @@ export default async function PrivacyPage({ params }: Props) {
 				thirdPartyRow('Sylphx Money', t('sections.thirdParty.money')),
 				thirdPartyRow('Stripe', t('sections.thirdParty.stripe')),
 				thirdPartyRow('Google', t('sections.thirdParty.google')),
-				thirdPartyRow('Resend', t('sections.thirdParty.resend')),
+				thirdPartyRow('Sylphx Limited', t('sections.thirdParty.mail')),
 			],
 			after: [t('sections.thirdParty.others')],
 		},
