@@ -7,6 +7,7 @@ use sqlx::PgPool;
 use crate::capabilities::billing::adapters::stripe::Stripe;
 use crate::capabilities::billing::service;
 use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
+use crate::capabilities::money::{pricing, Money};
 use crate::shared::tick_receipt::TickVerifier;
 
 #[derive(Clone)]
@@ -15,6 +16,8 @@ pub struct AppState {
     pub pool: Option<PgPool>,
     /// Stripe, when Puzzled Plus is on sale. None: nothing is sold or locked.
     pub stripe: Option<Stripe>,
+    /// Sylphx Money, when configured: entitlements, checkout and prices.
+    pub money: Option<Money>,
     /// Sylphx Auth end-user session checks.
     pub auth: AuthSessions,
     /// Admission for Compute schedule ticks (signed receipts).
@@ -29,6 +32,7 @@ impl AppState {
             auth: AuthSessions::from_env().with_pool(pool.clone()),
             pool,
             stripe: None,
+            money: None,
             ticks: TickVerifier::from_env(),
         }
     }
@@ -51,12 +55,33 @@ impl AppState {
         self
     }
 
+    #[must_use]
+    pub fn with_money(mut self, money: Option<Money>) -> Self {
+        self.money = money;
+        self
+    }
+
     /// Puzzled Plus is on sale: Stripe and the database are configured and
     /// every plan is published at exactly the catalogue's amounts, intervals
     /// and tax behaviour ([`service::on_sale_prices`], cached five minutes).
     /// A Stripe read that fails counts as on sale, so paid play fails closed;
     /// the free daily puzzle never asks.
     pub async fn sales_open(&self) -> bool {
+        // With Money configured, sales are open when Money's catalogue sells
+        // every declared plan. A catalogue read that fails counts as on sale,
+        // so paid play fails closed; the free daily puzzle never asks.
+        if let Some(money) = &self.money {
+            return match money.catalog().await {
+                Ok(catalog) => pricing::all_on_sale(
+                    &catalog,
+                    puzzled_core::billing_access::catalogue::catalogue(),
+                ),
+                Err(error) => {
+                    tracing::warn!(%error, "Money catalogue read failed; treating Plus as on sale");
+                    true
+                }
+            };
+        }
         match (&self.pool, &self.stripe) {
             (Some(_), Some(stripe)) => match service::on_sale_prices(stripe).await {
                 Ok(Some(_)) => true,

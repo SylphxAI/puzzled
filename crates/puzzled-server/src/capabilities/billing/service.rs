@@ -19,12 +19,15 @@ use puzzled_core::attribution::Attribution;
 
 use super::adapters::billing_db::{self, SubscriptionRow};
 use super::adapters::stripe::{path_segment, Stripe, StripePrice, StripeSubscription};
+use crate::capabilities::money::{access as money_access, Money};
 use crate::capabilities::preferences::adapters::attribution_db::attribution_for_user;
 
 /// Where the account's access comes from.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Entitlement {
     pub entitled: bool,
+    /// Entitled through Sylphx Money rather than a stored subscription.
+    pub via_money: bool,
     /// The account's own subscription that grants access, if any.
     pub own: Option<SubscriptionRow>,
     /// Refund window end for `own`.
@@ -115,6 +118,7 @@ pub async fn entitlement(
             .is_some_and(|r| r.stripe_subscription_id == own.stripe_subscription_id);
         return Ok(Entitlement {
             entitled: true,
+            via_money: false,
             refund_until_ms: refund_until_ms(own.started_at_ms, first),
             own: Some(own),
             family_owner: None,
@@ -124,6 +128,7 @@ pub async fn entitlement(
         if family_plan_active(pool, stripe, &owner).await? {
             return Ok(Entitlement {
                 entitled: true,
+                via_money: false,
                 own: None,
                 refund_until_ms: None,
                 family_owner: Some(owner),
@@ -131,6 +136,43 @@ pub async fn entitlement(
         }
     }
     Ok(Entitlement::default())
+}
+
+/// The account's access with Sylphx Money in the picture: a stored
+/// subscription still grants access (existing subscribers keep it), and
+/// Money's `entitlement_grants:check` grants it otherwise. Money failing
+/// closes only Money's part.
+pub async fn access(
+    pool: &PgPool,
+    stripe: Option<&Stripe>,
+    money: Option<&Money>,
+    user_id: &str,
+) -> Result<Entitlement, String> {
+    let legacy = entitlement(pool, stripe, user_id).await?;
+    let Some(money) = money else {
+        return Ok(legacy);
+    };
+    if legacy.entitled || !is_account_id(user_id) {
+        return Ok(legacy);
+    }
+    if money_access::is_premium(money, user_id).await {
+        return Ok(Entitlement {
+            entitled: true,
+            via_money: true,
+            ..Default::default()
+        });
+    }
+    // A family member's access follows the owner's family plan in Money.
+    if let Some(owner) = billing_db::family_owner_of(pool, user_id).await? {
+        if money_access::family_active(money, &owner).await {
+            return Ok(Entitlement {
+                entitled: true,
+                family_owner: Some(owner),
+                ..Default::default()
+            });
+        }
+    }
+    Ok(legacy)
 }
 
 /// Does `owner` hold a family plan that grants access now?
@@ -153,6 +195,8 @@ pub async fn family_plan_active(
 /// Why a checkout could not be started.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CheckoutError {
+    /// The immediate-supply consent was not given.
+    ConsentRequired,
     UnknownPlan,
     PlanNotOnSale,
     AlreadySubscribed,
@@ -221,7 +265,7 @@ pub async fn on_sale_prices(stripe: &Stripe) -> Result<Option<Vec<StripePrice>>,
 
 /// Return-URL path prefix for a locale: en-US has none, the others use the
 /// canonical tag (`/en-GB`, `/zh-HK`), matching the web routing.
-fn locale_prefix(locale: &str) -> &'static str {
+pub(crate) fn locale_prefix(locale: &str) -> &'static str {
     match locale.to_ascii_lowercase().as_str() {
         "en-gb" => "/en-GB",
         "zh-cn" => "/zh-CN",

@@ -35,7 +35,7 @@ use puzzled_core::puzzle_play::game_slugs::{
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
-use crate::capabilities::billing::service::entitlement;
+use crate::capabilities::billing::service::access as entitlement_access;
 use crate::capabilities::daily_pipeline;
 use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::fetch_puzzle_by_id;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
@@ -155,7 +155,14 @@ impl PuzzleConnectService {
         }
         let entitled = match (user_id, &self.state.pool) {
             (Some(uid), Some(pool)) => {
-                match entitlement(pool, self.state.stripe.as_ref(), uid).await {
+                match entitlement_access(
+                    pool,
+                    self.state.stripe.as_ref(),
+                    self.state.money.as_ref(),
+                    uid,
+                )
+                .await
+                {
                     Ok(found) => found.entitled,
                     Err(error) => {
                         warn!(%error, "entitlement read failed; refusing paid play");
