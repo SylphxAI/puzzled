@@ -5,7 +5,7 @@
 //! when the account is created or first pays, and only when the account's
 //! first-touch tags say Tryit sent it. The row is sent once inline with a short
 //! timeout; a 503, a 429 or a network failure leaves it for the sweep
-//! ([`spawn_sweep`]) to retry. Tryit is idempotent per (product, ref, event),
+//! (the `puzzled-tryit-conversions` Compute schedule) to retry. Tryit is idempotent per (product, ref, event),
 //! so a repeat send is safe. Only the `ref` leaves Puzzled, authorised with the
 //! environment's own `SYLPHX_API_KEY`.
 
@@ -24,7 +24,6 @@ const TIMEOUT: Duration = Duration::from_secs(3);
 const WINDOW_DAYS: i32 = 29;
 /// Give up after this many failed sends (about a day of sweeps).
 const MAX_ATTEMPTS: i32 = 144;
-const SWEEP_EVERY: Duration = Duration::from_secs(10 * 60);
 const SWEEP_BATCH: i64 = 50;
 
 /// The two events Puzzled reports.
@@ -266,26 +265,6 @@ pub async fn sweep(pool: &PgPool, reporter: &TryitReporter) -> Result<u32, Strin
         }
     }
     Ok(reported)
-}
-
-/// Run [`sweep`] every ten minutes. Idempotent on Tryit's side, so several
-/// replicas sweeping is harmless. Off without a database or `SYLPHX_API_KEY`.
-pub fn spawn_sweep(
-    pool: Option<PgPool>,
-    reporter: Option<TryitReporter>,
-) -> Option<tokio::task::JoinHandle<()>> {
-    let (pool, reporter) = (pool?, reporter?);
-    Some(tokio::spawn(async move {
-        let mut interval = tokio::time::interval(SWEEP_EVERY);
-        loop {
-            interval.tick().await;
-            match sweep(&pool, &reporter).await {
-                Ok(0) => {}
-                Ok(reported) => tracing::info!(reported, "tryit conversions reported"),
-                Err(error) => tracing::warn!(%error, "tryit conversion sweep failed"),
-            }
-        }
-    }))
 }
 
 #[cfg(test)]

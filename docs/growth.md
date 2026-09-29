@@ -63,7 +63,7 @@ Items 1 to 3 are built (share landing, challenge link, tomorrow teaser); this se
   share link's `ref` has no `utm_source=tryit`, so the two never mix (`Attribution::tryit_ref`). When
   the account is created with a Tryit ref the server queues a `signup` row in `tryit_conversions`, sends
   it once with a 3 second cap (`POST tryit.fun/api/attribution/conversions`, the product's own
-  `SYLPHX_API_KEY`, the `ref` only), and a ten-minute sweep retries a 503, 429 or failed send for 29
+  `SYLPHX_API_KEY`, the `ref` only), and a ten-minute Compute schedule (`puzzled-tryit-conversions`) retries a 503, 429 or failed send for 29
   days. A first paid invoice queues `purchase` the same way (it sends once Plus is on sale).
 - **Challenge.** The landing remembers the share in the browser; the result screen and the
   already-played view show both results when the same module and day are finished.

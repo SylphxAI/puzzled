@@ -53,12 +53,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             pool.clone(),
         );
 
-    // Tryit conversions: retry sign-ups and purchases not yet reported.
-    let _tryit_sweep = puzzled_server::capabilities::tryit_conversions::spawn_sweep(
-        pool.clone(),
-        puzzled_server::capabilities::tryit_conversions::TryitReporter::from_env(),
-    );
-
     // Daily puzzles: fill 14 days ahead and the archive at start-up; the
     // Compute schedule keeps it filled (issue #246).
     let _daily_fill =
