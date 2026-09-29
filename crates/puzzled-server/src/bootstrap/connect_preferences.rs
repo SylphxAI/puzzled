@@ -378,6 +378,27 @@ impl PreferencesService for PreferencesConnectService {
                 "cancel_subscription_first",
             ));
         }
+        // A subscription held in Money renews too: same rule. Money that
+        // cannot answer refuses erasure (retryable) rather than erasing a
+        // paying account.
+        if let Some(money) = &self.state.money {
+            match money.has_renewing_subscription(&identity.user_id).await {
+                Ok(true) => {
+                    return Err(ConnectError::new(
+                        ErrorCode::FailedPrecondition,
+                        "cancel_subscription_first",
+                    ))
+                }
+                Ok(false) => {}
+                Err(error) => {
+                    tracing::warn!(%error, "Money subscription check before erasure failed");
+                    return Err(ConnectError::new(
+                        ErrorCode::Unavailable,
+                        "account_deletion_unavailable",
+                    ));
+                }
+            }
+        }
         match delete_account_data(pool, &identity.user_id).await {
             Ok(rows_deleted) => {
                 tracing::info!(rows_deleted, "account data erased");
