@@ -9,9 +9,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{json, Value};
 
-use super::access::{
-    family_active, is_premium, seats, FEATURE_FAMILY, FEATURE_PLUS, FEATURE_SEATS,
-};
+use super::access::{family_active, is_premium, seats, FEATURE_PLUS, FEATURE_SEATS};
 use super::checkout::{create_session, session_body, CheckoutError, Consent};
 use super::client::{Catalog, Money};
 use super::pricing::{plan, plans};
