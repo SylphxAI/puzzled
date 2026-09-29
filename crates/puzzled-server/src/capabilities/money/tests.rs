@@ -7,7 +7,6 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use puzzled_core::billing_access::policy::PLAN_IDS;
 use serde_json::{json, Value};
 
 use super::access::{
@@ -15,7 +14,7 @@ use super::access::{
 };
 use super::checkout::{create_session, session_body, CheckoutError, Consent};
 use super::client::{Catalog, Money};
-use super::pricing::{plans, price_key, sellable};
+use super::pricing::{plan, plans};
 
 const USER: &str = "0190a0a0-0000-7000-8000-000000000001";
 
@@ -83,25 +82,26 @@ async fn fake_money(status: u16, answer: Value) -> (Money, Fake) {
     )
 }
 
-/// Money's catalogue for every plan id, with fixture amounts. `archived`
-/// lists price keys Money has archived.
+/// Money's catalogue: keys and amounts are arbitrary on purpose, so nothing in
+/// the code can depend on them. `archived` lists price keys Money archived.
 fn catalog_fixture(archived: &[&str]) -> Value {
-    let prices: Vec<Value> = PLAN_IDS
-        .iter()
-        .enumerate()
-        .map(|(i, plan_id)| {
-            let base = 1100 + i as i64;
-            let key = price_key(plan_id);
-            json!({
-                "key": key,
-                "recurring_interval": if plan_id.ends_with("_yearly") { "year" } else { "month" },
-                "tax_behavior": "inclusive",
-                "archived": archived.contains(&key.as_str()),
-                "unit_amounts": {"USD": base.to_string(), "GBP": (base - 100).to_string()},
-            })
+    let price = |key: &str, interval: &str, usd: i64| {
+        json!({
+            "key": key, "recurring_interval": interval, "tax_behavior": "inclusive",
+            "archived": archived.contains(&key),
+            "unit_amounts": {"USD": usd.to_string(), "GBP": (usd - 100).to_string()},
         })
-        .collect();
-    json!({"spec": {"products": [{"key": "plus", "display_name": "Puzzled Plus", "prices": prices}]}})
+    };
+    json!({"spec": {"products": [
+        {"key": "fam", "display_name": "Family",
+         "features": {"plus": "true", "family": "true", "seats": "4"},
+         "prices": [price("k_fam_y", "year", 6100), price("k_fam_m", "month", 1200)]},
+        {"key": "solo", "display_name": "Plus",
+         "features": {"plus": "true", "seats": "1"},
+         "prices": [price("k_solo_m", "month", 1100), price("k_solo_y", "year", 5100)]},
+        {"key": "other", "display_name": "Not Plus", "features": {"pro": "true"},
+         "prices": [price("k_other_m", "month", 9900)]}
+    ]}})
 }
 
 fn parsed(value: Value) -> Catalog {
@@ -219,7 +219,7 @@ async fn checkout_creates_a_money_session_and_returns_its_url() {
     assert_eq!(url, "https://checkout.example/pay/cs_1");
     let body = fake.lock().unwrap().sessions[0].clone();
     assert_eq!(body["subject"]["end_user"], USER);
-    assert_eq!(body["line_items"][0]["price"], "plus_individual_monthly");
+    assert_eq!(body["line_items"][0]["price"], "k_solo_m");
     assert_eq!(body["currency_code"], "GBP");
     assert_eq!(body["metadata"]["plan_id"], "individual_monthly");
     assert_eq!(body["metadata"]["immediate_supply_consent"], "true");
@@ -272,9 +272,9 @@ async fn checkout_refuses_unknown_archived_and_already_subscribed() {
     let catalog = parsed(catalog_fixture(&[]));
     assert_eq!(
         create_session(&money, &catalog, USER, "nope", "", "usd", None, consent).await,
-        Err(CheckoutError::UnknownPlan)
+        Err(CheckoutError::PlanNotOnSale)
     );
-    let archived = parsed(catalog_fixture(&["plus_individual_monthly"]));
+    let archived = parsed(catalog_fixture(&["k_solo_m"]));
     assert_eq!(
         create_session(
             &money,
@@ -320,7 +320,7 @@ fn session_body_carries_attribution() {
         &money,
         USER,
         "individual_monthly",
-        "plus_individual_monthly",
+        "k_solo_m",
         "",
         None,
         Some(&tags),
@@ -336,32 +336,41 @@ fn session_body_carries_attribution() {
 // ---- pricing ----------------------------------------------------------------
 
 #[tokio::test]
-async fn pricing_renders_from_the_catalogue_fixture() {
+async fn pricing_is_derived_from_the_catalogue_fixture() {
     let (money, _) = fake_money(200, json!({})).await;
     let catalog = money.catalog().await.unwrap();
     let shown = plans(&catalog);
-    assert_eq!(shown.len(), PLAN_IDS.len());
+    let ids: Vec<&str> = shown.iter().map(|p| p.plan_id.as_str()).collect();
+    // Individual (seats 1) before family, month before year; the product
+    // without `plus` is not a plan.
+    assert_eq!(
+        ids,
+        [
+            "individual_monthly",
+            "individual_yearly",
+            "family_monthly",
+            "family_yearly"
+        ]
+    );
     let first = &shown[0];
-    assert_eq!(first.plan_id, PLAN_IDS[0]);
+    assert_eq!(first.price_key, "k_solo_m");
     assert_eq!(first.interval, "month");
-    // Money's amounts, lower-case codes, sorted by code.
+    assert!(!first.family && shown[2].family && shown[2].seats == 4);
     assert_eq!(
         first.prices,
         vec![("gbp".to_string(), 1000), ("usd".to_string(), 1100)]
     );
-    assert!(shown.iter().any(|p| p.family) && shown.iter().any(|p| !p.family));
 }
 
 #[test]
-fn an_archived_or_reshaped_price_is_not_sold() {
-    let archived = parsed(catalog_fixture(&["plus_family_yearly"]));
-    assert_eq!(plans(&archived).len(), PLAN_IDS.len() - 1);
-    assert!(sellable(&archived, "family_yearly").is_none());
-    assert!(sellable(&archived, "family_monthly").is_some());
-    // A price whose interval differs from its plan id is not sold.
-    let mut wrong = catalog_fixture(&[]);
-    wrong["spec"]["products"][0]["prices"][0]["recurring_interval"] = json!("week");
-    assert!(sellable(&parsed(wrong), "individual_monthly").is_none());
+fn an_archived_or_unpriced_price_is_not_sold() {
+    let archived = parsed(catalog_fixture(&["k_fam_y"]));
+    assert_eq!(plans(&archived).len(), 3);
+    assert!(plan(&archived, "family_yearly").is_none());
+    assert!(plan(&archived, "family_monthly").is_some());
+    let mut weekly = catalog_fixture(&[]);
+    weekly["spec"]["products"][1]["prices"][0]["recurring_interval"] = json!("week");
+    assert!(plan(&parsed(weekly), "individual_monthly").is_none());
     assert!(plans(&Catalog::default()).is_empty());
 }
 
@@ -372,15 +381,9 @@ async fn consent_is_recorded_once_per_checkout() {
     let Some(pool) = crate::billing_flow_tests::fresh_database().await else {
         return;
     };
-    super::consent_db::record(
-        &pool,
-        USER,
-        "individual_monthly",
-        "plus_individual_monthly",
-        "en-US",
-    )
-    .await
-    .unwrap();
+    super::consent_db::record(&pool, USER, "individual_monthly", "k_solo_m", "en-US")
+        .await
+        .unwrap();
     let (n, statement): (i64, String) = sqlx::query_as(
         r#"SELECT count(*), max("statement") FROM "checkout_consents" WHERE "user_id" = $1::uuid"#,
     )

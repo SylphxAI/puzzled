@@ -3,12 +3,11 @@
 //! arrives through Money's entitlement check once the processor confirms.
 
 use puzzled_core::attribution::Attribution;
-use puzzled_core::billing_access::policy::{is_family_plan, is_known_plan};
 use serde_json::{json, Map, Value};
 
 use super::access::{FEATURE_FAMILY, FEATURE_PLUS};
 use super::client::{Catalog, Money, MoneyError};
-use super::pricing::{price_key, sellable};
+use super::pricing::{plan, price_of};
 use crate::capabilities::billing::service::locale_prefix;
 pub use crate::capabilities::billing::service::CheckoutError;
 
@@ -74,11 +73,9 @@ pub async fn create_session(
     attribution: Option<&Attribution>,
     _consent: Consent,
 ) -> Result<String, CheckoutError> {
-    if !is_known_plan(plan_id) {
-        return Err(CheckoutError::UnknownPlan);
-    }
-    let price = sellable(catalog, plan_id).ok_or(CheckoutError::PlanNotOnSale)?;
-    let feature = if is_family_plan(plan_id) {
+    let plan = plan(catalog, plan_id).ok_or(CheckoutError::PlanNotOnSale)?;
+    let price = price_of(catalog, &plan).ok_or(CheckoutError::PlanNotOnSale)?;
+    let feature = if plan.family {
         FEATURE_FAMILY
     } else {
         FEATURE_PLUS
@@ -95,7 +92,7 @@ pub async fn create_session(
         money,
         user_id,
         plan_id,
-        &price_key(plan_id),
+        &plan.price_key,
         locale,
         currency.as_deref(),
         attribution,

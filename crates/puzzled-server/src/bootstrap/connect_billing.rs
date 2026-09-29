@@ -127,26 +127,17 @@ impl BillingConnectService {
             .ok_or_else(|| CheckoutError::Failed("no database".into()))?;
         let plan_id = req.plan_id.trim();
         let locale = req.locale.trim();
-        if !puzzled_core::billing_access::policy::is_known_plan(plan_id) {
-            return Err(CheckoutError::UnknownPlan);
-        }
         let catalog = money
             .catalog()
             .await
             .map_err(|e| CheckoutError::Failed(e.to_string()))?;
-        pricing::sellable(&catalog, plan_id).ok_or(CheckoutError::PlanNotOnSale)?;
+        let plan = pricing::plan(&catalog, plan_id).ok_or(CheckoutError::PlanNotOnSale)?;
         let stored = attribution_for_user(pool, &identity.user_id)
             .await
             .map_err(CheckoutError::Failed)?;
-        consent_db::record(
-            pool,
-            &identity.user_id,
-            plan_id,
-            &pricing::price_key(plan_id),
-            locale,
-        )
-        .await
-        .map_err(CheckoutError::Failed)?;
+        consent_db::record(pool, &identity.user_id, plan_id, &plan.price_key, locale)
+            .await
+            .map_err(CheckoutError::Failed)?;
         money_checkout::create_session(
             money,
             &catalog,

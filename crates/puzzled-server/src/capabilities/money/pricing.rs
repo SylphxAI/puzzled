@@ -1,82 +1,97 @@
 //! The price list, read from Money's `catalogs/default`. Money is the one
-//! source of prices and seats: no amount, currency, interval or seat number is
-//! written in this repository. Only the mapping from Puzzled's plan ids to
-//! Money price keys lives here (`plus_<plan id>`).
+//! source of prices, plans and seats: nothing here names a price key, an
+//! amount, a currency or a seat count. A plan is derived from the catalogue:
+//! a product whose `features` contain `plus`, ranked by its `seats` limit
+//! (`1` is individual, above `1` is family), sold at a price picked by
+//! `recurring_interval`. Adding a plan is a catalogue change only.
 
-use puzzled_core::billing_access::policy::{is_family_plan, PLAN_IDS};
-
-use super::client::{Catalog, CatalogPrice};
+use super::access::{FEATURE_PLUS, FEATURE_SEATS};
+use super::client::{Catalog, CatalogPrice, CatalogProduct};
 
 /// One plan as the pricing page shows it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlanPrices {
+    /// `individual_monthly`, `family_yearly`, ...: derived from the seats
+    /// limit and the interval, and only used between the page and this api.
     pub plan_id: String,
+    /// The catalogue price key checkout sells.
     pub price_key: String,
     pub interval: String,
     pub family: bool,
+    pub seats: u32,
     /// (lower-case currency, minor units); sorted by code.
     pub prices: Vec<(String, i64)>,
 }
 
-/// The Money price key for a plan id.
-#[must_use]
-pub fn price_key(plan_id: &str) -> String {
-    format!("plus_{plan_id}")
+fn seats_of(product: &CatalogProduct) -> u32 {
+    product
+        .features
+        .get(FEATURE_SEATS)
+        .and_then(|seats| seats.trim().parse().ok())
+        .unwrap_or(1)
 }
 
-/// The plan id for a Money price key, when it is one of ours.
-#[must_use]
-pub fn plan_id_from_price_key(key: &str) -> Option<&'static str> {
-    let id = key.strip_prefix("plus_")?;
-    PLAN_IDS.iter().copied().find(|plan| *plan == id)
-}
-
-/// The interval a plan id names (`..._monthly`, `..._yearly`).
-fn interval_of(plan_id: &str) -> &'static str {
-    if plan_id.ends_with("_yearly") {
-        "year"
-    } else {
-        "month"
+fn sold(price: &CatalogPrice) -> Option<&'static str> {
+    if price.archived || price.unit_amounts.is_empty() {
+        return None;
+    }
+    match price.recurring_interval.as_deref() {
+        Some("month") => Some("monthly"),
+        Some("year") => Some("yearly"),
+        _ => None,
     }
 }
 
-/// A price checkout may sell: published, not archived, priced, and recurring
-/// at the interval its plan id names.
-fn on_sale<'a>(catalog: &'a Catalog, plan_id: &str) -> Option<&'a CatalogPrice> {
-    let key = price_key(plan_id);
-    let price = catalog.prices().find(|price| price.key == key)?;
-    let interval_ok = price.recurring_interval.as_deref() == Some(interval_of(plan_id));
-    (!price.archived && interval_ok && !price.unit_amounts.is_empty()).then_some(price)
-}
-
-/// The plans Money currently sells, in the pricing page's order, with
-/// Money's amounts.
-#[must_use]
-pub fn plans(catalog: &Catalog) -> Vec<PlanPrices> {
-    PLAN_IDS
+fn amounts(price: &CatalogPrice) -> Vec<(String, i64)> {
+    price
+        .unit_amounts
         .iter()
-        .filter_map(|plan_id| {
-            let price = on_sale(catalog, plan_id)?;
-            let prices: Vec<(String, i64)> = price
-                .unit_amounts
-                .iter()
-                .filter_map(|(code, minor)| {
-                    Some((code.to_ascii_lowercase(), minor.trim().parse().ok()?))
-                })
-                .collect();
-            Some(PlanPrices {
-                plan_id: (*plan_id).to_string(),
-                price_key: price_key(plan_id),
-                interval: interval_of(plan_id).to_string(),
-                family: is_family_plan(plan_id),
-                prices,
-            })
-        })
+        .filter_map(|(code, minor)| Some((code.to_ascii_lowercase(), minor.trim().parse().ok()?)))
         .collect()
 }
 
-/// The plan's price when checkout may sell it.
+/// The plans Money currently sells: individual before family, month before
+/// year. Where two products share a kind and interval, the smaller seats
+/// limit wins.
 #[must_use]
-pub fn sellable<'a>(catalog: &'a Catalog, plan_id: &str) -> Option<&'a CatalogPrice> {
-    on_sale(catalog, plan_id)
+pub fn plans(catalog: &Catalog) -> Vec<PlanPrices> {
+    let mut found: Vec<PlanPrices> = Vec::new();
+    for product in catalog
+        .spec
+        .products
+        .iter()
+        .filter(|p| p.features.contains_key(FEATURE_PLUS))
+    {
+        let seats = seats_of(product);
+        let family = seats > 1;
+        for price in &product.prices {
+            let Some(word) = sold(price) else { continue };
+            let kind = if family { "family" } else { "individual" };
+            found.push(PlanPrices {
+                plan_id: format!("{kind}_{word}"),
+                price_key: price.key.clone(),
+                interval: price.recurring_interval.clone().unwrap_or_default(),
+                family,
+                seats,
+                prices: amounts(price),
+            });
+        }
+    }
+    found.sort_by(|a, b| {
+        (a.family, a.interval == "year", a.seats).cmp(&(b.family, b.interval == "year", b.seats))
+    });
+    found.dedup_by(|later, first| later.plan_id == first.plan_id);
+    found
+}
+
+/// The plan `plan_id` names, when Money sells it.
+#[must_use]
+pub fn plan(catalog: &Catalog, plan_id: &str) -> Option<PlanPrices> {
+    plans(catalog).into_iter().find(|p| p.plan_id == plan_id)
+}
+
+/// The catalogue price behind a plan.
+#[must_use]
+pub fn price_of<'a>(catalog: &'a Catalog, plan: &PlanPrices) -> Option<&'a CatalogPrice> {
+    catalog.prices().find(|price| price.key == plan.price_key)
 }

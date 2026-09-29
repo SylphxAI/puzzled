@@ -88,6 +88,9 @@ pub struct CatalogPrice {
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CatalogProduct {
     pub key: String,
+    /// Feature grants: `plus`/`family` are `"true"`, `seats` a decimal string.
+    #[serde(default)]
+    pub features: std::collections::BTreeMap<String, String>,
     #[serde(default)]
     pub prices: Vec<CatalogPrice>,
 }
