@@ -1,0 +1,49 @@
+name: Rust check
+
+# Remote `cargo check` for `sylphx build check` (SylphxAI/.github docs/rust-check.md).
+# Copy this file to .github/workflows/sylphx-check.yml and keep the name.
+# Until the CLI ships: gh workflow run sylphx-check.yml -R ORG/REPO -f ref=BRANCH -f packages="crate1 crate2"
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag, or commit
+        required: true
+        type: string
+      packages:
+        description: Space-separated package names
+        required: false
+        type: string
+        default: ''
+      tests:
+        description: Also check test targets
+        required: false
+        type: boolean
+        default: false
+      workspace:
+        description: Cargo workspace directory
+        required: false
+        type: string
+        default: '.'
+      request:
+        description: Request id (names the run)
+        required: false
+        type: string
+        default: ''
+
+run-name: sylphx-check ${{ inputs.request }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    uses: SylphxAI/.github/.github/workflows/rust-check.yml@59d40ab36de233b7bce1acbe41b48813f688b816 # SylphxAI/.github #115 + #116
+    with:
+      ref: ${{ inputs.ref }}
+      packages: ${{ inputs.packages }}
+      tests: ${{ inputs.tests }}
+      workspace: ${{ inputs.workspace }}
+    # No cache credentials: the check keeps its compile cache in this
+    # repository's own GitHub Actions cache. A shared cache is never handed to
+    # another organization or tenant (cache poisoning).
