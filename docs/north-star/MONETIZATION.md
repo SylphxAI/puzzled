@@ -11,8 +11,8 @@
 ## 1. Objective
 
 Earn subscription revenue from players who already have the daily habit,
-without taking anything away from the free daily puzzle. There are no ads and
-no other revenue source (owner direction, 2026-09-26).
+without taking anything away from the free daily puzzle. Free players may also
+see one labelled ad (see [Ads](#ads)); Puzzled Plus removes it.
 
 Players do not pay for "a puzzle". They pay for more of a habit they already
 have: every game, every past day, stats across all of it, and sharing it with
@@ -76,7 +76,10 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 - A price change creates a new Stripe price that takes over the lookup key;
   existing subscribers keep their price until they change plan. Players get
   at least 30 days' notice before a new price applies to their renewal.
-- No free trial and no discount codes at launch.
+- Trials and discounts (a 7-day trial on the yearly plan, a win-back offer) are
+  allowed once Sylphx Money is live. Each states its real end date and real
+  price; the plan and price settings are in
+  [growth.md](../growth.md#ships-when-money-is-live).
 
 ## 4. Cancellation, refunds and UK consumer law
 
@@ -133,8 +136,19 @@ free game and keeps the query string.
 Allowed: the unlock panel on a paid game or past day (with today's free game
 beside it), the archive page, and the pricing page linked from the footer.
 
-Not allowed: fake urgency, streak guilt, hiding the free daily puzzle behind a
+Not allowed: false urgency (a countdown or stock claim that is not true; a real
+trial end date is fine), streak guilt, hiding the free daily puzzle behind a
 paywall, or card details before the first free finish.
+
+### Ads
+
+Google AdSense, off until an ad account is configured (`ADS_ADSENSE_CLIENT_ID`
+and `ADS_SLOT_ID` in the web environment). One labelled slot on the archive
+index and one on the result screen (the finish card and the already-played
+view). Never on a puzzle in play, never on the pricing or account pages, and
+never for a Puzzled Plus subscriber ("no ads" is a Plus perk). The ad loads only
+after the visitor accepts cookies. The site's Content Security Policy allows the
+ad network's hosts only while ads are configured.
 
 ## 7. Metrics (supporting, not the North Star)
 
