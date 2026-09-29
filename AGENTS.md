@@ -36,8 +36,8 @@ affected unit tests, and the migration lane when `apps/puzzled/atlas/` changes).
 `verify.yml` runs the full suite (production web build, release binary,
 database-backed Rust tests, SEO, accessibility, Lighthouse) after merge and
 nightly, and marks the commit `verified`. A draft is the compiler: it runs the
-gate only. A pull request marked ready also runs the affected suite. See
-SylphxAI/.github `docs/optimistic-merge.md`.
+gate only. A pull request marked ready also runs the affected suite. See the
+[SylphxAI/.github optimistic-merge guide](https://github.com/SylphxAI/.github/blob/main/docs/optimistic-merge.md).
 
 ## Validation notes
 
