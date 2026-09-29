@@ -140,13 +140,13 @@ fn env_value(name: &str) -> Option<String> {
 }
 
 impl Money {
-    /// Money is used when the environment URL and the server's secret key are
+    /// Money is used when the environment URL and the product's own API key (`SYLPHX_API_KEY`) are
     /// both configured; otherwise Puzzled keeps its existing behaviour.
     #[must_use]
     pub fn from_env() -> Option<Self> {
         Some(Self::new(
             &env_value("SYLPHX_MONEY_URL")?,
-            &env_value("SYLPHX_SECRET_KEY")?,
+            &env_value("SYLPHX_API_KEY")?,
             &env_value("PUZZLED_PUBLIC_URL").unwrap_or_else(|| DEFAULT_PUBLIC_URL.into()),
         ))
     }
