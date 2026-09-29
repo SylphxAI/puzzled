@@ -12,7 +12,7 @@ CREATE TABLE "tryit_conversions" (
 	"last_error" text,
 	"reported_at" timestamp,
 	"gave_up_at" timestamp,
-	PRIMARY KEY ("user_id", "event"),
+	CONSTRAINT "tryit_conversions_user_id_event_pk" PRIMARY KEY ("user_id", "event"),
 	CONSTRAINT "tryit_conversions_event_check" CHECK ("event" IN ('signup', 'purchase'))
 );
 

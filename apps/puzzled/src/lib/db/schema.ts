@@ -12,6 +12,7 @@ import { relations, sql } from 'drizzle-orm'
 import {
 	bigint,
 	boolean,
+	check,
 	index,
 	integer,
 	jsonb,
@@ -707,7 +708,13 @@ export const tryitConversions = pgTable(
 		reportedAt: timestamp('reported_at'),
 		gaveUpAt: timestamp('gave_up_at'),
 	},
-	(table) => [primaryKey({ columns: [table.userId, table.event] })],
+	(table) => [
+		primaryKey({ columns: [table.userId, table.event] }),
+		check('tryit_conversions_event_check', sql`${table.event} IN ('signup', 'purchase')`),
+		index('tryit_conversions_pending_idx')
+			.on(table.lastAttemptAt)
+			.where(sql`${table.reportedAt} IS NULL AND ${table.gaveUpAt} IS NULL`),
+	],
 )
 
 /**
