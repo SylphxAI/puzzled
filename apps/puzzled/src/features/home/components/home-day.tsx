@@ -17,6 +17,12 @@ export type HomeDayGame = {
 	duration?: string
 }
 
+/**
+ * A finish count is shown only above this many players: a small number reads
+ * as an empty room, not as proof.
+ */
+export const MIN_PLAYERS_SHOWN = 500
+
 type HomeDayProps = {
 	locale: string
 	/** Product day (Asia/Hong_Kong) formatted for the viewer's locale. */
@@ -76,7 +82,7 @@ export async function HomeDay({
 			: currentStreak > 0 && !hasPlayedToday
 				? t('day.titleMemberStreak', { days: currentStreak })
 				: t('day.titleMemberReady', { game: freeGame.name })
-		: t('day.title', { game: freeGame.name })
+		: t('day.guestTitle')
 
 	return (
 		<section className="day-surface relative">
@@ -184,7 +190,7 @@ function DayFacts({
 					{t('hero.progressRingLabel', { done: completedCount, total: availableCount })}
 				</p>
 			) : null}
-			{playerCount !== null && playerCount > 0 ? (
+			{playerCount !== null && playerCount > MIN_PLAYERS_SHOWN ? (
 				<p className="flex items-center gap-1.5">
 					<Users className="h-4 w-4" aria-hidden="true" />
 					{t('day.finishersToday', { count: formatNumber(playerCount, locale) })}

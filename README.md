@@ -1,8 +1,12 @@
 ![Puzzled](https://mark.sylphx.com/api/v1/mark/hero.svg?type=grid&color=0%3A9a3412%2C50%3Af97316%2C100%3Afb923c&text=Puzzled&desc=Short%20daily%20brain%20games)
 
-# Puzzled
+# Puzzled: nineteen daily puzzles, one always free. [puzzled.gg](https://puzzled.gg)
 
-Short daily brain games at [puzzled.gg](https://puzzled.gg): a few minutes a
+[![website](https://mark.sylphx.com/badge/play-puzzled.gg-f97316?style=flat-square&labelColor=1a1712)](https://puzzled.gg)
+[![stars](https://mark.sylphx.com/github/stars/SylphxAI/puzzled?style=flat-square&labelColor=1a1712&color=f97316)](https://github.com/SylphxAI/puzzled/stargazers)
+[![license](https://mark.sylphx.com/badge/license-MIT-f97316?style=flat-square&labelColor=1a1712)](LICENSE)
+
+Short daily brain games: a few minutes a
 day, one shared puzzle for everyone, and a result card you can share without
 spoiling the answer. Today's featured puzzle is free for everyone. Puzzled
 Plus, a subscription that opens every other game, the archive of past days and
