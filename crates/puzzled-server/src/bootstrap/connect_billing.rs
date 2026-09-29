@@ -99,15 +99,17 @@ impl BillingConnectService {
         })
     }
 
-    /// Seats on `owner`'s plan: Money's `seats` limit when Money answers,
-    /// otherwise the default family size.
-    async fn max_members(&self, owner: &str) -> u32 {
-        match &self.state.money {
-            Some(money) => money_access::seats(money, owner)
-                .await
-                .unwrap_or(FAMILY_MAX_MEMBERS),
-            None => FAMILY_MAX_MEMBERS,
-        }
+    /// Seats on `owner`'s plan, from Money's `seats` limit. `Err`: Money could
+    /// not answer (or the owner holds no `seats` limit), so nothing is decided
+    /// from a guess.
+    async fn max_members(&self, owner: &str) -> Result<u32, ConnectError> {
+        let unavailable = || ConnectError::new(ErrorCode::Unavailable, "seats_unavailable");
+        let money = self.state.money.as_ref().ok_or_else(unavailable)?;
+        money_access::seats(money, owner)
+            .await
+            .ok()
+            .flatten()
+            .ok_or_else(unavailable)
     }
 
     /// A Money checkout: the buyer's consent is recorded, then the server
@@ -204,7 +206,8 @@ impl BillingConnectService {
         Ok(Family {
             role: if viewer_is_owner { "owner" } else { "member" }.to_string(),
             members,
-            max_members: self.max_members(owner).await,
+            // Shown only; 0 while Money cannot say.
+            max_members: self.max_members(owner).await.unwrap_or(0),
             invite_code: if viewer_is_owner { invite_code } else { None },
             ..Default::default()
         })
@@ -230,7 +233,16 @@ impl BillingService for BillingConnectService {
                 .catalog()
                 .await
                 .map_err(|e| internal("plans_unavailable")(e.to_string()))?;
-            response.plans = pricing::plans(&catalog)
+            let sold = pricing::plans(&catalog);
+            // The family size is the catalogue's `seats` limit, not a number
+            // written here.
+            response.family_max_members = sold
+                .iter()
+                .filter(|plan| plan.family)
+                .map(|plan| plan.seats)
+                .max()
+                .unwrap_or(0);
+            response.plans = sold
                 .into_iter()
                 .map(|plan| Plan {
                     id: plan.plan_id,
@@ -516,7 +528,7 @@ impl BillingService for BillingConnectService {
             pool,
             &owner,
             &identity.user_id,
-            self.max_members(&owner).await,
+            self.max_members(&owner).await?,
         )
         .await
         .map_err(internal("family_unavailable"))?

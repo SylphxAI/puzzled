@@ -125,7 +125,8 @@ impl Catalog {
     }
 }
 
-type GrantCache = HashMap<(String, String), (Instant, Grant)>;
+/// (fresh until, the answer; None is a failed check remembered briefly).
+type GrantCache = HashMap<(String, String), (Instant, Option<Grant>)>;
 type CatalogSlot = Option<(Instant, Arc<Catalog>)>;
 
 #[derive(Clone)]
@@ -230,28 +231,33 @@ impl Money {
         })
     }
 
-    /// The entitlement answer for `feature`, from the 60-second cache when it
-    /// is fresh and otherwise from Money. Fails closed: a Money error answers
-    /// [`Grant::denied`], which is not cached.
-    pub async fn check(&self, user_id: &str, feature: &str) -> Grant {
+    /// The entitlement answer for `feature`, from the cache when it is fresh
+    /// and otherwise from Money. A Money error is an `Err`, remembered for 5
+    /// seconds so an outage is not retried per request; callers that must tell
+    /// "Money said no" from "Money could not answer" use this.
+    pub async fn try_check(&self, user_id: &str, feature: &str) -> Result<Grant, MoneyError> {
         let key = (user_id.to_string(), feature.to_string());
-        if let Some((fresh_until, grant)) =
+        if let Some((fresh_until, cached)) =
             self.grants.lock().ok().and_then(|c| c.get(&key).cloned())
         {
-            if fresh_until > Instant::now() && grant.ends_at.is_none_or(|end| end > Utc::now()) {
-                return grant;
+            if fresh_until > Instant::now() {
+                match cached {
+                    None => return Err(MoneyError::Unavailable("recent check failed".into())),
+                    Some(grant) if grant.ends_at.is_none_or(|end| end > Utc::now()) => {
+                        return Ok(grant)
+                    }
+                    Some(_) => {}
+                }
             }
         }
         let grant = match self.check_uncached(user_id, feature).await {
             Ok(grant) => grant,
             Err(error) => {
-                tracing::warn!(%error, feature, "Money entitlement check failed; treating as not entitled");
-                // Cached as "not entitled" for 5 s only; a success below
-                // still follows the 60 s rule.
+                tracing::warn!(%error, feature, "Money entitlement check failed");
                 if let Ok(mut cache) = self.grants.lock() {
-                    cache.insert(key, (Instant::now() + FAILED_CACHE_TTL, Grant::denied()));
+                    cache.insert(key, (Instant::now() + FAILED_CACHE_TTL, None));
                 }
-                return Grant::denied();
+                return Err(error);
             }
         };
         // The cache window is 60 s, and never runs past the grant's own end.
@@ -266,9 +272,17 @@ impl Money {
             .unwrap_or(ttl);
         let fresh_until = Instant::now() + ttl.min(until_end);
         if let Ok(mut cache) = self.grants.lock() {
-            cache.insert(key, (fresh_until, grant.clone()));
+            cache.insert(key, (fresh_until, Some(grant.clone())));
         }
-        grant
+        Ok(grant)
+    }
+
+    /// The entitlement answer for `feature`. Fails closed: a Money error
+    /// answers [`Grant::denied`] (cached 5 seconds).
+    pub async fn check(&self, user_id: &str, feature: &str) -> Grant {
+        self.try_check(user_id, feature)
+            .await
+            .unwrap_or_else(|_| Grant::denied())
     }
 
     /// The default catalogue, cached five minutes.

@@ -196,10 +196,13 @@ async fn an_answer_already_past_its_end_grants_nothing() {
 #[tokio::test]
 async fn seats_is_a_limit_feature() {
     let (money, fake) = fake_money(200, json!({"entitled": true, "limit": "4"})).await;
-    assert_eq!(seats(&money, USER).await, Some(4));
+    assert_eq!(seats(&money, USER).await, Ok(Some(4)));
     assert_eq!(fake.lock().unwrap().checks[0]["feature"], FEATURE_SEATS);
     let (money, _) = fake_money(200, json!({"entitled": false})).await;
-    assert_eq!(seats(&money, USER).await, None);
+    assert_eq!(seats(&money, USER).await, Ok(None));
+    // Money unable to answer is an error, not "no seats".
+    let (down, _) = fake_money(503, json!({})).await;
+    assert!(seats(&down, USER).await.is_err());
 }
 
 // ---- checkout ---------------------------------------------------------------
