@@ -132,7 +132,7 @@ impl PuzzleConnectService {
     ///
     /// A future day is refused so no one can read tomorrow's solution early.
     /// Today's featured game is free to everyone; every other game and every
-    /// past day needs Puzzled Plus once it is on sale. While Stripe is not
+    /// past day needs Puzzled Plus once it is on sale. While Money is not
     /// configured nothing is sold, so nothing is locked. An entitlement read
     /// that fails refuses (fail closed to the free floor).
     async fn enforce_play_access(
@@ -160,14 +160,7 @@ impl PuzzleConnectService {
         }
         let entitled = match (user_id, &self.state.pool) {
             (Some(uid), Some(pool)) => {
-                match entitlement_access(
-                    pool,
-                    self.state.stripe.as_ref(),
-                    self.state.money.as_ref(),
-                    uid,
-                )
-                .await
-                {
+                match entitlement_access(pool, self.state.money.as_ref(), uid).await {
                     Ok(found) => found.entitled,
                     Err(error) => {
                         warn!(%error, "entitlement read failed; refusing paid play");

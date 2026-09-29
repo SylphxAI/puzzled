@@ -314,7 +314,7 @@ export const getServerPlans = cache(async () => {
 	return createClient(BillingService, transport).listPlans(create(ListPlansRequestSchema, {}))
 })
 
-/** The signed-in account's subscription; `refresh` reads it back from Stripe first. */
+/** The signed-in account's subscription; `refresh` is accepted for compatibility; access is Sylphx Money's answer. */
 export const getServerSubscription = cache(async (refresh = false) => {
 	const transport = await getServerTransport()
 	return createClient(BillingService, transport).getSubscription(

@@ -18,6 +18,7 @@ const USER: &str = "0190a0a0-0000-7000-8000-000000000001";
 
 #[derive(Default)]
 struct FakeMoney {
+    actions: Vec<String>,
     status: u16,
     answer: Value,
     checks: Vec<Value>,
@@ -49,6 +50,20 @@ async fn subscriptions(State(fake): State<Fake>) -> (StatusCode, Json<Value>) {
     )
 }
 
+async fn action(
+    State(fake): State<Fake>,
+    axum::extract::Path(rest): axum::extract::Path<String>,
+    Json(body): Json<Value>,
+) -> Json<Value> {
+    fake.lock().unwrap().actions.push(format!("{rest} {body}"));
+    Json(json!({}))
+}
+
+async fn portal(State(fake): State<Fake>, Json(body): Json<Value>) -> Json<Value> {
+    fake.lock().unwrap().actions.push(format!("portal {body}"));
+    Json(json!({"url": "https://portal.example/p/1"}))
+}
+
 async fn catalog(State(fake): State<Fake>) -> Json<Value> {
     Json(fake.lock().unwrap().catalog.clone())
 }
@@ -66,6 +81,8 @@ async fn fake_money(status: u16, answer: Value) -> (Money, Fake) {
         .route("/env/checkout_sessions", post(session))
         .route("/env/catalogs/default", get(catalog))
         .route("/env/customer_subscriptions", get(subscriptions))
+        .route("/env/customer_subscriptions/{*rest}", post(action))
+        .route("/env/portal_sessions", post(portal))
         .with_state(fake.clone());
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
@@ -386,7 +403,7 @@ fn an_archived_or_unpriced_price_is_not_sold() {
 
 #[tokio::test]
 async fn consent_is_recorded_once_per_checkout() {
-    let Some(pool) = crate::billing_flow_tests::fresh_database().await else {
+    let Some(pool) = crate::test_support::fresh_database().await else {
         return;
     };
     super::consent_db::record(&pool, USER, "individual_monthly", "k_solo_m", "en-US")
@@ -406,7 +423,10 @@ async fn consent_is_recorded_once_per_checkout() {
 // ---- erasure guard ----------------------------------------------------------
 
 fn sub(user: &str, status: &str, ends: bool) -> Value {
-    json!({"subject": {"end_user": user}, "status": status, "cancel_at_period_end": ends})
+    json!({"name": "orgs/o/projects/p/envs/e/customer_subscriptions/csb_1",
+           "subject": {"end_user": user}, "status": status, "cancel_at_period_end": ends,
+           "current_period_end_time": "2099-01-01T00:00:00Z",
+           "items": [{"price": "k_solo_m", "quantity": 1}]})
 }
 
 #[tokio::test]
@@ -454,6 +474,72 @@ async fn a_failed_check_is_asked_again_after_five_seconds() {
     }
     tokio::time::sleep(super::client::FAILED_CACHE_TTL + Duration::from_millis(300)).await;
     assert!(is_premium(&money, USER).await);
+}
+
+#[tokio::test]
+async fn subscriptions_are_read_with_their_period_and_prices() {
+    let (money, _) = fake_money(
+        200,
+        json!({"customer_subscriptions": [sub(USER, "active", false)]}),
+    )
+    .await;
+    let subs = money.subscriptions(USER).await.unwrap();
+    assert_eq!(subs.len(), 1);
+    assert_eq!(subs[0].id, "csb_1");
+    assert!(subs[0].live() && subs[0].renews());
+    assert_eq!(subs[0].price_keys, ["k_solo_m"]);
+    assert_eq!(
+        subs[0].current_period_end.unwrap().timestamp(),
+        4_070_908_800_i64
+    );
+}
+
+#[tokio::test]
+async fn cancel_ends_at_the_period_end_with_no_refund_and_resume_undoes_it() {
+    let (money, fake) = fake_money(200, json!({})).await;
+    money.cancel_at_period_end("csb_1").await.unwrap();
+    money.resume("csb_1").await.unwrap();
+    let actions = fake.lock().unwrap().actions.clone();
+    assert_eq!(actions[0], r#"csb_1:cancel {"at_period_end":true}"#);
+    assert!(!actions[0].contains("refund"));
+    assert_eq!(actions[1], "csb_1:resume {}");
+    // An id cannot escape its path segment.
+    money.cancel_at_period_end("../x").await.unwrap();
+    assert!(fake.lock().unwrap().actions[2].starts_with("x:cancel"));
+}
+
+#[tokio::test]
+async fn portal_session_url_comes_from_money() {
+    let (money, fake) = fake_money(200, json!({})).await;
+    let url = money
+        .portal_url(USER, "https://puzzled.test/settings/subscription")
+        .await
+        .unwrap();
+    assert_eq!(url, "https://portal.example/p/1");
+    assert!(fake.lock().unwrap().actions[0].contains(USER));
+    let (down, _) = fake_money(503, json!({})).await;
+    assert!(down.portal_url(USER, "https://x").await.is_err());
+}
+
+#[tokio::test]
+async fn access_is_money_alone_and_fails_closed() {
+    let Some(pool) = crate::test_support::fresh_database().await else {
+        return;
+    };
+    let (granted, _) = fake_money(200, json!({"entitled": true})).await;
+    let e = crate::capabilities::billing::service::access(&pool, Some(&granted), USER)
+        .await
+        .unwrap();
+    assert!(e.entitled && e.family_owner.is_none());
+    let (down, _) = fake_money(503, json!({})).await;
+    let e = crate::capabilities::billing::service::access(&pool, Some(&down), USER)
+        .await
+        .unwrap();
+    assert!(!e.entitled);
+    let none = crate::capabilities::billing::service::access(&pool, None, USER)
+        .await
+        .unwrap();
+    assert!(!none.entitled);
 }
 
 // ---- environment discovery --------------------------------------------------

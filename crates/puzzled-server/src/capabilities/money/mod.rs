@@ -13,4 +13,5 @@ pub mod pricing;
 #[cfg(test)]
 mod tests;
 
+pub use checkout::CheckoutError;
 pub use client::{Money, MoneyError};

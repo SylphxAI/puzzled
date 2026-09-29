@@ -124,7 +124,7 @@
 				"content": "Please read these points in particular. The full terms below explain each one.",
 				"items": {
 					"renewal": "Puzzled Plus renews automatically until you cancel. You can cancel at any time in Settings > Subscription.",
-					"refunds": "Cancel your first subscription within 14 days for a full refund. After that, payments are not refunded, except where the law requires.",
+					"refunds": "Puzzled Plus is digital content supplied at once at your request. When you subscribe you ask for access to start now and acknowledge that you lose your 14-day right to cancel. Payments are not refunded, except where the law requires.",
 					"changes": "We may change games, features, prices and these terms. If a change materially reduces what you have paid for, you can cancel.",
 					"suspension": "We may suspend or close accounts that cheat or break these terms.",
 					"liability": "Our liability to you is limited, as Limitation of Liability explains. Your statutory rights as a consumer are not affected."
@@ -157,8 +157,8 @@
 				"items": {
 					"billing": "Prices are shown before you pay and include VAT where it applies. Sylphx Money takes payment when you subscribe and at the start of each monthly or yearly period.",
 					"renewal": "Your subscription renews automatically until you cancel. You can cancel at any time in Settings > Subscription; you keep access until the end of the period you have paid for and are not charged again.",
-					"cancellation": "Cancellation right: you may cancel your first subscription within 14 days of starting it and get a full refund, however much you have played. Cancel in Settings > Subscription or email us.",
-					"refund": "After those 14 days, payments are non-refundable and we do not refund part-used periods, except where these terms or the law say otherwise.",
+					"cancellation": "Immediate supply: when you subscribe you expressly ask for access to start at once and acknowledge that this ends your 14-day right to cancel a digital service. You can still stop renewals at any time in Settings > Subscription, and you keep access to the end of the period you have paid for.",
+					"refund": "Payments are non-refundable and we do not refund part-used periods, except where these terms or the law say otherwise. If something we delivered did not work, we put it right.",
 					"price": "We may change the price of Puzzled Plus. We tell you in advance, before a new price applies to your next renewal, and you can cancel before then.",
 					"family": "A family plan covers the subscriber and up to three people they invite. The subscriber can remove people at any time.",
 					"statutory": "Nothing in these terms affects your statutory rights as a consumer."

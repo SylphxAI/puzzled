@@ -147,7 +147,7 @@ async fn both_auth_subject_forms_reach_the_same_player() {
     use crate::capabilities::identity_access::adapters::auth_subjects::{
         player_for, LINK_FROM_ID_MAP, SPLIT_PLAYERS_AFTER_LINK,
     };
-    let Some(pool) = crate::billing_flow_tests::fresh_database().await else {
+    let Some(pool) = crate::test_support::fresh_database().await else {
         return;
     };
     const OLD: &str = "principal-0199aa10-7b2c-7d3e-8f00-1234567890ab";

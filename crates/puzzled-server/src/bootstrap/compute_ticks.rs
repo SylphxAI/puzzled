@@ -88,7 +88,6 @@ pub async fn audit_retention_tick(State(state): State<AppState>, headers: Header
         }
     }
 }
-
 /// Retry the Tryit conversions still queued (a 503 or a failed send).
 pub async fn tryit_conversions_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
     if let Err(reject) = state.ticks.admit(&headers, TRYIT_CONVERSIONS_PATH).await {

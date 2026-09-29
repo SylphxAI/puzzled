@@ -155,3 +155,7 @@ Star.
 Each new module costs content, verification, attention, runtime and a way to
 disable it without breaking the app. Ship modules when the expected lift in
 daily puzzle completers or paid conversion justifies that.
+
+## Stripe removal
+
+Puzzled has never had a paying customer: no Stripe key was ever created, so checkout never opened, and there are no Stripe customers, subscriptions or charges. There are no legacy subscribers to move. The drop migration `20260930000000_drop_billing_tables` therefore guards itself: it fails, and rolls back, if any row exists in `billing_customers`, `billing_subscriptions` or `billing_ledger`, and otherwise drops the three tables. A failing guard means a payment did happen: stop, and treat those rows as a tax record to export before anything is dropped.

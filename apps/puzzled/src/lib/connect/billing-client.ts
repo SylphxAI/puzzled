@@ -40,7 +40,7 @@ export async function openPortal(locale: string) {
 
 export async function cancelSubscription() {
 	const res = await client().cancelSubscription(create(CancelSubscriptionRequestSchema, {}))
-	return { refunded: res.refunded, accessEndsAtMs: Number(res.accessEndsAtMs) }
+	return { accessEndsAtMs: Number(res.accessEndsAtMs) }
 }
 
 export async function resumeSubscription() {

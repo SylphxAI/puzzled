@@ -8,11 +8,11 @@ use chrono::NaiveDate;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::billing_flow_tests::fresh_database;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::persist_validated_session;
 use crate::capabilities::puzzle_play::adapters::result_shares_db::{
     adopt_guest_shares, load_shared_result, record_share,
 };
+use crate::test_support::fresh_database;
 
 const DAY: &str = "2026-09-28";
 

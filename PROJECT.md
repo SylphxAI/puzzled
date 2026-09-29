@@ -34,14 +34,13 @@ Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilitie
 ## Architecture
 
 - **api** (Rust, `crates/puzzled-server`): sole backend. Connect RPC —
-  Health, Puzzle, Stats, Preferences, Gamification, Admin, Jobs, Billing —
-  plus the dormant Stripe webhook (`POST /webhooks/stripe`). Identity: a Sylphx
+  Health, Puzzle, Stats, Preferences, Gamification, Admin, Jobs, Billing.
+  Identity: a Sylphx
   Auth end-user session (the web's `sylphx_identity_session` cookie or a
   Bearer), checked once per request with Auth (`/v1/sessions/current`,
-  cached 60 s) by the router middleware. The Puzzled Plus entitlement, money
-  ledger and Stripe adapter live here but are dormant (no Stripe keys, 0
-  payers); they are replaced by Sylphx Money's checkout, entitlements API and
-  ledger, not switched on.
+  cached 60 s) by the router middleware. Puzzled Plus is Sylphx Money's: entitlements (`entitlement_grants:check`,
+  cached 60 s, fail closed), checkout sessions, the price list and the billing
+  portal. The api keeps the family membership list and the checkout consent.
 - **web** (Next.js, `apps/puzzled`): presentation only. Generated Connect
   client; Platform SDK for auth/flags/AI. No backend authority.
 - **core** (`crates/puzzled-core`): pure game rules, validation, scoring,
