@@ -365,7 +365,7 @@ async fn export_writes_every_table_and_reads_it_back() {
         .execute(&pool)
         .await
         .unwrap();
-    let dir = std::env::temp_dir().join(format!("puzzled-export-{}", uuid::Uuid::new_v4()));
+    let dir = std::env::temp_dir().join(format!("puzzled-export-{}", uuid::Uuid::now_v7()));
     let manifest = super::export::run_export(&pool, &dir).await.unwrap();
     let rows = |t: &str| manifest.iter().find(|m| m.table == t).unwrap().rows;
     assert_eq!(rows("billing_subscriptions"), 4);
