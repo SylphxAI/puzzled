@@ -333,6 +333,12 @@ export function GameResultCard({
 					>
 						{t('backToHome')}
 					</Link>
+					<a
+						href="https://tryit.fun/daily"
+						className="flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+					>
+						{t('moreOnTryit')}
+					</a>
 				</div>
 
 				{/* Daily mode: Countdown to next puzzle */}
