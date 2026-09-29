@@ -1,8 +1,9 @@
 -- The buyer's immediate-supply consent, one row per checkout started through
 -- Sylphx Money: they asked for access now and understood the 14-day
--- cancellation right is lost. Not a billing table; Money holds the payments.
+-- cancellation right is lost. The id is a UUIDv7 minted by the api, so the
+-- column has no default. Not a billing table; Money holds the payments.
 CREATE TABLE "checkout_consents" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" uuid NOT NULL,
 	"plan_id" text NOT NULL,
 	"price_key" text NOT NULL,

@@ -115,6 +115,7 @@ impl Catalog {
 }
 
 type GrantCache = HashMap<(String, String), (Instant, Grant)>;
+type CatalogSlot = Option<(Instant, Arc<Catalog>)>;
 
 #[derive(Clone)]
 pub struct Money {
@@ -124,7 +125,7 @@ pub struct Money {
     secret_key: String,
     public_url: String,
     grants: Arc<Mutex<GrantCache>>,
-    catalog: Arc<Mutex<Option<(Instant, Arc<Catalog>)>>>,
+    catalog: Arc<Mutex<CatalogSlot>>,
 }
 
 fn env_value(name: &str) -> Option<String> {

@@ -20,9 +20,10 @@ pub async fn record(
 ) -> Result<(), String> {
     let user = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
     sqlx::query(
-        r#"INSERT INTO "checkout_consents" ("user_id", "plan_id", "price_key", "locale", "statement")
-           VALUES ($1, $2, $3, $4, $5)"#,
+        r#"INSERT INTO "checkout_consents" ("id", "user_id", "plan_id", "price_key", "locale", "statement")
+           VALUES ($1, $2, $3, $4, $5, $6)"#,
     )
+    .bind(Uuid::now_v7())
     .bind(user)
     .bind(plan_id)
     .bind(price_key)

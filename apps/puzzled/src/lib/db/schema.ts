@@ -723,7 +723,8 @@ export const resultShares = pgTable(
 export const checkoutConsents = pgTable(
 	'checkout_consents',
 	{
-		id: uuid('id').defaultRandom().primaryKey(),
+		/** UUIDv7 minted by the api */
+		id: uuid('id').primaryKey(),
 		/** Platform user ID (no FK) */
 		userId: uuid('user_id').notNull(),
 		planId: text('plan_id').notNull(),
