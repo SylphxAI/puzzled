@@ -9,6 +9,7 @@
 //! and the real lock (COMPLIANCE object lock with a six-year `retain_until`,
 //! Store, from 10-03) is applied to these objects before the tables are dropped.
 
+use std::sync::Arc;
 use std::time::Duration;
 
 use base64::Engine;
@@ -43,8 +44,9 @@ pub struct Archive {
     http: reqwest::Client,
     /// `https://api.sylphx.com`.
     origin: String,
-    /// `https://api.sylphx.com/v1/orgs/{o}/projects/{p}/envs/{e}`.
-    env_url: String,
+    /// `{origin}/v1/orgs/{o}/projects/{p}/envs/{e}`, read from the key's
+    /// `whoami` on first use (never configured).
+    env_url: std::sync::Arc<tokio::sync::OnceCell<String>>,
     key: String,
 }
 
@@ -55,9 +57,9 @@ pub fn prefix_for(date: chrono::NaiveDate) -> String {
 }
 
 impl Archive {
-    /// `SYLPHX_API_KEY` and `SYLPHX_MONEY_URL`, the environment's resource URL
-    /// (`{origin}/v1/orgs/{o}/projects/{p}/envs/{e}`), which also names the
-    /// org, project and env the bucket is created in.
+    /// `SYLPHX_API_KEY` (and `SYLPHX_API_URL`, default `https://api.sylphx.com`).
+    /// The org, project and env the bucket is created in are the key's own,
+    /// from its `whoami`.
     pub fn from_env() -> Result<Self, String> {
         let var = |name: &str| {
             std::env::var(name)
@@ -65,26 +67,49 @@ impl Archive {
                 .map(|v| v.trim().to_string())
                 .filter(|v| !v.is_empty())
         };
-        Ok(Self::new(
-            &var("SYLPHX_MONEY_URL").ok_or("SYLPHX_MONEY_URL is not set")?,
+        Ok(Self::discovering(
+            &var("SYLPHX_API_URL").unwrap_or_else(|| DEFAULT_API_URL.to_string()),
             &var("SYLPHX_API_KEY").ok_or("SYLPHX_API_KEY is not set")?,
         ))
     }
 
-    /// `env_url` is `{origin}/v1/orgs/{o}/projects/{p}/envs/{e}`.
+    /// An archive whose environment is read from the key on first use.
     #[must_use]
-    pub fn new(env_url: &str, key: &str) -> Self {
-        let env_url = env_url.trim_end_matches('/').to_string();
-        let origin = env_url.split("/v1/").next().unwrap_or(&env_url).to_string();
+    pub fn discovering(origin: &str, key: &str) -> Self {
         Self {
             http: reqwest::Client::builder()
                 .timeout(Duration::from_secs(30))
                 .build()
                 .unwrap_or_default(),
-            origin,
-            env_url,
+            origin: origin.trim_end_matches('/').to_string(),
+            env_url: Arc::default(),
             key: key.to_string(),
         }
+    }
+
+    /// An archive with a known environment URL (tests).
+    #[must_use]
+    pub fn new(env_url: &str, key: &str) -> Self {
+        let env_url = env_url.trim_end_matches('/').to_string();
+        let origin = env_url.split("/v1/").next().unwrap_or(&env_url).to_string();
+        let archive = Self::discovering(&origin, key);
+        let _ = archive.env_url.set(env_url);
+        archive
+    }
+
+    async fn env(&self) -> Result<&str, String> {
+        self.env_url
+            .get_or_try_init(|| async {
+                crate::capabilities::money::client::resolve_env_url(
+                    &self.http,
+                    &self.origin,
+                    &self.key,
+                )
+                .await
+                .map_err(|e| e.to_string())
+            })
+            .await
+            .map(String::as_str)
     }
 
     /// Create `billing-archive` if it does not exist: not versioned, six-year
@@ -93,7 +118,10 @@ impl Archive {
     pub async fn ensure_bucket(&self) -> Result<(), String> {
         let response = self
             .http
-            .post(format!("{}/buckets?bucket_id={BUCKET_ID}", self.env_url))
+            .post(format!(
+                "{}/buckets?bucket_id={BUCKET_ID}",
+                self.env().await?
+            ))
             .bearer_auth(&self.key)
             .header("Idempotency-Key", BUCKET_IDEMPOTENCY_KEY)
             .json(&json!({"spec": {"versioning_enabled": false, "retention": "189216000s"}}))
