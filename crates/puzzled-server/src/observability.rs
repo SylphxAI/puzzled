@@ -17,8 +17,8 @@
 //! timeout. A full queue drops the event and counts it. Without a key the
 //! reporter only logs.
 
-use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;
+use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock, PoisonError};
@@ -151,7 +151,8 @@ fn scrub_cards(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let (mut cursor, mut i) = (0, 0);
     while i < bytes.len() {
-        let starts_run = bytes[i].is_ascii_digit() && (i == 0 || !bytes[i - 1].is_ascii_alphanumeric());
+        let starts_run =
+            bytes[i].is_ascii_digit() && (i == 0 || !bytes[i - 1].is_ascii_alphanumeric());
         if !starts_run {
             i += 1;
             continue;
@@ -219,9 +220,9 @@ fn scrub_pairs(text: &str) -> String {
             }
             if i < len {
                 let end = match bytes[i] {
-                    q @ (b'"' | b'\'') => text[i + 1..]
-                        .find(q as char)
-                        .map_or(len, |p| i + 1 + p + 1),
+                    q @ (b'"' | b'\'') => {
+                        text[i + 1..].find(q as char).map_or(len, |p| i + 1 + p + 1)
+                    }
                     _ => {
                         let mut e = i;
                         while e < len
@@ -248,7 +249,11 @@ fn scrub_pairs(text: &str) -> String {
 }
 
 fn is_word_byte(b: u8) -> bool {
-    b.is_ascii_alphanumeric() || matches!(b, b'_' | b'-' | b'.' | b'+' | b'/' | b'=' | b'@' | b'%' | b'~')
+    b.is_ascii_alphanumeric()
+        || matches!(
+            b,
+            b'_' | b'-' | b'.' | b'+' | b'/' | b'=' | b'@' | b'%' | b'~'
+        )
 }
 
 fn is_secret_word(word: &str) -> bool {
@@ -322,9 +327,10 @@ fn split_location(loc: &str) -> (String, i32, i32) {
             (Ok(col), Ok(line)) => ((*file).to_owned(), line, col),
             _ => (loc.to_owned(), 0, 0),
         },
-        [line, file] => line
-            .parse::<i32>()
-            .map_or_else(|_| (loc.to_owned(), 0, 0), |line| ((*file).to_owned(), line, 0)),
+        [line, file] => line.parse::<i32>().map_or_else(
+            |_| (loc.to_owned(), 0, 0),
+            |line| ((*file).to_owned(), line, 0),
+        ),
         _ => (loc.to_owned(), 0, 0),
     }
 }
@@ -372,7 +378,13 @@ fn parse_backtrace(text: &str) -> Vec<StackFrame> {
 pub fn error_event(report: &ErrorReport, config: &Config) -> ErrorEvent {
     let mut event = ErrorEvent::default();
     event.exception_type = report.exception_type.clone();
-    event.message = scrub(&report.message.chars().take(MAX_MESSAGE_CHARS).collect::<String>());
+    event.message = scrub(
+        &report
+            .message
+            .chars()
+            .take(MAX_MESSAGE_CHARS)
+            .collect::<String>(),
+    );
     event.service_name = config.service.clone();
     event.release = config.release.clone();
     for (key, value) in report.tags.iter().take(60) {
@@ -452,7 +464,11 @@ fn fingerprint_key(event: &ErrorEvent) -> String {
             "{}\n{}:{}:{}",
             event.exception_type, frame.file_path, frame.line, frame.function_name
         ),
-        None => format!("{}\n{}", event.exception_type, message_shape(&event.message)),
+        None => format!(
+            "{}\n{}",
+            event.exception_type,
+            message_shape(&event.message)
+        ),
     }
 }
 
@@ -578,7 +594,10 @@ impl Reporter {
         request.error_event = Some(event);
         if queue.try_send(request).is_err() {
             let total = self.dropped.fetch_add(1, Ordering::Relaxed) + 1;
-            tracing::warn!(dropped = total, "observability queue full or closed; event dropped");
+            tracing::warn!(
+                dropped = total,
+                "observability queue full or closed; event dropped"
+            );
         }
     }
 }
@@ -683,7 +702,10 @@ async fn observe(reporter: Option<&Reporter>, request: Request, next: Next) -> R
         .extensions()
         .get::<MatchedPath>()
         .map_or(UNMATCHED_ROUTE, |p| {
-            p.as_str().split(['?', '#']).next().unwrap_or(UNMATCHED_ROUTE)
+            p.as_str()
+                .split(['?', '#'])
+                .next()
+                .unwrap_or(UNMATCHED_ROUTE)
         })
         .to_owned();
     let response = next.run(request).await;
@@ -707,9 +729,9 @@ mod tests {
     use super::*;
     use std::sync::Arc;
 
-    use axum::Router;
     use axum::http::StatusCode;
     use axum::routing::get;
+    use axum::Router;
     use tower::ServiceExt as _;
 
     fn config() -> Config {
@@ -743,12 +765,21 @@ mod tests {
         assert_eq!(event.release, "abc123");
         assert_eq!(event.exception_type, "panic");
         assert_eq!(event.message, "boom at /x");
-        assert_eq!(event.tags.get("environment").map(String::as_str), Some("production"));
-        assert_eq!(event.tags.get("route").map(String::as_str), Some("/jobs/{id}"));
+        assert_eq!(
+            event.tags.get("environment").map(String::as_str),
+            Some("production")
+        );
+        assert_eq!(
+            event.tags.get("route").map(String::as_str),
+            Some("/jobs/{id}")
+        );
         // Infrastructure frame dropped; innermost last; location not duplicated.
         assert_eq!(event.stack_frames.len(), 2);
         let last = &event.stack_frames[1];
-        assert_eq!(last.function_name, "puzzled_server::capabilities::jobs::run");
+        assert_eq!(
+            last.function_name,
+            "puzzled_server::capabilities::jobs::run"
+        );
         assert_eq!(last.line, 42);
         assert!(last.app_frame);
         assert!(!event.stack_frames[0].app_frame);
@@ -772,7 +803,10 @@ mod tests {
         a.route = Some("/jobs/{id}".into());
         let mut c = a.clone();
         c.exception_type = "HTTP 502".into();
-        assert_eq!(error_event(&a, &config()).fingerprint, "HTTP 500\n/jobs/{id}");
+        assert_eq!(
+            error_event(&a, &config()).fingerprint,
+            "HTTP 500\n/jobs/{id}"
+        );
         assert_ne!(
             error_event(&a, &config()).fingerprint,
             error_event(&c, &config()).fingerprint
@@ -783,7 +817,9 @@ mod tests {
     fn frames_are_capped() {
         let mut backtrace = String::new();
         for i in 0..120 {
-            backtrace.push_str(&format!("  {i}: app::f{i}\n             at ./src/a.rs:{i}:1\n"));
+            backtrace.push_str(&format!(
+                "  {i}: app::f{i}\n             at ./src/a.rs:{i}:1\n"
+            ));
         }
         let mut r = report("panic", "x");
         r.backtrace = Some(backtrace);
@@ -796,17 +832,32 @@ mod tests {
     fn scrub_removes_each_secret_class() {
         let cases = [
             ("mail ada@example.com now", "ada@example.com"),
-            ("Authorization: Bearer abc123def456ghi789", "abc123def456ghi789"),
+            (
+                "Authorization: Bearer abc123def456ghi789",
+                "abc123def456ghi789",
+            ),
             ("got Bearer zzzzzzzzzzzz1234", "zzzzzzzzzzzz1234"),
-            ("jwt eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.abcdefSIG123 end", "eyJhbGciOiJIUzI1NiJ9"),
-            ("key sylphx_sk_live_abcdef123456 used", "sylphx_sk_live_abcdef123456"),
+            (
+                "jwt eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.abcdefSIG123 end",
+                "eyJhbGciOiJIUzI1NiJ9",
+            ),
+            (
+                "key sylphx_sk_live_abcdef123456 used",
+                "sylphx_sk_live_abcdef123456",
+            ),
             ("key sk_live_abcdef123456 used", "sk_live_abcdef123456"),
             ("key pk_test_abcdef123456 used", "pk_test_abcdef123456"),
-            ("token ghp_abcdefghijklmnop1234 used", "ghp_abcdefghijklmnop1234"),
+            (
+                "token ghp_abcdefghijklmnop1234 used",
+                "ghp_abcdefghijklmnop1234",
+            ),
             ("password=hunter2 next", "hunter2"),
             (r#"{"client_secret":"s3cr3t-value","ok":1}"#, "s3cr3t-value"),
             ("cookie: session=abcdef", "abcdef"),
-            ("id 0123456789abcdef0123456789abcdef01 end", "0123456789abcdef0123456789abcdef01"),
+            (
+                "id 0123456789abcdef0123456789abcdef01 end",
+                "0123456789abcdef0123456789abcdef01",
+            ),
             ("card 4111 1111 1111 1111 declined", "4111 1111 1111 1111"),
             ("card 4111111111111111 declined", "4111111111111111"),
         ];
@@ -838,7 +889,10 @@ mod tests {
         let event = error_event(&r, &config());
         assert!(!event.message.contains('@'));
         assert!(event.tags.values().all(|v| !v.contains('@')));
-        assert!(event.stack_frames.iter().all(|f| !f.file_path.contains('@')));
+        assert!(event
+            .stack_frames
+            .iter()
+            .all(|f| !f.file_path.contains('@')));
     }
 
     // (d) rate limit
@@ -900,7 +954,10 @@ mod tests {
 
     impl Fake {
         fn bodies(&self) -> Vec<String> {
-            self.0.lock().unwrap_or_else(PoisonError::into_inner).clone()
+            self.0
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .clone()
         }
     }
 
@@ -956,12 +1013,17 @@ mod tests {
         tokio::spawn(run_worker(client, queue));
         let reporter = Arc::new(reporter);
         let app = Router::new()
-            .route("/boom/{id}", get(|| async { StatusCode::INTERNAL_SERVER_ERROR }))
+            .route(
+                "/boom/{id}",
+                get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
+            )
             .route("/ok", get(|| async { "ok" }))
-            .layer(axum::middleware::from_fn(move |request: Request, next: Next| {
-                let reporter = Arc::clone(&reporter);
-                async move { observe(Some(&reporter), request, next).await }
-            }));
+            .layer(axum::middleware::from_fn(
+                move |request: Request, next: Next| {
+                    let reporter = Arc::clone(&reporter);
+                    async move { observe(Some(&reporter), request, next).await }
+                },
+            ));
 
         assert_eq!(get_status(&app, "/ok").await, StatusCode::OK);
         tokio::time::sleep(Duration::from_millis(300)).await;
@@ -991,18 +1053,26 @@ mod tests {
         let reporter = Arc::new(reporter);
         let app = Router::new()
             .fallback(|| async { StatusCode::BAD_GATEWAY })
-            .layer(axum::middleware::from_fn(move |request: Request, next: Next| {
-                let reporter = Arc::clone(&reporter);
-                async move { observe(Some(&reporter), request, next).await }
-            }));
-        assert_eq!(get_status(&app, "/secret/123?x=1").await, StatusCode::BAD_GATEWAY);
+            .layer(axum::middleware::from_fn(
+                move |request: Request, next: Next| {
+                    let reporter = Arc::clone(&reporter);
+                    async move { observe(Some(&reporter), request, next).await }
+                },
+            ));
+        assert_eq!(
+            get_status(&app, "/secret/123?x=1").await,
+            StatusCode::BAD_GATEWAY
+        );
         let Ok(sent) = rx.try_recv() else {
             panic!("no event queued");
         };
         let Some(event) = sent.error_event else {
             panic!("no event");
         };
-        assert_eq!(event.tags.get("route").map(String::as_str), Some(UNMATCHED_ROUTE));
+        assert_eq!(
+            event.tags.get("route").map(String::as_str),
+            Some(UNMATCHED_ROUTE)
+        );
         assert!(!event.message.contains("/secret"));
     }
 }
