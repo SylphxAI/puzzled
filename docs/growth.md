@@ -13,7 +13,7 @@ there). Evidence ids `[S1]`–`[S13]` are its [sources][src].
 
 Already live, so not on this list: the free daily seeded puzzle ([R24][mc-r]), non-spoiler share card
 with a `?date=` link ([V02][mc-v]), streaks with freezes ([R03, R45][mc-r]), the installable web app,
-first-touch campaign attribution, and the daily-reminder, streak-at-risk and win-back email jobs.
+first-touch campaign attribution, Tryit conversion reporting (below), and the daily-reminder, streak-at-risk and win-back email jobs.
 
 [mc-r]: https://github.com/Cubeage/cubeage-platform/blob/main/docs/standards/mechanics-catalogue.md#retention-r
 [mc-v]: https://github.com/Cubeage/cubeage-platform/blob/main/docs/standards/mechanics-catalogue.md#virality-v
@@ -58,6 +58,13 @@ Items 1 to 3 are built (share landing, challenge link, tomorrow teaser); this se
   and any sign-up to the share (`account_attribution.ref`). `share_count` counts share taps. The
   landing (`features/daily/components/shared-result-landing.tsx`) reads `GetSharedResult`, which
   returns only card facts. Measure: `result_shares` joined to `account_attribution.ref`.
+- **Tryit conversions (cross-lane, built).** A Tryit handoff lands as `utm_source=tryit&ref=<uuid>`;
+  the consent-gated `puzzled_attr` cookie keeps it and `account_attribution` stores it at sign-up. A
+  share link's `ref` has no `utm_source=tryit`, so the two never mix (`Attribution::tryit_ref`). When
+  the account is created with a Tryit ref the server queues a `signup` row in `tryit_conversions`, sends
+  it once with a 3 second cap (`POST tryit.fun/api/attribution/conversions`, the product's own
+  `SYLPHX_API_KEY`, the `ref` only), and a ten-minute Compute schedule (`puzzled-tryit-conversions`) retries a 503, 429 or failed send for 29
+  days. A first paid invoice queues `purchase` the same way (it sends once Plus is on sale).
 - **Challenge.** The landing remembers the share in the browser; the result screen and the
   already-played view show both results when the same module and day are finished.
 - **Tomorrow teaser.** `getTomorrowsFreeGame` in `lib/free-rotation.ts` reads the rotation for the next
