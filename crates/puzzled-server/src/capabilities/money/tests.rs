@@ -44,6 +44,14 @@ async fn session(State(fake): State<Fake>, Json(body): Json<Value>) -> Json<Valu
     Json(json!({"url": "https://checkout.example/pay/cs_1", "state": "open"}))
 }
 
+async fn subscriptions(State(fake): State<Fake>) -> (StatusCode, Json<Value>) {
+    let fake = fake.lock().unwrap();
+    (
+        StatusCode::from_u16(fake.status).unwrap(),
+        Json(fake.answer.clone()),
+    )
+}
+
 async fn catalog(State(fake): State<Fake>) -> Json<Value> {
     Json(fake.lock().unwrap().catalog.clone())
 }
@@ -60,6 +68,7 @@ async fn fake_money(status: u16, answer: Value) -> (Money, Fake) {
         .route("/env/entitlement_grants:check", post(check))
         .route("/env/checkout_sessions", post(session))
         .route("/env/catalogs/default", get(catalog))
+        .route("/env/customer_subscriptions", get(subscriptions))
         .with_state(fake.clone());
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
@@ -381,4 +390,40 @@ async fn consent_is_recorded_once_per_checkout() {
     .unwrap();
     assert_eq!(n, 1);
     assert_eq!(statement, super::consent_db::IMMEDIATE_SUPPLY_STATEMENT);
+}
+
+// ---- erasure guard ----------------------------------------------------------
+
+fn sub(user: &str, status: &str, ends: bool) -> Value {
+    json!({"subject": {"end_user": user}, "status": status, "cancel_at_period_end": ends})
+}
+
+#[tokio::test]
+async fn erasure_guard_sees_a_renewing_money_subscription() {
+    let (money, _) = fake_money(
+        200,
+        json!({"customer_subscriptions": [sub(USER, "active", false)]}),
+    )
+    .await;
+    assert_eq!(money.has_renewing_subscription(USER).await, Ok(true));
+}
+
+#[tokio::test]
+async fn erasure_guard_ignores_ended_cancelled_and_other_peoples_subscriptions() {
+    let rows = json!({"customer_subscriptions": [
+        sub(USER, "active", true),
+        sub(USER, "canceled", false),
+        sub("someone-else", "active", false)]});
+    let (money, _) = fake_money(200, rows).await;
+    assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
+    let (money, _) = fake_money(200, json!({})).await;
+    assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
+}
+
+#[tokio::test]
+async fn erasure_guard_errors_when_money_is_unavailable() {
+    let (money, _) = fake_money(503, json!({})).await;
+    assert!(money.has_renewing_subscription(USER).await.is_err());
+    let gone = Money::new("http://127.0.0.1:1/env", "sk_test", "https://puzzled.test");
+    assert!(gone.has_renewing_subscription(USER).await.is_err());
 }

@@ -271,6 +271,57 @@ impl Money {
         Ok(catalog)
     }
 
+    /// Does `user_id` hold a subscription in Money that still renews (active,
+    /// trialing or past due, not set to end at the period end)? Pages through
+    /// `customer_subscriptions` and re-checks each row's subject itself, so a
+    /// filter Money ignores cannot hide or invent a match. Any error is
+    /// returned: the caller must refuse rather than assume "none".
+    pub async fn has_renewing_subscription(&self, user_id: &str) -> Result<bool, MoneyError> {
+        let filter = format!("subject.end_user = \"{}\"", user_id.replace('"', ""));
+        let mut token = String::new();
+        loop {
+            let mut query = vec![("filter", filter.as_str()), ("page_size", "100")];
+            if !token.is_empty() {
+                query.push(("page_token", token.as_str()));
+            }
+            let body = self
+                .call(
+                    self.http
+                        .get(format!("{}/customer_subscriptions", self.base))
+                        .query(&query),
+                )
+                .await?;
+            for sub in body
+                .get("customer_subscriptions")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                let mine =
+                    sub.pointer("/subject/end_user").and_then(Value::as_str) == Some(user_id);
+                let live = matches!(
+                    sub.get("status").and_then(Value::as_str),
+                    Some("active" | "trialing" | "past_due")
+                );
+                let ends = sub
+                    .get("cancel_at_period_end")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false);
+                if mine && live && !ends {
+                    return Ok(true);
+                }
+            }
+            token = body
+                .get("next_page_token")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string();
+            if token.is_empty() {
+                return Ok(false);
+            }
+        }
+    }
+
     /// Create a checkout session; returns the hosted page's URL.
     pub async fn create_checkout_session(&self, session: &Value) -> Result<String, MoneyError> {
         let body = self
