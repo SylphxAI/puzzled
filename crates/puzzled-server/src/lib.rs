@@ -32,6 +32,8 @@ mod billing_flow_tests;
 mod daily_pipeline_tests;
 #[cfg(test)]
 mod result_shares_tests;
+#[cfg(test)]
+mod tryit_conversions_tests;
 
 #[cfg(test)]
 mod tests {

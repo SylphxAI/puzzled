@@ -500,6 +500,15 @@ pub async fn record_invoice_payment(pool: &PgPool, invoice: &Value) -> Result<()
         paid_at,
     )
     .await?;
+    // A Tryit-referred account's first paid invoice is queued for Tryit; the
+    // sweep sends it. Failing to queue never fails the webhook.
+    if let Some(user) = &user {
+        if let Err(error) =
+            crate::capabilities::tryit_conversions::enqueue_purchase(pool, user).await
+        {
+            tracing::warn!(%error, "tryit purchase not queued");
+        }
+    }
     Ok(())
 }
 

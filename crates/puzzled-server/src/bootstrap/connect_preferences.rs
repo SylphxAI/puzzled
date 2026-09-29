@@ -468,6 +468,29 @@ impl PreferencesService for PreferencesConnectService {
                 tracing::warn!(%error, "signup attribution failed");
                 ConnectError::new(ErrorCode::Unavailable, "attribution_unavailable")
             })?;
+        if recorded {
+            // Tryit-referred: queue the sign-up and send it once now (3s cap);
+            // a failure stays queued for the sweep.
+            let queued = crate::capabilities::tryit_conversions::enqueue(
+                pool,
+                &identity.user_id,
+                &tags,
+                crate::capabilities::tryit_conversions::Event::Signup,
+            )
+            .await
+            .unwrap_or_else(|error| {
+                tracing::warn!(%error, "tryit sign-up not queued");
+                false
+            });
+            if queued {
+                crate::capabilities::tryit_conversions::report_now(
+                    pool,
+                    self.state.tryit.as_ref(),
+                    &identity.user_id,
+                )
+                .await;
+            }
+        }
         Response::ok(RecordSignupAttributionResponse {
             recorded,
             ..Default::default()

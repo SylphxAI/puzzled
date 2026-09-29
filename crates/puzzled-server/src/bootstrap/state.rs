@@ -7,6 +7,7 @@ use sqlx::PgPool;
 use crate::capabilities::billing::adapters::stripe::Stripe;
 use crate::capabilities::identity_access::adapters::auth_erasure::AuthErasure;
 use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
+use crate::capabilities::tryit_conversions::TryitReporter;
 use crate::shared::tick_receipt::TickVerifier;
 
 #[derive(Clone)]
@@ -23,6 +24,9 @@ pub struct AppState {
     pub erasure: Option<AuthErasure>,
     /// Admission for Compute schedule ticks (signed receipts).
     pub ticks: TickVerifier,
+    /// Reports Tryit-referred sign-ups and purchases back to Tryit. None
+    /// without `SYLPHX_API_KEY`: conversions are then queued and wait.
+    pub tryit: Option<TryitReporter>,
 }
 
 impl AppState {
@@ -35,12 +39,19 @@ impl AppState {
             pool,
             stripe: None,
             ticks: TickVerifier::from_env(),
+            tryit: TryitReporter::from_env(),
         }
     }
 
     #[must_use]
     pub fn with_ticks(mut self, ticks: TickVerifier) -> Self {
         self.ticks = ticks;
+        self
+    }
+
+    #[must_use]
+    pub fn with_tryit(mut self, tryit: Option<TryitReporter>) -> Self {
+        self.tryit = tryit;
         self
     }
 

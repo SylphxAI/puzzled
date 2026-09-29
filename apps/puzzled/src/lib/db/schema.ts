@@ -17,6 +17,7 @@ import {
 	jsonb,
 	pgEnum,
 	pgTable,
+	primaryKey,
 	text,
 	timestamp,
 	uniqueIndex,
@@ -687,6 +688,27 @@ export const accountAttribution = pgTable('account_attribution', {
 	landedAt: timestamp('landed_at'),
 	recordedAt: timestamp('recorded_at').defaultNow().notNull(),
 })
+
+/**
+ * Conversions to report back to Tryit: one row per account and event
+ * (`signup`, `purchase`), queued only for an account with a Tryit `ref`, sent
+ * once and retried by the sweep until reported or given up.
+ */
+export const tryitConversions = pgTable(
+	'tryit_conversions',
+	{
+		userId: uuid('user_id').notNull(),
+		event: text('event').notNull(),
+		ref: text('ref').notNull(),
+		occurredAt: timestamp('occurred_at').notNull(),
+		attempts: integer('attempts').default(0).notNull(),
+		lastAttemptAt: timestamp('last_attempt_at'),
+		lastError: text('last_error'),
+		reportedAt: timestamp('reported_at'),
+		gaveUpAt: timestamp('gave_up_at'),
+	},
+	(table) => [primaryKey({ columns: [table.userId, table.event] })],
+)
 
 /**
  * A shared daily result. The share link carries `id` as `ref`; the row holds
