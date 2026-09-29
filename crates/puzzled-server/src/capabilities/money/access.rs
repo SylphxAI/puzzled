@@ -2,7 +2,7 @@
 //! `catalogs/default` declares; every entitlement read in Puzzled goes
 //! through these.
 
-use super::client::Money;
+use super::client::{Money, MoneyError};
 
 /// Every game, the archive and stats.
 pub const FEATURE_PLUS: &str = "plus";
@@ -21,8 +21,10 @@ pub async fn family_active(money: &Money, owner: &str) -> bool {
     money.check(owner, FEATURE_FAMILY).await.entitled
 }
 
-/// The seats `owner`'s plan covers (owner included), when Money says.
-pub async fn seats(money: &Money, owner: &str) -> Option<u32> {
-    let grant = money.check(owner, FEATURE_SEATS).await;
-    grant.entitled.then_some(grant.limit).flatten()
+/// The seats `owner`'s plan covers (owner included). `Err`: Money could not
+/// answer, so nothing may be decided from it; `Ok(None)`: Money answered and
+/// the owner holds no `seats` limit.
+pub async fn seats(money: &Money, owner: &str) -> Result<Option<u32>, MoneyError> {
+    let grant = money.try_check(owner, FEATURE_SEATS).await?;
+    Ok(grant.entitled.then_some(grant.limit).flatten())
 }
