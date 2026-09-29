@@ -26,6 +26,7 @@ pub const FAILED_CACHE_TTL: Duration = Duration::from_secs(5);
 pub const CATALOG_CACHE_TTL: Duration = Duration::from_secs(300);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(8);
 const DEFAULT_PUBLIC_URL: &str = "https://puzzled.gg";
+const DEFAULT_API_URL: &str = "https://api.sylphx.com";
 
 /// Why a Money call did not answer.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -132,8 +133,13 @@ type CatalogSlot = Option<(Instant, Arc<Catalog>)>;
 #[derive(Clone)]
 pub struct Money {
     http: reqwest::Client,
-    /// The environment's resource URL: `https://api.sylphx.com/v1/orgs/{org}/projects/{project}/envs/{env}`.
-    base: String,
+    /// `https://api.sylphx.com`.
+    origin: String,
+    /// The environment's resource URL,
+    /// `{origin}/v1/orgs/{org}/projects/{project}/envs/{env}`, read from the
+    /// key's `whoami` on first use and kept. Never written in configuration:
+    /// the env id it names is the key's own.
+    base: Arc<tokio::sync::OnceCell<String>>,
     secret_key: String,
     public_url: String,
     grants: Arc<Mutex<GrantCache>>,
@@ -147,32 +153,103 @@ fn env_value(name: &str) -> Option<String> {
         .filter(|value| !value.is_empty())
 }
 
+/// The environment resource URL a key belongs to, from its `whoami`:
+/// `{origin}/v1/orgs/{org}/projects/{project}/envs/{env}`. The key must be
+/// scoped to an environment.
+pub async fn resolve_env_url(
+    http: &reqwest::Client,
+    origin: &str,
+    key: &str,
+) -> Result<String, MoneyError> {
+    let response = http
+        .get(format!("{origin}/v1/whoami"))
+        .bearer_auth(key)
+        .send()
+        .await
+        .map_err(|e| MoneyError::Unavailable(format!("whoami failed: {e}")))?;
+    if !response.status().is_success() {
+        return Err(MoneyError::Unavailable(format!(
+            "whoami answered {}",
+            response.status()
+        )));
+    }
+    let body: Value = response
+        .json()
+        .await
+        .map_err(|e| MoneyError::Unavailable(format!("whoami unreadable: {e}")))?;
+    let part = |name: &str| {
+        body.get(name)
+            .and_then(Value::as_str)
+            .filter(|v| !v.is_empty())
+    };
+    match (part("org"), part("project"), part("env")) {
+        (Some(org), Some(project), Some(env)) => Ok(format!(
+            "{origin}/v1/orgs/{org}/projects/{project}/envs/{env}"
+        )),
+        _ => Err(MoneyError::Unavailable(
+            "the API key is not scoped to an environment".into(),
+        )),
+    }
+}
+
 impl Money {
-    /// Money is used when the environment URL and the product's own API key (`SYLPHX_API_KEY`) are
-    /// both configured; otherwise Puzzled keeps its existing behaviour.
+    /// Money is used when the product's own API key (`SYLPHX_API_KEY`) is
+    /// configured; its org, project and env come from the key's `whoami`
+    /// (`SYLPHX_API_URL`, default `https://api.sylphx.com`). Otherwise Puzzled
+    /// keeps its existing behaviour.
     #[must_use]
     pub fn from_env() -> Option<Self> {
-        Some(Self::new(
-            &env_value("SYLPHX_MONEY_URL")?,
+        Some(Self::discovering(
+            &env_value("SYLPHX_API_URL").unwrap_or_else(|| DEFAULT_API_URL.into()),
             &env_value("SYLPHX_API_KEY")?,
             &env_value("PUZZLED_PUBLIC_URL").unwrap_or_else(|| DEFAULT_PUBLIC_URL.into()),
         ))
     }
 
+    /// A client whose environment URL is read from the key on first use.
     #[must_use]
-    pub fn new(base: &str, secret_key: &str, public_url: &str) -> Self {
+    pub fn discovering(origin: &str, secret_key: &str, public_url: &str) -> Self {
+        let mut money = Self::new("", secret_key, public_url);
+        money.origin = origin.trim_end_matches('/').to_string();
+        money.base = Arc::default();
+        money
+    }
+
+    /// A client with a known environment URL (tests, or a caller that already
+    /// resolved it).
+    #[must_use]
+    pub fn new(env_url: &str, secret_key: &str, public_url: &str) -> Self {
         let http = reqwest::Client::builder()
             .timeout(REQUEST_TIMEOUT)
             .build()
             .unwrap_or_default();
+        let base = Arc::new(tokio::sync::OnceCell::new());
+        if !env_url.is_empty() {
+            let _ = base.set(env_url.trim_end_matches('/').to_string());
+        }
         Self {
             http,
-            base: base.trim_end_matches('/').to_string(),
+            origin: DEFAULT_API_URL.to_string(),
+            base,
             secret_key: secret_key.to_string(),
             public_url: public_url.trim_end_matches('/').to_string(),
             grants: Arc::default(),
             catalog: Arc::default(),
         }
+    }
+
+    /// The environment resource URL, discovered once and kept.
+    async fn env_url(&self) -> Result<&str, MoneyError> {
+        self.base
+            .get_or_try_init(|| resolve_env_url(&self.http, &self.origin, &self.secret_key))
+            .await
+            .map(String::as_str)
+    }
+
+    /// Resolve the environment now (at start-up), so a bad key shows in the
+    /// log rather than on the first request. Failure is retried on use.
+    pub async fn warm(&self) -> Result<(), MoneyError> {
+        self.env_url().await.map(|_| ())
     }
 
     #[must_use]
@@ -210,7 +287,10 @@ impl Money {
         let body = self
             .call(
                 self.http
-                    .post(format!("{}/entitlement_grants:check", self.base))
+                    .post(format!(
+                        "{}/entitlement_grants:check",
+                        self.env_url().await?
+                    ))
                     .json(&json!({"subject": {"end_user": user_id}, "feature": feature})),
             )
             .await?;
@@ -293,7 +373,10 @@ impl Money {
             }
         }
         let body = self
-            .call(self.http.get(format!("{}/catalogs/default", self.base)))
+            .call(
+                self.http
+                    .get(format!("{}/catalogs/default", self.env_url().await?)),
+            )
             .await?;
         let catalog: Arc<Catalog> = Arc::new(
             serde_json::from_value(body)
@@ -321,7 +404,7 @@ impl Money {
             let body = self
                 .call(
                     self.http
-                        .get(format!("{}/customer_subscriptions", self.base))
+                        .get(format!("{}/customer_subscriptions", self.env_url().await?))
                         .query(&query),
                 )
                 .await?;
@@ -434,7 +517,7 @@ impl Money {
         let body = self
             .call(
                 self.http
-                    .post(format!("{}/checkout_sessions", self.base))
+                    .post(format!("{}/checkout_sessions", self.env_url().await?))
                     .json(session),
             )
             .await?;
