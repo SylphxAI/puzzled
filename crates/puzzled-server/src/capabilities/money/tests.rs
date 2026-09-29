@@ -59,9 +59,13 @@ async fn action(
     Json(json!({}))
 }
 
-async fn portal(State(fake): State<Fake>, Json(body): Json<Value>) -> Json<Value> {
-    fake.lock().unwrap().actions.push(format!("portal {body}"));
-    Json(json!({"url": "https://portal.example/p/1"}))
+async fn portal(State(fake): State<Fake>, Json(body): Json<Value>) -> (StatusCode, Json<Value>) {
+    let mut fake = fake.lock().unwrap();
+    fake.actions.push(format!("portal {body}"));
+    (
+        StatusCode::from_u16(fake.status).unwrap(),
+        Json(json!({"url": "https://portal.example/p/1"})),
+    )
 }
 
 async fn catalog(State(fake): State<Fake>) -> Json<Value> {
