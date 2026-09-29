@@ -414,7 +414,7 @@ async fn fake_archive() -> (super::export::Archive, Bucket) {
 
 #[tokio::test]
 async fn export_writes_every_table_to_the_bucket_and_reads_it_back() {
-    let Some(pool) = crate::test_support::fresh_database().await else {
+    let Some(pool) = crate::billing_flow_tests::fresh_database().await else {
         return;
     };
     seed(&pool).await;
