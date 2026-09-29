@@ -390,7 +390,7 @@ async fn store_put(
         .decode(body["body"].as_str().unwrap())
         .unwrap();
     let mut bucket = bucket.lock().unwrap();
-    // Retention-locked: a key that exists is never replaced.
+    // A key that exists is never replaced (put_once must not ask).
     if bucket.contains_key(&key) {
         return (StatusCode::CONFLICT, Json(json!({})));
     }
@@ -398,16 +398,44 @@ async fn store_put(
     (StatusCode::OK, Json(json!({})))
 }
 
+/// `POST .../buckets?bucket_id=billing-archive`: records the request; a second
+/// create answers 409 (already exists).
+async fn bucket_create(
+    State(bucket): State<Bucket>,
+    headers: axum::http::HeaderMap,
+    axum::extract::Query(q): axum::extract::Query<HashMap<String, String>>,
+    Json(body): Json<Value>,
+) -> (StatusCode, Json<Value>) {
+    let mut bucket = bucket.lock().unwrap();
+    assert_eq!(q["bucket_id"], "billing-archive");
+    assert_eq!(headers["idempotency-key"], "puzzled-billing-archive-v1");
+    assert_eq!(body["spec"]["versioning_enabled"], false);
+    assert_eq!(body["spec"]["retention"], "189216000s");
+    let marker = "\0created".to_string();
+    if bucket.contains_key(&marker) {
+        return (StatusCode::CONFLICT, Json(json!({})));
+    }
+    bucket.insert(marker, Vec::new());
+    (StatusCode::OK, Json(json!({})))
+}
+
 async fn fake_archive() -> (super::export::Archive, Bucket) {
     let bucket: Bucket = Arc::default();
     let app = Router::new()
+        .route(
+            "/v1/orgs/o/projects/p/envs/e/buckets",
+            axum::routing::post(bucket_create),
+        )
         .route("/v1/objects/{bucket}/{*key}", get(store_get).put(store_put))
         .with_state(bucket.clone());
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
     tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
     (
-        super::export::Archive::new(&format!("http://{addr}"), "sk_app", "billing-archive"),
+        super::export::Archive::new(
+            &format!("http://{addr}/v1/orgs/o/projects/p/envs/e"),
+            "sk_app",
+        ),
         bucket,
     )
 }
@@ -455,6 +483,14 @@ async fn export_writes_every_table_to_the_bucket_and_reads_it_back() {
     assert!(super::export::run_export(&pool, &archive, &prefix)
         .await
         .is_err());
+}
+
+#[tokio::test]
+async fn the_bucket_is_created_once_and_already_exists_is_success() {
+    let (archive, bucket) = fake_archive().await;
+    archive.ensure_bucket().await.unwrap();
+    archive.ensure_bucket().await.unwrap();
+    assert!(bucket.lock().unwrap().contains_key("\0created"));
 }
 
 #[tokio::test]

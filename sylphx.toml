@@ -174,17 +174,3 @@ catch_up = "last_only"
 target = { kind = "http", method = "POST", signed = true }
 retry = { max_attempts = 3 }
 pause = false
-
-# One-off Stripe to Money migration: the billing export goes to Puzzled's own
-# Sylphx Store bucket (not the platform archive). Not versioned; six-year
-# (189216000 s), delete-protected retention, which is the UK tax record for
-# billing_ledger. The Store WORM retention lock must be applied to this bucket
-# before the deletion PR merges. The bucket id reaches the api as a secret.
-[resources.blob]
-name = "billing-archive"
-versioning_enabled = false
-retention = "189216000s"
-deletion_protection = true
-
-[env.PUZZLED_BILLING_ARCHIVE_BUCKET]
-from_secret = "PUZZLED_BILLING_ARCHIVE_BUCKET"

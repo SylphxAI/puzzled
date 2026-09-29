@@ -2,9 +2,12 @@
 //!
 //! One newline-delimited JSON object per table plus a manifest with row counts
 //! and SHA-256 sums, written under `billing/<date>/` to Puzzled's own Sylphx
-//! Store bucket (declared in `sylphx.toml`: not versioned, six-year delete-
-//! protected retention, and the Store WORM retention lock once applied), then
-//! read back from the bucket and compared to the database.
+//! Store bucket `billing-archive`, which the job creates itself (idempotently:
+//! not versioned, six-year retention that refuses DELETE only), then read back
+//! from the bucket and compared to the database. That retention is not WORM:
+//! overwrites are allowed, so objects are written once and never replaced here,
+//! and the real lock (COMPLIANCE object lock with a six-year `retain_until`,
+//! Store, from 10-03) is applied to these objects before the tables are dropped.
 
 use std::time::Duration;
 
@@ -20,7 +23,9 @@ pub const TABLES: [&str; 3] = [
     "billing_ledger",
 ];
 
-const DEFAULT_API_URL: &str = "https://api.sylphx.com";
+/// The bucket id, and the key that makes creating it idempotent.
+pub const BUCKET_ID: &str = "billing-archive";
+const BUCKET_IDEMPOTENCY_KEY: &str = "puzzled-billing-archive-v1";
 
 /// One table's export.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -30,14 +35,17 @@ pub struct Exported {
     pub sha256: String,
 }
 
-/// Puzzled's own archive bucket, through the Store object API
-/// (`PUT|GET /v1/objects/{bucket}/{key}`) with the app's own server key.
+/// Puzzled's own archive bucket, through the Store API with the product's own
+/// `SYLPHX_API_KEY` (its `*:write` covers `data:write` on its own project and
+/// env).
 #[derive(Clone)]
 pub struct Archive {
     http: reqwest::Client,
-    base: String,
+    /// `https://api.sylphx.com`.
+    origin: String,
+    /// `https://api.sylphx.com/v1/orgs/{o}/projects/{p}/envs/{e}`.
+    env_url: String,
     key: String,
-    bucket: String,
 }
 
 /// `billing/<UTC date>/`: where one export lives.
@@ -47,8 +55,9 @@ pub fn prefix_for(date: chrono::NaiveDate) -> String {
 }
 
 impl Archive {
-    /// `SYLPHX_SECRET_KEY` and `PUZZLED_BILLING_ARCHIVE_BUCKET`; the API
-    /// origin is `SYLPHX_API_URL` (default `https://api.sylphx.com`).
+    /// `SYLPHX_API_KEY` and `SYLPHX_MONEY_URL`, the environment's resource URL
+    /// (`{origin}/v1/orgs/{o}/projects/{p}/envs/{e}`), which also names the
+    /// org, project and env the bucket is created in.
     pub fn from_env() -> Result<Self, String> {
         let var = |name: &str| {
             std::env::var(name)
@@ -57,28 +66,50 @@ impl Archive {
                 .filter(|v| !v.is_empty())
         };
         Ok(Self::new(
-            &var("SYLPHX_API_URL").unwrap_or_else(|| DEFAULT_API_URL.to_string()),
-            &var("SYLPHX_SECRET_KEY").ok_or("SYLPHX_SECRET_KEY is not set")?,
-            &var("PUZZLED_BILLING_ARCHIVE_BUCKET")
-                .ok_or("PUZZLED_BILLING_ARCHIVE_BUCKET is not set")?,
+            &var("SYLPHX_MONEY_URL").ok_or("SYLPHX_MONEY_URL is not set")?,
+            &var("SYLPHX_API_KEY").ok_or("SYLPHX_API_KEY is not set")?,
         ))
     }
 
+    /// `env_url` is `{origin}/v1/orgs/{o}/projects/{p}/envs/{e}`.
     #[must_use]
-    pub fn new(base: &str, key: &str, bucket: &str) -> Self {
+    pub fn new(env_url: &str, key: &str) -> Self {
+        let env_url = env_url.trim_end_matches('/').to_string();
+        let origin = env_url.split("/v1/").next().unwrap_or(&env_url).to_string();
         Self {
             http: reqwest::Client::builder()
                 .timeout(Duration::from_secs(30))
                 .build()
                 .unwrap_or_default(),
-            base: base.trim_end_matches('/').to_string(),
+            origin,
+            env_url,
             key: key.to_string(),
-            bucket: bucket.to_string(),
+        }
+    }
+
+    /// Create `billing-archive` if it does not exist: not versioned, six-year
+    /// retention (`189216000s`, refuses DELETE only). "Already exists" is
+    /// success; the fixed `Idempotency-Key` makes a rerun the same request.
+    pub async fn ensure_bucket(&self) -> Result<(), String> {
+        let response = self
+            .http
+            .post(format!("{}/buckets?bucket_id={BUCKET_ID}", self.env_url))
+            .bearer_auth(&self.key)
+            .header("Idempotency-Key", BUCKET_IDEMPOTENCY_KEY)
+            .json(&json!({"spec": {"versioning_enabled": false, "retention": "189216000s"}}))
+            .send()
+            .await
+            .map_err(|e| format!("archive bucket create failed: {e}"))?;
+        let status = response.status();
+        if status.is_success() || status == reqwest::StatusCode::CONFLICT {
+            Ok(())
+        } else {
+            Err(format!("archive bucket create answered {status}"))
         }
     }
 
     fn url(&self, name: &str) -> String {
-        format!("{}/v1/objects/{}/{}", self.base, self.bucket, name)
+        format!("{}/v1/objects/{BUCKET_ID}/{name}", self.origin)
     }
 
     /// The object's bytes, or None when it does not exist.
@@ -175,6 +206,7 @@ pub async fn run_export(
     archive: &Archive,
     prefix: &str,
 ) -> Result<Vec<Exported>, String> {
+    archive.ensure_bucket().await?;
     let mut manifest = Vec::new();
     for table in TABLES {
         let lines = table_json(pool, table).await?;
