@@ -38,6 +38,34 @@ script or host.
   image therefore carries both `.next/static` and `.next/source-maps`.
   The service maps minified browser frames to source at ingest.
 
+## Api reporter
+
+`crates/puzzled-server/src/observability.rs`. Each event carries service
+(`SYLPHX_SERVICE_NAME`, default `api`), release (`SYLPHX_GIT_COMMIT_SHA`),
+environment (`SYLPHX_ENVIRONMENT_TYPE`, as tag `environment`), the route
+template as tag `route` (`unmatched` when no route matched; never the raw
+path or query), kind, message and stack. Panics carry a backtrace (up to 50
+frames, `app_frame` false for `/rustc/`, `.cargo` and registry paths).
+
+- **Scrubbing**: before sending, message, stack strings and tag values lose
+  emails, `Bearer`/`Basic` credentials, JWTs, `sylphx_`/`sk_`/`pk_`/`ghp_`
+  style keys, values of `key=value` or `"key":"value"` pairs whose key
+  contains secret, token, password, key, authorization or cookie, strings of
+  32+ hex/base64 characters and 13-19 digit numbers (`[redacted]`).
+- **Rate limit**: one fingerprint is sent at most once per 10 s per process;
+  suppressed repeats are counted and logged at debug.
+- **Queue**: events go through a bounded queue (64) to one worker. A full
+  queue drops the event and logs `observability queue full or closed`
+  with a running count, so if that line appears the api is erroring faster
+  than the worker delivers. Each call times out after 3 s.
+- **Off**: without `SYLPHX_API_KEY` the api logs
+  `observability capture off: SYLPHX_API_KEY is not set` and only logs
+  errors. Set the key (needs `observability:ingest`) and restart.
+
+Verify after a deploy with the production check below, then
+`sylphx observability error-groups list` (or the SDK read-back) and look for
+the `observability test error <nonce>` group with the new release.
+
 ## Privacy
 
 The service parses the raw stack and scrubs secrets, tokens, card numbers and

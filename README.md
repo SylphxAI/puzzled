@@ -38,8 +38,8 @@ ops     -> /observability/test              -> api (Rust)
   and calls the api through a generated Connect client.
 - **db**: PostgreSQL, with schema migrations managed by Atlas.
 
-Server and browser errors go to Sylphx Observability through the Sylphx SDK
-(Sentry is gone); see [docs/observability.md](docs/observability.md). Every
+Server and browser errors go to Sylphx Observability through the Sylphx SDK,
+with no third-party error service; see [docs/observability.md](docs/observability.md). Every
 page is served with a strict, nonce-based Content Security Policy
 ([docs/reference/csp.md](docs/reference/csp.md)). CI runs on our own runners.
 
