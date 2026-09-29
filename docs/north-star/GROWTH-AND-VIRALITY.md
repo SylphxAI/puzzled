@@ -107,7 +107,7 @@ Instrument; do not change the daily-puzzle-completer definition if aha metrics e
 ## 7. SEO and content farms
 
 - Evergreen explainers and fair “what is X puzzle” pages are fine.  
-- **Do not** build mass generated “quiz SEO” that contradicts entertainment honesty or floods daily entertainment completers.  
+- **Do not** publish misleading content: no pages that promise answers we do not give, and no thin pages that exist only to rank. One evergreen page per game, a "how to play" page and answer-free hints are welcome.  
 - Canonical daily play URLs should remain stable for sharing.
 
 ---

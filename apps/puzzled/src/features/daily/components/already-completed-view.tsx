@@ -4,6 +4,7 @@ import { Button, Card, CardContent } from '@sylphx/ui'
 import { Check, ChevronRight, Clock, Flame, Gauge, Share2, Target, Trophy, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
+import { AdSlot } from '@/features/ads/components/ad-slot'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useWarmShareId } from '@/features/daily/hooks/use-share-id'
 import { buildResultCard, resultCardStringsFrom } from '@/features/daily/lib/result-card'
@@ -277,6 +278,9 @@ export function AlreadyCompletedView({
 					<p className="mt-1 text-xs text-muted-foreground">{t('comeBackTomorrow')}</p>
 				</CardContent>
 			</Card>
+
+			{/* Free viewers only; the server hands the slot no config for Plus or when ads are off. */}
+			<AdSlot />
 
 			{/* Back to Home */}
 			<Link

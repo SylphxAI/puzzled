@@ -11,7 +11,7 @@ there). Evidence ids `[S1]`–`[S13]` are its [sources][src].
 [mc]: https://github.com/Cubeage/cubeage-platform/blob/main/docs/standards/mechanics-catalogue.md
 [src]: https://github.com/Cubeage/cubeage-platform/blob/main/docs/standards/game-standard.md#appendix-c-sources
 
-Already live, so not on this list: the free daily seeded puzzle ([R24][mc-r]), non-spoiler share card
+Already live, so not on this list: ads for free players (behind config, off until an ad account is set; [MONETIZATION.md](north-star/MONETIZATION.md#ads)), the free daily seeded puzzle ([R24][mc-r]), non-spoiler share card
 with a `?date=` link ([V02][mc-v]), streaks with freezes ([R03, R45][mc-r]), the installable web app,
 first-touch campaign attribution, Tryit conversion reporting (below), and the daily-reminder, streak-at-risk and win-back email jobs.
 
@@ -42,12 +42,9 @@ Measured today: recomputable from `game_sessions` (`compute_drc`); no dashboard 
 | 3 | Tomorrow teaser ([R50][mc-r]) | A visible reason to return tomorrow | Result screen and already-played view | Genshin previews, event countdowns (R50); puzzles exist 14 days ahead, so the date is real | S | none, build now |
 | 4 | Save-your-streak account ask ([experience: account protection](https://github.com/SylphxAI/owner/blob/main/standards/experience.md#account-protection), [X02][mc-x]) | Guests keep streak and stats across devices | Result screen, raised as the streak grows; never before the first finish | Supercell ID guest-first binding ([S11]) | S | none, build now |
 | 5 | Reminder at the player's usual finish time ([R46][mc-r], [R12][mc-r]) | Gentle return without guilt | Email (opt-in) at the hour they usually finish; PWA push later | Braze/OneSignal intelligent timing (R46) | S | none for Puzzled's own email; cloud#9826 for caps across our products |
-| 6 | Puzzled Plus on sale: yearly anchor, family plan ([B03, B18][mc-b]) | Revenue from players who already have the habit | Unlock panel, archive, pricing page (MONETIZATION.md §6) | Yearly year-1 retention 44% vs monthly 17% ([S2]) | M | cloud#9152 |
-| 7 | Trial experiment: free trial vs reverse trial ([B05, B09][mc-b]) | Let weekly ritualists feel all 19 games before paying | After the Nth finished day, on the result screen | Reverse-trial case 0.4% → 4.5% ([S1]) | M | cloud#9152, #9829, #9532 |
-| 8 | Save step, billing grace, win-back offers ([B11, B14, B16][mc-b]) | Keep subscribers who would lapse by accident or on price | Settings > Subscription; lapsed-subscriber email | 31% of Play cancellations involuntary ([S1]); churned monthly reactivate >13% ([S2]) | M | cloud#9829 |
-| 9 | Friends' results for today ([V08][mc-v]) | Compare with people you know, no public shame board | Result screen, opt-in | Wordle and Candy Crush friend boards (V08) | M | cloud#9830 |
-| 10 | Seasonal themes and holiday puzzles ([D08][mc-d]) | Fresh reasons to share on festival days | Home and result card on the day | Animal Crossing seasonal ambience (D08) | S | cloud#9828 (calendar); a hand-set list works until then |
-| 11 | Own-product promotion at session end ([A11][mc-a]) | Point finished players to our other products | Already-played view, at most one card a day | Supercell and Playrix cross-promotion (A11) | S | cloud#9826 |
+| 6 | Friends' results for today ([V08][mc-v]) | Compare with people you know, no public shame board | Result screen, opt-in | Wordle and Candy Crush friend boards (V08) | M | cloud#9830 |
+| 7 | Seasonal themes and holiday puzzles ([D08][mc-d]) | Fresh reasons to share on festival days | Home and result card on the day | Animal Crossing seasonal ambience (D08) | S | cloud#9828 (calendar); a hand-set list works until then |
+| 8 | Own-product promotion at session end ([A11][mc-a]) | Point finished players to our other products | Already-played view, at most one card a day | Supercell and Playrix cross-promotion (A11) | S | cloud#9826 |
 
 ## Build now
 
@@ -75,21 +72,58 @@ Items 1 to 3 are built (share landing, challenge link, tomorrow teaser); this se
 5. **Usual-time reminder** — schedule the existing `daily-reminder` job per player at their median
    finish hour; invitation copy only, one-tap unsubscribe (`jobs_policy`, `jobs_db`).
 
+## Ships when Money is live
+
+Everything here charges, discounts or unlocks paid access, so it waits for Sylphx Money subscriptions
+(cloud#9152; reverse trial also #9829 and #9532). Nothing here builds billing: each row is a setting or a
+product-side unlock on top of Money's plans, entitlements and coupons. Effects are estimates from
+industry benchmarks; the product has no payers yet, so none is measured.
+
+- [ ] **Plus on sale, yearly first** (S). Plans `individual_yearly` US$39.99 and `individual_monthly`
+      US$4.99 (about 33% off); pricing toggle defaults to yearly; label the saving from the live prices
+      with `yearlySavingPercent` (today's prices are 4 months free, so say that, never a rounder claim).
+      Family US$7.99 up to 4 seats stays; test 6 seats later.
+- [ ] **7-day trial on the yearly plan** (S). Money plan setting `trial_days = 7` on `individual_yearly`
+      only; card up front; a reminder before it converts and one-step cancel (UK DMCC). Trial end date is
+      the real one.
+- [ ] **Reverse trial as the default** (M). After the 3rd finished day, grant an entitlement that opens
+      all 19 games for 7 days, then drops back to free; one grant per account; an honest "ends on
+      DATE" line on the result screen. Runs instead of the card-up-front trial for new players; the
+      yearly trial serves returning ones.
+- [ ] **Metered archive** (S). 3 free past days per week for free players; the unlock panel shows on the
+      result screen after a 7-day streak. Never before or during the free daily finish.
+- [ ] **Lifetime plan** (S). One-time `individual_lifetime` at US$99.99 in Money; entitlement never
+      expires; shown on the pricing page beside yearly.
+- [ ] **Win-back offer** (S). Money coupon `winback_40_3m`: 40% off the first 3 months, redeemable once
+      by a lapsed subscriber or a player with no finish for 30 days; sent by the existing win-back
+      email job with the real end date. Test 50% against 40%.
+- [ ] **Referral reward in Plus days** (M). "Give a friend 7 days Plus, get 7 days when they finish 3
+      days", using the existing `result_shares` id and `ref` attribution; the reward is an entitlement
+      grant, so it needs Money's grant API.
+- [ ] **Paid streak freeze and Plus freezes** (S). Sell one freeze as a small one-off in Money; Plus
+      gets 2 per month. Freezes must first count toward the streak: `compute_personal_streak` ignores them
+      today, so an earned or bought freeze would do nothing. Build that first, then earn one per 7-day streak.
+- [ ] **Plus-nudge emails** (S). Day 3 and day 7 of a streak, consent-gated, with the yearly price and
+      no false urgency.
+- [ ] **Price localisation** (M). Money price tiers for HKD, EUR, JPY, INR, BRL and MXN alongside
+      USD and GBP; the site already has 5 locales; price per storefront, never converted at display time.
+- [ ] **Team plan for schools and workplaces** (L, after launch). A seat-based plan in Money.
+
 ## Pricing tactics
 
 Prices and the market citation (NYT Games, Times Puzzles, read 2026-09-26) live in
 [MONETIZATION.md §3](north-star/MONETIZATION.md#3-price); change them only there. Tactics: show
 the yearly plan first with its actual charge ([B03][mc-b]); keep the family plan as the upper tier
-([B18][mc-b]); price per storefront, not by converting currency ([B20][mc-b]); an intro offer or
-trial is an experiment that updates MONETIZATION.md, which today says "no free trial at launch";
-existing subscribers keep their price on an increase ([B23][mc-b]). We never price under the cited
+([B18][mc-b]); price per storefront, not by converting currency ([B20][mc-b]); the trial, discount and localised prices are on the
+[Ships when Money is live](#ships-when-money-is-live) list; existing subscribers keep their price on an increase ([B23][mc-b]). We never price under the cited
 market position because our cost is lower.
 
 ## Guardrails
 
-- **No dark patterns:** no fake urgency or countdowns, no streak guilt, no paywall before or during
+- **No dark patterns:** no false urgency (a true countdown, such as a real trial end, is fine), no streak guilt, no paywall before or during
   the free daily finish, no selling the solution. Cancellation, export and deletion stay easy.
-- **No ads, ever.** Money is the Plus subscription only, paid through Sylphx Money; no billing of our own.
+- **Ads:** free players only, on the archive and result screens, never during play, removed for Plus
+  (see [MONETIZATION.md](north-star/MONETIZATION.md#ads)). Payments still go through Sylphx Money; no billing of our own.
 - **Store and review policy:** if a store app ships, only the native review prompt at a happy moment,
   with no pre-question or incentive (Apple 5.6.1, Google In-App Review; catalogue [X24][mc-x] is `NOT`);
   subscription terms disclosed per Apple 3.1.2 and the Google Play subscriptions policy ([S5], [S7]).
