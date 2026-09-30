@@ -146,8 +146,23 @@ fn env_value(name: &str) -> Option<String> {
 }
 
 /// The environment resource URL a key belongs to, from its `whoami`:
-/// `{origin}/v1/orgs/{org}/projects/{project}/envs/{env}`. The key must be
-/// scoped to an environment.
+/// `{origin}/v1/{env}`. `env` is the environment's full resource name
+/// (`orgs/{o}/projects/{p}/envs/{e}`), used as-is. It is empty unless the key
+/// is scoped to an environment, which is Money unavailable.
+pub(super) fn env_url(origin: &str, whoami: &Value) -> Result<String, MoneyError> {
+    match whoami
+        .get("env")
+        .and_then(Value::as_str)
+        .map(|e| e.trim_matches('/'))
+        .filter(|e| !e.is_empty())
+    {
+        Some(env) => Ok(format!("{origin}/v1/{env}")),
+        None => Err(MoneyError::Unavailable(
+            "the API key is not scoped to an environment".into(),
+        )),
+    }
+}
+
 pub async fn resolve_env_url(
     http: &reqwest::Client,
     origin: &str,
@@ -169,19 +184,7 @@ pub async fn resolve_env_url(
         .json()
         .await
         .map_err(|e| MoneyError::Unavailable(format!("whoami unreadable: {e}")))?;
-    let part = |name: &str| {
-        body.get(name)
-            .and_then(Value::as_str)
-            .filter(|v| !v.is_empty())
-    };
-    match (part("org"), part("project"), part("env")) {
-        (Some(org), Some(project), Some(env)) => Ok(format!(
-            "{origin}/v1/orgs/{org}/projects/{project}/envs/{env}"
-        )),
-        _ => Err(MoneyError::Unavailable(
-            "the API key is not scoped to an environment".into(),
-        )),
-    }
+    env_url(origin, &body)
 }
 
 impl Money {

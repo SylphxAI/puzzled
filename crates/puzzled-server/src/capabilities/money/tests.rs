@@ -469,12 +469,12 @@ async fn the_environment_comes_from_the_keys_whoami_and_is_kept() {
                 let counter = counter.clone();
                 async move {
                     *counter.lock().unwrap() += 1;
-                    Json(json!({"org": "acme", "project": "puz", "env": "env_x1"}))
+                    Json(json!({"org": "orgs/org_x", "project": "orgs/org_x/projects/prj_y", "env": "orgs/org_x/projects/prj_y/envs/env_z"}))
                 }
             }),
         )
         .route(
-            "/v1/orgs/acme/projects/puz/envs/env_x1/entitlement_grants:check",
+            "/v1/orgs/org_x/projects/prj_y/envs/env_z/entitlement_grants:check",
             post(|| async { Json(json!({"entitled": true})) }),
         );
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -490,7 +490,7 @@ async fn the_environment_comes_from_the_keys_whoami_and_is_kept() {
 async fn a_key_that_is_not_scoped_to_an_environment_grants_nothing() {
     let app = Router::new().route(
         "/v1/whoami",
-        get(|| async { Json(json!({"org": "acme", "project": "", "env": ""})) }),
+        get(|| async { Json(json!({"org": "orgs/org_x", "project": "", "env": ""})) }),
     );
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
@@ -525,4 +525,21 @@ async fn money_calls_carry_the_money_key() {
         "https://puzzled.test",
     );
     assert!(is_premium(&money, USER).await);
+}
+
+#[test]
+fn the_base_is_the_env_name_as_is_never_a_doubled_path() {
+    let real = json!({
+        "org": "orgs/org_x",
+        "project": "orgs/org_x/projects/prj_y",
+        "env": "orgs/org_x/projects/prj_y/envs/env_z",
+    });
+    let url = super::client::env_url("https://api.sylphx.com", &real).unwrap();
+    assert_eq!(
+        url,
+        "https://api.sylphx.com/v1/orgs/org_x/projects/prj_y/envs/env_z"
+    );
+    assert_eq!(url.matches("orgs/").count(), 1, "no doubled orgs/ segment");
+    let unscoped = json!({"org": "orgs/org_x", "project": "", "env": ""});
+    assert!(super::client::env_url("https://api.sylphx.com", &unscoped).is_err());
 }
