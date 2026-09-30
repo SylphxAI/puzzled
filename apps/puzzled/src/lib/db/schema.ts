@@ -765,6 +765,8 @@ export const resultShares = pgTable(
 		attempts: integer('attempts').notNull(),
 		score: integer('score'),
 		timeSpentMs: integer('time_spent_ms'),
+		/** The sharer's same-day streak when the share was made; null when none. */
+		streak: integer('streak'),
 		shareCount: integer('share_count').default(0).notNull(),
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		lastSharedAt: timestamp('last_shared_at').defaultNow().notNull(),
