@@ -117,3 +117,60 @@ async fn existing_guest_claim_carries_two_days_and_today_once() {
             .unwrap();
     assert_eq!(days, ["2026-09-29", "2026-09-30"]);
 }
+
+#[tokio::test]
+async fn sender_outcomes_preserve_live_endpoints_and_prune_expired_ones() {
+    use crate::capabilities::preferences::adapters::web_push_sender::{PushDelivery, PushSender};
+    use ::web_push::SubscriptionInfo;
+    struct TestSender;
+    impl PushSender for TestSender {
+        async fn send<'a>(
+            &'a self,
+            subscription: &'a SubscriptionInfo,
+            payload: &'a str,
+        ) -> Result<PushDelivery, String> {
+            assert!(payload.contains("每日謎題"));
+            if subscription.endpoint.ends_with("expired") {
+                Ok(PushDelivery::Expired)
+            } else if subscription.endpoint.ends_with("failed") {
+                Err("transient failure".to_string())
+            } else {
+                Ok(PushDelivery::Delivered)
+            }
+        }
+    }
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    let mut subscriptions = Vec::new();
+    for suffix in ["live", "expired", "failed"] {
+        let endpoint = format!("https://fcm.googleapis.com/fcm/send/{suffix}");
+        web_push::save(&pool, player, &endpoint, "public-key", "auth-key", "zh-HK")
+            .await
+            .unwrap();
+        subscriptions.push(SubscriptionInfo::new(
+            endpoint,
+            "public-key".to_string(),
+            "auth-key".to_string(),
+        ));
+    }
+    let payload = web_push::reminder_payload("zh-HK").to_string();
+    assert!(
+        web_push::deliver_subscriptions(&pool, player, subscriptions, &payload, &TestSender)
+            .await
+            .is_err()
+    );
+    let endpoints: Vec<String> = sqlx::query_scalar(
+        "SELECT endpoint FROM push_subscriptions WHERE user_id = $1 ORDER BY endpoint",
+    )
+    .bind(player)
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+    assert_eq!(endpoints.len(), 2);
+    assert!(endpoints.iter().any(|endpoint| endpoint.ends_with("live")));
+    assert!(endpoints
+        .iter()
+        .any(|endpoint| endpoint.ends_with("failed")));
+}

@@ -1,8 +1,9 @@
 //! Browser subscriptions are player-scoped; delivery uses RFC 8291/8292 directly.
+use super::web_push_sender::{DirectVapidSender, PushDelivery, PushSender};
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use sqlx::PgPool;
 use uuid::Uuid;
-use web_push::{ContentEncoding, SubscriptionInfo, VapidSignatureBuilder, WebPushMessageBuilder};
+use web_push::SubscriptionInfo;
 
 // The browser's endpoint is untrusted. Only public browser push services may
 // receive requests; redirects are disabled too (no internal-network fetches).
@@ -104,10 +105,6 @@ pub async fn send_daily(pool: &PgPool, player: &str) -> Result<(), String> {
     if rows.is_empty() {
         return Ok(());
     }
-    let key = std::env::var("VAPID_PRIVATE_KEY")
-        .map_err(|_| "VAPID_PRIVATE_KEY unconfigured".to_string())?;
-    let subject =
-        std::env::var("VAPID_SUBJECT").map_err(|_| "VAPID_SUBJECT unconfigured".to_string())?;
     let locale: Option<String> = sqlx::query_scalar(
         "SELECT COALESCE(locale, 'en-US') FROM user_preferences WHERE user_id = $1",
     )
@@ -116,48 +113,33 @@ pub async fn send_daily(pool: &PgPool, player: &str) -> Result<(), String> {
     .await
     .map_err(|_| "push locale read failed".to_string())?;
     let payload = reminder_payload(locale.as_deref().unwrap_or("en-US")).to_string();
-    let client = reqwest::Client::builder()
-        .redirect(reqwest::redirect::Policy::none())
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|_| "push client failed".to_string())?;
+    let sender = DirectVapidSender::from_env()?;
+    let subscriptions = rows
+        .into_iter()
+        .map(|(endpoint, p256dh, auth)| SubscriptionInfo::new(endpoint, p256dh, auth))
+        .collect();
+    deliver_subscriptions(pool, player, subscriptions, &payload, &sender).await
+}
+
+/// Subscription lifecycle stays above the transport adapter. A future Notify
+/// sender returns the same delivery outcomes; the reminder job is unchanged.
+pub async fn deliver_subscriptions(
+    pool: &PgPool,
+    player: Uuid,
+    subscriptions: Vec<SubscriptionInfo>,
+    payload: &str,
+    sender: &impl PushSender,
+) -> Result<(), String> {
     let mut failed = false;
-    for (endpoint, p256dh, auth) in rows {
-        if !valid_endpoint(&endpoint) {
-            failed = true;
-            continue;
-        }
-        let subscription = SubscriptionInfo::new(endpoint.clone(), p256dh, auth);
-        let mut signature = VapidSignatureBuilder::from_base64(&key, &subscription)
-            .map_err(|_| "invalid VAPID key".to_string())?;
-        signature.add_claim("sub", subject.clone());
-        let signature = signature
-            .build()
-            .map_err(|_| "VAPID signing failed".to_string())?;
-        let mut builder = WebPushMessageBuilder::new(&subscription);
-        builder.set_vapid_signature(signature);
-        builder.set_payload(ContentEncoding::Aes128Gcm, payload.as_bytes());
-        builder.set_ttl(3600);
-        let message = builder
-            .build()
-            .map_err(|_| "push encryption failed".to_string())?;
-        let encrypted = message.payload.ok_or("push payload missing")?;
-        let mut request = client
-            .post(&endpoint)
-            .header("TTL", "3600")
-            .header("Content-Type", "application/octet-stream")
-            .header("Content-Encoding", "aes128gcm");
-        for (name, value) in encrypted.crypto_headers {
-            request = request.header(name, value);
-        }
-        match request.body(encrypted.content).send().await {
-            Ok(response) if response.status().is_success() => {}
-            Ok(response) if matches!(response.status().as_u16(), 404 | 410) => {
-                remove(pool, player, &endpoint)
+    for subscription in subscriptions {
+        match sender.send(&subscription, payload).await {
+            Ok(PushDelivery::Delivered) => {}
+            Ok(PushDelivery::Expired) => {
+                remove(pool, player, &subscription.endpoint)
                     .await
                     .map_err(|_| "expired push removal failed".to_string())?;
             }
-            _ => failed = true,
+            Err(_) => failed = true,
         }
     }
     if failed {

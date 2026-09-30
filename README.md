@@ -78,7 +78,11 @@ The existing manifest/icons and install prompt are reused; `/sw.js` adds
 notification reception without caching puzzles or account data. Daily browser
 reminders use the existing Compute job and the player's saved local time/time
 zone (#299), but send RFC 8291 encrypted Web Push directly from the Rust api
-rather than the legacy Events device adapter. Events still sends win-back email.
+rather than the legacy Events device adapter. Services confirms the platform
+has no Web Push yet. `PushSender` separates delivery from the reminder job;
+`DirectVapidSender` is its only implementation. A future platform Notify sender
+can replace it without changing reminder targeting or the job. Events still
+sends win-back email.
 
 Ops must set these on the **api** service (not the web build):
 
