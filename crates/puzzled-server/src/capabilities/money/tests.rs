@@ -499,3 +499,30 @@ async fn a_key_that_is_not_scoped_to_an_environment_grants_nothing() {
     assert!(money.warm().await.is_err());
     assert!(!is_premium(&money, USER).await);
 }
+
+#[test]
+fn money_reads_only_its_own_key() {
+    let only = |name: &'static str| move |asked: &str| (asked == name).then(|| "sk_x".to_string());
+    // The general key never enables Money: it fails closed (no client).
+    assert!(Money::from_lookup(only("SYLPHX_API_KEY")).is_none());
+    assert!(Money::from_lookup(|_| None).is_none());
+    assert!(Money::from_lookup(only("SYLPHX_MONEY_API_KEY")).is_some());
+}
+
+#[tokio::test]
+async fn money_calls_carry_the_money_key() {
+    async fn echo(headers: axum::http::HeaderMap) -> Json<Value> {
+        let auth = headers.get("authorization").and_then(|v| v.to_str().ok());
+        Json(json!({"entitled": auth == Some("Bearer sk_money"), "entitlement_grant": "g1"}))
+    }
+    let app = Router::new().route("/env/entitlement_grants:check", post(echo));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    let money = Money::new(
+        &format!("http://{addr}/env"),
+        "sk_money",
+        "https://puzzled.test",
+    );
+    assert!(is_premium(&money, USER).await);
+}

@@ -185,16 +185,21 @@ pub async fn resolve_env_url(
 }
 
 impl Money {
-    /// Money is used when the product's own API key (`SYLPHX_API_KEY`) is
-    /// configured; its org, project and env come from the key's `whoami`
-    /// (`SYLPHX_API_URL`, default `https://api.sylphx.com`). Otherwise Puzzled
-    /// keeps its existing behaviour.
+    /// Money is used when its dedicated key (`SYLPHX_MONEY_API_KEY`, scopes
+    /// billing:read and billing:write) is configured; its org, project and env
+    /// come from the key's `whoami` (`SYLPHX_API_URL`, default
+    /// `https://api.sylphx.com`). Without it Money is off and Puzzled keeps its
+    /// existing behaviour; `SYLPHX_API_KEY` is never used for Money.
     #[must_use]
     pub fn from_env() -> Option<Self> {
+        Self::from_lookup(env_value)
+    }
+
+    pub(super) fn from_lookup(get: impl Fn(&str) -> Option<String>) -> Option<Self> {
         Some(Self::discovering(
-            &env_value("SYLPHX_API_URL").unwrap_or_else(|| DEFAULT_API_URL.into()),
-            &env_value("SYLPHX_API_KEY")?,
-            &env_value("PUZZLED_PUBLIC_URL").unwrap_or_else(|| DEFAULT_PUBLIC_URL.into()),
+            &get("SYLPHX_API_URL").unwrap_or_else(|| DEFAULT_API_URL.into()),
+            &get("SYLPHX_MONEY_API_KEY")?,
+            &get("PUZZLED_PUBLIC_URL").unwrap_or_else(|| DEFAULT_PUBLIC_URL.into()),
         ))
     }
 
