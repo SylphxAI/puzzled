@@ -316,7 +316,7 @@ fn attribution_from_metadata(metadata: Option<&Value>) -> Option<Value> {
     (!tags.is_empty()).then_some(Value::Object(tags))
 }
 
-fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
+pub(crate) fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
     use sha2::{Digest, Sha256};
     const BLOCK: usize = 64;
     let mut block = [0u8; BLOCK];
@@ -346,7 +346,7 @@ fn hex(bytes: &[u8]) -> String {
     out
 }
 
-fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
+pub(crate) fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
     a.len() == b.len() && a.iter().zip(b).fold(0u8, |acc, (x, y)| acc | (x ^ y)) == 0
 }
 

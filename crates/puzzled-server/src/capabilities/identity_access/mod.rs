@@ -2,5 +2,6 @@
 
 pub mod adapters;
 pub mod contract;
+pub mod erasure;
 
 pub use contract::*;

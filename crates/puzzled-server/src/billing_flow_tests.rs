@@ -27,16 +27,16 @@ const WEBHOOK_SECRET: &str = "whsec_test_flow";
 // ---- fake Stripe -------------------------------------------------------------
 
 #[derive(Default)]
-struct FakeStripe {
+pub(crate) struct FakeStripe {
     next: u32,
     customers: HashMap<String, String>,
-    subscriptions: HashMap<String, Value>,
+    pub(crate) subscriptions: HashMap<String, Value>,
     invoices: HashMap<String, Value>,
-    refunds: Vec<Value>,
+    pub(crate) refunds: Vec<Value>,
     checkouts: Vec<HashMap<String, String>>,
 }
 
-type Fake = Arc<Mutex<FakeStripe>>;
+pub(crate) type Fake = Arc<Mutex<FakeStripe>>;
 
 fn price(id: &str, key: &str, usd: i64, gbp: i64, interval: &str) -> Value {
     json!({"id": id, "lookup_key": key, "currency": "usd", "unit_amount": usd,
@@ -169,7 +169,7 @@ async fn portal_session() -> Json<Value> {
     Json(json!({"url": "https://billing.stripe.test/session"}))
 }
 
-async fn spawn_fake(fake: Fake) -> String {
+pub(crate) async fn spawn_fake(fake: Fake) -> String {
     let app = Router::new()
         .route("/v1/prices", get(prices))
         .route("/v1/customers", axum::routing::post(create_customer))
@@ -203,7 +203,7 @@ async fn spawn_fake(fake: Fake) -> String {
 }
 
 /// Stripe finishing a checkout: a live subscription and its paid invoice.
-fn complete_checkout(
+pub(crate) fn complete_checkout(
     fake: &Fake,
     customer: &str,
     user: &str,
