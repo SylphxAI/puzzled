@@ -180,6 +180,13 @@ impl PuzzleConnectService {
                     .await
                     .is_err()
                 {
+                    // Intended: player experience over a small leak while Money
+                    // is down. Counted so an outage-long free ride is visible.
+                    tracing::warn!(
+                        event = "money_entitlement_unanswerable_allowed",
+                        feature = crate::capabilities::money::access::FEATURE_PLUS,
+                        "Money could not answer the Plus check; play allowed"
+                    );
                     return Ok(());
                 }
             }
