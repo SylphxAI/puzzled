@@ -24,7 +24,10 @@ function getDb(): NodePgDatabase<typeof schema> {
 					'For production: Set via environment variables.',
 			)
 		}
-		_pool = new Pool({ connectionString: url })
+		_pool = new Pool({ connectionString: url, max: 5, idleTimeoutMillis: 10_000, connectionTimeoutMillis: 5_000 })
+		// An idle client dropped by the pooler (maintenance, failover) emits 'error' on
+		// the pool; unhandled, that crashes the process. The pool reconnects on the next query.
+		_pool.on('error', (error) => console.error('postgres idle client error', error.message))
 		_db = drizzle(_pool, { schema })
 	}
 	return _db
