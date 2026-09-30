@@ -1,4 +1,4 @@
-# Applies config/commercial/catalogue.json to Sylphx Money: PATCH catalogs/default
+# Applies config/commercial/catalogue.json to Sylphx Money: PATCH price_catalogs/default
 # (allow_missing) then :sync, first to preview and then to production. This
 # workflow is the ONLY writer of the catalogue: no manual catalogue writes.
 # Change the catalogue by PR to that file.

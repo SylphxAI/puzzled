@@ -57,18 +57,18 @@ fi
 
 # 3. Convert the declaration into Money's spec, patch, and sync.
 bun scripts/money-catalogue-spec.ts config/commercial/catalogue.json > "$work/catalog.json"
-base="https://api.sylphx.com/v1/${resource}/catalogs/default"
+base="https://api.sylphx.com/v1/${resource}/price_catalogs/default"
 
 code=$(curl -sS -o "$work/patch.out" -w '%{http_code}' -X PATCH "${base}?allow_missing=true" \
   -H "Authorization: Bearer ${key}" -H 'Content-Type: application/json' \
   --data @"$work/catalog.json")
 if [ "$code" -ge 300 ]; then
-  echo "::error::PATCH catalogs/default answered ${code}"; cat "$work/patch.out"; exit 1
+  echo "::error::PATCH price_catalogs/default answered ${code}"; cat "$work/patch.out"; exit 1
 fi
 
 code=$(curl -sS -o "$work/sync.out" -w '%{http_code}' -X POST "${base}:sync" \
   -H "Authorization: Bearer ${key}" -H 'Content-Type: application/json' --data '{}')
 if [ "$code" -ge 300 ]; then
-  echo "::error::POST catalogs/default:sync answered ${code}"; cat "$work/sync.out"; exit 1
+  echo "::error::POST price_catalogs/default:sync answered ${code}"; cat "$work/sync.out"; exit 1
 fi
 echo "catalogue applied to ${resource##*/}"

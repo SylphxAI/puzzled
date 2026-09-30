@@ -1,6 +1,6 @@
 /**
  * Turns `config/commercial/catalogue.json` into the spec Sylphx Money's
- * `catalogs/default` accepts (cloud#10272: Catalog.spec with features and
+ * `price_catalogs/default` accepts (cloud#10272: Catalog.spec with features and
  * products, each product with its prices). CI runs this and applies the result
  * (.github/workflows/money-catalogue.yml); nothing else writes the catalogue.
  *
