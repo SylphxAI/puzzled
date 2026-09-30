@@ -31,6 +31,8 @@ export type SharedResult = {
 	score: number | null
 	timeSpentMs: number | null
 	difficulty: string | null
+	/** The sharer's streak on the day of a same-day share, when known */
+	streak: number | null
 }
 
 export function toSharedResult(res: GetSharedResultResponse): SharedResult {
@@ -46,6 +48,10 @@ export function toSharedResult(res: GetSharedResultResponse): SharedResult {
 			? Number(res.timeSpentMs)
 			: null,
 		difficulty: res.difficulty || null,
+		streak:
+			isFieldSet(res, GetSharedResultResponseSchema.field.streak) && res.streak > 0
+				? res.streak
+				: null,
 	}
 }
 
@@ -63,6 +69,7 @@ export function sharedResultCard(
 		attempts: shared.attempts,
 		score: shared.score,
 		timeSpentMs: shared.timeSpentMs,
+		currentStreak: shared.streak,
 	})
 }
 

@@ -205,7 +205,7 @@ pub async fn fill_range(
 
 fn alert_if_low(report: &FillReport) {
     if report.min_days_ahead < ALERT_BELOW_DAYS || !report.failed.is_empty() {
-        crate::observability::capture(crate::observability::ErrorReport {
+        crate::observability::capture(&crate::observability::ErrorReport {
             exception_type: "DailyPuzzleBufferLow".into(),
             message: format!(
                 "daily puzzle buffer: {} day(s) stored ahead (alert below {ALERT_BELOW_DAYS}); {} generation failure(s)",

@@ -11,7 +11,7 @@ use uuid::Uuid;
 use crate::billing_flow_tests::fresh_database;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::persist_validated_session;
 use crate::capabilities::puzzle_play::adapters::result_shares_db::{
-    adopt_guest_shares, load_shared_result, record_share,
+    adopt_guest_shares, load_shared_result, record_share, set_share_streak,
 };
 
 const DAY: &str = "2026-09-28";
@@ -174,5 +174,31 @@ async fn adopting_a_guest_keeps_the_account_share_on_a_conflict() {
         owner(guest_sudoku).await,
         guest,
         "the clashing guest row stays with the guest"
+    );
+}
+
+#[tokio::test]
+async fn the_sharers_streak_is_kept_once_and_shown_on_the_card() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let user = Uuid::now_v7();
+    let uid = user.to_string();
+    finish(&pool, &user, "sudoku", "won", 3).await;
+    let id = record_share(&pool, &uid, "sudoku", DAY, false)
+        .await
+        .unwrap()
+        .expect("a finish can be shared");
+    assert_eq!(
+        load_shared_result(&pool, id).await.unwrap().unwrap().streak,
+        None
+    );
+
+    set_share_streak(&pool, id, 9).await.unwrap();
+    // A later tap on a longer streak does not rewrite what the card showed.
+    set_share_streak(&pool, id, 12).await.unwrap();
+    assert_eq!(
+        load_shared_result(&pool, id).await.unwrap().unwrap().streak,
+        Some(9)
     );
 }

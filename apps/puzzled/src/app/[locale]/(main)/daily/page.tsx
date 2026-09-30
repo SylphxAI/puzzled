@@ -54,6 +54,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 			title: game,
 			subtitle: found.shared.status === 'won' ? tCard('statusWon') : tCard('statusLost'),
 			eyebrow: t('eyebrow'),
+			// The sharer's streak rides on the card's corner badge when the share has one.
+			badge: found.shared.streak ? tCard('streakDays', { days: found.shared.streak }) : undefined,
 			theme: getHowToPlayConfig(found.shared.gameSlug)?.display.theme,
 		}),
 	})

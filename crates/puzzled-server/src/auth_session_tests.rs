@@ -17,6 +17,9 @@ use crate::capabilities::identity_access::adapters::platform_jwt::VerifiedIdenti
 use crate::{router, AppState};
 
 const GOOD: &str = "identity_org_session_good";
+/// A valid session of another tenant's Auth instance.
+const FOREIGN: &str = "identity_org_session_foreign";
+const ORG: &str = "organization-0199aa10-7b2c-7d3e-8f00-00000000c0de";
 
 async fn spawn_fake_auth(calls: Arc<AtomicUsize>) -> String {
     let app = Router::new().route(
@@ -33,11 +36,19 @@ async fn spawn_fake_auth(calls: Arc<AtomicUsize>) -> String {
                     .get("user-agent")
                     .and_then(|v| v.to_str().ok())
                     .unwrap_or("");
-                if bearer == format!("Bearer {GOOD}") && agent == "Browser/1.0" {
+                let project = if bearer == format!("Bearer {GOOD}") {
+                    Some(ORG)
+                } else if bearer == format!("Bearer {FOREIGN}") {
+                    Some("organization-0199aa10-7b2c-7d3e-8f00-00000000bad0")
+                } else {
+                    None
+                };
+                if let (Some(project), "Browser/1.0") = (project, agent) {
                     (
                         StatusCode::OK,
                         Json(json!({"session": {"principal": {
                         "principal_id": "principal-0199aa10-7b2c-7d3e-8f00-1234567890ab",
+                        "project_id": project,
                         "display_name": "Ada", "primary_email": "ada@example.com",
                         "state": "active"}}})),
                     )
@@ -86,7 +97,7 @@ async fn subscription(app: &Router, headers: &[(&str, String)]) -> (StatusCode, 
 async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
     let calls = Arc::new(AtomicUsize::new(0));
     let base = spawn_fake_auth(calls.clone()).await;
-    let app = router(AppState::new(None).with_auth(AuthSessions::new(base)));
+    let app = router(AppState::new(None).with_auth(AuthSessions::new(base.clone(), ORG.into())));
 
     // The web's session cookie is verified with Auth.
     let cookie = ("cookie", format!("x=1; sylphx_identity_session={GOOD}"));
@@ -118,6 +129,15 @@ async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
         ],
     )
     .await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+
+    // A live session of another tenant's Auth instance is not signed in.
+    let (status, _) = subscription(&app, &[("authorization", format!("Bearer {FOREIGN}"))]).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+
+    // Without our own instance id configured, no session is accepted.
+    let unset = router(AppState::new(None).with_auth(AuthSessions::new(base, String::new())));
+    let (status, _) = subscription(&unset, &[("authorization", format!("Bearer {GOOD}"))]).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
     // A client cannot set the internal header itself.

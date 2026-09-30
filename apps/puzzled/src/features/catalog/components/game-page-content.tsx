@@ -1,7 +1,7 @@
 import { ArrowRight, ChevronDown, Lightbulb } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { readMessage } from '@/features/catalog/lib/catalog'
-import type { GameFaqItem } from '@/features/catalog/lib/game-page'
+import { type GameFaqItem, howToStructuredData } from '@/features/catalog/lib/game-page'
 import { getGameMetadata } from '@/games/registry'
 import { playerTitle, slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
@@ -87,6 +87,15 @@ export async function GamePageContent({
 								</li>
 							))}
 						</ol>
+						<script
+							type="application/ld+json"
+							// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD built from the rules shown above
+							dangerouslySetInnerHTML={{
+								__html: JSON.stringify(
+									howToStructuredData(t('gamePage.howToPlayTitle', { game: name }), rules),
+								),
+							}}
+						/>
 					</div>
 				</section>
 			)}

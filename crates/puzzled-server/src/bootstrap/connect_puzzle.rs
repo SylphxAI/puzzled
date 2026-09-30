@@ -37,13 +37,14 @@ use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 use super::state::AppState;
 use crate::capabilities::billing::service::access as entitlement_access;
 use crate::capabilities::daily_pipeline;
+use crate::capabilities::gamification::adapters::streak_read::load_settled_streak;
 use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::fetch_puzzle_by_id;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
     adopt_guest_sessions, has_completed_session, has_ritual_completion, load_completed_session,
     persist_validated_session,
 };
 use crate::capabilities::puzzle_play::adapters::result_shares_db::{
-    load_shared_result, record_share,
+    load_shared_result, record_share, set_share_streak,
 };
 use crate::proto::puzzled::v1::{
     CheckGuessRequest, CheckGuessResponse, DailyCompletion, GetDailyRequest, GetDailyResponse,
@@ -712,10 +713,25 @@ impl PuzzleService for PuzzleConnectService {
         )
         .await
         {
-            Ok(Some(id)) => Response::ok(ShareResultResponse {
-                share_id: id.to_string(),
-                ..Default::default()
-            }),
+            Ok(Some(id)) => {
+                // A same-day share carries the sharer's streak on its card.
+                if day == product_day_key(Utc::now()) {
+                    match load_settled_streak(pool, &uid, day).await {
+                        Ok((streak, _, _)) if streak.current_streak > 0 => {
+                            let streak = i32::try_from(streak.current_streak).unwrap_or(i32::MAX);
+                            if let Err(error) = set_share_streak(pool, id, streak).await {
+                                warn!(%error, "share streak not stored");
+                            }
+                        }
+                        Ok(_) => {}
+                        Err(error) => warn!(%error, "share streak not read"),
+                    }
+                }
+                Response::ok(ShareResultResponse {
+                    share_id: id.to_string(),
+                    ..Default::default()
+                })
+            }
             // Nothing to share until the player has an accepted finish.
             Ok(None) => Err(ConnectError::new(ErrorCode::NotFound, "no_finish_to_share")),
             Err(error) => {
@@ -748,6 +764,7 @@ impl PuzzleService for PuzzleConnectService {
                 attempts: u32::try_from(shared.attempts).unwrap_or_default(),
                 score: shared.score.and_then(|v| u32::try_from(v).ok()),
                 time_spent_ms: shared.time_spent_ms.and_then(|v| u64::try_from(v).ok()),
+                streak: shared.streak.and_then(|v| u32::try_from(v).ok()),
                 ..Default::default()
             }),
             Ok(None) => Err(ConnectError::new(ErrorCode::NotFound, "share_not_found")),

@@ -113,6 +113,16 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
         r#"DELETE FROM "user_freeze_data" WHERE "user_id" = $1"#,
     ),
     (
+        "streak_freeze_awards",
+        "user_id",
+        r#"DELETE FROM "streak_freeze_awards" WHERE "user_id" = $1"#,
+    ),
+    (
+        "streak_freeze_uses",
+        "user_id",
+        r#"DELETE FROM "streak_freeze_uses" WHERE "user_id" = $1"#,
+    ),
+    (
         "user_preferences",
         "user_id",
         r#"DELETE FROM "user_preferences" WHERE "user_id" = $1"#,

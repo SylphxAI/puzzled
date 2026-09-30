@@ -3,14 +3,17 @@ export const dynamic = 'force-dynamic'
 import { Card, CardContent } from '@sylphx/ui'
 import { CalendarDays, Lock, Play } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { AdSlot } from '@/features/ads/components/ad-slot'
 import {
 	ARCHIVE_WINDOW_DAYS,
 	archiveDays,
 	archivePlayPath,
 } from '@/features/daily/lib/archive-days'
 import { getAllGameMetadata } from '@/games/registry'
+import { adsConfig, adsFor } from '@/lib/ads'
 import { getServerPlusAccess } from '@/lib/api/server'
 import { OPEN_ACCESS } from '@/lib/billing/plus'
+import { env } from '@/lib/env'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
@@ -83,6 +86,8 @@ export default async function ArchivePage({ params }: Props) {
 		: await withPresentationDeadline(getServerPlusAccess(true), OPEN_ACCESS)
 	const locked = !isGuest && access.salesOpen && !access.entitled
 	const tPlus = await getTranslations('plus.unlock')
+	// Free viewers see one labelled ad under the list; Plus removes it.
+	const ads = adsFor(adsConfig(env), access.entitled)
 
 	const todaysFreeGame = getTodaysFreeGame()
 	const freeName = tGames(`${slugToCamelCase(todaysFreeGame)}.name`, {
@@ -210,6 +215,12 @@ export default async function ArchivePage({ params }: Props) {
 										</li>
 									))}
 								</ul>
+
+								{ads ? (
+									<div className="mt-8 max-w-2xl">
+										<AdSlot config={ads} />
+									</div>
+								) : null}
 
 								<div className="mt-6 flex flex-wrap items-center gap-3">
 									<Link

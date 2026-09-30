@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-13
-- **Relates to:** [NORTH-STAR-METRIC.md](../north-star/NORTH-STAR-METRIC.md), ADR-170
+- **Relates to:** [metrics.md](../metrics.md), ADR-170
 - **Does not change:** qualifying-finish membership, `puzzle_ritual` vs `entertainment_oracle`
 
 ## Context

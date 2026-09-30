@@ -25,6 +25,10 @@ message StreakInfo {
   uint32 total_games_played = 4;
   uint32 freezes_available = 5;
   bool auto_freeze_enabled = 6;
+  // Played days still needed to earn the next freeze (1..7).
+  uint32 days_until_next_freeze = 7;
+  // Yesterday was missed and a freeze kept the streak alive.
+  bool freeze_used_yesterday = 8;
 }
 
 message GetStreakInfoRequest {}
