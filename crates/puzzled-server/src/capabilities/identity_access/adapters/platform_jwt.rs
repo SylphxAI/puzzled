@@ -695,7 +695,6 @@ mod tests {
         }
         assert_eq!(
             identity(Some(("act", serde_json::json!({"sub": "agent_1"}))))
-                .unwrap()
                 .actor
                 .as_deref(),
             Some("agent_1")
