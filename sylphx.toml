@@ -81,6 +81,10 @@ watch_paths = [
   "sylphx.toml",
 ]
 
+# Dedicated email-link verification key; the web route needs only API_INTERNAL_URL.
+[services.env.EMAIL_UNSUBSCRIBE_SECRET]
+from_secret = "EMAIL_UNSUBSCRIBE_SECRET"
+
 [services.env.SYLPHX_MONEY_API_KEY]
 from_secret = "SYLPHX_MONEY_API_KEY"
 

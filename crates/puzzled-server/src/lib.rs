@@ -40,6 +40,8 @@ mod streak_freeze_tests;
 mod test_support;
 #[cfg(test)]
 mod tryit_conversions_tests;
+#[cfg(test)]
+mod unsubscribe_tests;
 
 #[cfg(test)]
 mod tests {

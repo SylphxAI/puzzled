@@ -7,6 +7,7 @@ use sqlx::PgPool;
 use crate::capabilities::identity_access::adapters::auth_erasure::AuthErasure;
 use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
 use crate::capabilities::money::{pricing, Money};
+use crate::capabilities::preferences::unsubscribe::UnsubscribeTokens;
 use crate::capabilities::tryit_conversions::TryitReporter;
 use crate::shared::tick_receipt::TickVerifier;
 
@@ -14,6 +15,8 @@ use crate::shared::tick_receipt::TickVerifier;
 pub struct AppState {
     started_at: Instant,
     pub pool: Option<PgPool>,
+    /// Dedicated signed-link verifier; missing key refuses unsubscribe.
+    pub unsubscribe: Option<UnsubscribeTokens>,
     /// Sylphx Money, when configured: entitlements, checkout and prices.
     pub money: Option<Money>,
     /// Sylphx Auth end-user session checks.
@@ -34,6 +37,7 @@ impl AppState {
     pub fn new(pool: Option<PgPool>) -> Self {
         Self {
             started_at: Instant::now(),
+            unsubscribe: UnsubscribeTokens::from_env(),
             auth: AuthSessions::from_env().with_pool(pool.clone()),
             erasure: AuthErasure::from_env(),
             pool,

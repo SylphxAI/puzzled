@@ -129,11 +129,6 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 	},
 	// Security / infra
 	{
-		name: 'EMAIL_UNSUBSCRIBE_SECRET',
-		required: false,
-		description: 'HMAC secret for email unsubscribe tokens',
-	},
-	{
 		name: 'DATABASE_URL',
 		required: false,
 		description: 'Postgres connection string for product reads (audit logs)',
@@ -270,10 +265,6 @@ export const env = {
 	/** Models product key */
 	get AI_API_KEY(): string | undefined {
 		return process.env.AI_API_KEY
-	},
-	/** HMAC key for email unsubscribe tokens; dedicated, shared with no other signer */
-	get EMAIL_UNSUBSCRIBE_SECRET(): string | undefined {
-		return process.env.EMAIL_UNSUBSCRIBE_SECRET
 	},
 	/** AdSense publisher id; ads are off while unset */
 	get ADS_ADSENSE_CLIENT_ID(): string | undefined {
