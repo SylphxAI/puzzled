@@ -1,6 +1,6 @@
 //! The play gate through the router with Sylphx Money as the only source of
 //! access: a paid user plays a Plus-only game and the archive, an unpaid user
-//! is refused with `plus_required`, and Money being unreachable refuses too.
+//! is refused with `plus_required`, and Money being unreachable locks nothing.
 //! Needs `PUZZLED_TEST_DATABASE_URL` (CI sets it).
 
 use std::sync::{Arc, Mutex};
@@ -151,13 +151,13 @@ async fn money_alone_decides_who_plays_paid_games_and_the_archive() {
     assert_eq!(status, StatusCode::FORBIDDEN, "{body}");
     assert!(refused(&body, "plus_required_archive"), "{body}");
 
-    // Money unreachable: paid play is refused (fail closed), the free daily
-    // puzzle never reads billing and still plays.
+    // Money unreachable: it cannot vouch for anyone, so nothing free today is
+    // locked (Money's outage never takes content away); the free daily puzzle
+    // never reads billing and still plays.
     fake.lock().unwrap().down = true;
     let outage_token = token(OUTAGE);
     let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &outage_token).await;
-    assert_eq!(status, StatusCode::FORBIDDEN, "{body}");
-    assert!(refused(&body, "plus_required"), "{body}");
+    assert_eq!(status, StatusCode::OK, "{body}");
     let (status, _) = get_daily(&app, json!({"gameSlug": free_game()}), &outage_token).await;
     assert_eq!(status, StatusCode::OK);
 }
