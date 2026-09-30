@@ -21,13 +21,19 @@ the handler declared in `sylphx.toml` (`[privacy] erasure_handler`), which is
    signed: `401`. A `project_id` that is not `SYLPHX_AUTH_ORGANIZATION_ID` (or
    an `env_id` other than `SYLPHX_AUTH_ENVIRONMENT_ID`, when set): `403`. Both
    touch nothing.
-2. **Resolve.** `user_id` maps to players through `auth_subjects`, in every
+2. **Cancel money first.** A renewing subscription of the player is cancelled
+   through the same billing code as the player's own cancel (refund inside the
+   refund window, otherwise stop at period end). If that fails, or billing is
+   not configured, nothing is erased and the delivery answers `502`, so Auth
+   re-announces and no charge is left running. The evidence lists it as kept
+   `subscription cancelled at erasure`.
+3. **Resolve.** `user_id` maps to players through `auth_subjects`, in every
    subject form, plus the player an old-form `principal-<uuid>` names.
-3. **Erase once.** Erasure and the `erasure_requests` row (keyed by
+4. **Erase once.** Erasure and the `erasure_requests` row (keyed by
    `request_id`) commit in one transaction. A redelivery, which Auth sends
    every 24 hours until evidence arrives, erases nothing and answers the stored
    evidence.
-4. **Report.** `POST /v1/privacy-requests/{request_id}/evidence` with the
+5. **Report.** `POST /v1/privacy-requests/{request_id}/evidence` with the
    environment secret key (scope `auth:privacy:evidence`): `handler`,
    `stores` (per table `deleted`, `anonymised`, `kept` with a reason and
    count) and `completed_at`. Failure is retried three times, then the
@@ -36,8 +42,8 @@ the handler declared in `sylphx.toml` (`[privacy] erasure_handler`), which is
 
 Kept: `billing_ledger` and `billing_subscriptions` rows stay for UK tax
 records (six years) with the player id cleared; they are reported as
-`anonymised` and `kept`. Unlike a player's own delete, this path does not wait
-for a subscription to be cancelled and does not file a second Auth request.
+`anonymised` and `kept`. Unlike a player's own delete, this path cancels a renewing subscription
+instead of refusing, and does not file a second Auth request.
 
 **Status.** The handler is built and tested against a fake delivery and a fake
 evidence endpoint. Wire-up waits on cloud#11120 (live 2026-10-12). Still to be

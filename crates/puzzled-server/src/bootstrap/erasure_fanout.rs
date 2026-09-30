@@ -49,7 +49,7 @@ pub(crate) async fn erasure_fanout_with(
             return refuse(StatusCode::SERVICE_UNAVAILABLE, "erasure_unavailable")
         }
     };
-    match handle(pool, transport, &request, retry_delays).await {
+    match handle(pool, transport, state.stripe.as_ref(), &request, retry_delays).await {
         Ok(handled) => (
             StatusCode::OK,
             Json(json!({

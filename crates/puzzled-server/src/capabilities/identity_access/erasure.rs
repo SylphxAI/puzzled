@@ -25,6 +25,8 @@ use super::adapters::auth_subjects::players_for_subject;
 use super::adapters::erasure_delivery::{
     DeletionRequested, ErasureTransport, Evidence, Kept, Store,
 };
+use crate::capabilities::billing::adapters::stripe::Stripe;
+use crate::capabilities::billing::service as billing;
 use crate::capabilities::preferences::adapters::account_deletion::{
     erase_in_transaction, ErasureReport,
 };
@@ -50,19 +52,27 @@ fn evidence_from(report: &ErasureReport) -> Evidence {
         .rows
         .iter()
         .map(|(store, rows)| match report.kept.get(store) {
-            Some(reason) => Store {
-                store: store.clone(),
-                deleted: 0,
-                anonymised: *rows,
-                kept: if *rows > 0 {
-                    vec![Kept {
+            Some(reason) => {
+                let mut kept = Vec::new();
+                if *rows > 0 {
+                    kept.push(Kept {
                         reason: reason.clone(),
                         count: *rows,
-                    }]
-                } else {
-                    Vec::new()
-                },
-            },
+                    });
+                }
+                if store == "billing_subscriptions" && report.cancelled_subscriptions > 0 {
+                    kept.push(Kept {
+                        reason: "subscription cancelled at erasure".to_string(),
+                        count: report.cancelled_subscriptions,
+                    });
+                }
+                Store {
+                    store: store.clone(),
+                    deleted: 0,
+                    anonymised: *rows,
+                    kept,
+                }
+            }
             None => Store {
                 store: store.clone(),
                 deleted: *rows,
@@ -74,17 +84,55 @@ fn evidence_from(report: &ErasureReport) -> Evidence {
     Evidence::new(stores, chrono::Utc::now())
 }
 
+/// Cancel every renewing own subscription of `players` through the billing
+/// code the player's own cancel uses, so erasing never leaves a charge
+/// running. Returns how many were cancelled; any failure (Stripe unreachable
+/// or not configured) aborts before anything is erased.
+async fn cancel_renewing_subscriptions(
+    pool: &PgPool,
+    stripe: Option<&Stripe>,
+    players: &[uuid::Uuid],
+) -> Result<u64, String> {
+    let mut cancelled = 0;
+    for player in players {
+        let user = player.to_string();
+        let entitlement = billing::entitlement(pool, stripe, &user).await?;
+        if entitlement.own.is_some_and(|own| !own.cancel_at_period_end) {
+            let stripe = stripe.ok_or("subscription renews but billing is not configured")?;
+            billing::cancel(pool, stripe, &user)
+                .await?
+                .ok_or("subscription vanished during cancel")?;
+            cancelled += 1;
+        }
+    }
+    Ok(cancelled)
+}
+
 /// Erase (once) and report. `Err` means the delivery must not be
 /// acknowledged, so the fan-out retries it.
 pub async fn handle(
     pool: &PgPool,
     transport: &ErasureTransport,
+    stripe: Option<&Stripe>,
     request: &DeletionRequested,
     retry_delays: &[Duration],
 ) -> Result<Handled, String> {
     let players = players_for_subject(pool, &request.user_id)
         .await
         .map_err(|error| format!("subject lookup failed: {error}"))?;
+    // Money first, and only for a request not handled yet: a charge must not
+    // outlive the erasure. A failure answers 502 with nothing erased.
+    let handled: bool =
+        sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM erasure_requests WHERE request_id = $1)")
+            .bind(&request.request_id)
+            .fetch_one(pool)
+            .await
+            .map_err(|error| format!("erasure request read failed: {error}"))?;
+    let cancelled = if handled {
+        0
+    } else {
+        cancel_renewing_subscriptions(pool, stripe, &players).await?
+    };
     let mut tx = pool
         .begin()
         .await
@@ -102,7 +150,10 @@ pub async fn handle(
     .rows_affected()
         == 1;
     let (evidence, replay) = if first {
-        let mut report = ErasureReport::default();
+        let mut report = ErasureReport {
+            cancelled_subscriptions: cancelled,
+            ..ErasureReport::default()
+        };
         for player in players {
             report.merge(erase_in_transaction(&mut tx, player).await?);
         }
@@ -131,7 +182,14 @@ pub async fn handle(
             true,
         )
     };
-    report_evidence(pool, transport, &request.request_id, &evidence, retry_delays).await?;
+    report_evidence(
+        pool,
+        transport,
+        &request.request_id,
+        &evidence,
+        retry_delays,
+    )
+    .await?;
     Ok(Handled { evidence, replay })
 }
 
@@ -143,13 +201,12 @@ async fn report_evidence(
     evidence: &Evidence,
     retry_delays: &[Duration],
 ) -> Result<(), String> {
-    let posted: Option<chrono::NaiveDateTime> = sqlx::query_scalar(
-        "SELECT evidence_posted_at FROM erasure_requests WHERE request_id = $1",
-    )
-    .bind(request_id)
-    .fetch_one(pool)
-    .await
-    .map_err(|error| format!("erasure evidence state read failed: {error}"))?;
+    let posted: Option<chrono::NaiveDateTime> =
+        sqlx::query_scalar("SELECT evidence_posted_at FROM erasure_requests WHERE request_id = $1")
+            .bind(request_id)
+            .fetch_one(pool)
+            .await
+            .map_err(|error| format!("erasure evidence state read failed: {error}"))?;
     if posted.is_some() {
         return Ok(());
     }

@@ -151,6 +151,9 @@ pub const KEPT_TABLES: &[(&str, &str)] = &[
 pub struct ErasureReport {
     pub rows: BTreeMap<String, u64>,
     pub kept: BTreeMap<String, String>,
+    /// Renewing subscriptions cancelled just before this erasure (set by the
+    /// platform fan-out, which cancels for the player instead of refusing).
+    pub cancelled_subscriptions: u64,
 }
 
 impl ErasureReport {
@@ -165,6 +168,7 @@ impl ErasureReport {
             *self.rows.entry(table).or_default() += n;
         }
         self.kept.extend(other.kept);
+        self.cancelled_subscriptions += other.cancelled_subscriptions;
     }
 }
 

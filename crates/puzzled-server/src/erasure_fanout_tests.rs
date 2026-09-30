@@ -13,7 +13,9 @@ use sqlx::PgPool;
 use tower::ServiceExt;
 use uuid::Uuid;
 
-use crate::billing_flow_tests::fresh_database;
+use crate::billing_flow_tests::{complete_checkout, fresh_database, spawn_fake, Fake};
+use crate::capabilities::billing::adapters::stripe::Stripe;
+use crate::capabilities::billing::service as billing;
 use crate::capabilities::identity_access::adapters::erasure_delivery::{
     sign_delivery, ErasureTransport,
 };
@@ -176,15 +178,19 @@ async fn a_verified_delivery_erases_the_player_and_posts_evidence() {
     assert_eq!(status, StatusCode::OK, "{body}");
     assert_eq!(body["replay"], false);
 
-    assert_eq!(count(&pool, "notification_preferences", "user_id", player).await, 0);
+    assert_eq!(
+        count(&pool, "notification_preferences", "user_id", player).await,
+        0
+    );
     assert_eq!(count(&pool, "auth_subjects", "user_id", player).await, 0);
     // The money row stays, with the player id cleared.
     assert_eq!(count(&pool, "billing_ledger", "user_id", player).await, 0);
-    let kept: i64 = sqlx::query_scalar(r#"SELECT count(*) FROM "billing_ledger" WHERE "source_id" = $1"#)
-        .bind(format!("src_{player}"))
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+    let kept: i64 =
+        sqlx::query_scalar(r#"SELECT count(*) FROM "billing_ledger" WHERE "source_id" = $1"#)
+            .bind(format!("src_{player}"))
+            .fetch_one(&pool)
+            .await
+            .unwrap();
     assert_eq!(kept, 1);
 
     let seen = fake.seen.lock().unwrap();
@@ -200,7 +206,10 @@ async fn a_verified_delivery_erases_the_player_and_posts_evidence() {
     assert_eq!(ledger["deleted"], 0);
     assert_eq!(ledger["anonymised"], 1);
     assert_eq!(ledger["kept"][0]["count"], 1);
-    assert!(ledger["kept"][0]["reason"].as_str().unwrap().contains("tax"));
+    assert!(ledger["kept"][0]["reason"]
+        .as_str()
+        .unwrap()
+        .contains("tax"));
 }
 
 #[tokio::test]
@@ -227,7 +236,10 @@ async fn a_replay_is_a_no_op_that_answers_the_same_evidence() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(second["replay"], true);
     assert_eq!(first["evidence"], second["evidence"]);
-    assert_eq!(count(&pool, "notification_preferences", "user_id", again).await, 1);
+    assert_eq!(
+        count(&pool, "notification_preferences", "user_id", again).await,
+        1
+    );
     // Auth had the evidence after the first delivery: no second post.
     assert_eq!(fake.seen.lock().unwrap().len(), 1);
 }
@@ -254,7 +266,10 @@ async fn evidence_that_fails_is_retried_and_a_redelivery_reposts_it() {
     .await;
     assert_eq!(response, StatusCode::BAD_GATEWAY);
     assert_eq!(fake.seen.lock().unwrap().len(), 3);
-    assert_eq!(count(&pool, "notification_preferences", "user_id", player).await, 0);
+    assert_eq!(
+        count(&pool, "notification_preferences", "user_id", player).await,
+        0
+    );
 
     // Auth re-announces; the endpoint recovers; the stored evidence is posted.
     *fake.fail.lock().unwrap() = 0;
@@ -264,7 +279,10 @@ async fn evidence_that_fails_is_retried_and_a_redelivery_reposts_it() {
     let seen = fake.seen.lock().unwrap();
     assert_eq!(seen.len(), 4);
     assert_eq!(seen[3]["body"]["stores"], seen[0]["body"]["stores"]);
-    assert_eq!(seen[3]["body"]["completed_at"], seen[0]["body"]["completed_at"]);
+    assert_eq!(
+        seen[3]["body"]["completed_at"],
+        seen[0]["body"]["completed_at"]
+    );
 }
 
 #[tokio::test]
@@ -305,17 +323,16 @@ async fn unverified_and_foreign_deliveries_touch_nothing() {
     // Correctly signed, but for another project.
     let (status, _) = deliver(
         &app,
-        event(
-            user,
-            "pr_5",
-            "proj_01kmp4wyhhfgxsyrjvh8e0tkkg",
-        ),
+        event(user, "pr_5", "proj_01kmp4wyhhfgxsyrjvh8e0tkkg"),
         WEBHOOK_SECRET,
     )
     .await;
     assert_eq!(status, StatusCode::FORBIDDEN);
 
-    assert_eq!(count(&pool, "notification_preferences", "user_id", player).await, 1);
+    assert_eq!(
+        count(&pool, "notification_preferences", "user_id", player).await,
+        1
+    );
     let recorded: i64 = sqlx::query_scalar(r#"SELECT count(*) FROM "erasure_requests""#)
         .fetch_one(&pool)
         .await
@@ -370,5 +387,128 @@ async fn an_old_form_id_with_no_subject_row_reaches_its_player() {
     )
     .await;
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(count(&pool, "notification_preferences", "user_id", player).await, 0);
+    assert_eq!(
+        count(&pool, "notification_preferences", "user_id", player).await,
+        0
+    );
+}
+
+fn stripe_at(base: String) -> Stripe {
+    Stripe::new(
+        "sk_test_flow".into(),
+        "whsec_test_flow".into(),
+        base,
+        "https://puzzled.test".into(),
+    )
+}
+
+/// A player with a renewing subscription, synced into the database.
+async fn subscribe(pool: &PgPool, fake: &Fake, stripe: &Stripe, player: Uuid) -> String {
+    let sub = complete_checkout(
+        fake,
+        "cus_1",
+        &player.to_string(),
+        "puzzled_individual_monthly",
+        499,
+    );
+    billing::sync_subscription(pool, stripe, &sub)
+        .await
+        .unwrap();
+    sub
+}
+
+async fn subscription_owner(pool: &PgPool, sub: &str) -> Option<Uuid> {
+    sqlx::query_scalar(
+        r#"SELECT "user_id" FROM "billing_subscriptions" WHERE "stripe_subscription_id" = $1"#,
+    )
+    .bind(sub)
+    .fetch_one(pool)
+    .await
+    .unwrap()
+}
+
+#[tokio::test]
+async fn a_renewing_subscription_is_cancelled_before_the_erasure() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let auth = FakeAuth::default();
+    let auth_base = spawn_auth(auth.clone()).await;
+    let fake: Fake = Arc::default();
+    let stripe = stripe_at(spawn_fake(fake.clone()).await);
+    let player = Uuid::now_v7();
+    let user = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, user).await;
+    let sub = subscribe(&pool, &fake, &stripe, player).await;
+    let app = router(state(&pool, &auth_base).with_stripe(Some(stripe)));
+
+    let (status, body) = deliver(&app, event(user, "pr_8", PROJECT_ID), WEBHOOK_SECRET).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+
+    // Inside the refund window: refunded, ended at Stripe, and no charge left.
+    assert_eq!(fake.lock().unwrap().refunds.len(), 1);
+    assert_eq!(
+        fake.lock().unwrap().subscriptions[&sub]["status"],
+        "canceled"
+    );
+    // The row stays for tax, unlinked from the player.
+    assert_eq!(subscription_owner(&pool, &sub).await, None);
+    assert_eq!(
+        count(&pool, "notification_preferences", "user_id", player).await,
+        0
+    );
+    let seen = auth.seen.lock().unwrap();
+    let subs = store(&seen[0]["body"], "billing_subscriptions");
+    let reasons: Vec<&str> = subs["kept"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|k| k["reason"].as_str().unwrap())
+        .collect();
+    assert!(
+        reasons.contains(&"subscription cancelled at erasure"),
+        "{subs}"
+    );
+    let cancelled = subs["kept"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|k| k["reason"] == "subscription cancelled at erasure")
+        .unwrap();
+    assert_eq!(cancelled["count"], 1);
+}
+
+#[tokio::test]
+async fn a_failed_cancel_erases_nothing_and_answers_502() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let auth = FakeAuth::default();
+    let auth_base = spawn_auth(auth.clone()).await;
+    let fake: Fake = Arc::default();
+    let stripe = stripe_at(spawn_fake(fake.clone()).await);
+    let player = Uuid::now_v7();
+    let user = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, user).await;
+    let sub = subscribe(&pool, &fake, &stripe, player).await;
+
+    // Stripe becomes unreachable (nothing listens on port 1), and the other
+    // failing case: billing not configured at all.
+    for unreachable in [Some(stripe_at("http://127.0.0.1:1".into())), None] {
+        let app = router(state(&pool, &auth_base).with_stripe(unreachable));
+        let (status, _) = deliver(&app, event(user, "pr_9", PROJECT_ID), WEBHOOK_SECRET).await;
+        assert_eq!(status, StatusCode::BAD_GATEWAY);
+        assert_eq!(
+            count(&pool, "notification_preferences", "user_id", player).await,
+            1
+        );
+        assert_eq!(subscription_owner(&pool, &sub).await, Some(player));
+        assert_eq!(fake.lock().unwrap().subscriptions[&sub]["status"], "active");
+    }
+    let recorded: i64 = sqlx::query_scalar(r#"SELECT count(*) FROM "erasure_requests""#)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(recorded, 0);
+    assert!(auth.seen.lock().unwrap().is_empty());
 }
