@@ -628,22 +628,34 @@ export const webhookEvents = pgTable(
 )
 
 // ==========================================
-// RETIRED BILLING TABLES (Puzzled Plus moved to Sylphx Money)
+// FORMER PUZZLED PLUS BILLING (Sylphx Money now holds subscriptions, access
+// and the ledger)
 // ==========================================
-// Renamed by migration 20261001020000_retire_billing_tables and kept, empty and
-// unused by any code, until they are dropped after 2026-10-29 (PITR must cover
-// the pre-rename point). Not written or read anywhere.
+// Kept until the contract migration after Money live proof: that migration
+// (after 2026-10-02, once Money is read back live on Puzzled and the rows are
+// archived) retires these tables. Until then they are defined here only so
+// schema/migration parity holds, under their original table, index and
+// constraint names. No app or server code reads or writes them; a test
+// (account_deletion.rs, retiring_billing_tables_have_no_runtime_reader) fails
+// if any does.
 
-export const billingCustomersRetired = pgTable('billing_customers__retired_20260929', {
+/** One Stripe customer per account (former; see the section note). */
+export const billingCustomers = pgTable('billing_customers', {
+	/** Platform user ID (no FK) */
 	userId: uuid('user_id').primaryKey(),
 	stripeCustomerId: text('stripe_customer_id').notNull().unique(),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
-export const billingSubscriptionsRetired = pgTable(
-	'billing_subscriptions__retired_20260929',
+/**
+ * The last state read back from Stripe for each subscription. Entitlement is
+ * derived from these rows; a webhook is only a hint to read Stripe again.
+ */
+export const billingSubscriptions = pgTable(
+	'billing_subscriptions',
 	{
 		stripeSubscriptionId: text('stripe_subscription_id').primaryKey(),
+		/** Platform user ID (no FK); null once the account is erased */
 		userId: uuid('user_id'),
 		stripeCustomerId: text('stripe_customer_id').notNull(),
 		planId: text('plan_id').notNull(),
@@ -652,17 +664,24 @@ export const billingSubscriptionsRetired = pgTable(
 		cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
 		startedAt: timestamp('started_at').notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
+		/** First-touch campaign tags copied from Stripe metadata at checkout */
 		attribution: jsonb('attribution'),
 	},
-	(table) => [index('billing_subscriptions__retired_20260929_user_id_idx').on(table.userId)],
+	(table) => [index('billing_subscriptions_user_id_idx').on(table.userId)],
 )
 
-export const billingLedgerRetired = pgTable(
-	'billing_ledger__retired_20260929',
+/**
+ * Append-only money ledger: one row per Stripe payment (invoice) or refund.
+ * Amounts are signed integer minor units; a refund is a new negative row.
+ */
+export const billingLedger = pgTable(
+	'billing_ledger',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
+		/** Stripe invoice id (payment) or refund id (refund) */
 		sourceId: text('source_id').notNull().unique(),
 		kind: text('kind').notNull(),
+		/** Platform user ID (no FK); null once the account is erased */
 		userId: uuid('user_id'),
 		stripeCustomerId: text('stripe_customer_id').notNull(),
 		stripeSubscriptionId: text('stripe_subscription_id'),
@@ -671,10 +690,8 @@ export const billingLedgerRetired = pgTable(
 		occurredAt: timestamp('occurred_at').notNull(),
 		recordedAt: timestamp('recorded_at').defaultNow().notNull(),
 	},
-	(table) => [index('billing_ledger__retired_20260929_user_id_idx').on(table.userId)],
+	(table) => [index('billing_ledger_user_id_idx').on(table.userId)],
 )
-
-/**
 
 /**
  * The Sylphx Auth subject that signs a player in, kept as the exact text Auth
