@@ -229,10 +229,10 @@ mod tests {
     }
 
     /// Puzzled's former billing tables. Sylphx Money holds subscriptions and
-    /// the ledger now; these tables are kept, unread and unwritten, until the
-    /// contract migration after Money live proof retires them (its guard
-    /// refuses to run over any row). No code touches them, so erasure has
-    /// nothing to erase there: `retiring_billing_tables_have_no_runtime_reader`
+    /// the ledger now; the contract migration renames them to
+    /// `..._retired_...` (its guard refuses to run over any row), which the
+    /// migration parse above already drops. No code touches them, so erasure
+    /// has nothing to erase there: `retiring_billing_tables_have_no_runtime_reader`
     /// holds that.
     const RETIRING_TABLES: [&str; 3] = [
         "billing_customers",
@@ -266,9 +266,9 @@ mod tests {
         );
     }
 
-    /// No runtime code path (server, core, or web app) names a retiring
-    /// billing table: they stay only for schema/migration parity until the
-    /// contract migration. Tests and the Drizzle schema are the exceptions.
+    /// No runtime code path (server, core, or web app) names a retiring or
+    /// retired billing table: they stay only for schema/migration parity.
+    /// Tests and the Drizzle schema are the exceptions.
     #[test]
     fn retiring_billing_tables_have_no_runtime_reader() {
         fn walk(dir: &Path, out: &mut Vec<std::path::PathBuf>) {
