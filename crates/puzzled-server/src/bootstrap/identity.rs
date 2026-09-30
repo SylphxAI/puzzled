@@ -163,7 +163,7 @@ pub fn require_purchase_allowed(identity: &VerifiedIdentity) -> Result<(), Conne
     if identity.is_delegated() {
         return Err(ConnectError::new(
             ErrorCode::PermissionDenied,
-            "purchases_not_available_for_delegated_agents",
+            "purchases by delegated agents are not available yet",
         ));
     }
     Ok(())
@@ -253,7 +253,7 @@ mod tests {
         assert_eq!(denied.code, ErrorCode::PermissionDenied);
         assert_eq!(
             denied.message.as_deref(),
-            Some("purchases_not_available_for_delegated_agents")
+            Some("purchases by delegated agents are not available yet")
         );
     }
 
