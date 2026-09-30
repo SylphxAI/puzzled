@@ -106,6 +106,7 @@ import zhTWFooter from '@/messages/zh-TW/footer.json'
 import zhTWHome from '@/messages/zh-TW/home.json'
 import zhTWLeaderboard from '@/messages/zh-TW/leaderboard.json'
 import zhTWNav from '@/messages/zh-TW/nav.json'
+import zhTWOnboarding from '@/messages/zh-TW/onboarding.json'
 import zhTWSettings from '@/messages/zh-TW/settings.json'
 import zhTWShare from '@/messages/zh-TW/share.json'
 import zhTWStats from '@/messages/zh-TW/stats.json'
@@ -218,6 +219,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		support: zhHKSupport,
 	},
 	'zh-TW': {
+		onboarding: zhTWOnboarding,
 		common: zhTWCommon,
 		auth: zhTWAuth,
 		nav: zhTWNav,

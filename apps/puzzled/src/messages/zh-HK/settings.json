@@ -732,12 +732,12 @@
 			"heading": "推送通知",
 			"inlineEnabled": "推送通知已開啟",
 			"inlineDisabled": "開啟通知以接收每日提醒",
-			"enable": "開啟",
+			"enable": "每日提醒我",
 			"disable": "關閉",
 			"description": "接收謎題、連勝等通知",
 			"typesHeading": "通知類型",
 			"loading": "正在載入偏好設定…",
-			"dailyReminder": "每日謎題提醒",
+			"dailyReminder": "每日提醒我",
 			"dailyReminderDescription": "新每日謎題推出時提醒你",
 			"streakAlert": "連勝警示",
 			"streakAlertDescription": "連勝即將中斷前提醒你",
@@ -746,7 +746,9 @@
 			"saving": "儲存中…",
 			"save": "儲存偏好設定",
 			"enablePrompt": "開啟推送通知以自訂你的偏好設定",
-			"enableNotifications": "開啟通知"
+			"enableNotifications": "每日提醒我",
+			"reminderTime": "提醒時間（你嘅本地時間）",
+			"unavailable": "暫時未能設定每日提醒，請再試。"
 		}
 	},
 	"pushNotifications": "推播通知",

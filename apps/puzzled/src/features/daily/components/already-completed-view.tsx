@@ -11,10 +11,12 @@ import { buildResultCard, resultCardStringsFrom } from '@/features/daily/lib/res
 import { getHowToPlayConfig } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
+import { productDayKey } from '@/lib/product-day'
 import { cn, getBaseUrl } from '@/lib/utils'
 import { ChallengeComparison } from './challenge-comparison'
 import { DifficultyBadge } from './difficulty-selector'
 import { NextPuzzleCountdown } from './next-puzzle-countdown'
+import { SaveStreakPrompt } from './save-streak-prompt'
 import { TomorrowGameLine } from './tomorrow-game-line'
 
 /**
@@ -114,6 +116,7 @@ export function AlreadyCompletedView({
 
 	return (
 		<div className={cn('flex w-full max-w-md flex-col items-center gap-5', className)}>
+			<SaveStreakPrompt daily={puzzleDate === productDayKey()} />
 			{/* Victory/Result Header */}
 			<div
 				className={cn('flex flex-col items-center text-center', animate && 'animate-slide-up-fade')}

@@ -23,10 +23,13 @@ Cite the ID column.
 | PUZ-AUTH-RECOVERY | Password reset by email; recovery by code that ends other sessions and notifies every channel is not built | partial | `apps/puzzled/src/app/api/identity/recovery` | Sylphx Auth recovery by code |
 | PUZ-AUTH-SESSIONS | Sign-out ends the server session; the sessions list shows a count only, with no end-one or end-all | partial | `apps/puzzled/src/app/[locale]/(main)/settings/security` | Sylphx Auth sessions API |
 | PUZ-AUTH-DELETE | In-app account deletion with confirmation; no public web deletion link or recent-sign-in step-up | partial | `apps/puzzled/src/app/[locale]/(main)/settings/account` | Sylphx Auth step-up |
-| PUZ-AUTH-GUEST | Guest is a browser-local `guest_day_id`; binding carries stats but the guest is not an Auth account, so the user id is not kept | partial | `apps/puzzled/src/features/daily` | Sylphx Auth guest accounts |
+| PUZ-AUTH-GUEST | A guest with at least two streak days is offered a free account after a daily finish. Sign-in (including OAuth) invokes the existing idempotent guest-session adoption, carrying accepted results, streak days, shares and freezes onto the account. The guest itself remains browser-local, not an Auth account | partial | `apps/puzzled/src/features/daily/components/save-streak-prompt.tsx`, `crates/puzzled-server/src/capabilities/puzzle_play/adapters/game_sessions_db.rs` | Sylphx Auth; browser cookie retained until claim |
 | PUZ-AUTH-AGENT | CLI or agent device authorization | planned | none | Sylphx Auth device authorization |
 | PUZ-ORIGIN | Original content: daily puzzles are original or public domain, never another publisher's daily; entertainment games are play, not advice | supported | `crates/puzzled-core/src/capabilities/puzzle_play/generate` | PUZ-MODULE |
 | PUZ-MARKS | No third-party marks as slugs or player titles ([catalog.md](catalog.md#names)); `crowns` and `duo` are canonical, `queens` and `tango` only redirect | supported | `crates/puzzled-core/src/capabilities/puzzle_play/domain/game_slugs.rs` | none |
+
+| PUZ-PWA | Existing manifest and install prompt plus root-scoped service worker; no puzzle, credential or account caching | partial | `apps/puzzled/public/manifest.webmanifest`, `apps/puzzled/public/sw.js` | browser install support; production install verification pending |
+| PUZ-PUSH-DAILY | Opt-in daily browser reminder at the player's saved local time and zone. Subscriptions are player-scoped in the existing table; unsubscribe/account erasure remove them, expired endpoints are pruned. The existing Compute reminder job sends encrypted RFC 8291/8292 Web Push directly with VAPID, in all five locales | partial | `crates/puzzled-server/src/capabilities/preferences/adapters/web_push.rs`, `apps/puzzled/src/features/push` | api `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`; browser delivery verification pending |
 
 ## Boundaries
 

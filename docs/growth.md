@@ -69,7 +69,7 @@ should move.
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Earned streak freezes (streak freeze) | Keep a streak alive through a missed day without guilt; free players earn one per 7 played days | Stats streak card, streak calculation | D7 retention | M | none; today the streak calculation ignores freezes |
 | 2 | Save-your-streak account ask (try before signup, saved progress) | Guests keep streak and stats across devices | Result screen, raised as the streak grows; never before the first finish | Guest to account rate, D7 retention | S | none |
-| 3 | Daily reminder at each player's own time and time zone (personalised notification timing) | Gentle return without guilt | The player's saved reminder time is stored but does not schedule the send today: the daily-reminder job sends on its own schedule. Email (opt-in) at the player's time in their zone; PWA push later | D7 retention | S | none for Puzzled's own email; cloud#9826 for caps across our products |
+| 3 | Daily reminder at each player's own time and time zone (personalised notification timing) | Gentle return without guilt | The player's saved reminder time is stored but does not schedule the send today: the daily-reminder job sends on its own schedule. Email (opt-in) at the player's time in their zone; browser Web Push through the existing reminder job (VAPID configuration required) | D7 retention | S | none for Puzzled's own email; cloud#9826 for caps across our products |
 | 4 | Streak on the shared card (share cards) | Show the sharer's run on the card and landing, so a friend has something to beat | Share landing, share image, challenge comparison | Landing rate, conversion | S | none |
 | 5 | How-to-play structured data on game pages (programmatic pages) | Rank for "how to play X" from the rules the pages already show | Per-game page markup | Search landings | S | none |
 | 6 | Friends' results for today (friends leaderboard) | Compare with people you know, no public shame board | Result screen, opt-in | Share and return rates | M | cloud#9830 |
@@ -78,8 +78,9 @@ should move.
 
 Design notes for the open items:
 
-- **Save-your-streak ask:** the server decides from streak length and recovery methods; the client
-  renders a quiet mark, then a card at the result screen, capped per week (`gamification`, `identity`).
+- **Save-your-streak ask:** after a guest finishes a daily with at least two streak days, the client
+  reads the authoritative streak and offers a free account. Sign-in adopts accepted
+  guest sessions through the existing claim path (`gamification`, `identity`).
 - **Reminder time:** invitation copy only, one-tap unsubscribe (`jobs_policy`, `jobs_db`); using the
   player's own setting rather than inferring a median finish hour is enough to start.
 - **Not building yet:** a per-game "today's hint" generator that cannot be proven to leak nothing, and

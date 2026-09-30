@@ -13,10 +13,7 @@ use connectrpc::{
 use super::state::AppState;
 use crate::capabilities::jobs::adapters::jobs_db;
 use crate::proto::puzzled::v1::{JobsService, RunRetentionJobRequest, RunRetentionJobResponse};
-use crate::shared::dest_http::{
-    dest_email_connector_id, dest_email_delivery, dest_events_deliver, dest_push_connector_id,
-    dest_push_delivery,
-};
+use crate::shared::dest_http::{dest_email_connector_id, dest_email_delivery, dest_events_deliver};
 use crate::shared::tick_receipt::TickError;
 use puzzled_core::puzzle_play::daily_time::product_day_key;
 
@@ -28,7 +25,6 @@ pub async fn send_due_daily_reminders(
     pool: &sqlx::PgPool,
     now: chrono::DateTime<Utc>,
 ) -> Result<u32, Vec<String>> {
-    let connector_id = dest_push_connector_id().map_err(|e| vec![e])?;
     let product_day = product_day_key(now).format("%Y-%m-%d").to_string();
     let due = jobs_db::claim_due_daily_reminders(pool, now, &product_day)
         .await
@@ -36,14 +32,8 @@ pub async fn send_due_daily_reminders(
     let mut errors = Vec::new();
     let mut processed = 0u32;
     for (user_id, _time) in due {
-        let delivery = dest_push_delivery(
-            &connector_id,
-            &user_id,
-            "Your daily puzzle is ready",
-            "Today's puzzle is waiting. It only takes a few minutes.",
-            "/",
-        );
-        match dest_events_deliver(delivery).await {
+        match crate::capabilities::preferences::adapters::web_push::send_daily(pool, &user_id).await
+        {
             Ok(()) => processed += 1,
             Err(e) => {
                 errors.push(format!("{user_id}: {e}"));

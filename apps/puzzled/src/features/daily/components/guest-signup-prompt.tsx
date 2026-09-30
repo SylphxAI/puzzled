@@ -10,8 +10,8 @@ import {
 	DialogTitle,
 } from '@sylphx/ui'
 import { Sparkles } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useRouter } from '@/lib/i18n/routing'
 
 type GuestSignupPromptProps = {
 	open: boolean
@@ -20,7 +20,7 @@ type GuestSignupPromptProps = {
 }
 
 /**
- * Modal shown after guest completes their first puzzle
+ * Modal shown after a guest finishes a daily with a streak of at least two days
  * Encourages sign up to save progress and access features
  */
 export function GuestSignupPrompt({ open, onClose, streakCount = 1 }: GuestSignupPromptProps) {
@@ -37,13 +37,15 @@ export function GuestSignupPrompt({ open, onClose, streakCount = 1 }: GuestSignu
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
 						<Sparkles className="h-5 w-5 text-primary" />
-						<span>{t('niceWork')}</span>
+						<span>{t('saveStreak')}</span>
 					</DialogTitle>
 				</DialogHeader>
 				<DialogBody className="space-y-4">
 					{/* Main message */}
 					<div className="text-center">
-						<p className="text-sm text-muted-foreground">{t('signupPromptDesc')}</p>
+						<p className="text-sm text-muted-foreground">
+							{t('keepStreak', { days: streakCount })}
+						</p>
 					</div>
 
 					{/* Benefits list */}

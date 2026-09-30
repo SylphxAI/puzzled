@@ -159,7 +159,12 @@
 			"unsupported": "此瀏覽器不支援推播通知。",
 			"heading": "推播通知",
 			"inlineEnabled": "推播通知已開啟",
-			"enablePrompt": "開啟推播通知以自訂你的偏好設定"
+			"enablePrompt": "開啟推播通知以自訂你的偏好設定",
+			"dailyReminder": "每天提醒我",
+			"reminderTime": "提醒時間（你的當地時間）",
+			"unavailable": "暫時無法設定每日提醒，請再試一次。",
+			"enable": "每天提醒我",
+			"enableNotifications": "每天提醒我"
 		}
 	},
 	"pushNotificationsDescription": "管理你的推播通知偏好",

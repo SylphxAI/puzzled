@@ -37,6 +37,8 @@ mod result_shares_tests;
 #[cfg(test)]
 mod streak_freeze_tests;
 #[cfg(test)]
+mod retention_push_tests;
+#[cfg(test)]
 mod test_support;
 #[cfg(test)]
 mod tryit_conversions_tests;
