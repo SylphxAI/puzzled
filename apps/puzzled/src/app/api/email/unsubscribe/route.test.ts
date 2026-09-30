@@ -66,6 +66,19 @@ describe('unsubscribe forwarding', () => {
 		expect(forwarded[0]?.body).toEqual({ token: 'email.link.token' })
 	})
 
+	test('RFC 8058 also accepts multipart one-click forms', async () => {
+		const body = new FormData()
+		body.set('List-Unsubscribe', 'One-Click')
+		const response = await POST(
+			new Request('https://puzzled.test/api/email/unsubscribe?token=multipart.link.token', {
+				method: 'POST',
+				body,
+			}),
+		)
+		expect(response.status).toBe(200)
+		expect(forwarded[0]?.body).toEqual({ token: 'multipart.link.token' })
+	})
+
 	test('Rust refusal becomes invalid-link response for JSON and browser links', async () => {
 		rpcStatus = 400
 		expect((await POST(jsonRequest('forged-or-expired'))).status).toBe(400)

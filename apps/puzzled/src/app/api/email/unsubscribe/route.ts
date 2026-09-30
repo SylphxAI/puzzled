@@ -21,8 +21,11 @@ export async function POST(request: Request) {
 	let token: unknown
 	try {
 		const contentType = request.headers.get('content-type') ?? ''
-		if (contentType.startsWith('application/x-www-form-urlencoded')) {
-			const form = new URLSearchParams(await request.text())
+		if (
+			contentType.startsWith('application/x-www-form-urlencoded') ||
+			contentType.startsWith('multipart/form-data')
+		) {
+			const form = await request.formData()
 			if (form.get('List-Unsubscribe') !== 'One-Click') {
 				return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 			}

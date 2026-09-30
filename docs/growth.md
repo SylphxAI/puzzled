@@ -64,7 +64,8 @@ Existing links keep the `userId.base36Milliseconds.first16HexHmacSha256` format,
 forged and expired links are refused. `/api/email/unsubscribe` is only a Connect
 forwarder: JSON POST carries `{token}`, browser GET redirects to the existing
 landing page, and RFC 8058 POST carries `List-Unsubscribe=One-Click` as
-`application/x-www-form-urlencoded` with the signed token in the URL. No login
+`application/x-www-form-urlencoded` or `multipart/form-data` with the signed
+token in the URL. No login
 or redirect is required for the one-click POST. Repeated valid links are safe.
 
 Tests: `route.test.ts` verifies forwarding and the no-web-database boundary;
