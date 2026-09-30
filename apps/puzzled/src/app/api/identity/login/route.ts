@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 			userAgent: userAgentOf(request),
 		})
 		await completeSignIn(config, request, ticket)
-		return NextResponse.json({ authority: 'sylphx-identity' })
+		return NextResponse.json({})
 	} catch (error) {
 		if (error instanceof AuthCallError && error.status === 429) {
 			return authFail(429, 'locked_out')

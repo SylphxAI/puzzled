@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 				new_password: newPassword,
 			},
 		})
-		return NextResponse.json({ authority: 'sylphx-identity', accepted: true })
+		return NextResponse.json({ accepted: true })
 	} catch {
 		return identityFail(401, 'identity_rejected')
 	}

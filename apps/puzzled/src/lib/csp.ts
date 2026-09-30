@@ -38,8 +38,9 @@ export function buildCsp(
 		"style-src 'self' 'unsafe-inline'",
 		"img-src 'self' data: blob: https:",
 		"font-src 'self' data:",
-		// Sylphx platform APIs (identity, events, data) and the Iconify icon APIs.
-		`connect-src 'self' https://sylphx.com https://*.sylphx.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com${adConnect}`,
+		// The browser talks only to this origin (identity, events and errors are
+		// same-origin routes) and to the Iconify icon APIs.
+		`connect-src 'self' https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com${adConnect}`,
 		`frame-src 'self'${adFrames}`,
 		"worker-src 'self'",
 		"object-src 'none'",

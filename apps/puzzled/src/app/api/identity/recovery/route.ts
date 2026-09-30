@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 				principal_hint: hint,
 			},
 		})
-		return NextResponse.json({ authority: 'sylphx-identity', accepted: true })
+		return NextResponse.json({ accepted: true })
 	} catch {
 		return identityFail(502, 'identity_recovery_failed')
 	}

@@ -8,9 +8,16 @@ import {
 	destIdentityUser,
 	type IdentityUser,
 } from './dest'
+import {
+	LEGACY_SESSION_COOKIE,
+	readSessionToken,
+	SESSION_COOKIE,
+	SESSION_COOKIE_NAMES,
+	sessionCookieOptions,
+} from './session-cookie'
 
 export const AUTH_API_ORIGIN = destIdentityOrigin()
-export const SESSION_COOKIE = 'sylphx_identity_session'
+export { SESSION_COOKIE }
 export type { IdentityUser }
 
 function identityOrigin(): string {
@@ -18,7 +25,7 @@ function identityOrigin(): string {
 }
 
 export async function sessionToken(): Promise<string | undefined> {
-	return (await cookies()).get(SESSION_COOKIE)?.value
+	return readSessionToken(await cookies())
 }
 
 /** The browser's User-Agent: Auth binds a session to it. */
@@ -52,17 +59,14 @@ export async function auth(): Promise<{
 
 export async function setSessionCookie(token: string): Promise<void> {
 	const jar = await cookies()
-	jar.set(SESSION_COOKIE, token, {
-		httpOnly: true,
-		sameSite: 'lax',
-		path: '/',
-		secure: env.NODE_ENV === 'production',
-	})
+	jar.set(SESSION_COOKIE, token, sessionCookieOptions(env.NODE_ENV === 'production'))
+	// A fresh sign-in replaces any old-named cookie (removed 2026-10-31).
+	jar.delete(LEGACY_SESSION_COOKIE)
 }
 
 export async function clearSessionCookie(): Promise<void> {
 	const jar = await cookies()
-	jar.delete(SESSION_COOKIE)
+	for (const name of SESSION_COOKIE_NAMES) jar.delete(name)
 }
 
 export async function revokeCurrentSessions(): Promise<void> {
