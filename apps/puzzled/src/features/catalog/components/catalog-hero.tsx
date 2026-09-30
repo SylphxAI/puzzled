@@ -84,7 +84,7 @@ export async function CatalogHero({ gameCount, visibleCount, query, category }: 
 					</form>
 				</search>
 
-				<fieldset className="no-scrollbar -mx-4 mt-3 flex items-center gap-2 overflow-x-auto border-0 px-4 py-1 md:mx-0 md:px-0">
+				<fieldset className="no-scrollbar min-w-0 -mx-4 mt-3 flex items-center gap-2 overflow-x-auto border-0 px-4 py-1 md:mx-0 md:px-0">
 					<legend className="sr-only">{t('filterLabel')}</legend>
 					{filterOptions.map((option) => (
 						<Link

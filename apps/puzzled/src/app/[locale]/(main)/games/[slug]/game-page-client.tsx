@@ -51,6 +51,7 @@ export function GamePageClient({
 				locale={locale}
 				onHelpClick={() => setShowHelpModal(true)}
 				difficulty={difficulty}
+				changeDifficultyHref={difficulty && mode === 'daily' ? `/games/${slug}#play` : undefined}
 			/>
 
 			{/* Game Content - centered vertically */}

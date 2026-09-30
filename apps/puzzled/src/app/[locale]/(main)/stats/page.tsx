@@ -106,7 +106,7 @@ export default async function StatsPage({ params }: Props) {
 	const streakRead = streakResult.status === 'fulfilled' ? streakResult.value : null
 	const statsKnown = statsRead !== null || !hasProgressIdentity
 	const historyKnown = historyRead !== null || !hasProgressIdentity
-	const streakKnown = streakRead !== null
+	const streakKnown = streakRead !== null || !hasProgressIdentity
 
 	const personalResults: Record<string, PersonalDailyResult> =
 		personalResult.status === 'fulfilled' ? personalResult.value : {}

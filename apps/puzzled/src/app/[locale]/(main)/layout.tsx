@@ -98,6 +98,20 @@ export default function MainLayout({ children }: Props) {
 			<GuestIdentityBootstrap />
 			<SkipNavigation />
 
+			{/*
+			 * Consent banner - deliberately not deferred, and outside the identity
+			 * Suspense below so its markup flushes with the shell rather than when
+			 * the streak read lands. It is the largest paint on mobile, so the LCP
+			 * budget (<= 2.5 s simulated) needs it in the first frame. It is fixed
+			 * (out of flow) and mounted first in the document so the browser can
+			 * paint it before it has parsed the page body and the inline RSC
+			 * payload that follows; last in the DOM it painted only after all of
+			 * that (LCP 3.9 s on /games). Settled visitors are hidden before paint
+			 * by the settle script in `[locale]/layout.tsx`; the SDK keeps owning
+			 * the UI and the stored decision.
+			 */}
+			<ConsentBanner />
+
 			{/* Desktop: Top navigation */}
 			<Suspense fallback={<TopNavSkeleton />}>
 				<TopNavChrome />
@@ -110,16 +124,6 @@ export default function MainLayout({ children }: Props) {
 				<Footer />
 			</div>
 
-			{/*
-			 * Consent banner - deliberately not deferred, and outside the identity
-			 * Suspense above so its markup flushes with the shell rather than when
-			 * the streak read lands. It is the largest paint on mobile, so the LCP
-			 * budget (<= 2.5 s simulated) needs it in the first frame; mounting it
-			 * on idle put the largest paint at ~5.4-6.0 s. Settled visitors are
-			 * hidden before paint by the settle script in `[locale]/layout.tsx`;
-			 * the SDK keeps owning the UI and the stored decision.
-			 */}
-			<ConsentBanner />
 			<AttributionCapture />
 
 			{/* Fixed overlays - proper z-index stacking */}
