@@ -861,10 +861,6 @@
 				"keys": ["auth.signUp", "common.signUp"]
 			},
 			{
-				"value": "Sign in",
-				"keys": ["archive.signInCta", "plus.unlock.signIn"]
-			},
-			{
 				"value": "Sign out",
 				"keys": ["settings.account.signOutTitle", "settings.sessions.signOut"]
 			},
@@ -1945,10 +1941,6 @@
 				"keys": ["auth.signUp", "common.signUp"]
 			},
 			{
-				"value": "Sign in",
-				"keys": ["archive.signInCta", "plus.unlock.signIn"]
-			},
-			{
 				"value": "Sign out",
 				"keys": ["settings.account.signOutTitle", "settings.sessions.signOut"]
 			},
@@ -2919,7 +2911,6 @@
 				"value": "登入",
 				"keys": [
 					"admin.auditLogs.actions.login",
-					"archive.signInCta",
 					"auth.signIn",
 					"common.signIn",
 					"plus.unlock.signIn"
@@ -3974,7 +3965,6 @@
 				"value": "登入",
 				"keys": [
 					"admin.auditLogs.actions.login",
-					"archive.signInCta",
 					"auth.signIn",
 					"common.signIn",
 					"plus.unlock.signIn"
@@ -5110,7 +5100,6 @@
 				"value": "登录",
 				"keys": [
 					"admin.auditLogs.actions.login",
-					"archive.signInCta",
 					"auth.signIn",
 					"common.signIn",
 					"plus.unlock.signIn"

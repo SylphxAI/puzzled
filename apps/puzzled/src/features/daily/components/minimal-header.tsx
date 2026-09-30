@@ -34,6 +34,8 @@ type MinimalHeaderProps = {
 	onMenuClick?: () => void
 	/** Difficulty level for games that support it */
 	difficulty?: PuzzleDifficulty
+	/** Where the difficulty badge leads, so the level can be changed from the board. */
+	changeDifficultyHref?: string
 }
 
 /**
@@ -56,6 +58,7 @@ export function MinimalHeader({
 	onHelpClick,
 	onMenuClick,
 	difficulty,
+	changeDifficultyHref,
 }: MinimalHeaderProps) {
 	const t = useTranslations('common')
 
@@ -92,7 +95,18 @@ export function MinimalHeader({
 						<StreakBar currentStreak={currentStreak} variant="compact" showMilestone={false} />
 					)}
 					<ModeBadge mode={mode} />
-					{difficulty && <DifficultyBadge difficulty={difficulty} />}
+					{difficulty &&
+						(changeDifficultyHref ? (
+							<Link
+								href={changeDifficultyHref}
+								aria-label={t('difficulty.chooseDifficulty')}
+								className="pressable flex min-h-11 items-center rounded-full px-1"
+							>
+								<DifficultyBadge difficulty={difficulty} />
+							</Link>
+						) : (
+							<DifficultyBadge difficulty={difficulty} />
+						))}
 					{onHelpClick && (
 						<Button variant="ghost" size="icon" onClick={onHelpClick}>
 							<HelpCircle className="h-5 w-5" aria-hidden="true" />

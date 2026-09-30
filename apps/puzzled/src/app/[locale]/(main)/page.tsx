@@ -4,6 +4,7 @@ import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from '@/features/daily/lib/home-exposure'
 import { deriveHomePlayState, scopeHomePlayState } from '@/features/daily/lib/home-play-state'
 import { getPuzzleNumber } from '@/features/daily/lib/puzzle-utils'
+import { todayPlayPath } from '@/features/daily/lib/today-play-path'
 import {
 	HomeDay,
 	HomeDayFallback,
@@ -297,6 +298,7 @@ export default async function HomePage({ params }: Props) {
 		theme: freeGameMeta?.display.theme ?? 'violet',
 		tagline: freeGameMeta ? t(`games.${slugToCamelCase(todaysFreeGame)}.tagline`) : undefined,
 		duration: freeGameMeta?.display.duration,
+		playHref: todayPlayPath(todaysFreeGame),
 	}
 	// The day has an identity: this is the puzzle number `getPuzzleNumber`
 	// already computes for the module and the product day.
