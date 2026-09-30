@@ -5,13 +5,13 @@ import { currentUser } from '@/lib/identity/server'
 export async function GET() {
 	const user = await currentUser()
 	if (!user) {
-		return NextResponse.json({ authority: 'sylphx-events', devices: [] })
+		return NextResponse.json({ devices: [] })
 	}
 	try {
 		const body = await destEventsJson<{ devices?: unknown[] }>('/v1/devices', {
 			method: 'GET',
 		})
-		return NextResponse.json({ authority: 'sylphx-events', devices: body.devices ?? [] })
+		return NextResponse.json({ devices: body.devices ?? [] })
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'events_devices_failed'
 		return NextResponse.json({ error: message }, { status: 502 })
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 				method: 'POST',
 				body: { device_id: body.deviceId },
 			})
-			return NextResponse.json({ authority: 'sylphx-events', unregistered: true })
+			return NextResponse.json({ unregistered: true })
 		}
 		const token = body?.token?.trim()
 		if (!token || token.length < 8) {
@@ -57,7 +57,6 @@ export async function POST(request: Request) {
 			},
 		})
 		return NextResponse.json({
-			authority: 'sylphx-events',
 			deviceId: registered.device?.device_id,
 		})
 	} catch (error) {

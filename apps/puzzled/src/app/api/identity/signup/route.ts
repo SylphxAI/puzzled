@@ -37,8 +37,8 @@ export async function POST(request: Request) {
 	try {
 		const ticket = await passwordTicket(config, { email, password, userAgent })
 		await completeSignIn(config, request, ticket)
-		return NextResponse.json({ authority: 'sylphx-identity', signedIn: true })
+		return NextResponse.json({ signedIn: true })
 	} catch {
-		return NextResponse.json({ authority: 'sylphx-identity', signedIn: false })
+		return NextResponse.json({ signedIn: false })
 	}
 }

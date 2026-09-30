@@ -5,7 +5,7 @@ import { sessionToken } from '@/lib/identity/server'
 export async function GET() {
 	const token = await sessionToken()
 	if (!token) {
-		return NextResponse.json({ authority: 'sylphx-identity', sessions: [] })
+		return NextResponse.json({ sessions: [] })
 	}
 	try {
 		const body = await destIdentityCall<{ sessions?: unknown[] }>('/v1/sessions', {
@@ -14,7 +14,6 @@ export async function GET() {
 			body: { cursor: '', limit: 20 },
 		})
 		return NextResponse.json({
-			authority: 'sylphx-identity',
 			sessions: body.sessions ?? [],
 		})
 	} catch {

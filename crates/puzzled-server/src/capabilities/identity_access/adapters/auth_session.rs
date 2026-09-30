@@ -34,8 +34,11 @@ use super::platform_jwt::VerifiedIdentity;
 
 /// Internal header carrying the verified end user (base64url JSON).
 pub const VERIFIED_IDENTITY_HEADER: &str = "x-puzzled-verified-identity";
-/// The web's session cookie (set by `apps/puzzled/src/lib/identity/server.ts`).
-pub const SESSION_COOKIE: &str = "sylphx_identity_session";
+/// The web's session cookie (set by `apps/puzzled/src/lib/identity/session-cookie.ts`).
+pub const SESSION_COOKIE: &str = "puzzled_session";
+/// The cookie's previous name, still read so the rename signs nobody out.
+// TODO(2026-10-31): drop LEGACY_SESSION_COOKIE and its read in `session_token`.
+pub const LEGACY_SESSION_COOKIE: &str = "sylphx_identity_session";
 const SESSION_PREFIX: &str = "identity_org_session_";
 const DEFAULT_AUTH_URL: &str = "https://api.sylphx.com";
 const POSITIVE_TTL: Duration = Duration::from_secs(60);
@@ -277,16 +280,21 @@ pub fn session_token(headers: &HeaderMap) -> Option<String> {
     {
         return Some(bearer.to_string());
     }
-    headers
-        .get_all(COOKIE)
-        .iter()
-        .filter_map(|v| v.to_str().ok())
-        .flat_map(|v| v.split(';'))
-        .find_map(|pair| {
-            let (name, value) = pair.trim().split_once('=')?;
-            let value = value.trim();
-            (name.trim() == SESSION_COOKIE && value.starts_with(SESSION_PREFIX))
-                .then(|| value.to_string())
+    // The new name first, then the old one.
+    [SESSION_COOKIE, LEGACY_SESSION_COOKIE]
+        .into_iter()
+        .find_map(|wanted| {
+            headers
+                .get_all(COOKIE)
+                .iter()
+                .filter_map(|v| v.to_str().ok())
+                .flat_map(|v| v.split(';'))
+                .find_map(|pair| {
+                    let (name, value) = pair.trim().split_once('=')?;
+                    let value = value.trim();
+                    (name.trim() == wanted && value.starts_with(SESSION_PREFIX))
+                        .then(|| value.to_string())
+                })
         })
 }
 
@@ -460,7 +468,7 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert(
             COOKIE,
-            "a=1; sylphx_identity_session=identity_org_session_abc"
+            "a=1; puzzled_session=identity_org_session_abc"
                 .parse()
                 .unwrap(),
         );
@@ -479,6 +487,31 @@ mod tests {
         let mut jwt = HeaderMap::new();
         jwt.insert(AUTHORIZATION, "Bearer eyJhbGciOi.x.y".parse().unwrap());
         assert_eq!(session_token(&jwt), None);
+    }
+
+    #[test]
+    fn old_cookie_name_still_signs_in_and_the_new_name_wins() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            COOKIE,
+            "sylphx_identity_session=identity_org_session_old"
+                .parse()
+                .unwrap(),
+        );
+        assert_eq!(
+            session_token(&headers).as_deref(),
+            Some("identity_org_session_old")
+        );
+        headers.insert(
+            COOKIE,
+            "sylphx_identity_session=identity_org_session_old; puzzled_session=identity_org_session_new"
+                .parse()
+                .unwrap(),
+        );
+        assert_eq!(
+            session_token(&headers).as_deref(),
+            Some("identity_org_session_new")
+        );
     }
 
     #[test]

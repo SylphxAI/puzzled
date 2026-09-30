@@ -100,7 +100,7 @@ async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
     let app = router(AppState::new(None).with_auth(AuthSessions::new(base.clone(), ORG.into())));
 
     // The web's session cookie is verified with Auth.
-    let cookie = ("cookie", format!("x=1; sylphx_identity_session={GOOD}"));
+    let cookie = ("cookie", format!("x=1; puzzled_session={GOOD}"));
     let (status, body) = subscription(&app, std::slice::from_ref(&cookie)).await;
     assert_eq!(status, StatusCode::OK, "{body}");
     // A bearer works too, and the answer is cached (one Auth call so far).
@@ -115,7 +115,7 @@ async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
     // A session Auth refuses is not signed in.
     let bad = (
         "cookie",
-        "sylphx_identity_session=identity_org_session_revoked".to_string(),
+        "puzzled_session=identity_org_session_revoked".to_string(),
     );
     let (status, _) = subscription(&app, &[bad]).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);

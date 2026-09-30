@@ -13,7 +13,7 @@ import { setSessionCookie } from './server'
 import { recordSignupAttribution } from './signup-attribution'
 
 export function authFail(status: number, error: string) {
-	return NextResponse.json({ error, authority: 'sylphx-identity' }, { status })
+	return NextResponse.json({ error }, { status })
 }
 
 export function userAgentOf(request: Request): string {

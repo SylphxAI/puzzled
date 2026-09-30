@@ -13,7 +13,7 @@ script-src 'self' 'nonce-<per request>' 'strict-dynamic';
 style-src 'self' 'unsafe-inline';
 img-src 'self' data: blob: https:;
 font-src 'self' data:;
-connect-src 'self' https://sylphx.com https://*.sylphx.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com;
+connect-src 'self' https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com;
 frame-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none';
 form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 ```

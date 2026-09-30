@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 				occurred_at_unix_seconds: Math.floor(Date.now() / 1000),
 			},
 		})
-		return NextResponse.json({ authority: 'sylphx-identity', purpose })
+		return NextResponse.json({ purpose })
 	} catch {
 		return identityFail(502, 'identity_consent_failed')
 	}
