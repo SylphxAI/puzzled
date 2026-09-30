@@ -1,4 +1,4 @@
-# Local full-stack readback (`scripts/local-stack.ts`)
+# Local full-stack check (`scripts/local-stack.ts`)
 
 Run the whole [`scripts/verify-live.ts`](live-verification.md) check set against
 a **local** stack — the real `crates/puzzled-server` binary, the real
@@ -7,7 +7,7 @@ applied — instead of only the Connect surface.
 
 ## Layer
 
-This is a **Local** readback, not a Live claim. It answers "is the product loop
+This is a **Local** check, not a Live claim. It answers "is the product loop
 correct in the revision I built?" while the platform Release path is what
 answers "is production serving it?". A green local run never upgrades a Live
 check: Live stays `bun run verify:live --base https://puzzled.gg
@@ -18,7 +18,7 @@ Use it when:
 - the deployed revision is older than the fix you want to verify, and you need
   the same assertions to be falsifiable *now*;
 - a change touches the finish loop (submit / terminal / one-finish-per-day /
-  completion readback) and unit tests alone would not prove the wiring;
+  completion check) and unit tests alone would not prove the wiring;
 - you want the post-deploy expectations from
   [`live-verification.md`](live-verification.md) rehearsed before a Promote.
 
@@ -33,8 +33,8 @@ Use it when:
 
 ```bash
 # 1. Scratch database + schema (Atlas is the only migration writer).
-psql -h localhost -U postgres -c 'CREATE DATABASE puzzled_local_readback;'
-export DATABASE_URL="postgres://postgres:postgres@localhost:5432/puzzled_local_readback?sslmode=disable"
+psql -h localhost -U postgres -c 'CREATE DATABASE puzzled_local_check;'
+export DATABASE_URL="postgres://postgres:postgres@localhost:5432/puzzled_local_check?sslmode=disable"
 atlas migrate apply --dir file://apps/puzzled/atlas/migrations --url "$DATABASE_URL"
 
 # 2. api — the Rust authority (owns Postgres). GIT_COMMIT_SHA makes /healthz
@@ -77,14 +77,14 @@ origin resolver. A production build ignores a loopback
 | Check | Locally | Why |
 | --- | --- | --- |
 | `free-slug-discovery`, `daily-serve`, `archive-open` | pass | Real GetDaily against the real schema and rotation. |
-| `finish-loop` | pass on a revision that records honest losses | Terminal recorded, `hasCompleted` on re-read, second submit refused `already_played`. On a revision that still hard-codes the win claim this check fails with `Invalid win claim …` — that failure is the point of the check, not a local artifact. |
+| `finish-loop` | pass on a revision that records losses | Terminal recorded, `hasCompleted` on re-read, second submit refused `already_played`. On a revision that still hard-codes the win claim this check fails with `Invalid win claim …` — that failure is the point of the check, not a local artifact. |
 | `web-document`, `marks-scan` | pass | The web layer is what renders canonical/JSON-LD/CTA; loopback targets are accepted as-is. |
 | `share-deep-link` | `unknown` | The harness cannot solve the free module, so the solution signature stays unknown; the landing-page shape and non-spoiler checks still run. |
 | `healthz` `git-commit-sha` | pass when launched with `GIT_COMMIT_SHA` | The api reads `SYLPHX_GIT_COMMIT_SHA`/`GIT_COMMIT_SHA`/`GIT_SHA`/`GITHUB_SHA` and omits the field when unset. Without it the sub-check is `fail` (200 + no sha), so step 2 sets it from `git rev-parse HEAD`. |
 
 ## What a green local `finish-loop` proves
 
-`SubmitGuess` → `200 valid=true status=lost` (an honest give-up is a terminal,
+`SubmitGuess` → `200 valid=true status=lost` (a give-up is a terminal,
 not an "Invalid win claim"), `GetDaily` re-read → `hasCompleted=true` with the
 completed session, and a second terminal → `409 already_played`. The row the
 run writes is a qualifying ritual finish, so the North Star recipe is

@@ -7,7 +7,7 @@
  *   STRIPE_SECRET_KEY=sk_test_... bun scripts/stripe-setup.ts \
  *     [--public-url https://puzzled.gg] [--webhook-secret-out /path/file]
  *
- * Prices are the commercial policy's (docs/north-star/MONETIZATION.md): tax
+ * Prices are the commercial policy's (docs/monetization.md): tax
  * inclusive, USD with a GBP option. A price whose amount changed gets a new
  * Stripe price that takes over the lookup key; the old one is archived and
  * existing subscriptions keep it until they change plan.
