@@ -88,6 +88,12 @@ pub struct PlatformClaims {
     pub scope: Option<String>,
     #[serde(default)]
     pub scopes: Option<Vec<String>>,
+    /// RFC 8693 actor claim: present when an agent acts for `sub`.
+    #[serde(default, deserialize_with = "present")]
+    pub act: Option<serde_json::Value>,
+    /// Auth's `actor` spelling of the same claim.
+    #[serde(default, deserialize_with = "present")]
+    pub actor: Option<serde_json::Value>,
     pub exp: i64,
 }
 
@@ -98,6 +104,57 @@ pub struct VerifiedIdentity {
     pub display_name: Option<String>,
     pub email: Option<String>,
     pub is_admin: bool,
+    /// Who acts for the user when the credential is delegated (RFC 8693 `act`,
+    /// or Auth's `actor`): the actor's subject, or `"delegated"` when the
+    /// claim carries no subject. None for the user acting for themselves.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub actor: Option<String>,
+}
+
+impl VerifiedIdentity {
+    /// True when someone other than the user acts for them (an agent with a
+    /// delegated credential).
+    #[must_use]
+    pub fn is_delegated(&self) -> bool {
+        self.actor.is_some()
+    }
+}
+
+/// The actor an `act` / `actor` field names. Presence is what counts: a field
+/// that is there at all, even `null`, `false`, `""` or `{}`, means delegation
+/// (fail closed). The actor's `sub` is kept when it has one, else `"delegated"`.
+/// None only when the field is absent.
+#[must_use]
+pub fn actor_from_claim(value: Option<&serde_json::Value>) -> Option<String> {
+    use serde_json::Value;
+    let named = |text: &str| {
+        let text = text.trim();
+        (!text.is_empty()).then(|| text.to_string())
+    };
+    let value = value?;
+    let name = match value {
+        Value::String(text) => named(text),
+        Value::Object(map) => ["sub", "id", "actor_id", "principal_id"]
+            .iter()
+            .find_map(|k| map.get(*k).and_then(Value::as_str).and_then(named)),
+        _ => None,
+    };
+    Some(name.unwrap_or_else(|| "delegated".to_string()))
+}
+
+/// Keep a JSON `null` distinct from a missing field: `Some(None)` is present
+/// and null.
+fn present<'de, D: serde::Deserializer<'de>>(
+    de: D,
+) -> Result<Option<serde_json::Value>, D::Error> {
+    serde::Deserialize::deserialize(de).map(Some)
+}
+
+impl PlatformClaims {
+    /// The delegated actor, when an `act` or `actor` field is present.
+    fn delegation(&self) -> Option<String> {
+        actor_from_claim(self.act.as_ref()).or_else(|| actor_from_claim(self.actor.as_ref()))
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -440,6 +497,7 @@ pub fn verify_platform_jwt(token: &str) -> Result<VerifiedIdentity, JwtError> {
             display_name: claims.name.clone(),
             email: claims.email.clone(),
             is_admin: is_admin_from_claims(&claims),
+            actor: claims.delegation(),
         });
     }
 
@@ -462,6 +520,7 @@ pub fn verify_platform_jwt(token: &str) -> Result<VerifiedIdentity, JwtError> {
                         display_name: claims.name.clone(),
                         email: claims.email.clone(),
                         is_admin: is_admin_from_claims(&claims),
+                        actor: claims.delegation(),
                     });
                 }
                 Err(e) => last_err = e,
@@ -476,6 +535,7 @@ pub fn verify_platform_jwt(token: &str) -> Result<VerifiedIdentity, JwtError> {
                     display_name: claims.name.clone(),
                     email: claims.email.clone(),
                     is_admin: is_admin_from_claims(&claims),
+                    actor: claims.delegation(),
                 });
             }
             Err(e) => last_err = e,
@@ -607,6 +667,39 @@ mod tests {
             validation_config_inner(Some("puzzled".into()), Some("sylphx".into()), true,).is_ok()
         );
         assert!(validation_config_inner(None, None, false).is_ok());
+    }
+
+    #[test]
+    fn act_or_actor_field_present_means_delegated_and_absent_does_not() {
+        let _g = lock();
+        install_test_decoding_key_pem(TEST_PUB_PEM).expect("install key");
+        let key = EncodingKey::from_rsa_pem(TEST_PRIV_PEM.as_bytes()).expect("enc key");
+        let exp = chrono::Utc::now().timestamp() + 3600;
+        let identity = |extra: Option<(&str, serde_json::Value)>| {
+            let mut claims = serde_json::json!({"sub": "user_a", "exp": exp});
+            if let Some((k, v)) = extra {
+                claims[k] = v;
+            }
+            let token = encode(&JwtHeader::new(Algorithm::RS256), &claims, &key).expect("mint");
+            verify_platform_jwt(&token).expect("verify")
+        };
+        assert_eq!(identity(None).actor, None);
+        for field in ["act", "actor"] {
+            for value in [
+                serde_json::json!(null),
+                serde_json::json!(false),
+                serde_json::json!(""),
+                serde_json::json!({}),
+            ] {
+                let got = identity(Some((field, value.clone())));
+                assert!(got.is_delegated(), "{field}={value}");
+            }
+        }
+        assert_eq!(
+            identity(Some(("act", serde_json::json!({"sub": "agent_1"})))).actor.as_deref(),
+            Some("agent_1")
+        );
+        clear_test_decoding_key();
     }
 
     #[test]
