@@ -26,7 +26,7 @@ type Json = Record<string, unknown>
 /** The English games namespace exactly as the app resolves it. */
 const ENGLISH_GAMES = resolveGameMessages('en-US') as Record<string, Json>
 
-/** The gameName literals that sat in the tree at b199007 (see notes/td21-before.md). */
+/** The gameName literals that sat in the tree at b199007. */
 const OLD_LITERALS: Record<string, string> = {
 	arithmo: 'Arithmo',
 	'block-slide': 'Slides',

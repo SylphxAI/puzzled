@@ -4,7 +4,7 @@
  * Off until an ad account is configured: with no `ADS_ADSENSE_CLIENT_ID` and
  * `ADS_SLOT_ID` the site loads no ad script, allows no ad host in its
  * Content Security Policy and renders no slot. Placement rules live in
- * docs/north-star/MONETIZATION.md: the archive index and the result screen
+ * docs/monetization.md: the archive index and the result screen
  * only, never while a puzzle is being played, and never for a Puzzled Plus
  * subscriber.
  */

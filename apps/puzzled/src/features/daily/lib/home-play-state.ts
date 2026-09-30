@@ -77,7 +77,7 @@ export type HomePlayScopes = {
 /**
  * Split derived play state into home's two scopes.
  *
- * Home renders only the bounded exposure (`docs/north-star/CATALOG.md` §1),
+ * Home renders only the bounded exposure (`docs/catalog.md` (Direction)),
  * but the hero's "Today's progress" indicator must keep counting every module
  * the viewer can play today: re-basing the denominator on the exposed six
  * would show a player who proved 8 of 19 a false "6/6 all complete"

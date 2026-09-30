@@ -1,7 +1,7 @@
 /**
  * Non-spoiler result card model (S3 slice 2 - closes register row G3).
  *
- * Protocol: docs/north-star/RITUAL-AND-MODULE-PROTOCOL.md section 6
+ * Protocol: docs/game-protocol.md, "Result card"
  * "Result card (viral unit)". The model is the one place the non-spoiler
  * invariants live:
  *
