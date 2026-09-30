@@ -18,6 +18,47 @@ use crate::shared::dest_http::{
     dest_push_delivery,
 };
 use crate::shared::tick_receipt::TickError;
+use puzzled_core::puzzle_play::daily_time::product_day_key;
+
+/// Send the daily reminders due at `now`, each at the player's own reminder
+/// time in their own time zone (see [`jobs_db::claim_due_daily_reminders`]).
+/// Safe to call as often as the schedule likes: a player is reminded once per
+/// local day, and never after finishing today's puzzle.
+pub async fn send_due_daily_reminders(
+    pool: &sqlx::PgPool,
+    now: chrono::DateTime<Utc>,
+) -> Result<u32, Vec<String>> {
+    let connector_id = dest_push_connector_id().map_err(|e| vec![e])?;
+    let product_day = product_day_key(now).format("%Y-%m-%d").to_string();
+    let due = jobs_db::claim_due_daily_reminders(pool, now, &product_day)
+        .await
+        .map_err(|e| vec![e])?;
+    let mut errors = Vec::new();
+    let mut processed = 0u32;
+    for (user_id, _time) in due {
+        let delivery = dest_push_delivery(
+            &connector_id,
+            &user_id,
+            "Your daily puzzle is ready",
+            "Today's puzzle is waiting. It only takes a few minutes.",
+            "/",
+        );
+        match dest_events_deliver(delivery).await {
+            Ok(()) => processed += 1,
+            Err(e) => {
+                errors.push(format!("{user_id}: {e}"));
+                if let Err(release) = jobs_db::release_daily_reminder(pool, &user_id).await {
+                    errors.push(format!("{user_id} release: {release}"));
+                }
+            }
+        }
+    }
+    if errors.is_empty() {
+        Ok(processed)
+    } else {
+        Err(errors)
+    }
+}
 
 #[derive(Clone)]
 pub struct JobsConnectService {
@@ -49,26 +90,7 @@ impl JobsConnectService {
         let Some(pool) = &self.state.pool else {
             return Err(vec!["no database pool".to_string()]);
         };
-        let targets = jobs_db::daily_reminder_targets(pool)
-            .await
-            .map_err(|e| vec![e])?;
-        let connector_id = dest_push_connector_id().map_err(|e| vec![e])?;
-        let mut errors = Vec::new();
-        let mut processed = 0u32;
-        for (user_id, time) in targets {
-            let title = "Your daily puzzle is ready";
-            let body = format!("Play today's puzzles — your daily reminder is set for {time}.");
-            let delivery = dest_push_delivery(&connector_id, &user_id, title, &body, "/");
-            match dest_events_deliver(delivery).await {
-                Ok(()) => processed += 1,
-                Err(e) => errors.push(format!("{user_id}: {e}")),
-            }
-        }
-        if errors.is_empty() {
-            Ok(processed)
-        } else {
-            Err(errors)
-        }
+        send_due_daily_reminders(pool, Utc::now()).await
     }
 
     async fn run_win_back_emails(&self) -> Result<u32, Vec<String>> {

@@ -31,7 +31,11 @@ mod billing_flow_tests;
 #[cfg(test)]
 mod daily_pipeline_tests;
 #[cfg(test)]
+mod daily_reminder_tests;
+#[cfg(test)]
 mod result_shares_tests;
+#[cfg(test)]
+mod streak_freeze_tests;
 #[cfg(test)]
 mod tryit_conversions_tests;
 
@@ -1254,6 +1258,7 @@ mod tests {
             "/internal/compute/daily-puzzles",
             "/internal/compute/audit-log-retention",
             "/internal/compute/tryit-conversions",
+            "/internal/compute/daily-reminders",
         ] {
             let refused = router(tick_state())
                 .oneshot(tick_request(path, "{}", None))
