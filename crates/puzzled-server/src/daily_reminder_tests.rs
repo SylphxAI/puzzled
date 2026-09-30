@@ -8,12 +8,12 @@ use chrono::{DateTime, Duration, NaiveDate, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::billing_flow_tests::fresh_database;
 use crate::capabilities::jobs::adapters::jobs_db::{
     claim_due_daily_reminders, release_daily_reminder,
 };
 use crate::capabilities::preferences::adapters::preferences_db::is_reminder_time;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::persist_validated_session;
+use crate::test_support::fresh_database;
 
 /// 01:00 UTC on 30 September: 09:00 in Hong Kong, 21:00 the evening before in
 /// New York, and the product day (Hong Kong) is 2026-09-30.

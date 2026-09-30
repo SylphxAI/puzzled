@@ -12,10 +12,9 @@ use uuid::Uuid;
 /// erases it. Rows matching the player are deleted, including audit rows where
 /// they are the subject or the actor.
 ///
-/// Money facts are the exception: a subscription row and a ledger row are kept
-/// for accounting (UK tax records), with the player id cleared so they no
-/// longer identify the player. The erasure call refuses while a subscription
-/// still renews, so nothing is charged to an erased account.
+/// Money facts are Sylphx Money's, not this database's. The erasure call
+/// refuses while a Money subscription still renews, so nothing is charged to an
+/// erased account.
 pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
         "tryit_conversions",
@@ -36,21 +35,6 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
         "checkout_consents",
         "user_id",
         r#"DELETE FROM "checkout_consents" WHERE "user_id" = $1"#,
-    ),
-    (
-        "billing_customers",
-        "user_id",
-        r#"DELETE FROM "billing_customers" WHERE "user_id" = $1"#,
-    ),
-    (
-        "billing_ledger",
-        "user_id",
-        r#"UPDATE "billing_ledger" SET "user_id" = NULL WHERE "user_id" = $1"#,
-    ),
-    (
-        "billing_subscriptions",
-        "user_id",
-        r#"UPDATE "billing_subscriptions" SET "user_id" = NULL WHERE "user_id" = $1"#,
     ),
     (
         "family_members",
@@ -206,6 +190,18 @@ mod tests {
                     }
                 }
             }
+            // A table renamed to `..._retired_...` is empty (its migration
+            // refuses to run over rows), so it holds no player data to erase.
+            if let Some(rest) = trimmed.strip_prefix("ALTER TABLE ") {
+                let parts: Vec<&str> = rest.split('"').collect();
+                if let (Some(old), true) = (
+                    parts.get(1),
+                    parts.iter().any(|p| p.contains("RENAME TO"))
+                        && parts.get(3).is_some_and(|new| new.contains("__retired_")),
+                ) {
+                    found.retain(|(t, _)| t != old);
+                }
+            }
             // ALTER TABLE "t" ADD COLUMN "user_id" ...
             if let Some(rest) = trimmed.strip_prefix("ALTER TABLE ") {
                 let parts: Vec<&str> = rest.split('"').collect();
@@ -228,11 +224,7 @@ mod tests {
     fn each_statement_erases_its_own_column() {
         for (table, column, statement) in USER_KEYED_COLUMNS {
             let delete = format!(r#"DELETE FROM "{table}" WHERE "{column}" = $1"#);
-            // Money facts keep the row and drop the player id.
-            let unlink = format!(r#"UPDATE "{table}" SET "{column}" = NULL WHERE "{column}" = $1"#);
-            let is_money = matches!(*table, "billing_ledger" | "billing_subscriptions");
-            let expected = if is_money { unlink } else { delete };
-            assert_eq!(*statement, expected);
+            assert_eq!(*statement, delete);
         }
     }
 

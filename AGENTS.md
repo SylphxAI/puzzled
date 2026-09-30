@@ -50,9 +50,9 @@ Run the narrowest affected check first; the full workspace is for the end.
 - **One finish per `(user, game, day_key)`.** Keep the already-played guard even
   when a deterministic generator gives no `puzzle_id`.
 - **The free daily puzzle never reads billing.** A failed entitlement read must
-  refuse paid play and leave the free floor open. Puzzled Plus is built but not
-  on sale, and its Stripe code is replaced by Sylphx Money rather than switched
-  on ([docs/monetization.md](docs/monetization.md)).
+  refuse paid play and leave the free floor open. Payments run only through
+  Sylphx Money; Puzzled holds no Stripe code or keys
+  ([docs/monetization.md](docs/monetization.md)).
 - **Migrations are forward-only in production.** Use expand then contract, run
   `atlas migrate hash` after editing, and take the next free migration number
   because open branches also add migrations.

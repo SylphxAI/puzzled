@@ -628,26 +628,22 @@ export const webhookEvents = pgTable(
 )
 
 // ==========================================
-// PUZZLED PLUS (Stripe is the processor; these rows own entitlement and money)
+// RETIRED BILLING TABLES (Puzzled Plus moved to Sylphx Money)
 // ==========================================
+// Renamed by migration 20261001020000_retire_billing_tables and kept, empty and
+// unused by any code, until they are dropped after 2026-10-29 (PITR must cover
+// the pre-rename point). Not written or read anywhere.
 
-/** One Stripe customer per account. */
-export const billingCustomers = pgTable('billing_customers', {
-	/** Platform user ID (no FK) */
+export const billingCustomersRetired = pgTable('billing_customers__retired_20260929', {
 	userId: uuid('user_id').primaryKey(),
 	stripeCustomerId: text('stripe_customer_id').notNull().unique(),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
-/**
- * The last state read back from Stripe for each subscription. Entitlement is
- * derived from these rows; a webhook is only a hint to read Stripe again.
- */
-export const billingSubscriptions = pgTable(
-	'billing_subscriptions',
+export const billingSubscriptionsRetired = pgTable(
+	'billing_subscriptions__retired_20260929',
 	{
 		stripeSubscriptionId: text('stripe_subscription_id').primaryKey(),
-		/** Platform user ID (no FK); null once the account is erased */
 		userId: uuid('user_id'),
 		stripeCustomerId: text('stripe_customer_id').notNull(),
 		planId: text('plan_id').notNull(),
@@ -656,24 +652,17 @@ export const billingSubscriptions = pgTable(
 		cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
 		startedAt: timestamp('started_at').notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
-		/** First-touch campaign tags copied from Stripe metadata at checkout */
 		attribution: jsonb('attribution'),
 	},
-	(table) => [index('billing_subscriptions_user_id_idx').on(table.userId)],
+	(table) => [index('billing_subscriptions__retired_20260929_user_id_idx').on(table.userId)],
 )
 
-/**
- * Append-only money ledger: one row per Stripe payment (invoice) or refund.
- * Amounts are signed integer minor units; a refund is a new negative row.
- */
-export const billingLedger = pgTable(
-	'billing_ledger',
+export const billingLedgerRetired = pgTable(
+	'billing_ledger__retired_20260929',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
-		/** Stripe invoice id (payment) or refund id (refund) */
 		sourceId: text('source_id').notNull().unique(),
 		kind: text('kind').notNull(),
-		/** Platform user ID (no FK); null once the account is erased */
 		userId: uuid('user_id'),
 		stripeCustomerId: text('stripe_customer_id').notNull(),
 		stripeSubscriptionId: text('stripe_subscription_id'),
@@ -682,8 +671,10 @@ export const billingLedger = pgTable(
 		occurredAt: timestamp('occurred_at').notNull(),
 		recordedAt: timestamp('recorded_at').defaultNow().notNull(),
 	},
-	(table) => [index('billing_ledger_user_id_idx').on(table.userId)],
+	(table) => [index('billing_ledger__retired_20260929_user_id_idx').on(table.userId)],
 )
+
+/**
 
 /**
  * The Sylphx Auth subject that signs a player in, kept as the exact text Auth

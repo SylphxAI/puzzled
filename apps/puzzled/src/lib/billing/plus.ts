@@ -93,7 +93,6 @@ export type SubscriptionView = {
 	status: string | null
 	periodEndMs: number | null
 	cancelAtPeriodEnd: boolean
-	refundUntilMs: number | null
 	family: {
 		role: 'owner' | 'member'
 		inviteCode: string | null
@@ -113,7 +112,6 @@ export function subscriptionView(res: GetSubscriptionResponse): SubscriptionView
 		status: res.status || null,
 		periodEndMs: Number(res.currentPeriodEndMs) || null,
 		cancelAtPeriodEnd: res.cancelAtPeriodEnd,
-		refundUntilMs: Number(res.refundUntilMs) || null,
 		family: res.family
 			? {
 					role: res.family.role === 'owner' ? 'owner' : 'member',

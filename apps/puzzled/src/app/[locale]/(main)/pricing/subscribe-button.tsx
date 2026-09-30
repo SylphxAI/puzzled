@@ -71,7 +71,7 @@ export function SubscribeButton({ planId, currency, locale, signedIn, subscribed
 								? t('alreadySubscribed')
 								: message.includes('consent_required')
 									? t('consentRequired')
-									: t('checkoutFailed'),
+									: t('purchasesSoon'),
 						)
 						setBusy(false)
 					}

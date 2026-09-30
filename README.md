@@ -22,7 +22,6 @@ service ([pricing and policy](docs/monetization.md)).
 ```text
 browser -> /puzzled.v1.*, /healthz, /readyz -> api (Rust)
 Compute -> /internal/compute/*              -> api (Rust)  scheduled jobs
-Stripe  -> /webhooks/stripe                 -> api (Rust)  dormant, no keys
 ops     -> /observability/test              -> api (Rust)
         -> everything else (/api/health)    -> web (Next.js)
 ```
@@ -32,9 +31,9 @@ ops     -> /observability/test              -> api (Rust)
   decides game results and the only one that writes to the database. Its
   daily-puzzle pipeline generates and stores every game's puzzle 14 days
   ahead (19 games), on an hourly Compute schedule, and grades guesses on the
-  server, so the browser never holds an answer. It also holds the dormant
-  Puzzled Plus code (entitlement, ledger, Stripe adapter), which is replaced
-  by Sylphx Money rather than switched on.
+  server, so the browser never holds an answer. Puzzled Plus is Sylphx Money's:
+  the api asks Money for entitlements, creates its checkout sessions and reads
+  its price list, and keeps only the family membership list.
 - **core** ([crates/puzzled-core](crates/puzzled-core)): the game rules,
   answer checking and scoring, with no I/O.
 - **web** ([apps/puzzled](apps/puzzled)): the Next.js site. It renders pages

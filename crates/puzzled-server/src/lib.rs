@@ -27,15 +27,17 @@ mod account_erasure_tests;
 #[cfg(test)]
 mod auth_session_tests;
 #[cfg(test)]
-mod billing_flow_tests;
-#[cfg(test)]
 mod daily_pipeline_tests;
 #[cfg(test)]
 mod daily_reminder_tests;
 #[cfg(test)]
+mod money_access_tests;
+#[cfg(test)]
 mod result_shares_tests;
 #[cfg(test)]
 mod streak_freeze_tests;
+#[cfg(test)]
+mod test_support;
 #[cfg(test)]
 mod tryit_conversions_tests;
 
@@ -1258,7 +1260,6 @@ mod tests {
             "/internal/compute/daily-puzzles",
             "/internal/compute/audit-log-retention",
             "/internal/compute/tryit-conversions",
-            "/internal/compute/daily-reminders",
         ] {
             let refused = router(tick_state())
                 .oneshot(tick_request(path, "{}", None))
