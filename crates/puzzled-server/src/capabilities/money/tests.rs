@@ -238,7 +238,10 @@ async fn checkout_creates_a_money_session_and_returns_its_url() {
     .unwrap();
     assert_eq!(url, "https://checkout.example/pay/cs_1");
     let key = fake.lock().unwrap().session_keys[0].clone();
-    assert!(key.is_some_and(|k| !k.is_empty()), "Idempotency-Key is sent");
+    assert!(
+        key.is_some_and(|k| !k.is_empty()),
+        "Idempotency-Key is sent"
+    );
     let body = fake.lock().unwrap().sessions[0].clone();
     assert_eq!(body["subject"]["end_user"], USER);
     assert_eq!(body["line_items"][0]["price"], "k_solo_m");
