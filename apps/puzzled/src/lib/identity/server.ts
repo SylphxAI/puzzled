@@ -34,7 +34,7 @@ export async function currentUser(): Promise<IdentityUser | null> {
 			credential: token,
 			headers: { 'user-agent': await browserUserAgent() },
 		})
-		return destIdentityUser(current)
+		return destIdentityUser(current, destIdentityProjectId())
 	} catch {
 		return null
 	}

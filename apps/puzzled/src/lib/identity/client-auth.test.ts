@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test'
-import { authConfig, googleStartUrl, isNewUser, safeNext } from './client-auth'
+import { afterEach, describe, expect, test } from 'bun:test'
+import { authConfig, googleStartUrl, isNewUser, safeNext, sessionTimes } from './client-auth'
 
 const env = {
 	SYLPHX_AUTH_URL: 'https://auth.example/',
@@ -51,5 +51,42 @@ describe('Sylphx Auth client', () => {
 		for (const bad of ['https://evil.example', '//evil.example', '/\\evil', '', null, '/a\nb']) {
 			expect(safeNext(bad)).toBe('/')
 		}
+	})
+
+	describe('sessionTimes', () => {
+		const originalFetch = globalThis.fetch
+		afterEach(() => {
+			globalThis.fetch = originalFetch
+		})
+		const own = 'organization-0199aa10-7b2c-7d3e-8f00-00000000c0de'
+		const answer = (project?: string) => {
+			globalThis.fetch = (async () =>
+				new Response(
+					JSON.stringify({
+						session: {
+							created_at_unix_seconds: '1030',
+							principal: { created_at_unix_seconds: 1000, project_id: project },
+						},
+					}),
+				)) as unknown as typeof fetch
+		}
+		const config = { url: 'https://auth.example', publishableKey: 'pk', secretKey: 'sk' }
+
+		test("reads the times of a session of this product's own Auth instance", async () => {
+			answer(own)
+			expect(await sessionTimes(config, 't', 'ua', own)).toEqual({
+				principalCreatedAt: 1000,
+				sessionCreatedAt: 1030,
+			})
+		})
+
+		test('reads nothing from another instance, no instance, or with ours unset', async () => {
+			answer('organization-0199aa10-7b2c-7d3e-8f00-00000000bad0')
+			expect(await sessionTimes(config, 't', 'ua', own)).toEqual({})
+			answer(undefined)
+			expect(await sessionTimes(config, 't', 'ua', own)).toEqual({})
+			answer(own)
+			expect(await sessionTimes(config, 't', 'ua', undefined)).toEqual({})
+		})
 	})
 })
