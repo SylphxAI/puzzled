@@ -175,11 +175,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 				<link rel="mask-icon" href="/brand/mark-mono.svg" color="#1a1712" />
 				<link rel="icon" href="/favicon.ico" sizes="48x48" />
 				<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-				{/*
-				 * Fonts are self-hosted by next/font, so no Google Fonts preconnect
-				 * is needed. Stripe is only contacted when checkout opens.
-				 */}
-				<link rel="dns-prefetch" href="https://js.stripe.com" />
+				{/* Fonts are self-hosted by next/font, so no preconnect is needed. */}
 				{/* FOUC prevention: Apply theme class before React hydration */}
 				<script
 					nonce={nonce}

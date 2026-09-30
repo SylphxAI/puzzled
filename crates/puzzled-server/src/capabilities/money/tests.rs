@@ -18,11 +18,11 @@ const USER: &str = "0190a0a0-0000-7000-8000-000000000001";
 
 #[derive(Default)]
 struct FakeMoney {
+    actions: Vec<String>,
     status: u16,
     answer: Value,
     checks: Vec<Value>,
     sessions: Vec<Value>,
-    session_keys: Vec<Option<String>>,
     catalog: Value,
 }
 
@@ -37,19 +37,8 @@ async fn check(State(fake): State<Fake>, Json(body): Json<Value>) -> (StatusCode
     )
 }
 
-async fn session(
-    State(fake): State<Fake>,
-    headers: axum::http::HeaderMap,
-    Json(body): Json<Value>,
-) -> Json<Value> {
-    let mut fake = fake.lock().unwrap();
-    fake.session_keys.push(
-        headers
-            .get("idempotency-key")
-            .and_then(|v| v.to_str().ok())
-            .map(str::to_string),
-    );
-    fake.sessions.push(body);
+async fn session(State(fake): State<Fake>, Json(body): Json<Value>) -> Json<Value> {
+    fake.lock().unwrap().sessions.push(body);
     Json(json!({"url": "https://checkout.example/pay/cs_1", "state": "open"}))
 }
 
@@ -58,6 +47,24 @@ async fn subscriptions(State(fake): State<Fake>) -> (StatusCode, Json<Value>) {
     (
         StatusCode::from_u16(fake.status).unwrap(),
         Json(fake.answer.clone()),
+    )
+}
+
+async fn action(
+    State(fake): State<Fake>,
+    axum::extract::Path(rest): axum::extract::Path<String>,
+    Json(body): Json<Value>,
+) -> Json<Value> {
+    fake.lock().unwrap().actions.push(format!("{rest} {body}"));
+    Json(json!({}))
+}
+
+async fn portal(State(fake): State<Fake>, Json(body): Json<Value>) -> (StatusCode, Json<Value>) {
+    let mut fake = fake.lock().unwrap();
+    fake.actions.push(format!("portal {body}"));
+    (
+        StatusCode::from_u16(fake.status).unwrap(),
+        Json(json!({"url": "https://portal.example/p/1"})),
     )
 }
 
@@ -76,8 +83,10 @@ async fn fake_money(status: u16, answer: Value) -> (Money, Fake) {
     let app = Router::new()
         .route("/env/entitlement_grants:check", post(check))
         .route("/env/checkout_sessions", post(session))
-        .route("/env/price_catalogs/default", get(catalog))
+        .route("/env/catalogs/default", get(catalog))
         .route("/env/customer_subscriptions", get(subscriptions))
+        .route("/env/customer_subscriptions/{*rest}", post(action))
+        .route("/env/portal_sessions", post(portal))
         .with_state(fake.clone());
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
@@ -237,11 +246,6 @@ async fn checkout_creates_a_money_session_and_returns_its_url() {
     .await
     .unwrap();
     assert_eq!(url, "https://checkout.example/pay/cs_1");
-    let key = fake.lock().unwrap().session_keys[0].clone();
-    assert!(
-        key.is_some_and(|k| !k.is_empty()),
-        "Idempotency-Key is sent"
-    );
     let body = fake.lock().unwrap().sessions[0].clone();
     assert_eq!(body["subject"]["end_user"], USER);
     assert_eq!(body["line_items"][0]["price"], "k_solo_m");
@@ -403,7 +407,7 @@ fn an_archived_or_unpriced_price_is_not_sold() {
 
 #[tokio::test]
 async fn consent_is_recorded_once_per_checkout() {
-    let Some(pool) = crate::billing_flow_tests::fresh_database().await else {
+    let Some(pool) = crate::test_support::fresh_database().await else {
         return;
     };
     super::consent_db::record(&pool, USER, "individual_monthly", "k_solo_m", "en-US")
@@ -423,7 +427,10 @@ async fn consent_is_recorded_once_per_checkout() {
 // ---- erasure guard ----------------------------------------------------------
 
 fn sub(user: &str, status: &str, ends: bool) -> Value {
-    json!({"subject": {"end_user": user}, "status": status, "cancel_at_period_end": ends})
+    json!({"name": "orgs/o/projects/p/envs/e/customer_subscriptions/csb_1",
+           "subject": {"end_user": user}, "status": status, "cancel_at_period_end": ends,
+           "current_period_end_time": "2099-01-01T00:00:00Z",
+           "items": [{"price": "k_solo_m", "quantity": 1}]})
 }
 
 #[tokio::test]
@@ -473,6 +480,72 @@ async fn a_failed_check_is_asked_again_after_five_seconds() {
     assert!(is_premium(&money, USER).await);
 }
 
+#[tokio::test]
+async fn subscriptions_are_read_with_their_period_and_prices() {
+    let (money, _) = fake_money(
+        200,
+        json!({"customer_subscriptions": [sub(USER, "active", false)]}),
+    )
+    .await;
+    let subs = money.subscriptions(USER).await.unwrap();
+    assert_eq!(subs.len(), 1);
+    assert_eq!(subs[0].id, "csb_1");
+    assert!(subs[0].live() && subs[0].renews());
+    assert_eq!(subs[0].price_keys, ["k_solo_m"]);
+    assert_eq!(
+        subs[0].current_period_end.unwrap().timestamp(),
+        4_070_908_800_i64
+    );
+}
+
+#[tokio::test]
+async fn cancel_ends_at_the_period_end_with_no_refund_and_resume_undoes_it() {
+    let (money, fake) = fake_money(200, json!({})).await;
+    money.cancel_at_period_end("csb_1").await.unwrap();
+    money.resume("csb_1").await.unwrap();
+    let actions = fake.lock().unwrap().actions.clone();
+    assert_eq!(actions[0], r#"csb_1:cancel {"at_period_end":true}"#);
+    assert!(!actions[0].contains("refund"));
+    assert_eq!(actions[1], "csb_1:resume {}");
+    // An id cannot escape its path segment.
+    money.cancel_at_period_end("../x").await.unwrap();
+    assert!(fake.lock().unwrap().actions[2].starts_with("x:cancel"));
+}
+
+#[tokio::test]
+async fn portal_session_url_comes_from_money() {
+    let (money, fake) = fake_money(200, json!({})).await;
+    let url = money
+        .portal_url(USER, "https://puzzled.test/settings/subscription")
+        .await
+        .unwrap();
+    assert_eq!(url, "https://portal.example/p/1");
+    assert!(fake.lock().unwrap().actions[0].contains(USER));
+    let (down, _) = fake_money(503, json!({})).await;
+    assert!(down.portal_url(USER, "https://x").await.is_err());
+}
+
+#[tokio::test]
+async fn access_is_money_alone_and_fails_closed() {
+    let Some(pool) = crate::test_support::fresh_database().await else {
+        return;
+    };
+    let (granted, _) = fake_money(200, json!({"entitled": true})).await;
+    let e = crate::capabilities::billing::service::access(&pool, Some(&granted), USER)
+        .await
+        .unwrap();
+    assert!(e.entitled && e.family_owner.is_none());
+    let (down, _) = fake_money(503, json!({})).await;
+    let e = crate::capabilities::billing::service::access(&pool, Some(&down), USER)
+        .await
+        .unwrap();
+    assert!(!e.entitled);
+    let none = crate::capabilities::billing::service::access(&pool, None, USER)
+        .await
+        .unwrap();
+    assert!(!none.entitled);
+}
+
 // ---- environment discovery --------------------------------------------------
 
 #[tokio::test]
@@ -486,12 +559,12 @@ async fn the_environment_comes_from_the_keys_whoami_and_is_kept() {
                 let counter = counter.clone();
                 async move {
                     *counter.lock().unwrap() += 1;
-                    Json(json!({"org": "orgs/org_x", "project": "orgs/org_x/projects/prj_y", "env": "orgs/org_x/projects/prj_y/envs/env_z"}))
+                    Json(json!({"org": "acme", "project": "puz", "env": "env_x1"}))
                 }
             }),
         )
         .route(
-            "/v1/orgs/org_x/projects/prj_y/envs/env_z/entitlement_grants:check",
+            "/v1/orgs/acme/projects/puz/envs/env_x1/entitlement_grants:check",
             post(|| async { Json(json!({"entitled": true})) }),
         );
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -507,7 +580,7 @@ async fn the_environment_comes_from_the_keys_whoami_and_is_kept() {
 async fn a_key_that_is_not_scoped_to_an_environment_grants_nothing() {
     let app = Router::new().route(
         "/v1/whoami",
-        get(|| async { Json(json!({"org": "orgs/org_x", "project": "", "env": ""})) }),
+        get(|| async { Json(json!({"org": "acme", "project": "", "env": ""})) }),
     );
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
@@ -542,21 +615,4 @@ async fn money_calls_carry_the_money_key() {
         "https://puzzled.test",
     );
     assert!(is_premium(&money, USER).await);
-}
-
-#[test]
-fn the_base_is_the_env_name_as_is_never_a_doubled_path() {
-    let real = json!({
-        "org": "orgs/org_x",
-        "project": "orgs/org_x/projects/prj_y",
-        "env": "orgs/org_x/projects/prj_y/envs/env_z",
-    });
-    let url = super::client::env_url("https://api.sylphx.com", &real).unwrap();
-    assert_eq!(
-        url,
-        "https://api.sylphx.com/v1/orgs/org_x/projects/prj_y/envs/env_z"
-    );
-    assert_eq!(url.matches("orgs/").count(), 1, "no doubled orgs/ segment");
-    let unscoped = json!({"org": "orgs/org_x", "project": "", "env": ""});
-    assert!(super::client::env_url("https://api.sylphx.com", &unscoped).is_err());
 }

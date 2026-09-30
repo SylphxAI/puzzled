@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props) {
 }
 
 /**
- * Puzzled Plus plans. Every amount is Stripe's published price (ListPlans),
+ * Puzzled Plus plans. Every amount is Sylphx Money's catalogue price (ListPlans),
  * tax included, in the currency checkout will charge; nothing is hardcoded.
  * While sales are closed the page says everything is free.
  */
@@ -70,7 +70,6 @@ export default async function PricingPage({ params, searchParams }: Props) {
 	const yearly = (family: boolean) =>
 		cards.find((c) => c.family === family && c.interval === 'year')
 	const familyMax = plans?.familyMaxMembers ?? 4
-	const cancellationDays = plans?.cancellationDays ?? 14
 
 	const groups = [
 		{ family: false, title: tPlus('name'), body: t('individualBody') },
@@ -228,7 +227,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 							})}
 						</ul>
 						<p className="mt-6 max-w-3xl text-xs leading-relaxed text-muted-foreground">
-							{t('legal', { days: cancellationDays })}{' '}
+							{t('legal')}{' '}
 							<Link href="/terms#subscriptions" className="underline">
 								{t('manage')}
 							</Link>

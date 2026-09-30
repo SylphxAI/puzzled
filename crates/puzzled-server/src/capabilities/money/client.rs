@@ -1,6 +1,6 @@
 //! Thin REST client for the Money calls Puzzled uses, shaped from
 //! `contracts/generated/openapi.json` (cloud#10272): `entitlement_grants:check`,
-//! `checkout_sessions` and `price_catalogs/default`. Nothing else is called.
+//! `checkout_sessions` and `catalogs/default`. Nothing else is called.
 //!
 //! Entitlement answers are cached at most 60 seconds and never past the
 //! answer's `expire_time`; a Money call that fails answers "not entitled"
@@ -74,7 +74,39 @@ struct CheckResponse {
     expire_time: Option<String>,
 }
 
-/// A catalogue price as `GET price_catalogs/default` publishes it.
+/// A customer subscription as Money mirrors it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Subscription {
+    pub id: String,
+    pub status: String,
+    pub cancel_at_period_end: bool,
+    pub current_period_end: Option<DateTime<Utc>>,
+    /// The catalogue price keys it sells.
+    pub price_keys: Vec<String>,
+}
+
+impl Subscription {
+    /// Grants access now: trialing, active or past due.
+    #[must_use]
+    pub fn live(&self) -> bool {
+        matches!(self.status.as_str(), "active" | "trialing" | "past_due")
+    }
+
+    /// Live and will renew.
+    #[must_use]
+    pub fn renews(&self) -> bool {
+        self.live() && !self.cancel_at_period_end
+    }
+}
+
+/// A path segment that cannot escape its place in the URL.
+fn segment(id: &str) -> String {
+    id.chars()
+        .filter(|c| c.is_ascii_alphanumeric() || matches!(c, '_' | '-'))
+        .collect()
+}
+
+/// A catalogue price as `GET catalogs/default` publishes it.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CatalogPrice {
     pub key: String,
@@ -146,23 +178,8 @@ fn env_value(name: &str) -> Option<String> {
 }
 
 /// The environment resource URL a key belongs to, from its `whoami`:
-/// `{origin}/v1/{env}`. `env` is the environment's full resource name
-/// (`orgs/{o}/projects/{p}/envs/{e}`), used as-is. It is empty unless the key
-/// is scoped to an environment, which is Money unavailable.
-pub(super) fn env_url(origin: &str, whoami: &Value) -> Result<String, MoneyError> {
-    match whoami
-        .get("env")
-        .and_then(Value::as_str)
-        .map(|e| e.trim_matches('/'))
-        .filter(|e| !e.is_empty())
-    {
-        Some(env) => Ok(format!("{origin}/v1/{env}")),
-        None => Err(MoneyError::Unavailable(
-            "the API key is not scoped to an environment".into(),
-        )),
-    }
-}
-
+/// `{origin}/v1/orgs/{org}/projects/{project}/envs/{env}`. The key must be
+/// scoped to an environment.
 pub async fn resolve_env_url(
     http: &reqwest::Client,
     origin: &str,
@@ -184,7 +201,19 @@ pub async fn resolve_env_url(
         .json()
         .await
         .map_err(|e| MoneyError::Unavailable(format!("whoami unreadable: {e}")))?;
-    env_url(origin, &body)
+    let part = |name: &str| {
+        body.get(name)
+            .and_then(Value::as_str)
+            .filter(|v| !v.is_empty())
+    };
+    match (part("org"), part("project"), part("env")) {
+        (Some(org), Some(project), Some(env)) => Ok(format!(
+            "{origin}/v1/orgs/{org}/projects/{project}/envs/{env}"
+        )),
+        _ => Err(MoneyError::Unavailable(
+            "the API key is not scoped to an environment".into(),
+        )),
+    }
 }
 
 impl Money {
@@ -375,7 +404,7 @@ impl Money {
         let body = self
             .call(
                 self.http
-                    .get(format!("{}/price_catalogs/default", self.env_url().await?)),
+                    .get(format!("{}/catalogs/default", self.env_url().await?)),
             )
             .await?;
         let catalog: Arc<Catalog> = Arc::new(
@@ -388,14 +417,14 @@ impl Money {
         Ok(catalog)
     }
 
-    /// Does `user_id` hold a subscription in Money that still renews (active,
-    /// trialing or past due, not set to end at the period end)? Pages through
+    /// Every customer subscription `user_id` holds. Pages through
     /// `customer_subscriptions` and re-checks each row's subject itself, so a
     /// filter Money ignores cannot hide or invent a match. Any error is
-    /// returned: the caller must refuse rather than assume "none".
-    pub async fn has_renewing_subscription(&self, user_id: &str) -> Result<bool, MoneyError> {
+    /// returned: the caller must fail closed rather than assume "none".
+    pub async fn subscriptions(&self, user_id: &str) -> Result<Vec<Subscription>, MoneyError> {
         let filter = format!("subject.end_user = \"{}\"", user_id.replace('"', ""));
         let mut token = String::new();
+        let mut found = Vec::new();
         loop {
             let mut query = vec![("filter", filter.as_str()), ("page_size", "100")];
             if !token.is_empty() {
@@ -414,19 +443,39 @@ impl Money {
                 .into_iter()
                 .flatten()
             {
-                let mine =
-                    sub.pointer("/subject/end_user").and_then(Value::as_str) == Some(user_id);
-                let live = matches!(
-                    sub.get("status").and_then(Value::as_str),
-                    Some("active" | "trialing" | "past_due")
-                );
-                let ends = sub
-                    .get("cancel_at_period_end")
-                    .and_then(Value::as_bool)
-                    .unwrap_or(false);
-                if mine && live && !ends {
-                    return Ok(true);
+                if sub.pointer("/subject/end_user").and_then(Value::as_str) != Some(user_id) {
+                    continue;
                 }
+                found.push(Subscription {
+                    id: sub
+                        .get("name")
+                        .and_then(Value::as_str)
+                        .and_then(|name| name.rsplit('/').next())
+                        .unwrap_or_default()
+                        .to_string(),
+                    status: sub
+                        .get("status")
+                        .and_then(Value::as_str)
+                        .unwrap_or_default()
+                        .to_string(),
+                    cancel_at_period_end: sub
+                        .get("cancel_at_period_end")
+                        .and_then(Value::as_bool)
+                        .unwrap_or(false),
+                    current_period_end: sub
+                        .get("current_period_end_time")
+                        .and_then(Value::as_str)
+                        .and_then(|t| DateTime::parse_from_rfc3339(t).ok())
+                        .map(|t| t.with_timezone(&Utc)),
+                    price_keys: sub
+                        .get("items")
+                        .and_then(Value::as_array)
+                        .into_iter()
+                        .flatten()
+                        .filter_map(|item| item.get("price").and_then(Value::as_str))
+                        .map(str::to_string)
+                        .collect(),
+                });
             }
             token = body
                 .get("next_page_token")
@@ -434,9 +483,65 @@ impl Money {
                 .unwrap_or_default()
                 .to_string();
             if token.is_empty() {
-                return Ok(false);
+                return Ok(found);
             }
         }
+    }
+
+    /// Does `user_id` hold a subscription that still renews? Errors are
+    /// returned, never read as "no".
+    pub async fn has_renewing_subscription(&self, user_id: &str) -> Result<bool, MoneyError> {
+        Ok(self
+            .subscriptions(user_id)
+            .await?
+            .iter()
+            .any(Subscription::renews))
+    }
+
+    /// A hosted billing-portal page for `user_id` (payment method, invoices).
+    pub async fn portal_url(&self, user_id: &str, return_url: &str) -> Result<String, MoneyError> {
+        let body = self
+            .call(
+                self.http
+                    .post(format!("{}/portal_sessions", self.env_url().await?))
+                    .json(&json!({"subject": {"end_user": user_id}, "return_url": return_url})),
+            )
+            .await?;
+        body.get("url")
+            .and_then(Value::as_str)
+            .filter(|url| !url.is_empty())
+            .map(str::to_string)
+            .ok_or_else(|| MoneyError::Unavailable("portal session has no url".into()))
+    }
+
+    /// End a subscription at its period end (no refund: owner#779).
+    pub async fn cancel_at_period_end(&self, id: &str) -> Result<(), MoneyError> {
+        self.call(
+            self.http
+                .post(format!(
+                    "{}/customer_subscriptions/{}:cancel",
+                    self.env_url().await?,
+                    segment(id)
+                ))
+                .json(&json!({"at_period_end": true})),
+        )
+        .await
+        .map(|_| ())
+    }
+
+    /// Undo a pending cancellation.
+    pub async fn resume(&self, id: &str) -> Result<(), MoneyError> {
+        self.call(
+            self.http
+                .post(format!(
+                    "{}/customer_subscriptions/{}:resume",
+                    self.env_url().await?,
+                    segment(id)
+                ))
+                .json(&json!({})),
+        )
+        .await
+        .map(|_| ())
     }
 
     /// Create a checkout session; returns the hosted page's URL.
@@ -445,9 +550,6 @@ impl Money {
             .call(
                 self.http
                     .post(format!("{}/checkout_sessions", self.env_url().await?))
-                    // One key per checkout attempt, so a retried POST cannot
-                    // open a second session.
-                    .header("Idempotency-Key", uuid::Uuid::now_v7().simple().to_string())
                     .json(session),
             )
             .await?;

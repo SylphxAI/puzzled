@@ -2,8 +2,8 @@
 //!
 //! Sole surface: Connect RPC services (healthz/readyz probes + Connect
 //! fallback). The hand-rolled REST surface is deleted (ADR-170). The
-//! non-Connect writes are the Stripe webhook, which Stripe calls, not clients,
-//! and the key-guarded Observability test trigger (docs/observability.md).
+//! non-Connect writes are the Compute schedule ticks and the key-guarded
+//! Observability test trigger (docs/observability.md).
 //! Every 5xx is captured into Sylphx Observability.
 
 use axum::routing::{get, post};
@@ -14,7 +14,7 @@ use super::compute_ticks::{
     AUDIT_RETENTION_PATH, DAILY_PUZZLES_PATH, DAILY_REMINDERS_PATH, TRYIT_CONVERSIONS_PATH,
 };
 use super::connect_admin::admin_connect_service;
-use super::connect_billing::{billing_connect_service, stripe_webhook};
+use super::connect_billing::billing_connect_service;
 use super::connect_gamification::gamification_connect_service;
 use super::connect_health::health_connect_service;
 use super::connect_jobs::jobs_connect_service;
@@ -41,7 +41,6 @@ pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
-        .route("/webhooks/stripe", post(stripe_webhook))
         .route(DAILY_PUZZLES_PATH, post(daily_puzzles_tick))
         .route(AUDIT_RETENTION_PATH, post(audit_retention_tick))
         .route(DAILY_REMINDERS_PATH, post(daily_reminders_tick))

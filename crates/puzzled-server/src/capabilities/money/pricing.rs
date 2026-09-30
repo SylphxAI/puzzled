@@ -1,4 +1,4 @@
-//! The price list, read from Money's `price_catalogs/default`. Money is the one
+//! The price list, read from Money's `catalogs/default`. Money is the one
 //! source of prices, plans and seats: nothing here names a price key, an
 //! amount, a currency or a seat count. A plan is derived from the catalogue:
 //! a product whose `features` contain `plus`, ranked by its `seats` limit

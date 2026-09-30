@@ -118,7 +118,7 @@ impl Attribution {
         (from_tryit && valid).then_some(referral)
     }
 
-    /// Tag pairs as they are named in Stripe metadata and reports.
+    /// Tag pairs as they are named in Money checkout metadata and reports.
     #[must_use]
     pub fn metadata_pairs(&self) -> Vec<(&'static str, &str)> {
         [

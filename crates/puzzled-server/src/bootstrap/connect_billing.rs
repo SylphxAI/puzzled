@@ -1,31 +1,24 @@
-//! Native Connect BillingService (Puzzled Plus) and the Stripe webhook route.
+//! Native Connect BillingService (Puzzled Plus), backed by Sylphx Money.
 //!
 //! Identity comes from the Platform JWT; guests can read the price list only.
-//! The webhook is the one non-Connect route: Stripe posts to it, the signature
-//! is verified over the raw body, and each event is read back from Stripe.
+//! Prices, checkout, portal, subscriptions and access are Money's; Puzzled
+//! keeps the family membership list and the checkout consent.
 
 use std::sync::Arc;
 
-use axum::body::Bytes;
-use axum::extract::State;
-use axum::http::{HeaderMap, StatusCode};
-use chrono::Utc;
 use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
 use sqlx::PgPool;
 use tracing::warn;
 
-use puzzled_core::billing_access::policy::{is_family_plan, CANCELLATION_DAYS, FAMILY_MAX_MEMBERS};
-
 use super::identity::require_identity;
 use super::state::AppState;
 use crate::capabilities::billing::adapters::billing_db::{self, JoinRefused};
-use crate::capabilities::billing::adapters::stripe::Stripe;
-use crate::capabilities::billing::service::{self, CheckoutError};
+use crate::capabilities::billing::service;
 use crate::capabilities::identity_access::adapters::platform_jwt::VerifiedIdentity;
 use crate::capabilities::money::{
-    access as money_access, checkout as money_checkout, consent_db, pricing, Money,
+    access as money_access, checkout as money_checkout, consent_db, pricing, CheckoutError, Money,
 };
 use crate::capabilities::preferences::adapters::attribution_db::attribution_for_user;
 use crate::proto::puzzled::v1::{
@@ -66,10 +59,10 @@ impl BillingConnectService {
         Self { state }
     }
 
-    /// Stripe and the database, or `sales_closed`.
-    fn store(&self) -> Result<(&PgPool, &Stripe), ConnectError> {
-        match (&self.state.pool, &self.state.stripe) {
-            (Some(pool), Some(stripe)) => Ok((pool, stripe)),
+    /// Money and the database, or `sales_closed`.
+    fn store(&self) -> Result<(&PgPool, &Money), ConnectError> {
+        match (&self.state.pool, &self.state.money) {
+            (Some(pool), Some(money)) => Ok((pool, money)),
             _ => Err(ConnectError::new(
                 ErrorCode::FailedPrecondition,
                 "sales_closed",
@@ -85,33 +78,25 @@ impl BillingConnectService {
             .ok_or_else(|| ConnectError::new(ErrorCode::FailedPrecondition, "sales_closed"))
     }
 
-    /// Does `owner` hold a family plan now, in a stored subscription or in Money?
-    async fn family_active(&self, pool: &PgPool, owner: &str) -> Result<bool, ConnectError> {
-        if service::family_plan_active(pool, self.state.stripe.as_ref(), owner)
-            .await
-            .map_err(internal("family_unavailable"))?
-        {
-            return Ok(true);
-        }
-        Ok(match &self.state.money {
+    /// Does `owner` hold a family plan now, in Money?
+    async fn family_active(&self, owner: &str) -> bool {
+        match &self.state.money {
             Some(money) => money_access::family_active(money, owner).await,
             None => false,
-        })
+        }
     }
 
-    /// Seats on `owner`'s plan. With Money, its `seats` limit; `Err` when Money
-    /// could not answer (or the owner holds no `seats` limit), so nothing is
-    /// decided from a guess. Without Money, only the not-yet-migrated Stripe
-    /// path exists and keeps its family size.
+    /// Seats on `owner`'s plan, from Money's `seats` limit. `Err`: Money could
+    /// not answer (or the owner holds no `seats` limit), so nothing is decided
+    /// from a guess.
     async fn max_members(&self, owner: &str) -> Result<u32, ConnectError> {
-        let Some(money) = self.state.money.as_ref() else {
-            return Ok(FAMILY_MAX_MEMBERS);
-        };
+        let unavailable = || ConnectError::new(ErrorCode::Unavailable, "seats_unavailable");
+        let money = self.state.money.as_ref().ok_or_else(unavailable)?;
         money_access::seats(money, owner)
             .await
             .ok()
             .flatten()
-            .ok_or_else(|| ConnectError::new(ErrorCode::Unavailable, "seats_unavailable"))
+            .ok_or_else(unavailable)
     }
 
     /// A Money checkout: the buyer's consent is recorded, then the server
@@ -225,63 +210,34 @@ impl BillingService for BillingConnectService {
     ) -> ServiceResult<ListPlansResponse> {
         let mut response = ListPlansResponse {
             sales_open: false,
-            family_max_members: FAMILY_MAX_MEMBERS,
-            cancellation_days: CANCELLATION_DAYS,
             ..Default::default()
         };
-        if let Some(money) = &self.state.money {
-            // Prices are Money's `price_catalogs/default`; nothing is priced here.
-            // Money unreachable: no plans and sales closed ("Purchases open
-            // shortly"), never an error page.
-            let Ok(catalog) = money.catalog().await else {
-                return Response::ok(response);
-            };
-            let sold = pricing::plans(&catalog);
-            // The family size is the catalogue's `seats` limit, not a number
-            // written here.
-            response.family_max_members = sold
-                .iter()
-                .filter(|plan| plan.family)
-                .map(|plan| plan.seats)
-                .max()
-                .unwrap_or(0);
-            response.plans = sold
-                .into_iter()
-                .map(|plan| Plan {
-                    id: plan.plan_id,
-                    family: plan.family,
-                    interval: plan.interval,
-                    prices: plan
-                        .prices
-                        .into_iter()
-                        .map(|(currency, unit_amount_minor)| PlanPrice {
-                            currency,
-                            unit_amount_minor,
-                            ..Default::default()
-                        })
-                        .collect(),
-                    ..Default::default()
-                })
-                .collect();
-            response.sales_open = !response.plans.is_empty();
-            return Response::ok(response);
-        }
-        let Ok((_, stripe)) = self.store() else {
+        let Some(money) = &self.state.money else {
             return Response::ok(response);
         };
-        let prices = stripe
-            .prices()
-            .await
-            .map_err(internal("plans_unavailable"))?;
-        response.sales_open = !prices.is_empty();
-        response.plans = prices
+        // Prices are Money's `catalogs/default`; nothing is priced here.
+        // Money unreachable: no plans and sales closed ("Purchases open
+        // shortly"), never an error page.
+        let Ok(catalog) = money.catalog().await else {
+            return Response::ok(response);
+        };
+        let sold = pricing::plans(&catalog);
+        // The family size is the catalogue's `seats` limit, not a number
+        // written here.
+        response.family_max_members = sold
+            .iter()
+            .filter(|plan| plan.family)
+            .map(|plan| plan.seats)
+            .max()
+            .unwrap_or(0);
+        response.plans = sold
             .into_iter()
-            .map(|price| Plan {
-                id: price.plan_id.to_string(),
-                family: is_family_plan(price.plan_id),
-                interval: price.interval,
-                prices: price
-                    .amounts
+            .map(|plan| Plan {
+                id: plan.plan_id,
+                family: plan.family,
+                interval: plan.interval,
+                prices: plan
+                    .prices
                     .into_iter()
                     .map(|(currency, unit_amount_minor)| PlanPrice {
                         currency,
@@ -292,70 +248,46 @@ impl BillingService for BillingConnectService {
                 ..Default::default()
             })
             .collect();
+        response.sales_open = !response.plans.is_empty();
         Response::ok(response)
     }
 
     async fn get_subscription(
         &self,
         ctx: RequestContext,
-        request: ServiceRequest<'_, GetSubscriptionRequest>,
+        _request: ServiceRequest<'_, GetSubscriptionRequest>,
     ) -> ServiceResult<GetSubscriptionResponse> {
         let identity = require_identity(&ctx)?;
-        let req = request.to_owned_message();
         let mut response = GetSubscriptionResponse {
             sales_open: self.state.sales_open().await,
             source: "none".to_string(),
             ..Default::default()
         };
-        let stripe = self.state.stripe.as_ref();
-        let money = self.state.money.as_ref();
-        let Some(pool) = self
-            .state
-            .pool
-            .as_ref()
-            .filter(|_| stripe.is_some() || money.is_some())
+        let (Some(pool), Some(money)) = (self.state.pool.as_ref(), self.state.money.as_ref())
         else {
             return Response::ok(response);
         };
         if !service::is_account_id(&identity.user_id) {
             return Response::ok(response);
         }
-        if let (true, Some(stripe)) = (req.refresh, stripe) {
-            service::sync_user(pool, stripe, &identity.user_id)
-                .await
-                .map_err(internal("subscription_unavailable"))?;
-        }
-        let entitlement = service::access(pool, stripe, money, &identity.user_id)
+        let entitlement = service::access(pool, Some(money), &identity.user_id)
             .await
             .map_err(internal("subscription_unavailable"))?;
         response.entitled = entitlement.entitled;
-        if let Some(own) = &entitlement.own {
+        if let Some(owner) = &entitlement.family_owner {
+            response.source = "family".to_string();
+            response.family = self.family_view(pool, owner, false).await?.into();
+        } else if entitlement.entitled {
             response.source = "plus".to_string();
-            response.plan_id = Some(own.plan_id.clone());
-            response.status = Some(own.status.clone());
-            response.current_period_end_ms = Some(own.current_period_end_ms);
-            response.cancel_at_period_end = own.cancel_at_period_end;
-            response.refund_until_ms = entitlement
-                .refund_until_ms
-                .filter(|until| *until > Utc::now().timestamp_millis());
-            if is_family_plan(&own.plan_id) {
-                response.family = self
-                    .family_view(pool, &identity.user_id, true)
-                    .await?
-                    .into();
-            }
-        } else if entitlement.via_money {
-            response.source = "plus".to_string();
-            // A Tryit-referred account's first paid subscription is queued for
-            // Tryit (one row per account and event, so this is idempotent).
-            // Money sends Puzzled no webhook, so the page the buyer returns to
-            // is where it is noticed. Failing to queue never fails the read.
-            if let Some(money) = money {
-                if money
-                    .has_renewing_subscription(&identity.user_id)
-                    .await
-                    .unwrap_or(false)
-                {
+            // The subscription behind it, when there is one (a manual grant
+            // has none). A read that fails leaves the access answer standing.
+            if let Ok(subs) = money.subscriptions(&identity.user_id).await {
+                if let Some(sub) = subs.iter().find(|s| s.live()) {
+                    // A Tryit-referred account's first paid subscription is
+                    // queued for Tryit (one row per account and event, so
+                    // this is idempotent). Money sends Puzzled no webhook,
+                    // so the page the buyer returns to is where it is
+                    // noticed. Failing to queue never fails the read.
                     if let Err(error) = crate::capabilities::tryit_conversions::enqueue_purchase(
                         pool,
                         &identity.user_id,
@@ -364,11 +296,27 @@ impl BillingService for BillingConnectService {
                     {
                         tracing::warn!(%error, "tryit purchase not queued");
                     }
+                    let catalog = money.catalog().await.ok();
+                    let plan = catalog.as_deref().and_then(|c| {
+                        pricing::plans(c)
+                            .into_iter()
+                            .find(|p| sub.price_keys.contains(&p.price_key))
+                    });
+                    response.status = Some(sub.status.clone());
+                    response.cancel_at_period_end = sub.cancel_at_period_end;
+                    response.current_period_end_ms =
+                        sub.current_period_end.map(|t| t.timestamp_millis());
+                    if let Some(plan) = plan {
+                        response.plan_id = Some(plan.plan_id.clone());
+                        if plan.family {
+                            response.family = self
+                                .family_view(pool, &identity.user_id, true)
+                                .await?
+                                .into();
+                        }
+                    }
                 }
             }
-        } else if let Some(owner) = &entitlement.family_owner {
-            response.source = "family".to_string();
-            response.family = self.family_view(pool, owner, false).await?.into();
         }
         Response::ok(response)
     }
@@ -386,24 +334,10 @@ impl BillingService for BillingConnectService {
             .iter()
             .filter_map(|value| value.to_str().ok())
             .find_map(puzzled_core::attribution::from_cookie_header);
-        let started = if let Some(money) = &self.state.money {
-            self.money_checkout(money, &identity, &req, landing.as_ref())
-                .await
-        } else {
-            let (pool, stripe) = self.store()?;
-            service::create_checkout(
-                pool,
-                stripe,
-                &identity.user_id,
-                identity.email.as_deref(),
-                identity.display_name.as_deref(),
-                req.plan_id.trim(),
-                req.locale.trim(),
-                &req.currency,
-                landing.as_ref(),
-            )
-            .await
-        };
+        let (_, money) = self.store()?;
+        let started = self
+            .money_checkout(money, &identity, &req, landing.as_ref())
+            .await;
         match started {
             Ok(url) => Response::ok(CreateCheckoutResponse {
                 url,
@@ -412,10 +346,6 @@ impl BillingService for BillingConnectService {
             Err(CheckoutError::ConsentRequired) => Err(ConnectError::new(
                 ErrorCode::FailedPrecondition,
                 "consent_required",
-            )),
-            Err(CheckoutError::UnknownPlan) => Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "unknown_plan",
             )),
             Err(CheckoutError::PlanNotOnSale) => Err(ConnectError::new(
                 ErrorCode::FailedPrecondition,
@@ -435,21 +365,31 @@ impl BillingService for BillingConnectService {
         request: ServiceRequest<'_, CreatePortalRequest>,
     ) -> ServiceResult<CreatePortalResponse> {
         let identity = Self::account(&ctx)?;
-        let (pool, stripe) = self.store()?;
+        let (_, money) = self.store()?;
         let req = request.to_owned_message();
-        match service::create_portal(pool, stripe, &identity.user_id, req.locale.trim())
+        let subs = money
+            .subscriptions(&identity.user_id)
             .await
-            .map_err(internal("portal_unavailable"))?
-        {
-            Some(url) => Response::ok(CreatePortalResponse {
-                url,
-                ..Default::default()
-            }),
-            None => Err(ConnectError::new(
+            .map_err(|e| internal("portal_unavailable")(e.to_string()))?;
+        if subs.is_empty() {
+            return Err(ConnectError::new(
                 ErrorCode::FailedPrecondition,
                 "no_billing_account",
-            )),
+            ));
         }
+        let back = format!(
+            "{}{}/settings/subscription",
+            money.public_url(),
+            money_checkout::locale_prefix(req.locale.trim())
+        );
+        let url = money
+            .portal_url(&identity.user_id, &back)
+            .await
+            .map_err(|e| internal("portal_unavailable")(e.to_string()))?;
+        Response::ok(CreatePortalResponse {
+            url,
+            ..Default::default()
+        })
     }
 
     async fn cancel_subscription(
@@ -458,21 +398,26 @@ impl BillingService for BillingConnectService {
         _request: ServiceRequest<'_, CancelSubscriptionRequest>,
     ) -> ServiceResult<CancelSubscriptionResponse> {
         let identity = Self::account(&ctx)?;
-        let (pool, stripe) = self.store()?;
-        match service::cancel(pool, stripe, &identity.user_id)
+        let (_, money) = self.store()?;
+        let subs = money
+            .subscriptions(&identity.user_id)
             .await
-            .map_err(internal("cancel_unavailable"))?
-        {
-            Some(done) => Response::ok(CancelSubscriptionResponse {
-                refunded: done.refunded,
-                access_ends_at_ms: done.access_ends_at_ms,
-                ..Default::default()
-            }),
-            None => Err(ConnectError::new(
+            .map_err(|e| internal("cancel_unavailable")(e.to_string()))?;
+        let Some(sub) = subs.iter().find(|s| s.renews()) else {
+            return Err(ConnectError::new(
                 ErrorCode::FailedPrecondition,
                 "no_subscription",
-            )),
-        }
+            ));
+        };
+        // Access runs to the end of the paid period; no refund is promised.
+        money
+            .cancel_at_period_end(&sub.id)
+            .await
+            .map_err(|e| internal("cancel_unavailable")(e.to_string()))?;
+        Response::ok(CancelSubscriptionResponse {
+            access_ends_at_ms: sub.current_period_end.map_or(0, |t| t.timestamp_millis()),
+            ..Default::default()
+        })
     }
 
     async fn resume_subscription(
@@ -481,18 +426,22 @@ impl BillingService for BillingConnectService {
         _request: ServiceRequest<'_, ResumeSubscriptionRequest>,
     ) -> ServiceResult<ResumeSubscriptionResponse> {
         let identity = Self::account(&ctx)?;
-        let (pool, stripe) = self.store()?;
-        if service::resume(pool, stripe, &identity.user_id)
+        let (_, money) = self.store()?;
+        let subs = money
+            .subscriptions(&identity.user_id)
             .await
-            .map_err(internal("resume_unavailable"))?
-        {
-            Response::ok(ResumeSubscriptionResponse::default())
-        } else {
-            Err(ConnectError::new(
+            .map_err(|e| internal("resume_unavailable")(e.to_string()))?;
+        let Some(sub) = subs.iter().find(|s| s.live() && s.cancel_at_period_end) else {
+            return Err(ConnectError::new(
                 ErrorCode::FailedPrecondition,
                 "nothing_to_resume",
-            ))
-        }
+            ));
+        };
+        money
+            .resume(&sub.id)
+            .await
+            .map_err(|e| internal("resume_unavailable")(e.to_string()))?;
+        Response::ok(ResumeSubscriptionResponse::default())
     }
 
     async fn join_family(
@@ -521,7 +470,7 @@ impl BillingService for BillingConnectService {
                 "family_owner",
             ));
         }
-        if !self.family_active(pool, &owner).await? {
+        if !self.family_active(&owner).await {
             return Err(ConnectError::new(
                 ErrorCode::FailedPrecondition,
                 "family_plan_inactive",
@@ -592,7 +541,7 @@ impl BillingService for BillingConnectService {
     ) -> ServiceResult<ResetFamilyInviteResponse> {
         let identity = Self::account(&ctx)?;
         let pool = self.pool()?;
-        if !self.family_active(pool, &identity.user_id).await? {
+        if !self.family_active(&identity.user_id).await {
             return Err(ConnectError::new(
                 ErrorCode::FailedPrecondition,
                 "family_plan_inactive",
@@ -611,39 +560,6 @@ impl BillingService for BillingConnectService {
 
 pub fn billing_connect_service(state: AppState) -> Arc<BillingConnectService> {
     Arc::new(BillingConnectService::new(state))
-}
-
-/// `POST /webhooks/stripe`: verify, then read the named objects back from Stripe.
-///
-/// 400 for a bad signature or body, 503 while sales are closed, 500 when
-/// processing failed (Stripe retries), 200 once applied.
-pub async fn stripe_webhook(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    body: Bytes,
-) -> StatusCode {
-    let (Some(pool), Some(stripe)) = (&state.pool, &state.stripe) else {
-        return StatusCode::SERVICE_UNAVAILABLE;
-    };
-    let Some(signature) = headers
-        .get("stripe-signature")
-        .and_then(|value| value.to_str().ok())
-    else {
-        return StatusCode::BAD_REQUEST;
-    };
-    if !stripe.verify_webhook(&body, signature, Utc::now().timestamp()) {
-        return StatusCode::BAD_REQUEST;
-    }
-    let Ok(event) = serde_json::from_slice::<serde_json::Value>(&body) else {
-        return StatusCode::BAD_REQUEST;
-    };
-    match service::handle_event(pool, stripe, &event).await {
-        Ok(()) => StatusCode::OK,
-        Err(error) => {
-            warn!(%error, "stripe webhook processing failed");
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    }
 }
 
 #[cfg(test)]

@@ -26,7 +26,7 @@ const primary =
 const secondary =
 	'inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold hover:border-primary/30 hover:text-primary disabled:opacity-60'
 
-/** Plan state, cancel/resume, the Stripe portal, and the family plan. */
+/** Plan state, cancel/resume, the billing portal, and the family plan. */
 export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 	const t = useTranslations('plus.subscription')
 	const tFamily = useTranslations('plus.family')
@@ -66,10 +66,8 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 		return <p role="alert">{t('error')}</p>
 	}
 
-	const own = view.source === 'plus'
 	const origin = typeof window === 'undefined' ? '' : window.location.origin
 	const inviteUrl = inviteCode ? `${origin}/family/join?code=${inviteCode}` : null
-	const refundOpen = own && view.refundUntilMs !== null && !view.cancelAtPeriodEnd
 	const statusKey =
 		view.status === 'trialing'
 			? 'active'
@@ -110,19 +108,10 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 									? t('ends', { date: date(view.periodEndMs) })
 									: t('renews', { date: date(view.periodEndMs) })}
 							</p>
-							{refundOpen ? (
-								<p className="text-muted-foreground">
-									{t('refundWindow', { date: date(view.refundUntilMs) })}
-								</p>
-							) : null}
 
 							{confirming === 'cancel' ? (
 								<div className="space-y-3 rounded-xl border border-border p-4">
-									<p>
-										{refundOpen
-											? t('cancelRefundConfirm')
-											: t('cancelPeriodConfirm', { date: date(view.periodEndMs) })}
-									</p>
+									<p>{t('cancelPeriodConfirm', { date: date(view.periodEndMs) })}</p>
 									<div className="flex flex-wrap gap-2">
 										<button
 											type="button"
@@ -131,9 +120,7 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 											onClick={() =>
 												run(async () => {
 													const done = await cancelSubscription()
-													return done.refunded
-														? t('cancelledRefund')
-														: t('cancelledPeriod', { date: date(done.accessEndsAtMs) })
+													return t('cancelledPeriod', { date: date(done.accessEndsAtMs) })
 												})
 											}
 										>

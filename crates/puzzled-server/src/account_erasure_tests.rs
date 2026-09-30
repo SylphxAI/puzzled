@@ -19,9 +19,9 @@ use sqlx::PgPool;
 use tower::ServiceExt;
 use uuid::Uuid;
 
-use crate::billing_flow_tests::{fresh_database, token};
 use crate::capabilities::identity_access::adapters::auth_erasure::AuthErasure;
 use crate::capabilities::identity_access::adapters::platform_jwt::test_key_lock;
+use crate::test_support::{fresh_database, token};
 use crate::{router, AppState};
 
 const DELETE_PATH: &str = "/puzzled.v1.PreferencesService/DeleteAccountData";

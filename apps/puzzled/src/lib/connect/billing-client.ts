@@ -1,6 +1,6 @@
 /**
  * BillingService browser client (Puzzled Plus). The api owns every decision;
- * these calls only start a checkout, open the Stripe portal, or change the
+ * these calls only start a checkout, open the Sylphx Money billing portal, or change the
  * account's own subscription and family.
  */
 import { create } from '@bufbuild/protobuf'
@@ -40,7 +40,7 @@ export async function openPortal(locale: string) {
 
 export async function cancelSubscription() {
 	const res = await client().cancelSubscription(create(CancelSubscriptionRequestSchema, {}))
-	return { refunded: res.refunded, accessEndsAtMs: Number(res.accessEndsAtMs) }
+	return { accessEndsAtMs: Number(res.accessEndsAtMs) }
 }
 
 export async function resumeSubscription() {

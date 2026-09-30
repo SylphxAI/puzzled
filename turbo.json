@@ -15,7 +15,6 @@
 		"TRIGGER_*",
 		"SYLPHX_*",
 		"GOOGLE_CLIENT_*",
-		"STRIPE_*",
 		"VAPID_*",
 		"EMAIL_UNSUBSCRIBE_SECRET",
 		"INIT_SECRET",

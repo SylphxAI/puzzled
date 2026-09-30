@@ -8,8 +8,29 @@ use serde_json::{json, Map, Value};
 use super::access::{FEATURE_FAMILY, FEATURE_PLUS};
 use super::client::{Catalog, Money, MoneyError};
 use super::pricing::{plan, price_of};
-use crate::capabilities::billing::service::locale_prefix;
-pub use crate::capabilities::billing::service::CheckoutError;
+
+/// Why a checkout could not be started.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CheckoutError {
+    /// The immediate-supply consent was not given.
+    ConsentRequired,
+    PlanNotOnSale,
+    AlreadySubscribed,
+    Failed(String),
+}
+
+/// Return-URL path prefix for a locale: en-US has none, the others use the
+/// canonical tag (`/en-GB`, `/zh-HK`), matching the web routing.
+#[must_use]
+pub fn locale_prefix(locale: &str) -> &'static str {
+    match locale.to_ascii_lowercase().as_str() {
+        "en-gb" => "/en-GB",
+        "zh-cn" => "/zh-CN",
+        "zh-hk" => "/zh-HK",
+        "zh-tw" => "/zh-TW",
+        _ => "",
+    }
+}
 
 /// Proof the buyer gave the immediate-supply consent. It can only be made
 /// from a ticked box, so no session is created without one.
