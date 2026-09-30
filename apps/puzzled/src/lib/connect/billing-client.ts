@@ -22,9 +22,14 @@ function client() {
 	return createClient(BillingService, getConnectTransport())
 }
 
-export async function startCheckout(planId: string, locale: string, currency: string) {
+export async function startCheckout(
+	planId: string,
+	locale: string,
+	currency: string,
+	immediateSupplyConsent: boolean,
+) {
 	const res = await client().createCheckout(
-		create(CreateCheckoutRequestSchema, { planId, locale, currency }),
+		create(CreateCheckoutRequestSchema, { planId, locale, currency, immediateSupplyConsent }),
 	)
 	return res.url
 }

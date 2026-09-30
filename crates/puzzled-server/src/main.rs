@@ -66,7 +66,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some(_) => info!("Stripe configured (test mode); Plus is on sale once prices exist"),
         None => info!("Stripe not configured: Puzzled Plus is not on sale and nothing is locked"),
     }
-    let state = AppState::new(pool).with_stripe(stripe);
+    let money = puzzled_server::capabilities::money::Money::from_env();
+    if let Some(money) = &money {
+        // The org, project and env come from the key's own whoami.
+        if let Err(error) = money.warm().await {
+            tracing::warn!(%error, "Sylphx Money environment not resolved at start-up; retrying on use");
+        }
+        info!("Sylphx Money configured: entitlements, checkout and prices come from Money");
+    }
+    let state = AppState::new(pool).with_stripe(stripe).with_money(money);
     let slice = if state.pool.is_some() { "S1" } else { "S0" };
     let port = http_port();
     let listener = TcpListener::bind(("0.0.0.0", port)).await?;

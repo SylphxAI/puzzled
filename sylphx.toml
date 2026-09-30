@@ -83,6 +83,9 @@ watch_paths = [
   "sylphx.toml",
 ]
 
+[services.env.SYLPHX_MONEY_API_KEY]
+from_secret = "SYLPHX_MONEY_API_KEY"
+
 [services.health]
 mode = "http"
 # ADR-141 single path (api). Web uses per-service health.path = "/".

@@ -35,7 +35,7 @@ use puzzled_core::puzzle_play::game_slugs::{
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
-use crate::capabilities::billing::service::entitlement;
+use crate::capabilities::billing::service::access as entitlement_access;
 use crate::capabilities::daily_pipeline;
 use crate::capabilities::gamification::adapters::streak_read::load_settled_streak;
 use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::fetch_puzzle_by_id;
@@ -161,7 +161,14 @@ impl PuzzleConnectService {
         }
         let entitled = match (user_id, &self.state.pool) {
             (Some(uid), Some(pool)) => {
-                match entitlement(pool, self.state.stripe.as_ref(), uid).await {
+                match entitlement_access(
+                    pool,
+                    self.state.stripe.as_ref(),
+                    self.state.money.as_ref(),
+                    uid,
+                )
+                .await
+                {
                     Ok(found) => found.entitled,
                     Err(error) => {
                         warn!(%error, "entitlement read failed; refusing paid play");
@@ -171,6 +178,26 @@ impl PuzzleConnectService {
             }
             _ => false,
         };
+        // Money unreachable: it cannot vouch for anyone, so nothing that is
+        // free today is locked behind it.
+        if !entitled {
+            if let (Some(uid), Some(money)) = (user_id, self.state.money.as_ref()) {
+                if money
+                    .try_check(uid, crate::capabilities::money::access::FEATURE_PLUS)
+                    .await
+                    .is_err()
+                {
+                    // Intended: player experience over a small leak while Money
+                    // is down. Counted so an outage-long free ride is visible.
+                    tracing::warn!(
+                        event = "money_entitlement_unanswerable_allowed",
+                        feature = crate::capabilities::money::access::FEATURE_PLUS,
+                        "Money could not answer the Plus check; play allowed"
+                    );
+                    return Ok(());
+                }
+            }
+        }
         play_access(sales_open, entitled, is_today, free_today)
             .map_err(|denied| ConnectError::new(ErrorCode::PermissionDenied, denied.code()))
     }

@@ -89,6 +89,9 @@ message CreateCheckoutRequest {
   string locale = 2;
   // Preferred currency (usd, gbp). Empty lets the server choose.
   string currency = 3;
+  // The buyer's express request for immediate access and acknowledgement that
+  // the 14-day cancellation right is lost. Checkout is refused without it.
+  bool immediate_supply_consent = 4;
 }
 
 message CreateCheckoutResponse {

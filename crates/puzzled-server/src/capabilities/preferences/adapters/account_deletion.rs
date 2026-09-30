@@ -33,6 +33,11 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
         r#"DELETE FROM "auth_subjects" WHERE "user_id" = $1"#,
     ),
     (
+        "checkout_consents",
+        "user_id",
+        r#"DELETE FROM "checkout_consents" WHERE "user_id" = $1"#,
+    ),
+    (
         "billing_customers",
         "user_id",
         r#"DELETE FROM "billing_customers" WHERE "user_id" = $1"#,

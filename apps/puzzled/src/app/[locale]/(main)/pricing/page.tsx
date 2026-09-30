@@ -121,6 +121,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 						</p>
 						<h2 className="mt-2 font-display text-2xl">{t('closedTitle')}</h2>
 						<p className="mt-2 text-[15px] text-muted-foreground">{t('closedBody')}</p>
+						<p className="mt-1 text-[15px] font-semibold">{t('purchasesSoon')}</p>
 						<ul className="mt-5 space-y-2.5 border-t border-border pt-5">
 							{includes(true).map((line) => (
 								<li key={line} className="flex items-start gap-2.5 text-[15px]">

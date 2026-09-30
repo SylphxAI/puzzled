@@ -170,3 +170,10 @@ Star.
 Each new module costs content, verification, attention, runtime and a way to
 disable it without breaking the app. Ship modules when the expected lift in
 daily puzzle completers or paid conversion justifies that.
+
+## When Money cannot answer
+
+This is the intended behaviour, a business choice of player experience over a small leak:
+
+- If the Money catalogue can't be read, Plus counts as not on sale. Nothing is locked, and the pricing page says "Purchases open shortly".
+- If Money can't answer a Plus entitlement check, play is allowed. Each such allowance logs `event = "money_entitlement_unanswerable_allowed"` at warn level, so a free ride lasting a whole outage shows up in logs and alerts.

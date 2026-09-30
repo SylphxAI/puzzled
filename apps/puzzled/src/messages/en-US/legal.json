@@ -28,7 +28,7 @@
 				"items": {
 					"account": "Account information: name, email address, and profile picture",
 					"game": "Game data: scores, statistics, streaks, and game history",
-					"payment": "Payment information: Stripe collects your card details; we receive your subscription status, amounts, dates and Stripe references",
+					"payment": "Payment information: Sylphx Money, the payments service of Sylphx Limited, and its payment processor Stripe collect your card details; we receive your subscription status, amounts, dates and payment references",
 					"technical": "Technical data: IP address, browser type, and device information",
 					"errors": "Error reports: when a page or our server fails, we record the error message, stack trace and page path (never the query string, email addresses or anything you typed) in our own error-monitoring service, to find and fix the fault",
 					"referral": "Referral tags: if you arrive through a link that carries campaign tags (utm_ parameters or a referral id, for example from another Sylphx product), and you have accepted analytics cookies, we keep those tags for 30 days in a first-party cookie and store them with your account and subscription if you sign up or subscribe. We use them to know which link brought you, and we do not sell them."
@@ -48,11 +48,12 @@
 			},
 			"payments": {
 				"title": "Payments",
-				"content": "When you subscribe, Stripe processes your payment; we never receive your full card number. We keep a record of your subscription, payments and refunds (amounts, dates and Stripe references) for as long as tax and accounting law requires. If you delete your account, these records are kept without your player ID."
+				"content": "When you subscribe, Sylphx Money (operated by Sylphx Limited) and its payment processor Stripe process your payment; we never receive your full card number. We record that you asked for access to start at once when you subscribed. Sylphx Money keeps a record of your subscription, payments and refunds (amounts, dates and payment references) for as long as tax and accounting law requires. If you delete your account, these records are kept without your player ID."
 			},
 			"thirdParty": {
 				"title": "Who we share data with",
 				"content": "We share personal data with service providers that process it for us under contract, including:",
+				"money": "Payment processing and subscriptions",
 				"stripe": "Payment processing",
 				"google": "Authentication",
 				"mail": "Email delivery (sign-in and verification mail)",
@@ -154,7 +155,7 @@
 				"title": "Puzzled Plus subscriptions",
 				"content": "Today's featured puzzle is free. Puzzled Plus is an optional paid subscription that opens every game, the archive of past days, and stats for every game.",
 				"items": {
-					"billing": "Prices are shown before you pay and include VAT where it applies. Stripe takes payment when you subscribe and at the start of each monthly or yearly period.",
+					"billing": "Prices are shown before you pay and include VAT where it applies. Sylphx Money takes payment when you subscribe and at the start of each monthly or yearly period.",
 					"renewal": "Your subscription renews automatically until you cancel. You can cancel at any time in Settings > Subscription; you keep access until the end of the period you have paid for and are not charged again.",
 					"cancellation": "Cancellation right: you may cancel your first subscription within 14 days of starting it and get a full refund, however much you have played. Cancel in Settings > Subscription or email us.",
 					"refund": "After those 14 days, payments are non-refundable and we do not refund part-used periods, except where these terms or the law say otherwise.",
