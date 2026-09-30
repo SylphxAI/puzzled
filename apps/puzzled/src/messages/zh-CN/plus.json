@@ -8,6 +8,7 @@
 		"closedTitle": "目前全部免费",
 		"closedBody": "Puzzled Plus 尚未开售，因此每款游戏和每一天的题目都向所有人开放。",
 		"purchasesSoon": "即将开放购买。",
+		"checkoutFailed": "无法打开付款页面，请重试。",
 		"freeTitle": "免费",
 		"freeBody": "每天一道今日精选谜题，无需注册账户。",
 		"playFree": "玩今日免费谜题：{game}",

@@ -8,6 +8,7 @@
 		"closedTitle": "Everything is free for now",
 		"closedBody": "Puzzled Plus is not on sale yet, so every game and every past day is open to everyone.",
 		"purchasesSoon": "Purchases open shortly.",
+		"checkoutFailed": "Checkout could not start. Please try again.",
 		"freeTitle": "Free",
 		"freeBody": "Today's featured puzzle, every day, with no account needed.",
 		"playFree": "Play today's free puzzle: {game}",
