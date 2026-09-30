@@ -36,6 +36,11 @@ watch_paths = [
   "sylphx.toml",
 ]
 
+# The platform's user-deletion fan-out (cloud#11120): Auth announces
+# auth.user.deletion_requested here; the api erases and posts evidence.
+[privacy]
+erasure_handler = { service = "api", path = "/webhooks/sylphx/erasure" }
+
 [[services]]
 name = "web"
 port = 3000
@@ -68,6 +73,8 @@ path_prefixes = [
   "/readyz",
   # Stripe posts subscription and payment events here (signature-verified).
   "/webhooks/stripe",
+  # Sylphx Auth's user-deletion fan-out (signature-verified; docs/privacy.md).
+  "/webhooks/sylphx/erasure",
   # Key-guarded production check for error capture (docs/observability.md).
   # The web service's own trigger is /api/observability/test.
   "/observability/test",

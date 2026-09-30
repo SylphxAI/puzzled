@@ -29,6 +29,8 @@ mod auth_session_tests;
 #[cfg(test)]
 mod billing_flow_tests;
 #[cfg(test)]
+mod erasure_fanout_tests;
+#[cfg(test)]
 mod daily_pipeline_tests;
 #[cfg(test)]
 mod daily_reminder_tests;

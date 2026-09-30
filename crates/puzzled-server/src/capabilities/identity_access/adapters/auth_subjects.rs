@@ -76,6 +76,23 @@ pub async fn subjects_naming_player(
     Ok(subjects)
 }
 
+/// Every player an Auth user id names, in any subject form: each row whose
+/// subject is the id, plus the player derived from an old-form id that never
+/// got a row. Used by the platform's erasure fan-out; it never creates a row.
+pub async fn players_for_subject(pool: &PgPool, subject: &str) -> Result<Vec<Uuid>, sqlx::Error> {
+    let mut players: Vec<Uuid> =
+        sqlx::query_scalar("SELECT DISTINCT user_id FROM auth_subjects WHERE subject = $1")
+            .bind(subject)
+            .fetch_all(pool)
+            .await?;
+    if let Some(derived) = legacy_player_id(subject) {
+        if !players.contains(&derived) {
+            players.push(derived);
+        }
+    }
+    Ok(players)
+}
+
 async fn lookup(pool: &PgPool, subject: &str) -> Result<Option<Uuid>, sqlx::Error> {
     sqlx::query_scalar("SELECT user_id FROM auth_subjects WHERE subject = $1")
         .bind(subject)

@@ -7,6 +7,7 @@ use sqlx::PgPool;
 use crate::capabilities::billing::adapters::stripe::Stripe;
 use crate::capabilities::identity_access::adapters::auth_erasure::AuthErasure;
 use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
+use crate::capabilities::identity_access::adapters::erasure_delivery::ErasureTransport;
 use crate::capabilities::tryit_conversions::TryitReporter;
 use crate::shared::tick_receipt::TickVerifier;
 
@@ -22,6 +23,9 @@ pub struct AppState {
     /// Enable Auth binds the instance keys: account erasure then refuses,
     /// rather than leaving a live sign-in behind.
     pub erasure: Option<AuthErasure>,
+    /// The platform's user-deletion fan-out: verifies deliveries and posts
+    /// evidence. None until its secret is set: the endpoint then answers 503.
+    pub erasure_fanout: Option<ErasureTransport>,
     /// Admission for Compute schedule ticks (signed receipts).
     pub ticks: TickVerifier,
     /// Reports Tryit-referred sign-ups and purchases back to Tryit. None
@@ -36,6 +40,7 @@ impl AppState {
             started_at: Instant::now(),
             auth: AuthSessions::from_env().with_pool(pool.clone()),
             erasure: AuthErasure::from_env(),
+            erasure_fanout: ErasureTransport::from_env(),
             pool,
             stripe: None,
             ticks: TickVerifier::from_env(),
@@ -64,6 +69,12 @@ impl AppState {
     #[must_use]
     pub fn with_erasure(mut self, erasure: Option<AuthErasure>) -> Self {
         self.erasure = erasure;
+        self
+    }
+
+    #[must_use]
+    pub fn with_erasure_fanout(mut self, transport: Option<ErasureTransport>) -> Self {
+        self.erasure_fanout = transport;
         self
     }
 

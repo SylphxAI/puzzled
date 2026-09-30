@@ -5,7 +5,9 @@
 //! player-id column that is not listed here, so a new table cannot be left out
 //! of erasure silently.
 
-use sqlx::PgPool;
+use std::collections::BTreeMap;
+
+use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
 /// Every (table, column) that stores a player id, with the statement that
@@ -129,6 +131,64 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     ),
 ];
 
+/// Tables whose rows outlive the erasure, and why. The row stays, with the
+/// player id cleared (see the statements above); the reason goes into the
+/// evidence sent to Sylphx Auth.
+pub const KEPT_TABLES: &[(&str, &str)] = &[
+    (
+        "billing_ledger",
+        "kept for UK tax records (six years); the player id is cleared so the row no longer identifies the player",
+    ),
+    (
+        "billing_subscriptions",
+        "kept for UK tax records (six years); the player id is cleared so the row no longer identifies the player",
+    ),
+];
+
+/// What one erasure did: rows affected per table (deleted, or unlinked for a
+/// kept table) and the reason each kept table still holds rows.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ErasureReport {
+    pub rows: BTreeMap<String, u64>,
+    pub kept: BTreeMap<String, String>,
+}
+
+impl ErasureReport {
+    #[must_use]
+    pub fn total(&self) -> u64 {
+        self.rows.values().sum()
+    }
+
+    /// Add another player's report (a subject can name more than one).
+    pub fn merge(&mut self, other: Self) {
+        for (table, n) in other.rows {
+            *self.rows.entry(table).or_default() += n;
+        }
+        self.kept.extend(other.kept);
+    }
+}
+
+/// The one erasure path, inside the caller's transaction: the player's own
+/// delete and the platform's fan-out both run this.
+pub async fn erase_in_transaction(
+    tx: &mut Transaction<'_, Postgres>,
+    player: Uuid,
+) -> Result<ErasureReport, String> {
+    let mut report = ErasureReport::default();
+    for (table, column, statement) in USER_KEYED_COLUMNS {
+        let result = sqlx::query(*statement)
+            .bind(player)
+            .execute(&mut **tx)
+            .await
+            .map_err(|e| format!("account deletion failed on {table}.{column}: {e}"))?;
+        *report.rows.entry((*table).to_string()).or_default() += result.rows_affected();
+    }
+    for (table, reason) in KEPT_TABLES {
+        report.kept.insert((*table).to_string(), (*reason).to_string());
+    }
+    Ok(report)
+}
+
 /// Delete every row keyed to `user_id` in one transaction; returns rows deleted.
 pub async fn delete_account_data(pool: &PgPool, user_id: &str) -> Result<u64, String> {
     let uid = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
@@ -136,24 +196,16 @@ pub async fn delete_account_data(pool: &PgPool, user_id: &str) -> Result<u64, St
         .begin()
         .await
         .map_err(|e| format!("account deletion begin failed: {e}"))?;
-    let mut deleted = 0u64;
-    for (table, column, statement) in USER_KEYED_COLUMNS {
-        let result = sqlx::query(*statement)
-            .bind(uid)
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| format!("account deletion failed on {table}.{column}: {e}"))?;
-        deleted += result.rows_affected();
-    }
+    let report = erase_in_transaction(&mut tx, uid).await?;
     tx.commit()
         .await
         .map_err(|e| format!("account deletion commit failed: {e}"))?;
-    Ok(deleted)
+    Ok(report.total())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::USER_KEYED_COLUMNS;
+    use super::{KEPT_TABLES, USER_KEYED_COLUMNS};
     use std::collections::BTreeSet;
     use std::path::Path;
 
@@ -225,7 +277,7 @@ mod tests {
             let delete = format!(r#"DELETE FROM "{table}" WHERE "{column}" = $1"#);
             // Money facts keep the row and drop the player id.
             let unlink = format!(r#"UPDATE "{table}" SET "{column}" = NULL WHERE "{column}" = $1"#);
-            let is_money = matches!(*table, "billing_ledger" | "billing_subscriptions");
+            let is_money = KEPT_TABLES.iter().any(|(kept, _)| kept == table);
             let expected = if is_money { unlink } else { delete };
             assert_eq!(*statement, expected);
         }
@@ -252,5 +304,25 @@ mod tests {
             stale.is_empty(),
             "USER_KEYED_COLUMNS names columns no migration declares: {stale:?}"
         );
+    }
+
+    #[test]
+    fn every_user_keyed_table_is_erased_or_kept_with_a_reason() {
+        for (table, column, statement) in USER_KEYED_COLUMNS {
+            let kept = KEPT_TABLES.iter().find(|(kept, _)| kept == table);
+            match kept {
+                Some((_, reason)) => {
+                    assert!(!reason.is_empty(), "{table}: kept without a reason");
+                    assert!(statement.starts_with("UPDATE"), "{table}.{column}");
+                }
+                None => assert!(statement.starts_with("DELETE"), "{table}.{column}"),
+            }
+        }
+        for (kept, _) in KEPT_TABLES {
+            assert!(
+                USER_KEYED_COLUMNS.iter().any(|(table, _, _)| table == kept),
+                "{kept} is listed as kept but is not a user-keyed table"
+            );
+        }
     }
 }

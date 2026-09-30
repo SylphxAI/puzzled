@@ -15,6 +15,7 @@ use super::compute_ticks::{
 };
 use super::connect_admin::admin_connect_service;
 use super::connect_billing::{billing_connect_service, stripe_webhook};
+use super::erasure_fanout::{erasure_fanout, ERASURE_FANOUT_PATH};
 use super::connect_gamification::gamification_connect_service;
 use super::connect_health::health_connect_service;
 use super::connect_jobs::jobs_connect_service;
@@ -42,6 +43,7 @@ pub fn router(state: AppState) -> Router {
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route("/webhooks/stripe", post(stripe_webhook))
+        .route(ERASURE_FANOUT_PATH, post(erasure_fanout))
         .route(DAILY_PUZZLES_PATH, post(daily_puzzles_tick))
         .route(AUDIT_RETENTION_PATH, post(audit_retention_tick))
         .route(DAILY_REMINDERS_PATH, post(daily_reminders_tick))
