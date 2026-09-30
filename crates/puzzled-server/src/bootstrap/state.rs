@@ -110,7 +110,10 @@ mod tests {
     #[tokio::test]
     async fn money_unreachable_means_sales_closed() {
         let money = Money::new("http://127.0.0.1:9/env", "sk_test", "https://puzzled.test");
-        let state = AppState::new(Some(PgPool::connect_lazy("postgres://u@127.0.0.1:9/d").unwrap())).with_money(Some(money));
+        let state = AppState::new(Some(
+            PgPool::connect_lazy("postgres://u@127.0.0.1:9/d").unwrap(),
+        ))
+        .with_money(Some(money));
         assert!(!state.sales_open().await);
     }
 }

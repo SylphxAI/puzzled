@@ -10,13 +10,13 @@ use puzzled_core::gamification::personal_streak::compute_personal_streak;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::test_support::fresh_database;
 use crate::capabilities::gamification::adapters::freezes_db::{
     adopt_guest_freezes, load_freeze_row, settle_player_freezes,
 };
 use crate::capabilities::gamification::adapters::streak_sessions_db::load_accepted_ritual_days;
 use crate::capabilities::preferences::adapters::account_deletion::delete_account_data;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::persist_validated_session;
+use crate::test_support::fresh_database;
 
 fn day(d: u32) -> NaiveDate {
     NaiveDate::from_ymd_opt(2026, 9, d).unwrap()
