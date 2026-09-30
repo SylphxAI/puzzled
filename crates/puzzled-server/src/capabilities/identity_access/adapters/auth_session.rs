@@ -539,12 +539,18 @@ mod tests {
         let on_session = json!({"session": {"principal": principal.clone(),
             "act": {"sub": "agent_1"}}});
         assert_eq!(
-            principal_from_session(&on_session, ORG).unwrap().actor.as_deref(),
+            principal_from_session(&on_session, ORG)
+                .unwrap()
+                .actor
+                .as_deref(),
             Some("agent_1")
         );
         let on_body = json!({"actor": "agent_2", "session": {"principal": principal.clone()}});
         assert_eq!(
-            principal_from_session(&on_body, ORG).unwrap().actor.as_deref(),
+            principal_from_session(&on_body, ORG)
+                .unwrap()
+                .actor
+                .as_deref(),
             Some("agent_2")
         );
         let mut on_principal = principal.clone();

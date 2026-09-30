@@ -144,9 +144,7 @@ pub fn actor_from_claim(value: Option<&serde_json::Value>) -> Option<String> {
 
 /// Keep a JSON `null` distinct from a missing field: `Some(None)` is present
 /// and null.
-fn present<'de, D: serde::Deserializer<'de>>(
-    de: D,
-) -> Result<Option<serde_json::Value>, D::Error> {
+fn present<'de, D: serde::Deserializer<'de>>(de: D) -> Result<Option<serde_json::Value>, D::Error> {
     serde::Deserialize::deserialize(de).map(Some)
 }
 
@@ -696,7 +694,10 @@ mod tests {
             }
         }
         assert_eq!(
-            identity(Some(("act", serde_json::json!({"sub": "agent_1"})))).actor.as_deref(),
+            identity(Some(("act", serde_json::json!({"sub": "agent_1"}))))
+                .unwrap()
+                .actor
+                .as_deref(),
             Some("agent_1")
         );
         clear_test_decoding_key();
