@@ -2,6 +2,7 @@ import { afterEach, describe, expect, mock, test } from 'bun:test'
 import { getAppConfig } from './app-config'
 import { destEventsCredential, destIdentityProjectId } from './credentials'
 import {
+	authIdValue,
 	DEST_PEELS,
 	destIdentityJson,
 	destIdentityOrigin,
@@ -11,6 +12,7 @@ import {
 import { destEventsJson } from './peels'
 
 const originalFetch = globalThis.fetch
+const OWN = 'organization-0199aa10-7b2c-7d3e-8f00-00000000c0de'
 
 // `unstable_cache` needs Next's incremental cache; under bun test it runs the loader.
 mock.module('next/cache', () => ({ unstable_cache: <T>(load: T) => load }))
@@ -26,22 +28,93 @@ describe('Identity dest HTTP', () => {
 
 	test('parses dest snake_case principal_id', () => {
 		expect(
-			destIdentityPrincipal({
-				session: {
-					session_id: 'session-a',
-					principal: {
-						principal_id: 'principal-puzzled-a',
-						primary_email: 'a@example.com',
-						primary_email_verified: true,
+			destIdentityPrincipal(
+				{
+					session: {
+						session_id: 'session-a',
+						principal: {
+							principal_id: 'principal-puzzled-a',
+							project_id: OWN,
+							primary_email: 'a@example.com',
+							primary_email_verified: true,
+						},
 					},
 				},
-			}),
+				OWN,
+			),
 		).toEqual({
 			principalId: 'principal-puzzled-a',
 			primaryEmail: 'a@example.com',
 			displayName: undefined,
 			primaryEmailVerified: true,
 		})
+	})
+
+	test("only a session of this product's own Auth instance is a principal", () => {
+		const session = (project?: string) => ({
+			session: {
+				principal: {
+					principal_id: 'usr_a',
+					primary_email: 'a@example.com',
+					...(project === undefined ? {} : { project_id: project }),
+				},
+			},
+		})
+		// (a) Our own instance, in either key case.
+		expect(destIdentityPrincipal(session(OWN), OWN)?.principalId).toBe('usr_a')
+		expect(
+			destIdentityPrincipal({ principal: { principalId: 'usr_a', projectId: OWN } }, OWN),
+		).not.toBeNull()
+		// (b) Another tenant's instance, even with the same email.
+		expect(
+			destIdentityPrincipal(session('organization-0199aa10-7b2c-7d3e-8f00-00000000bad0'), OWN),
+		).toBeNull()
+		// (c) No or empty project id.
+		expect(destIdentityPrincipal(session(), OWN)).toBeNull()
+		expect(destIdentityPrincipal(session(''), OWN)).toBeNull()
+		// (d) Our own id unset.
+		expect(destIdentityPrincipal(session(OWN), undefined)).toBeNull()
+		expect(destIdentityPrincipal(session(OWN), ' ')).toBeNull()
+	})
+
+	test('Auth ids compare by value across organization, TypeID and uuid forms', () => {
+		// TypeID spec v0.3 vectors.
+		expect(authIdValue('org_00000000000000000000000000')).toBe('0'.repeat(32))
+		expect(authIdValue('org_01h455vb4pex5vsknk084sn02q')).toBe('01890a5dac96774bbcceb302099a8057')
+		expect(authIdValue('organization-01890A5D-AC96-774B-BCCE-B302099A8057')).toBe(
+			'01890a5dac96774bbcceb302099a8057',
+		)
+		expect(authIdValue('01890a5d-ac96-774b-bcce-b302099a8057')).toBe(
+			'01890a5dac96774bbcceb302099a8057',
+		)
+		for (const malformed of [
+			'',
+			undefined,
+			'org_puzzled',
+			'org_81h455vb4pex5vsknk084sn02q',
+			'org_01h455vb4pex5vsknk084sn02',
+			'org_01h455vb4pex5vsknk084sn02u',
+			'org_01H455VB4PEX5VSKNK084SN02Q',
+			'o_01h455vb4pex5vsknk084sn02q',
+			'organization_01h455vb4pex5vsknk084sn02q',
+			'organization-01890a5dac96774bbcceb302099a8057',
+			'organization-01890a5d-ac96-774b-bcce-b302099a805g',
+		]) {
+			expect(authIdValue(malformed)).toBeUndefined()
+		}
+		const legacy = 'organization-01890a5d-ac96-774b-bcce-b302099a8057'
+		const typeid = 'org_01h455vb4pex5vsknk084sn02q'
+		const session = (project: string) => ({
+			principal: { principal_id: 'usr_a', project_id: project },
+		})
+		expect(destIdentityPrincipal(session(typeid), legacy)).not.toBeNull()
+		expect(destIdentityPrincipal(session(legacy), typeid)).not.toBeNull()
+		expect(
+			destIdentityPrincipal(session('organization-01890a5d-ac96-774b-bcce-b302099a8058'), typeid),
+		).toBeNull()
+		expect(destIdentityPrincipal(session('org_01h455vb4pex5vsknk084sn02r'), legacy)).toBeNull()
+		expect(destIdentityPrincipal(session('org_puzzled'), legacy)).toBeNull()
+		expect(destIdentityPrincipal(session(legacy), 'org_puzzled')).toBeNull()
 	})
 
 	test('rejects suite-door {project}.api.sylphx.com as dest origin', () => {

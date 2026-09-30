@@ -96,13 +96,49 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 	return value && typeof value === 'object' ? (value as Record<string, unknown>) : undefined
 }
 
-export function destIdentityPrincipal(raw: unknown): IdentityPrincipal | null {
+const CANONICAL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const TYPEID = /^[a-z]{2,5}_([0-7][0-9a-hjkmnp-tv-z]{25})$/
+const CROCKFORD = '0123456789abcdefghjkmnpqrstvwxyz'
+
+/**
+ * The 128-bit value an Auth id carries (32 lowercase hex digits), in any of
+ * its forms: `organization-<uuid>`, a TypeID (`<prefix>_<26 base32 chars>`,
+ * spec v0.3) or a bare canonical uuid. Anything else is undefined.
+ */
+export function authIdValue(raw: string | undefined | null): string | undefined {
+	const value = raw?.trim() ?? ''
+	const uuid = value.startsWith('organization-') ? value.slice('organization-'.length) : value
+	if (CANONICAL_UUID.test(uuid)) return uuid.replaceAll('-', '').toLowerCase()
+	const suffix = TYPEID.exec(value)?.[1]
+	if (!suffix) return undefined
+	let bits = BigInt(0)
+	for (const char of suffix) bits = (bits << BigInt(5)) | BigInt(CROCKFORD.indexOf(char))
+	return bits.toString(16).padStart(32, '0')
+}
+
+/**
+ * The principal of a `GET /v1/sessions/current` answer. Auth answers for a
+ * session of ANY Auth instance, so the principal counts only when its
+ * `project_id` is this product's own instance (`expectedProjectId`, i.e.
+ * `SYLPHX_AUTH_ORGANIZATION_ID`), compared by value; a missing or different
+ * id, or no expected id, is no principal.
+ */
+export function destIdentityPrincipal(
+	raw: unknown,
+	expectedProjectId: string | undefined,
+): IdentityPrincipal | null {
 	const record = asRecord(raw)
 	if (!record) return null
 	const nested =
 		asRecord(record.principal) ?? asRecord(asRecord(record.session)?.principal) ?? record
 	const principalId = readText(nested, ['principal_id', 'principalId'])
 	if (!principalId) return null
+	const expected = authIdValue(expectedProjectId)
+	const projectId = readText(nested, ['project_id', 'projectId'])
+	if (!expected || authIdValue(projectId) !== expected) {
+		console.warn('auth session from another Auth instance refused', { projectId })
+		return null
+	}
 	const verified =
 		nested.primary_email_verified ?? nested.primaryEmailVerified ?? nested.email_verified
 	return {
@@ -113,8 +149,11 @@ export function destIdentityPrincipal(raw: unknown): IdentityPrincipal | null {
 	}
 }
 
-export function destIdentityUser(raw: unknown): IdentityUser | null {
-	const principal = destIdentityPrincipal(raw)
+export function destIdentityUser(
+	raw: unknown,
+	expectedProjectId: string | undefined,
+): IdentityUser | null {
+	const principal = destIdentityPrincipal(raw, expectedProjectId)
 	if (!principal) return null
 	return {
 		id: principal.principalId,
