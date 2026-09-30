@@ -7,6 +7,7 @@
 		"lead": "今日精选谜题人人免费。Puzzled Plus 开放全部 {count} 款游戏、往日题库，以及每款游戏的统计。",
 		"closedTitle": "目前全部免费",
 		"closedBody": "Puzzled Plus 尚未开售，因此每款游戏和每一天的题目都向所有人开放。",
+		"purchasesSoon": "即将开放购买。",
 		"freeTitle": "免费",
 		"freeBody": "每天一道今日精选谜题，无需注册账户。",
 		"playFree": "玩今日免费谜题：{game}",
@@ -29,7 +30,7 @@
 		"manage": "管理订阅",
 		"legal": "价格已含增值税。由 Sylphx Limited（在英格兰及威尔士注册）销售。订阅会自动续期，直到你在“设置”中取消。首次订阅后 {days} 天内取消可获全额退款。",
 		"checkoutCancelled": "已取消付款，你没有被扣费。",
-		"checkoutFailed": "无法打开付款页面，请重试。",
+		"checkoutFailed": "即将开放购买。",
 		"alreadySubscribed": "你已订阅 Puzzled Plus。",
 		"immediateSupplyConsent": "我要立即使用，并明白我会失去 14 天取消权。",
 		"consentRequired": "请勾选方框以继续。"

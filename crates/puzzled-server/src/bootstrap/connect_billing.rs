@@ -231,10 +231,11 @@ impl BillingService for BillingConnectService {
         };
         if let Some(money) = &self.state.money {
             // Prices are Money's `catalogs/default`; nothing is priced here.
-            let catalog = money
-                .catalog()
-                .await
-                .map_err(|e| internal("plans_unavailable")(e.to_string()))?;
+            // Money unreachable: no plans and sales closed ("Purchases open
+            // shortly"), never an error page.
+            let Ok(catalog) = money.catalog().await else {
+                return Response::ok(response);
+            };
             let sold = pricing::plans(&catalog);
             // The family size is the catalogue's `seats` limit, not a number
             // written here.

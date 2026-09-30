@@ -7,6 +7,7 @@
 		"lead": "今日精選謎題人人免費。Puzzled Plus 開放全部 {count} 款遊戲、往日題庫，以及每款遊戲的統計。",
 		"closedTitle": "現時全部免費",
 		"closedBody": "Puzzled Plus 尚未開售，所以每款遊戲和每一天的題目都向所有人開放。",
+		"purchasesSoon": "即將開放購買。",
 		"freeTitle": "免費",
 		"freeBody": "每天一題今日精選謎題，毋須登記帳戶。",
 		"playFree": "玩今日免費謎題：{game}",
@@ -29,7 +30,7 @@
 		"manage": "管理訂閱",
 		"legal": "價格已包含增值稅。由 Sylphx Limited（於英格蘭及威爾斯註冊）出售。訂閱會自動續期，直至你在「設定」中取消。首次訂閱後 {days} 日內取消可獲全數退款。",
 		"checkoutCancelled": "已取消付款，你沒有被收費。",
-		"checkoutFailed": "未能開啟付款頁面，請再試一次。",
+		"checkoutFailed": "即將開放購買。",
 		"alreadySubscribed": "你已訂閱 Puzzled Plus。",
 		"immediateSupplyConsent": "我要即時使用，並明白我會失去 14 天取消權。",
 		"consentRequired": "請剔選方格以繼續。"

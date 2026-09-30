@@ -89,14 +89,15 @@ impl AppState {
     /// the free daily puzzle never asks.
     pub async fn sales_open(&self) -> bool {
         // With Money configured, sales are open when Money's catalogue sells
-        // at least one Puzzled plan. A catalogue read that fails counts as on sale,
-        // so paid play fails closed; the free daily puzzle never asks.
+        // at least one Puzzled plan. A catalogue read that fails counts as not
+        // on sale: nothing is locked and no purchase is offered until Money
+        // answers (everything is free today, so an outage never locks it).
         if let Some(money) = &self.money {
             return match money.catalog().await {
                 Ok(catalog) => !pricing::plans(&catalog).is_empty(),
                 Err(error) => {
-                    tracing::warn!(%error, "Money catalogue read failed; treating Plus as on sale");
-                    true
+                    tracing::warn!(%error, "Money catalogue read failed; treating Plus as not on sale");
+                    false
                 }
             };
         }
@@ -121,5 +122,19 @@ impl AppState {
 impl Default for AppState {
     fn default() -> Self {
         Self::new(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Money down: sales read as closed, so nothing free today is locked and
+    /// no purchase is offered.
+    #[tokio::test]
+    async fn money_unreachable_means_sales_closed() {
+        let money = Money::new("http://127.0.0.1:9/env", "sk_test", "https://puzzled.test");
+        let state = AppState::new(None).with_money(Some(money));
+        assert!(!state.sales_open().await);
     }
 }

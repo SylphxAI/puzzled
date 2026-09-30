@@ -178,6 +178,19 @@ impl PuzzleConnectService {
             }
             _ => false,
         };
+        // Money unreachable: it cannot vouch for anyone, so nothing that is
+        // free today is locked behind it.
+        if !entitled {
+            if let (Some(uid), Some(money)) = (user_id, self.state.money.as_ref()) {
+                if money
+                    .try_check(uid, crate::capabilities::money::access::FEATURE_PLUS)
+                    .await
+                    .is_err()
+                {
+                    return Ok(());
+                }
+            }
+        }
         play_access(sales_open, entitled, is_today, free_today)
             .map_err(|denied| ConnectError::new(ErrorCode::PermissionDenied, denied.code()))
     }
