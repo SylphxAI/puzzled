@@ -1,5 +1,5 @@
 //! Who holds what, as Money answers it. The feature keys are the ones Money's
-//! `catalogs/default` declares; every entitlement read in Puzzled goes
+//! `price_catalogs/default` declares; every entitlement read in Puzzled goes
 //! through these.
 
 use super::client::{Money, MoneyError};

@@ -22,6 +22,7 @@ struct FakeMoney {
     answer: Value,
     checks: Vec<Value>,
     sessions: Vec<Value>,
+    session_keys: Vec<Option<String>>,
     catalog: Value,
 }
 
@@ -36,8 +37,19 @@ async fn check(State(fake): State<Fake>, Json(body): Json<Value>) -> (StatusCode
     )
 }
 
-async fn session(State(fake): State<Fake>, Json(body): Json<Value>) -> Json<Value> {
-    fake.lock().unwrap().sessions.push(body);
+async fn session(
+    State(fake): State<Fake>,
+    headers: axum::http::HeaderMap,
+    Json(body): Json<Value>,
+) -> Json<Value> {
+    let mut fake = fake.lock().unwrap();
+    fake.session_keys.push(
+        headers
+            .get("idempotency-key")
+            .and_then(|v| v.to_str().ok())
+            .map(str::to_string),
+    );
+    fake.sessions.push(body);
     Json(json!({"url": "https://checkout.example/pay/cs_1", "state": "open"}))
 }
 
@@ -64,7 +76,7 @@ async fn fake_money(status: u16, answer: Value) -> (Money, Fake) {
     let app = Router::new()
         .route("/env/entitlement_grants:check", post(check))
         .route("/env/checkout_sessions", post(session))
-        .route("/env/catalogs/default", get(catalog))
+        .route("/env/price_catalogs/default", get(catalog))
         .route("/env/customer_subscriptions", get(subscriptions))
         .with_state(fake.clone());
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -225,6 +237,8 @@ async fn checkout_creates_a_money_session_and_returns_its_url() {
     .await
     .unwrap();
     assert_eq!(url, "https://checkout.example/pay/cs_1");
+    let key = fake.lock().unwrap().session_keys[0].clone();
+    assert!(key.is_some_and(|k| !k.is_empty()), "Idempotency-Key is sent");
     let body = fake.lock().unwrap().sessions[0].clone();
     assert_eq!(body["subject"]["end_user"], USER);
     assert_eq!(body["line_items"][0]["price"], "k_solo_m");

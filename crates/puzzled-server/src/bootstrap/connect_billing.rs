@@ -230,7 +230,7 @@ impl BillingService for BillingConnectService {
             ..Default::default()
         };
         if let Some(money) = &self.state.money {
-            // Prices are Money's `catalogs/default`; nothing is priced here.
+            // Prices are Money's `price_catalogs/default`; nothing is priced here.
             // Money unreachable: no plans and sales closed ("Purchases open
             // shortly"), never an error page.
             let Ok(catalog) = money.catalog().await else {
