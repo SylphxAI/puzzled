@@ -10,7 +10,7 @@ use puzzled_core::gamification::personal_streak::compute_personal_streak;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::billing_flow_tests::fresh_database;
+use crate::test_support::fresh_database;
 use crate::capabilities::gamification::adapters::freezes_db::{
     adopt_guest_freezes, load_freeze_row, settle_player_freezes,
 };

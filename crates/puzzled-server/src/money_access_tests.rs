@@ -273,7 +273,7 @@ async fn the_billing_retire_refuses_to_run_over_data() {
         .await
         .unwrap();
     let retire_sql =
-        std::fs::read_to_string(migrations.join("20260930000000_retire_billing_tables.sql"))
+        std::fs::read_to_string(migrations.join("20261001020000_retire_billing_tables.sql"))
             .unwrap();
     let exists = |table: String| {
         let pool = pool.clone();

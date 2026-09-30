@@ -630,7 +630,7 @@ export const webhookEvents = pgTable(
 // ==========================================
 // RETIRED BILLING TABLES (Puzzled Plus moved to Sylphx Money)
 // ==========================================
-// Renamed by migration 20260930000000_retire_billing_tables and kept, empty and
+// Renamed by migration 20261001020000_retire_billing_tables and kept, empty and
 // unused by any code, until they are dropped after 2026-10-29 (PITR must cover
 // the pre-rename point). Not written or read anywhere.
 

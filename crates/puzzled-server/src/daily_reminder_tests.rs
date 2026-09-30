@@ -8,7 +8,7 @@ use chrono::{DateTime, Duration, NaiveDate, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::billing_flow_tests::fresh_database;
+use crate::test_support::fresh_database;
 use crate::capabilities::jobs::adapters::jobs_db::{
     claim_due_daily_reminders, release_daily_reminder,
 };
