@@ -81,7 +81,6 @@
 		"navigate": "Navigate",
 		"select": "Select",
 		"seedPlans": "Seed Default Plans",
-		"syncStripe": "Sync Plans to Stripe",
 		"viewErrors": "View Failed Jobs"
 	},
 	"dashboard": {
@@ -159,18 +158,14 @@
 	},
 	"plans": {
 		"title": "方案与定价",
-		"subtitle": "管理订阅方案并与 Stripe 同步",
+		"subtitle": "管理订阅方案",
 		"seedDefault": "生成默认方案",
-		"syncAll": "全部同步至 Stripe",
 		"noPlansYet": "暂无方案",
 		"noPlansHint": "点击「生成默认方案」创建免费和 Premium 方案",
 		"active": "启用",
 		"inactive": "停用",
-		"stripeSynced": "已同步 Stripe",
-		"syncToStripe": "同步至 Stripe",
 		"slug": "标识符",
 		"description": "描述",
-		"stripeProductId": "Stripe 产品 ID",
 		"features": "功能",
 		"prices": "价格",
 		"notSynced": "未同步",

@@ -13,10 +13,10 @@ option features.(pb.cpp).string_type = STRING;
 import "google/protobuf/cpp_features.proto";
 
 // BillingService: Puzzled Plus, the subscription that opens every game and
-// the archive. Stripe is the payment processor; this service owns the
-// entitlement and the append-only ledger. Identity comes from the verified
+// the archive. Sylphx Money is the payments service; this service owns the
+// entitlement and answers it from Money. Identity comes from the verified
 // Platform JWT; the request body never carries a user id. Prices are read
-// from Stripe, never copied into the client.
+// from Money, never copied into the client.
 
 message Plan {
   // Stable plan id: individual_monthly, individual_yearly, family_monthly,
@@ -65,7 +65,7 @@ message Family {
 }
 
 message GetSubscriptionRequest {
-  // Read the subscription back from Stripe before answering (after checkout).
+  // Read the subscription back from Money before answering (after checkout).
   bool refresh = 1;
 }
 
@@ -75,7 +75,7 @@ message GetSubscriptionResponse {
   bool entitled = 2;
   // none | plus (own subscription) | family (member of a family plan)
   string source = 3;
-  // Own subscription: plan id, Stripe status, period end.
+  // Own subscription: plan id, Money status, period end.
   string plan_id = 4 [features.field_presence = EXPLICIT];
   string status = 5 [features.field_presence = EXPLICIT];
   int64 current_period_end_ms = 6 [features.field_presence = EXPLICIT];

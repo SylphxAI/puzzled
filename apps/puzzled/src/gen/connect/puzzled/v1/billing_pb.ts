@@ -205,7 +205,7 @@ export const FamilySchema: GenMessage<Family> =
  */
 export type GetSubscriptionRequest = Message<'puzzled.v1.GetSubscriptionRequest'> & {
 	/**
-	 * Read the subscription back from Stripe before answering (after checkout).
+	 * Read the subscription back from Money before answering (after checkout).
 	 *
 	 * @generated from field: bool refresh = 1;
 	 */
@@ -244,7 +244,7 @@ export type GetSubscriptionResponse = Message<'puzzled.v1.GetSubscriptionRespons
 	source: string
 
 	/**
-	 * Own subscription: plan id, Stripe status, period end.
+	 * Own subscription: plan id, Money status, period end.
 	 *
 	 * @generated from field: string plan_id = 4 [features.field_presence = EXPLICIT];
 	 */

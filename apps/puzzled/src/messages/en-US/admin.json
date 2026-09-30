@@ -81,7 +81,6 @@
 		"navigate": "Navigate",
 		"select": "Select",
 		"seedPlans": "Seed Default Plans",
-		"syncStripe": "Sync Plans to Stripe",
 		"viewErrors": "View Failed Jobs"
 	},
 	"dashboard": {
@@ -159,18 +158,14 @@
 	},
 	"plans": {
 		"title": "Plans & Pricing",
-		"subtitle": "Manage subscription plans and sync with Stripe",
+		"subtitle": "Manage subscription plans",
 		"seedDefault": "Seed Default Plans",
-		"syncAll": "Sync All to Stripe",
 		"noPlansYet": "No plans yet",
 		"noPlansHint": "Click \"Seed Default Plans\" to create Free and Premium plans",
 		"active": "Active",
 		"inactive": "Inactive",
-		"stripeSynced": "Stripe Synced",
-		"syncToStripe": "Sync to Stripe",
 		"slug": "Slug",
 		"description": "Description",
-		"stripeProductId": "Stripe Product ID",
 		"features": "Features",
 		"prices": "Prices",
 		"notSynced": "Not synced",
