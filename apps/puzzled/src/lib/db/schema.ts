@@ -10,6 +10,7 @@
 
 import { relations, sql } from 'drizzle-orm'
 import {
+	bigint,
 	boolean,
 	check,
 	date,
@@ -625,6 +626,55 @@ export const webhookEvents = pgTable(
 		index('webhook_events_resource_created_idx').on(table.resourceId, table.eventCreatedAt),
 	],
 )
+
+// ==========================================
+// RETIRED BILLING TABLES (Puzzled Plus moved to Sylphx Money)
+// ==========================================
+// Renamed by migration 20261001020000_retire_billing_tables and kept, empty and
+// unused by any code, until they are dropped after 2026-10-29 (PITR must cover
+// the pre-rename point). Not written or read anywhere.
+
+export const billingCustomersRetired = pgTable('billing_customers__retired_20260929', {
+	userId: uuid('user_id').primaryKey(),
+	stripeCustomerId: text('stripe_customer_id').notNull().unique(),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const billingSubscriptionsRetired = pgTable(
+	'billing_subscriptions__retired_20260929',
+	{
+		stripeSubscriptionId: text('stripe_subscription_id').primaryKey(),
+		userId: uuid('user_id'),
+		stripeCustomerId: text('stripe_customer_id').notNull(),
+		planId: text('plan_id').notNull(),
+		status: text('status').notNull(),
+		currentPeriodEnd: timestamp('current_period_end').notNull(),
+		cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
+		startedAt: timestamp('started_at').notNull(),
+		updatedAt: timestamp('updated_at').defaultNow().notNull(),
+		attribution: jsonb('attribution'),
+	},
+	(table) => [index('billing_subscriptions__retired_20260929_user_id_idx').on(table.userId)],
+)
+
+export const billingLedgerRetired = pgTable(
+	'billing_ledger__retired_20260929',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		sourceId: text('source_id').notNull().unique(),
+		kind: text('kind').notNull(),
+		userId: uuid('user_id'),
+		stripeCustomerId: text('stripe_customer_id').notNull(),
+		stripeSubscriptionId: text('stripe_subscription_id'),
+		currency: text('currency').notNull(),
+		amountMinor: bigint('amount_minor', { mode: 'number' }).notNull(),
+		occurredAt: timestamp('occurred_at').notNull(),
+		recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+	},
+	(table) => [index('billing_ledger__retired_20260929_user_id_idx').on(table.userId)],
+)
+
+/**
 
 /**
  * The Sylphx Auth subject that signs a player in, kept as the exact text Auth
