@@ -2,10 +2,10 @@
 //! is admitted only with Compute's signed receipt for its exact URL
 //! (`shared::tick_receipt`), never a shared secret.
 
+use axum::Json;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
-use axum::Json;
 use serde_json::json;
 
 use super::state::AppState;
@@ -129,10 +129,34 @@ pub async fn daily_reminders_tick(State(state): State<AppState>, headers: Header
             .into_response();
     };
     match super::connect_jobs::send_due_daily_reminders(pool, chrono::Utc::now()).await {
-        Ok(sent) => (StatusCode::OK, Json(json!({"sent": sent}))).into_response(),
+        Ok(outcome) if outcome.send_path_down() => {
+            tracing::warn!(
+                failed = outcome.failed,
+                "daily reminders send path down; every send failed"
+            );
+            // Released; Compute retries and they go out once the path is back.
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({"error": "send_failed", "failed": outcome.failed})),
+            )
+                .into_response()
+        }
+        Ok(outcome) => {
+            if outcome.failed > 0 {
+                tracing::warn!(
+                    failed = outcome.failed,
+                    sent = outcome.sent,
+                    "daily reminders tick had per-player failures"
+                );
+            }
+            (
+                StatusCode::OK,
+                Json(json!({"sent": outcome.sent, "failed": outcome.failed})),
+            )
+                .into_response()
+        }
         Err(errors) => {
-            tracing::warn!(failed = errors.len(), "daily reminders tick had failures");
-            // Failed sends were released; Compute retries and they go out then.
+            tracing::warn!(error = %errors.join("; "), "daily reminders tick could not run");
             (
                 StatusCode::SERVICE_UNAVAILABLE,
                 Json(json!({"error": "send_failed", "failed": errors.len()})),
