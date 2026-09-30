@@ -230,7 +230,13 @@ async fn a_family_join_is_refused_and_retryable_when_money_cannot_answer_seats()
     assert!(refused(&body, "seats_unavailable"), "{body}");
 
     // Seats answered: the same join succeeds, and the member then plays.
+    // The failed check is remembered for FAILED_CACHE_TTL; wait it out.
     fake.lock().unwrap().seats_down = false;
+    tokio::time::sleep(
+        crate::capabilities::money::client::FAILED_CACHE_TTL
+            + std::time::Duration::from_millis(300),
+    )
+    .await;
     let member = token(UNPAID);
     let (status, body) = call(&app, "/puzzled.v1.BillingService/JoinFamily", join, &member).await;
     assert_eq!(status, StatusCode::OK, "{body}");
