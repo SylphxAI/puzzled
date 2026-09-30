@@ -55,7 +55,8 @@ impl FreezeData {
             user_id: user_id.into(),
             freezes_available: 0,
             freezes_used: 0,
-            auto_freeze_enabled: false,
+            // Earned freezes cover missed days until the player turns it off.
+            auto_freeze_enabled: true,
         }
     }
 }
@@ -107,42 +108,11 @@ pub fn add_streak_freezes(
     Ok((data, reason))
 }
 
-/// Try auto-freeze on loss (premium + available freezes).
-///
-/// Returns `(used, updated_data)`.
-#[must_use]
-pub fn try_auto_freeze(mut data: FreezeData, is_premium: bool) -> (bool, FreezeData) {
-    if !is_premium || !data.auto_freeze_enabled || data.freezes_available <= 0 {
-        return (false, data);
-    }
-    data.freezes_available -= 1;
-    data.freezes_used = data.freezes_used.saturating_add(1);
-    (true, data)
-}
-
 /// Why a personal streak payload cannot be returned.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StreakReadError {
     StoreUnavailable,
     ReadFailed,
-}
-
-/// Map a store read into a personal streak, or fail closed.
-pub fn project_personal_streak(
-    today: chrono::NaiveDate,
-    read: Result<(Vec<chrono::NaiveDate>, u32), String>,
-) -> Result<
-    (
-        puzzled_core::gamification::personal_streak::PersonalStreak,
-        u32,
-    ),
-    StreakReadError,
-> {
-    let (days, total_games_played) = read.map_err(|_| StreakReadError::ReadFailed)?;
-    Ok((
-        puzzled_core::gamification::personal_streak::compute_personal_streak(today, &days),
-        total_games_played,
-    ))
 }
 
 /// Missing session store cannot be reported as a zero streak.
@@ -160,6 +130,8 @@ pub struct StreakInfo {
     pub total_games_played: i32,
     pub freezes_available: i32,
     pub auto_freeze_enabled: bool,
+    pub days_until_next_freeze: i32,
+    pub freeze_used_yesterday: bool,
 }
 
 fn u32_to_i32(value: u32) -> i32 {
@@ -180,6 +152,8 @@ pub fn build_streak_info(
         total_games_played,
         freezes_available: freeze.freezes_available,
         auto_freeze_enabled: freeze.auto_freeze_enabled,
+        days_until_next_freeze: u32_to_i32(streak.days_until_next_freeze),
+        freeze_used_yesterday: streak.freeze_used_yesterday,
     }
 }
 
@@ -205,27 +179,6 @@ mod tests {
     }
 
     #[test]
-    fn auto_freeze_consumes() {
-        let mut d = FreezeData::new("u1");
-        d.freezes_available = 2;
-        d.auto_freeze_enabled = true;
-        let (used, d) = try_auto_freeze(d, true);
-        assert!(used);
-        assert_eq!(d.freezes_available, 1);
-        assert_eq!(d.freezes_used, 1);
-    }
-
-    #[test]
-    fn auto_freeze_requires_premium() {
-        let mut d = FreezeData::new("u1");
-        d.freezes_available = 2;
-        d.auto_freeze_enabled = true;
-        let (used, d) = try_auto_freeze(d, false);
-        assert!(!used);
-        assert_eq!(d.freezes_available, 2);
-    }
-
-    #[test]
     fn streak_info_uses_computed_personal_streak() {
         use chrono::NaiveDate;
         use puzzled_core::gamification::personal_streak::compute_personal_streak;
@@ -242,7 +195,7 @@ mod tests {
             NaiveDate::from_ymd_opt(2026, 8, 21).expect("d"),
             NaiveDate::from_ymd_opt(2026, 8, 22).expect("d"),
         ];
-        let streak = compute_personal_streak(today, &days);
+        let streak = compute_personal_streak(today, &days, &[]);
         let info = build_streak_info(streak, 42, &freeze);
         assert_eq!(info.current_streak, 3);
         assert_eq!(info.max_streak, 3);
@@ -250,24 +203,21 @@ mod tests {
         assert_eq!(info.total_games_played, 42);
         assert_eq!(info.freezes_available, 1);
         assert!(info.auto_freeze_enabled);
+        assert_eq!(info.days_until_next_freeze, 4);
+        assert!(!info.freeze_used_yesterday);
     }
 
     #[test]
-    fn missing_store_or_read_fails_closed() {
-        use chrono::NaiveDate;
-        let today = NaiveDate::from_ymd_opt(2026, 8, 22).expect("day");
+    fn a_new_player_covers_missed_days_automatically() {
+        assert!(FreezeData::new("u1").auto_freeze_enabled);
+    }
+
+    #[test]
+    fn a_missing_store_fails_closed_not_as_a_zero_streak() {
         assert_eq!(
             require_streak_store::<()>(None),
             Err(StreakReadError::StoreUnavailable)
         );
-        assert_eq!(
-            project_personal_streak(today, Err("db down".into())),
-            Err(StreakReadError::ReadFailed)
-        );
-        let (streak, total) =
-            project_personal_streak(today, Ok((vec![today], 4))).expect("payload");
-        assert_eq!(streak.current_streak, 1);
-        assert!(streak.has_played_today);
-        assert_eq!(total, 4);
+        assert_eq!(require_streak_store(Some(1)), Ok(1));
     }
 }

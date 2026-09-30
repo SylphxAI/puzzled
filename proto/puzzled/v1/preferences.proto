@@ -36,6 +36,8 @@ message NotificationPreferences {
   bool email_enabled = 6;
   bool email_weekly_digest = 7;
   bool email_marketing = 8;
+  // IANA time zone the reminder time is read in, e.g. "Europe/London". Empty reads as UTC.
+  string timezone = 9;
 }
 
 message GetProfileRequest {}
@@ -73,6 +75,7 @@ message UpdatePushPreferencesRequest {
   bool push_streak_alert = 3 [features.field_presence = EXPLICIT];
   bool push_new_games = 4 [features.field_presence = EXPLICIT];
   string daily_reminder_time = 5 [features.field_presence = EXPLICIT];
+  string timezone = 6 [features.field_presence = EXPLICIT];
 }
 message UpdatePushPreferencesResponse {
   NotificationPreferences preferences = 1;

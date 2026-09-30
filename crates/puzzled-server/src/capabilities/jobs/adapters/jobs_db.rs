@@ -1,25 +1,80 @@
 //! SQL adapters for retention job targeting.
 
-use chrono::{Duration, NaiveDate, Utc};
+use chrono::{DateTime, Duration, NaiveDate, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-/// Users opted into push with the daily reminder flag.
-pub async fn daily_reminder_targets(pool: &PgPool) -> Result<Vec<(String, String)>, String> {
+/// Minutes after a player's reminder time during which it can still go out, so
+/// a missed or late tick does not lose the day's reminder.
+pub const REMINDER_GRACE_MINUTES: i32 = 120;
+
+/// Claim the daily reminders due at `now`: push-opted-in players whose own
+/// local time has reached their reminder time (within
+/// [`REMINDER_GRACE_MINUTES`]), who have not had one on their local date and
+/// have not finished today's puzzle (`product_day`). Each player is marked as
+/// reminded in the same statement, so overlapping ticks send once; a failed
+/// send releases the claim with [`release_daily_reminder`].
+///
+/// The reminder time is read in the player's time zone (unknown or unset reads
+/// as UTC). Returns (user id, reminder time).
+pub async fn claim_due_daily_reminders(
+    pool: &PgPool,
+    now: DateTime<Utc>,
+    product_day: &str,
+) -> Result<Vec<(String, String)>, String> {
     let rows: Vec<(Uuid, String)> = sqlx::query_as(
         r#"
-        SELECT np.user_id, COALESCE(np.daily_reminder_time, '09:00')
-        FROM notification_preferences np
-        WHERE np.push_enabled AND np.push_daily_reminder
+        WITH zoned AS (
+            SELECT np.user_id,
+                   np.daily_reminder_time AS reminder_time,
+                   ($1::timestamptz AT TIME ZONE COALESCE(z.name, 'UTC')) AS local_now
+            FROM notification_preferences np
+            LEFT JOIN pg_timezone_names z ON z.name = np.timezone
+            WHERE np.push_enabled AND np.push_daily_reminder
+              AND np.daily_reminder_time ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+        ), due AS (
+            SELECT user_id, reminder_time, local_now::date AS local_date
+            FROM zoned
+            WHERE floor(extract(epoch FROM local_now::time) / 60)
+                  BETWEEN extract(epoch FROM reminder_time::time) / 60
+                      AND extract(epoch FROM reminder_time::time) / 60 + $3::int
+        )
+        UPDATE notification_preferences np
+        SET last_daily_reminder_on = due.local_date
+        FROM due
+        WHERE np.user_id = due.user_id
+          AND np.last_daily_reminder_on IS DISTINCT FROM due.local_date
+          AND NOT EXISTS (
+              SELECT 1 FROM game_sessions gs
+              WHERE gs.user_id = np.user_id AND gs.day_key = $2
+                AND gs.is_ritual AND gs.status IN ('won', 'lost')
+          )
+        RETURNING np.user_id, due.reminder_time
         "#,
     )
+    .bind(now)
+    .bind(product_day)
+    .bind(REMINDER_GRACE_MINUTES)
     .fetch_all(pool)
     .await
-    .map_err(|e| format!("daily reminder targets failed: {e}"))?;
+    .map_err(|e| format!("daily reminder claim failed: {e}"))?;
     Ok(rows
         .into_iter()
         .map(|(uid, time)| (uid.to_string(), time))
         .collect())
+}
+
+/// Give back a claimed reminder whose send failed, so the next tick retries it.
+pub async fn release_daily_reminder(pool: &PgPool, user_id: &str) -> Result<(), String> {
+    let uid = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    sqlx::query(
+        "UPDATE notification_preferences SET last_daily_reminder_on = NULL WHERE user_id = $1",
+    )
+    .bind(uid)
+    .execute(pool)
+    .await
+    .map_err(|e| format!("daily reminder release failed: {e}"))?;
+    Ok(())
 }
 
 /// Email-opted-in users with no completed session in the last `days` and no

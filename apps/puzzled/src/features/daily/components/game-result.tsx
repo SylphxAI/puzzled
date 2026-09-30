@@ -263,7 +263,7 @@ export function GameResultCard({
 				{/* "Beat my result": both results, when the player opened a share link for this puzzle. */}
 				{mode === 'daily' && (
 					<ChallengeComparison
-						mine={{ ...buildCard(), currentStreak: null }}
+						mine={buildCard()}
 						strings={cardStrings}
 						gameName={resolveModuleDisplayName(tGames, gameType)}
 					/>

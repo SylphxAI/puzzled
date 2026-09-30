@@ -350,6 +350,20 @@ export default async function StatsPage({ params }: Props) {
 												<Snowflake className="h-4 w-4 text-primary" aria-hidden="true" />
 												{t('streakCard.freezes', { count: streakRead?.freezesAvailable ?? 0 })}
 											</li>
+											{streakRead?.freezeUsedYesterday ? (
+												<li className="flex items-center gap-2">
+													<Snowflake className="h-4 w-4 text-primary" aria-hidden="true" />
+													{t('streakCard.freezeUsedYesterday')}
+												</li>
+											) : null}
+											{streakRead &&
+											streakRead.currentStreak > 0 &&
+											streakRead.freezesAvailable < 2 ? (
+												<li className="flex items-center gap-2 text-muted-foreground">
+													<Snowflake className="h-4 w-4" aria-hidden="true" />
+													{t('streakCard.nextFreeze', { count: streakRead.daysUntilNextFreeze })}
+												</li>
+											) : null}
 										</ul>
 										{(streakRead?.freezesAvailable ?? 0) > 0 &&
 										streakRead?.autoFreezeEnabled !== undefined ? (

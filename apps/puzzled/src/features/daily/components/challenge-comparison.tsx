@@ -62,7 +62,14 @@ export function ChallengeComparison({ mine, strings, gameName }: ChallengeCompar
 			<h4 className="mb-2 text-center text-sm font-semibold">{t('title')}</h4>
 			<div className="grid grid-cols-2 gap-2">
 				<ResultCardSummary model={theirCard} strings={strings} heading={t('theirs')} stacked />
-				<ResultCardSummary model={mine} strings={strings} heading={t('yours')} stacked />
+				<ResultCardSummary
+					// Side by side only what both cards can show: a share with no streak on it
+					// (an earlier day, or one made before streaks were kept) hides the reader's too.
+					model={theirCard.currentStreak == null ? { ...mine, currentStreak: null } : mine}
+					strings={strings}
+					heading={t('yours')}
+					stacked
+				/>
 			</div>
 		</section>
 	)
