@@ -4,7 +4,7 @@
 # Change the catalogue by PR to that file.
 #
 # No stored secret and no configuration: each job trades a GitHub OIDC token
-# (audience sylphx-access) for a 15-minute money:write key bound to this
+# (audience sylphx-access) for a 15-minute billing:write key bound to this
 # repository, this file's path and refs/heads/main
 # (kernel/access/tenant-manifest.toml, cloud#10444). The key's own name gives
 # the org, project and env it belongs to, so none is written here. The path of
