@@ -76,6 +76,15 @@ export async function getNotificationPreferences(
 	return res.preferences
 }
 
+/** The device's IANA time zone, so the daily reminder lands at the player's own hour. */
+export function deviceTimeZone(): string | undefined {
+	try {
+		return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined
+	} catch {
+		return undefined
+	}
+}
+
 export async function updatePushPreferences(
 	input: {
 		pushEnabled?: boolean
@@ -83,6 +92,8 @@ export async function updatePushPreferences(
 		pushStreakAlert?: boolean
 		pushNewGames?: boolean
 		dailyReminderTime?: string
+		/** IANA time zone the reminder time is read in; defaults to this device's */
+		timezone?: string
 	},
 	client?: PreferencesServiceClient,
 ): Promise<NotificationPreferences> {
@@ -94,6 +105,7 @@ export async function updatePushPreferences(
 			pushStreakAlert: input.pushStreakAlert ?? undefined,
 			pushNewGames: input.pushNewGames ?? undefined,
 			dailyReminderTime: input.dailyReminderTime ?? undefined,
+			timezone: input.timezone ?? deviceTimeZone(),
 		}),
 	)
 	if (!res.preferences) throw new Error('preferences_unavailable')

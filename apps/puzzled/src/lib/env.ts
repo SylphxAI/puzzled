@@ -62,6 +62,18 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		required: false,
 		description: 'Next.js phase; phase-production-build relaxes the Redis connect',
 	},
+	// Advertising (off until both are set)
+	{
+		name: 'ADS_ADSENSE_CLIENT_ID',
+		required: false,
+		description:
+			'AdSense publisher id (ca-pub-...); ads stay off until this and ADS_SLOT_ID are set',
+	},
+	{
+		name: 'ADS_SLOT_ID',
+		required: false,
+		description: 'AdSense ad unit id for the archive and result slots',
+	},
 	// Deployment / dev host facts
 	{
 		name: 'SYLPHX_PUBLIC_URL',
@@ -262,6 +274,14 @@ export const env = {
 	/** HMAC key for email unsubscribe tokens; dedicated, shared with no other signer */
 	get EMAIL_UNSUBSCRIBE_SECRET(): string | undefined {
 		return process.env.EMAIL_UNSUBSCRIBE_SECRET
+	},
+	/** AdSense publisher id; ads are off while unset */
+	get ADS_ADSENSE_CLIENT_ID(): string | undefined {
+		return process.env.ADS_ADSENSE_CLIENT_ID
+	},
+	/** AdSense ad unit id */
+	get ADS_SLOT_ID(): string | undefined {
+		return process.env.ADS_SLOT_ID
 	},
 	/** Postgres connection string */
 	get DATABASE_URL(): string | undefined {

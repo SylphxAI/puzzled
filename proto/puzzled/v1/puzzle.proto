@@ -146,6 +146,8 @@ message GetSharedResultResponse {
   uint32 attempts = 5;
   uint32 score = 6 [features.field_presence = EXPLICIT];
   uint64 time_spent_ms = 7 [features.field_presence = EXPLICIT];
+  // The sharer's streak on the day of a same-day share.
+  uint32 streak = 8 [features.field_presence = EXPLICIT];
 }
 
 service PuzzleService {

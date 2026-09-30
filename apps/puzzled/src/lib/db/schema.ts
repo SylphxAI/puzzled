@@ -13,6 +13,7 @@ import {
 	bigint,
 	boolean,
 	check,
+	date,
 	index,
 	integer,
 	jsonb,
@@ -345,12 +346,36 @@ export const userFreezeData = pgTable(
 		freezesUsed: integer('freezes_used').default(0).notNull(),
 
 		/** Auto-freeze enabled setting */
-		autoFreezeEnabled: boolean('auto_freeze_enabled').default(false).notNull(),
+		autoFreezeEnabled: boolean('auto_freeze_enabled').default(true).notNull(),
 
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
 	(table) => [index('user_freeze_data_user_id_idx').on(table.userId)],
+)
+
+/** Milestone days that earned a streak freeze (granted once, ever). */
+export const streakFreezeAwards = pgTable(
+	'streak_freeze_awards',
+	{
+		userId: uuid('user_id').notNull(),
+		dayKey: date('day_key', { mode: 'string' }).notNull(),
+		/** False when the player already held the most freezes allowed */
+		granted: boolean('granted').notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.userId, table.dayKey] })],
+)
+
+/** Missed days a streak freeze covered. */
+export const streakFreezeUses = pgTable(
+	'streak_freeze_uses',
+	{
+		userId: uuid('user_id').notNull(),
+		dayKey: date('day_key', { mode: 'string' }).notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.userId, table.dayKey] })],
 )
 
 // ==========================================
@@ -377,6 +402,10 @@ export const notificationPreferences = pgTable('notification_preferences', {
 	pushNewGames: boolean('push_new_games').default(true).notNull(),
 	/** Daily reminder time (HH:mm format) */
 	dailyReminderTime: text('daily_reminder_time').default('09:00'),
+	/** IANA time zone the reminder time is read in (null reads as UTC) */
+	timezone: text('timezone'),
+	/** Local date of the last daily reminder sent (one per local day) */
+	lastDailyReminderOn: date('last_daily_reminder_on', { mode: 'string' }),
 
 	// Email Notifications
 	/** Master email toggle */
@@ -725,6 +754,8 @@ export const resultShares = pgTable(
 		attempts: integer('attempts').notNull(),
 		score: integer('score'),
 		timeSpentMs: integer('time_spent_ms'),
+		/** The sharer's same-day streak when the share was made; null when none. */
+		streak: integer('streak'),
 		shareCount: integer('share_count').default(0).notNull(),
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		lastSharedAt: timestamp('last_shared_at').defaultNow().notNull(),

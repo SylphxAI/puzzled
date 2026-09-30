@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
+import { MIN_PLAYERS_SHOWN } from '@/features/home/components/home-day'
 import { getServerTodayOverview } from '@/lib/api/server'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
 import { slugToCamelCase } from '@/lib/game-slug'
@@ -32,8 +33,8 @@ export async function AuthShell({ locale, children }: AuthShellProps) {
 	// Public aggregate for today; an unreadable payload simply drops the line
 	// rather than claiming a number we did not receive.
 	const overview = await withPresentationDeadline(getServerTodayOverview(), null)
-	// Three distinct states: a real count, a real zero ("be the first"), and an
-	// unread aggregate. Folding zero into "no count" would invent a number.
+	// A count is shown only above `MIN_PLAYERS_SHOWN`; below it, or unread, the
+	// line falls back to the no-account promise.
 	const playersToday = overview === null ? null : overview.playerCount
 
 	const trustPoints = [
@@ -69,13 +70,11 @@ export async function AuthShell({ locale, children }: AuthShellProps) {
 								{t('brandPanel.proofGame', { game: freeGameName })}
 							</p>
 							<p className="mt-1 text-sm text-foreground/80">
-								{playersToday === null
+								{playersToday === null || playersToday <= MIN_PLAYERS_SHOWN
 									? t('brandPanel.proofNoCount')
-									: playersToday === 0
-										? t('brandPanel.proofPlayersNone')
-										: t('brandPanel.proofPlayers', {
-												count: new Intl.NumberFormat(locale).format(playersToday),
-											})}
+									: t('brandPanel.proofPlayers', {
+											count: new Intl.NumberFormat(locale).format(playersToday),
+										})}
 							</p>
 							<Link
 								href={`/games/${freeGameSlug}`}

@@ -27,9 +27,8 @@ mock.module('next/navigation', () => ({
 	useSearchParams: () => new URLSearchParams(),
 }))
 
-const { parseGameFaq, parseGameTips, requireGamePage, resolveGamePage } = await import(
-	'./game-page'
-)
+const { howToStructuredData, parseGameFaq, parseGameTips, requireGamePage, resolveGamePage } =
+	await import('./game-page')
 const { generateMetadata } = (await import(
 	'@/app/[locale]/(main)/games/[slug]/page'
 )) as typeof import('@/app/[locale]/(main)/games/[slug]/page')
@@ -105,5 +104,16 @@ describe('parseGameFaq', () => {
 
 	test('returns nothing for a missing payload', () => {
 		expect(parseGameFaq(null)).toEqual([])
+	})
+})
+
+describe('howToStructuredData', () => {
+	test('numbers the visible rules as HowTo steps and carries nothing else', () => {
+		const data = howToStructuredData('How to play Sudoku', ['Fill every row.', 'No repeats.'])
+		expect(data['@type']).toBe('HowTo')
+		expect(data.step).toEqual([
+			{ '@type': 'HowToStep', position: 1, text: 'Fill every row.' },
+			{ '@type': 'HowToStep', position: 2, text: 'No repeats.' },
+		])
 	})
 })

@@ -15,7 +15,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
+import { adsConfig } from '@/lib/ads'
 import { buildCsp, createNonce, NONCE_HEADER } from '@/lib/csp'
+import { env } from '@/lib/env'
 import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
 import { isInboundPublicPath, isProxySkippedPath } from '@/lib/proxy-paths'
@@ -78,7 +80,10 @@ export function rememberedLocaleRedirect(
  */
 export async function proxy(incoming: NextRequest) {
 	const nonce = createNonce()
-	const csp = buildCsp(nonce, { dev: process.env.NODE_ENV === 'development' })
+	const csp = buildCsp(nonce, {
+		dev: process.env.NODE_ENV === 'development',
+		ads: adsConfig(env) !== null,
+	})
 	const headers = new Headers(incoming.headers)
 	headers.set(NONCE_HEADER, nonce)
 	headers.set('Content-Security-Policy', csp)

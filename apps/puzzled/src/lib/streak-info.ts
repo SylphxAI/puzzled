@@ -5,6 +5,10 @@ export type StreakInfo = {
 	totalGamesPlayed: number
 	freezesAvailable: number
 	autoFreezeEnabled: boolean
+	/** Played days still needed to earn the next freeze (1 to 7) */
+	daysUntilNextFreeze: number
+	/** Yesterday was missed and a freeze kept the streak alive */
+	freezeUsedYesterday: boolean
 }
 
 export type StreakInfoPayload =
@@ -15,6 +19,8 @@ export type StreakInfoPayload =
 			totalGamesPlayed?: unknown
 			freezesAvailable?: unknown
 			autoFreezeEnabled?: unknown
+			daysUntilNextFreeze?: unknown
+			freezeUsedYesterday?: unknown
 	  }
 	| null
 	| undefined
@@ -44,6 +50,9 @@ export function projectStreakInfo(info: StreakInfoPayload): StreakInfo {
 	if (typeof info.autoFreezeEnabled !== 'boolean') {
 		throw new Error('streak_payload_unavailable:autoFreezeEnabled')
 	}
+	if (typeof info.freezeUsedYesterday !== 'boolean') {
+		throw new Error('streak_payload_unavailable:freezeUsedYesterday')
+	}
 	return {
 		currentStreak: requiredUint(info.currentStreak, 'currentStreak'),
 		maxStreak: requiredUint(info.maxStreak, 'maxStreak'),
@@ -51,5 +60,7 @@ export function projectStreakInfo(info: StreakInfoPayload): StreakInfo {
 		totalGamesPlayed: requiredUint(info.totalGamesPlayed, 'totalGamesPlayed'),
 		freezesAvailable: requiredUint(info.freezesAvailable, 'freezesAvailable'),
 		autoFreezeEnabled: info.autoFreezeEnabled,
+		daysUntilNextFreeze: requiredUint(info.daysUntilNextFreeze, 'daysUntilNextFreeze'),
+		freezeUsedYesterday: info.freezeUsedYesterday,
 	}
 }

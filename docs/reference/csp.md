@@ -31,7 +31,11 @@ form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   (`force-dynamic`, `private, no-store`), so the nonce costs no caching.
 - **`worker-src 'self'`** is explicit because `'strict-dynamic'` ignores
   `'self'` in `script-src`, which is the service worker's fallback.
-- **No third-party scripts.** Checkout is a redirect to a hosted checkout page, and
+- **Ads (only when configured).** With `ADS_ADSENSE_CLIENT_ID` and `ADS_SLOT_ID` set, `buildCsp`
+  adds the ad network's hosts to `frame-src` and `connect-src` (`AD_CSP_HOSTS` in `src/lib/ads.ts`).
+  `script-src` does not change: our nonced code inserts the loader, which `'strict-dynamic'` trusts.
+  Unconfigured, the policy is exactly the one above.
+- **No other third-party scripts.** Checkout is a redirect to a hosted checkout page, and
   analytics and replays are gone, so Stripe, PostHog, Vercel, GTM, Neon and
   Cloudflare hosts are no longer listed.
 

@@ -2,7 +2,7 @@
  * Bounded home exposure (presentation layer).
  *
  * The destination catalog is unbounded (115 modules); home must stay small
- * (`docs/north-star/CATALOG.md` §1: "Large catalog is capability; exposure
+ * (`docs/catalog.md` (Direction): "Large catalog is capability; exposure
  * stays small."). This pure selector picks the bounded set the home hero may
  * render from the registered modules:
  *

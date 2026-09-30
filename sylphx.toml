@@ -81,6 +81,9 @@ watch_paths = [
   "sylphx.toml",
 ]
 
+[services.env.SYLPHX_MONEY_API_KEY]
+from_secret = "SYLPHX_MONEY_API_KEY"
+
 [services.health]
 mode = "http"
 # ADR-141 single path (api). Web uses per-service health.path = "/".
@@ -116,6 +119,20 @@ idempotency_key = "puzzled-audit-log-retention-v1"
 service = "api"
 path = "/internal/compute/audit-log-retention"
 calendar = { kind = "cron", expression = "23 3 * * *", timezone = "UTC" }
+overlap = "skip"
+catch_up = "skip"
+target = { kind = "http", method = "POST", signed = true }
+retry = { max_attempts = 3 }
+pause = false
+
+# Daily reminders: every quarter hour, send the push whose owner's own reminder
+# time (in their own time zone) has just come; a player gets one per local day.
+[[compute.schedules]]
+id = "puzzled-daily-reminders"
+idempotency_key = "puzzled-daily-reminders-v1"
+service = "api"
+path = "/internal/compute/daily-reminders"
+calendar = { kind = "cron", expression = "*/15 * * * *", timezone = "UTC" }
 overlap = "skip"
 catch_up = "skip"
 target = { kind = "http", method = "POST", signed = true }

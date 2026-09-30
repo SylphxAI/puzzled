@@ -20,6 +20,8 @@ pub struct SharedResult {
     pub attempts: i32,
     pub score: Option<i32>,
     pub time_spent_ms: Option<i32>,
+    /// The sharer's streak on the day of a same-day share.
+    pub streak: Option<i32>,
 }
 
 /// One row per (player, module, product day), created from the player's
@@ -76,10 +78,22 @@ pub async fn record_share(
     Ok(id)
 }
 
+/// Keep the sharer's streak on their share of today, once: it is what the
+/// shared card shows, and a later share tap must not rewrite it.
+pub async fn set_share_streak(pool: &PgPool, id: Uuid, streak: i32) -> Result<(), String> {
+    sqlx::query("UPDATE result_shares SET streak = $2 WHERE id = $1 AND streak IS NULL")
+        .bind(id)
+        .bind(streak)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("result share streak write failed: {e}"))?;
+    Ok(())
+}
+
 /// The shared result behind a link; None for an unknown id.
 pub async fn load_shared_result(pool: &PgPool, id: Uuid) -> Result<Option<SharedResult>, String> {
     let row = sqlx::query(
-        r#"SELECT game_slug, day_key, difficulty, status, attempts, score, time_spent_ms
+        r#"SELECT game_slug, day_key, difficulty, status, attempts, score, time_spent_ms, streak
            FROM result_shares WHERE id = $1"#,
     )
     .bind(id)
@@ -98,6 +112,7 @@ pub async fn load_shared_result(pool: &PgPool, id: Uuid) -> Result<Option<Shared
         attempts: row.try_get("attempts").map_err(read)?,
         score: row.try_get("score").map_err(read)?,
         time_spent_ms: row.try_get("time_spent_ms").map_err(read)?,
+        streak: row.try_get("streak").map_err(read)?,
     }))
 }
 

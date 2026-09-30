@@ -59,6 +59,7 @@ describe('a shared result is non-spoiler by construction', () => {
 			'puzzle_date',
 			'score',
 			'status',
+			'streak',
 			'time_spent_ms',
 		])
 	})
@@ -72,6 +73,7 @@ describe('a shared result is non-spoiler by construction', () => {
 			score: null,
 			timeSpentMs: 75_000,
 			difficulty: null,
+			streak: null,
 		})
 		expect(toSharedResult(create(GetSharedResultResponseSchema, { status: 'lost' })).attempts).toBe(
 			null,
@@ -84,6 +86,24 @@ describe('a shared result is non-spoiler by construction', () => {
 		expect(toSharedResult(fromJson(GetSharedResultResponseSchema, { status: 'won' })).score).toBe(
 			null,
 		)
+	})
+
+	test('a shared streak reaches the card; an absent one or a zero does not', () => {
+		const withStreak = fromJson(GetSharedResultResponseSchema, { status: 'won', streak: 9 })
+		expect(toSharedResult(withStreak).streak).toBe(9)
+		expect(toSharedResult(fromJson(GetSharedResultResponseSchema, { status: 'won' })).streak).toBe(
+			null,
+		)
+		expect(
+			toSharedResult(fromJson(GetSharedResultResponseSchema, { status: 'won', streak: 0 })).streak,
+		).toBe(null)
+		const card = sharedResultCard(toSharedResult(withStreak), {
+			origin: 'https://puzzled.gg',
+			gameName: 'Sudoku',
+			theme: 'slate',
+			locale: 'en-US',
+		})
+		expect(card.currentStreak).toBe(9)
 	})
 
 	test('the landing card shows a time band, not the exact time, and links to the play page', () => {

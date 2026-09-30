@@ -10,8 +10,8 @@ use axum::routing::{get, post};
 use axum::Router;
 
 use super::compute_ticks::{
-    audit_retention_tick, daily_puzzles_tick, tryit_conversions_tick, AUDIT_RETENTION_PATH,
-    DAILY_PUZZLES_PATH, TRYIT_CONVERSIONS_PATH,
+    audit_retention_tick, daily_puzzles_tick, daily_reminders_tick, tryit_conversions_tick,
+    AUDIT_RETENTION_PATH, DAILY_PUZZLES_PATH, DAILY_REMINDERS_PATH, TRYIT_CONVERSIONS_PATH,
 };
 use super::connect_admin::admin_connect_service;
 use super::connect_billing::billing_connect_service;
@@ -43,6 +43,7 @@ pub fn router(state: AppState) -> Router {
         .route("/readyz", get(readyz))
         .route(DAILY_PUZZLES_PATH, post(daily_puzzles_tick))
         .route(AUDIT_RETENTION_PATH, post(audit_retention_tick))
+        .route(DAILY_REMINDERS_PATH, post(daily_reminders_tick))
         .route(TRYIT_CONVERSIONS_PATH, post(tryit_conversions_tick))
         .route("/observability/test", post(observability_test))
         .with_state(state)

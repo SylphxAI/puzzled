@@ -4,6 +4,7 @@ import { Button } from '@sylphx/ui'
 import { BarChart3, Clock, Image, Share2, Target, Trophy, Users } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { AdSlot } from '@/features/ads/components/ad-slot'
 import { ChallengeComparison } from '@/features/daily/components/challenge-comparison'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
 import { TomorrowGameLine } from '@/features/daily/components/tomorrow-game-line'
@@ -262,7 +263,7 @@ export function GameResultCard({
 				{/* "Beat my result": both results, when the player opened a share link for this puzzle. */}
 				{mode === 'daily' && (
 					<ChallengeComparison
-						mine={{ ...buildCard(), currentStreak: null }}
+						mine={buildCard()}
 						strings={cardStrings}
 						gameName={resolveModuleDisplayName(tGames, gameType)}
 					/>
@@ -333,6 +334,12 @@ export function GameResultCard({
 					>
 						{t('backToHome')}
 					</Link>
+					<a
+						href="https://tryit.fun/daily"
+						className="flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+					>
+						{t('moreOnTryit')}
+					</a>
 				</div>
 
 				{/* Daily mode: Countdown to next puzzle */}
@@ -342,6 +349,11 @@ export function GameResultCard({
 						<TomorrowGameLine className="mt-1.5" />
 					</div>
 				)}
+
+				{/* After the finish only; renders nothing for Plus or while ads are off. */}
+				<div className="mt-4">
+					<AdSlot />
+				</div>
 			</div>
 		</div>
 	)

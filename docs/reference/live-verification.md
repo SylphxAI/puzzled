@@ -1,7 +1,7 @@
 # Live verification harness (`scripts/verify-live.ts`)
 
-Re-runnable readbacks of the **Live** layer from
-[`docs/north-star/EVIDENCE-AND-ORACLES.md`](../north-star/EVIDENCE-AND-ORACLES.md) §1
+Re-runnable post-deploy checks of the **Live** layer from
+[live layer](https://github.com/SylphxAI/owner/blob/main/standards/docs.md#claims-stay-inside-their-layer)
 for the capability graph in [`docs/capabilities.md`](../capabilities.md):
 `PUZ-MODULE`, `PUZ-DAILY`, `PUZ-FREE`, `PUZ-SHARE`, `PUZ-MARKS`, and the
 anonymous half of `PUZ-PLUS`. The harness reads `BillingService.ListPlans`
@@ -16,7 +16,7 @@ excerpts, SHA-256 fingerprints, and the `git_commit_sha` the target reports).
 ## Commands
 
 ```bash
-# Read-only (default). Live readbacks against https://puzzled.gg.
+# Read-only (default). Live checks against https://puzzled.gg.
 bun scripts/verify-live.ts
 
 # Same, via the repo-root alias.
@@ -32,7 +32,7 @@ bun run verify:live --expected-sha <commit-sha>
 # one-finish-per-(user, module, product day) re-submit probe.
 bun scripts/verify-live.ts --play --guest <uuid>
 
-# Honest-failure demo against a deliberately wrong base.
+# Failure demo against a deliberately wrong base.
 bun scripts/verify-live.ts --base https://example.com --json
 
 # Regression self-test: synthetic local stubs (no network target, no writes).
@@ -62,7 +62,7 @@ depend on the host date. It never touches the network target and never writes.
 (case-insensitive prefix match either direction, so a short SHA works). A
 mismatch fails the `healthz` check and prints both values; without the flag the
 expected revision is `unknown (not asserted: no --expected-sha)` and the check
-stays a pure readback. Use it for post-deploy live verification.
+stays a pure read-only check. Use it for post-deploy live verification.
 
 Exit codes: `0` = no check failed and no indeterminate `unknown` remains;
 `1` = at least one required check failed, or any check other than the explicit
@@ -113,7 +113,7 @@ locally solved grid appear as a byte count plus SHA-256, not as grid content.
 | `finish-loop` (`--play`) | a genuine terminal is accepted server-side, `hasCompleted=true` + `completedSession` come back on re-read, and a second terminal for the same guest + module + product day is refused `already_played` | solver plan, both submit responses, re-read body |
 | `share-deep-link` | `/games/<free>?date=<product-day>` ends on the module path (`/games/<free>`, one optional locale prefix, same origin) with 200 HTML after a documented same-origin redirect; the landing carries no solution-shaped JSON keys and no locally solved solution signature. The harness *requests* the documented module+`?date=` shape, but the app-side `formatRitualShareText` output is not observed here — no format/non-spoiler claim is made. Without a local solution (modules the harness cannot solve) the signature compare is `unknown` | path, redirect chain, final path/origin, content type/bytes, leak-pattern hits, signature count + redacted SHA-256s |
 | `archive-open` | anonymous `GetDaily` for yesterday's `puzzle_date` on today's pick is 200 while Plus is not on sale and 403 `plus_required_archive` once it is; for a future `puzzle_date` (today + 2) it is 400 `future_puzzle_date`; a 5xx/transport failure is `unknown` | archive and future request bodies, Connect `code`/`message`, timings |
-| `marks-scan` | `CATALOG` §3.2 marks do not appear in `title` / meta / `JSON-LD` / manifest `short_name`-class fields, and no `JSON-LD`/canonical URL is a localhost origin on a non-local host; marks anywhere else are reported as warnings with exact context; a manifest that cannot be observed makes the dimension `unknown`, not a silent pass | per-target SHA-256, hard failures with zone + context, warnings with context, manifest fields/URL/state |
+| `marks-scan` | the [catalog](../catalog.md#names) marks do not appear in `title` / meta / `JSON-LD` / manifest `short_name`-class fields, and no `JSON-LD`/canonical URL is a localhost origin on a non-local host; marks anywhere else are reported as warnings with exact context; a manifest that cannot be observed makes the dimension `unknown`, not a silent pass | per-target SHA-256, hard failures with zone + context, warnings with context, manifest fields/URL/state |
 
 Product day key: `Asia/Hong_Kong` calendar date (fixed UTC+8, no DST — the same
 shift the Rust `product_day_key` applies). The harness prefers the
@@ -130,15 +130,15 @@ reports. It does **not** establish:
 - **Source / CI / Landed**: nothing about the git history, tests, or review of
   the responded revision.
 - **Artifact / Released / Deployed**: no image digest, provenance, SBOM, or
-  rollout readback. `liveRevision` is the `git_commit_sha` the target *claims*
+  rollout check. `liveRevision` is the `git_commit_sha` the target *claims*
   on `/healthz`; the harness does not verify that mapping. `--expected-sha`
-  strengthens this from a self-reported readback to an asserted match with the
+  strengthens this from a self-reported check to an asserted match with the
   deploy you expected, but the claim is still self-reported — it does not
   establish digest, provenance, or rollout state.
 - **North Star metric**: completing one guest ritual is not `daily puzzle
   completers`. Recomputing the metric from canonical `game_sessions` rows
   remains the
-  [metric oracle](../north-star/NORTH-STAR-METRIC.md) — this harness does not
+  [metric recompute](../metrics.md) — this harness does not
   query the warehouse.
 - **Coverage**: authenticated journeys (P4/P5), admin (P7), non-rotation
   modules, puzzle content beyond today's pick, client-rendered DOM state (the harness reads
@@ -169,50 +169,3 @@ On days whose pick the harness cannot solve (`word-guess`,
 to check and reports `unknown`, so read-only runs are structurally non-green
 on those days. That is by design; run on a solvable day (`sudoku`,
 `crowns`) or accept the `unknown`.
-
-## Post-deploy expectations (2026-09-11 fix set)
-
-A deployed revision at or after `328009a` must flip these Live readbacks that
-the pinned 2026-08-25 revision (`git_commit_sha=3675ab73…`, observed
-2026-09-11) fails. Treat any still-red row as an incomplete deploy, not as a
-harness problem:
-
-| Readback | Pinned 2026-08-25 revision | Expected after the deploy |
-|---|---|---|
-| canonical / JSON-LD origin | `http://localhost:3000` | `https://puzzled.gg` (no `og:url`/`og:image`; the origin-bearing card field is `twitter:image` on `/` only) |
-| served home HTML CTA | 0 free-game hrefs, "today's progress unavailable" | bounded hero (free module first) + `See all games` |
-| `/games` catalog | 404 | 200, every registry module with CATALOG player titles |
-| `/games/crowns` | 308 -> `/games/games/crowns` -> 404 | 200 on the canonical module path |
-| `/crowns`, `/duo` inbound aliases | alias hop breaks (double prefix) | redirect to `/games/crowns` / `/games/duo`, final 200 |
-| `/privacy`, `/terms` (anonymous) | 307 to `/login` | public 200 |
-| `number-path`, `pip-place` (anonymous) | `404 unknown_game` | known module (200 while Puzzled Plus is not on sale; 403 `plus_required` once it is) |
-| marks scan on `/` and the free module | 8 hard hits (`Wordle`, `Connections` in meta/JSON-LD) | 0 hard hits |
-| finish loop (`--play`) | pass (server-authoritative) | still pass; one finish per `(user, module, day_key)` |
-
-Two different probe families cover the table. Run both and keep the raw
-output with the record that claims the deploy.
-
-```bash
-# 1) Harness (healthz/readyz, every rotation module served, daily serve,
-#    share deep link, archive open / future refused, marks scan, finish loop):
-bun run verify:live --expected-sha <deployed-sha> --play --json
-
-# 2) Surfaces the harness does not probe (compare each result to the table):
-curl -sS -o /dev/null -w 'games %{http_code} %{url_effective}\n' -L https://puzzled.gg/games
-curl -sS -o /dev/null -w 'crowns %{http_code} %{url_effective}\n' -L https://puzzled.gg/games/crowns
-curl -sS -o /dev/null -w 'alias %{http_code} %{url_effective}\n' -L https://puzzled.gg/crowns
-curl -sS -o /dev/null -w 'alias %{http_code} %{url_effective}\n' -L https://puzzled.gg/duo
-curl -sS -o /dev/null -w 'privacy %{http_code} -> %{redirect_url}\n' https://puzzled.gg/privacy
-curl -sS -o /dev/null -w 'terms %{http_code} -> %{redirect_url}\n' https://puzzled.gg/terms
-curl -sS -X POST https://puzzled.gg/puzzled.v1.PuzzleService/GetDaily \
-  -H 'content-type: application/json' -d '{"gameSlug":"number-path"}'
-curl -sS -X POST https://puzzled.gg/puzzled.v1.PuzzleService/GetDaily \
-  -H 'content-type: application/json' -d '{"gameSlug":"pip-place"}'
-```
-
-A green harness run alone is not the deploy evidence for this table: the
-harness has no check for `/games`, the alias/legal routes, or the two new
-modules. And on days whose pick the harness cannot solve
-(`word-guess`, `word-groups`, `crossword`) the share signature compare is
-`unknown` by design (see above), so the command exits non-zero on a complete
-deploy — run it on a `sudoku`/`crowns` day or accept the documented `unknown`.

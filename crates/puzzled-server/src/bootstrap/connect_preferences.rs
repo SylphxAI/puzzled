@@ -12,8 +12,8 @@ use super::state::AppState;
 use crate::capabilities::identity_access::adapters::auth_subjects;
 use crate::capabilities::preferences::adapters::account_deletion::delete_account_data;
 use crate::capabilities::preferences::adapters::preferences_db::{
-    fetch_notification_preferences, fetch_user_preferences, upsert_notification_preferences,
-    upsert_user_preferences, username_taken,
+    fetch_notification_preferences, fetch_user_preferences, is_reminder_time, timezone_is_known,
+    upsert_notification_preferences, upsert_user_preferences, username_taken,
 };
 use crate::proto::puzzled::v1::{
     CheckUsernameRequest, CheckUsernameResponse, DeleteAccountDataRequest,
@@ -104,6 +104,11 @@ impl PreferencesConnectService {
                 .get("emailMarketing")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(false),
+            timezone: value
+                .get("timezone")
+                .and_then(|v| v.as_str())
+                .unwrap_or_default()
+                .to_string(),
             ..Default::default()
         }
     }
@@ -266,6 +271,26 @@ impl PreferencesService for PreferencesConnectService {
     ) -> ServiceResult<UpdatePushPreferencesResponse> {
         let identity = require_identity(&ctx)?;
         let req = request.to_owned_message();
+        if let Some(time) = req.daily_reminder_time.as_deref() {
+            if !is_reminder_time(time) {
+                return Err(ConnectError::new(
+                    ErrorCode::InvalidArgument,
+                    "invalid_reminder_time",
+                ));
+            }
+        }
+        if let (Some(zone), Some(pool)) = (req.timezone.as_deref(), &self.state.pool) {
+            let known = timezone_is_known(pool, zone).await.map_err(|error| {
+                tracing::warn!(%error, "time zone check failed");
+                ConnectError::new(ErrorCode::Internal, "preferences_update_failed")
+            })?;
+            if !known {
+                return Err(ConnectError::new(
+                    ErrorCode::InvalidArgument,
+                    "invalid_timezone",
+                ));
+            }
+        }
         if let Some(pool) = &self.state.pool {
             if let Err(error) = upsert_notification_preferences(
                 pool,
@@ -275,6 +300,7 @@ impl PreferencesService for PreferencesConnectService {
                 req.push_streak_alert,
                 req.push_new_games,
                 req.daily_reminder_time.as_deref(),
+                req.timezone.as_deref(),
                 None,
                 None,
                 None,
@@ -312,6 +338,7 @@ impl PreferencesService for PreferencesConnectService {
             if let Err(error) = upsert_notification_preferences(
                 pool,
                 &identity.user_id,
+                None,
                 None,
                 None,
                 None,

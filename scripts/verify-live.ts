@@ -4,7 +4,7 @@
  * verify-live.ts — re-runnable Live-layer readbacks for the Puzzled capability
  * graph (PUZ-MODULE / PUZ-DAILY / PUZ-FREE / PUZ-SHARE / PUZ-MARKS).
  *
- * Layer: Live (docs/north-star/EVIDENCE-AND-ORACLES.md §1) for the revision the
+ * Layer: Live (owner standards/docs.md, "Claims stay inside their layer") for the revision the
  * target itself reports. Source/CI/Deploy layers are NOT established here, and
  * a green-looking proxy never upgrades a check.
  *
@@ -55,7 +55,7 @@ const CLIENT_LEAK_KEYS = new Set([
 ])
 
 /**
- * CATALOG §3.2 marks we do not use (player title or slug). The harness scans
+ * the docs/catalog.md "Names" marks we do not use (player title or slug). The harness scans
  * served HTML for them: title / meta / JSON-LD / manifest fields hard-fail,
  * anywhere else warns with the exact context.
  */

@@ -1,55 +1,75 @@
-# Puzzled Vision
+# Puzzled vision
 
-**Status:** Canonical product destination
-**Identity graph:** [`capabilities.md`](capabilities.md)
-**Growth backlog:** [`growth.md`](growth.md) (ranked mechanics, North Star inputs, build-now list)
-**Design system:** [`design/README.md`](design/README.md) (brand, tokens, shell, page list)
-**North Star package:** [`north-star/README.md`](north-star/README.md) (field contract subordinate to this destination), [`north-star/VISION.md`](north-star/VISION.md) (pointer), [`north-star/NORTH-STAR-METRIC.md`](north-star/NORTH-STAR-METRIC.md)
+## Goal
 
-This document owns the long-term product destination. It does not claim the destination is landed or live. If the north-star package or an ADR conflicts with this file or [`capabilities.md`](capabilities.md), this file and the identity graph win.
+Puzzled is the default daily home for light, positive brain games: a few
+minutes a day, one shared puzzle for everyone, and a result card you can share
+without spoiling the answer. Habit comes first and the subscription second.
 
-## Destination
+Why this shape: the daily games that became cultural habits (Wordle, the NYT
+Games suite) grew because finishing today's puzzle creates a small social
+object, the result card, that makes a friend curious about the same day. The
+product is built around that loop, not around a large catalog or a paywall.
+The catalog can grow without limit, as long as every game fits the same
+daily-puzzle protocol ([game-protocol.md](game-protocol.md)) and home does not
+dump the whole list on a new visitor.
 
-Puzzled is the default daily home for light, positive, brain-training play — minutes a day, optional depth, unlimited catalog under one protocol — a free daily finish floor, habit first, subscription second, shareable results without spoilers.
+## Who it serves
 
-Catalog ambition is unbounded: every game that fits the daily light brain ritual (word, logic, pattern, mini crossword, sudoku family, spatial, and light entertainment oracle formats labeled as play) should eventually live here under the single module protocol (day key in `Asia/Hong_Kong`, run, finish, result card, entitlement). Capability ambition is not unbounded sprawl.
+- **Daily player**: wants a short, uplifting mental break and to share a result
+  that gives nothing away. Plays as a guest, on a phone, with no install.
+- **Weekly regular**: returns most days, uses the archive and stats, and
+  subscribes when the habit is worth paying for.
 
-## Money
+## What it costs and earns
 
-Today's featured puzzle stays free for everyone. Puzzled Plus, a subscription
-in the NYT Games class, opens every game, every past day, stats for every game
-and a family plan. The commercial policy (prices, cancellation, entitlement)
-is [`north-star/MONETIZATION.md`](north-star/MONETIZATION.md). Payments,
-subscription state and entitlements go through Sylphx Money, the platform's
-payments service; the product builds no billing of its own.
+Today's featured puzzle is free for everyone, always. Puzzled Plus, a
+subscription in the NYT Games class, opens every other game, every past day,
+stats for every game and a family plan. The policy is in
+[monetization.md](monetization.md). Payments, subscription state and
+entitlements go through Sylphx Money, the platform's payments service; the
+product builds no billing of its own.
 
-## Users and their jobs
+## What we won't do
 
-- **Daily player** who wants a short uplifting mental break in minutes and to share a non-spoiler result.
-- **Weekly ritualist** who returns daily, uses archive/stats, and optionally subscribes when the habit warrants it.
-- **Virality loop:** one shared day, minutes-to-complete, soft failure, non-spoiler card, zero-install first play.
+- Charge for today's featured puzzle or sell the solution. The free finish is
+  what creates daily habit, and habit is what a subscription is sold to.
+- Hardcore ranked ladders as the main social surface, gambling or loot boxes,
+  and scientific, medical, IQ or destiny claims. They pull the tone away from
+  light and positive, and the claims are not ours to back.
+- Dark-pattern streak punishment or false urgency. A missed day should not
+  erase progress; trust is worth more than a short-term conversion.
+- A second play authority. The Rust api (Connect `PuzzleService`) alone decides
+  results, so a client can never assert a finish or hold an answer.
+- Thin pages that exist only to rank in search, or another publisher's daily
+  puzzle or trademarked title ([catalog.md](catalog.md)).
+- Shrinking the catalog to look minimal. Breadth gives more reasons to return
+  each day; it must not change how success is counted.
 
-## Not doing
+## How success is measured
 
-- Hardcore esports/ranked ladders as core, gambling/loot-box, scientific/medical/IQ/destiny claims.
-- Infinite content-farm SEO spam or dark-pattern streak punishment.
-- Shrinking catalog to look minimal — unbounded catalog is the destination.
-- A second play authority behind a different transport (Connect `PuzzleService` is sole authority).
-- Charging for today's featured free ritual, or selling the solution.
+The North Star is **daily puzzle completers**: distinct players who finish at
+least one qualifying daily puzzle on a product day. Definition, supporting
+metrics and stop-the-line signals are in [metrics.md](metrics.md).
 
-## Product oracle
+Targets, to be recalibrated once live baselines exist:
 
-The destination is true only when a non-technical player on a phone can finish today's featured ritual in minutes without payment or account, share a non-spoiler card with a `?date=` deep link, and return the next product day without push, with server-authoritative serve+validate, one finish per `(user, module, day_key)`, and with empty-catalog and mute-blog never presented as live, at the live layer.
+| Metric | Target direction |
+| --- | --- |
+| Daily puzzle completers | Grows week over week; never falls without a deploy or content explanation |
+| D7 retention of new completers | Measured first, then improved; own cohort curves, not industry medians |
+| Weekly regulars (4 or more finish days in 7) | Grows faster than completers; leading indicator for subscriptions |
+| Share-landing new completers | Every share that lands can be traced to a first finish |
+| Free-to-Plus conversion among weekly regulars | Measured once Plus is on sale; paid players' completion stays close to free players' |
 
-Source green, `GET /healthz` 200, and `GET /` 200 are not this oracle.
+The live product check is what a non-technical player on a phone can do: finish
+today's featured puzzle in minutes without payment or an account, share a
+result card with a `?date=` link, and return the next day. A `200` from
+`/healthz` or `/` is not that check (`bun run verify:live`,
+[reference/live-verification.md](reference/live-verification.md)).
 
-## North Star Metric
+## Related
 
-**daily puzzle completers** — distinct users who complete at least one qualifying `puzzle_ritual` on product day D in `Asia/Hong_Kong`. Multiple finishes by the same user on D still count as one. Secondary entertainment metric: **daily entertainment completers**. Do not invent a house score acronym. Field definition: [`north-star/NORTH-STAR-METRIC.md`](north-star/NORTH-STAR-METRIC.md) (`PUZ-NSM`).
-
-## Clients (company dest)
-
-Consume owner ADR-038. This product calls peer public APIs with those
-products' credentials and their generated Rust or TypeScript SDKs. It
-does not implement Backend-as-a-Service, compile a mega-client, or use
-`{project}.api.sylphx.com` as dest.
+- [capabilities.md](capabilities.md): what exists and its measured status.
+- [growth.md](growth.md): the loop and the ranked backlog.
+- [design/README.md](design/README.md): brand, tokens, shell, page list.
