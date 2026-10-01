@@ -469,6 +469,12 @@ jobs:
           grep -Eq '^test guest_ownership_tests::raced_adoption_and_erasure_preserve_only_unclaimed_guest_or_erase_linked_sources \.\.\. ok$' "$LOG"
           grep -Eq '^test guest_ownership_tests::unregistered_guess_budget_uses_hash_without_allocating_player \.\.\. ok$' "$LOG"
           grep -Eq '^test guest_ownership_tests::invalid_submit_rolls_back_allocation_and_adoption_until_valid_finish \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::legacy_claim_keeps_streak_and_history_and_leaves_nothing_under_legacy \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::replaying_the_legacy_id_with_another_token_claims_nothing \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::account_backed_or_registered_legacy_id_is_refused \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::two_concurrent_legacy_claims_have_exactly_one_winner \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::wrong_origin_legacy_claim_is_forbidden_without_database_effect \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::signed_in_player_with_legacy_id_ends_with_history_on_the_account \.\.\. ok$' "$LOG"
           grep -Eq '^test result: ok\. [1-9][0-9]* passed;' "$LOG"
           grep -Eq '^test retention_push_tests::connect_push_foreign_endpoint_returns_404_without_any_writes \.\.\. ok$' "$LOG"
 

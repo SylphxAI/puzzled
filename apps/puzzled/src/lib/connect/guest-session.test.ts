@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { createClient } from '@connectrpc/connect'
 import { StatsService } from '@/gen/connect/puzzled/v1/stats_pb'
+import { GUEST_DAY_ID_KEY } from '@/lib/storage-keys'
 import { ensureGuestSession, getConnectTransport, resetConnectTransportCache } from './transport'
 
 const originalFetch = globalThis.fetch
@@ -89,5 +90,44 @@ describe('browser guest cookie admission', () => {
 			throw new Error('must not fetch')
 		}) as unknown as typeof fetch
 		expect(await ensureGuestSession()).toEqual({ issued: false })
+	})
+
+	test('sends the legacy id once and forgets it after the server claims it', async () => {
+		const store = new Map<string, string>()
+		const id = '7f5d3b0a-1c2e-4a6b-9d8f-0123456789ab'
+		const previousStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+		Object.defineProperty(globalThis, 'localStorage', {
+			configurable: true,
+			value: {
+				getItem: (k: string) => store.get(k) ?? null,
+				setItem: (k: string, v: string) => void store.set(k, v),
+				removeItem: (k: string) => void store.delete(k),
+			},
+		})
+		try {
+			store.set(GUEST_DAY_ID_KEY, id)
+			globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+				calls.push(new Request(input, init))
+				return respond({ issued: true, claimed: true })
+			}) as unknown as typeof fetch
+			await ensureGuestSession('https://puzzled.test')
+			expect(await calls[0]?.json()).toEqual({ legacyGuestId: id })
+			expect(store.has(GUEST_DAY_ID_KEY)).toBe(false)
+		} finally {
+			if (previousStorage) Object.defineProperty(globalThis, 'localStorage', previousStorage)
+			else Reflect.deleteProperty(globalThis, 'localStorage')
+		}
+	})
+
+	test('a bootstrap failure never blocks an RPC', async () => {
+		let rpc = 0
+		globalThis.fetch = (async (input: RequestInfo | URL) => {
+			if (String(input).endsWith('/v1/guest/session')) return respond({}, 503)
+			rpc += 1
+			return respond({})
+		}) as unknown as typeof fetch
+		const client = createClient(StatsService, getConnectTransport('https://puzzled.test'))
+		await client.getUserStats({}).catch(() => undefined)
+		expect(rpc).toBe(1)
 	})
 })

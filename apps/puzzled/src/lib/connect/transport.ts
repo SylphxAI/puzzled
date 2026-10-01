@@ -13,6 +13,8 @@
 
 import type { Interceptor, Transport } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
+import { getOrCreateGuestDayId } from '@/lib/guest-day-id'
+import { GUEST_DAY_ID_KEY } from '@/lib/storage-keys'
 
 const DEV_DEFAULT_BASE = 'http://127.0.0.1:3001'
 
@@ -84,11 +86,13 @@ let guestSession: Promise<GuestSessionResult> | null = null
 export function ensureGuestSession(base = resolveConnectBaseUrl()): Promise<GuestSessionResult> {
 	if (typeof window === 'undefined') return Promise.resolve({ issued: false })
 	if (guestSession) return guestSession
+	// Old progress lives under a raw id; the server claims it once into the new namespace.
+	const legacy = getOrCreateGuestDayId()
 	const pending = fetch(`${normalizeConnectBaseUrl(base)}/v1/guest/session`, {
 		method: 'POST',
 		credentials: 'include',
 		headers: { 'Content-Type': 'application/json' },
-		body: '{}',
+		body: JSON.stringify(legacy ? { legacyGuestId: legacy } : {}),
 	}).then(async (response) => {
 		if (!response.ok) throw new Error('guest_session_unavailable')
 		const result: unknown = await response.json()
@@ -99,6 +103,13 @@ export function ensureGuestSession(base = resolveConnectBaseUrl()): Promise<Gues
 			typeof result.issued !== 'boolean'
 		) {
 			throw new Error('guest_session_invalid_response')
+		}
+		if (legacy && (result.issued || ('claimed' in result && result.claimed === true))) {
+			try {
+				localStorage.removeItem(GUEST_DAY_ID_KEY)
+			} catch {
+				// Storage may be unavailable; the server refuses a second claim anyway.
+			}
 		}
 		return { issued: result.issued }
 	})
@@ -121,7 +132,7 @@ export function getConnectTransport(baseUrl?: string): Transport {
 		useBinaryFormat: false, // browserDefaultEncoding: protojson
 		interceptors: [
 			((next) => async (req) => {
-				await ensureGuestSession(base)
+				await ensureGuestSession(base).catch(() => undefined)
 				return next(req)
 			}) satisfies Interceptor,
 		],

@@ -333,6 +333,21 @@ pub async fn adopt_guest_sessions(
     Ok(value)
 }
 
+/// Move a player's sessions to another player id, recording the origin.
+pub async fn reassign_sessions(
+    connection: &mut sqlx::PgConnection,
+    from: uuid::Uuid,
+    to: uuid::Uuid,
+) -> Result<u64, String> {
+    sqlx::query(ADOPT_GUEST_REASSIGN_SQL)
+        .bind(from)
+        .bind(to)
+        .execute(connection)
+        .await
+        .map(|r| r.rows_affected())
+        .map_err(|e| e.to_string())
+}
+
 pub async fn adopt_guest_sessions_on_connection(
     connection: &mut sqlx::PgConnection,
     verified_account: &crate::capabilities::identity_access::adapters::platform_jwt::VerifiedIdentity,
