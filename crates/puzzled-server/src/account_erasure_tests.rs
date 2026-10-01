@@ -177,7 +177,7 @@ fn assert_diagnostic(body: &Value, expected_reason: &str) {
         .split("request_ref=")
         .nth(1)
         .expect("request reference");
-    assert_eq!(Uuid::parse_str(reference).unwrap().get_version_num(), 4);
+    assert_eq!(Uuid::parse_str(reference).unwrap().get_version_num(), 7);
     assert!(!message.contains(SECRET_KEY));
 }
 

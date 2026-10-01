@@ -543,7 +543,7 @@ impl PreferencesService for PreferencesConnectService {
                 "confirmation_required",
             ));
         }
-        let correlation = Uuid::new_v4();
+        let correlation = Uuid::now_v7();
         let Some(pool) = &self.state.pool else {
             return Err(ErasureFailure::DatabaseUnavailable.error(correlation));
         };
@@ -713,14 +713,14 @@ mod erasure_diagnostic_tests {
                 ErrorCode::Internal,
             ),
         ] {
-            let correlation = Uuid::new_v4();
+            let correlation = Uuid::now_v7();
             let error = failure.error(correlation);
             assert_eq!(error.code, code);
             let message = error.message.unwrap();
             assert!(message.ends_with(&format!("reason={reason} request_ref={correlation}")));
-            assert_eq!(correlation.get_version_num(), 4);
+            assert_eq!(correlation.get_version_num(), 7);
             assert!(error.details.is_empty());
-            assert_ne!(correlation, Uuid::new_v4());
+            assert_ne!(correlation, Uuid::now_v7());
         }
     }
 }
