@@ -113,8 +113,8 @@ impl StatsService for StatsConnectService {
             ));
         }
 
-        let viewer = require_identity_or_guest(&ctx).ok();
-        let viewer_id = viewer.as_ref().map(|identity| identity.user_id.as_str());
+        let access = crate::bootstrap::identity::admitted_request_identities(&ctx, self.state.pool.as_ref()).await?;
+        let viewer_id = access.primary().map(|identity| identity.user_id.as_str());
 
         let query = LeaderboardQuery {
             game_slug: game_slug.to_string(),
@@ -126,12 +126,9 @@ impl StatsService for StatsConnectService {
         if let Some(pool) = &self.state.pool {
             match fetch_score_leaderboard(pool, &query).await {
                 Ok(entries) => {
-                    return leaderboard_response(
-                        entries
-                            .into_iter()
-                            .map(|entry| to_proto_entry(entry, viewer_id))
-                            .collect(),
-                    );
+                    let entries = entries.into_iter().map(|entry| to_proto_entry(entry, viewer_id)).collect();
+                    access.commit().await?;
+                    return leaderboard_response(entries);
                 }
                 Err(error) => {
                     tracing::warn!(
@@ -144,6 +141,7 @@ impl StatsService for StatsConnectService {
         }
 
         // No pool or read failure: honest residual empty board (do not invent scores).
+        access.commit().await?;
         leaderboard_response(Vec::new())
     }
 

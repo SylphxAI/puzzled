@@ -255,3 +255,54 @@ async fn second_guest_cookie_never_reads_or_adopts_a_public_player_id() {
     assert_eq!(guest_credentials::lookup_hash(&pool,&b_hash).await.unwrap(),None);
     pool.close().await;
 }
+
+#[tokio::test]
+async fn existing_cookie_parallel_bootstrap_keeps_one_registry_player() {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    let Some(pool) = fresh_database().await else { return; };
+    let cookie = guest_credentials::issue(&pool).await.unwrap();
+    let pair = cookie.split(';').next().unwrap();
+    let app = router(AppState::new(Some(pool.clone())));
+    let (first, second) = tokio::join!(
+        request(&app,"/v1/guest/session",Some(pair),None,None),
+        request(&app,"/v1/guest/session",Some(pair),None,None),
+    );
+    assert_eq!(first.0,StatusCode::OK);
+    assert_eq!(second.0,StatusCode::OK);
+    assert!(first.2.is_none());
+    assert!(second.2.is_none());
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials").fetch_one(&pool).await.unwrap();
+    assert_eq!(count,1);
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn legacy_guest_write_and_completion_paths_have_no_player_effects() {
+    let Some(pool) = fresh_database().await else { return; };
+    let legacy = Uuid::now_v7();
+    sqlx::query("INSERT INTO game_sessions(user_id,game_slug,status,attempts,mode) VALUES($1,'word-guess','won',1,'daily')")
+        .bind(legacy).execute(&pool).await.unwrap();
+    let app = router(AppState::new(Some(pool.clone())));
+    let cookie = format!("puzzled_guest_id={legacy}");
+    let cases = [
+        ("/puzzled.v1.PuzzleService/SubmitGuess",json!({"gameSlug":"word-guess","status":"won","attempts":1,"submissionJson":"{}"})),
+        ("/puzzled.v1.PuzzleService/CheckGuess",json!({"gameSlug":"word-guess","guessJson":"{}"})),
+        ("/puzzled.v1.PuzzleService/ShareResult",json!({"gameSlug":"word-guess","tap":true})),
+    ];
+    for (path, body) in cases {
+        let response = app.clone().oneshot(
+            Request::builder().method("POST").uri(path).header("content-type","application/json")
+                .header("cookie",&cookie).header("x-puzzled-guest-id",legacy.to_string())
+                .body(Body::from(body.to_string())).unwrap()
+        ).await.unwrap();
+        assert_eq!(response.status(),StatusCode::UNAUTHORIZED,"{path}");
+    }
+    let rows: Vec<(Uuid,i32)> = sqlx::query_as("SELECT user_id,attempts FROM game_sessions").fetch_all(&pool).await.unwrap();
+    assert_eq!(rows,[(legacy,1)]);
+    for table in ["result_shares","user_freeze_data","guest_credentials"] {
+        let statement = format!("SELECT count(*) FROM {table}");
+        let count: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(statement)).fetch_one(&pool).await.unwrap();
+        assert_eq!(count,0,"{table}");
+    }
+    pool.close().await;
+}
