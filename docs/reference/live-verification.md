@@ -13,6 +13,22 @@ never infers success from a proxy: every check prints `pass` / `fail` /
 `unknown` plus the raw evidence behind it (HTTP status, timing, response
 excerpts, SHA-256 fingerprints, and the `git_commit_sha` the target reports).
 
+## Accessibility quarantine
+
+The shared browser axe gate temporarily quarantines only its `document-title`
+assertion while asynchronous hydration removes and restores an otherwise correct
+page title. All other axe rules, behavioural accessibility checks, CSP and
+production-transport terminal regressions remain enforced. Raw axe violations,
+including title findings, remain attached to each audit; a green gate does not
+claim title conformance during this quarantine.
+
+[Issue #322](https://github.com/SylphxAI/puzzled/issues/322) owns the separate
+hydration root fix (ops/title-fix builder) and explicit removal criteria: prove
+stable/atomic localized metadata through hydration and navigation, add a
+deterministic regression, restore normal title enforcement, and verify full
+merged-main accessibility, CSP terminal tests and production readback. Do not
+retry the flaky assertion or broaden this quarantine.
+
 ## Commands
 
 ```bash

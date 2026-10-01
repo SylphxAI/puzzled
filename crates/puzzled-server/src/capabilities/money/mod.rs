@@ -2,7 +2,7 @@
 //! price, no processor key and no entitlement rule of its own once it runs
 //! here: access is Money's `entitlement_grants:check`, checkout is a Money
 //! `checkout_sessions` the browser is redirected to, and the price list is
-//! Money's `catalogs/default`.
+//! Money's `price_catalogs/default`.
 
 pub mod access;
 pub mod checkout;

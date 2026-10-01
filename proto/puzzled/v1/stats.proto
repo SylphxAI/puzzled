@@ -33,10 +33,13 @@ enum LeaderboardPeriod {
 
 message LeaderboardEntry {
   int32 rank = 1;
+  // Compatibility name: opaque per-response entry id, NEVER a player/account id.
   string user_id = 2;
   string user_name = 3 [features.field_presence = EXPLICIT];
   string user_image = 4 [features.field_presence = EXPLICIT];
   int32 value = 5;
+  // Private viewer marker preserves own-row highlighting without exposing identity.
+  bool is_viewer = 6;
 }
 
 message GetLeaderboardRequest {

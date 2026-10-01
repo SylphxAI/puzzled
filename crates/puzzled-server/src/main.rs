@@ -2,7 +2,7 @@
 
 use std::time::Duration;
 
-use puzzled_server::shared::db_config::select_database_url;
+use puzzled_server::shared::db_config::{select_database_url, writer_pool_options};
 use puzzled_server::{http_port, router, shutdown_signal, AppState};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
@@ -21,13 +21,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Cold-start + managed DNS: allow longer first connect so free-floor ritual
     // persist is not permanently demoted to S0 on a transient 3s timeout.
     let pool = match select_database_url() {
-        Some(url) => match PgPoolOptions::new()
-            .max_connections(5)
-            .acquire_timeout(Duration::from_secs(15))
-            .test_before_acquire(true)
-            .max_lifetime(Some(Duration::from_secs(600)))
-            .connect(&url)
-            .await
+        Some(url) => match writer_pool_options(
+            PgPoolOptions::new()
+                .max_connections(5)
+                .acquire_timeout(Duration::from_secs(15))
+                .max_lifetime(Some(Duration::from_secs(600))),
+        )
+        .connect(&url)
+        .await
         {
             Ok(pool) => {
                 info!("postgres pool connected (ADR-168 S1)");

@@ -26,6 +26,13 @@ test('normal deploy executes baseline DDL on an empty preview database', () => {
 	// ledger on an unmanaged populated database. Neither belongs in deploy.
 	expect(migration.command).not.toContain('--baseline')
 	expect(migration.command).not.toContain('--allow-dirty')
+	const pkg = JSON.parse(readFileSync(resolve(ROOT, 'apps/puzzled/package.json'), 'utf8')) as {
+		scripts: Record<string, string>
+	}
+	const build = pkg.scripts['build:with-migrate']
+	expect(build).toBe('atlas migrate apply --env production && next build')
+	expect(build).not.toContain('--baseline')
+	expect(build).not.toContain('--allow-dirty')
 	const directory = resolve(ROOT, 'apps/puzzled/atlas/migrations')
 	const first = readdirSync(directory)
 		.filter((name) => name.endsWith('.sql'))
