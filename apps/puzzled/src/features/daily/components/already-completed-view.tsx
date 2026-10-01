@@ -118,7 +118,7 @@ export function AlreadyCompletedView({
 
 	return (
 		<div className={cn('flex w-full max-w-md flex-col items-center gap-5', className)}>
-			<SaveStreakPrompt daily={puzzleDate === productDayKey()} />
+			<SaveStreakPrompt daily={puzzleDate === productDayKey()} gameSlug={gameSlug} />
 			{/* Victory/Result Header */}
 			<div
 				className={cn('flex flex-col items-center text-center', animate && 'animate-slide-up-fade')}

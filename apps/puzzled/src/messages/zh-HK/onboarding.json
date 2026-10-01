@@ -14,7 +14,7 @@
 	"saveStreak": "儲低你嘅連續紀錄",
 	"leaderboards": "參與排行榜競爭",
 	"trackStats": "追蹤你的統計",
-	"keepStreak": "開個免費帳戶，保留你連續 {days} 日嘅紀錄同今日嘅成績。",
+	"keepStreak": "開個免費帳戶，保留你連續 {days, plural, other {# 日}} 嘅紀錄同今日嘅成績。",
 	"createFreeAccount": "建立免費帳號",
 	"maybeLater": "稍後再說",
 	"signupBannerTitle": "儲存你的進度！",

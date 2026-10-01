@@ -21,7 +21,7 @@ import { useSaveGameResult } from '@/features/gamification'
 import type { PuzzleDifficulty } from '@/games/types'
 import { logger } from '@/lib/logger'
 import { getGameSessionKey } from '@/lib/storage-keys'
-import { triggerHaptic, triggerSound, useGuestOnboarding } from '@/shared/hooks'
+import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { finishRecordingFor } from './finish-recording'
 
 /** Final game outcome - what gets saved to database */
@@ -103,12 +103,6 @@ export interface UseGameSessionOptions {
 	resultModalDelay?: number
 
 	/**
-	 * Delay before showing guest signup prompt (ms)
-	 * @default 2000
-	 */
-	guestPromptDelay?: number
-
-	/**
 	 * Product day key (YYYY-MM-DD) the board was served for. A daily finish
 	 * forwards it only while it is still the product day; an archive finish
 	 * records it as the dated finish it is (see `finishRecordingFor`).
@@ -153,12 +147,7 @@ export interface UseGameSessionReturn {
 	showCelebration: boolean
 	showStarBurst: boolean
 	showResultModal: boolean
-	showGuestSignupPrompt: boolean
 	setShowResultModal: (show: boolean) => void
-	setShowGuestSignupPrompt: (show: boolean) => void
-
-	// Guest signup
-	handleCloseGuestPrompt: () => void
 
 	// Utilities
 	resetSession: () => void
@@ -175,7 +164,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		enableStarBurst = false,
 		isPerfectWin,
 		resultModalDelay,
-		guestPromptDelay = 2000,
 		puzzleDate,
 		requireServerAccept = false,
 	} = options
@@ -185,7 +173,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	// Hooks
 	const { saveResult, isLoggedIn } = useSaveGameResult(gameSlug)
 	const { saveCompletion: saveGuestCompletion } = useGuestGameState(gameSlug)
-	const { incrementGuestGames, shouldShowSignupPrompt, dismissSignupPrompt } = useGuestOnboarding()
 
 	// State
 	const [gamePhase, setGamePhase] = useState<GamePhase>(() => {
@@ -197,7 +184,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	const [showCelebration, setShowCelebration] = useState(false)
 	const [showStarBurst, setShowStarBurst] = useState(false)
 	const [showResultModal, setShowResultModal] = useState(false)
-	const [showGuestSignupPrompt, setShowGuestSignupPrompt] = useState(false)
 	const [serverScore, setServerScore] = useState<number | null>(null)
 
 	// Ref to prevent duplicate saves
@@ -324,12 +310,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 					status,
 					attempts: endData.attempts ?? 1,
 				})
-				incrementGuestGames()
-				if (shouldShowSignupPrompt) {
-					setTimeout(() => {
-						setShowGuestSignupPrompt(true)
-					}, guestPromptDelay)
-				}
 			}
 
 			return finish
@@ -344,9 +324,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			isLoggedIn,
 			saveResult,
 			saveGuestCompletion,
-			incrementGuestGames,
-			shouldShowSignupPrompt,
-			guestPromptDelay,
 			requireServerAccept,
 			celebrate,
 		],
@@ -362,14 +339,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	}, [gamePhase, startTime])
 
 	/**
-	 * Handle closing guest signup prompt
-	 */
-	const handleCloseGuestPrompt = useCallback(() => {
-		setShowGuestSignupPrompt(false)
-		dismissSignupPrompt()
-	}, [dismissSignupPrompt])
-
-	/**
 	 * Reset session state (for new game)
 	 */
 	const resetSession = useCallback(() => {
@@ -377,7 +346,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		setShowCelebration(false)
 		setShowStarBurst(false)
 		setShowResultModal(false)
-		setShowGuestSignupPrompt(false)
 		setServerScore(null)
 		setStartTime(Date.now())
 	}, [])
@@ -404,12 +372,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		showCelebration,
 		showStarBurst,
 		showResultModal,
-		showGuestSignupPrompt,
 		setShowResultModal,
-		setShowGuestSignupPrompt,
-
-		// Guest signup
-		handleCloseGuestPrompt,
 
 		// Utilities
 		resetSession,

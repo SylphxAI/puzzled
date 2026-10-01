@@ -188,7 +188,7 @@ export function GameResultCard({
 
 	return (
 		<div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-			<SaveStreakPrompt daily={mode === 'daily'} />
+			<SaveStreakPrompt daily={mode === 'daily'} gameSlug={gameType} />
 			{/* Screen reader announcement */}
 			<output aria-live="polite" className="sr-only">
 				{getAnnouncementMessage()}

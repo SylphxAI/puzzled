@@ -61,11 +61,6 @@ function MyGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
         status={gameStatus}
         stats={{ attempts, timeSpentMs: session.timeSpentMs }}
       />
-
-      <GuestSignupPrompt
-        open={session.showGuestSignupPrompt}
-        onClose={session.handleCloseGuestPrompt}
-      />
     </div>
   )
 }
@@ -138,12 +133,7 @@ interface UseGameSessionReturn {
   showCelebration: boolean
   showStarBurst: boolean
   showResultModal: boolean
-  showGuestSignupPrompt: boolean
   setShowResultModal: (show: boolean) => void
-  setShowGuestSignupPrompt: (show: boolean) => void
-
-  // Guest signup
-  handleCloseGuestPrompt: () => void
 
   // Utilities
   resetSession: () => void
@@ -181,10 +171,6 @@ useEffect(() => {
       saveResult({ status: gameStatus, attempts, timeSpentMs })
     } else {
       saveGuestCompletion({ status: gameStatus, attempts })
-      incrementGuestGames()
-      if (shouldShowSignupPrompt) {
-        setTimeout(() => setShowGuestSignupPrompt(true), 2000)
-      }
     }
 
     setShowCelebration(true)

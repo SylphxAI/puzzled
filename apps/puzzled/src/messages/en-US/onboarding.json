@@ -14,7 +14,7 @@
 	"saveStreak": "Save your streak",
 	"leaderboards": "Compete on leaderboards",
 	"trackStats": "Track your statistics",
-	"keepStreak": "Create a free account to keep your {days}-day streak and today’s result.",
+	"keepStreak": "Create a free account to keep your streak of {days, plural, one {# day} other {# days}} and today’s result.",
 	"createFreeAccount": "Create Free Account",
 	"maybeLater": "Maybe later",
 	"signupBannerTitle": "Save your progress!",
