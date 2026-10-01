@@ -35,6 +35,8 @@ mod money_access_tests;
 #[cfg(test)]
 mod result_shares_tests;
 #[cfg(test)]
+mod retention_push_tests;
+#[cfg(test)]
 mod streak_freeze_tests;
 #[cfg(test)]
 mod test_support;

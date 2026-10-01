@@ -719,6 +719,14 @@
 				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
 			},
 			{
+				"value": "Remind me daily",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "Remove",
 				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
 			},
@@ -1799,6 +1807,14 @@
 				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
 			},
 			{
+				"value": "Remind me daily",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "Remove",
 				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
 			},
@@ -2383,10 +2399,6 @@
 				"keys": ["settings.profile.username", "settings.profile.usernamePlaceholder"]
 			},
 			{
-				"value": "保護你的連勝",
-				"keys": ["onboarding.saveStreak", "settings.overview.quickNotifications.streakDesc"]
-			},
-			{
 				"value": "個人檔案",
 				"keys": [
 					"nav.profile",
@@ -2853,6 +2865,14 @@
 			{
 				"value": "每日提醒",
 				"keys": ["settings.overview.quickNotifications.daily", "settings.pushDailyReminder"]
+			},
+			{
+				"value": "每日提醒我",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
 			},
 			{
 				"value": "沒有安全警示",
@@ -3442,10 +3462,6 @@
 				"keys": ["settings.profile.username", "settings.profile.usernamePlaceholder"]
 			},
 			{
-				"value": "保護你的連勝",
-				"keys": ["onboarding.saveStreak", "settings.overview.quickNotifications.streakDesc"]
-			},
-			{
 				"value": "個人檔案",
 				"keys": [
 					"nav.profile",
@@ -3903,6 +3919,14 @@
 			{
 				"value": "死信佇列",
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
+			},
+			{
+				"value": "每天提醒我",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
 			},
 			{
 				"value": "每日",
@@ -4529,10 +4553,6 @@
 				]
 			},
 			{
-				"value": "保护你的连胜",
-				"keys": ["onboarding.saveStreak", "settings.overview.quickNotifications.streakDesc"]
-			},
-			{
 				"value": "偏好设置",
 				"keys": [
 					"settings.nav.preferences",
@@ -5015,6 +5035,14 @@
 			{
 				"value": "死信队列",
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
+			},
+			{
+				"value": "每天提醒我",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
 			},
 			{
 				"value": "每日",

@@ -1,5 +1,7 @@
 'use client'
 
+import { create } from '@bufbuild/protobuf'
+import { createClient } from '@connectrpc/connect'
 import { useTranslations } from 'next-intl'
 import {
 	createContext,
@@ -12,6 +14,16 @@ import {
 	useState,
 	useSyncExternalStore,
 } from 'react'
+import {
+	persistSubscription,
+	pushRegistration,
+	subscribeBrowser,
+} from '@/features/push/lib/web-push'
+import {
+	GamificationService,
+	GetStreakInfoRequestSchema,
+} from '@/gen/connect/puzzled/v1/gamification_pb'
+import { getConnectTransport } from '@/lib/connect/transport'
 import { type AppConfig, DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type IdentityUser } from './dest'
 
 type AuthState = {
@@ -64,6 +76,23 @@ export function SylphxProvider({
 				const body = await readJson(response)
 				const next = (body.user as IdentityUser | null) ?? null
 				if (!cancelled) setUser(next)
+				// Reuse GetStreakInfo's existing guest adoption. This runs after
+				// every sign-in method, including OAuth, without a second claim API.
+				if (next) {
+					// Restore this browser's persisted subscription after every
+					// authentication method, including a shared-device account switch.
+					if ('serviceWorker' in navigator && 'PushManager' in window) {
+						pushRegistration()
+							.then(async (registration) => {
+								const sub = await registration.pushManager.getSubscription()
+								if (sub && !cancelled) await persistSubscription(sub)
+							})
+							.catch(() => undefined)
+					}
+					await createClient(GamificationService, getConnectTransport())
+						.getStreakInfo(create(GetStreakInfoRequestSchema, {}))
+						.catch(() => undefined)
+				}
 			})
 			.catch(() => {
 				if (!cancelled) setUser(null)
@@ -80,6 +109,17 @@ export function SylphxProvider({
 	}, [])
 
 	const signOut = useCallback(async () => {
+		// Revoke the browser endpoint too: account reminders must not be left
+		// on a shared device after sign-out. Server removal is best-effort;
+		// browser revocation prevents delivery even if that request fails.
+		if ('serviceWorker' in navigator && 'PushManager' in window) {
+			const registration = await navigator.serviceWorker.getRegistration('/').catch(() => undefined)
+			const sub = await registration?.pushManager.getSubscription().catch(() => null)
+			if (sub) {
+				await persistSubscription(sub, true).catch(() => undefined)
+				await sub.unsubscribe().catch(() => undefined)
+			}
+		}
 		await fetch('/api/identity/logout', { method: 'POST', credentials: 'same-origin' })
 		setUser(null)
 	}, [])
@@ -415,71 +455,65 @@ export function useSafeConsent() {
 	}
 }
 export function useNotifications() {
-	const [permission, setPermission] = useState<NotificationPermission>(
-		typeof Notification === 'undefined' ? 'denied' : Notification.permission,
-	)
-	const [deviceId, setDeviceId] = useState<string | null>(null)
+	const { user } = useSafeUser()
+	const [subscription, setSubscription] = useState<PushSubscription | null>(null)
 	const [error, setError] = useState<{ message?: string } | null>(null)
-	const [preferences, setPreferences] = useState<Record<string, unknown>>({})
+	const isSupported =
+		typeof window !== 'undefined' &&
+		'Notification' in window &&
+		'PushManager' in window &&
+		'serviceWorker' in navigator
 	useEffect(() => {
-		fetch('/api/events/inbox', { credentials: 'same-origin' })
-			.then(async (response) => {
-				const body = await readJson(response)
-				setPreferences({ messages: body.messages ?? [] })
+		setSubscription(null)
+		if (!isSupported || !user) return
+		let cancelled = false
+		pushRegistration()
+			.then(async (registration) => {
+				const sub = await registration.pushManager.getSubscription()
+				if (sub) await persistSubscription(sub)
+				if (!cancelled) setSubscription(sub)
 			})
-			.catch(() => undefined)
-	}, [])
+			.catch(() => {
+				if (!cancelled) setError({ message: 'push_subscription_unavailable' })
+			})
+		return () => {
+			cancelled = true
+		}
+	}, [isSupported, user])
 	return {
-		permission,
-		isSupported: typeof Notification !== 'undefined',
-		isSubscribed: Boolean(deviceId),
+		isSupported,
+		isSubscribed: Boolean(subscription),
 		subscribe: async () => {
-			if (typeof Notification === 'undefined') return false
-			const next = await Notification.requestPermission()
-			setPermission(next)
-			if (next !== 'granted') return false
-			const registration = await navigator.serviceWorker?.ready.catch(() => undefined)
-			const push = await registration?.pushManager
-				.subscribe({ userVisibleOnly: true })
-				.catch(() => undefined)
-			const response = await fetch('/api/events/devices', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				credentials: 'same-origin',
-				body: JSON.stringify({
-					token: push?.endpoint ?? `web-push-${crypto.randomUUID()}`,
-					p256dh: push ? arrayBufferToB64(push.getKey('p256dh')) : '',
-					auth: push ? arrayBufferToB64(push.getKey('auth')) : '',
-				}),
-			})
-			const body = await readJson(response)
-			if (!response.ok) {
-				setError({ message: typeof body.error === 'string' ? body.error : 'subscribe_failed' })
+			if (!isSupported || !user) return false
+			try {
+				const sub = await subscribeBrowser()
+				setSubscription(sub)
+				setError(null)
+				return Boolean(sub)
+			} catch {
+				setError({ message: 'push_subscription_unavailable' })
 				return false
 			}
-			setDeviceId(typeof body.deviceId === 'string' ? body.deviceId : 'events-device')
-			setError(null)
-			return true
 		},
 		unsubscribe: async () => {
-			if (!deviceId) return
-			await fetch('/api/events/devices', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				credentials: 'same-origin',
-				body: JSON.stringify({ unregister: true, deviceId }),
-			})
-			setDeviceId(null)
+			try {
+				const sub = subscription ?? (await (await pushRegistration()).pushManager.getSubscription())
+				if (sub) {
+					await persistSubscription(sub, true)
+					await sub.unsubscribe()
+				}
+				setSubscription(null)
+				setError(null)
+			} catch {
+				setError({ message: 'push_subscription_unavailable' })
+				throw new Error('push_subscription_unavailable')
+			}
 		},
 		error,
-		preferences,
+		preferences: {},
 	}
 }
 
-function arrayBufferToB64(value: ArrayBuffer | null): string {
-	if (!value) return ''
-	return btoa(String.fromCharCode(...new Uint8Array(value)))
-}
 type Achievement = {
 	unlocked: boolean
 	achievementId: string

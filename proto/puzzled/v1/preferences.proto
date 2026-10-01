@@ -114,7 +114,23 @@ message RecordSignupAttributionResponse {
   bool recorded = 1;
 }
 
+// Browser Web Push uses the same player identity and reminder preferences.
+message GetWebPushConfigRequest {}
+message GetWebPushConfigResponse { string public_key = 1; }
+message SaveWebPushSubscriptionRequest {
+  string endpoint = 1;
+  string p256dh = 2;
+  string auth = 3;
+  // Remove this browser's endpoint; keys are not needed for removal.
+  bool remove = 4;
+  // UI locale for the player's reminders (one of the five supported locales).
+  string locale = 5;
+}
+message SaveWebPushSubscriptionResponse {}
+
 service PreferencesService {
+  rpc GetWebPushConfig(GetWebPushConfigRequest) returns (GetWebPushConfigResponse);
+  rpc SaveWebPushSubscription(SaveWebPushSubscriptionRequest) returns (SaveWebPushSubscriptionResponse);
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
   rpc CheckUsername(CheckUsernameRequest) returns (CheckUsernameResponse);

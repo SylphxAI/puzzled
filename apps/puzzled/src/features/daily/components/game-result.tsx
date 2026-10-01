@@ -22,6 +22,7 @@ import { useTodayPercentile } from '@/lib/api'
 import { Link } from '@/lib/i18n/routing'
 import { productDayKey } from '@/lib/product-day'
 import { cn, getBaseUrl } from '@/lib/utils'
+import { SaveStreakPrompt } from './save-streak-prompt'
 
 type MissedCategory = {
 	name: string
@@ -181,6 +182,7 @@ export function GameResultCard({
 
 	return (
 		<div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+			<SaveStreakPrompt daily={mode === 'daily'} />
 			{/* Screen reader announcement */}
 			<output aria-live="polite" className="sr-only">
 				{getAnnouncementMessage()}

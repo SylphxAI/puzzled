@@ -89,13 +89,12 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 - Cancellation right: an account's first subscription can be cancelled within
   14 days of starting it for a full refund, however much was played
   (Consumer Contracts Regulations 2013). The api refunds every paid invoice of
-  that subscription through Stripe, ends access at once, and appends negative
-  ledger rows. A later subscription has no refund window.
-- The Stripe Customer Portal handles payment methods, invoices and plan
+  that subscription through Sylphx Money, which owns the refund records and ends access at once. A later subscription has no refund window.
+- Sylphx Money's hosted portal handles payment methods, invoices and plan
   changes; cancellation stays in Settings so the refund rule applies.
 - An account with a subscription that still renews cannot be erased until it
-  is cancelled. On erasure, subscription and ledger rows are kept for six
-  years (UK tax records) with the player id removed.
+  is cancelled. Money retains legally required financial records under its own retention
+  policy; Puzzled has no subscription or payment-ledger rows to retain.
 - Erasure also deletes the player's Sylphx Auth sign-in, through Auth's
   privacy-request API, for every subject that names the player. A refused
   Auth deletion erases nothing: the account stays whole and the request can
@@ -105,31 +104,31 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 
 ## 5. Money and entitlement (commercial standard)
 
-- Stripe webhooks (`POST /webhooks/stripe`) are signature-verified and treated
-  as hints: each event is read back from Stripe before a row changes.
-  Returning from checkout also reads the subscription back
-  (`GetSubscription{refresh}`), so access never waits on a webhook.
-- `billing_subscriptions` holds the last read-back state per subscription;
-  entitlement is derived from it (`active`, `trialing` or `past_due` inside the
-  paid period). A row whose period has passed while Stripe still calls it live
-  is read back before it can lock a player out.
-- `billing_ledger` is append-only: one row per paid invoice and per refund,
-  signed integer minor units, unique per Stripe source id.
+- Sylphx Money is the sole payments owner. Puzzled creates Money hosted
+  checkout sessions, reads `catalogs/default` for prices, and asks
+  `entitlement_grants:check` for Plus access. It holds no Stripe keys,
+  processor webhooks, billing subscriptions or payment ledger.
+- Checkout return reads Money's subscription status; a browser redirect
+  cannot assert a paid entitlement. Cancellation and the first-subscription
+  14-day refund are requests to Money; Money owns invoice, refund and tax
+  records. Puzzled stores only checkout consent evidence and family membership.
 - Family: the family-plan subscriber gets an invite link; up to 3 others join
   with their own accounts. The subscriber can remove members and reset the
-  link. Members lose access when the plan ends.
+  link. Membership is not an entitlement: access still requires the owner's
+  live family entitlement from Money.
+- Money is called server-side with the dedicated `SYLPHX_MONEY_API_KEY`
+  (`billing:read` + `billing:write`), never a browser or general platform key.
+  The free daily puzzle never reads Money. The outage policy is stated below.
 
 ### Referral attribution
 
 A landing with campaign tags (`utm_*`, `ref`; Tryit links use
 `utm_source=tryit&utm_medium=referral&utm_campaign=…&ref=<result id>`) is kept
 first-touch for 30 days in the `puzzled_attr` first-party cookie, only after
-analytics consent (declining clears it). Email sign-up stores it once in
-`account_attribution`. Checkout copies the account's tags (or, without them,
-the cookie) into the Stripe subscription metadata, which is read back into
-`billing_subscriptions.attribution`. Gap: an OAuth sign-up completes at Sylphx
-Identity with no Puzzled sign-up hook, so its account row is not written; its
-subscription still carries the cookie's tags. `/daily` redirects to today's
+analytics consent (declining clears it). Sign-up stores it once in
+`account_attribution`. Checkout passes the account's tags (or, without them,
+the cookie) to Money's checkout-session attribution. No Stripe subscription
+metadata or local billing table is written. `/daily` redirects to today's
 free game and keeps the query string.
 
 ## 6. Conversion moments (ethical)
@@ -160,7 +159,7 @@ Star.
 
 ## 8. Channels
 
-- Web: Sylphx Money hosted checkout (planned). The Stripe Checkout path from #237 is dormant.
+- Web: Sylphx Money hosted checkout. Purchases open only when Money is configured.
 - App Store and Google Play in-app purchase: not built. When a store app
   ships, Sylphx Money validates its receipts and serves the same
   entitlement.

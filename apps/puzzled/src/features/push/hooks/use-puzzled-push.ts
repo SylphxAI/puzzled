@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useNotificationPreferences, useUpdatePushPreferences } from '@/lib/api'
 import { MINUTE_MS } from '@/lib/constants/time'
 import { useNotifications } from '@/lib/identity/react'
@@ -90,9 +90,12 @@ export function usePuzzledPush() {
 	 */
 	const requestPermission = useCallback(async () => {
 		const success = await subscribe()
-
+		if (success) {
+			await updateMutation.mutateAsync({ pushEnabled: true, pushDailyReminder: true })
+			await refetchPreferences()
+		}
 		return success
-	}, [subscribe])
+	}, [subscribe, updateMutation, refetchPreferences])
 
 	/**
 	 * Disable push notifications
@@ -105,13 +108,16 @@ export function usePuzzledPush() {
 	/**
 	 * Get notification preferences from server
 	 */
-	const preferences: PuzzledNotificationPreferences = {
-		pushEnabled: serverPreferences?.pushEnabled ?? true,
-		pushDailyReminder: serverPreferences?.pushDailyReminder ?? true,
-		pushStreakAlert: serverPreferences?.pushStreakAlert ?? true,
-		pushNewGames: serverPreferences?.pushNewGames ?? true,
-		dailyReminderTime: serverPreferences?.dailyReminderTime ?? '09:00',
-	}
+	const preferences: PuzzledNotificationPreferences = useMemo(
+		() => ({
+			pushEnabled: serverPreferences?.pushEnabled ?? true,
+			pushDailyReminder: serverPreferences?.pushDailyReminder ?? true,
+			pushStreakAlert: serverPreferences?.pushStreakAlert ?? true,
+			pushNewGames: serverPreferences?.pushNewGames ?? true,
+			dailyReminderTime: serverPreferences?.dailyReminderTime ?? '09:00',
+		}),
+		[serverPreferences],
+	)
 
 	/**
 	 * Update notification preferences on server

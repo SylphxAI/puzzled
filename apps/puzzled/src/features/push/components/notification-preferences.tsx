@@ -184,7 +184,7 @@ export function NotificationPreferences({
 
 			{error && (
 				<div className="mt-4 p-3 bg-destructive/10 text-destructive text-sm rounded-md">
-					{error.message}
+					{t('notifications.push.unavailable')}
 				</div>
 			)}
 
@@ -205,6 +205,18 @@ export function NotificationPreferences({
 								checked={localPrefs.pushDailyReminder}
 								onChange={() => handleToggle('pushDailyReminder')}
 							/>
+
+							<label className="block py-3 text-sm">
+								{t('notifications.push.reminderTime')}
+								<input
+									type="time"
+									value={localPrefs.dailyReminderTime}
+									onChange={(event) =>
+										setLocalPrefs((prev) => ({ ...prev, dailyReminderTime: event.target.value }))
+									}
+									className="mt-2 block rounded-md border bg-background px-3 py-2"
+								/>
+							</label>
 
 							<PreferenceItem
 								label={t('notifications.push.streakAlert')}
