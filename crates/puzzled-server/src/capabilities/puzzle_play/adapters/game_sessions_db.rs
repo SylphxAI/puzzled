@@ -293,6 +293,14 @@ pub async fn load_completed_session(
     )
 }
 
+type TodayProgressRow = (
+    String,
+    String,
+    Option<i32>,
+    i32,
+    Option<chrono::NaiveDateTime>,
+);
+
 const TODAY_PROGRESS_SQL: &str = r#"
 SELECT DISTINCT ON (game_slug) game_slug, status::text, score, attempts, completed_at
 FROM game_sessions
@@ -314,14 +322,13 @@ pub async fn load_today_progress(
 ) -> Result<std::collections::HashMap<String, CompletedSession>, String> {
     let uid = parse_user_id(user_id)?;
     let date = puzzle_date.and_hms_opt(0, 0, 0).ok_or("invalid date")?;
-    let rows: Vec<(String, String, Option<i32>, i32, Option<chrono::NaiveDateTime>)> =
-        sqlx::query_as(TODAY_PROGRESS_SQL)
-            .bind(uid)
-            .bind(game_slugs)
-            .bind(date)
-            .fetch_all(pool)
-            .await
-            .map_err(|e| format!("today progress query failed: {e}"))?;
+    let rows: Vec<TodayProgressRow> = sqlx::query_as(TODAY_PROGRESS_SQL)
+        .bind(uid)
+        .bind(game_slugs)
+        .bind(date)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("today progress query failed: {e}"))?;
     Ok(rows
         .into_iter()
         .map(|(slug, status, score, attempts, completed_at)| {

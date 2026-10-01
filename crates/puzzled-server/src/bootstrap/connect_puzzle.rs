@@ -48,9 +48,9 @@ use crate::capabilities::puzzle_play::adapters::result_shares_db::{
 };
 use crate::proto::puzzled::v1::{
     CheckGuessRequest, CheckGuessResponse, DailyCompletion, GameProgress, GetDailyRequest,
-    GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse, GetSharedResultRequest, GetSharedResultResponse,
-    GetTodayProgressRequest, GetTodayProgressResponse, PuzzleService, ShareResultRequest, ShareResultResponse, SubmitGuessRequest,
-    SubmitGuessResponse,
+    GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse, GetSharedResultRequest,
+    GetSharedResultResponse, GetTodayProgressRequest, GetTodayProgressResponse, PuzzleService,
+    ShareResultRequest, ShareResultResponse, SubmitGuessRequest, SubmitGuessResponse,
 };
 
 const SLICE_PUZZLE: &str = "S2-puzzle-connect";
@@ -241,7 +241,10 @@ const MAX_PROGRESS_SLUGS: usize = 64;
 /// Requested slugs paired with their canonical storage slug, request order kept.
 fn progress_slugs(raw: &[String]) -> Result<Vec<(String, String)>, ConnectError> {
     if raw.len() > MAX_PROGRESS_SLUGS {
-        return Err(ConnectError::new(ErrorCode::InvalidArgument, "too_many_games"));
+        return Err(ConnectError::new(
+            ErrorCode::InvalidArgument,
+            "too_many_games",
+        ));
     }
     raw.iter()
         .map(|slug| {
