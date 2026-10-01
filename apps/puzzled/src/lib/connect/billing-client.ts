@@ -55,8 +55,10 @@ export async function leaveFamily() {
 	await client().leaveFamily(create(LeaveFamilyRequestSchema, {}))
 }
 
-export async function removeFamilyMember(userId: string) {
-	await client().removeFamilyMember(create(RemoveFamilyMemberRequestSchema, { userId }))
+export async function removeFamilyMember(memberHandle: string) {
+	await client().removeFamilyMember(
+		create(RemoveFamilyMemberRequestSchema, { userId: memberHandle }),
+	)
 }
 
 export async function resetFamilyInvite() {
