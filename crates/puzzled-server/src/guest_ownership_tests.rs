@@ -54,7 +54,7 @@ async fn issued_cookie_is_fresh_host_only_and_progress_adopts_without_deleting_c
     let app = router(AppState::new(Some(pool.clone())));
     let (status, body, cookie) = request(&app, "/v1/guest/session", None, None, Some(&Uuid::now_v7().to_string())).await;
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(body, json!({}));
+    assert_eq!(body, json!({"issued":true}));
     let cookie = cookie.unwrap();
     assert!(cookie.starts_with("__Host-puzzled_guest="));
     for attribute in ["Path=/", "HttpOnly", "Secure", "SameSite=Lax", "Max-Age=34560000"] { assert!(cookie.contains(attribute)); }
@@ -320,7 +320,7 @@ async fn bootstrap_is_zero_database_and_unknown_read_does_not_allocate() {
     let app = router(AppState::new(None));
     let (status, body, cookie) = request(&app,"/v1/guest/session",None,None,None).await;
     assert_eq!(status,StatusCode::OK);
-    assert_eq!(body,json!({}));
+    assert_eq!(body,json!({"issued":true}));
     let cookie = cookie.unwrap();
     assert!(cookie.contains("Max-Age=34560000"));
     let pair = cookie.split(';').next().unwrap();
@@ -373,4 +373,137 @@ async fn four_concurrent_submits_with_two_connections_do_not_hold_pool_during_co
     assert_eq!(guest.get_version_num(),7);
     pool.close().await;
     admin_pool.close().await;
+}
+
+#[tokio::test]
+async fn fifty_parallel_first_write_pairs_keep_one_winning_namespace_each() {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    let Some(pool) = fresh_database().await else { return; };
+    let day = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
+    let slug = puzzled_core::puzzle_play::game_slugs::todays_free_game(day);
+    crate::capabilities::daily_pipeline::resolve(Some(&pool),slug,day,None).await.unwrap();
+    let app = router(AppState::new(Some(pool.clone())));
+    async fn submit(app: axum::Router, cookie: String, slug: &'static str) {
+        let body = json!({"gameSlug":slug,"status":"won","attempts":1,"submissionJson":"{}"});
+        let response = app.oneshot(Request::builder().method("POST")
+            .uri("/puzzled.v1.PuzzleService/SubmitGuess").header("content-type","application/json")
+            .header("cookie",cookie).body(Body::from(body.to_string())).unwrap()).await.unwrap();
+        assert_eq!(response.status(),StatusCode::OK);
+    }
+    for iteration in 0..50 {
+        let cookie = guest_credentials::mint_cookie(None).unwrap();
+        let pair = cookie.split(';').next().unwrap().to_string();
+        let first = tokio::spawn(submit(app.clone(),pair.clone(),slug));
+        let second = tokio::spawn(submit(app.clone(),pair.clone(),slug));
+        tokio::time::timeout(std::time::Duration::from_secs(8),async {
+            first.await.unwrap();
+            second.await.unwrap();
+        }).await.unwrap();
+        let hash = guest_credentials::token_hash(pair.split_once('=').unwrap().1).unwrap();
+        let count: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials WHERE token_hash=$1")
+            .bind(hash).fetch_one(&pool).await.unwrap();
+        assert_eq!(count,1,"iteration {iteration}");
+    }
+    let count: i64 = sqlx::query_scalar("SELECT count(DISTINCT user_id) FROM guest_credentials").fetch_one(&pool).await.unwrap();
+    assert_eq!(count,50);
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn account_erasure_includes_retained_adopted_guest_collisions_and_provenance() {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    use crate::capabilities::preferences::adapters::account_deletion::{delete_account_data,USER_KEYED_COLUMNS};
+    let Some(pool) = fresh_database().await else { return; };
+    let cookie = guest_credentials::issue(&pool).await.unwrap();
+    let pair = cookie.split(';').next().unwrap();
+    let hash = guest_credentials::token_hash(pair.split_once('=').unwrap().1).unwrap();
+    let guest = guest_credentials::lookup_hash(&pool,&hash).await.unwrap().unwrap();
+    let account = Uuid::now_v7();
+    sqlx::query("INSERT INTO auth_subjects(subject,user_id) VALUES($1,$2)")
+        .bind(format!("principal-{account}")).bind(account).execute(&pool).await.unwrap();
+    for owner in [guest,account] {
+        sqlx::query("INSERT INTO game_sessions(user_id,game_slug,status,attempts,mode,is_ritual,day_key) VALUES($1,'word-guess','won',1,'daily',true,'2026-09-30')")
+            .bind(owner).execute(&pool).await.unwrap();
+        sqlx::query("INSERT INTO result_shares(id,user_id,game_slug,day_key,status,attempts) VALUES($1,$2,'word-guess','2026-09-30','won',1)")
+            .bind(Uuid::now_v7()).bind(owner).execute(&pool).await.unwrap();
+        sqlx::query("INSERT INTO user_freeze_data(user_id,freezes_available) VALUES($1,1)")
+            .bind(owner).execute(&pool).await.unwrap();
+        sqlx::query("INSERT INTO streak_freeze_awards(user_id,day_key,granted) VALUES($1,'2026-09-29',true)")
+            .bind(owner).execute(&pool).await.unwrap();
+    }
+    sqlx::query("INSERT INTO game_sessions(user_id,game_slug,status,attempts,mode,is_ritual,day_key) VALUES($1,'word-guess','won',1,'daily',true,'2026-09-29')")
+        .bind(guest).execute(&pool).await.unwrap();
+    let app = router(AppState::new(Some(pool.clone())));
+    assert_eq!(request(&app,"/puzzled.v1.StatsService/GetHistory",Some(pair),Some(&token(&account.to_string())),None).await.0,StatusCode::OK);
+    let retained: i64 = sqlx::query_scalar("SELECT count(*) FROM game_sessions WHERE user_id=$1").bind(guest).fetch_one(&pool).await.unwrap();
+    assert_eq!(retained,1);
+    delete_account_data(&pool,&account.to_string()).await.unwrap();
+    for (table,column,_) in USER_KEYED_COLUMNS {
+        let statement = format!("SELECT count(*) FROM \"{table}\" WHERE \"{column}\" IN ($1,$2)");
+        let remaining: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(statement)).bind(account).bind(guest).fetch_one(&pool).await.unwrap();
+        assert_eq!(remaining,0,"{table}.{column}");
+    }
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn raced_adoption_and_erasure_preserve_only_unclaimed_guest_or_erase_linked_sources() {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    use crate::capabilities::preferences::adapters::account_deletion::delete_account_data;
+    use crate::capabilities::puzzle_play::adapters::game_sessions_db::{adopt_guest_sessions,adopt_guest_sessions_on_connection};
+    let Some(pool) = fresh_database().await else { return; };
+    for adoption_first in [true,false] {
+        let cookie = guest_credentials::issue(&pool).await.unwrap();
+        let raw = cookie.split(';').next().unwrap().split_once('=').unwrap().1;
+        let hash = guest_credentials::token_hash(raw).unwrap();
+        let guest = guest_credentials::lookup_hash(&pool,&hash).await.unwrap().unwrap();
+        let account = Uuid::now_v7();
+        sqlx::query("INSERT INTO auth_subjects(subject,user_id) VALUES($1,$2)")
+            .bind(format!("principal-{account}")).bind(account).execute(&pool).await.unwrap();
+        for owner in [account,guest] {
+            sqlx::query("INSERT INTO game_sessions(user_id,game_slug,status,attempts,mode,is_ritual,day_key) VALUES($1,'word-guess','won',1,'daily',true,'2026-09-30')")
+                .bind(owner).execute(&pool).await.unwrap();
+        }
+        let identity = crate::VerifiedIdentity {
+            user_id:account.to_string(),display_name:None,email:None,is_admin:false,actor:None,
+        };
+        let mut tx = pool.begin().await.unwrap();
+        if adoption_first {
+            sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended('puzzled:guest-token:' || $1, 0))")
+                .bind(&hash).execute(&mut *tx).await.unwrap();
+            adopt_guest_sessions_on_connection(&mut tx,&identity,&format!("guest_{guest}"),&hash).await.unwrap();
+            let erasure_pool = pool.clone();
+            let erase = tokio::spawn(async move { delete_account_data(&erasure_pool,&account.to_string()).await });
+            tokio::time::timeout(std::time::Duration::from_secs(2),async {
+                loop {
+                    let blocked: bool = sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM pg_locks WHERE locktype='advisory' AND NOT granted AND database=(SELECT oid FROM pg_database WHERE datname=current_database()))")
+                        .fetch_one(&pool).await.unwrap();
+                    if blocked { break; }
+                    tokio::task::yield_now().await;
+                }
+            }).await.unwrap();
+            tx.commit().await.unwrap();
+            tokio::time::timeout(std::time::Duration::from_secs(3),erase).await.unwrap().unwrap().unwrap();
+        } else {
+            guest_credentials::lock_players(&mut tx,vec![account]).await.unwrap();
+            let adoption_pool = pool.clone();
+            let adopt = tokio::spawn(async move {
+                adopt_guest_sessions(&adoption_pool,&identity,&format!("guest_{guest}"),&hash).await
+            });
+            sqlx::query("DELETE FROM auth_subjects WHERE user_id=$1").bind(account).execute(&mut *tx).await.unwrap();
+            sqlx::query("DELETE FROM game_sessions WHERE user_id=$1").bind(account).execute(&mut *tx).await.unwrap();
+            tx.commit().await.unwrap();
+            assert!(tokio::time::timeout(std::time::Duration::from_secs(3),adopt).await.unwrap().unwrap().is_err());
+        }
+        let account_rows: i64 = sqlx::query_scalar("SELECT count(*) FROM game_sessions WHERE user_id=$1 OR adopted_from_guest=$1")
+            .bind(account).fetch_one(&pool).await.unwrap();
+        assert_eq!(account_rows,0);
+        let source_rows: i64 = sqlx::query_scalar("SELECT count(*) FROM game_sessions WHERE user_id=$1 OR adopted_from_guest=$1")
+            .bind(guest).fetch_one(&pool).await.unwrap();
+        assert_eq!(source_rows,if adoption_first {0} else {1});
+        let linked: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials WHERE adopted_user_id=$1")
+            .bind(account).fetch_one(&pool).await.unwrap();
+        assert_eq!(linked,0);
+    }
+    pool.close().await;
 }

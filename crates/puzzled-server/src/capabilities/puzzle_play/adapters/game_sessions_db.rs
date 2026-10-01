@@ -313,6 +313,8 @@ pub async fn adopt_guest_sessions(
     credential_hash: &str,
 ) -> Result<u64, String> {
     let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended('puzzled:guest-token:' || $1, 0))")
+        .bind(credential_hash).execute(&mut *tx).await.map_err(|e| e.to_string())?;
     let value = adopt_guest_sessions_on_connection(&mut tx, verified_account, guest_user_id, credential_hash).await?;
     tx.commit().await.map_err(|e| e.to_string())?;
     Ok(value)
@@ -337,6 +339,9 @@ pub async fn adopt_guest_sessions_on_connection(
     let destination_is_guest: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)")
         .bind(account).fetch_one(&mut *connection).await.map_err(|e| e.to_string())?;
     if destination_is_guest { return Err(refused()); }
+    if !guest_credentials::account_backed(&mut *connection, account).await.map_err(|e| e.to_string())? {
+        return Err(refused());
+    }
     let credential: Option<uuid::Uuid> = sqlx::query_scalar(
         "SELECT user_id FROM guest_credentials WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL AND adopted_user_id IS NULL FOR UPDATE",
     ).bind(guest).bind(credential_hash).fetch_optional(&mut *connection).await.map_err(|e| e.to_string())?;

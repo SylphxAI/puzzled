@@ -464,6 +464,9 @@ jobs:
           grep -Eq '^test guest_ownership_tests::legacy_guest_write_and_completion_paths_have_no_player_effects \.\.\. ok$' "$LOG"
           grep -Eq '^test guest_ownership_tests::bootstrap_is_zero_database_and_unknown_read_does_not_allocate \.\.\. ok$' "$LOG"
           grep -Eq '^test guest_ownership_tests::four_concurrent_submits_with_two_connections_do_not_hold_pool_during_content_lookup \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::fifty_parallel_first_write_pairs_keep_one_winning_namespace_each \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::account_erasure_includes_retained_adopted_guest_collisions_and_provenance \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::raced_adoption_and_erasure_preserve_only_unclaimed_guest_or_erase_linked_sources \.\.\. ok$' "$LOG"
           grep -Eq '^test result: ok\. [1-9][0-9]* passed;' "$LOG"
           grep -Eq '^test retention_push_tests::connect_push_foreign_endpoint_returns_404_without_any_writes \.\.\. ok$' "$LOG"
 

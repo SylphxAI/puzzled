@@ -163,10 +163,12 @@ pub async fn session(
         return axum::http::StatusCode::FORBIDDEN.into_response();
     }
     let _ = state; // Bootstrap does not acquire a connection or write rows.
-    match mint_cookie(cookie_token(&headers)) {
+    let existing = cookie_token(&headers).filter(|token| token_hash(token).is_some());
+    let issued = existing.is_none();
+    match mint_cookie(existing) {
         Ok(cookie) => match cookie.parse() {
             Ok(value) => {
-                let mut response = axum::Json(serde_json::json!({})).into_response();
+                let mut response = axum::Json(serde_json::json!({"issued": issued})).into_response();
                 response.headers_mut().insert(axum::http::header::SET_COOKIE, value);
                 response
             }

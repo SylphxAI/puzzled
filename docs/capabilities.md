@@ -35,6 +35,8 @@ Cite the ID column.
 
 ## Boundaries
 
+- **Guest cookie:** `__Host-puzzled_guest` is strictly necessary for functional browser progress continuity, not advertising or analytics. It is HttpOnly, Secure and SameSite=Lax, with a 400-day lifetime refreshed by bootstrap. Only its SHA-256 hash is stored after the first guest write; linked identifiers and hashes may be pseudonymous personal data. Account erasure removes the account and all linked adopted source guests, including retained collisions and source provenance.
+
 - **Auth post-deploy check** ([owner standard](https://github.com/SylphxAI/owner/blob/main/standards/auth.md#how-a-product-proves-it)):
   after each deploy, with a test account on `https://puzzled.gg`, sign in and
   out, confirm the response cookies are named `puzzled_session` (no `sylphx`
