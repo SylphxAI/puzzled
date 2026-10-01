@@ -941,6 +941,8 @@ async fn outbox_skips_busy_or_suppressed_player_without_poisoning_unrelated_conv
     assert_eq!(attempts, 0);
 }
 
+const SESSION_TEST_ORG: &str = "organization-0199aa10-7b2c-7d3e-8f00-00000000c0de";
+
 async fn session_auth_for(player: Uuid) -> (String, Arc<std::sync::atomic::AtomicUsize>) {
     let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let handler = {
@@ -951,7 +953,7 @@ async fn session_auth_for(player: Uuid) -> (String, Arc<std::sync::atomic::Atomi
                 calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
                 Json(json!({"session":{"principal":{
                     "principal_id":format!("principal-{player}"),
-                    "project_id":ORGANIZATION_ID,"state":"active","display_name":"Fixture"
+                    "project_id":SESSION_TEST_ORG,"state":"active","display_name":"Fixture"
                 }}}))
             }
         }
