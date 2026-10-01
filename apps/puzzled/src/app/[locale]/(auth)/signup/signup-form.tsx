@@ -1,16 +1,19 @@
 'use client'
 
 import { MailCheck } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { FormEvent } from 'react'
 import { useRef, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
+import { afterSignUpDestination } from '@/lib/identity/after-sign-up'
 import { type OAuthProvider, useSafeAuth, useSignUpForm } from '@/lib/identity/react'
 import {
 	AuthField,
 	AuthSubmit,
 	emailProblem,
 	FormAlert,
+	MIN_PASSWORD_LENGTH,
 	OAuthButtons,
 	PasswordField,
 	passwordProblem,
@@ -36,6 +39,8 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 	// second submit while the first request is in flight.
 	const submittingRef = useRef(false)
 	const { signInWithOAuth } = useSafeAuth()
+	// Back to the game that asked for the account (safe same-origin path only).
+	const afterSignUpUrl = afterSignUpDestination(useSearchParams().get('callbackUrl'))
 
 	const {
 		form,
@@ -51,10 +56,13 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		handleOAuthSignUp,
 	} = useSignUpForm({
 		providers,
-		afterSignUpUrl: '/',
-		minPasswordLength: 8,
+		afterSignUpUrl,
+		minPasswordLength: MIN_PASSWORD_LENGTH,
 		oauthHandler: async (provider: string) => {
-			await signInWithOAuth?.({ provider: provider as OAuthSignInProvider, redirectUrl: '/' })
+			await signInWithOAuth?.({
+				provider: provider as OAuthSignInProvider,
+				redirectUrl: afterSignUpUrl,
+			})
 		},
 	})
 
@@ -83,6 +91,16 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 			</div>
 		)
 	}
+
+	// The server's own refusal of a short password shows under the field too,
+	// not as a generic failure banner.
+	const serverSaysTooShort = error?.message === 'password_too_short'
+	const passwordError =
+		(attempted || touched.password) && passwordIssue
+			? t(passwordIssue, { min: MIN_PASSWORD_LENGTH })
+			: serverSaysTooShort
+				? t('passwordTooShort', { min: MIN_PASSWORD_LENGTH })
+				: undefined
 
 	function onSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault()
@@ -145,14 +163,14 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 					onBlur={() => setTouched((state) => ({ ...state, password: true }))}
 					autoComplete="new-password"
 					disabled={isLoading}
-					hint={t('passwordHint')}
-					error={(attempted || touched.password) && passwordIssue ? t(passwordIssue) : undefined}
+					hint={t('passwordHint', { min: MIN_PASSWORD_LENGTH })}
+					error={passwordError}
 					showStrength
 					required
 					enterKeyHint="done"
 				/>
 
-				<FormAlert message={error ? t('signUpError') : null} />
+				<FormAlert message={error && !serverSaysTooShort ? t('signUpError') : null} />
 
 				<AuthSubmit
 					pending={isLoading}

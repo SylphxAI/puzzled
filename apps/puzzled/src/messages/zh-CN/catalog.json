@@ -58,9 +58,8 @@
 	"breadcrumbLabel": "浏览路径",
 	"gamePage": {
 		"playCta": "开始今日谜题",
-		"freeNote": "今日精选 — 无需账户。",
 		"guestNote": "游玩无需账户。",
-		"guestSignIn": "登录以保留连续记录。",
+		"guestSignIn": "保留你的连续记录",
 		"howToPlayTitle": "如何玩 {game}",
 		"tipsTitle": "{game} 技巧与策略",
 		"faqTitle": "关于 {game} 的常见问题",

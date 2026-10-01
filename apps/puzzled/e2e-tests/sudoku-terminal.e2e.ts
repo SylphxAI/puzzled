@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { GUEST_GAMES_KEY, GUEST_ONBOARDING_KEY } from '../src/lib/storage-keys'
+import { GUEST_GAMES_KEY } from '../src/lib/storage-keys'
 
 // The dev transport uses :3001 while production is same-origin. Only local
 // intercepted-RPC runs opt out of CSP; the served production CI build does not.
@@ -105,11 +105,10 @@ test('Sudoku waits for acceptance, shows rejection, and retries without false gu
 	await expect(page.getByText('Congratulations!', { exact: true })).toHaveCount(0)
 	const markers = () =>
 		page.evaluate(
-			({ games, onboarding }) => ({
+			({ games }) => ({
 				games: JSON.parse(localStorage.getItem(games) || '{"games":[]}').games,
-				onboarding: localStorage.getItem(onboarding),
 			}),
-			{ games: GUEST_GAMES_KEY, onboarding: GUEST_ONBOARDING_KEY },
+			{ games: GUEST_GAMES_KEY },
 		)
 	const before = await markers()
 	expect(before.games).toEqual([])

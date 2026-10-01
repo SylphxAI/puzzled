@@ -65,7 +65,7 @@ clean-break end state that replaces all of it.
 | Service | Responsibility |
 | --- | --- |
 | HealthService | liveness/readiness |
-| PuzzleService | GetPuzzle (practice), GetDaily (daily/archive), SubmitGuess |
+| PuzzleService | GetPuzzle (practice), GetDaily (daily/archive), GetTodayProgress (one batched read of the caller's finishes for the server's product day, used by home), SubmitGuess |
 | StatsService | leaderboard, percentile, user stats, history, today overview |
 | PreferencesService | profile, username, push/email preferences |
 | GamificationService | streak info (reading it settles earned freezes: one per 7 played days, at most 2 held, a held freeze covers up to 3 missed days unless the player turns auto-freeze off; rules in `personal_streak.rs`), admin freeze grant |

@@ -15,7 +15,6 @@ import { createConnectTransport } from '@connectrpc/connect-web'
 import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
 import { type SharedResult, toSharedResult } from '@/features/daily/lib/challenge'
-import { loadDailyCompletionMap } from '@/features/daily/lib/daily-completion'
 import {
 	BillingService,
 	GetSubscriptionRequestSchema,
@@ -28,6 +27,7 @@ import {
 import {
 	GetDailyRequestSchema,
 	GetSharedResultRequestSchema,
+	GetTodayProgressRequestSchema,
 	PuzzleService,
 } from '@/gen/connect/puzzled/v1/puzzle_pb'
 import {
@@ -40,6 +40,7 @@ import { mergeServerConnectInit, SERVER_CONNECT_TIMEOUT_MS } from '@/lib/api/con
 import {
 	type DailyStatus,
 	mapDailyStatus,
+	mapTodayProgress,
 	mapTodaysPuzzle,
 	type TodaysPuzzle,
 } from '@/lib/api/domain/daily'
@@ -184,60 +185,50 @@ function isNoIdentityError(error: unknown): boolean {
 	return code === Code.Unauthenticated || code === Code.NotFound
 }
 
-/**
- * One retry for a transient failure. The first request after a cold start can
- * miss the short SSR deadline for a few of the parallel reads; a second try
- * is served warm. A missing identity is final and is not retried.
- */
-async function readDailyStatusWithRetry(gameSlug: string): Promise<DailyStatus> {
-	try {
-		return await getServerDailyStatus({ gameSlug })
-	} catch (error) {
-		if (isNoIdentityError(error)) throw error
-		// Uncached: React cache() would replay the first rejection.
-		return await fetchServerDailyStatus({ gameSlug })
-	}
+async function fetchTodayProgress(gameSlugs: readonly string[]) {
+	const transport = await getServerTransport()
+	const client = createClient(PuzzleService, transport)
+	const res = await client.getTodayProgress(
+		create(GetTodayProgressRequestSchema, { gameSlugs: [...gameSlugs] }),
+	)
+	return mapTodayProgress(res)
 }
 
 /**
- * Personal home/progress today-state. GetTodayOverview is a public aggregate
- * for social proof, not a user's completion state; guests and accounts both
- * read GetDaily.has_completed / completed_session.
+ * Personal home/progress today-state in ONE batched GetTodayProgress read
+ * (the server computes the product day). GetTodayOverview is a public
+ * aggregate for social proof, not a user's completion state. One retry for a
+ * transient failure; a missing identity is an empty state, not a failure.
  */
 export async function getServerPersonalDailyResults(input: {
 	gameSlugs: readonly string[]
-	isGuest: boolean
 }): Promise<Record<string, PersonalDailyResult>> {
-	const statuses = new Map<string, DailyStatus>()
-	const unavailableSlugs = new Set<string>()
-	await loadDailyCompletionMap({
-		gameSlugs: input.gameSlugs,
-		isGuest: input.isGuest,
-		read: async (gameSlug) => {
-			try {
-				const status = await readDailyStatusWithRetry(gameSlug)
-				statuses.set(gameSlug, status)
-				return status.hasCompleted
-			} catch (error) {
-				// A missing or stale session/guest id is an expected empty state
-				// (nothing to read yet), not a failed read.
-				if (isNoIdentityError(error)) return false
-				unavailableSlugs.add(gameSlug)
-				logger.error('home.personal-result-read-failed', { gameSlug, error })
-				throw error
-			}
-		},
-	})
+	const gameSlugs = [...new Set(input.gameSlugs)]
+	let progress: Awaited<ReturnType<typeof fetchTodayProgress>> | null = null
+	let noIdentity = false
+	try {
+		try {
+			progress = await fetchTodayProgress(gameSlugs)
+		} catch (error) {
+			if (isNoIdentityError(error)) throw error
+			progress = await fetchTodayProgress(gameSlugs)
+		}
+	} catch (error) {
+		// A missing or stale session/guest id is an expected empty state.
+		noIdentity = isNoIdentityError(error)
+		if (!noIdentity) logger.error('home.personal-result-read-failed', { error })
+	}
 
 	return Object.fromEntries(
-		input.gameSlugs.map((gameSlug) => {
-			const status = statuses.get(gameSlug)
+		gameSlugs.map((gameSlug) => {
+			const entry = progress?.[gameSlug]
 			return [
 				gameSlug,
 				{
-					hasCompleted: status?.hasCompleted ?? false,
-					completedSession: status?.completedSession ?? null,
-					statusAvailable: !unavailableSlugs.has(gameSlug),
+					hasCompleted: entry?.hasCompleted ?? false,
+					completedSession: entry?.completedSession ?? null,
+					// Unknown unless the server answered for this slug (or has no one to answer for).
+					statusAvailable: noIdentity || entry !== undefined,
 				},
 			] as const
 		}),

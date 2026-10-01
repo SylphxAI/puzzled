@@ -4,6 +4,7 @@ import { Button, Input, OAuthIcons } from '@sylphx/ui'
 import { Check, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { type ReactNode, useState } from 'react'
+import { MIN_PASSWORD_LENGTH } from '@/lib/identity/password-policy'
 import { cn } from '@/lib/utils'
 
 type ProviderIcon = (props: { className?: string; 'aria-hidden'?: boolean | 'true' }) => ReactNode
@@ -18,7 +19,10 @@ const PROVIDER_ICONS: Record<string, ProviderIcon> = OAuthIcons
  * described-by region the design system wires up.
  */
 
-export const MIN_PASSWORD_LENGTH = 8
+export { MIN_PASSWORD_LENGTH }
+
+/** Sign-in only checks that a password was entered: older accounts may have shorter ones. */
+export const SIGN_IN_MIN_PASSWORD_LENGTH = 1
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
@@ -201,7 +205,7 @@ function PasswordStrength({ value }: { value: string }) {
 							aria-hidden="true"
 						/>
 						<span className={check.met ? 'text-foreground' : 'text-muted-foreground'}>
-							{t(`passwordStrength.${check.key}`)}
+							{t(`passwordStrength.${check.key}`, { min: MIN_PASSWORD_LENGTH })}
 						</span>
 						<span className="sr-only">
 							{check.met ? t('passwordStrength.met') : t('passwordStrength.unmet')}

@@ -77,7 +77,7 @@
 		"puzzleNumber": "第 {number} 題",
 		"resetsIn": "距離重置",
 		"resetsAt": "香港時間午夜",
-		"guestTitle": "每日十九款謎題，一款永遠免費。",
+		"guestTitle": "今日嘅{game}，免費玩",
 		"titleMemberReady": "今日的{game}已準備好",
 		"titleMemberStreak": "你的 {days} 日連續紀錄等着你",
 		"titleMemberDone": "今日已完成 — 玩得漂亮",

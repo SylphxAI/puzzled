@@ -38,7 +38,6 @@ export const CHALLENGE_KEY = 'puzzled:challenge:share'
 // ==========================================
 // Guest User Data
 // ==========================================
-export const GUEST_ONBOARDING_KEY = 'puzzled:guest:onboarding'
 export const GUEST_GAMES_KEY = 'puzzled:guest:games'
 /** Stable guest-day UUID (client-bound); sent as X-Puzzled-Guest-Id for free ritual finishes. */
 export const GUEST_DAY_ID_KEY = 'puzzled:guest:day-id'
@@ -56,3 +55,6 @@ export function getGameSessionKey(gameSlug: string, puzzleId?: string): string {
 		? `puzzled:game:${gameSlug}:${puzzleId}:started`
 		: `puzzled:game:${gameSlug}:started`
 }
+
+/** Product day (YYYY-MM-DD) of this browser's first finished puzzle; gates the install offer. */
+export const FIRST_FINISH_DAY_KEY = 'puzzled:pwa:first-finish-day'

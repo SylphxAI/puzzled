@@ -7,6 +7,7 @@ import { getServerStreakInfo, hasServerProgressIdentity } from '@/lib/api/server
 import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { BottomNav } from '@/shared/components/layout'
+import { AccountSavedNote } from '@/shared/components/layout/account-saved-note'
 import { ConsentBanner } from '@/shared/components/layout/consent-banner'
 import { Footer } from '@/shared/components/layout/footer'
 import { LayoutTopNav } from './layout-nav'
@@ -120,6 +121,7 @@ export default function MainLayout({ children }: Props) {
 			{/* Main scrollable content */}
 			{/* pb-nav on mobile only (bottom nav), md:pb-0 on desktop */}
 			<div id="main-content" className="flex flex-1 flex-col pb-nav md:pb-0" tabIndex={-1}>
+				<AccountSavedNote />
 				{children}
 				<Footer />
 			</div>

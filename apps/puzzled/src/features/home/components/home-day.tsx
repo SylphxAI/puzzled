@@ -84,7 +84,7 @@ export async function HomeDay({
 			: currentStreak > 0 && !hasPlayedToday
 				? t('day.titleMemberStreak', { days: currentStreak })
 				: t('day.titleMemberReady', { game: freeGame.name })
-		: t('day.guestTitle')
+		: t('day.guestTitle', { game: freeGame.name })
 
 	return (
 		<section className="day-surface relative">

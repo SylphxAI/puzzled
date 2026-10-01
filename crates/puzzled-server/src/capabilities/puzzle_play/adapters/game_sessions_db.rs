@@ -293,6 +293,58 @@ pub async fn load_completed_session(
     )
 }
 
+type TodayProgressRow = (
+    String,
+    String,
+    Option<i32>,
+    i32,
+    Option<chrono::NaiveDateTime>,
+);
+
+const TODAY_PROGRESS_SQL: &str = r#"
+SELECT DISTINCT ON (game_slug) game_slug, status::text, score, attempts, completed_at
+FROM game_sessions
+WHERE user_id = $1
+  AND game_slug = ANY($2)
+  AND puzzle_date = $3
+  AND status IN ('won','lost')
+ORDER BY game_slug, completed_at DESC NULLS LAST, id DESC
+"#;
+
+/// Accepted finishes for one product day across many games in a single query,
+/// keyed by game slug. Same date arm and ordering as [`load_completed_session`],
+/// so the one-finish-per-(user, game, day) reading is identical.
+pub async fn load_today_progress(
+    pool: &PgPool,
+    user_id: &str,
+    game_slugs: &[String],
+    puzzle_date: chrono::NaiveDate,
+) -> Result<std::collections::HashMap<String, CompletedSession>, String> {
+    let uid = parse_user_id(user_id)?;
+    let date = puzzle_date.and_hms_opt(0, 0, 0).ok_or("invalid date")?;
+    let rows: Vec<TodayProgressRow> = sqlx::query_as(TODAY_PROGRESS_SQL)
+        .bind(uid)
+        .bind(game_slugs)
+        .bind(date)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("today progress query failed: {e}"))?;
+    Ok(rows
+        .into_iter()
+        .map(|(slug, status, score, attempts, completed_at)| {
+            (
+                slug,
+                CompletedSession {
+                    status,
+                    score,
+                    attempts,
+                    completed_at,
+                },
+            )
+        })
+        .collect())
+}
+
 /// Move accepted guest rows onto the Platform account without duplicating a
 /// finish for the same puzzle or ritual (user, module, product day).
 ///

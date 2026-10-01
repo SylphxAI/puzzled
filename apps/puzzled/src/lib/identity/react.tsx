@@ -25,6 +25,7 @@ import {
 } from '@/gen/connect/puzzled/v1/gamification_pb'
 import { getConnectTransport } from '@/lib/connect/transport'
 import { type AppConfig, DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type IdentityUser } from './dest'
+import { MIN_PASSWORD_LENGTH } from './password-policy'
 
 type AuthState = {
 	user: IdentityUser | null
@@ -284,7 +285,7 @@ export function useSignUpForm(
 	const [step, setStep] = useState<number | 'verify-email'>(1)
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
-	const minLength = opts.minPasswordLength ?? 8
+	const minLength = opts.minPasswordLength ?? MIN_PASSWORD_LENGTH
 	return {
 		form: { email, password, name },
 		setEmail,
@@ -306,10 +307,12 @@ export function useSignUpForm(
 					credentials: 'same-origin',
 					body: JSON.stringify({ email, password, name }),
 				})
-				if (!response.ok) throw new Error('sign-up failed')
 				const result = await readJson(response)
+				if (!response.ok) {
+					throw new Error(typeof result.error === 'string' ? result.error : 'sign-up failed')
+				}
 				if (result.signedIn === true) {
-					window.location.assign('/')
+					window.location.assign(opts.afterSignUpUrl ?? '/')
 					return
 				}
 				setStep('verify-email')
@@ -370,7 +373,7 @@ export function useResetPasswordForm(opts?: {
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [success, setSuccess] = useState(false)
-	const minLength = opts?.minPasswordLength ?? 8
+	const minLength = opts?.minPasswordLength ?? MIN_PASSWORD_LENGTH
 	const passwordsMatch = password === confirmPassword
 	return {
 		form: { password, confirmPassword, email: '' },
@@ -577,13 +580,13 @@ export function CookieBanner(props: {
 			// unusable until consent was given.
 			className={
 				props.position === 'bottom'
-					? 'fixed inset-x-0 z-toast p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
+					? 'fixed inset-x-0 z-toast p-2 sm:p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
 					: undefined
 			}
 		>
 			<section
 				aria-label={t('title')}
-				className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border bg-background/95 p-4 text-sm shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+				className="mx-auto flex max-w-3xl flex-col gap-2 rounded-2xl border bg-background/95 p-3 text-[13px] leading-snug shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4 sm:text-sm"
 			>
 				<p className="text-muted-foreground">
 					{t('message')}{' '}
@@ -596,10 +599,11 @@ export function CookieBanner(props: {
 						</a>
 					) : null}
 				</p>
+				{/* Same size and weight: neither answer is steered. */}
 				<div className="flex shrink-0 items-center gap-2">
 					<button
 						type="button"
-						className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 font-medium text-foreground transition-colors hover:bg-muted"
+						className="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border px-4 font-medium text-foreground transition-colors hover:bg-muted sm:flex-none"
 						onClick={() => {
 							void setConsent({ analytics: false, marketing: false }).then(() => props.onSave?.())
 						}}
@@ -608,7 +612,7 @@ export function CookieBanner(props: {
 					</button>
 					<button
 						type="button"
-						className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+						className="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border px-4 font-medium text-foreground transition-colors hover:bg-muted sm:flex-none"
 						onClick={() => {
 							void setConsent({ analytics: true, marketing: false }).then(() => props.onSave?.())
 						}}

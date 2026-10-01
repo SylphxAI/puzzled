@@ -1,4 +1,4 @@
 {
 	"saveStreak": "保存你的連續紀錄",
-	"keepStreak": "建立免費帳戶，保留你連續 {days} 天的紀錄和今天的成績。"
+	"keepStreak": "建立免費帳戶，保留你連續 {days, plural, other {# 天}} 的紀錄和今天的成績。"
 }

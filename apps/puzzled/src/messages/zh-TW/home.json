@@ -60,7 +60,7 @@
 		}
 	},
 	"day": {
-		"guestTitle": "每天十九款謎題，永遠有一款免費。",
+		"guestTitle": "今天的{game}，免費玩",
 		"titleMemberReady": "今天的{game}已準備好",
 		"titleMemberStreak": "你的 {days} 天連續紀錄等著你",
 		"titleMemberDone": "今天已完成 — 玩得漂亮",
