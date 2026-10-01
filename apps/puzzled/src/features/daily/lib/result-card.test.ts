@@ -101,6 +101,7 @@ describe('buildResultCard', () => {
 			'mode',
 			'pattern',
 			'score',
+			'season',
 			'status',
 			'theme',
 			'timeBand',

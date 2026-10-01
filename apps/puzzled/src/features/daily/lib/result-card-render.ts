@@ -172,6 +172,23 @@ export function paintResultCard(
 	ctx.fillStyle = palette.text
 	ctx.fillText(model.status === 'won' ? strings.statusWon : strings.statusLost, innerX, 418 * scale)
 
+	// Seasonal day only: a pill in the season's accent carries the greeting.
+	if (model.season && strings.seasonGreeting) {
+		const pillH = 52 * scale
+		const pillY = 436 * scale
+		ctx.font = `600 ${Math.round(28 * scale)}px ${FONT_FAMILY}`
+		const label = `${model.season.glyph} ${strings.seasonGreeting}`
+		const pillW = Math.min(innerW, ctx.measureText(label).width + 48 * scale)
+		roundedRect(ctx, innerX, pillY, pillW, pillH, pillH / 2)
+		ctx.fillStyle = getGameColors(model.season.accent).hex
+		ctx.fill()
+		ctx.strokeStyle = palette.frame
+		ctx.lineWidth = 2 * scale
+		ctx.stroke()
+		ctx.fillStyle = palette.text
+		ctx.fillText(label, innerX + 24 * scale, pillY + 36 * scale, pillW - 48 * scale)
+	}
+
 	// Chips: up to four glanceable facts on white cards.
 	const chips = resultCardChips(model, strings)
 	const chipY = 540 * scale
