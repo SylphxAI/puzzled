@@ -9,7 +9,17 @@ mock.module('server-only', () => ({}))
 mock.module('next/headers', () => ({
 	cookies: async () => {
 		const cookie = contexts.getStore()?.cookie ?? ''
-		return { toString: () => cookie }
+		const all = cookie
+			? cookie.split('; ').map((item) => {
+					const [name, ...value] = item.split('=')
+					return { name: name ?? '', value: value.join('=') }
+				})
+			: []
+		return {
+			toString: () => cookie,
+			getAll: () => all,
+			get: (name: string) => all.find((item) => item.name === name),
+		}
 	},
 	headers: async () => new Headers({ 'user-agent': contexts.getStore()?.userAgent ?? '' }),
 }))
@@ -26,7 +36,7 @@ const server = createServer((request, response) => {
 				userId: `entry-${received.length}-${index}`,
 				userName: name,
 				value: 100 - index,
-				isViewer: cookie === `test-session=${name}` && userAgent === `Browser-${name}`,
+				isViewer: cookie === `puzzled_session=${name}` && userAgent === `Browser-${name}`,
 			})),
 		}),
 	)
@@ -41,8 +51,8 @@ try {
 	const { getServerLeaderboard } = await import('../../src/lib/api/server')
 	const input = { gameSlug: 'sudoku', type: 'score', period: 'all', limit: 10 } as const
 	const readers = [
-		{ cookie: 'test-session=A', userAgent: 'Browser-A' },
-		{ cookie: 'test-session=B', userAgent: 'Browser-B' },
+		{ cookie: 'puzzled_session=A', userAgent: 'Browser-A' },
+		{ cookie: 'puzzled_session=B', userAgent: 'Browser-B' },
 		{ cookie: '', userAgent: 'Browser-anonymous' },
 	]
 	const boards = await Promise.all(
