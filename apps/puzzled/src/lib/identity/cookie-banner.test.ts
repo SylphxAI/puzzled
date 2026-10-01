@@ -35,7 +35,8 @@ describe('CookieBanner (mobile compact)', () => {
 	test('sits above the bottom bar and stays slim on mobile', () => {
 		expect(html).toContain('bottom-[calc(var(--spacing-bottom-nav-height)')
 		expect(html).toContain('text-xs')
-		expect(html).toContain('min-h-9')
+		expect(html).toContain('min-h-11')
+		expect(html).not.toContain('min-h-9')
 		expect(html).not.toContain('p-3')
 	})
 })

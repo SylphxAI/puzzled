@@ -603,7 +603,7 @@ export function CookieBanner(props: {
 				<div className="flex shrink-0 items-center gap-2">
 					<button
 						type="button"
-						className="inline-flex min-h-9 flex-1 items-center justify-center rounded-lg border px-4 font-medium text-foreground sm:min-h-10 sm:rounded-xl transition-colors hover:bg-muted sm:flex-none"
+						className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-4 font-medium text-foreground sm:rounded-xl transition-colors hover:bg-muted sm:flex-none"
 						onClick={() => {
 							void setConsent({ analytics: false, marketing: false }).then(() => props.onSave?.())
 						}}
@@ -612,7 +612,7 @@ export function CookieBanner(props: {
 					</button>
 					<button
 						type="button"
-						className="inline-flex min-h-9 flex-1 items-center justify-center rounded-lg border px-4 font-medium text-foreground sm:min-h-10 sm:rounded-xl transition-colors hover:bg-muted sm:flex-none"
+						className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-4 font-medium text-foreground sm:rounded-xl transition-colors hover:bg-muted sm:flex-none"
 						onClick={() => {
 							void setConsent({ analytics: true, marketing: false }).then(() => props.onSave?.())
 						}}
