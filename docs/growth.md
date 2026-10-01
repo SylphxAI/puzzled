@@ -91,7 +91,7 @@ should move.
 
 | # | Capability | Job it serves | Where it appears | Metric | Effort | Depends on |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Earned streak freezes (streak freeze) | Keep a streak alive through a missed day without guilt; free players earn one per 7 played days | Stats streak card, streak calculation | D7 retention | M | none; today the streak calculation ignores freezes |
+| 1 | Earned streak freezes (streak freeze) | Keep a streak alive through a missed day without guilt; free players earn one per 7 played days, hold at most 2, and a held freeze covers one missed day automatically (settings can turn auto-cover off) | Stats streak card (freezes held, days to the next one), streak calculation | D7 retention | M | shipped (#299): rules in `puzzled-core` `personal_streak`, ledgers `streak_freeze_awards` and `streak_freeze_uses`; guests and signed-in players alike |
 | 2 | Save-your-streak account ask (try before signup, saved progress) | Guests keep streak and stats across devices | Result screen, raised as the streak grows; never before the first finish | Guest to account rate, D7 retention | S | none |
 | 3 | Daily reminder at each player's own time and time zone (personalised notification timing) | Gentle return without guilt | The player's saved reminder time is stored but does not schedule the send today: the daily-reminder job sends on its own schedule. Email (opt-in) at the player's time in their zone; browser Web Push through the existing reminder job (VAPID configuration required) | D7 retention | S | none for Puzzled's own email; cloud#9826 for caps across our products |
 | 4 | Streak on the shared card (share cards) | Show the sharer's run on the card and landing, so a friend has something to beat | Share landing, share image, challenge comparison | Landing rate, conversion | S | none |
@@ -139,7 +139,7 @@ industry benchmarks; the product has no payers yet, so none is measured.
       days", using the existing `result_shares` id and `ref` attribution; the reward is an entitlement
       grant, so it needs Money's grant API.
 - [ ] **Paid streak freeze and Plus freezes** (S). Sell one freeze as a small one-off in Money; Plus
-      gets 2 per month. Needs freezes to count toward the streak first (backlog: earned streak freezes).
+      gets 2 per month. Earned freezes already count toward the streak (backlog row 1, shipped); a bought freeze adds to the same bank, still capped by `FREEZE_CAP`.
 - [ ] **Plus-nudge emails** (S). Day 3 and day 7 of a streak, consent-gated, with the yearly price and
       no false urgency.
 - [ ] **Price localisation** (M). Money price tiers for HKD, EUR, JPY, INR, BRL and MXN alongside
