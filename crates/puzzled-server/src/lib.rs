@@ -49,14 +49,6 @@ mod unsubscribe_tests;
 
 #[cfg(test)]
 mod tests {
-    /// A freshly minted server-issued guest cookie pair (`name=value`).
-    fn guest_cookie_pair() -> String {
-        let cookie =
-            crate::capabilities::identity_access::adapters::guest_credentials::mint_cookie(None)
-                .expect("mint guest cookie");
-        cookie.split(';').next().expect("cookie pair").to_string()
-    }
-
     use super::*;
     use axum::body::{to_bytes, Body};
     use axum::http::{Method, Request, StatusCode};
@@ -351,29 +343,23 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_get_streak_info_guest_fails_closed_without_store() {
+    async fn connect_get_streak_info_refuses_legacy_guest_header() {
         let app = router(AppState::new(None));
         let request = match Request::builder()
             .method(Method::POST)
             .uri("/puzzled.v1.GamificationService/GetStreakInfo")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("cookie", guest_cookie_pair())
+            .header("x-puzzled-guest-id", "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
             .body(Body::from("{}"))
         {
             Ok(request) => request,
-            Err(error) => panic!("build guest GetStreakInfo: {error}"),
+            Err(error) => panic!("build GetStreakInfo: {error}"),
         };
         let response = match app.oneshot(request).await {
             Ok(response) => response,
-            Err(error) => panic!("connect GetStreakInfo guest: {error}"),
+            Err(error) => panic!("connect GetStreakInfo: {error}"),
         };
-        assert_ne!(response.status(), StatusCode::UNAUTHORIZED);
-        assert_ne!(
-            response.status(),
-            StatusCode::OK,
-            "guest missing store must not fabricate current_streak=0"
-        );
-        assert!(response.status().is_server_error());
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
 
     #[tokio::test]
@@ -646,7 +632,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_crossword_free_floor_guest_can_finish_win() {
+    async fn connect_crossword_free_floor_can_finish_win() {
         // Product free floor: crossword must be finishable without content store.
         let app = router(AppState::new(None));
         let (_pd, sol) = served_today("crossword").await;
@@ -665,7 +651,10 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("cookie", guest_cookie_pair())
+            .header(
+                "authorization",
+                format!("Bearer {}", mint_test_token("user_test_01")),
+            )
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -751,7 +740,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_word_groups_free_floor_guest_can_finish_win() {
+    async fn connect_word_groups_free_floor_can_finish_win() {
         let app = router(AppState::new(None));
         let (_pd, sol) = served_today("word-groups").await;
         let body = word_groups_win_submission(&sol);
@@ -759,7 +748,10 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("cookie", guest_cookie_pair())
+            .header(
+                "authorization",
+                format!("Bearer {}", mint_test_token("user_test_01")),
+            )
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -780,7 +772,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_word_groups_free_floor_guest_can_finish_loss() {
+    async fn connect_word_groups_free_floor_can_finish_loss() {
         let app = router(AppState::new(None));
         let (_pd, sol) = served_today("word-groups").await;
         let first = sol["categories"][0]["words"].clone();
@@ -800,7 +792,10 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("cookie", guest_cookie_pair())
+            .header(
+                "authorization",
+                format!("Bearer {}", mint_test_token("user_test_01")),
+            )
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -839,7 +834,10 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("cookie", guest_cookie_pair())
+            .header(
+                "authorization",
+                format!("Bearer {}", mint_test_token("user_test_01")),
+            )
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -883,12 +881,15 @@ mod tests {
         ));
     }
 
-    fn guest_submit(body: String) -> Request<Body> {
+    fn player_submit(body: String) -> Request<Body> {
         match Request::builder()
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("cookie", guest_cookie_pair())
+            .header(
+                "authorization",
+                format!("Bearer {}", mint_test_token("user_test_01")),
+            )
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -967,7 +968,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_word_guess_free_floor_guest_can_finish_win() {
+    async fn connect_word_guess_free_floor_can_finish_win() {
         let app = router(AppState::new(None));
         let (_pd, sol) = served_today("word-guess").await;
         let word = sol["word"].as_str().expect("word");
@@ -980,7 +981,7 @@ mod tests {
             "submissionJson": submission.to_string(),
         })
         .to_string();
-        let response = match app.oneshot(guest_submit(body)).await {
+        let response = match app.oneshot(player_submit(body)).await {
             Ok(r) => r,
             Err(error) => panic!("submit: {error}"),
         };
@@ -995,7 +996,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_crowns_free_floor_guest_can_finish_win() {
+    async fn connect_crowns_free_floor_can_finish_win() {
         let app = router(AppState::new(None));
         let (pd, sol) = served_today("crowns").await;
         let size = pd["size"].as_u64().unwrap_or(0) as usize;
@@ -1025,7 +1026,7 @@ mod tests {
             "submissionJson": submission.to_string(),
         })
         .to_string();
-        let response = match app.oneshot(guest_submit(body)).await {
+        let response = match app.oneshot(player_submit(body)).await {
             Ok(r) => r,
             Err(error) => panic!("submit: {error}"),
         };
@@ -1037,7 +1038,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_crowns_free_floor_guest_can_finish_loss() {
+    async fn connect_crowns_free_floor_can_finish_loss() {
         let app = router(AppState::new(None));
         let empty = vec![vec![false; 6]; 6];
         let submission = serde_json::json!({ "finalGrid": empty });
@@ -1049,7 +1050,7 @@ mod tests {
             "submissionJson": submission.to_string(),
         })
         .to_string();
-        let response = match app.oneshot(guest_submit(body)).await {
+        let response = match app.oneshot(player_submit(body)).await {
             Ok(r) => r,
             Err(error) => panic!("submit: {error}"),
         };
