@@ -92,7 +92,7 @@ fn to_proto_entry(
         rank: entry.rank,
         // Wire compatibility: this field now identifies only this response entry.
         // Never derive it from a player id, including by hashing.
-        user_id: uuid::Uuid::new_v4().to_string(),
+        user_id: uuid::Uuid::now_v7().to_string(),
         user_name: entry.user_name,
         // Avatar URLs can contain stable account identifiers. Public rows use initials.
         user_image: None,
