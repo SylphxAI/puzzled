@@ -71,17 +71,22 @@ export default async function PricingPage({ params, searchParams }: Props) {
 		cards.find((c) => c.family === family && c.interval === 'month')
 	const yearly = (family: boolean) =>
 		cards.find((c) => c.family === family && c.interval === 'year')
-	const familyMax = plans?.familyMaxMembers || 4
+	// The seat count belongs to the catalogue: no family plan sold means 0, never a guess.
+	const familyMax = plans?.familyMaxMembers || null
 
 	const groups = [
-		{ family: false, title: tPlus('name'), body: t('individualBody') },
-		{ family: true, title: t('family'), body: t('familyBody', { count: familyMax }) },
+		{ family: false, title: tPlus('name'), body: t('individualBody') as string | null },
+		{
+			family: true,
+			title: t('family'),
+			body: familyMax ? t('familyBody', { count: familyMax }) : null,
+		},
 	]
 	const includes = (family: boolean) => [
 		t('includesAllGames', { count: gameCount }),
 		t('includesArchive'),
 		t('includesStats'),
-		...(family ? [t('includesFamily', { count: familyMax })] : []),
+		...(family && familyMax ? [t('includesFamily', { count: familyMax })] : []),
 	]
 
 	const priceLine = (card: PlanCard | undefined) =>
@@ -122,7 +127,6 @@ export default async function PricingPage({ params, searchParams }: Props) {
 						</p>
 						<h2 className="mt-2 font-display text-2xl">{t('closedTitle')}</h2>
 						<p className="mt-2 text-[15px] text-muted-foreground">{t('closedBody')}</p>
-						<p className="mt-1 text-[15px] font-semibold">{t('purchasesSoon')}</p>
 						<ul className="mt-5 space-y-2.5 border-t border-border pt-5">
 							{includes(true).map((line) => (
 								<li key={line} className="flex items-start gap-2.5 text-[15px]">
@@ -173,7 +177,9 @@ export default async function PricingPage({ params, searchParams }: Props) {
 											) : null}
 											{group.title}
 										</h2>
-										<p className="mt-1 text-sm text-muted-foreground">{group.body}</p>
+										{group.body ? (
+											<p className="mt-1 text-sm text-muted-foreground">{group.body}</p>
+										) : null}
 										<dl className="mt-5 space-y-1">
 											{month ? (
 												<div className="flex flex-wrap items-baseline gap-1.5">
