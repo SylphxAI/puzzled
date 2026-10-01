@@ -32,32 +32,46 @@ async fn browser_subscription_is_idempotent_player_scoped_and_erased() {
     assert_eq!(owner, first);
     assert_eq!(count, 1);
     // Another player cannot unsubscribe someone else's endpoint.
-    web_push::remove(&pool, second, endpoint).await.unwrap();
+    assert!(matches!(
+        web_push::remove(&pool, second, endpoint).await,
+        Err(sqlx::Error::RowNotFound)
+    ));
     let count: i64 = sqlx::query_scalar("SELECT count(*) FROM push_subscriptions")
         .fetch_one(&pool)
         .await
         .unwrap();
     assert_eq!(count, 1);
-    // The same browser signing into a different account changes its owner.
-    web_push::save(
-        &pool,
-        second,
-        endpoint,
-        "rotated-public-key",
-        "rotated-auth-key",
-        "zh-TW",
-    )
-    .await
-    .unwrap();
+    // Knowing a browser endpoint does not authorize transferring its owner.
+    assert!(matches!(
+        web_push::save(
+            &pool,
+            second,
+            endpoint,
+            "rotated-public-key",
+            "rotated-auth-key",
+            "zh-TW",
+        )
+        .await,
+        Err(sqlx::Error::RowNotFound)
+    ));
+    let stored: (Uuid, String, String) =
+        sqlx::query_as("SELECT user_id, p256dh, auth FROM push_subscriptions")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(stored, (first, "public-key".into(), "auth-key".into()));
+    let preference_count: i64 =
+        sqlx::query_scalar("SELECT count(*) FROM user_preferences WHERE user_id = $1")
+            .bind(second)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(preference_count, 0);
     delete_account_data(&pool, &first.to_string())
         .await
         .unwrap();
-    let owner: Uuid = sqlx::query_scalar("SELECT user_id FROM push_subscriptions")
-        .fetch_one(&pool)
-        .await
-        .unwrap();
-    assert_eq!(owner, second);
-    web_push::remove(&pool, second, endpoint).await.unwrap();
+    // The new account registers a fresh endpoint, never silently transfers it.
+    let endpoint = "https://fcm.googleapis.com/fcm/send/browser-two";
     web_push::save(&pool, second, endpoint, "public-key", "auth-key", "zh-HK")
         .await
         .unwrap();
@@ -173,4 +187,102 @@ async fn sender_outcomes_preserve_live_endpoints_and_prune_expired_ones() {
     assert!(endpoints
         .iter()
         .any(|endpoint| endpoint.ends_with("failed")));
+}
+
+/// Exercise authentication, request validation, adapter admission, and HTTP errors.
+#[tokio::test]
+async fn connect_push_foreign_endpoint_returns_404_without_any_writes() {
+    use axum::body::{to_bytes, Body};
+    use axum::http::{Request, StatusCode};
+    use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+    use serde_json::{json, Value};
+    use tower::ServiceExt;
+
+    async fn save_request(
+        app: &axum::Router,
+        token: &str,
+        body: Value,
+    ) -> (StatusCode, Value) {
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/puzzled.v1.PreferencesService/SaveWebPushSubscription")
+                    .header("content-type", "application/json")
+                    .header("authorization", format!("Bearer {token}"))
+                    .body(Body::from(body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let status = response.status();
+        let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        (status, serde_json::from_slice(&bytes).unwrap())
+    }
+
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let first = Uuid::now_v7();
+    let second = Uuid::now_v7();
+    let first_token = crate::test_support::token(&first.to_string());
+    let second_token = crate::test_support::token(&second.to_string());
+    let app = crate::router(crate::AppState::new(Some(pool.clone())));
+    let endpoint = "https://fcm.googleapis.com/fcm/send/ownership-regression";
+    let mut key = [1_u8; 65];
+    key[0] = 4;
+    let original_key = URL_SAFE_NO_PAD.encode(key);
+    let original_auth = URL_SAFE_NO_PAD.encode([1_u8; 16]);
+    let registration = json!({
+        "endpoint": endpoint, "p256dh": original_key,
+        "auth": original_auth, "locale": "zh-HK"
+    });
+    for _ in 0..2 {
+        assert_eq!(
+            save_request(&app, &first_token, registration.clone()).await.0,
+            StatusCode::OK
+        );
+    }
+    key[1] = 2;
+    let forged = json!({
+        "endpoint": endpoint, "p256dh": URL_SAFE_NO_PAD.encode(key),
+        "auth": URL_SAFE_NO_PAD.encode([2_u8; 16]), "locale": "zh-TW"
+    });
+    for body in [forged.clone(), json!({"endpoint": endpoint, "remove": true})] {
+        let (status, body) = save_request(&app, &second_token, body).await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        assert_eq!(body["code"], "not_found");
+        assert_eq!(body["message"], "push_subscription_not_found");
+        let row: (Uuid, String, String) = sqlx::query_as(
+            "SELECT user_id, p256dh, auth FROM push_subscriptions WHERE endpoint = $1",
+        )
+        .bind(endpoint)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert_eq!(row, (first, original_key.clone(), original_auth.clone()));
+        let prefs: Vec<(Uuid, String)> =
+            sqlx::query_as("SELECT user_id, locale FROM user_preferences ORDER BY user_id")
+                .fetch_all(&pool)
+                .await
+                .unwrap();
+        assert_eq!(prefs, [(first, "zh-HK".into())]);
+    }
+    // The current owner can still rotate its keys and remove its subscription.
+    assert_eq!(save_request(&app, &first_token, forged).await.0, StatusCode::OK);
+    assert_eq!(
+        save_request(&app, &first_token, json!({"endpoint": endpoint, "remove": true})).await.0,
+        StatusCode::OK
+    );
+    let remaining: i64 = sqlx::query_scalar("SELECT count(*) FROM push_subscriptions")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(remaining, 0);
+    // A shared-device account switch registers a genuinely fresh endpoint.
+    let mut fresh = registration;
+    fresh["endpoint"] = json!("https://fcm.googleapis.com/fcm/send/fresh-subscription");
+    assert_eq!(save_request(&app, &second_token, fresh).await.0, StatusCode::OK);
+    pool.close().await;
 }

@@ -173,8 +173,12 @@ impl PreferencesService for PreferencesConnectService {
             )
             .await
         };
-        result
-            .map_err(|_| ConnectError::new(ErrorCode::Internal, "push_subscription_save_failed"))?;
+        result.map_err(|error| match error {
+            sqlx::Error::RowNotFound => {
+                ConnectError::new(ErrorCode::NotFound, "push_subscription_not_found")
+            }
+            _ => ConnectError::new(ErrorCode::Internal, "push_subscription_save_failed"),
+        })?;
         Response::ok(SaveWebPushSubscriptionResponse::default())
     }
 
