@@ -38,12 +38,11 @@ permissions:
 
 jobs:
   check:
-    uses: SylphxAI/.github/.github/workflows/rust-check.yml@59d40ab36de233b7bce1acbe41b48813f688b816 # SylphxAI/.github #115 + #116
+    uses: SylphxAI/.github/.github/workflows/rust-check.yml@13890e5cc13e308f376748fd23f626b637a47771 # SylphxAI/.github #122
     with:
       ref: ${{ inputs.ref }}
       packages: ${{ inputs.packages }}
       tests: ${{ inputs.tests }}
       workspace: ${{ inputs.workspace }}
-    # No cache credentials: the check keeps its compile cache in this
-    # repository's own GitHub Actions cache. A shared cache is never handed to
-    # another organization or tenant (cache poisoning).
+    # No repository credentials: the runner supplies its org-scoped compile
+    # cache; GitHub Actions cache is the per-repository fallback.
