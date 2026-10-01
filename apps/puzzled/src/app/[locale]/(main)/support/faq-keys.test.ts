@@ -21,6 +21,8 @@ describe('support FAQ copy', () => {
 				})
 				expect(String(entry?.question).trim().length).toBeGreaterThan(0)
 				expect(String(entry?.answer).trim().length).toBeGreaterThan(0)
+				expect(typeof entry?.answer).toBe('string')
+				expect(String(entry?.answer)).not.toContain('support.faq.')
 				expect(String(entry?.question)).not.toContain('support.faq.')
 			}
 		})

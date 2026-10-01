@@ -31,11 +31,23 @@ describe('game page search metadata', () => {
 			const title = gameMetaTitle(t, copy.name, meta.category)
 			const description = gameMetaDescription(t, copy.name, meta.category, copy.description, '.')
 			expect(title).toContain('daily')
+			expect(title.toLowerCase()).not.toContain('free')
 			expect(`${title} | Puzzled`.length).toBeLessThanOrEqual(60)
 			expect(description.length).toBeGreaterThanOrEqual(120)
 			expect(description.length).toBeLessThanOrEqual(160)
 			expect(seen.has(description)).toBe(false)
 			seen.add(description)
+		}
+	})
+
+	test("only today's featured game is free, so no game title claims free (zh)", () => {
+		for (const locale of ['zh-HK', 'zh-TW', 'zh-CN'] as const) {
+			const t = reader(locale)
+			for (const meta of getAllGameMetadata()) {
+				const title = gameMetaTitle(t, gameCopy(locale, meta.slug).name, meta.category)
+				expect(title).not.toContain('免費')
+				expect(title).not.toContain('免费')
+			}
 		}
 	})
 

@@ -65,7 +65,7 @@
 		"faqTitle": "关于 {game} 的常见问题",
 		"relatedTitle": "更多游戏",
 		"relatedAll": "查看所有游戏",
-		"metaTitle": "{game}：免费每日{genre}谜题",
+		"metaTitle": "{game}：每日{genre}谜题",
 		"metaDescription": "{game}是每日{genre}谜题。{rule}每天一道新题，当日精选谜题免费，无需账户。",
 		"genre": {
 			"word": "文字",

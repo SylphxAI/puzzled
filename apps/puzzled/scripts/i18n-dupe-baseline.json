@@ -10,6 +10,10 @@
 				]
 			},
 			{
+				"value": "2026-10-01",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
 				"value": "Account",
 				"keys": [
 					"nav.account",
@@ -1034,7 +1038,7 @@
 				]
 			},
 			{
-				"value": "We reply within 24-48 hours",
+				"value": "We reply by email.",
 				"keys": ["support.email.responseTime", "support.hero.factReply"]
 			},
 			{
@@ -1106,6 +1110,10 @@
 				]
 			},
 			{
+				"value": "2026-10-01",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
 				"value": "Account",
 				"keys": [
 					"nav.account",
@@ -2130,7 +2138,7 @@
 				]
 			},
 			{
-				"value": "We reply within 24-48 hours",
+				"value": "We reply by email.",
 				"keys": ["support.email.responseTime", "support.hero.factReply"]
 			},
 			{
@@ -2202,8 +2210,8 @@
 				]
 			},
 			{
-				"value": "24-48 小時內回覆",
-				"keys": ["support.email.responseTime", "support.hero.factReply"]
+				"value": "2026-10-01",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "All Users",
@@ -2727,6 +2735,10 @@
 					"legal.privacy.sections.dataCollection.title",
 					"settings.privacy.analytics.whatWeCollect"
 				]
+			},
+			{
+				"value": "我們會以電郵回覆。",
+				"keys": ["support.email.responseTime", "support.hero.factReply"]
 			},
 			{
 				"value": "所有遊戲",
@@ -3290,8 +3302,8 @@
 				]
 			},
 			{
-				"value": "24-48 小時內回覆",
-				"keys": ["support.email.responseTime", "support.hero.factReply"]
+				"value": "2026-10-01",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "All Users",
@@ -3817,6 +3829,10 @@
 					"legal.privacy.sections.dataCollection.title",
 					"settings.privacy.analytics.whatWeCollect"
 				]
+			},
+			{
+				"value": "我們會以電郵回覆。",
+				"keys": ["support.email.responseTime", "support.hero.factReply"]
 			},
 			{
 				"value": "所有遊戲",
@@ -4372,8 +4388,8 @@
 				]
 			},
 			{
-				"value": "24-48 小时内回复",
-				"keys": ["support.email.responseTime", "support.hero.factReply"]
+				"value": "2026-10-01",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "All Users",
@@ -4938,6 +4954,10 @@
 					"settings.playerCard.achievements",
 					"settings.playerCard.achievementsSection.title"
 				]
+			},
+			{
+				"value": "我们会通过邮件回复。",
+				"keys": ["support.email.responseTime", "support.hero.factReply"]
 			},
 			{
 				"value": "我们收集的数据",

@@ -1,11 +1,11 @@
 {
 	"title": "Support & Help",
-	"description": "Email Puzzled about your account, games or data. We reply within 24-48 hours.",
+	"description": "Email Puzzled about your account, games or data. We reply by email.",
 	"hero": {
 		"eyebrow": "Support",
-		"lead": "Email us about your account, progress or a bug. We reply within 24-48 hours.",
+		"lead": "Email us about your account, progress or a bug. We reply by email.",
 		"factHuman": "One inbox for everything",
-		"factReply": "We reply within 24-48 hours",
+		"factReply": "We reply by email.",
 		"emailCta": "Email support",
 		"faqCta": "Read the FAQ"
 	},
@@ -26,7 +26,7 @@
 		"note": "Email is the support channel. Write from the address on your account so we can check it."
 	},
 	"email": {
-		"responseTime": "We reply within 24-48 hours"
+		"responseTime": "We reply by email."
 	},
 	"faq": {
 		"title": "Questions this page can answer",
@@ -53,7 +53,7 @@
 		},
 		"data": {
 			"question": "How do I get a copy of my data, or delete it?",
-			"answer": "Write to {email} for access, an export, correction or deletion; the privacy inbox handles those requests. The Privacy Policy lists what is collected, which third parties are involved and the rights you can exercise."
+			"answer": "Write to {email} for access, an export, correction or deletion; that one address handles those requests. The Privacy Policy lists what is collected, which third parties are involved and the rights you can exercise."
 		},
 		"cancel": {
 			"question": "How do I cancel Puzzled Plus?",

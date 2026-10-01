@@ -65,7 +65,7 @@
 		"faqTitle": "Questions about {game}",
 		"relatedTitle": "More puzzles to try",
 		"relatedAll": "See all games",
-		"metaTitle": "{game}: free daily {genre} puzzle",
+		"metaTitle": "{game}: daily {genre} puzzle",
 		"metaDescription": "{game} is a daily {genre} puzzle. {rule} A new puzzle every day; today's featured puzzle is free, no account needed.",
 		"genre": {
 			"word": "word",
