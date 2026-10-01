@@ -1,6 +1,6 @@
 -- Browser identity and adoption provenance; no existing data is changed.
 CREATE TABLE "guest_credentials" (
-    "token_hash" text PRIMARY KEY NOT NULL,
+    "token_hash" text PRIMARY KEY NOT NULL, -- identifiers: allow SHA-256 digest of a secret cookie, not an entity id
     "user_id" uuid NOT NULL UNIQUE,
     "adopted_user_id" uuid,
     "revoked_at" timestamp,
