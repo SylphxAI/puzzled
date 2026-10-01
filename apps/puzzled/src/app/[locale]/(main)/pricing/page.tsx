@@ -69,7 +69,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 		cards.find((c) => c.family === family && c.interval === 'month')
 	const yearly = (family: boolean) =>
 		cards.find((c) => c.family === family && c.interval === 'year')
-	const familyMax = plans?.familyMaxMembers ?? 4
+	const familyMax = plans?.familyMaxMembers || 4
 
 	const groups = [
 		{ family: false, title: tPlus('name'), body: t('individualBody') },
