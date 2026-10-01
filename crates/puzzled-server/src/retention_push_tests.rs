@@ -90,18 +90,39 @@ async fn existing_guest_claim_carries_two_days_and_today_once() {
     let Some(pool) = fresh_database().await else {
         return;
     };
-    let credential_cookie = crate::capabilities::identity_access::adapters::guest_credentials::issue(&pool).await.unwrap();
-    let token = credential_cookie.split(';').next().unwrap().split_once('=').unwrap().1;
-    let hash = crate::capabilities::identity_access::adapters::guest_credentials::token_hash(token).unwrap();
-    let guest_id = crate::capabilities::identity_access::adapters::guest_credentials::lookup_hash(&pool, &hash).await.unwrap().unwrap();
+    let credential_cookie =
+        crate::capabilities::identity_access::adapters::guest_credentials::issue(&pool)
+            .await
+            .unwrap();
+    let token = credential_cookie
+        .split(';')
+        .next()
+        .unwrap()
+        .split_once('=')
+        .unwrap()
+        .1;
+    let hash = crate::capabilities::identity_access::adapters::guest_credentials::token_hash(token)
+        .unwrap();
+    let guest_id = crate::capabilities::identity_access::adapters::guest_credentials::lookup_hash(
+        &pool, &hash,
+    )
+    .await
+    .unwrap()
+    .unwrap();
     let guest = format!("guest_{guest_id}");
     let account = Uuid::now_v7().to_string();
     sqlx::query("INSERT INTO auth_subjects (subject, user_id) VALUES ($1, $2)")
-        .bind(format!("principal-{account}")).bind(Uuid::parse_str(&account).unwrap())
-        .execute(&pool).await.unwrap();
+        .bind(format!("principal-{account}"))
+        .bind(Uuid::parse_str(&account).unwrap())
+        .execute(&pool)
+        .await
+        .unwrap();
     let verified_account = crate::VerifiedIdentity {
-        user_id: account.clone(), display_name: None, email: None,
-        is_admin: false, actor: None,
+        user_id: account.clone(),
+        display_name: None,
+        email: None,
+        is_admin: false,
+        actor: None,
     };
     for day in [29, 30] {
         let date = NaiveDate::from_ymd_opt(2026, 9, day).unwrap();
@@ -127,10 +148,16 @@ async fn existing_guest_claim_carries_two_days_and_today_once() {
         .unwrap();
     }
     assert_eq!(
-        adopt_guest_sessions(&pool, &verified_account, &guest, &hash).await.unwrap(),
+        adopt_guest_sessions(&pool, &verified_account, &guest, &hash)
+            .await
+            .unwrap(),
         2
     );
-    assert!(adopt_guest_sessions(&pool, &verified_account, &guest, &hash).await.is_err());
+    assert!(
+        adopt_guest_sessions(&pool, &verified_account, &guest, &hash)
+            .await
+            .is_err()
+    );
     let days: Vec<String> =
         sqlx::query_scalar("SELECT day_key FROM game_sessions WHERE user_id = $1 ORDER BY day_key")
             .bind(Uuid::parse_str(&account).unwrap())

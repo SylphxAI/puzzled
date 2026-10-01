@@ -231,7 +231,11 @@ impl Money {
         Some(Self::discovering(
             &get("SYLPHX_API_URL").unwrap_or_else(|| DEFAULT_API_URL.into()),
             &get("SYLPHX_MONEY_API_KEY")?,
-            &parse_public_origin(&get("PUZZLED_PUBLIC_URL").unwrap_or_else(|| DEFAULT_PUBLIC_URL.into()), !cfg!(debug_assertions)).ok()?,
+            &parse_public_origin(
+                &get("PUZZLED_PUBLIC_URL").unwrap_or_else(|| DEFAULT_PUBLIC_URL.into()),
+                !cfg!(debug_assertions),
+            )
+            .ok()?,
         ))
     }
 

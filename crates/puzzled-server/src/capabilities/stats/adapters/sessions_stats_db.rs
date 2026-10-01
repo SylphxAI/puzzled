@@ -32,7 +32,10 @@ pub async fn user_stats(pool: &PgPool, user_id: &str) -> Result<(Vec<Value>, u32
     Ok(value)
 }
 
-pub async fn user_stats_on_connection(connection: &mut sqlx::PgConnection, user_id: &str) -> Result<(Vec<Value>, u32, u32), String> {
+pub async fn user_stats_on_connection(
+    connection: &mut sqlx::PgConnection,
+    user_id: &str,
+) -> Result<(Vec<Value>, u32, u32), String> {
     let uid = parse_user_id(user_id)?;
     let rows: Vec<(String, i64, i64, Option<i32>)> = sqlx::query_as(
         r#"

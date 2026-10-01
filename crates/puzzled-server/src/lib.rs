@@ -31,13 +31,13 @@ mod daily_pipeline_tests;
 #[cfg(test)]
 mod daily_reminder_tests;
 #[cfg(test)]
+mod guest_ownership_tests;
+#[cfg(test)]
 mod money_access_tests;
 #[cfg(test)]
 mod result_shares_tests;
 #[cfg(test)]
 mod retention_push_tests;
-#[cfg(test)]
-mod guest_ownership_tests;
 #[cfg(test)]
 mod streak_freeze_tests;
 #[cfg(test)]
@@ -563,7 +563,6 @@ mod tests {
             Err(error) => panic!("connect SubmitGuess guest: {error}"),
         };
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
-
     }
 
     #[tokio::test]

@@ -1012,23 +1012,26 @@ export type NewAppSetting = typeof appSettings.$inferInsert
 
 /** Server-issued browser credentials; plaintext never reaches the database. */
 export const guestCredentials = pgTable(
-    'guest_credentials',
-    {
-        tokenHash: text('token_hash').primaryKey(),
-        userId: uuid('user_id').notNull().unique(),
-        adoptedUserId: uuid('adopted_user_id'),
-        revokedAt: timestamp('revoked_at'),
-        revocationReason: text('revocation_reason'),
-        provenance: text('provenance').notNull(),
-        createdAt: timestamp('created_at').defaultNow().notNull(),
-    },
-    (table) => [
-        index('guest_credentials_adopted_user_id_idx').on(table.adoptedUserId),
-        check('guest_credentials_provenance_check', sql`${table.provenance} = 'server_issued'`),
-        check('guest_credentials_revocation_check', sql`(
-            (${table.revokedAt} IS NULL AND ${table.revocationReason} IS NULL AND ${table.adoptedUserId} IS NULL)
-            OR (${table.revokedAt} IS NOT NULL AND ${table.revocationReason} IS NOT NULL AND ${table.revocationReason} = 'adopted' AND ${table.adoptedUserId} IS NOT NULL)
-            OR (${table.revokedAt} IS NOT NULL AND ${table.revocationReason} IS NOT NULL AND ${table.revocationReason} = 'account_collision' AND ${table.adoptedUserId} IS NULL)
-        )`),
-    ],
+	'guest_credentials',
+	{
+		tokenHash: text('token_hash').primaryKey(),
+		userId: uuid('user_id').notNull().unique('guest_credentials_user_id_key'),
+		adoptedUserId: uuid('adopted_user_id'),
+		revokedAt: timestamp('revoked_at'),
+		revocationReason: text('revocation_reason'),
+		provenance: text('provenance').notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+	},
+	(table) => [
+		index('guest_credentials_adopted_user_id_idx').on(table.adoptedUserId),
+		check('guest_credentials_provenance_check', sql`${table.provenance} = 'server_issued'`),
+		check(
+			'guest_credentials_revocation_check',
+			sql`(
+			(${table.revokedAt} IS NULL AND ${table.revocationReason} IS NULL AND ${table.adoptedUserId} IS NULL)
+			OR (${table.revokedAt} IS NOT NULL AND ${table.revocationReason} IS NOT NULL AND ${table.revocationReason} = 'adopted' AND ${table.adoptedUserId} IS NOT NULL)
+			OR (${table.revokedAt} IS NOT NULL AND ${table.revocationReason} IS NOT NULL AND ${table.revocationReason} = 'account_collision' AND ${table.adoptedUserId} IS NULL)
+        )`,
+		),
+	],
 )

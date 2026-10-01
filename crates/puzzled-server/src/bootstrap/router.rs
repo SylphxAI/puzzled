@@ -40,7 +40,10 @@ pub fn router(state: AppState) -> Router {
     let auth = state.auth.clone();
     let guest_pool = state.pool.clone();
     Router::new()
-        .route("/v1/guest/session", post(crate::capabilities::identity_access::adapters::guest_credentials::session))
+        .route(
+            "/v1/guest/session",
+            post(crate::capabilities::identity_access::adapters::guest_credentials::session),
+        )
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route(DAILY_PUZZLES_PATH, post(daily_puzzles_tick))

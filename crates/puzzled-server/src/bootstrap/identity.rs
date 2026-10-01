@@ -121,7 +121,9 @@ pub struct RequestAccess {
 
 impl std::ops::Deref for RequestAccess {
     type Target = RequestIdentities;
-    fn deref(&self) -> &Self::Target { &self.identities }
+    fn deref(&self) -> &Self::Target {
+        &self.identities
+    }
 }
 
 impl RequestAccess {
@@ -130,7 +132,9 @@ impl RequestAccess {
     }
     pub async fn commit(self) -> Result<(), ConnectError> {
         if let Some(tx) = self.transaction {
-            tx.commit().await.map_err(|_| ConnectError::new(ErrorCode::Internal, "identity_store_failed"))?;
+            tx.commit()
+                .await
+                .map_err(|_| ConnectError::new(ErrorCode::Internal, "identity_store_failed"))?;
         }
         Ok(())
     }
@@ -147,32 +151,59 @@ pub async fn admitted_request_identities(
     let internal = || ConnectError::new(ErrorCode::Internal, "identity_store_failed");
     let mut identities = resolve_request_identities(ctx);
     if guest_credential_hash(ctx).is_none() && identities.platform.is_none() {
-        return Ok(RequestAccess { identities, transaction: None });
+        return Ok(RequestAccess {
+            identities,
+            transaction: None,
+        });
     }
     let Some(pool) = pool else {
-        return Ok(RequestAccess { identities, transaction: None });
+        return Ok(RequestAccess {
+            identities,
+            transaction: None,
+        });
     };
     let hash = guest_credential_hash(ctx);
-    let account = identities.platform.as_ref().and_then(|identity| user_id_to_storage_uuid(&identity.user_id));
+    let account = identities
+        .platform
+        .as_ref()
+        .and_then(|identity| user_id_to_storage_uuid(&identity.user_id));
     let (mut tx, candidate) = loop {
         let mut tx = pool.begin().await.map_err(|_| internal())?;
         // Serialize token allocation BEFORE common player locks. A loser
         // never holds an unused candidate lock while acquiring the winner.
         if let Some(hash) = hash {
-            sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended('puzzled:guest-token:' || $1, 0))")
-                .bind(hash).execute(&mut *tx).await.map_err(|_| internal())?;
+            sqlx::query(
+                "SELECT pg_advisory_xact_lock(hashtextextended('puzzled:guest-token:' || $1, 0))",
+            )
+            .bind(hash)
+            .execute(&mut *tx)
+            .await
+            .map_err(|_| internal())?;
         }
         let mut candidate: Option<uuid::Uuid> = match hash {
-            Some(hash) => sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE token_hash = $1")
-                .bind(hash).fetch_optional(&mut *tx).await.map_err(|_| internal())?,
+            Some(hash) => {
+                sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE token_hash = $1")
+                    .bind(hash)
+                    .fetch_optional(&mut *tx)
+                    .await
+                    .map_err(|_| internal())?
+            }
             None => None,
         };
-        let allocate = candidate.is_none() && hash.is_some() && guest_write && identities.platform.is_none();
-        if allocate { candidate = Some(uuid::Uuid::now_v7()); }
-        guest_credentials::lock_players(&mut tx, candidate.into_iter().chain(account).collect()).await.map_err(|_| internal())?;
+        let allocate =
+            candidate.is_none() && hash.is_some() && guest_write && identities.platform.is_none();
+        if allocate {
+            candidate = Some(uuid::Uuid::now_v7());
+        }
+        guest_credentials::lock_players(&mut tx, candidate.into_iter().chain(account).collect())
+            .await
+            .map_err(|_| internal())?;
         if allocate {
             let player = candidate.ok_or_else(internal)?;
-            if !guest_credentials::unused_player(&mut tx, player).await.map_err(|_| internal())? {
+            if !guest_credentials::unused_player(&mut tx, player)
+                .await
+                .map_err(|_| internal())?
+            {
                 tx.rollback().await.map_err(|_| internal())?;
                 continue;
             }
@@ -188,27 +219,47 @@ pub async fn admitted_request_identities(
         break (tx, candidate);
     };
     if let Some(player) = account {
-        let collision: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)")
-            .bind(player).fetch_one(&mut *tx).await.map_err(|_| internal())?;
-        if collision { identities.platform = None; }
+        let collision: bool = sqlx::query_scalar(
+            "SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)",
+        )
+        .bind(player)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(|_| internal())?;
+        if collision {
+            identities.platform = None;
+        }
     }
     if let (Some(player), Some(hash)) = (candidate, hash) {
         let live: Option<uuid::Uuid> = sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL AND adopted_user_id IS NULL FOR SHARE")
             .bind(player).bind(hash).fetch_optional(&mut *tx).await.map_err(|_| internal())?;
-        if live == Some(player) && account != Some(player) && !guest_credentials::account_backed(&mut tx, player).await.map_err(|_| internal())? {
+        if live == Some(player)
+            && account != Some(player)
+            && !guest_credentials::account_backed(&mut tx, player)
+                .await
+                .map_err(|_| internal())?
+        {
             identities.guest = Some(VerifiedIdentity {
-                user_id: format!("guest_{player}"), display_name: Some("Guest".into()),
-                email: None, is_admin: false, actor: None,
+                user_id: format!("guest_{player}"),
+                display_name: Some("Guest".into()),
+                email: None,
+                is_admin: false,
+                actor: None,
             });
         }
     }
-    if let (Some(verified), Some(guest), Some(hash)) = (&identities.platform, &identities.guest, hash) {
+    if let (Some(verified), Some(guest), Some(hash)) =
+        (&identities.platform, &identities.guest, hash)
+    {
         crate::capabilities::puzzle_play::adapters::game_sessions_db::adopt_guest_sessions_on_connection(
             &mut tx, verified, &guest.user_id, hash,
         ).await.map_err(|_| internal())?;
         identities.guest = None;
     }
-    Ok(RequestAccess { identities, transaction: Some(tx) })
+    Ok(RequestAccess {
+        identities,
+        transaction: Some(tx),
+    })
 }
 
 pub fn guest_credential_hash(ctx: &RequestContext) -> Option<&str> {
@@ -274,8 +325,16 @@ mod tests {
     #[test]
     fn raw_guest_header_and_cookie_are_not_credentials() {
         let mut headers = HeaderMap::new();
-        headers.insert(GUEST_ID_HEADER, "a1b2c3d4-e5f6-7890-abcd-ef1234567890".parse().unwrap());
-        headers.insert(COOKIE, "puzzled_guest_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890".parse().unwrap());
+        headers.insert(
+            GUEST_ID_HEADER,
+            "a1b2c3d4-e5f6-7890-abcd-ef1234567890".parse().unwrap(),
+        );
+        headers.insert(
+            COOKIE,
+            "puzzled_guest_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                .parse()
+                .unwrap(),
+        );
         assert!(resolve_guest(&headers).is_none());
     }
 

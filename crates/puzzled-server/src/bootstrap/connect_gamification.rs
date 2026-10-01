@@ -7,9 +7,7 @@ use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
 
-use super::identity::{
-    require_admin, require_identity,
-};
+use super::identity::{require_admin, require_identity};
 use super::state::AppState;
 use crate::capabilities::gamification::adapters::freezes_db::{
     load_freeze_row, upsert_freeze_data,
@@ -41,7 +39,12 @@ impl GamificationConnectService {
         &self,
         ctx: &RequestContext,
     ) -> Result<crate::bootstrap::identity::RequestAccess, ConnectError> {
-        crate::bootstrap::identity::admitted_request_identities(ctx, self.state.pool.as_ref(), false).await
+        crate::bootstrap::identity::admitted_request_identities(
+            ctx,
+            self.state.pool.as_ref(),
+            false,
+        )
+        .await
     }
 
     /// The player's streak with freezes settled: milestones earned since the
@@ -52,7 +55,8 @@ impl GamificationConnectService {
         user_id: &str,
         connection: Option<&mut sqlx::PgConnection>,
     ) -> Result<(PersonalStreak, u32, FreezeData), ConnectError> {
-        let connection = connection.ok_or_else(|| map_streak_error(StreakReadError::StoreUnavailable))?;
+        let connection =
+            connection.ok_or_else(|| map_streak_error(StreakReadError::StoreUnavailable))?;
         let today = product_day_key(Utc::now());
         let read = load_settled_streak_on_connection(connection, user_id, today).await;
         let (streak, total, row) = match read {
@@ -106,8 +110,12 @@ impl GamificationService for GamificationConnectService {
         _request: ServiceRequest<'_, GetStreakInfoRequest>,
     ) -> ServiceResult<GetStreakInfoResponse> {
         let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
-        let identity = access.primary().cloned().ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"))?;
-        let (streak, total, freeze) = self.load_personal_streak(&identity.user_id, access.connection()).await?;
+        let identity = access.primary().cloned().ok_or_else(|| {
+            ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
+        })?;
+        let (streak, total, freeze) = self
+            .load_personal_streak(&identity.user_id, access.connection())
+            .await?;
         access.commit().await?;
         Response::ok(GetStreakInfoResponse {
             info: self.to_info(&freeze, streak, total).into(),
@@ -143,7 +151,9 @@ impl GamificationService for GamificationConnectService {
             })?;
         }
         let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
-        let (streak, total, freeze) = self.load_personal_streak(&identity.user_id, access.connection()).await?;
+        let (streak, total, freeze) = self
+            .load_personal_streak(&identity.user_id, access.connection())
+            .await?;
         access.commit().await?;
         Response::ok(ToggleAutoFreezeResponse {
             info: self.to_info(&freeze, streak, total).into(),
@@ -161,7 +171,9 @@ impl GamificationService for GamificationConnectService {
     ) -> ServiceResult<TryAutoFreezeResponse> {
         let identity = require_identity(&ctx)?;
         let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
-        let (streak, total, freeze) = self.load_personal_streak(&identity.user_id, access.connection()).await?;
+        let (streak, total, freeze) = self
+            .load_personal_streak(&identity.user_id, access.connection())
+            .await?;
         access.commit().await?;
         Response::ok(TryAutoFreezeResponse {
             used_freeze: streak.freeze_used_yesterday,
@@ -209,14 +221,30 @@ impl GamificationService for GamificationConnectService {
                 ));
             }
         }
-        let pool = self.state.pool.as_ref().ok_or_else(|| map_streak_error(StreakReadError::StoreUnavailable))?;
-        let mut transaction = pool.begin().await.map_err(|_| map_streak_error(StreakReadError::ReadFailed))?;
+        let pool = self
+            .state
+            .pool
+            .as_ref()
+            .ok_or_else(|| map_streak_error(StreakReadError::StoreUnavailable))?;
+        let mut transaction = pool
+            .begin()
+            .await
+            .map_err(|_| map_streak_error(StreakReadError::ReadFailed))?;
         let player = uuid::Uuid::parse_str(&req.user_id)
             .map_err(|_| ConnectError::new(ErrorCode::InvalidArgument, "invalid_user_id"))?;
-        crate::capabilities::identity_access::adapters::guest_credentials::lock_players(&mut transaction, vec![player])
-            .await.map_err(|_| map_streak_error(StreakReadError::ReadFailed))?;
-        let (streak, total, freeze) = self.load_personal_streak(&req.user_id, Some(&mut transaction)).await?;
-        transaction.commit().await.map_err(|_| map_streak_error(StreakReadError::ReadFailed))?;
+        crate::capabilities::identity_access::adapters::guest_credentials::lock_players(
+            &mut transaction,
+            vec![player],
+        )
+        .await
+        .map_err(|_| map_streak_error(StreakReadError::ReadFailed))?;
+        let (streak, total, freeze) = self
+            .load_personal_streak(&req.user_id, Some(&mut transaction))
+            .await?;
+        transaction
+            .commit()
+            .await
+            .map_err(|_| map_streak_error(StreakReadError::ReadFailed))?;
         Response::ok(AddStreakFreezesResponse {
             info: self.to_info(&freeze, streak, total).into(),
             ..Default::default()

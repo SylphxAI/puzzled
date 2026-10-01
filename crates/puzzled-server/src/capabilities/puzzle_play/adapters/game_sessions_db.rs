@@ -174,7 +174,9 @@ pub async fn has_completed_session(
     puzzle_id: Option<&str>,
 ) -> Result<bool, String> {
     let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
-    let value = has_completed_session_on_connection(&mut tx, user_id, game_slug, puzzle_date, puzzle_id).await?;
+    let value =
+        has_completed_session_on_connection(&mut tx, user_id, game_slug, puzzle_date, puzzle_id)
+            .await?;
     tx.commit().await.map_err(|e| e.to_string())?;
     Ok(value)
 }
@@ -244,7 +246,9 @@ pub async fn load_completed_session(
     puzzle_id: Option<&str>,
 ) -> Result<Option<CompletedSession>, String> {
     let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
-    let value = load_completed_session_on_connection(&mut tx, user_id, game_slug, puzzle_date, puzzle_id).await?;
+    let value =
+        load_completed_session_on_connection(&mut tx, user_id, game_slug, puzzle_date, puzzle_id)
+            .await?;
     tx.commit().await.map_err(|e| e.to_string())?;
     Ok(value)
 }
@@ -314,8 +318,17 @@ pub async fn adopt_guest_sessions(
 ) -> Result<u64, String> {
     let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
     sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended('puzzled:guest-token:' || $1, 0))")
-        .bind(credential_hash).execute(&mut *tx).await.map_err(|e| e.to_string())?;
-    let value = adopt_guest_sessions_on_connection(&mut tx, verified_account, guest_user_id, credential_hash).await?;
+        .bind(credential_hash)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+    let value = adopt_guest_sessions_on_connection(
+        &mut tx,
+        verified_account,
+        guest_user_id,
+        credential_hash,
+    )
+    .await?;
     tx.commit().await.map_err(|e| e.to_string())?;
     Ok(value)
 }
@@ -334,26 +347,50 @@ pub async fn adopt_guest_sessions_on_connection(
     }
     let account = parse_user_id(&verified_account.user_id)?;
     let guest = parse_user_id(guest_user_id)?;
-    if account == guest { return Err(refused()); }
-    guest_credentials::lock_players(&mut *connection, vec![account, guest]).await.map_err(|e| e.to_string())?;
-    let destination_is_guest: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)")
-        .bind(account).fetch_one(&mut *connection).await.map_err(|e| e.to_string())?;
-    if destination_is_guest { return Err(refused()); }
-    if !guest_credentials::account_backed(&mut *connection, account).await.map_err(|e| e.to_string())? {
+    if account == guest {
+        return Err(refused());
+    }
+    guest_credentials::lock_players(&mut *connection, vec![account, guest])
+        .await
+        .map_err(|e| e.to_string())?;
+    let destination_is_guest: bool =
+        sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)")
+            .bind(account)
+            .fetch_one(&mut *connection)
+            .await
+            .map_err(|e| e.to_string())?;
+    if destination_is_guest {
+        return Err(refused());
+    }
+    if !guest_credentials::account_backed(&mut *connection, account)
+        .await
+        .map_err(|e| e.to_string())?
+    {
         return Err(refused());
     }
     let credential: Option<uuid::Uuid> = sqlx::query_scalar(
         "SELECT user_id FROM guest_credentials WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL AND adopted_user_id IS NULL FOR UPDATE",
     ).bind(guest).bind(credential_hash).fetch_optional(&mut *connection).await.map_err(|e| e.to_string())?;
-    if credential != Some(guest) || guest_credentials::account_backed(&mut *connection, guest).await.map_err(|e| e.to_string())? {
+    if credential != Some(guest)
+        || guest_credentials::account_backed(&mut *connection, guest)
+            .await
+            .map_err(|e| e.to_string())?
+    {
         return Err(refused());
     }
     let updated = sqlx::query(ADOPT_GUEST_REASSIGN_SQL)
-        .bind(guest).bind(account).execute(&mut *connection).await.map_err(|e| e.to_string())?;
+        .bind(guest)
+        .bind(account)
+        .execute(&mut *connection)
+        .await
+        .map_err(|e| e.to_string())?;
     super::result_shares_db::adopt_guest_shares(&mut *connection, account, guest).await?;
     crate::capabilities::gamification::adapters::freezes_db::adopt_guest_freezes(
-        &mut *connection, account, guest,
-    ).await?;
+        &mut *connection,
+        account,
+        guest,
+    )
+    .await?;
     sqlx::query("UPDATE guest_credentials SET adopted_user_id = $2, revoked_at = now(), revocation_reason = 'adopted' WHERE user_id = $1 AND adopted_user_id IS NULL")
         .bind(guest).bind(account).execute(&mut *connection).await.map_err(|e| e.to_string())?;
     Ok(updated.rows_affected())
@@ -414,7 +451,22 @@ pub async fn persist_validated_session(
     at_ms: i64,
 ) -> Result<String, String> {
     let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
-    let value = persist_validated_session_on_connection(&mut tx, user_id, game_slug, difficulty, mode, status, score, attempts, time_spent_ms, puzzle_id, puzzle_date, day_key, at_ms).await?;
+    let value = persist_validated_session_on_connection(
+        &mut tx,
+        user_id,
+        game_slug,
+        difficulty,
+        mode,
+        status,
+        score,
+        attempts,
+        time_spent_ms,
+        puzzle_id,
+        puzzle_date,
+        day_key,
+        at_ms,
+    )
+    .await?;
     tx.commit().await.map_err(|e| e.to_string())?;
     Ok(value)
 }
@@ -542,7 +594,10 @@ pub async fn count_sessions(pool: &PgPool, user_id: &str) -> Result<u32, String>
     Ok(value)
 }
 
-pub async fn count_sessions_on_connection(connection: &mut sqlx::PgConnection, user_id: &str) -> Result<u32, String> {
+pub async fn count_sessions_on_connection(
+    connection: &mut sqlx::PgConnection,
+    user_id: &str,
+) -> Result<u32, String> {
     let uid = parse_user_id(user_id)?;
     let row: (i64,) = sqlx::query_as(
         "SELECT COUNT(*) FROM game_sessions WHERE user_id = $1 AND status IN ('won','lost')",

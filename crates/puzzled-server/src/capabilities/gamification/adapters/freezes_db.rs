@@ -37,7 +37,10 @@ pub async fn load_freeze_row(pool: &PgPool, user_id: &str) -> Result<FreezeRow, 
     Ok(value)
 }
 
-pub async fn load_freeze_row_on_connection(connection: &mut sqlx::PgConnection, user_id: &str) -> Result<FreezeRow, String> {
+pub async fn load_freeze_row_on_connection(
+    connection: &mut sqlx::PgConnection,
+    user_id: &str,
+) -> Result<FreezeRow, String> {
     let uid = parse_user_id(user_id)?;
     let row: Option<(i32, i32, bool)> = sqlx::query_as(
         "SELECT freezes_available, freezes_used, auto_freeze_enabled \
@@ -56,7 +59,11 @@ pub async fn load_freeze_row_on_connection(connection: &mut sqlx::PgConnection, 
         .unwrap_or_default())
 }
 
-async fn day_column_on_connection(connection: &mut sqlx::PgConnection, sql: &'static str, uid: Uuid) -> Result<Vec<NaiveDate>, String> {
+async fn day_column_on_connection(
+    connection: &mut sqlx::PgConnection,
+    sql: &'static str,
+    uid: Uuid,
+) -> Result<Vec<NaiveDate>, String> {
     let rows: Vec<(NaiveDate,)> = sqlx::query_as(sql)
         .bind(uid)
         .fetch_all(&mut *connection)
@@ -222,7 +229,11 @@ async fn persist(
 /// Move a guest's freezes onto the account when the guest signs in: covered
 /// and earned days merge, held freezes add up to the most allowed, and the
 /// guest's rows remain as provenance; the credential is revoked by adoption.
-pub async fn adopt_guest_freezes(connection: &mut sqlx::PgConnection, account: Uuid, guest: Uuid) -> Result<(), String> {
+pub async fn adopt_guest_freezes(
+    connection: &mut sqlx::PgConnection,
+    account: Uuid,
+    guest: Uuid,
+) -> Result<(), String> {
     for table in ["streak_freeze_uses", "streak_freeze_awards"] {
         let sql = if table == "streak_freeze_uses" {
             "INSERT INTO streak_freeze_uses (user_id, day_key) \

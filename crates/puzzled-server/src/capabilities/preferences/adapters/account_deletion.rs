@@ -145,14 +145,28 @@ pub async fn delete_account_data(pool: &PgPool, user_id: &str) -> Result<u64, St
     let uid = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
     for _ in 0..3 {
         let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
-        let linked: Vec<Uuid> = sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE adopted_user_id = $1 ORDER BY user_id")
-            .bind(uid).fetch_all(&mut *tx).await.map_err(|e| e.to_string())?;
+        let linked: Vec<Uuid> = sqlx::query_scalar(
+            "SELECT user_id FROM guest_credentials WHERE adopted_user_id = $1 ORDER BY user_id",
+        )
+        .bind(uid)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
         let mut players = vec![uid];
         players.extend(linked.iter().copied());
-        crate::capabilities::identity_access::adapters::guest_credentials::lock_players(&mut tx, players.clone())
-            .await.map_err(|e| e.to_string())?;
-        let locked_linked: Vec<Uuid> = sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE adopted_user_id = $1 ORDER BY user_id")
-            .bind(uid).fetch_all(&mut *tx).await.map_err(|e| e.to_string())?;
+        crate::capabilities::identity_access::adapters::guest_credentials::lock_players(
+            &mut tx,
+            players.clone(),
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+        let locked_linked: Vec<Uuid> = sqlx::query_scalar(
+            "SELECT user_id FROM guest_credentials WHERE adopted_user_id = $1 ORDER BY user_id",
+        )
+        .bind(uid)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
         if linked != locked_linked {
             tx.rollback().await.map_err(|e| e.to_string())?;
             continue;
@@ -163,8 +177,13 @@ pub async fn delete_account_data(pool: &PgPool, user_id: &str) -> Result<u64, St
         for credentials in [false, true] {
             for player in &players {
                 for (table, column, statement) in USER_KEYED_COLUMNS {
-                    if (*table == "guest_credentials") != credentials { continue; }
-                    let result = sqlx::query(*statement).bind(player).execute(&mut *tx).await
+                    if (*table == "guest_credentials") != credentials {
+                        continue;
+                    }
+                    let result = sqlx::query(*statement)
+                        .bind(player)
+                        .execute(&mut *tx)
+                        .await
                         .map_err(|e| format!("account deletion failed on {table}.{column}: {e}"))?;
                     deleted += result.rows_affected();
                 }
@@ -198,8 +217,12 @@ mod tests {
             sql.push('\n');
         }
 
-        let is_player_column =
-            |name: &str| name == "user_id" || name.ends_with("_user_id") || name == "actor_id" || name == "adopted_from_guest";
+        let is_player_column = |name: &str| {
+            name == "user_id"
+                || name.ends_with("_user_id")
+                || name == "actor_id"
+                || name == "adopted_from_guest"
+        };
         let mut found = BTreeSet::new();
         let mut table: Option<String> = None;
         for line in sql.lines() {

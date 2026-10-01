@@ -40,7 +40,12 @@ impl StatsConnectService {
         &self,
         ctx: &RequestContext,
     ) -> Result<crate::bootstrap::identity::RequestAccess, ConnectError> {
-        crate::bootstrap::identity::admitted_request_identities(ctx, self.state.pool.as_ref(), false).await
+        crate::bootstrap::identity::admitted_request_identities(
+            ctx,
+            self.state.pool.as_ref(),
+            false,
+        )
+        .await
     }
 }
 
@@ -123,9 +128,17 @@ impl StatsService for StatsConnectService {
         if let Some(pool) = &self.state.pool {
             match fetch_score_leaderboard(pool, &query).await {
                 Ok(entries) => {
-                    let access = crate::bootstrap::identity::admitted_request_identities(&ctx, self.state.pool.as_ref(), false).await?;
+                    let access = crate::bootstrap::identity::admitted_request_identities(
+                        &ctx,
+                        self.state.pool.as_ref(),
+                        false,
+                    )
+                    .await?;
                     let viewer_id = access.primary().map(|identity| identity.user_id.as_str());
-                    let entries = entries.into_iter().map(|entry| to_proto_entry(entry, viewer_id)).collect();
+                    let entries = entries
+                        .into_iter()
+                        .map(|entry| to_proto_entry(entry, viewer_id))
+                        .collect();
                     access.commit().await?;
                     return leaderboard_response(entries);
                 }
@@ -249,13 +262,17 @@ impl StatsService for StatsConnectService {
         request: ServiceRequest<'_, GetUserStatsRequest>,
     ) -> ServiceResult<GetUserStatsResponse> {
         let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
-        let identity = access.primary().cloned().ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"))?;
+        let identity = access.primary().cloned().ok_or_else(|| {
+            ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
+        })?;
         let req = request.to_owned_message();
         let (games, total_played, total_won) = match access.connection() {
-            Some(connection) => user_stats_on_connection(connection, &identity.user_id).await.map_err(|e| {
-                tracing::warn!(%e, "user stats read failed");
-                ConnectError::new(ErrorCode::Internal, "user_stats_read_failed")
-            })?,
+            Some(connection) => user_stats_on_connection(connection, &identity.user_id)
+                .await
+                .map_err(|e| {
+                    tracing::warn!(%e, "user stats read failed");
+                    ConnectError::new(ErrorCode::Internal, "user_stats_read_failed")
+                })?,
             None => (Vec::new(), 0, 0),
         };
         let games_proto: Vec<UserGameStats> = games
@@ -288,16 +305,23 @@ impl StatsService for StatsConnectService {
         request: ServiceRequest<'_, GetHistoryRequest>,
     ) -> ServiceResult<GetHistoryResponse> {
         let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
-        let identity = access.primary().cloned().ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"))?;
+        let identity = access.primary().cloned().ok_or_else(|| {
+            ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
+        })?;
         let req = request.to_owned_message();
         let slug = (!req.game_slug.trim().is_empty()).then(|| req.game_slug.trim().to_string());
         let rows = match access.connection() {
-            Some(connection) => user_history_on_connection(connection, &identity.user_id, slug.as_deref(), req.limit)
-                .await
-                .map_err(|e| {
-                    tracing::warn!(%e, "history read failed");
-                    ConnectError::new(ErrorCode::Internal, "history_read_failed")
-                })?,
+            Some(connection) => user_history_on_connection(
+                connection,
+                &identity.user_id,
+                slug.as_deref(),
+                req.limit,
+            )
+            .await
+            .map_err(|e| {
+                tracing::warn!(%e, "history read failed");
+                ConnectError::new(ErrorCode::Internal, "history_read_failed")
+            })?,
             None => Vec::new(),
         };
         let sessions: Vec<SessionEntry> = rows

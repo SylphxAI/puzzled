@@ -100,7 +100,11 @@ pub async fn set_share_streak(pool: &PgPool, id: Uuid, streak: i32) -> Result<()
     Ok(value)
 }
 
-pub async fn set_share_streak_on_connection(connection: &mut sqlx::PgConnection, id: Uuid, streak: i32) -> Result<(), String> {
+pub async fn set_share_streak_on_connection(
+    connection: &mut sqlx::PgConnection,
+    id: Uuid,
+    streak: i32,
+) -> Result<(), String> {
     sqlx::query("UPDATE result_shares SET streak = $2 WHERE id = $1 AND streak IS NULL")
         .bind(id)
         .bind(streak)
@@ -138,7 +142,11 @@ pub async fn load_shared_result(pool: &PgPool, id: Uuid) -> Result<Option<Shared
 
 /// Move a guest's shares onto the account when the guest signs in, keeping any
 /// share the account already has for the same module and day.
-pub async fn adopt_guest_shares(connection: &mut sqlx::PgConnection, account: Uuid, guest: Uuid) -> Result<u64, String> {
+pub async fn adopt_guest_shares(
+    connection: &mut sqlx::PgConnection,
+    account: Uuid,
+    guest: Uuid,
+) -> Result<u64, String> {
     sqlx::query(
         r#"UPDATE result_shares g SET user_id = $2, adopted_from_guest = $1
            WHERE g.user_id = $1

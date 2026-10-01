@@ -44,14 +44,21 @@ pub async fn player_for(
     loop {
         let mut tx = pool.begin().await?;
         super::guest_credentials::lock_players(&mut tx, vec![player]).await?;
-        let existing: Option<Uuid> = sqlx::query_scalar("SELECT user_id FROM auth_subjects WHERE subject = $1")
-            .bind(subject).fetch_optional(&mut *tx).await?;
+        let existing: Option<Uuid> =
+            sqlx::query_scalar("SELECT user_id FROM auth_subjects WHERE subject = $1")
+                .bind(subject)
+                .fetch_optional(&mut *tx)
+                .await?;
         if let Some(existing) = existing {
             tx.commit().await?;
             return Ok(existing);
         }
-        let guest_collision: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)")
-            .bind(player).fetch_one(&mut *tx).await?;
+        let guest_collision: bool = sqlx::query_scalar(
+            "SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)",
+        )
+        .bind(player)
+        .fetch_one(&mut *tx)
+        .await?;
         if guest_collision {
             tx.rollback().await?;
             player = Uuid::now_v7();

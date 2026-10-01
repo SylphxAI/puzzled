@@ -30,6 +30,7 @@ pub async fn load_settled_streak_on_connection(
 ) -> Result<(PersonalStreak, u32, FreezeRow), String> {
     let days = load_accepted_ritual_days_on_connection(connection, user_id).await?;
     let total = count_sessions_on_connection(connection, user_id).await?;
-    let (row, frozen) = settle_player_freezes_on_connection(connection, user_id, today, &days).await?;
+    let (row, frozen) =
+        settle_player_freezes_on_connection(connection, user_id, today, &days).await?;
     Ok((compute_personal_streak(today, &days, &frozen), total, row))
 }
