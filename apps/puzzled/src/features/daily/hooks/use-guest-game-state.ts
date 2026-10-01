@@ -61,6 +61,14 @@ function cleanOldEntries(games: GuestCompletedGame[]): GuestCompletedGame[] {
 	return games.filter((game) => game.date >= cutoffStr)
 }
 
+/** Slugs this browser finished as a guest on the given product day (or the UTC day it stores). */
+export function readGuestFinishedToday(productDay: string): string[] {
+	const today = getTodayDateString()
+	return loadGuestStore()
+		.games.filter((game) => game.date === today || game.date === productDay)
+		.map((game) => game.gameSlug)
+}
+
 /**
  * Hook for managing guest (non-logged-in) user game state
  * Stores game completions in localStorage for 7 days

@@ -214,6 +214,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 														key={card.id}
 														planId={card.id}
 														currency={card.currency}
+														amountMinor={card.amountMinor}
 														locale={locale}
 														signedIn={Boolean(user)}
 														subscribed={Boolean(access?.entitled)}

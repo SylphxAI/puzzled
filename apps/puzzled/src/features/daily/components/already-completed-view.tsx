@@ -51,6 +51,8 @@ type AlreadyCompletedViewProps = {
 	difficulty?: PuzzleDifficulty
 	/** Whether the game supports multiple difficulty levels */
 	supportsDifficulty?: boolean
+	/** Every level of today's daily is finished: say so under the result. */
+	allLevelsFinished?: boolean
 }
 
 /**
@@ -75,6 +77,7 @@ export function AlreadyCompletedView({
 	className,
 	difficulty,
 	supportsDifficulty = false,
+	allLevelsFinished = false,
 }: AlreadyCompletedViewProps) {
 	const t = useTranslations('daily')
 	const tCommon = useTranslations('common')
@@ -118,7 +121,7 @@ export function AlreadyCompletedView({
 
 	return (
 		<div className={cn('flex w-full max-w-md flex-col items-center gap-5', className)}>
-			<SaveStreakPrompt daily={puzzleDate === productDayKey()} />
+			<SaveStreakPrompt daily={puzzleDate === productDayKey()} gameSlug={gameSlug} />
 			{/* Victory/Result Header */}
 			<div
 				className={cn('flex flex-col items-center text-center', animate && 'animate-slide-up-fade')}
@@ -253,8 +256,12 @@ export function AlreadyCompletedView({
 				)}
 			>
 				<Share2 className="h-5 w-5" />
-				{tCommon('share')} Your Result
+				{tCommon('share')}
 			</Button>
+
+			{allLevelsFinished ? (
+				<p className="text-center text-sm text-muted-foreground">{t('allCompleteMessage')}</p>
+			) : null}
 
 			{/* Play Other Difficulties - For games with difficulty support */}
 			{supportsDifficulty && (

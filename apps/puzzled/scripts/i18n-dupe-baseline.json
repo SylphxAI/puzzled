@@ -84,7 +84,7 @@
 				"keys": ["archive.eyebrow", "modes.archive", "nav.archive"]
 			},
 			{
-				"value": "At least 8 characters",
+				"value": "At least {min} characters",
 				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
 			},
 			{
@@ -771,6 +771,10 @@
 			{
 				"value": "Save Changes",
 				"keys": ["admin.plans.saveChanges", "settings.profile.saveChanges"]
+			},
+			{
+				"value": "Save your streak",
+				"keys": ["catalog.gamePage.guestSignIn", "onboarding.saveStreak"]
 			},
 			{
 				"value": "Saving...",
@@ -1172,7 +1176,7 @@
 				"keys": ["archive.eyebrow", "modes.archive", "nav.archive"]
 			},
 			{
-				"value": "At least 8 characters",
+				"value": "At least {min} characters",
 				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
 			},
 			{
@@ -1859,6 +1863,10 @@
 			{
 				"value": "Save Changes",
 				"keys": ["admin.plans.saveChanges", "settings.profile.saveChanges"]
+			},
+			{
+				"value": "Save your streak",
+				"keys": ["catalog.gamePage.guestSignIn", "onboarding.saveStreak"]
 			},
 			{
 				"value": "Saving...",
@@ -3011,6 +3019,10 @@
 				"keys": ["footer.contact", "legal.privacy.sections.contact.title"]
 			},
 			{
+				"value": "至少 {min} 個字元",
+				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
+			},
+			{
 				"value": "良好",
 				"keys": [
 					"settings.overview.protectionLevels.good",
@@ -4054,6 +4066,10 @@
 			{
 				"value": "聯絡我們",
 				"keys": ["footer.contact", "legal.privacy.sections.contact.title"]
+			},
+			{
+				"value": "至少 {min} 個字元",
+				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
 			},
 			{
 				"value": "良好",
@@ -5173,6 +5189,10 @@
 					"stats.modules.winRate",
 					"stats.winRate"
 				]
+			},
+			{
+				"value": "至少 {min} 个字符",
+				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
 			},
 			{
 				"value": "良好",

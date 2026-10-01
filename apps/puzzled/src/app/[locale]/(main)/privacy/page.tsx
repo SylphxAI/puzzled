@@ -3,9 +3,12 @@ export const dynamic = 'force-dynamic'
 import { ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { ChangeCookieChoice } from '@/features/analytics/components/change-cookie-choice'
+import { googleTagIds } from '@/features/analytics/lib/google-tag'
 import { MarketingCta, MarketingHero } from '@/features/marketing/components'
 import { LegalDocument, type LegalSection } from '@/features/marketing/components/legal-document'
 import { PRIVACY_EMAIL } from '@/lib/config/app'
+import { env } from '@/lib/env'
 import { Link } from '@/lib/i18n/routing'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
 
@@ -43,6 +46,8 @@ export default async function PrivacyPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
+	const ids = googleTagIds(env)
+	const tagIds = [ids?.ga, ids?.ads].filter((id): id is string => Boolean(id))
 	const t = await getTranslations('legal.privacy')
 	const tTerms = await getTranslations('legal.terms')
 	// The revision is published data; without it the page shows no date at all.
@@ -99,6 +104,7 @@ export default async function PrivacyPage({ params }: Props) {
 				thirdPartyRow('Sylphx Money', t('sections.thirdParty.money')),
 				thirdPartyRow('Stripe', t('sections.thirdParty.stripe')),
 				thirdPartyRow('Google', t('sections.thirdParty.google')),
+				thirdPartyRow('Google Analytics, Google Ads', t('sections.thirdParty.googleMeasurement')),
 				thirdPartyRow('Sylphx Limited', t('sections.thirdParty.mail')),
 			],
 			after: [t('sections.thirdParty.others')],
@@ -116,7 +122,8 @@ export default async function PrivacyPage({ params }: Props) {
 		{
 			id: 'cookies',
 			title: t('sections.cookies.title'),
-			paragraphs: [t('sections.cookies.content')],
+			paragraphs: [t('sections.cookies.content'), t('sections.cookies.google')],
+			after: [<ChangeCookieChoice key="change-cookie-choice" tagIds={tagIds} />],
 		},
 		{
 			id: 'rights',

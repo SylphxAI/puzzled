@@ -1,7 +1,12 @@
 {
 	"title": "Analytics consent",
-	"message": "Puzzled uses privacy-friendly analytics to understand how the puzzles are played. Free players may also see a labelled ad on the archive and result screens, never during a puzzle. We never sell your data, and you can change this any time in Settings.",
+	"message": "We use Google Analytics to count plays; advertising cookies stay off unless you turn them on.",
 	"accept": "Accept",
 	"decline": "Decline",
-	"learnMore": "Privacy policy"
+	"learnMore": "Privacy policy",
+	"analyticsLabel": "Analytics cookies",
+	"analyticsHint": "Counts how puzzles are played.",
+	"marketingLabel": "Advertising cookies",
+	"marketingHint": "Lets us see if our Google ads lead to sign-ups. Off by default.",
+	"change": "Change cookie choice"
 }

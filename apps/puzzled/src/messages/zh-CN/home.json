@@ -77,17 +77,18 @@
 		"puzzleNumber": "第 {number} 题",
 		"resetsIn": "距离重置",
 		"resetsAt": "香港时间午夜",
-		"guestTitle": "每天十九款谜题，始终有一款免费。",
+		"guestTitle": "今天的{game}，免费玩",
 		"titleMemberReady": "今天的{game}已准备好",
 		"titleMemberStreak": "你的 {days} 天连胜在等你",
 		"titleMemberDone": "今天已完成 — 玩得漂亮",
-		"bodyGuest": "文字、逻辑和数字谜题，每天重置，有连续记录和公平的排行榜。无需注册即可玩。",
+		"bodyGuest": "Puzzled 每天提供一组文字、逻辑和数字谜题。每天一个免费，几分钟就能玩完，无需注册。",
 		"bodyMember": "你的连胜、统计和今日阵容，一点即到。",
 		"playToday": "玩今天的{game}",
 		"playAgain": "再玩一次",
 		"browseAll": "浏览所有游戏",
 		"finishersToday": "今天已有 {count} 人完成",
-		"freeToday": "今天免费"
+		"freeToday": "今天免费",
+		"guestNote": "无需注册，无需银行卡，几分钟玩完。"
 	},
 	"seasons": {
 		"newYear": "新年快乐",

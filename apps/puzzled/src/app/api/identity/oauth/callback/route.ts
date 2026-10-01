@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { signUpCookieHeader } from '@/lib/identity/after-sign-up'
 import { authConfig, safeNext } from '@/lib/identity/client-auth'
 import { completeSignIn } from '@/lib/identity/sign-in'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
@@ -18,8 +19,11 @@ export async function GET(request: Request) {
 		return NextResponse.redirect(`${origin}/login?error=oauth_failed`, 303)
 	}
 	try {
-		await completeSignIn(config, request, ticket)
-		return NextResponse.redirect(`${origin}${next}`, 303)
+		const { newAccount } = await completeSignIn(config, request, ticket)
+		const response = NextResponse.redirect(`${origin}${next}`, 303)
+		// Only Auth's own new-account answer sets the one-shot sign_up cookie.
+		if (newAccount) response.headers.append('set-cookie', signUpCookieHeader('oauth'))
+		return response
 	} catch {
 		return NextResponse.redirect(`${origin}/login?error=oauth_failed`, 303)
 	}

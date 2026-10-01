@@ -23,6 +23,22 @@ describe('content security policy', () => {
 		expect(directive(buildCsp('abc'), 'worker-src')).toBe("worker-src 'self'")
 	})
 
+	test('Google hosts are allowed only while the tag is configured', () => {
+		expect(buildCsp('abc')).not.toContain('google')
+		const connect = directive(buildCsp('abc', { googleTag: true }), 'connect-src')
+		expect(connect).toContain('https://www.googletagmanager.com')
+		expect(connect).toContain('https://*.google-analytics.com')
+		expect(connect).toContain('https://www.googleadservices.com')
+		expect(connect).toContain('https://pagead2.googlesyndication.com')
+		expect(directive(buildCsp('abc', { googleTag: true }), 'frame-src')).toContain(
+			'https://td.doubleclick.net',
+		)
+		expect(directive(buildCsp('abc'), 'frame-src')).not.toContain('doubleclick')
+		expect(directive(buildCsp('abc', { googleTag: true }), 'script-src')).toBe(
+			"script-src 'self' 'nonce-abc' 'strict-dynamic'",
+		)
+	})
+
 	test('every nonce is fresh, 16 random bytes', () => {
 		const nonce = createNonce()
 		expect(atob(nonce)).toHaveLength(16)

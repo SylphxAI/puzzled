@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
+import { googleTagIds } from '@/features/analytics/lib/google-tag'
 import { adsConfig } from '@/lib/ads'
 import { buildCsp, createNonce, NONCE_HEADER } from '@/lib/csp'
 import { env } from '@/lib/env'
@@ -89,6 +90,7 @@ export async function proxy(incoming: NextRequest) {
 	const csp = buildCsp(nonce, {
 		dev: process.env.NODE_ENV === 'development',
 		ads: adsConfig(env) !== null,
+		googleTag: googleTagIds(env) !== null,
 	})
 	const headers = new Headers(incoming.headers)
 	headers.set(NONCE_HEADER, nonce)

@@ -18,6 +18,7 @@ import {
 	DailyCompletionSchema,
 	type GetDailyResponse,
 	GetDailyResponseSchema,
+	GetTodayProgressResponseSchema,
 } from '@/gen/connect/puzzled/v1/puzzle_pb'
 import type { DailyStatus } from './daily'
 
@@ -101,7 +102,10 @@ function bodyText(body: RequestInit['body']): string {
 	return ''
 }
 
-function stubConnectFetch(response: GetDailyResponse) {
+function stubConnectFetch(
+	response: GetDailyResponse,
+	schema: typeof GetDailyResponseSchema = GetDailyResponseSchema,
+) {
 	globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
 		requests.push({
 			url: String(input),
@@ -109,7 +113,7 @@ function stubConnectFetch(response: GetDailyResponse) {
 			cookie: new Headers(init?.headers).get('cookie') ?? '',
 			userAgent: new Headers(init?.headers).get('user-agent'),
 		})
-		return new Response(JSON.stringify(toJson(GetDailyResponseSchema, response)), {
+		return new Response(JSON.stringify(toJson(schema, response)), {
 			status: 200,
 			headers: { 'content-type': 'application/json' },
 		})
@@ -120,24 +124,57 @@ const { getServerDailyStatus, getServerPersonalDailyResults, getServerTodaysPuzz
 	'@/lib/api/server'
 )
 
-describe('home page personal results: GetDaily as the home page calls it', () => {
+describe('home page personal results: one GetTodayProgress call', () => {
 	const gameSlugs = ['sudoku', 'word-guess', 'nonogram']
+	const progress = () =>
+		create(GetTodayProgressResponseSchema, {
+			dayKey: '2026-09-21',
+			games: [
+				{
+					gameSlug: 'sudoku',
+					hasCompleted: true,
+					completedSession: create(DailyCompletionSchema, { status: 'won', score: 90 }),
+				},
+				{ gameSlug: 'word-guess', hasCompleted: false },
+				{ gameSlug: 'nonogram', hasCompleted: false },
+			],
+		})
+	const stubProgress = () =>
+		stubConnectFetch(progress() as never, GetTodayProgressResponseSchema as never)
 
-	test('one GetDaily per game, each naming its game, with the browser User-Agent', async () => {
-		stubConnectFetch(fixture())
-		const out = await getServerPersonalDailyResults({ gameSlugs, isGuest: true })
+	test('one request for every game, no client day, with the browser User-Agent', async () => {
+		stubProgress()
+		const out = await getServerPersonalDailyResults({ gameSlugs })
+		expect(requests.length).toBe(1)
+		expect(requests[0].url.endsWith('/puzzled.v1.PuzzleService/GetTodayProgress')).toBe(true)
+		expect(JSON.parse(requests[0].body)).toEqual({ gameSlugs })
+		expect(requests[0].userAgent).toBe('test-browser')
 		expect(Object.keys(out).sort()).toEqual([...gameSlugs].sort())
 		expect(Object.values(out).every((r) => r.statusAvailable)).toBe(true)
-		expect(requests.map((r) => JSON.parse(r.body).gameSlug).sort()).toEqual([...gameSlugs].sort())
-		expect(requests.every((r) => r.userAgent === 'test-browser')).toBe(true)
+		expect(out.sudoku.hasCompleted).toBe(true)
+		expect(out.sudoku.completedSession?.score).toBe(90)
+		expect(out['word-guess'].hasCompleted).toBe(false)
+	})
+
+	test('a failed read marks every status unavailable, never finished', async () => {
+		globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
+			requests.push({ url: String(input), body: bodyText(init?.body), cookie: '', userAgent: null })
+			return new Response('{"code":"internal","message":"x"}', {
+				status: 500,
+				headers: { 'content-type': 'application/json' },
+			})
+		}) as typeof fetch
+		const out = await getServerPersonalDailyResults({ gameSlugs })
+		expect(requests.length).toBe(2) // one retry
+		expect(Object.values(out).every((r) => !r.statusAvailable && !r.hasCompleted)).toBe(true)
 	})
 
 	test('a platform probe rendering the page does not pass its User-Agent to the api', async () => {
 		// Knative's queue-proxy answers any kube-probe/ request itself with a 400.
 		pageUserAgent = 'kube-probe/1.33'
-		stubConnectFetch(fixture())
-		await getServerPersonalDailyResults({ gameSlugs, isGuest: true })
-		expect(requests.length).toBe(gameSlugs.length)
+		stubProgress()
+		await getServerPersonalDailyResults({ gameSlugs })
+		expect(requests.length).toBe(1)
 		expect(requests.some((r) => /kube-probe/i.test(r.userAgent ?? ''))).toBe(false)
 	})
 })

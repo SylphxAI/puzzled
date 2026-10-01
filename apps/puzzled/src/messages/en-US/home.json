@@ -77,17 +77,18 @@
 		"puzzleNumber": "Puzzle #{number}",
 		"resetsIn": "Resets in",
 		"resetsAt": "midnight in Hong Kong",
-		"guestTitle": "Nineteen daily puzzles. One always free.",
+		"guestTitle": "Play today's {game}, free",
 		"titleMemberReady": "Today's {game} is ready",
 		"titleMemberStreak": "Your {days}-day streak is waiting",
 		"titleMemberDone": "All done for today — nicely played",
-		"bodyGuest": "Word, logic and number puzzles that reset every day, with streaks and a fair leaderboard. No signup to play.",
+		"bodyGuest": "Puzzled is a daily set of word, logic and number puzzles. One is free every day, takes a few minutes, and needs no signup.",
 		"bodyMember": "Your streak, your stats and today's lineup are one tap away.",
 		"playToday": "Play today's {game}",
 		"playAgain": "Play today again",
 		"browseAll": "Browse all games",
 		"finishersToday": "{count} finished today so far",
-		"freeToday": "Free today"
+		"freeToday": "Free today",
+		"guestNote": "No signup, no card. Done in a few minutes."
 	},
 	"seasons": {
 		"newYear": "Happy New Year",

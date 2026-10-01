@@ -158,16 +158,13 @@ export async function GamePageHero({
 								<Play className="h-4 w-4" fill="currentColor" aria-hidden="true" />
 								{t('gamePage.playCta')}
 							</a>
-							{freeToday ? (
-								<p className="text-sm text-[#1a1712]/75">{t('gamePage.freeNote')}</p>
-							) : null}
 						</div>
 
 						{isGuest && (
 							<p className="mt-3 text-sm text-[#1a1712]/75">
 								{t('gamePage.guestNote')}{' '}
 								<Link
-									href={`/login?callbackUrl=/games/${slug}`}
+									href={{ pathname: '/signup', query: { callbackUrl: `/games/${slug}` } }}
 									className="font-semibold text-[#1a1712] underline underline-offset-4"
 								>
 									{t('gamePage.guestSignIn')}
