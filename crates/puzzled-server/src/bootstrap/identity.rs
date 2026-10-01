@@ -14,10 +14,9 @@ use crate::capabilities::identity_access::adapters::platform_jwt::{
     extract_bearer, verify_platform_jwt, VerifiedIdentity,
 };
 
-/// Request header for client-stable guest day id (UUID).
+/// Legacy header exercised by denial tests; it supplies no authority.
+#[cfg(test)]
 pub const GUEST_ID_HEADER: &str = "x-puzzled-guest-id";
-/// Cookie name for the same guest id (browser same-origin).
-pub const GUEST_ID_COOKIE: &str = "puzzled_guest_id";
 
 /// Extract the Platform session JWT from the Cookie header, if present.
 fn extract_session_cookie_jwt(headers: &axum::http::HeaderMap) -> Option<String> {
@@ -92,7 +91,8 @@ impl RequestIdentities {
         self.platform.as_ref().or(self.guest.as_ref())
     }
 
-    /// Account/guest pair that must be merged. None when adoption is a no-op.
+    /// Account/guest pair inspected by identity precedence tests.
+    #[cfg(test)]
     #[must_use]
     pub fn adoption_pair(&self) -> Option<(&str, &str)> {
         match (&self.platform, &self.guest) {
