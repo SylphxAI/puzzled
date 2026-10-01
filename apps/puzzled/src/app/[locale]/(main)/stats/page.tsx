@@ -95,7 +95,6 @@ export default async function StatsPage({ params }: Props) {
 		hasProgressIdentity ? getServerStreakInfo() : Promise.resolve(null as StreakInfo | null),
 		getServerPersonalDailyResults({
 			gameSlugs: modules.map((module) => module.slug),
-			isGuest: !user,
 		}),
 	])
 

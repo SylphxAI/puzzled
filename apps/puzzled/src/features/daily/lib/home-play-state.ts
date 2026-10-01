@@ -38,7 +38,11 @@ export type HomeGamePlayState = {
 
 export type HomePlayState = {
 	games: HomeGamePlayState[]
-	/** True when at least one module's completion state is unknown. */
+	/**
+	 * True when today's FREE module's completion state is unknown. Only that
+	 * module gates the "could not load" notice; another module being unread
+	 * must not alarm a player who can finish the free puzzle.
+	 */
 	hasUnverifiedStatus: boolean
 }
 
@@ -60,7 +64,7 @@ export function deriveHomePlayState(input: HomePlayStateInput): HomePlayState {
 
 	return {
 		games,
-		hasUnverifiedStatus: games.some((game) => game.statusUnknown),
+		hasUnverifiedStatus: games.some((game) => game.isFreeToday && game.statusUnknown),
 	}
 }
 
