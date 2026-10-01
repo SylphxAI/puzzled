@@ -12,7 +12,7 @@ use connectrpc::{
 use sqlx::PgPool;
 use tracing::warn;
 
-use super::identity::require_identity;
+use super::identity::{require_identity, require_purchase_allowed};
 use super::state::AppState;
 use crate::capabilities::billing::adapters::billing_db::{self, JoinRefused};
 use crate::capabilities::billing::service;
@@ -327,6 +327,7 @@ impl BillingService for BillingConnectService {
         request: ServiceRequest<'_, CreateCheckoutRequest>,
     ) -> ServiceResult<CreateCheckoutResponse> {
         let identity = Self::account(&ctx)?;
+        require_purchase_allowed(&identity)?;
         let req = request.to_owned_message();
         let landing = ctx
             .headers()
@@ -365,6 +366,7 @@ impl BillingService for BillingConnectService {
         request: ServiceRequest<'_, CreatePortalRequest>,
     ) -> ServiceResult<CreatePortalResponse> {
         let identity = Self::account(&ctx)?;
+        require_purchase_allowed(&identity)?;
         let (_, money) = self.store()?;
         let req = request.to_owned_message();
         let subs = money
@@ -426,6 +428,7 @@ impl BillingService for BillingConnectService {
         _request: ServiceRequest<'_, ResumeSubscriptionRequest>,
     ) -> ServiceResult<ResumeSubscriptionResponse> {
         let identity = Self::account(&ctx)?;
+        require_purchase_allowed(&identity)?;
         let (_, money) = self.store()?;
         let subs = money
             .subscriptions(&identity.user_id)

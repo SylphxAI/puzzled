@@ -146,6 +146,7 @@ async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
         display_name: None,
         email: None,
         is_admin: true,
+        actor: None,
     })
     .unwrap();
     let (status, _) = subscription(
