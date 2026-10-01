@@ -1,7 +1,12 @@
 {
 	"title": "Analytics consent",
-	"message": "We use privacy-friendly analytics to see how puzzles are played, and never sell your data.",
+	"message": "We use privacy-friendly analytics; advertising cookies stay off unless you turn them on in Settings.",
 	"accept": "Accept",
 	"decline": "Decline",
-	"learnMore": "Privacy policy"
+	"learnMore": "Privacy policy",
+	"analyticsLabel": "Analytics cookies",
+	"analyticsHint": "Counts how puzzles are played.",
+	"marketingLabel": "Advertising cookies",
+	"marketingHint": "Lets us see if our Google ads lead to sign-ups. Off by default.",
+	"change": "Change cookie choice"
 }

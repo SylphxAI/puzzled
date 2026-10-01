@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { ChangeCookieChoice } from '@/features/analytics/components/change-cookie-choice'
 import { MarketingCta, MarketingHero } from '@/features/marketing/components'
 import { LegalDocument, type LegalSection } from '@/features/marketing/components/legal-document'
 import { PRIVACY_EMAIL } from '@/lib/config/app'
@@ -99,6 +100,7 @@ export default async function PrivacyPage({ params }: Props) {
 				thirdPartyRow('Sylphx Money', t('sections.thirdParty.money')),
 				thirdPartyRow('Stripe', t('sections.thirdParty.stripe')),
 				thirdPartyRow('Google', t('sections.thirdParty.google')),
+				thirdPartyRow('Google Analytics, Google Ads', t('sections.thirdParty.googleMeasurement')),
 				thirdPartyRow('Sylphx Limited', t('sections.thirdParty.mail')),
 			],
 			after: [t('sections.thirdParty.others')],
@@ -116,7 +118,8 @@ export default async function PrivacyPage({ params }: Props) {
 		{
 			id: 'cookies',
 			title: t('sections.cookies.title'),
-			paragraphs: [t('sections.cookies.content')],
+			paragraphs: [t('sections.cookies.content'), t('sections.cookies.google')],
+			after: [<ChangeCookieChoice key="change-cookie-choice" />],
 		},
 		{
 			id: 'rights',

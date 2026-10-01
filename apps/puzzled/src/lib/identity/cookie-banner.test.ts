@@ -20,11 +20,47 @@ const html = renderToStaticMarkup(
 )
 
 describe('CookieBanner (mobile compact)', () => {
-	test('offers Accept and Decline with identical styling, nothing pre-selected', () => {
+	test('offers Decline, Settings and Accept with identical styling, nothing pre-selected', () => {
 		const buttons = [...html.matchAll(/<button[^>]*class="([^"]*)"[^>]*>([^<]*)<\/button>/g)]
-		expect(buttons.map((b) => b[2])).toEqual(['Decline', 'Accept'])
-		expect(buttons[0]?.[1]).toBe(buttons[1]?.[1] as string)
+		expect(buttons.map((b) => b[2])).toEqual(['Decline', 'Settings', 'Accept'])
+		expect(new Set(buttons.map((b) => b[1])).size).toBe(1)
 		expect(html).not.toMatch(/checked|aria-pressed="true"/)
+	})
+
+	test('advertising is its own choice: Accept never includes it', async () => {
+		const source = await Bun.file(new URL('./react.tsx', import.meta.url)).text()
+		expect(source).toContain('save({ analytics: true, marketing: false })')
+		expect(source).toContain('save({ analytics: false, marketing: false })')
+		expect(source).toContain('save({ analytics, marketing })')
+		expect(source).toContain('useState(false)')
+	})
+
+	test('every shipped locale has the copy, and it stays short enough for a phone', () => {
+		const keys = [
+			'message',
+			'accept',
+			'decline',
+			'analyticsLabel',
+			'analyticsHint',
+			'marketingLabel',
+			'marketingHint',
+			'change',
+		]
+		for (const locale of ['en-US', 'en-GB', 'zh-HK', 'zh-CN', 'zh-TW'] as const) {
+			const consent = (resolveLocale(locale) as unknown as Record<string, Record<string, string>>)
+				.consent
+			for (const key of keys) expect(typeof consent?.[key]).toBe('string')
+			const common = (resolveLocale(locale) as unknown as Record<string, Record<string, string>>)
+				.common
+			for (const key of ['settings', 'save', 'back']) expect(typeof common?.[key]).toBe('string')
+			for (const key of ['accept', 'decline'])
+				expect(consent?.[key]?.length).toBeLessThanOrEqual(12)
+			for (const key of ['settings', 'save', 'back'])
+				expect(common?.[key]?.length).toBeLessThanOrEqual(12)
+			for (const key of ['analyticsHint', 'marketingHint']) {
+				expect(consent?.[key]?.length).toBeLessThanOrEqual(locale.startsWith('en') ? 80 : 40)
+			}
+		}
 	})
 
 	test('links to the privacy policy and keeps the stable hide hook', () => {

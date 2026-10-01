@@ -2,7 +2,12 @@
 
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
-import { SIGNED_UP_PARAM } from '@/lib/identity/after-sign-up'
+import { trackSignUp } from '@/features/analytics/lib/google-tag'
+import {
+	SIGNED_UP_PARAM,
+	SIGNUP_METHOD_PARAM,
+	signUpMethodFrom,
+} from '@/lib/identity/after-sign-up'
 
 /**
  * A calm, one-time confirmation after creating an account. The sign-up flow
@@ -15,10 +20,15 @@ export function AccountSavedNote() {
 
 	useEffect(() => {
 		const url = new URL(window.location.href)
-		if (url.searchParams.get(SIGNED_UP_PARAM) !== '1') return
+		// The server adds the method only for an account Auth just created.
+		const method = signUpMethodFrom(url.searchParams.get(SIGNUP_METHOD_PARAM))
+		const saved = url.searchParams.get(SIGNED_UP_PARAM) === '1'
+		if (!saved && !method) return
 		url.searchParams.delete(SIGNED_UP_PARAM)
+		url.searchParams.delete(SIGNUP_METHOD_PARAM)
 		window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash)
-		setVisible(true)
+		if (method) trackSignUp(method)
+		if (saved) setVisible(true)
 	}, [])
 
 	if (!visible) return null

@@ -38,7 +38,8 @@ export function cleanClickId(value: string | null): string | null {
 }
 
 function clean(value: string | null): string | null {
-	if (!value) return null
+	// An '@' means the value is probably an email address; never keep one.
+	if (!value || value.includes('@')) return null
 	const cleaned = [...value]
 		.filter((char) => char.charCodeAt(0) > 0x1f && char.charCodeAt(0) !== 0x7f)
 		.join('')

@@ -37,8 +37,8 @@ export async function POST(request: Request) {
 	}
 	try {
 		const ticket = await passwordTicket(config, { email, password, userAgent })
-		await completeSignIn(config, request, ticket)
-		return NextResponse.json({ signedIn: true })
+		const { newAccount } = await completeSignIn(config, request, ticket)
+		return NextResponse.json({ signedIn: true, newAccount })
 	} catch {
 		return NextResponse.json({ signedIn: false })
 	}

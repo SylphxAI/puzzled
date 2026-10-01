@@ -2,7 +2,7 @@
 	"privacy": {
 		"title": "Privacy Policy",
 		"lastUpdated": "Last Updated",
-		"revision": "2026-09-29",
+		"revision": "2026-10-01",
 		"eyebrow": "Legal",
 		"lead": "This policy explains what data Puzzled collects, why it is collected, and how to contact us about it.",
 		"toc": {
@@ -31,7 +31,7 @@
 					"payment": "Payment information: Sylphx Money, the payments service of Sylphx Limited, and its payment processor Stripe collect your card details; we receive your subscription status, amounts, dates and payment references",
 					"technical": "Technical data: IP address, browser type, and device information",
 					"errors": "Error reports: when a page or our server fails, we record the error message, stack trace and page path (never the query string, email addresses or anything you typed) in our own error-monitoring service, to find and fix the fault",
-					"referral": "Referral tags: if you arrive through a link that carries campaign tags (utm_ parameters or a referral id, for example from another Sylphx product), and you have accepted analytics cookies, we keep those tags for 30 days in a first-party cookie and store them with your account and subscription if you sign up or subscribe. We use them to know which link brought you, and we do not sell them."
+					"referral": "Referral and ad tags: if you arrive through a link that carries campaign tags (utm_ parameters or a referral id, for example from another Sylphx product), and you have accepted analytics cookies, we keep those tags for 30 days in a first-party cookie. If you arrive from a Google ad and have turned on advertising cookies, we also keep the ad click id for 90 days in the same cookie. We store them with your account and subscription if you sign up or subscribe, to know which link or ad brought you, and we do not sell them."
 				}
 			},
 			"dataUse": {
@@ -41,7 +41,7 @@
 					"service": "To provide Puzzled, your account, Puzzled Plus and the family plan, and to answer your requests: performance of our contract with you",
 					"improve": "To keep Puzzled secure, prevent cheating, abuse and fraud, fix faults, and understand and improve our games: our legitimate interests in running a safe, working and improving service",
 					"communicate": "To send you messages about your account, subscription and changes to Puzzled: our contract with you and our legitimate interests",
-					"analytics": "To measure how Puzzled is played and which links bring players, using analytics and the referral cookie: your consent, which you can withdraw at any time in Settings",
+					"analytics": "To measure how Puzzled is played, which links and ads bring players, and whether they sign up or subscribe, using analytics, advertising measurement and the referral cookie: your consent (analytics and advertising are separate choices), which you can withdraw at any time with Change cookie choice in the Cookies section",
 					"legal": "To keep tax and accounting records, respond to lawful requests, and establish, exercise or defend legal claims: our legal obligations and our legitimate interests",
 					"noSale": "We do not sell your personal data. Players without Puzzled Plus may see advertising on the archive and result screens (never during a puzzle), served by Google AdSense; the ad is shown, and advertising cookies are set, only if you accepted cookies."
 				}
@@ -57,7 +57,8 @@
 				"stripe": "Payment processing",
 				"google": "Authentication",
 				"mail": "Email delivery (sign-in and verification mail)",
-				"others": "We may also share data with our hosting providers, professional advisers, authorities where the law requires it, and a buyer or successor if our business or Puzzled is sold or reorganized."
+				"others": "We may also share data with our hosting providers, professional advisers, authorities where the law requires it, and a buyer or successor if our business or Puzzled is sold or reorganized.",
+				"googleMeasurement": "Analytics and advertising measurement (only after you consent)"
 			},
 			"transfers": {
 				"title": "International transfers",
@@ -69,7 +70,8 @@
 			},
 			"cookies": {
 				"title": "Cookies",
-				"content": "We use cookies that are strictly necessary to sign you in, keep Puzzled secure and remember your settings. We use analytics and the referral cookie only if you accept them, and you can change your choice at any time in Settings."
+				"content": "We use cookies that are strictly necessary to sign you in, keep Puzzled secure and remember your settings. We use analytics and the referral cookie only if you accept analytics, and advertising measurement only if you separately turn on advertising in Settings; nothing is pre-selected and declining costs you nothing.",
+				"google": "If Google Analytics or Google Ads is switched on for this site, it loads only after you have said yes: Google Analytics for analytics, and Google Ads to measure whether an ad led to a sign-up or a purchase, with the plan and price but no name or email. We turn off ad personalisation and Google signals, and send Google only public page addresses. You can withdraw at any time with the button below, which also deletes the Google cookies."
 			},
 			"rights": {
 				"title": "Your Rights",

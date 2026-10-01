@@ -35,6 +35,10 @@ form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   adds the ad network's hosts to `frame-src` and `connect-src` (`AD_CSP_HOSTS` in `src/lib/ads.ts`).
   `script-src` does not change: our nonced code inserts the loader, which `'strict-dynamic'` trusts.
   Unconfigured, the policy is exactly the one above.
+- **Google tag (only when configured).** With `GA_MEASUREMENT_ID` or `GOOGLE_ADS_ID` set, `buildCsp`
+  adds Google's collection hosts to `connect-src` (`GOOGLE_TAG_CONNECT_HOSTS`). `script-src` does not
+  change: the consent-gated loader in `src/features/analytics` inserts gtag.js, which `'strict-dynamic'`
+  trusts. Unconfigured, nothing Google is allowed.
 - **No other third-party scripts.** Checkout is a redirect to a hosted checkout page, and
   analytics and replays are gone, so Stripe, PostHog, Vercel, GTM, Neon and
   Cloudflare hosts are no longer listed.

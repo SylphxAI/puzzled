@@ -68,9 +68,13 @@ fn percent_decode(raw: &str) -> Option<String> {
     String::from_utf8(out).ok()
 }
 
-/// Trim, drop control characters, and cap the length; empty becomes None.
+/// Trim, drop control characters, and cap the length; empty becomes None. A
+/// value containing `@` is dropped whole: it is probably an email address.
 #[must_use]
 pub fn clean_value(raw: &str) -> Option<String> {
+    if raw.contains('@') {
+        return None;
+    }
     let cleaned: String = raw
         .trim()
         .chars()
@@ -308,5 +312,12 @@ mod tests {
         assert_eq!(found.source.map(|s| s.len()), Some(100));
         assert_eq!(found.landing_path, None);
         assert_eq!(from_cookie_header("other=1"), None);
+    }
+
+    #[test]
+    fn a_value_that_looks_like_an_email_address_is_dropped() {
+        assert_eq!(clean_value("someone@example.com"), None);
+        assert_eq!(Attribution::from_cookie("s=a%40b.example"), None);
+        assert_eq!(clean_value("spring-sale"), Some("spring-sale".to_string()));
     }
 }

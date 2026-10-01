@@ -31,3 +31,40 @@ export function afterSignUpDestination(callbackUrl: string | null | undefined): 
 	const hash = hashAt === -1 ? '' : path.slice(hashAt)
 	return `${base}${base.includes('?') ? '&' : '?'}${SIGNED_UP_PARAM}=1${hash}`
 }
+
+/**
+ * One-shot marker the server adds to the landing address when Auth says the
+ * account was just created. It carries the sign-in method for the `sign_up`
+ * conversion; the landing reads it once and removes it.
+ */
+export const SIGNUP_METHOD_PARAM = 'signupVia'
+
+const SIGNUP_METHODS = ['email', 'oauth'] as const
+export type SignUpMethod = (typeof SIGNUP_METHODS)[number]
+
+/** The method named by a marker value, or null for anything else. */
+export function signUpMethodFrom(value: string | null | undefined): SignUpMethod | null {
+	return SIGNUP_METHODS.find((method) => method === value) ?? null
+}
+
+/** `path` with the new-account marker added (a marker already in it is replaced). */
+export function withNewAccountMarker(path: string, method: SignUpMethod): string {
+	const safe = safeCallbackPath(path) ?? '/'
+	const hashAt = safe.indexOf('#')
+	const hash = hashAt === -1 ? '' : safe.slice(hashAt)
+	const [base = '/', query = ''] = (hashAt === -1 ? safe : safe.slice(0, hashAt)).split('?')
+	const params = new URLSearchParams(query)
+	params.set(SIGNUP_METHOD_PARAM, method)
+	return `${base}?${params.toString()}${hash}`
+}
+
+/** `path` without any new-account marker, so a forged or stale one is never forwarded. */
+export function withoutNewAccountMarker(path: string): string {
+	const hashAt = path.indexOf('#')
+	const hash = hashAt === -1 ? '' : path.slice(hashAt)
+	const [base = '/', query = ''] = (hashAt === -1 ? path : path.slice(0, hashAt)).split('?')
+	const params = new URLSearchParams(query)
+	params.delete(SIGNUP_METHOD_PARAM)
+	const rest = params.toString()
+	return `${base}${rest ? `?${rest}` : ''}${hash}`
+}

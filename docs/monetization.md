@@ -158,6 +158,25 @@ never for a Puzzled Plus subscriber ("no ads" is a Plus perk). The ad loads only
 after the visitor accepts cookies. The site's Content Security Policy allows the
 ad network's hosts only while ads are configured.
 
+### Google Analytics and Ads conversions
+
+Off until `GA_MEASUREMENT_ID` (GA4, `G-...`) or `GOOGLE_ADS_ID` (`AW-...`) is set in
+the web environment; with neither, no Google script, request or CSP host exists.
+The cookie banner has three equal choices: Decline, Settings (separate Analytics and
+Advertising switches, both off) and Accept (analytics only, never advertising). gtag.js is
+injected, and `config` sent, only after a stored choice grants something: GA4 needs
+Analytics, Ads needs Advertising (`ad_storage`, `ad_user_data`); `ad_personalization`
+is always denied and Google signals are off. Basic consent mode: unanswered or declined
+loads nothing. There is no geo signal, so the denied defaults apply everywhere.
+Google sees only the site origin plus public paths (`/`, `/pricing`, `/privacy`, `/terms`,
+`/support`, `/login`, `/signup`), a fixed title and no referrer; game, share and account
+addresses never reach it. Turn **enhanced measurement** and **Google signals** off in the
+GA4 property. Events: `sign_up` (new account only, from Auth's new-account answer),
+`trial_start` (value = the plan's post-trial price in the checkout currency, plan as item id)
+and `purchase` on the checkout return, each once per Money checkout session (`s`); mark them as
+Ads conversions. "Change cookie choice" on the privacy page withdraws consent, deletes
+`_ga*` and `_gcl_*`, and reopens the banner.
+
 ## 7. Metrics (supporting, not the North Star)
 
 See [metrics.md](metrics.md): paid conversion among players with

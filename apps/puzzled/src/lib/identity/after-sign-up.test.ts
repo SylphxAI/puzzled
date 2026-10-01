@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'bun:test'
-import { afterSignUpDestination, safeCallbackPath } from './after-sign-up'
+import {
+	afterSignUpDestination,
+	safeCallbackPath,
+	signUpMethodFrom,
+	withNewAccountMarker,
+	withoutNewAccountMarker,
+} from './after-sign-up'
 
 describe('safeCallbackPath', () => {
 	test('accepts same-origin relative paths', () => {
@@ -36,5 +42,27 @@ describe('afterSignUpDestination', () => {
 	test('falls back to home for a missing or unsafe callback', () => {
 		expect(afterSignUpDestination(null)).toBe('/?signedUp=1')
 		expect(afterSignUpDestination('//evil.example')).toBe('/?signedUp=1')
+	})
+})
+
+describe('new-account marker', () => {
+	test('adds the method once, keeping query and hash', () => {
+		expect(withNewAccountMarker('/', 'oauth')).toBe('/?signupVia=oauth')
+		expect(withNewAccountMarker('/games/x?d=1&signupVia=email#top', 'oauth')).toBe(
+			'/games/x?d=1&signupVia=oauth#top',
+		)
+	})
+
+	test('a forged marker is stripped', () => {
+		expect(withoutNewAccountMarker('/a?signupVia=email')).toBe('/a')
+		expect(withoutNewAccountMarker('/a?x=1&signupVia=email#h')).toBe('/a?x=1#h')
+		expect(withoutNewAccountMarker('/a?x=1')).toBe('/a?x=1')
+	})
+
+	test('only known methods are read', () => {
+		expect(signUpMethodFrom('email')).toBe('email')
+		expect(signUpMethodFrom('oauth')).toBe('oauth')
+		expect(signUpMethodFrom('a@b.example')).toBeNull()
+		expect(signUpMethodFrom(null)).toBeNull()
 	})
 })

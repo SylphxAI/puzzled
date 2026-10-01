@@ -74,6 +74,18 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		required: false,
 		description: 'AdSense ad unit id for the archive and result slots',
 	},
+	// Google tag (off until set; nothing loads without an id)
+	{
+		name: 'GA_MEASUREMENT_ID',
+		required: false,
+		description:
+			'GA4 measurement id (G-...); the Google tag stays off until this or GOOGLE_ADS_ID is set',
+	},
+	{
+		name: 'GOOGLE_ADS_ID',
+		required: false,
+		description: 'Google Ads tag id (AW-...) for conversion events, shared across Sylphx products',
+	},
 	// Deployment / dev host facts
 	{
 		name: 'SYLPHX_PUBLIC_URL',
@@ -271,6 +283,14 @@ export const env = {
 		return process.env.ADS_ADSENSE_CLIENT_ID
 	},
 	/** AdSense ad unit id */
+	/** GA4 measurement id (G-...) */
+	get GA_MEASUREMENT_ID(): string | undefined {
+		return process.env.GA_MEASUREMENT_ID
+	},
+	/** Google Ads tag id (AW-...) */
+	get GOOGLE_ADS_ID(): string | undefined {
+		return process.env.GOOGLE_ADS_ID
+	},
 	get ADS_SLOT_ID(): string | undefined {
 		return process.env.ADS_SLOT_ID
 	},

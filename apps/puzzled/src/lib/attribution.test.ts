@@ -127,4 +127,11 @@ describe('ad click id capture', () => {
 		expect(attributionCookieString(encodeURIComponent('s=abc'), true)).toContain('Max-Age=2592000')
 		expect(attributionCookieString(encodeURIComponent('g=abc'), true)).not.toContain('Domain')
 	})
+
+	test('a tag value that looks like an email address is dropped', () => {
+		expect(attributionCookieValue('?utm_source=someone@example.com', '/', 1)).toBeNull()
+		expect(
+			decodeURIComponent(attributionCookieValue('?utm_source=spring&utm_term=a@b.c', '/', 1) ?? ''),
+		).toContain('s=spring')
+	})
 })
