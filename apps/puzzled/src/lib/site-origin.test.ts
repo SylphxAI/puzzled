@@ -222,3 +222,34 @@ describe('site origin request-validation mode', () => {
 		expect(resolveSiteOrigin(input)).toBe('https://puzzled.gg')
 	})
 })
+
+describe('strict bracketed request authority', () => {
+	test('production configured origin does not excuse a malformed request host', () => {
+		const input = {
+			configuredUrl: 'https://puzzled.gg',
+			host: '[::1]garbage',
+			nodeEnv: 'production',
+		}
+		expect(resolveSiteOrigin(input, 'request')).toBeNull()
+		expect(resolveSiteOrigin(input)).toBe('https://puzzled.gg')
+	})
+
+	test('development forwarded IPv6 authority retains every suffix byte', () => {
+		for (const forwardedHost of ['[::1]garbage', '[::1', '[::1]]', '[::1]:3000junk', '[::1]:']) {
+			expect(
+				resolveSiteOrigin(
+					{ forwardedHost, forwardedProto: 'http', nodeEnv: 'development' },
+					'request',
+				),
+			).toBeNull()
+		}
+		for (const forwardedHost of ['[::1]', '[::1]:3000']) {
+			expect(
+				resolveSiteOrigin(
+					{ forwardedHost, forwardedProto: 'http', nodeEnv: 'development' },
+					'request',
+				),
+			).toBe(`http://${forwardedHost}`)
+		}
+	})
+})

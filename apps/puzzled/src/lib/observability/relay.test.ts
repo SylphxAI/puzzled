@@ -156,3 +156,30 @@ describe('relay canonical request authority', () => {
 		expect(captureSpy).toHaveBeenCalledTimes(1)
 	})
 })
+
+describe('bracketed authority is rejected before capture', () => {
+	test('production configured origin with malformed Host refuses a valid report', async () => {
+		process.env.SYLPHX_PUBLIC_URL = 'https://puzzled.gg'
+		await denied(post({ host: '[::1]garbage' }))
+		expect(captureSpy).toHaveBeenCalledTimes(0)
+	})
+
+	test('development malformed forwarded IPv6 host refuses a valid report', async () => {
+		Object.assign(process.env, { NODE_ENV: 'development' })
+		try {
+			await denied(
+				post(
+					{
+						host: 'localhost:3000',
+						'x-forwarded-host': '[::1]garbage',
+						'x-forwarded-proto': 'http',
+					},
+					'http://[::1]',
+				),
+			)
+			expect(captureSpy).toHaveBeenCalledTimes(0)
+		} finally {
+			Object.assign(process.env, { NODE_ENV: 'production' })
+		}
+	})
+})

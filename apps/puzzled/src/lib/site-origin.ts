@@ -75,6 +75,13 @@ function isValidRequestHost(host: string, strict = false): boolean {
 	if (hostname.length === 0) return false
 	if (port !== null && !/^\d{1,5}$/.test(port)) return false
 	if (strict) {
+		// The lenient SEO splitter may discard a bracket suffix; request authority may not.
+		if (host.startsWith('[')) {
+			const end = host.indexOf(']')
+			if (end < 0 || (end + 1 < host.length && !/^:\d{1,5}$/.test(host.slice(end + 1)))) {
+				return false
+			}
+		}
 		if (port !== null && (Number(port) < 1 || Number(port) > 65535)) return false
 		if (
 			!isLoopbackHostname(hostname) &&
