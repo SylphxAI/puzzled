@@ -54,6 +54,9 @@ pub struct AuthSessions {
     auth_url: String,
     /// Puzzled's own Auth instance; empty means no session is accepted.
     organization_id: String,
+    /// The product's publishable key (scope auth:public), sent as `x-sylphx-caller-key`; empty
+    /// means no session is verified (fail closed).
+    caller_key: String,
     cache: Arc<Mutex<Cache>>,
     /// Where the Auth subject to player map lives ([`super::auth_subjects`]).
     pool: Option<PgPool>,
@@ -61,7 +64,7 @@ pub struct AuthSessions {
 
 impl AuthSessions {
     #[must_use]
-    pub fn new(auth_url: String, organization_id: String) -> Self {
+    pub fn new(auth_url: String, organization_id: String, caller_key: String) -> Self {
         Self {
             http: reqwest::Client::builder()
                 .timeout(Duration::from_secs(5))
@@ -69,6 +72,7 @@ impl AuthSessions {
                 .unwrap_or_default(),
             auth_url: auth_url.trim_end_matches('/').to_string(),
             organization_id: organization_id.trim().to_string(),
+            caller_key: caller_key.trim().to_string(),
             cache: Arc::new(Mutex::new(HashMap::new())),
             pool: None,
         }
@@ -96,7 +100,13 @@ impl AuthSessions {
             tracing::warn!("SYLPHX_AUTH_ORGANIZATION_ID is unset: no Auth session is accepted");
             String::new()
         });
-        Self::new(url, organization_id)
+        // Read once here; never logged. TODO: switch to the identity SDK's
+        // `callerKey` option once cloud#11034 publishes.
+        let caller_key = read("SYLPHX_PUBLISHABLE_KEY").unwrap_or_else(|| {
+            tracing::warn!("SYLPHX_PUBLISHABLE_KEY is unset: no Auth session is accepted");
+            String::new()
+        });
+        Self::new(url, organization_id, caller_key)
     }
 
     /// The end user behind a session bearer; None when Auth refuses it or is
@@ -131,10 +141,14 @@ impl AuthSessions {
     }
 
     async fn fetch(&self, token: &str, user_agent: &str) -> Option<VerifiedIdentity> {
+        if self.caller_key.is_empty() {
+            return None;
+        }
         let response = self
             .http
             .get(format!("{}/v1/sessions/current", self.auth_url))
             .bearer_auth(token)
+            .header("x-sylphx-caller-key", &self.caller_key)
             .header(axum::http::header::USER_AGENT, user_agent)
             .send()
             .await
@@ -443,6 +457,15 @@ mod tests {
         assert_eq!(
             auth_id_value("organization-01890A5D-AC96-774B-BCCE-B302099A8057"),
             auth_id_value("org_01h455vb4pex5vsknk084sn02q")
+        );
+        // aorg_ test vector, both directions.
+        assert_eq!(
+            auth_id_value("organization-01890a5d-ac96-774b-bcce-b302099a8057"),
+            auth_id_value("aorg_01h455vb4pex5vsknk084sn02q")
+        );
+        assert_eq!(
+            auth_id_value("aorg_01h455vb4pex5vsknk084sn02q"),
+            auth_id_value("organization-01890a5d-ac96-774b-bcce-b302099a8057")
         );
         assert_eq!(
             auth_id_value("01890a5d-ac96-774b-bcce-b302099a8057"),
