@@ -128,7 +128,7 @@ impl std::ops::Deref for RequestAccess {
 
 impl RequestAccess {
     pub fn connection(&mut self) -> Option<&mut sqlx::PgConnection> {
-        self.transaction.as_mut().map(|tx| &mut **tx)
+        self.transaction.as_deref_mut()
     }
     pub async fn commit(self) -> Result<(), ConnectError> {
         if let Some(tx) = self.transaction {

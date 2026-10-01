@@ -95,9 +95,9 @@ pub async fn record_share_on_connection(
 /// shared card shows, and a later share tap must not rewrite it.
 pub async fn set_share_streak(pool: &PgPool, id: Uuid, streak: i32) -> Result<(), String> {
     let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
-    let value = set_share_streak_on_connection(&mut tx, id, streak).await?;
+    set_share_streak_on_connection(&mut tx, id, streak).await?;
     tx.commit().await.map_err(|e| e.to_string())?;
-    Ok(value)
+    Ok(())
 }
 
 pub async fn set_share_streak_on_connection(
