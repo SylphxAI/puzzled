@@ -148,7 +148,9 @@ async fn adopting_a_guest_keeps_the_account_share_on_a_conflict() {
         .unwrap()
         .unwrap();
 
-    assert_eq!(adopt_guest_shares(&pool, account, guest).await.unwrap(), 1);
+    let mut tx = pool.begin().await.unwrap();
+    assert_eq!(adopt_guest_shares(&mut tx, account, guest).await.unwrap(), 1);
+    tx.commit().await.unwrap();
 
     let owner = |id: Uuid| {
         let pool = pool.clone();

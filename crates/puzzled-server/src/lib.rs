@@ -37,6 +37,8 @@ mod result_shares_tests;
 #[cfg(test)]
 mod retention_push_tests;
 #[cfg(test)]
+mod guest_ownership_tests;
+#[cfg(test)]
 mod streak_freeze_tests;
 #[cfg(test)]
 mod test_support;
@@ -538,7 +540,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_submit_guess_accepts_guest_day_id_for_free_game() {
+    async fn connect_submit_guess_refuses_unsigned_guest_id() {
         // Guest free-ritual path: X-Puzzled-Guest-Id → past identity gate.
         // Empty submission is still invalid (server-authoritative validation).
         let app = router(AppState::new(None));
@@ -560,24 +562,8 @@ mod tests {
             Ok(response) => response,
             Err(error) => panic!("connect SubmitGuess guest: {error}"),
         };
-        // Must not be identity 401 — guest day id is accepted.
-        assert_ne!(
-            response.status(),
-            StatusCode::UNAUTHORIZED,
-            "guest free path must not 401 identity_required"
-        );
-        if densifies_without_store(&free_slug) {
-            // No DB: deterministic generators validate (empty → invalid verdict).
-            assert_eq!(response.status(), StatusCode::OK);
-            let json = body_json(response).await;
-            assert!(
-                json.get("valid")
-                    .map_or(true, |v| v == false || v.is_null()),
-                "expected invalid verdict for empty guest submit: {:?}",
-                json.get("valid")
-            );
-        }
-        // Other free-day modules without content: 404 unserved is fine; not 401.
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+
     }
 
     #[tokio::test]

@@ -8,13 +8,11 @@
  * - Server (SSR/node): API_INTERNAL_URL (platform-injected private web -> api).
  * - Local dev: http://127.0.0.1:3001 (puzzled-server).
  *
- * Guest free-ritual: interceptor attaches X-Puzzled-Guest-Id when a browser
- * guest-day UUID exists (platform session cookie still preferred server-side).
+ * Guest identity is a server-issued HttpOnly cookie, never a browser player id.
  */
 
 import type { Interceptor, Transport } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
-import { GUEST_ID_HEADER, getOrCreateGuestDayId } from '@/lib/guest-day-id'
 
 const DEV_DEFAULT_BASE = 'http://127.0.0.1:3001'
 
@@ -79,12 +77,24 @@ export function resolveServerConnectBaseUrl(
 	return normalizeConnectBaseUrl(internal)
 }
 
-const guestDayIdInterceptor: Interceptor = (next) => async (req) => {
-	const guestId = getOrCreateGuestDayId()
-	if (guestId) {
-		req.header.set(GUEST_ID_HEADER, guestId)
-	}
-	return next(req)
+let guestSession: Promise<void> | null = null
+
+export function ensureGuestSession(base = resolveConnectBaseUrl()): Promise<void> {
+    if (typeof window === 'undefined') return Promise.resolve()
+    guestSession ??= fetch(`${base}/v1/guest/session`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+    }).then((response) => {
+        if (!response.ok) throw new Error('guest_session_unavailable')
+    })
+    return guestSession
+}
+
+const guestSessionInterceptor: Interceptor = (next) => async (req) => {
+    await ensureGuestSession()
+    return next(req)
 }
 
 let cachedBase: string | null = null
@@ -97,7 +107,7 @@ export function getConnectTransport(baseUrl?: string): Transport {
 	cachedTransport = createConnectTransport({
 		baseUrl: base,
 		useBinaryFormat: false, // browserDefaultEncoding: protojson
-		interceptors: [guestDayIdInterceptor],
+		interceptors: [guestSessionInterceptor],
 		// Cookie-auth fetch credentials (cast: connect-web option surface varies by minor).
 		...({ credentials: 'include' } as Record<string, string>),
 	})
@@ -105,6 +115,7 @@ export function getConnectTransport(baseUrl?: string): Transport {
 }
 
 export function resetConnectTransportCache(): void {
+    guestSession = null
 	cachedBase = null
 	cachedTransport = null
 }

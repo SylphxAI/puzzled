@@ -38,7 +38,9 @@ pub fn router(state: AppState) -> Router {
         .add_service(stats_connect_service(state.clone()));
 
     let auth = state.auth.clone();
+    let guest_pool = state.pool.clone();
     Router::new()
+        .route("/v1/guest/session", post(crate::capabilities::identity_access::adapters::guest_credentials::session))
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route(DAILY_PUZZLES_PATH, post(daily_puzzles_tick))
@@ -48,6 +50,10 @@ pub fn router(state: AppState) -> Router {
         .route("/observability/test", post(observability_test))
         .with_state(state)
         .fallback_service(connect.into_axum_service())
+        .layer(axum::middleware::from_fn_with_state(
+            guest_pool,
+            crate::capabilities::identity_access::adapters::guest_credentials::attach_guest,
+        ))
         // Sylphx Auth end-user sessions are checked once, before any service.
         .layer(axum::middleware::from_fn_with_state(
             auth,

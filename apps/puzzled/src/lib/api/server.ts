@@ -93,7 +93,7 @@ async function getServerTransport() {
 /** True when SSR can attach a guest or Platform identity to Connect reads. */
 export async function hasServerProgressIdentity(): Promise<boolean> {
 	const cookieStore = await cookies()
-	if (cookieStore.get('puzzled_guest_id')?.value) return true
+	if (cookieStore.get('__Host-puzzled_guest')?.value) return true
 	return cookieStore
 		.getAll()
 		.some(

@@ -205,9 +205,8 @@ async fn persist(
 
 /// Move a guest's freezes onto the account when the guest signs in: covered
 /// and earned days merge, held freezes add up to the most allowed, and the
-/// guest's rows go.
-pub async fn adopt_guest_freezes(pool: &PgPool, account: Uuid, guest: Uuid) -> Result<(), String> {
-    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+/// guest's rows remain as provenance; the credential is revoked by adoption.
+pub async fn adopt_guest_freezes(connection: &mut sqlx::PgConnection, account: Uuid, guest: Uuid) -> Result<(), String> {
     for table in ["streak_freeze_uses", "streak_freeze_awards"] {
         let sql = if table == "streak_freeze_uses" {
             "INSERT INTO streak_freeze_uses (user_id, day_key) \
@@ -221,7 +220,7 @@ pub async fn adopt_guest_freezes(pool: &PgPool, account: Uuid, guest: Uuid) -> R
         sqlx::query(sql)
             .bind(guest)
             .bind(account)
-            .execute(&mut *tx)
+            .execute(&mut *connection)
             .await
             .map_err(|e| format!("guest {table} adoption failed: {e}"))?;
     }
@@ -235,21 +234,10 @@ pub async fn adopt_guest_freezes(pool: &PgPool, account: Uuid, guest: Uuid) -> R
     .bind(guest)
     .bind(account)
     .bind(i32::try_from(puzzled_core::gamification::personal_streak::FREEZE_CAP).unwrap_or(2))
-    .execute(&mut *tx)
+    .execute(&mut *connection)
     .await
     .map_err(|e| format!("guest freeze counters adoption failed: {e}"))?;
-    for sql in [
-        "DELETE FROM streak_freeze_uses WHERE user_id = $1",
-        "DELETE FROM streak_freeze_awards WHERE user_id = $1",
-        "DELETE FROM user_freeze_data WHERE user_id = $1",
-    ] {
-        sqlx::query(sql)
-            .bind(guest)
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| e.to_string())?;
-    }
-    tx.commit().await.map_err(|e| e.to_string())
+    Ok(())
 }
 
 /// Upsert freeze counters for a user.

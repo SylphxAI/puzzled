@@ -142,36 +142,18 @@ ORDER BY completed_at DESC NULLS LAST, id DESC
 LIMIT 1
 "#;
 
-const ADOPT_GUEST_COLLISION_DELETE_SQL: &str = r#"
-DELETE FROM game_sessions AS guest
-WHERE guest.user_id = $1
-  AND (
-    (
-      guest.puzzle_id IS NOT NULL
-      AND EXISTS (
-        SELECT 1 FROM game_sessions AS account
-        WHERE account.user_id = $2
-          AND account.puzzle_id = guest.puzzle_id
-      )
-    )
-    OR (
-      guest.is_ritual = true
-      AND guest.day_key IS NOT NULL
-      AND EXISTS (
-        SELECT 1 FROM game_sessions AS account
-        WHERE account.user_id = $2
-          AND account.is_ritual = true
-          AND account.game_slug = guest.game_slug
-          AND account.day_key = guest.day_key
-      )
-    )
-  )
-"#;
-
 const ADOPT_GUEST_REASSIGN_SQL: &str = r#"
-UPDATE game_sessions
-SET user_id = $2
-WHERE user_id = $1
+UPDATE game_sessions AS guest
+SET user_id = $2, adopted_from_guest = $1
+WHERE guest.user_id = $1
+  AND NOT EXISTS (
+    SELECT 1 FROM game_sessions AS account
+    WHERE account.user_id = $2
+      AND ((guest.puzzle_id IS NOT NULL AND account.puzzle_id = guest.puzzle_id)
+        OR (guest.is_ritual = true AND guest.day_key IS NOT NULL
+            AND account.is_ritual = true AND account.game_slug = guest.game_slug
+            AND account.day_key = guest.day_key))
+  )
 "#;
 
 /// True when the user has a completed session for the given puzzle and/or date.
@@ -296,39 +278,40 @@ pub async fn load_completed_session(
 /// Move accepted guest rows onto the Platform account without duplicating a
 /// finish for the same puzzle or ritual (user, module, product day).
 ///
-/// Colliding guest rows are dropped so the account keeps its existing
-/// canonical result. Remaining guest rows are reassigned to the account.
+/// Collisions are retained under the original guest. Noncolliding rows carry
+/// their original guest provenance when adopted under verified possession.
 pub async fn adopt_guest_sessions(
     pool: &PgPool,
-    account_user_id: &str,
+    verified_account: &crate::capabilities::identity_access::adapters::platform_jwt::VerifiedIdentity,
     guest_user_id: &str,
+    credential_hash: &str,
 ) -> Result<u64, String> {
-    let account = parse_user_id(account_user_id)?;
-    let guest = parse_user_id(guest_user_id)?;
-    if account == guest {
-        return Ok(0);
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    use puzzled_core::identity_policy::guest_day_id::is_guest_user_id;
+    let refused = || "identity_not_found".to_string();
+    if is_guest_user_id(&verified_account.user_id) || !is_guest_user_id(guest_user_id) {
+        return Err(refused());
     }
-
-    sqlx::query(ADOPT_GUEST_COLLISION_DELETE_SQL)
-        .bind(guest)
-        .bind(account)
-        .execute(pool)
-        .await
-        .map_err(|e| format!("guest collision delete failed: {e}"))?;
-
+    let account = parse_user_id(&verified_account.user_id)?;
+    let guest = parse_user_id(guest_user_id)?;
+    if account == guest { return Err(refused()); }
+    let mut tx = pool.begin().await.map_err(|_| refused())?;
+    guest_credentials::lock_players(&mut tx, vec![account, guest]).await.map_err(|_| refused())?;
+    let credential: Option<uuid::Uuid> = sqlx::query_scalar(
+        "SELECT user_id FROM guest_credentials WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL AND adopted_user_id IS NULL FOR UPDATE",
+    ).bind(guest).bind(credential_hash).fetch_optional(&mut *tx).await.map_err(|e| e.to_string())?;
+    if credential != Some(guest) || guest_credentials::account_backed(&mut tx, guest).await.map_err(|e| e.to_string())? {
+        return Err(refused());
+    }
     let updated = sqlx::query(ADOPT_GUEST_REASSIGN_SQL)
-        .bind(guest)
-        .bind(account)
-        .execute(pool)
-        .await
-        .map_err(|e| format!("guest reassign failed: {e}"))?;
-
-    super::result_shares_db::adopt_guest_shares(pool, account, guest).await?;
+        .bind(guest).bind(account).execute(&mut *tx).await.map_err(|_| refused())?;
+    super::result_shares_db::adopt_guest_shares(&mut tx, account, guest).await?;
     crate::capabilities::gamification::adapters::freezes_db::adopt_guest_freezes(
-        pool, account, guest,
-    )
-    .await?;
-
+        &mut tx, account, guest,
+    ).await?;
+    sqlx::query("UPDATE guest_credentials SET adopted_user_id = $2, revoked_at = now(), revocation_reason = 'adopted' WHERE user_id = $1 AND adopted_user_id IS NULL")
+        .bind(guest).bind(account).execute(&mut *tx).await.map_err(|_| refused())?;
+    tx.commit().await.map_err(|_| refused())?;
     Ok(updated.rows_affected())
 }
 

@@ -118,9 +118,9 @@ pub async fn load_shared_result(pool: &PgPool, id: Uuid) -> Result<Option<Shared
 
 /// Move a guest's shares onto the account when the guest signs in, keeping any
 /// share the account already has for the same module and day.
-pub async fn adopt_guest_shares(pool: &PgPool, account: Uuid, guest: Uuid) -> Result<u64, String> {
+pub async fn adopt_guest_shares(connection: &mut sqlx::PgConnection, account: Uuid, guest: Uuid) -> Result<u64, String> {
     sqlx::query(
-        r#"UPDATE result_shares g SET user_id = $2
+        r#"UPDATE result_shares g SET user_id = $2, adopted_from_guest = $1
            WHERE g.user_id = $1
              AND NOT EXISTS (
                SELECT 1 FROM result_shares a
@@ -128,7 +128,7 @@ pub async fn adopt_guest_shares(pool: &PgPool, account: Uuid, guest: Uuid) -> Re
     )
     .bind(guest)
     .bind(account)
-    .execute(pool)
+    .execute(connection)
     .await
     .map(|r| r.rows_affected())
     .map_err(|e| format!("guest share adoption failed: {e}"))

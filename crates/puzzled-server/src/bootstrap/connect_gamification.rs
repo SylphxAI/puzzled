@@ -8,7 +8,7 @@ use connectrpc::{
 };
 
 use super::identity::{
-    require_admin, require_identity, require_identity_or_guest, resolve_request_identities,
+    require_admin, require_identity, require_admitted_identity_or_guest, admitted_request_identities,
 };
 use super::state::AppState;
 use crate::capabilities::gamification::adapters::freezes_db::{
@@ -45,15 +45,15 @@ impl GamificationConnectService {
         let Some(pool) = &self.state.pool else {
             return Ok(());
         };
-        let identities = resolve_request_identities(ctx);
-        let Some((account_user_id, guest_user_id)) = identities.adoption_pair() else {
+        let identities = admitted_request_identities(ctx, Some(pool)).await?;
+        let Some((_account_user_id, guest_user_id)) = identities.adoption_pair() else {
             return Ok(());
         };
-        adopt_guest_sessions(pool, account_user_id, guest_user_id)
+        adopt_guest_sessions(pool, identities.platform.as_ref().ok_or_else(|| ConnectError::new(ErrorCode::NotFound, "identity_not_found"))?, guest_user_id, crate::bootstrap::identity::guest_credential_hash(ctx).ok_or_else(|| ConnectError::new(ErrorCode::NotFound, "identity_not_found"))?)
             .await
             .map_err(|error| {
                 tracing::warn!(%error, "guest progress adoption failed");
-                ConnectError::new(ErrorCode::Internal, "guest_progress_adopt_failed")
+                ConnectError::new(ErrorCode::NotFound, "identity_not_found")
             })?;
         Ok(())
     }
@@ -119,7 +119,7 @@ impl GamificationService for GamificationConnectService {
         _request: ServiceRequest<'_, GetStreakInfoRequest>,
     ) -> ServiceResult<GetStreakInfoResponse> {
         self.adopt_guest_progress_if_needed(&ctx).await?;
-        let identity = require_identity_or_guest(&ctx)?;
+        let identity = require_admitted_identity_or_guest(&ctx, self.state.pool.as_ref()).await?;
         let (streak, total, freeze) = self.load_personal_streak(&identity.user_id).await?;
         Response::ok(GetStreakInfoResponse {
             info: self.to_info(&freeze, streak, total).into(),

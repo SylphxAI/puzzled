@@ -17,6 +17,26 @@ use uuid::Uuid;
 /// erased account.
 pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
+        "guest_credentials",
+        "user_id",
+        r#"DELETE FROM "guest_credentials" WHERE "user_id" = $1"#,
+    ),
+    (
+        "guest_credentials",
+        "adopted_user_id",
+        r#"DELETE FROM "guest_credentials" WHERE "adopted_user_id" = $1"#,
+    ),
+    (
+        "game_sessions",
+        "adopted_from_guest",
+        r#"DELETE FROM "game_sessions" WHERE "adopted_from_guest" = $1"#,
+    ),
+    (
+        "result_shares",
+        "adopted_from_guest",
+        r#"DELETE FROM "result_shares" WHERE "adopted_from_guest" = $1"#,
+    ),
+    (
         "tryit_conversions",
         "user_id",
         r#"DELETE FROM "tryit_conversions" WHERE "user_id" = $1"#,
@@ -163,7 +183,7 @@ mod tests {
         }
 
         let is_player_column =
-            |name: &str| name == "user_id" || name.ends_with("_user_id") || name == "actor_id";
+            |name: &str| name == "user_id" || name.ends_with("_user_id") || name == "actor_id" || name == "adopted_from_guest";
         let mut found = BTreeSet::new();
         let mut table: Option<String> = None;
         for line in sql.lines() {
@@ -322,7 +342,9 @@ mod tests {
                 }
                 _ => false,
             };
-            if !runtime {
+            // Identity classification only asks whether a historic account
+            // exists; it does not consume billing entitlements or payments.
+            if !runtime || file.ends_with("identity_access/adapters/guest_credentials.rs") {
                 continue;
             }
             let text = std::fs::read_to_string(file).unwrap_or_default();

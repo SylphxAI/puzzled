@@ -236,6 +236,7 @@ export const gameSessions = pgTable(
 
 		/** Platform user ID (no FK - platform is source of truth) */
 		userId: uuid('user_id').notNull(),
+		adoptedFromGuest: uuid('adopted_from_guest'),
 
 		/** Game identifier */
 		gameSlug: text('game_slug').notNull(),
@@ -766,6 +767,7 @@ export const resultShares = pgTable(
 		id: uuid('id').primaryKey(),
 		/** Platform user ID or guest-day ID (no FK) */
 		userId: uuid('user_id').notNull(),
+		adoptedFromGuest: uuid('adopted_from_guest'),
 		gameSlug: text('game_slug').notNull(),
 		dayKey: text('day_key').notNull(),
 		difficulty: text('difficulty'),
@@ -1007,3 +1009,18 @@ export type NewAnnouncementDismissal = typeof announcementDismissals.$inferInser
 // App Settings
 export type AppSetting = typeof appSettings.$inferSelect
 export type NewAppSetting = typeof appSettings.$inferInsert
+
+/** Server-issued browser credentials; plaintext never reaches the database. */
+export const guestCredentials = pgTable(
+    'guest_credentials',
+    {
+        tokenHash: text('token_hash').primaryKey(),
+        userId: uuid('user_id').notNull().unique(),
+        adoptedUserId: uuid('adopted_user_id'),
+        revokedAt: timestamp('revoked_at'),
+        revocationReason: text('revocation_reason'),
+        provenance: text('provenance').notNull(),
+        createdAt: timestamp('created_at').defaultNow().notNull(),
+    },
+    (table) => [index('guest_credentials_adopted_user_id_idx').on(table.adoptedUserId)],
+)

@@ -90,20 +90,21 @@ impl PuzzleConnectService {
         true
     }
 
-    fn identity(&self, ctx: &RequestContext) -> Result<Option<String>, ConnectError> {
-        use crate::bootstrap::identity::require_identity_or_guest;
+    async fn identity(&self, ctx: &RequestContext) -> Result<Option<String>, ConnectError> {
+        use crate::bootstrap::identity::require_admitted_identity_or_guest;
         // Platform JWT/session or stable guest-day id (for has_completed).
         // Pure anonymous (no JWT, no guest id) → None for free-floor reads.
-        match require_identity_or_guest(ctx) {
+        match require_admitted_identity_or_guest(ctx, self.state.pool.as_ref()).await {
             Ok(identity) => Ok(Some(identity.user_id)),
-            Err(_) => Ok(None),
+            Err(error) if error.code == ErrorCode::Unauthenticated => Ok(None),
+            Err(error) => Err(error),
         }
     }
 
     /// SubmitGuess identity: Platform JWT/session **or** guest-day id.
-    fn identity_for_submit(&self, ctx: &RequestContext) -> Result<String, ConnectError> {
-        use crate::bootstrap::identity::require_identity_or_guest;
-        Ok(require_identity_or_guest(ctx)?.user_id)
+    async fn identity_for_submit(&self, ctx: &RequestContext) -> Result<String, ConnectError> {
+        use crate::bootstrap::identity::require_admitted_identity_or_guest;
+        Ok(require_admitted_identity_or_guest(ctx, self.state.pool.as_ref()).await?.user_id)
     }
 
     /// Reassign accepted guest rows onto the Platform account before a personal
@@ -112,19 +113,19 @@ impl PuzzleConnectService {
         &self,
         ctx: &RequestContext,
     ) -> Result<(), ConnectError> {
-        use crate::bootstrap::identity::resolve_request_identities;
+        use crate::bootstrap::identity::admitted_request_identities;
         let Some(pool) = &self.state.pool else {
             return Ok(());
         };
-        let identities = resolve_request_identities(ctx);
-        let Some((account_user_id, guest_user_id)) = identities.adoption_pair() else {
+        let identities = admitted_request_identities(ctx, Some(pool)).await?;
+        let Some((_account_user_id, guest_user_id)) = identities.adoption_pair() else {
             return Ok(());
         };
-        adopt_guest_sessions(pool, account_user_id, guest_user_id)
+        adopt_guest_sessions(pool, identities.platform.as_ref().ok_or_else(|| ConnectError::new(ErrorCode::NotFound, "identity_not_found"))?, guest_user_id, crate::bootstrap::identity::guest_credential_hash(ctx).ok_or_else(|| ConnectError::new(ErrorCode::NotFound, "identity_not_found"))?)
             .await
             .map_err(|error| {
                 warn!(%error, "guest progress adoption failed");
-                ConnectError::new(ErrorCode::Internal, "guest_progress_adopt_failed")
+                ConnectError::new(ErrorCode::NotFound, "identity_not_found")
             })?;
         Ok(())
     }
@@ -296,7 +297,7 @@ impl PuzzleService for PuzzleConnectService {
         }
 
         self.adopt_guest_progress_if_needed(&ctx).await?;
-        let identity = self.identity(&ctx)?;
+        let identity = self.identity(&ctx).await?;
         let difficulty = {
             let d = req.difficulty.trim();
             if d.is_empty() {
@@ -447,7 +448,7 @@ impl PuzzleService for PuzzleConnectService {
         };
         // Platform auth **or** stable guest-day id (free-ritual protocol default).
         self.adopt_guest_progress_if_needed(&ctx).await?;
-        let uid = self.identity_for_submit(&ctx)?;
+        let uid = self.identity_for_submit(&ctx).await?;
 
         let data: Value = if req.submission_json.trim().is_empty() {
             Value::Null
@@ -661,7 +662,7 @@ impl PuzzleService for PuzzleConnectService {
                 "game_not_graded_per_guess",
             ));
         }
-        let uid = self.identity_for_submit(&ctx)?;
+        let uid = self.identity_for_submit(&ctx).await?;
         let today = product_day_key(Utc::now());
         let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
         self.enforce_play_access(Some(&uid), game_slug, date)
@@ -707,7 +708,7 @@ impl PuzzleService for PuzzleConnectService {
         if !is_valid_game_slug(game_slug) {
             return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
         }
-        let uid = self.identity_for_submit(&ctx)?;
+        let uid = self.identity_for_submit(&ctx).await?;
         self.adopt_guest_progress_if_needed(&ctx).await?;
         let day =
             date_from_string(req.puzzle_date.as_deref()).unwrap_or(product_day_key(Utc::now()));

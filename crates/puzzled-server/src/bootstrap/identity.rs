@@ -10,7 +10,6 @@
 //!   finishes (North Star protocol; counts toward daily puzzle completers as distinct user key).
 
 use connectrpc::{ConnectError, ErrorCode, RequestContext};
-use puzzled_core::identity_policy::guest_day_id::normalize_guest_user_id;
 
 use crate::capabilities::identity_access::adapters::platform_jwt::{
     extract_bearer, verify_platform_jwt, VerifiedIdentity,
@@ -41,38 +40,10 @@ fn extract_session_cookie_jwt(headers: &axum::http::HeaderMap) -> Option<String>
     None
 }
 
-fn extract_cookie_value(headers: &axum::http::HeaderMap, cookie_name: &str) -> Option<String> {
-    let cookie = headers.get(axum::http::header::COOKIE)?.to_str().ok()?;
-    for pair in cookie.split(';') {
-        let pair = pair.trim();
-        let Some((name, value)) = pair.split_once('=') else {
-            continue;
-        };
-        if name.trim() == cookie_name {
-            let value = value.trim();
-            if !value.is_empty() {
-                return Some(value.to_string());
-            }
-        }
-    }
-    None
-}
-
 /// Resolve guest-day identity from header or cookie (UUID → `guest_<uuid>`).
-fn resolve_guest(headers: &axum::http::HeaderMap) -> Option<VerifiedIdentity> {
-    let raw = headers
-        .get(GUEST_ID_HEADER)
-        .and_then(|v| v.to_str().ok())
-        .map(str::to_string)
-        .or_else(|| extract_cookie_value(headers, GUEST_ID_COOKIE))?;
-    let user_id = normalize_guest_user_id(&raw)?;
-    Some(VerifiedIdentity {
-        user_id,
-        display_name: Some("Guest".to_string()),
-        email: None,
-        is_admin: false,
-        actor: None,
-    })
+fn resolve_guest(_headers: &axum::http::HeaderMap) -> Option<VerifiedIdentity> {
+    // Only asynchronous database admission resolves the internal hash.
+    None
 }
 
 fn verify(headers: &axum::http::HeaderMap) -> Result<VerifiedIdentity, ConnectError> {
@@ -98,7 +69,7 @@ fn verify(headers: &axum::http::HeaderMap) -> Result<VerifiedIdentity, ConnectEr
 
 /// Verify the identity from Bearer or session cookie (fails closed when absent).
 ///
-/// Does **not** accept guest headers — use [`require_identity_or_guest`] for
+/// Does **not** accept guest headers — use [`require_admitted_identity_or_guest`] for
 /// free-ritual SubmitGuess.
 pub fn require_identity(ctx: &RequestContext) -> Result<VerifiedIdentity, ConnectError> {
     verify(ctx.headers())
@@ -144,15 +115,55 @@ pub fn resolve_request_identities(ctx: &RequestContext) -> RequestIdentities {
     }
 }
 
-/// Platform JWT/session **or** stable guest-day id (protocol default for free
-/// ritual finishes). Platform identity wins when both are present.
-pub fn require_identity_or_guest(ctx: &RequestContext) -> Result<VerifiedIdentity, ConnectError> {
-    resolve_request_identities(ctx)
-        .primary()
-        .cloned()
-        .ok_or_else(|| {
-            ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
-        })
+/// Every guest access revalidates live browser possession and account class.
+pub async fn admitted_request_identities(
+    ctx: &RequestContext,
+    pool: Option<&sqlx::PgPool>,
+) -> Result<RequestIdentities, ConnectError> {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    use puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid;
+    let internal = || ConnectError::new(ErrorCode::Internal, "identity_store_failed");
+    let mut identities = resolve_request_identities(ctx);
+    if let Some(hash) = guest_credential_hash(ctx) {
+        let pool = pool.ok_or_else(internal)?;
+        let candidate = guest_credentials::lookup_hash(pool, hash).await.map_err(|_| internal())?;
+        if let Some(player) = candidate {
+            let mut tx = pool.begin().await.map_err(|_| internal())?;
+            guest_credentials::lock_players(&mut tx, vec![player]).await.map_err(|_| internal())?;
+            let valid = guest_credentials::validate_locked(&mut tx, player, hash).await.map_err(|_| internal())?;
+            tx.commit().await.map_err(|_| internal())?;
+            if valid && !identities.platform.as_ref().is_some_and(|account| account.user_id == player.to_string()) {
+                identities.guest = Some(VerifiedIdentity {
+                    user_id: format!("guest_{player}"), display_name: Some("Guest".into()),
+                    email: None, is_admin: false, actor: None,
+                });
+            }
+        }
+    }
+    if let Some(account) = &identities.platform {
+        if let Some(player) = user_id_to_storage_uuid(&account.user_id) {
+            if let Some(pool) = pool {
+                let guest_collision: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)")
+                    .bind(player).fetch_one(pool).await.map_err(|_| internal())?;
+                if guest_collision { identities.platform = None; }
+            }
+        }
+    }
+    // Invalid or absent guest credentials never prevent signed-in own access.
+    Ok(identities)
+}
+
+pub fn guest_credential_hash(ctx: &RequestContext) -> Option<&str> {
+    use crate::capabilities::identity_access::adapters::guest_credentials::VERIFIED_GUEST_HEADER;
+    ctx.headers().get(VERIFIED_GUEST_HEADER)?.to_str().ok()
+}
+
+pub async fn require_admitted_identity_or_guest(
+    ctx: &RequestContext,
+    pool: Option<&sqlx::PgPool>,
+) -> Result<VerifiedIdentity, ConnectError> {
+    admitted_request_identities(ctx, pool).await?.primary().cloned()
+        .ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"))
 }
 
 /// The one guard for every authenticated purchase or spend (checkout, billing
@@ -211,50 +222,11 @@ mod tests {
     }
 
     #[test]
-    fn guest_header_normalizes_to_guest_user_id() {
+    fn raw_guest_header_and_cookie_are_not_credentials() {
         let mut headers = HeaderMap::new();
-        headers.insert(
-            GUEST_ID_HEADER,
-            "a1b2c3d4-e5f6-7890-abcd-ef1234567890".parse().unwrap(),
-        );
-        let identity = resolve_guest(&headers).expect("guest");
-        assert_eq!(
-            identity.user_id,
-            "guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-        );
-        assert!(!identity.is_admin);
-    }
-
-    #[test]
-    fn guest_cookie_accepted() {
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            COOKIE,
-            "puzzled_guest_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-                .parse()
-                .unwrap(),
-        );
-        let identity = resolve_guest(&headers).expect("guest cookie");
-        assert!(identity.user_id.starts_with("guest_"));
-    }
-
-    #[test]
-    fn delegated_identity_cannot_purchase_and_a_normal_one_can() {
-        let mut identity = VerifiedIdentity {
-            user_id: "f715210b-9df3-4945-b5bd-94fc4609bc30".to_string(),
-            display_name: None,
-            email: None,
-            is_admin: false,
-            actor: None,
-        };
-        assert!(require_purchase_allowed(&identity).is_ok());
-        identity.actor = Some("agent_1".to_string());
-        let denied = require_purchase_allowed(&identity).unwrap_err();
-        assert_eq!(denied.code, ErrorCode::PermissionDenied);
-        assert_eq!(
-            denied.message.as_deref(),
-            Some("purchases by delegated agents are not available yet")
-        );
+        headers.insert(GUEST_ID_HEADER, "a1b2c3d4-e5f6-7890-abcd-ef1234567890".parse().unwrap());
+        headers.insert(COOKIE, "puzzled_guest_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890".parse().unwrap());
+        assert!(resolve_guest(&headers).is_none());
     }
 
     #[test]
