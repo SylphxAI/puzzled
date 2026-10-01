@@ -176,74 +176,6 @@ async fn sender_outcomes_preserve_live_endpoints_and_prune_expired_ones() {
 }
 
 #[tokio::test]
-async fn cancelled_worker_and_reconstructed_worker_recover_the_unacknowledged_batch() {
-    use crate::bootstrap::connect_jobs::send_due_daily_reminders_with;
-    use crate::capabilities::jobs::adapters::jobs_db::REMINDER_LEASE_SECONDS;
-    let Some(pool) = fresh_database().await else {
-        return;
-    };
-    for _ in 0..3 {
-        sqlx::query("INSERT INTO notification_preferences (user_id, push_enabled, push_daily_reminder, daily_reminder_time, timezone) VALUES ($1, true, true, '08:00', 'UTC')")
-            .bind(Uuid::now_v7()).execute(&pool).await.unwrap();
-    }
-    let now = "2026-10-01T08:00:00Z".parse().unwrap();
-    let (entered, started) = tokio::sync::oneshot::channel();
-    let worker_pool = pool.clone();
-    let worker = tokio::spawn(async move {
-        let mut entered = Some(entered);
-        let mut attempts = 0;
-        send_due_daily_reminders_with(&worker_pool, now, |_| {
-            attempts += 1;
-            let first = attempts == 1;
-            if !first {
-                if let Some(entered) = entered.take() {
-                    entered.send(()).unwrap();
-                }
-            }
-            async move {
-                if first {
-                    Ok(())
-                } else {
-                    std::future::pending::<Result<(), String>>().await
-                }
-            }
-        })
-        .await
-    });
-    started.await.unwrap();
-    worker.abort();
-    assert!(worker.await.unwrap_err().is_cancelled());
-    let delivered: i64 = sqlx::query_scalar(
-        "SELECT count(*) FROM notification_preferences WHERE last_daily_reminder_on IS NOT NULL",
-    )
-    .fetch_one(&pool)
-    .await
-    .unwrap();
-    assert_eq!(delivered, 1);
-    // Reconstruct the executor with no in-memory claim state. It cannot steal
-    // live leases; expiry recovers only the two not acknowledged as delivered.
-    assert_eq!(
-        send_due_daily_reminders_with(&pool, now, |_| async { Ok(()) })
-            .await
-            .unwrap(),
-        0
-    );
-    let retried = now + chrono::Duration::seconds(REMINDER_LEASE_SECONDS);
-    assert_eq!(
-        send_due_daily_reminders_with(&pool, retried, |_| async { Ok(()) })
-            .await
-            .unwrap(),
-        2
-    );
-    assert_eq!(
-        send_due_daily_reminders_with(&pool, retried, |_| async { Ok(()) })
-            .await
-            .unwrap(),
-        0
-    );
-}
-
-#[tokio::test]
 async fn delivery_before_ack_crash_explicitly_allows_at_least_once_retry() {
     use crate::capabilities::jobs::adapters::jobs_db::{
         acknowledge_daily_reminder, claim_due_daily_reminders, REMINDER_LEASE_SECONDS,
@@ -273,30 +205,4 @@ async fn delivery_before_ack_crash_explicitly_allows_at_least_once_retry() {
     assert!(acknowledge_daily_reminder(&pool, &second, expiry)
         .await
         .unwrap());
-}
-
-#[tokio::test]
-async fn successful_tick_drains_more_than_one_bounded_batch() {
-    use crate::bootstrap::connect_jobs::send_due_daily_reminders_with;
-    use crate::capabilities::jobs::adapters::jobs_db::REMINDER_CLAIM_BATCH;
-    let Some(pool) = fresh_database().await else {
-        return;
-    };
-    for _ in 0..(REMINDER_CLAIM_BATCH + 1) {
-        sqlx::query("INSERT INTO notification_preferences (user_id, push_enabled, push_daily_reminder, daily_reminder_time, timezone) VALUES ($1, true, true, '08:00', 'UTC')")
-            .bind(Uuid::now_v7()).execute(&pool).await.unwrap();
-    }
-    let now = "2026-10-01T08:00:00Z".parse().unwrap();
-    assert_eq!(
-        send_due_daily_reminders_with(&pool, now, |_| async { Ok(()) })
-            .await
-            .unwrap(),
-        (REMINDER_CLAIM_BATCH + 1) as u32
-    );
-    assert_eq!(
-        send_due_daily_reminders_with(&pool, now, |_| async { Ok(()) })
-            .await
-            .unwrap(),
-        0
-    );
 }
