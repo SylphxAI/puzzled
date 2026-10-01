@@ -137,10 +137,24 @@ export function subscriptionView(res: GetSubscriptionResponse): SubscriptionView
 
 /**
  * The day a trial ends and the first charge happens: `trialDays` whole days
- * after `now`, formatted for the viewer. Null when the plan has no trial.
+ * after `now`, formatted for the viewer in `timeZone` (the viewer's own; the
+ * client passes none). Null when the plan has no trial.
  */
-export function trialEndDate(now: Date, trialDays: number, locale: string): string | null {
+export function trialEndDate(
+	now: Date,
+	trialDays: number,
+	locale: string,
+	timeZone?: string,
+): string | null {
 	if (trialDays <= 0) return null
 	const end = new Date(now.getTime() + trialDays * 86_400_000)
-	return new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone: 'UTC' }).format(end)
+	return new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone }).format(end)
+}
+
+/**
+ * Does the buy button give way to "Current plan"? Only for a paid
+ * subscription; a reverse-trial viewer is entitled but can still buy.
+ */
+export function showsCurrentPlan(access: PlusAccess | null | undefined): boolean {
+	return Boolean(access?.entitled) && !access?.trialEndsMs
 }

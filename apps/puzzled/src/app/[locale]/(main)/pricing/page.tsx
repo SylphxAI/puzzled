@@ -1,6 +1,7 @@
 import { Check, Play } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { MarketingHero, MarketingSection } from '@/features/marketing/components'
+import { TrialChargeLine } from '@/features/plus/components/trial-charge-line'
 import { getAllGameMetadata } from '@/games/registry'
 import { getServerPlans, getServerPlusAccess } from '@/lib/api/server'
 import {
@@ -8,7 +9,7 @@ import {
 	formatPrice,
 	type PlanCard,
 	planCards,
-	trialEndDate,
+	showsCurrentPlan,
 	yearlySavingPercent,
 } from '@/lib/billing/plus'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
@@ -83,7 +84,6 @@ export default async function PricingPage({ params, searchParams }: Props) {
 		...(family ? [t('includesFamily', { count: familyMax })] : []),
 	]
 
-	const now = new Date()
 	const priceLine = (card: PlanCard | undefined) =>
 		card ? formatPrice(card.amountMinor, card.currency, locale) : null
 
@@ -154,7 +154,6 @@ export default async function PricingPage({ params, searchParams }: Props) {
 							{groups.map((group) => {
 								const month = monthly(group.family)
 								const year = yearly(group.family)
-								const trialEnd = year ? trialEndDate(now, year.trialDays, locale) : null
 								const saving =
 									month && year ? yearlySavingPercent(month.amountMinor, year.amountMinor) : null
 								return (
@@ -195,14 +194,8 @@ export default async function PricingPage({ params, searchParams }: Props) {
 													) : null}
 												</div>
 											) : null}
-											{year && trialEnd ? (
-												<p className="pt-1 text-sm font-semibold">
-													{t('trialLine', {
-														days: year.trialDays,
-														price: priceLine(year) ?? '',
-														date: trialEnd,
-													})}
-												</p>
+											{year && year.trialDays > 0 ? (
+												<TrialChargeLine days={year.trialDays} price={priceLine(year) ?? ''} />
 											) : null}
 										</dl>
 										<ul className="mt-5 flex-1 space-y-2.5">
@@ -228,7 +221,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 														currency={card.currency}
 														locale={locale}
 														signedIn={Boolean(user)}
-														subscribed={Boolean(access?.entitled)}
+														subscribed={showsCurrentPlan(access)}
 														label={
 															card.trialDays > 0
 																? t('startTrial', { days: card.trialDays })

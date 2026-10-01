@@ -10,6 +10,7 @@ import {
 	isPlayLocked,
 	isPlusRequiredError,
 	planCards,
+	showsCurrentPlan,
 	subscriptionView,
 	trialEndDate,
 	yearlySavingPercent,
@@ -71,6 +72,15 @@ describe('Puzzled Plus presentation', () => {
 		expect(yearlySavingPercent(499, 6000)).toBe(null)
 	})
 
+	test('a reverse-trial viewer still sees the buy button; a subscriber sees the current plan', () => {
+		expect(
+			showsCurrentPlan({ salesOpen: true, entitled: true, trialEndsMs: 1_790_000_000_000 }),
+		).toBe(false)
+		expect(showsCurrentPlan({ salesOpen: true, entitled: true, trialEndsMs: null })).toBe(true)
+		expect(showsCurrentPlan({ salesOpen: true, entitled: false })).toBe(false)
+		expect(showsCurrentPlan(null)).toBe(false)
+	})
+
 	test('a trial plan carries its days and a real end date', () => {
 		const plans = create(ListPlansResponseSchema, {
 			plans: [
@@ -84,7 +94,11 @@ describe('Puzzled Plus presentation', () => {
 		}).plans
 		expect(planCards(plans, 'usd')[0].trialDays).toBe(7)
 		const now = new Date('2026-10-01T23:30:00Z')
-		expect(trialEndDate(now, 7, 'en-US')).toBe('October 8, 2026')
+		expect(trialEndDate(now, 7, 'en-US', 'UTC')).toBe('October 8, 2026')
+		// A US evening viewer sees their own day, not the server's.
+		expect(trialEndDate(new Date('2026-10-01T02:00:00Z'), 7, 'en-US', 'America/Los_Angeles')).toBe(
+			'October 7, 2026',
+		)
 		expect(trialEndDate(now, 0, 'en-US')).toBe(null)
 	})
 
