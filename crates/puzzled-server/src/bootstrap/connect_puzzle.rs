@@ -917,7 +917,7 @@ mod today_progress_tests {
         let out = progress_entries(&slugs, &finished);
         assert_eq!(out[0].game_slug, "sudoku");
         assert!(!out[0].has_completed);
-        assert!(out[0].completed_session.is_none());
+        assert!(out[0].completed_session.status.is_empty());
         assert_eq!(out[1].game_slug, "queens");
         assert!(out[1].has_completed);
         assert_eq!(out[1].completed_session.score, Some(80));
