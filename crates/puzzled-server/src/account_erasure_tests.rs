@@ -1051,3 +1051,104 @@ async fn cached_positive_auth_identity_still_cannot_write_after_erasure_intent()
     .unwrap();
     assert_eq!(rows, 0);
 }
+
+#[tokio::test]
+async fn stale_or_expired_erasure_worker_cannot_release_replacement_lease() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    use crate::capabilities::identity_access::erasure::{release_for_retry, Failure};
+    let operation = seed_erasure_intent(&pool, Uuid::now_v7()).await;
+    let stale = Uuid::now_v7();
+    let replacement = Uuid::now_v7();
+    sqlx::query("UPDATE erasure_requests SET lease_token=$2,lease_until=now()+interval '2 minutes',last_reason='auth_request_pending' WHERE request_id=$1")
+        .bind(operation).bind(replacement).execute(&pool).await.unwrap();
+    let before: Value =
+        sqlx::query_scalar("SELECT to_jsonb(e) FROM erasure_requests e WHERE request_id=$1")
+            .bind(operation)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(
+        release_for_retry(&pool, operation, stale, Failure::MoneyPreflightUnavailable).await,
+        Err(Failure::LeaseLost)
+    );
+    let after: Value =
+        sqlx::query_scalar("SELECT to_jsonb(e) FROM erasure_requests e WHERE request_id=$1")
+            .bind(operation)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(
+        before, after,
+        "stale worker changes no lease, reason, retry or snapshot"
+    );
+    sqlx::query(
+        "UPDATE erasure_requests SET lease_until=now()-interval '1 second' WHERE request_id=$1",
+    )
+    .bind(operation)
+    .execute(&pool)
+    .await
+    .unwrap();
+    assert_eq!(
+        release_for_retry(
+            &pool,
+            operation,
+            replacement,
+            Failure::MoneyPreflightUnavailable
+        )
+        .await,
+        Err(Failure::LeaseLost)
+    );
+    sqlx::query(
+        "UPDATE erasure_requests SET lease_until=now()+interval '2 minutes' WHERE request_id=$1",
+    )
+    .bind(operation)
+    .execute(&pool)
+    .await
+    .unwrap();
+    assert_eq!(
+        release_for_retry(
+            &pool,
+            operation,
+            replacement,
+            Failure::MoneyPreflightUnavailable
+        )
+        .await,
+        Ok(())
+    );
+    let state: (bool, String, bool) = sqlx::query_as("SELECT lease_token IS NULL,last_reason,retry_due>now() FROM erasure_requests WHERE request_id=$1").bind(operation).fetch_one(&pool).await.unwrap();
+    assert_eq!(state, (true, "money_preflight_unavailable".into(), true));
+}
+
+#[tokio::test]
+async fn erasure_retry_resumes_expired_claim_but_never_calls_foreign_auth_or_asserts_completion() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    let operation = seed_erasure_intent(&pool, player).await;
+    sqlx::query("UPDATE erasure_requests SET lease_token=$2,lease_until=now()-interval '1 second' WHERE request_id=$1")
+        .bind(operation).bind(Uuid::now_v7()).execute(&pool).await.unwrap();
+    let stub = StubAuth::accepting();
+    let base = spawn_auth(stub.clone()).await;
+    let foreign = AuthErasure::new(base, "foreign-org-fixture".into(), SECRET_KEY.into());
+    let counts = crate::capabilities::identity_access::erasure::sweep(&pool, Some(&foreign))
+        .await
+        .unwrap();
+    assert_eq!(
+        (counts.attempted, counts.pending, counts.completed),
+        (1, 1, 0)
+    );
+    assert!(stub.subjects().is_empty());
+    let evidence: (String, String, bool, bool, i32) = sqlx::query_as("SELECT state,last_reason,lease_token IS NULL,completed_at IS NULL,attempts FROM erasure_requests WHERE request_id=$1")
+        .bind(operation).fetch_one(&pool).await.unwrap();
+    assert_eq!(
+        evidence,
+        ("pending".into(), "instance_changed".into(), true, true, 1)
+    );
+    let replay = crate::capabilities::identity_access::erasure::sweep(&pool, Some(&foreign))
+        .await
+        .unwrap();
+    assert_eq!((replay.attempted, replay.completed), (0, 0));
+}

@@ -203,9 +203,25 @@ pub async fn sweep(pool: &PgPool, auth: Option<&AuthErasure>) -> Result<SweepCou
         // The RETURNING claim token, not a freshly minted replacement, fences
         // the retry bookkeeping against a replacement worker.
         let token: Uuid = claim.get("lease_token");
-        sqlx::query("UPDATE erasure_requests SET last_reason=$3,retry_due=now()+interval '1 minute',lease_token=NULL,lease_until=NULL,updated_at=now() WHERE request_id=$1 AND lease_token=$2 AND lease_until>now()")
-            .bind(operation).bind(token).bind(reason.stage()).execute(pool).await.map_err(|_| Failure::DatabaseUnavailable)?;
+        release_for_retry(pool, operation, token, reason).await?;
         counts.pending += 1;
     }
     Ok(counts)
+}
+
+/// A stale/expired worker cannot release another worker's lease or report that
+/// it progressed the operation. Compare only the token captured at claim time.
+pub(crate) async fn release_for_retry(
+    pool: &PgPool,
+    operation: Uuid,
+    captured_token: Uuid,
+    reason: Failure,
+) -> Result<(), Failure> {
+    let updated = sqlx::query("UPDATE erasure_requests SET last_reason=$3,retry_due=now()+interval '1 minute',lease_token=NULL,lease_until=NULL,updated_at=now() WHERE request_id=$1 AND lease_token=$2 AND lease_until>now() AND state <> 'completed'")
+        .bind(operation).bind(captured_token).bind(reason.stage()).execute(pool).await
+        .map_err(|_| Failure::DatabaseUnavailable)?.rows_affected();
+    if updated != 1 {
+        return Err(Failure::LeaseLost);
+    }
+    Ok(())
 }

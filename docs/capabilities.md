@@ -66,6 +66,10 @@ Cite the ID column.
   subject-map write denied by the erasure fence returns Connect
   `failed_precondition` / `account_erasure_pending`, never a guest fallback.
   Cached positive identities still cannot bypass the ordinary-write triggers.
+  Retry bookkeeping compares the captured, unexpired lease token; a stale
+  worker cannot release a replacement lease or count a refused update as
+  progress. An expired claim can be recovered, but a changed Auth instance
+  remains pending without contacting the foreign authority.
   Real Money erasure preparation remains unavailable: no Auth erasure effect
   is activated until that owned contract is supplied. Credential/adoption
   migration integration waits for the separate incident prerequisite, then
