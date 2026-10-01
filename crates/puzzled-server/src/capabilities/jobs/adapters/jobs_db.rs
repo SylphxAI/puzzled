@@ -20,6 +20,12 @@ pub struct DailyReminderClaim {
     pub lease_until: DateTime<Utc>,
 }
 
+#[derive(Debug)]
+pub struct DailyReminderBatch {
+    pub claims: Vec<DailyReminderClaim>,
+    pub next_cursor: Option<Uuid>,
+}
+
 /// Claim due players without recording delivery. Expired leases are reclaimed
 /// by the existing Jobs/Compute tick, including after a worker restart.
 /// Privacy admission uses the erasure owner's fresh-snapshot try-lock helper:
@@ -34,8 +40,23 @@ pub async fn claim_due_daily_reminders(
     now: DateTime<Utc>,
     product_day: &str,
 ) -> Result<Vec<DailyReminderClaim>, String> {
+    Ok(
+        claim_due_daily_reminders_after(pool, now, product_day, None)
+            .await?
+            .claims,
+    )
+}
+
+/// Advance over every candidate, even one refused by privacy admission, so
+/// released failures and busy identities cannot starve later pages this tick.
+pub async fn claim_due_daily_reminders_after(
+    pool: &PgPool,
+    now: DateTime<Utc>,
+    product_day: &str,
+    after: Option<Uuid>,
+) -> Result<DailyReminderBatch, String> {
     let token = Uuid::now_v7();
-    let rows: Vec<(Uuid, NaiveDate)> = sqlx::query_as(
+    let rows: Vec<(Option<Uuid>, Option<NaiveDate>, Uuid)> = sqlx::query_as(
         r#"
         WITH candidates AS MATERIALIZED (
             SELECT np.user_id, local.local_now::date AS local_date
@@ -45,6 +66,7 @@ pub async fn claim_due_daily_reminders(
                 SELECT $1::timestamptz AT TIME ZONE COALESCE(z.name, 'UTC') AS local_now
             ) local
             WHERE np.push_enabled AND np.push_daily_reminder
+              AND ($7::uuid IS NULL OR np.user_id > $7)
               AND NOT EXISTS (
                   SELECT 1 FROM erasure_requests e
                   WHERE e.suppression_hash = puzzled_erasure_player_hash(np.user_id)
@@ -66,7 +88,7 @@ pub async fn claim_due_daily_reminders(
         ), due AS MATERIALIZED (
             SELECT user_id, local_date FROM candidates
             WHERE puzzled_erasure_try_admit(user_id)
-        )
+        ), claimed AS (
         UPDATE notification_preferences np
         SET daily_reminder_claim_token = $5,
             daily_reminder_claim_on = due.local_date,
@@ -74,6 +96,11 @@ pub async fn claim_due_daily_reminders(
         FROM due
         WHERE np.user_id = due.user_id
         RETURNING np.user_id, due.local_date
+        )
+        SELECT claimed.user_id, claimed.local_date, page.last_user_id
+        FROM (SELECT user_id AS last_user_id FROM candidates ORDER BY user_id DESC LIMIT 1) page
+        LEFT JOIN claimed ON true
+        ORDER BY claimed.user_id
         "#,
     )
     .bind(now)
@@ -82,18 +109,26 @@ pub async fn claim_due_daily_reminders(
     .bind(REMINDER_CLAIM_BATCH)
     .bind(token)
     .bind(REMINDER_LEASE_SECONDS as f64)
+    .bind(after)
     .fetch_all(pool)
     .await
     .map_err(|e| format!("daily reminder claim failed: {e}"))?;
-    Ok(rows
+    let next_cursor = rows.first().map(|(_, _, cursor)| *cursor);
+    let claims = rows
         .into_iter()
-        .map(|(uid, local_day)| DailyReminderClaim {
-            user_id: uid.to_string(),
-            local_day,
-            token,
-            lease_until: now + Duration::seconds(REMINDER_LEASE_SECONDS),
+        .filter_map(|(uid, day, _)| {
+            Some(DailyReminderClaim {
+                user_id: uid?.to_string(),
+                local_day: day?,
+                token,
+                lease_until: now + Duration::seconds(REMINDER_LEASE_SECONDS),
+            })
         })
-        .collect())
+        .collect();
+    Ok(DailyReminderBatch {
+        claims,
+        next_cursor,
+    })
 }
 
 /// Only the still-live token/day owner may acknowledge successful delivery.

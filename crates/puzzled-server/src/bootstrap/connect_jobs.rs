@@ -26,8 +26,9 @@ pub async fn send_due_daily_reminders(
     pool: &sqlx::PgPool,
     now: chrono::DateTime<Utc>,
 ) -> Result<u32, Vec<String>> {
-    send_due_daily_reminders_with(pool, now, |user_id| async move {
-        crate::capabilities::preferences::adapters::web_push::send_daily(pool, &user_id).await
+    send_due_daily_reminders_with(pool, now, |user_id, deadline| async move {
+        crate::capabilities::preferences::adapters::web_push::send_daily(pool, &user_id, deadline)
+            .await
     })
     .await
 }
@@ -40,10 +41,10 @@ pub(crate) async fn send_due_daily_reminders_with<F, Fut>(
     mut send: F,
 ) -> Result<u32, Vec<String>>
 where
-    F: FnMut(String) -> Fut,
+    F: FnMut(String, tokio::time::Instant) -> Fut,
     Fut: std::future::Future<Output = Result<(), String>>,
 {
-    let started = std::time::Instant::now();
+    let started = tokio::time::Instant::now();
     let elapsed_now = || {
         chrono::Duration::from_std(started.elapsed())
             .ok()
@@ -52,16 +53,29 @@ where
     };
     let mut claim_at = now;
     let mut processed = 0u32;
+    let mut cursor = None;
+    let mut errors = Vec::new();
     loop {
         let product_day = product_day_key(claim_at).format("%Y-%m-%d").to_string();
-        let due = jobs_db::claim_due_daily_reminders(pool, claim_at, &product_day)
-            .await
-            .map_err(|e| vec![e])?;
-        if due.is_empty() {
-            return Ok(processed);
-        }
-        let mut errors = Vec::new();
-        for claim in due {
+        let batch =
+            match jobs_db::claim_due_daily_reminders_after(pool, claim_at, &product_day, cursor)
+                .await
+            {
+                Ok(batch) => batch,
+                Err(error) => {
+                    errors.push(error);
+                    return Err(errors);
+                }
+            };
+        let Some(next_cursor) = batch.next_cursor else {
+            return if errors.is_empty() {
+                Ok(processed)
+            } else {
+                Err(errors)
+            };
+        };
+        cursor = Some(next_cursor);
+        for claim in batch.claims {
             let user_id = &claim.user_id;
             // Delivery returns success if any endpoint received the reminder;
             // only a wholly unsuccessful retryable delivery releases this claim.
@@ -69,15 +83,29 @@ where
             // Keep the adapter's per-endpoint timeout: cancelling a whole player
             // midway would discard its already-successful endpoint outcomes.
             let delivery_started_at = elapsed_now()?;
-            if delivery_started_at >= claim.lease_until {
+            let delivery_until = claim.lease_until - chrono::Duration::seconds(10);
+            if delivery_started_at >= delivery_until {
                 errors.push(format!("{user_id}: reminder lease expired before delivery"));
                 continue;
             }
-            let delivery = send(user_id.clone()).await;
+            let budget = (delivery_until - delivery_started_at)
+                .to_std()
+                .map_err(|_| vec!["daily reminder deadline overflow".to_string()])?;
+            let deadline = tokio::time::Instant::now() + budget;
+            let lease_deadline = deadline + std::time::Duration::from_secs(10);
+            let delivery = send(user_id.clone(), deadline).await;
             let completed_at = elapsed_now()?;
             match delivery {
                 Ok(()) => {
-                    match jobs_db::acknowledge_daily_reminder(pool, &claim, completed_at).await {
+                    let acknowledgement = tokio::time::timeout_at(
+                        lease_deadline,
+                        jobs_db::acknowledge_daily_reminder(pool, &claim, completed_at),
+                    )
+                    .await
+                    .unwrap_or_else(|_| {
+                        Err("daily reminder acknowledgement deadline reached".to_string())
+                    });
+                    match acknowledgement {
                         Ok(true) => processed += 1,
                         Ok(false) => {
                             errors.push(format!("{user_id}: reminder lease expired or replaced"))
@@ -87,20 +115,20 @@ where
                 }
                 Err(e) => {
                     errors.push(format!("{user_id}: {e}"));
-                    if let Err(release) =
-                        jobs_db::release_daily_reminder(pool, &claim, completed_at).await
-                    {
+                    let released = tokio::time::timeout_at(
+                        lease_deadline,
+                        jobs_db::release_daily_reminder(pool, &claim, completed_at),
+                    )
+                    .await
+                    .unwrap_or_else(|_| Err("daily reminder release deadline reached".to_string()));
+                    if let Err(release) = released {
                         errors.push(format!("{user_id} release: {release}"));
                     }
                 }
             }
         }
-        // Drain successful batches without limiting the whole tick to 16
-        // players. Stop after a failed batch so released players are retried
-        // by the next Compute tick, never immediately in a tight retry loop.
-        if !errors.is_empty() {
-            return Err(errors);
-        }
+        // Keep progressing after failures. The invocation cursor advances past
+        // every candidate, so released players are retried only by a later tick.
         claim_at = elapsed_now()?;
     }
 }
@@ -289,7 +317,7 @@ mod tests {
             let result = send_due_daily_reminders_with(
                 &pool,
                 now + chrono::Duration::minutes(tick * 15),
-                |user_id| {
+                |user_id, _deadline| {
                     let pool = &pool;
                     let sender = &sender;
                     async move {
@@ -362,7 +390,7 @@ mod tests {
         let worker = tokio::spawn(async move {
             let mut entered = Some(entered);
             let mut attempts = 0;
-            send_due_daily_reminders_with(&worker_pool, now, |_| {
+            send_due_daily_reminders_with(&worker_pool, now, |_, _| {
                 attempts += 1;
                 let first = attempts == 1;
                 if !first {
@@ -393,20 +421,20 @@ mod tests {
         // Reconstruct the executor with no in-memory claim state. It cannot steal
         // live leases; expiry recovers only the two not acknowledged as delivered.
         assert_eq!(
-            send_due_daily_reminders_with(&pool, now, |_| async { Ok(()) })
+            send_due_daily_reminders_with(&pool, now, |_, _| async { Ok(()) })
                 .await
                 .unwrap(),
             0
         );
         let retried = now + chrono::Duration::seconds(REMINDER_LEASE_SECONDS);
         assert_eq!(
-            send_due_daily_reminders_with(&pool, retried, |_| async { Ok(()) })
+            send_due_daily_reminders_with(&pool, retried, |_, _| async { Ok(()) })
                 .await
                 .unwrap(),
             2
         );
         assert_eq!(
-            send_due_daily_reminders_with(&pool, retried, |_| async { Ok(()) })
+            send_due_daily_reminders_with(&pool, retried, |_, _| async { Ok(()) })
                 .await
                 .unwrap(),
             0
@@ -425,16 +453,61 @@ mod tests {
         }
         let now = "2026-10-01T08:00:00Z".parse().unwrap();
         assert_eq!(
-            send_due_daily_reminders_with(&pool, now, |_| async { Ok(()) })
+            send_due_daily_reminders_with(&pool, now, |_, _| async { Ok(()) })
                 .await
                 .unwrap(),
             (REMINDER_CLAIM_BATCH + 1) as u32
         );
         assert_eq!(
-            send_due_daily_reminders_with(&pool, now, |_| async { Ok(()) })
+            send_due_daily_reminders_with(&pool, now, |_, _| async { Ok(()) })
                 .await
                 .unwrap(),
             0
+        );
+    }
+    #[tokio::test]
+    async fn failing_first_batch_does_not_starve_player_seventeen_or_retry_releases() {
+        use crate::capabilities::jobs::adapters::jobs_db::REMINDER_CLAIM_BATCH;
+        let Some(pool) = fresh_database().await else {
+            return;
+        };
+        for i in 1..=(REMINDER_CLAIM_BATCH + 1) {
+            sqlx::query("INSERT INTO notification_preferences (user_id, push_enabled, push_daily_reminder, daily_reminder_time, timezone) VALUES ($1, true, true, '08:00', 'UTC')")
+                .bind(Uuid::from_u128(i as u128)).execute(&pool).await.unwrap();
+        }
+        let now = "2026-10-01T08:00:00Z".parse().unwrap();
+        let mut attempts = Vec::new();
+        let result = send_due_daily_reminders_with(&pool, now, |user_id, _| {
+            let user = Uuid::parse_str(&user_id).unwrap();
+            attempts.push(user);
+            async move {
+                if user.as_u128() == (REMINDER_CLAIM_BATCH + 1) as u128 {
+                    Ok(())
+                } else {
+                    Err("retryable failure".to_string())
+                }
+            }
+        })
+        .await;
+        assert_eq!(result.unwrap_err().len(), REMINDER_CLAIM_BATCH as usize);
+        assert_eq!(attempts.len(), (REMINDER_CLAIM_BATCH + 1) as usize);
+        assert_eq!(
+            attempts
+                .iter()
+                .copied()
+                .collect::<std::collections::HashSet<_>>()
+                .len(),
+            attempts.len()
+        );
+        let delivered: Vec<Uuid> = sqlx::query_scalar(
+            "SELECT user_id FROM notification_preferences WHERE last_daily_reminder_on IS NOT NULL",
+        )
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+        assert_eq!(
+            delivered,
+            vec![Uuid::from_u128((REMINDER_CLAIM_BATCH + 1) as u128)]
         );
     }
 }
