@@ -56,10 +56,10 @@ export function SubscribeButton({
 
 	return (
 		<div>
-			<label className="mb-3 flex items-start gap-2 text-sm">
+			<label className="mb-3 flex min-h-11 cursor-pointer items-start gap-3 text-sm">
 				<input
 					type="checkbox"
-					className="mt-1 h-4 w-4"
+					className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
 					checked={consent}
 					onChange={(event) => setConsent(event.target.checked)}
 				/>

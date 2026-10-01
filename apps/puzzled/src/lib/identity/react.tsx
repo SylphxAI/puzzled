@@ -413,6 +413,7 @@ export function useResetPasswordForm(opts?: {
 }
 
 export function useSafeConsent() {
+	const { user } = useSafeUser()
 	const [consent, setConsent] = useState<Record<string, boolean>>({})
 	const [hasConsented, setHasConsented] = useState(false)
 	const [isLoading, setIsLoading] = useState(true)
@@ -441,6 +442,9 @@ export function useSafeConsent() {
 			if (typeof window !== 'undefined') {
 				window.localStorage.setItem('puzzled-consent', JSON.stringify(next))
 			}
+			// A guest's choice lives in this browser only; the consent ledger needs an account, so
+			// calling it as a guest would just be a 401 in the console.
+			if (!user) return
 			await Promise.all(
 				DEST_CONSENT_PURPOSES.filter((purpose) => purpose !== 'necessary').map((purpose) =>
 					fetch('/api/identity/consent', {
@@ -451,7 +455,7 @@ export function useSafeConsent() {
 							purpose,
 							state: next[purpose] ? 'granted' : 'denied',
 						}),
-					}),
+					}).catch(() => undefined),
 				),
 			)
 		},
