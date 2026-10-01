@@ -700,8 +700,25 @@ async fn consent_retention_boundary_linked_rows_and_concurrent_skip_locked() {
         .await
         .unwrap();
     let mut lock = pool.begin().await.unwrap();
-    let boundary: bool = sqlx::query_scalar("SELECT (statement_timestamp() AT TIME ZONE 'UTC') <= (statement_timestamp() AT TIME ZONE 'UTC')").fetch_one(&mut *lock).await.unwrap();
-    assert!(boundary, "the expiry boundary is inclusive");
+    // statement_timestamp is stable throughout one DO statement. Execute
+    // the actual production purge at equality and one microsecond before
+    // expiry, without changing the clock or inventing a test transport.
+    let boundary_id = Uuid::now_v7();
+    let future_id = Uuid::now_v7();
+    let boundary = format!(
+        "DO $boundary$ BEGIN
+        INSERT INTO checkout_consents(id,plan_id,price_key,locale,statement,retention_expires_at)
+        VALUES ('{boundary_id}','plus','fixture','en-US','fixture',statement_timestamp() AT TIME ZONE 'UTC'),
+               ('{future_id}','plus','fixture','en-US','fixture',(statement_timestamp() AT TIME ZONE 'UTC') + interval '1 microsecond');
+        {};
+        IF EXISTS(SELECT 1 FROM checkout_consents WHERE id='{boundary_id}') OR NOT EXISTS(SELECT 1 FROM checkout_consents WHERE id='{future_id}') THEN
+            RAISE EXCEPTION 'retention expiry boundary incorrect';
+        END IF;
+        DELETE FROM checkout_consents WHERE id='{future_id}';
+        END $boundary$",
+        crate::capabilities::money::consent_db::PURGE_EXPIRED_UNLINKED
+    );
+    sqlx::query(&boundary).execute(&pool).await.unwrap();
     let expired = Uuid::now_v7();
     let unlocked = Uuid::now_v7();
     let future = Uuid::now_v7();

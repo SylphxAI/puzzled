@@ -57,18 +57,18 @@ pub async fn record_in_transaction(
 /// One bounded retention page, shared by the existing Jobs/startup owner.
 /// Linked consent is never purged here. Concurrent replicas skip locked rows.
 /// Expiry is a UTC calendar timestamp, independent of the connection timezone.
-pub async fn purge_expired_unlinked(pool: &PgPool) -> Result<u64, String> {
-    sqlx::query(
-        r#"WITH due AS (
+pub(crate) const PURGE_EXPIRED_UNLINKED: &str = r#"WITH due AS (
             SELECT id FROM checkout_consents
             WHERE user_id IS NULL
               AND retention_expires_at <= (statement_timestamp() AT TIME ZONE 'UTC')
             ORDER BY retention_expires_at, id
             LIMIT 256 FOR UPDATE SKIP LOCKED
-        ) DELETE FROM checkout_consents c USING due WHERE c.id = due.id"#,
-    )
-    .execute(pool)
-    .await
-    .map(|result| result.rows_affected())
-    .map_err(|_| "checkout consent retention failed".to_string())
+        ) DELETE FROM checkout_consents c USING due WHERE c.id = due.id"#;
+
+pub async fn purge_expired_unlinked(pool: &PgPool) -> Result<u64, String> {
+    sqlx::query(PURGE_EXPIRED_UNLINKED)
+        .execute(pool)
+        .await
+        .map(|result| result.rows_affected())
+        .map_err(|_| "checkout consent retention failed".to_string())
 }
