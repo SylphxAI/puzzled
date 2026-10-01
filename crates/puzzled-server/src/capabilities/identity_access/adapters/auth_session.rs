@@ -21,9 +21,11 @@ use std::time::{Duration, Instant};
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::header::{AUTHORIZATION, COOKIE};
+use axum::http::StatusCode;
 use axum::http::{HeaderMap, HeaderValue, Request};
 use axum::middleware::Next;
-use axum::response::Response;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
 use base64::Engine;
 use serde_json::Value;
 
@@ -57,6 +59,24 @@ pub struct AuthSessions {
     cache: Arc<Mutex<Cache>>,
     /// Where the Auth subject to player map lives ([`super::auth_subjects`]).
     pool: Option<PgPool>,
+}
+
+/// Keep the erasure fence distinct from absent/invalid Auth credentials.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SessionFailure {
+    ErasurePending,
+}
+
+fn subject_lookup_failure(error: &sqlx::Error) -> Option<SessionFailure> {
+    match error {
+        sqlx::Error::Database(database)
+            if database.code().as_deref() == Some("55000")
+                && database.message() == "account_erasure_pending" =>
+        {
+            Some(SessionFailure::ErasurePending)
+        }
+        _ => None,
+    }
 }
 
 impl AuthSessions {
@@ -105,11 +125,19 @@ impl AuthSessions {
     /// Auth binds a session to the browser's User-Agent, so it is forwarded
     /// and is part of the cache key.
     pub async fn verify(&self, token: &str, user_agent: &str) -> Option<VerifiedIdentity> {
+        self.verify_checked(token, user_agent).await.ok().flatten()
+    }
+
+    async fn verify_checked(
+        &self,
+        token: &str,
+        user_agent: &str,
+    ) -> Result<Option<VerifiedIdentity>, SessionFailure> {
         let key = token_key(token, user_agent);
         if let Some(hit) = self.cached(&key) {
-            return hit;
+            return Ok(hit);
         }
-        let result = self.fetch(token, user_agent).await;
+        let result = self.fetch(token, user_agent).await?;
         let ttl = if result.is_some() {
             POSITIVE_TTL
         } else {
@@ -121,7 +149,7 @@ impl AuthSessions {
             }
             cache.insert(key, (Instant::now() + ttl, result.clone()));
         }
-        result
+        Ok(result)
     }
 
     fn cached(&self, key: &[u8; 32]) -> Option<Option<VerifiedIdentity>> {
@@ -130,40 +158,65 @@ impl AuthSessions {
         (*expires > Instant::now()).then(|| value.clone())
     }
 
-    async fn fetch(&self, token: &str, user_agent: &str) -> Option<VerifiedIdentity> {
-        let response = self
+    async fn fetch(
+        &self,
+        token: &str,
+        user_agent: &str,
+    ) -> Result<Option<VerifiedIdentity>, SessionFailure> {
+        let response = match self
             .http
             .get(format!("{}/v1/sessions/current", self.auth_url))
             .bearer_auth(token)
             .header(axum::http::header::USER_AGENT, user_agent)
             .send()
             .await
-            .map_err(|error| tracing::warn!(%error, "auth session check failed"))
-            .ok()?;
+        {
+            Ok(response) => response,
+            Err(_) => {
+                tracing::warn!("auth session check failed");
+                return Ok(None);
+            }
+        };
         if !response.status().is_success() {
-            return None;
+            return Ok(None);
         }
-        let principal =
-            principal_from_session(&response.json::<Value>().await.ok()?, &self.organization_id)?;
+        let Ok(body) = response.json::<Value>().await else {
+            return Ok(None);
+        };
+        let Some(principal) = principal_from_session(&body, &self.organization_id) else {
+            return Ok(None);
+        };
         let user_id = match &self.pool {
-            Some(pool) => auth_subjects::player_for(
+            Some(pool) => match auth_subjects::player_for(
                 pool,
                 &principal.subject,
                 principal.legacy_subject.as_deref(),
             )
             .await
-            .map_err(|error| tracing::warn!(%error, "auth subject lookup failed"))
-            .ok()?,
-            // No database: nothing is stored, so only the old form maps.
-            None => auth_subjects::legacy_player_id(&principal.subject)?,
+            {
+                Ok(player) => player,
+                Err(error) => {
+                    if let Some(failure) = subject_lookup_failure(&error) {
+                        return Err(failure);
+                    }
+                    tracing::warn!("auth subject lookup failed");
+                    return Ok(None);
+                }
+            },
+            None => {
+                let Some(player) = auth_subjects::legacy_player_id(&principal.subject) else {
+                    return Ok(None);
+                };
+                player
+            }
         };
-        Some(VerifiedIdentity {
+        Ok(Some(VerifiedIdentity {
             user_id: user_id.to_string(),
             display_name: principal.display_name,
             email: principal.email,
             is_admin: false,
             actor: principal.actor,
-        })
+        }))
     }
 }
 
@@ -347,15 +400,26 @@ pub async fn attach_auth_session(
             .and_then(|v| v.to_str().ok())
             .unwrap_or("")
             .to_string();
-        if let Some(value) = sessions
-            .verify(&token, &user_agent)
-            .await
-            .as_ref()
-            .and_then(encode_identity)
-        {
-            request
-                .headers_mut()
-                .insert(VERIFIED_IDENTITY_HEADER, value);
+        match sessions.verify_checked(&token, &user_agent).await {
+            Ok(Some(identity)) => {
+                if let Some(value) = encode_identity(&identity) {
+                    request
+                        .headers_mut()
+                        .insert(VERIFIED_IDENTITY_HEADER, value);
+                }
+            }
+            Ok(None) => {}
+            Err(SessionFailure::ErasurePending) => {
+                // Connect FailedPrecondition is HTTP400, not Internal, a retry
+                // hint, or an invitation to fall back to a guest identity.
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(serde_json::json!({
+                        "code": "failed_precondition", "message": "account_erasure_pending"
+                    })),
+                )
+                    .into_response();
+            }
         }
     }
     next.run(request).await

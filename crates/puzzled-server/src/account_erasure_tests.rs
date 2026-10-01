@@ -749,3 +749,303 @@ async fn consent_retention_boundary_linked_rows_and_concurrent_skip_locked() {
         .unwrap();
     assert_eq!(remaining, 2, "linked and future evidence remain");
 }
+
+/// A request/response barrier, not a sleep: the sender holds admission while
+/// the fake receiver waits for this test to acknowledge the observed request.
+async fn gated_tryit() -> (
+    crate::capabilities::tryit_conversions::TryitReporter,
+    Arc<std::sync::atomic::AtomicUsize>,
+    Arc<tokio::sync::Notify>,
+    Arc<tokio::sync::Notify>,
+) {
+    let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let entered = Arc::new(tokio::sync::Notify::new());
+    let release = Arc::new(tokio::sync::Notify::new());
+    let handler = {
+        let calls = calls.clone();
+        let entered = entered.clone();
+        let release = release.clone();
+        move || {
+            let calls = calls.clone();
+            let entered = entered.clone();
+            let release = release.clone();
+            async move {
+                calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                entered.notify_one();
+                release.notified().await;
+                StatusCode::CREATED
+            }
+        }
+    };
+    let app = Router::new().route("/api/attribution/conversions", axum::routing::post(handler));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    (
+        crate::capabilities::tryit_conversions::TryitReporter::new(
+            &format!("http://{address}"),
+            "fixture-key",
+        )
+        .unwrap(),
+        calls,
+        entered,
+        release,
+    )
+}
+
+async fn queue_tryit(pool: &PgPool, player: Uuid) {
+    let tags =
+        puzzled_core::attribution::Attribution::from_cookie("s=tryit&r=fixture-ref").unwrap();
+    crate::capabilities::tryit_conversions::enqueue(
+        pool,
+        &player.to_string(),
+        &tags,
+        crate::capabilities::tryit_conversions::Event::Signup,
+    )
+    .await
+    .unwrap();
+}
+
+#[tokio::test]
+async fn outbox_send_holds_admission_until_outcome_then_erasure_prevents_any_later_send() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    queue_tryit(&pool, player).await;
+    let (reporter, calls, entered, release) = gated_tryit().await;
+    // One connection proves there is no nested pool acquisition while the
+    // send's admission transaction is held.
+    let sender_pool = sqlx::postgres::PgPoolOptions::new()
+        .max_connections(1)
+        .connect_with(pool.connect_options().as_ref().clone())
+        .await
+        .unwrap();
+    let sender = {
+        let sender_pool = sender_pool.clone();
+        let reporter = reporter.clone();
+        tokio::spawn(async move {
+            crate::capabilities::tryit_conversions::report_now(
+                &sender_pool,
+                Some(&reporter),
+                &player.to_string(),
+            )
+            .await;
+        })
+    };
+    tokio::time::timeout(std::time::Duration::from_secs(5), entered.notified())
+        .await
+        .unwrap();
+    let mut erasure = pool.begin().await.unwrap();
+    let locked: bool = sqlx::query_scalar("SELECT pg_try_advisory_xact_lock(hashtextextended('puzzled:erasure:' || $1::uuid::text,0))")
+        .bind(player).fetch_one(&mut *erasure).await.unwrap();
+    assert!(
+        !locked,
+        "the receiver barrier proves erasure cannot commit during send"
+    );
+    erasure.rollback().await.unwrap();
+    release.notify_one();
+    tokio::time::timeout(std::time::Duration::from_secs(5), sender)
+        .await
+        .unwrap()
+        .unwrap();
+    let attempts: i32 =
+        sqlx::query_scalar("SELECT attempts FROM tryit_conversions WHERE user_id=$1")
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(attempts, 1);
+    seed_erasure_intent(&pool, player).await;
+    crate::capabilities::preferences::adapters::account_deletion::delete_account_data(
+        &pool,
+        &player.to_string(),
+    )
+    .await
+    .unwrap();
+    crate::capabilities::tryit_conversions::report_now(
+        &sender_pool,
+        Some(&reporter),
+        &player.to_string(),
+    )
+    .await;
+    assert_eq!(
+        crate::capabilities::tryit_conversions::sweep(&sender_pool, &reporter)
+            .await
+            .unwrap(),
+        0
+    );
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    sender_pool.close().await;
+}
+
+#[tokio::test]
+async fn outbox_skips_busy_or_suppressed_player_without_poisoning_unrelated_conversion() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let suppressed = Uuid::now_v7();
+    let unrelated = Uuid::now_v7();
+    queue_tryit(&pool, suppressed).await;
+    sqlx::query("UPDATE tryit_conversions SET occurred_at=(now() AT TIME ZONE 'utc')-interval '40 days' WHERE user_id=$1")
+        .bind(suppressed).execute(&pool).await.unwrap();
+    let (reporter, calls, entered, release) = gated_tryit().await;
+    let mut intent = pool.begin().await.unwrap();
+    sqlx::query("SELECT puzzled_erasure_lock($1)")
+        .bind(suppressed)
+        .execute(&mut *intent)
+        .await
+        .unwrap();
+    // The intent has the lock but has not committed yet. Nonblocking admission
+    // skips it and performs no external call; no timing-only sleep needed.
+    crate::capabilities::tryit_conversions::report_now(
+        &pool,
+        Some(&reporter),
+        &suppressed.to_string(),
+    )
+    .await;
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 0);
+    sqlx::query("INSERT INTO erasure_requests(request_id,player_id,suppression_hash,organization_id,subjects) VALUES($1,$2,puzzled_erasure_player_hash($2),'org_test',$3)")
+        .bind(Uuid::now_v7()).bind(suppressed).bind(json!([{"principal_id":"subject-fixture","idempotency_key":"stable-fixture","request_id":null,"state":null}]))
+        .execute(&mut *intent).await.unwrap();
+    intent.commit().await.unwrap();
+    // Expired suppressed rows also cannot poison a bulk expiry UPDATE.
+    queue_tryit(&pool, unrelated).await;
+    let worker = {
+        let pool = pool.clone();
+        let reporter = reporter.clone();
+        tokio::spawn(async move {
+            crate::capabilities::tryit_conversions::sweep(&pool, &reporter)
+                .await
+                .unwrap()
+        })
+    };
+    tokio::time::timeout(std::time::Duration::from_secs(5), entered.notified())
+        .await
+        .unwrap();
+    release.notify_one();
+    assert_eq!(
+        tokio::time::timeout(std::time::Duration::from_secs(5), worker)
+            .await
+            .unwrap()
+            .unwrap(),
+        1
+    );
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    let attempts: i32 =
+        sqlx::query_scalar("SELECT attempts FROM tryit_conversions WHERE user_id=$1")
+            .bind(suppressed)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(attempts, 0);
+}
+
+async fn session_auth_for(player: Uuid) -> (String, Arc<std::sync::atomic::AtomicUsize>) {
+    let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let handler = {
+        let calls = calls.clone();
+        move || {
+            let calls = calls.clone();
+            async move {
+                calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                Json(json!({"session":{"principal":{
+                    "principal_id":format!("principal-{player}"),
+                    "project_id":ORGANIZATION_ID,"state":"active","display_name":"Fixture"
+                }}}))
+            }
+        }
+    };
+    let app = Router::new().route("/v1/sessions/current", axum::routing::get(handler));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    (format!("http://{address}"), calls)
+}
+
+async fn session_profile(app: &Router, update: bool) -> (StatusCode, Value) {
+    let response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method(Method::POST)
+                .uri(if update {
+                    "/puzzled.v1.PreferencesService/UpdateProfile"
+                } else {
+                    "/puzzled.v1.PreferencesService/GetProfile"
+                })
+                .header("content-type", "application/json")
+                .header("authorization", "Bearer identity_org_session_fixture")
+                .body(Body::from(if update {
+                    json!({"bio":"late-write"}).to_string()
+                } else {
+                    "{}".to_string()
+                }))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let status = response.status();
+    let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    (
+        status,
+        serde_json::from_slice(&bytes).unwrap_or(Value::Null),
+    )
+}
+
+#[tokio::test]
+async fn auth_subject_fence_is_failed_precondition_not_guest_or_retryable_error() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    seed_erasure_intent(&pool, player).await;
+    let (url, calls) = session_auth_for(player).await;
+    let sessions = crate::capabilities::identity_access::adapters::auth_session::AuthSessions::new(
+        url,
+        ORGANIZATION_ID.into(),
+    )
+    .with_pool(Some(pool.clone()));
+    let app = router(AppState::new(Some(pool.clone())).with_auth(sessions));
+    let (status, body) = session_profile(&app, false).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST, "{body}");
+    assert_eq!(body["code"], "failed_precondition");
+    assert_eq!(body["message"], "account_erasure_pending");
+    assert_eq!(subject_rows(&pool, player).await, 0);
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+}
+
+#[tokio::test]
+async fn cached_positive_auth_identity_still_cannot_write_after_erasure_intent() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    let (url, calls) = session_auth_for(player).await;
+    let sessions = crate::capabilities::identity_access::adapters::auth_session::AuthSessions::new(
+        url,
+        ORGANIZATION_ID.into(),
+    )
+    .with_pool(Some(pool.clone()));
+    let app = router(AppState::new(Some(pool.clone())).with_auth(sessions));
+    assert_eq!(session_profile(&app, false).await.0, StatusCode::OK);
+    seed_erasure_intent(&pool, player).await;
+    let (status, _) = session_profile(&app, true).await;
+    assert!(
+        !status.is_success(),
+        "cached positive identity cannot bypass the database fence"
+    );
+    assert_eq!(
+        calls.load(std::sync::atomic::Ordering::SeqCst),
+        1,
+        "positive Auth cache is actually used"
+    );
+    let rows: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM user_preferences WHERE user_id=$1 AND bio='late-write'",
+    )
+    .bind(player)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(rows, 0);
+}
