@@ -117,7 +117,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		<div className="surface-card p-5 sm:p-7">
 			<h1 className="font-display text-2xl">{t('createAccount')}</h1>
 			<p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{t('joinToContinue')}</p>
-			{/* The brand panel carries these on desktop; on a phone the card is the whole page. */}
+			{/* The desktop brand panel makes a different pitch (free, no account, midnight); on a phone the card is the whole page, so the sign-up reasons live here. */}
 			<ul className="mt-3 space-y-1.5 text-sm lg:hidden">
 				{(['signupBenefitSaved', 'signupBenefitDevices', 'signupBenefitFree'] as const).map(
 					(key) => (
