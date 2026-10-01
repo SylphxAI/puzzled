@@ -136,7 +136,6 @@ export function PasswordField({
 					onChange={(event) => onChange(event.target.value)}
 					onBlur={onBlur}
 					autoComplete={autoComplete}
-					placeholder="••••••••"
 					disabled={disabled}
 					enterKeyHint={enterKeyHint}
 					required={required}

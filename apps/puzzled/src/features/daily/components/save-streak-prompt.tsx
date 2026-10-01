@@ -66,6 +66,7 @@ export function SaveStreakPrompt({ daily, gameSlug }: { daily: boolean; gameSlug
 						{t('saveStreak')}
 					</h3>
 					<p className="mt-1 text-sm text-muted-foreground">{t('keepStreak', { days: streak })}</p>
+					<p className="mt-1 text-xs text-muted-foreground">{t('saveStreakNote')}</p>
 					<Button asChild className="mt-3 w-full" size="lg">
 						<Link href={signupHref(gameSlug)}>{t('createFreeAccount')}</Link>
 					</Button>
