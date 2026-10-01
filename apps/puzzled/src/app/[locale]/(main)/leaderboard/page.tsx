@@ -91,7 +91,7 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 				rank: entry.rank,
 				name: entry.userName.trim() || t('anonymous'),
 				score: entry.value,
-				isViewer: Boolean(viewerId && entry.userId === viewerId),
+				isViewer: entry.isViewer,
 			}))
 		}
 	}

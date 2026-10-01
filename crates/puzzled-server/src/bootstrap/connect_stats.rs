@@ -84,22 +84,39 @@ fn clamp_limit(limit: i32) -> i32 {
     }
 }
 
-fn to_proto_entry(entry: puzzled_core::leaderboard::enrich::LeaderboardEntry) -> LeaderboardEntry {
+fn to_proto_entry(
+    entry: puzzled_core::leaderboard::enrich::LeaderboardEntry,
+    viewer_id: Option<&str>,
+) -> LeaderboardEntry {
     LeaderboardEntry {
         rank: entry.rank,
-        user_id: entry.user_id.to_string(),
+        // Wire compatibility: this field now identifies only this response entry.
+        // Never derive it from a player id, including by hashing.
+        user_id: uuid::Uuid::new_v4().to_string(),
         user_name: entry.user_name,
-        user_image: entry.user_image,
+        // Avatar URLs can contain stable account identifiers. Public rows use initials.
+        user_image: None,
+        is_viewer: viewer_id.is_some_and(|id| id == entry.user_id.to_string()),
         value: entry.value,
         ..Default::default()
     }
+}
+
+// Viewer markers are private response data; public intermediaries must not store them.
+fn leaderboard_response(entries: Vec<LeaderboardEntry>) -> ServiceResult<GetLeaderboardResponse> {
+    Ok(Response::new(GetLeaderboardResponse {
+        entries,
+        ..Default::default()
+    })
+    .with_header("cache-control", "private, no-store, max-age=0")
+    .with_header("cdn-cache-control", "no-store"))
 }
 
 #[allow(refining_impl_trait_internal, refining_impl_trait_reachable)]
 impl StatsService for StatsConnectService {
     async fn get_leaderboard(
         &self,
-        _ctx: RequestContext,
+        ctx: RequestContext,
         request: ServiceRequest<'_, GetLeaderboardRequest>,
     ) -> ServiceResult<GetLeaderboardResponse> {
         let req = request.to_owned_message();
@@ -111,6 +128,9 @@ impl StatsService for StatsConnectService {
             ));
         }
 
+        let viewer = require_identity_or_guest(&ctx).ok();
+        let viewer_id = viewer.as_ref().map(|identity| identity.user_id.as_str());
+
         let query = LeaderboardQuery {
             game_slug: game_slug.to_string(),
             leaderboard_type: map_type(req.r#type),
@@ -121,10 +141,12 @@ impl StatsService for StatsConnectService {
         if let Some(pool) = &self.state.pool {
             match fetch_score_leaderboard(pool, &query).await {
                 Ok(entries) => {
-                    return Response::ok(GetLeaderboardResponse {
-                        entries: entries.into_iter().map(to_proto_entry).collect(),
-                        ..Default::default()
-                    });
+                    return leaderboard_response(
+                        entries
+                            .into_iter()
+                            .map(|entry| to_proto_entry(entry, viewer_id))
+                            .collect(),
+                    );
                 }
                 Err(error) => {
                     tracing::warn!(
@@ -137,10 +159,7 @@ impl StatsService for StatsConnectService {
         }
 
         // No pool or read failure: honest residual empty board (do not invent scores).
-        Response::ok(GetLeaderboardResponse {
-            entries: Vec::new(),
-            ..Default::default()
-        })
+        leaderboard_response(Vec::new())
     }
 
     async fn get_today_percentile(
@@ -342,4 +361,38 @@ impl StatsService for StatsConnectService {
 
 pub fn stats_connect_service(state: AppState) -> Arc<StatsConnectService> {
     Arc::new(StatsConnectService::new(state))
+}
+
+#[cfg(test)]
+mod public_disclosure_tests {
+    use super::*;
+
+    #[test]
+    fn public_entries_do_not_disclose_or_reuse_player_identifiers() {
+        let id = uuid::Uuid::from_u128(1);
+        let row = puzzled_core::leaderboard::enrich::LeaderboardEntry {
+            rank: 2,
+            user_id: id,
+            user_name: Some("Player".into()),
+            user_image: Some(format!("https://avatars.invalid/{id}")),
+            value: 700,
+        };
+        let a = to_proto_entry(row.clone(), Some(&id.to_string()));
+        let b = to_proto_entry(row, None);
+        assert_ne!(a.user_id, id.to_string());
+        assert_ne!(a.user_id, b.user_id);
+        assert!(a.user_image.is_none());
+        assert!(a.is_viewer);
+        assert!(!b.is_viewer);
+        assert_eq!(
+            (a.rank, a.value, a.user_name.as_deref()),
+            (2, 700, Some("Player"))
+        );
+        let response = leaderboard_response(vec![a]).unwrap();
+        assert_eq!(
+            response.headers["cache-control"],
+            "private, no-store, max-age=0"
+        );
+        assert_eq!(response.headers["cdn-cache-control"], "no-store");
+    }
 }
