@@ -177,6 +177,30 @@ fn env_value(name: &str) -> Option<String> {
         .filter(|value| !value.is_empty())
 }
 
+/// The environment URL from a `whoami` body. `env` is the environment's full
+/// resource name (`orgs/{o}/projects/{p}/envs/{e}`), used as-is under
+/// `{origin}/v1/`; bare `org`/`project`/`env` ids build the same path.
+pub(super) fn env_url(origin: &str, whoami: &Value) -> Result<String, MoneyError> {
+    let part = |name: &str| {
+        whoami
+            .get(name)
+            .and_then(Value::as_str)
+            .map(|v| v.trim_matches('/'))
+            .filter(|v| !v.is_empty())
+    };
+    if let Some(env) = part("env").filter(|e| e.starts_with("orgs/")) {
+        return Ok(format!("{origin}/v1/{env}"));
+    }
+    match (part("org"), part("project"), part("env")) {
+        (Some(org), Some(project), Some(env)) => Ok(format!(
+            "{origin}/v1/orgs/{org}/projects/{project}/envs/{env}"
+        )),
+        _ => Err(MoneyError::Unavailable(
+            "the API key is not scoped to an environment".into(),
+        )),
+    }
+}
+
 /// The environment resource URL a key belongs to, from its `whoami`:
 /// `{origin}/v1/orgs/{org}/projects/{project}/envs/{env}`. The key must be
 /// scoped to an environment.
@@ -201,19 +225,7 @@ pub async fn resolve_env_url(
         .json()
         .await
         .map_err(|e| MoneyError::Unavailable(format!("whoami unreadable: {e}")))?;
-    let part = |name: &str| {
-        body.get(name)
-            .and_then(Value::as_str)
-            .filter(|v| !v.is_empty())
-    };
-    match (part("org"), part("project"), part("env")) {
-        (Some(org), Some(project), Some(env)) => Ok(format!(
-            "{origin}/v1/orgs/{org}/projects/{project}/envs/{env}"
-        )),
-        _ => Err(MoneyError::Unavailable(
-            "the API key is not scoped to an environment".into(),
-        )),
-    }
+    env_url(origin, &body)
 }
 
 impl Money {
