@@ -1,14 +1,16 @@
 'use client'
 
 import { Button } from '@sylphx/ui'
-import { BarChart3, Clock, Image, Share2, Target, Trophy, Users } from 'lucide-react'
+import { ArrowRight, BarChart3, Clock, Share2, Target, Trophy, Users } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AdSlot } from '@/features/ads/components/ad-slot'
 import { ChallengeComparison } from '@/features/daily/components/challenge-comparison'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
 import { TomorrowGameLine } from '@/features/daily/components/tomorrow-game-line'
+import { readGuestFinishedToday } from '@/features/daily/hooks/use-guest-game-state'
 import { countShareTap, knownShareId, useWarmShareId } from '@/features/daily/hooks/use-share-id'
+import { nextGameToPlay } from '@/features/daily/lib/next-game'
 import {
 	buildResultCard,
 	type ResultCardTile,
@@ -18,7 +20,7 @@ import {
 import { resolveModuleDisplayName } from '@/features/daily/lib/result-share'
 import { shareRitualResultCard } from '@/features/daily/lib/share-result-card'
 import { seasonGreeting } from '@/features/seasons/lib/seasons'
-import { type GameSlug, getHowToPlayConfig } from '@/games/how-to-play-registry'
+import { type GameSlug, getHowToPlayConfig, HOW_TO_PLAY_SLUGS } from '@/games/how-to-play-registry'
 import { useTodayPercentile } from '@/lib/api'
 import { Link } from '@/lib/i18n/routing'
 import { productDayKey } from '@/lib/product-day'
@@ -44,7 +46,8 @@ type GameResultProps = {
 	}
 	solution?: string
 	mode: 'daily' | 'archive'
-	onShare: () => void
+	/** Unused: the one Share button sends the card with its caption and link. */
+	onShare?: () => void
 	/** For connections: categories the user didn't solve */
 	missedCategories?: MissedCategory[]
 	/** Product day (YYYY-MM-DD) the run was served for; labels the shareable card. */
@@ -69,7 +72,6 @@ export function GameResultCard({
 	stats,
 	solution,
 	mode,
-	onShare,
 	missedCategories,
 	puzzleDate,
 	currentStreak,
@@ -84,6 +86,13 @@ export function GameResultCard({
 	useWarmShareId(gameType, puzzleDate, mode === 'daily')
 	const [cardBusy, setCardBusy] = useState(false)
 	const [cardNotice, setCardNotice] = useState<string | null>(null)
+	const [nextGame, setNextGame] = useState<string | null>(null)
+	// Guests keep today's finishes on this device; the next suggestion skips them.
+	useEffect(() => {
+		setNextGame(
+			nextGameToPlay(gameType, HOW_TO_PLAY_SLUGS, new Set(readGuestFinishedToday(productDayKey()))),
+		)
+	}, [gameType])
 
 	const isWin = status === 'won'
 
@@ -312,7 +321,7 @@ export function GameResultCard({
 
 				{/* Actions */}
 				<div className="flex flex-col gap-2">
-					{/* The card is the primary share; the text share stays beside it. */}
+					{/* One share: the card image with the caption and the ?ref= link riding along. */}
 					<Button
 						onClick={handleShareCard}
 						className="w-full gap-2"
@@ -320,11 +329,6 @@ export function GameResultCard({
 						disabled={cardBusy}
 						aria-busy={cardBusy}
 					>
-						<Image className="h-4 w-4" aria-hidden="true" />
-						{tShare('card.share')}
-					</Button>
-
-					<Button onClick={onShare} variant="secondary" className="w-full gap-2" size="lg">
 						<Share2 className="h-4 w-4" aria-hidden="true" />
 						{tCommon('share')}
 					</Button>
@@ -342,12 +346,15 @@ export function GameResultCard({
 					>
 						{t('backToHome')}
 					</Link>
-					<a
-						href="https://tryit.fun/daily"
-						className="flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-					>
-						{t('moreOnTryit')}
-					</a>
+					{nextGame ? (
+						<Link
+							href={`/games/${nextGame}`}
+							className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full px-4 text-[15px] font-medium text-foreground transition-colors hover:text-primary"
+						>
+							{t('playNext', { game: resolveModuleDisplayName(tGames, nextGame) })}
+							<ArrowRight className="h-4 w-4" aria-hidden="true" />
+						</Link>
+					) : null}
 				</div>
 
 				{/* Daily mode: Countdown to next puzzle */}
