@@ -1,0 +1,14 @@
+{
+	"pricing": {
+		"metaDescription": "今天精選謎題免費。Puzzled Plus 開放全部遊戲、所有過往題目，並提供家庭方案。",
+		"lead": "今天精選謎題人人免費。Puzzled Plus 開放全部 {count} 款遊戲、過往題庫，以及每款遊戲的統計。",
+		"freeBody": "每天一題今天精選謎題，不需註冊帳號。",
+		"playFree": "玩今天的免費謎題：{game}"
+	},
+	"unlock": {
+		"body": "今天的免費謎題是 {game}。Puzzled Plus 開放全部 {count} 款遊戲和所有過往題目。"
+	},
+	"subscription": {
+		"free": "你正在使用免費方案：每天一題今天精選謎題。"
+	}
+}

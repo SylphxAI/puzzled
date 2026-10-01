@@ -4,5 +4,7 @@
 	"eyebrow": "典藏",
 	"title": "典藏",
 	"body": "每個過往的每日謎題都還在這裡。選一天，再玩一次。",
-	"listBody": "最近 {count} 個遊戲日，最新在前。每一天都會開啟當日運行的謎題。"
+	"listBody": "最近 {count} 個遊戲日，最新在前。每一天都會開啟當日運行的謎題。",
+	"playFreeToday": "玩今天的免費謎題（{game}）",
+	"playToday": "玩今天的儀式（{game}）"
 }

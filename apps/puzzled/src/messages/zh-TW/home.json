@@ -16,7 +16,8 @@
 	"lineup": {
 		"title": "今天的陣容",
 		"subtitle": "每日輪換，天天新鮮。完整目錄請到遊戲頁。",
-		"seeAll": "看全部遊戲"
+		"seeAll": "看全部遊戲",
+		"freeToday": "今天精選"
 	},
 	"value": {
 		"dailyTitle": "每天全新題目",
@@ -70,5 +71,6 @@
 		"finishersToday": "今天已有 {count} 人完成",
 		"freeToday": "今天免費",
 		"guestNote": "不必註冊、不必信用卡，幾分鐘玩完。"
-	}
+	},
+	"todaysPuzzles": "今天的謎題"
 }

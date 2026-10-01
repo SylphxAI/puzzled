@@ -3492,14 +3492,15 @@
 			},
 			{
 				"value": "今天",
-				"keys": ["stats.calendar.todayLabel", "stats.today.title"]
+				"keys": [
+					"leaderboard.period.today",
+					"nav.today",
+					"stats.calendar.todayLabel",
+					"stats.today.title"
+				]
 			},
 			{
-				"value": "今日",
-				"keys": ["leaderboard.period.today", "nav.today"]
-			},
-			{
-				"value": "今日精選",
+				"value": "今天精選",
 				"keys": ["catalog.freeToday", "home.lineup.freeToday"]
 			},
 			{
@@ -3509,6 +3510,10 @@
 			{
 				"value": "你的名稱",
 				"keys": ["auth.namePlaceholder", "settings.profile.displayNamePlaceholder"]
+			},
+			{
+				"value": "你的成績",
+				"keys": ["settings.playerCard.progressTitle", "share.challenge.yours"]
 			},
 			{
 				"value": "使用更緊密的排版與更小的間距",
@@ -3831,7 +3836,7 @@
 				]
 			},
 			{
-				"value": "我們會以電郵回覆。",
+				"value": "我們會以電子郵件回覆。",
 				"keys": ["support.email.responseTime", "support.hero.factReply"]
 			},
 			{
@@ -4039,6 +4044,10 @@
 			{
 				"value": "狀態",
 				"keys": ["admin.dlq.table.status", "gameResult.status"]
+			},
+			{
+				"value": "玩今天的免費謎題",
+				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
 			},
 			{
 				"value": "玩家",

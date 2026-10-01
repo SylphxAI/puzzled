@@ -103,14 +103,18 @@ import zhTWCommon from '@/messages/zh-TW/common.json'
 import zhTWConsent from '@/messages/zh-TW/consent.json'
 import zhTWDaily from '@/messages/zh-TW/daily.json'
 import zhTWFooter from '@/messages/zh-TW/footer.json'
+import zhTWGameResult from '@/messages/zh-TW/game-result.json'
 import zhTWHome from '@/messages/zh-TW/home.json'
 import zhTWLeaderboard from '@/messages/zh-TW/leaderboard.json'
 import zhTWLegal from '@/messages/zh-TW/legal.json'
+import zhTWModes from '@/messages/zh-TW/modes.json'
 import zhTWNav from '@/messages/zh-TW/nav.json'
 import zhTWOnboarding from '@/messages/zh-TW/onboarding.json'
+import zhTWPlus from '@/messages/zh-TW/plus.json'
 import zhTWSettings from '@/messages/zh-TW/settings.json'
 import zhTWShare from '@/messages/zh-TW/share.json'
 import zhTWStats from '@/messages/zh-TW/stats.json'
+import zhTWStreak from '@/messages/zh-TW/streak.json'
 import zhTWSupport from '@/messages/zh-TW/support.json'
 
 // ==========================================
@@ -235,7 +239,11 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		legal: zhTWLegal,
 		share: zhTWShare,
 		stats: zhTWStats,
+		streak: zhTWStreak,
 		support: zhTWSupport,
+		plus: zhTWPlus,
+		modes: zhTWModes,
+		gameResult: zhTWGameResult,
 	},
 	'zh-CN': {
 		common: zhCNCommon,
