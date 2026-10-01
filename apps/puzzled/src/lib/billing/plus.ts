@@ -15,9 +15,11 @@ export type PlusAccess = {
 	salesOpen: boolean
 	/** The viewer may play every game and the archive. */
 	entitled: boolean
+	/** The free reverse trial runs until this time (epoch ms); null when none runs. */
+	trialEndsMs?: number | null
 }
 
-export const OPEN_ACCESS: PlusAccess = { salesOpen: false, entitled: false }
+export const OPEN_ACCESS: PlusAccess = { salesOpen: false, entitled: false, trialEndsMs: null }
 
 /** Is this game or day locked for the viewer? Mirrors `billing_access::policy::play_access`. */
 export function isPlayLocked(
@@ -91,7 +93,8 @@ export function yearlySavingPercent(monthlyMinor: number, yearlyMinor: number): 
 export type SubscriptionView = {
 	salesOpen: boolean
 	entitled: boolean
-	source: 'none' | 'plus' | 'family'
+	source: 'none' | 'plus' | 'family' | 'trial'
+	trialEndsMs: number | null
 	planId: PlanId | null
 	status: string | null
 	periodEndMs: number | null
@@ -105,11 +108,13 @@ export type SubscriptionView = {
 }
 
 export function subscriptionView(res: GetSubscriptionResponse): SubscriptionView {
-	const source = res.source === 'plus' || res.source === 'family' ? res.source : 'none'
+	const source =
+		res.source === 'plus' || res.source === 'family' || res.source === 'trial' ? res.source : 'none'
 	return {
 		salesOpen: res.salesOpen,
 		entitled: res.entitled,
 		source,
+		trialEndsMs: Number(res.trialEndsMs) || null,
 		// Unset optional fields read as their zero value.
 		planId: (res.planId || null) as PlanId | null,
 		status: res.status || null,

@@ -7,7 +7,7 @@
 		"lead": "今日精选谜题人人免费。Puzzled Plus 开放全部 {count} 款游戏、往日题库，以及每款游戏的统计。",
 		"closedTitle": "目前全部免费",
 		"closedBody": "Puzzled Plus 尚未开售，因此每款游戏和每一天的题目都向所有人开放。",
-		"purchasesSoon": "即将开放购买。",
+		"purchasesSoon": "现在每款游戏和每一个往日谜题都向所有人开放，尽情畅玩。",
 		"checkoutFailed": "无法打开付款页面，请重试。",
 		"freeTitle": "免费",
 		"freeBody": "每天一道今日精选谜题，无需注册账户。",
@@ -36,6 +36,9 @@
 		"alreadySubscribed": "你已订阅 Puzzled Plus。",
 		"immediateSupplyConsent": "我要立即使用，并明白我会失去 14 天取消权。",
 		"consentRequired": "请勾选方框以继续。"
+	},
+	"trial": {
+		"endsOn": "你的 Puzzled Plus 免费一周将于 {date} 结束。不会收取任何费用，你已完成的内容会继续保留在统计中。"
 	},
 	"unlock": {
 		"title": "这款游戏属于 Puzzled Plus",

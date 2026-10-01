@@ -38,6 +38,17 @@ family.
   `puzzled-core` `billing_access::policy::play_access`). A refused request is
   403 `plus_required` (another game) or `plus_required_archive` (a past day);
   the web renders the unlock path from the same rule, never a dead end.
+- **Reverse trial** (new players): after a player's third finished day the api
+  grants every game for 7 days, once per account (`plus_trials`, one row per
+  account, kept after it ends), then the account drops back to the free floor
+  with nothing charged and nothing taken away. Money has no grant API for this,
+  so it is Puzzled's own time-boxed access, owned by the Rust api
+  (`billing_access::reverse_trial`, `billing::service::access`). It is off
+  unless `PUZZLED_REVERSE_TRIAL=on` in the api environment; switch it on
+  together with Plus sales. Result screens and Settings > Subscription state the
+  true end date ("ends on DATE"). The 7-day card-up-front yearly trial is the
+  offer for returning players (pricing page); Money cannot yet hide it from a
+  new player who goes straight to the yearly plan.
 - An entitlement read that fails refuses paid play (fail closed to the free
   floor). The free daily puzzle never reads billing.
 - While Stripe is not configured, nothing is sold, so nothing is locked.
@@ -88,12 +99,15 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 
 - Cancel at any time in Settings > Subscription. Access runs to the end of the
   paid period and nothing more is charged.
-- Cancellation right: an account's first subscription can be cancelled within
-  14 days of starting it for a full refund, however much was played
-  (Consumer Contracts Regulations 2013). The api refunds every paid invoice of
-  that subscription through Sylphx Money, which owns the refund records and ends access at once. A later subscription has no refund window.
+- Immediate supply: checkout starts only after the buyer asks for access now
+  and acknowledges that they lose the 14-day cancellation right
+  (Consumer Contracts Regulations 2013, regulation 37). The consent is recorded
+  per checkout. No 14-day refund is promised and the api does not refund on
+  cancellation; the buyer's statutory rights (for example for a faulty or
+  misdescribed service, and any refund the law requires) are unaffected, and
+  Terms say so.
 - Sylphx Money's hosted portal handles payment methods, invoices and plan
-  changes; cancellation stays in Settings so the refund rule applies.
+  changes; cancellation stays in Settings, one step, and access runs to the end of the paid period.
 - An account with a subscription that still renews cannot be erased until it
   is cancelled. Money retains legally required financial records under its own retention
   policy; Puzzled has no subscription or payment-ledger rows to retain.
@@ -102,7 +116,7 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   Auth deletion erases nothing: the account stays whole and the request can
   be repeated.
 - Terms, Privacy and checkout name Sylphx Limited, state VAT-inclusive prices,
-  automatic renewal, the 14-day right, and UK GDPR with the ICO.
+  automatic renewal, the immediate-supply waiver of the 14-day right, the statutory rights that remain, and UK GDPR with the ICO.
 
 ## 5. Money and entitlement (commercial standard)
 
@@ -111,9 +125,8 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   `entitlement_grants:check` for Plus access. It holds no Stripe keys,
   processor webhooks, billing subscriptions or payment ledger.
 - Checkout return reads Money's subscription status; a browser redirect
-  cannot assert a paid entitlement. Cancellation and the first-subscription
-  14-day refund are requests to Money; Money owns invoice, refund and tax
-  records. Puzzled stores only checkout consent evidence and family membership.
+  cannot assert a paid entitlement. Cancellation is a request to Money; Money owns invoice, refund and tax
+  records. Puzzled stores only checkout consent evidence, family membership and the reverse-trial grants (below).
 - Family: the family-plan subscriber gets an invite link; up to 3 others join
   with their own accounts. The subscriber can remove members and reset the
   link. Membership is not an entitlement: access still requires the owner's
@@ -176,5 +189,5 @@ daily puzzle completers or paid conversion justifies that.
 
 This is the intended behaviour, a business choice of player experience over a small leak:
 
-- If the Money catalogue can't be read, Plus counts as not on sale. Nothing is locked, and the pricing page says "Purchases open shortly".
+- If the Money catalogue can't be read, Plus counts as not on sale. Nothing is locked, and the pricing page says every game and every past day is open to everyone today.
 - If Money can't answer a Plus entitlement check, play is allowed. Each such allowance logs `event = "money_entitlement_unanswerable_allowed"` at warn level, so a free ride lasting a whole outage shows up in logs and alerts.

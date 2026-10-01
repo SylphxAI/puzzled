@@ -75,7 +75,8 @@ message GetSubscriptionResponse {
   bool sales_open = 1;
   // The account may play every game and the archive.
   bool entitled = 2;
-  // none | plus (own subscription) | family (member of a family plan)
+  // none | plus (own subscription) | family (member of a family plan) |
+  // trial (the reverse trial: every game for seven days, once)
   string source = 3;
   // Own subscription: plan id, Money status, period end.
   string plan_id = 4 [features.field_presence = EXPLICIT];
@@ -86,6 +87,8 @@ message GetSubscriptionResponse {
   reserved 8;
   reserved refund_until_ms;
   Family family = 9;
+  // Reverse trial: when the free access ends. Set only while it runs.
+  int64 trial_ends_ms = 10 [features.field_presence = EXPLICIT];
 }
 
 message CreateCheckoutRequest {

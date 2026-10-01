@@ -131,7 +131,7 @@ industry benchmarks; the product has no payers yet, so none is measured.
 - [~] **7-day trial on the yearly plan** (S). Source done (`trial_days = 7` in `config/commercial/catalogue.json`, pricing page states the real first-charge date); live when Money applies the catalogue and honours it at checkout. The pre-conversion reminder email is not built. Money plan setting `trial_days = 7` on `individual_yearly`
       only; card up front; a reminder before it converts and one-step cancel (UK DMCC). Trial end date is
       the real one.
-- [ ] **Reverse trial as the default** (M). After the 3rd finished day, grant an entitlement that opens
+- [~] **Reverse trial as the default** (M). Built behind `PUZZLED_REVERSE_TRIAL=on` (off until Money is live); the "ends on DATE" line is on the result screen and in Settings. After the 3rd finished day, grant an entitlement that opens
       all 19 games for 7 days, then drops back to free; one grant per account; a true "ends on
       DATE" line on the result screen. Runs instead of the card-up-front trial for new players; the
       yearly trial serves returning ones.

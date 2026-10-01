@@ -360,7 +360,11 @@ export const getServerPlusAccess = cache(async (signedIn: boolean): Promise<Plus
 	if (signedIn) {
 		try {
 			const res = await getServerSubscription()
-			return { salesOpen: res.salesOpen, entitled: res.entitled }
+			return {
+				salesOpen: res.salesOpen,
+				entitled: res.entitled,
+				trialEndsMs: Number(res.trialEndsMs) || null,
+			}
 		} catch (error) {
 			logger.warn('plus.subscription-read-failed', { error })
 		}

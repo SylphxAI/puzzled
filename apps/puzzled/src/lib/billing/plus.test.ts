@@ -88,6 +88,20 @@ describe('Puzzled Plus presentation', () => {
 		expect(trialEndDate(now, 0, 'en-US')).toBe(null)
 	})
 
+	test('the reverse trial reads as its own source with a real end', () => {
+		const view = subscriptionView(
+			create(GetSubscriptionResponseSchema, {
+				salesOpen: true,
+				entitled: true,
+				source: 'trial',
+				trialEndsMs: BigInt(1_790_000_000_000),
+			}),
+		)
+		expect(view).toMatchObject({ entitled: true, source: 'trial', trialEndsMs: 1_790_000_000_000 })
+		const none = subscriptionView(create(GetSubscriptionResponseSchema, { source: 'none' }))
+		expect(none.trialEndsMs).toBe(null)
+	})
+
 	test('subscription view reads optional fields as null', () => {
 		const view = subscriptionView(
 			create(GetSubscriptionResponseSchema, { salesOpen: true, source: 'none' }),

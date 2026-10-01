@@ -31,6 +31,7 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 	const t = useTranslations('plus.subscription')
 	const tFamily = useTranslations('plus.family')
 	const tUnlock = useTranslations('plus.unlock')
+	const tTrial = useTranslations('plus.trial')
 	const router = useRouter()
 	const [busy, setBusy] = useState(false)
 	const [confirming, setConfirming] = useState<'cancel' | 'leave' | null>(null)
@@ -97,6 +98,13 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 						</>
 					) : view.source === 'family' ? (
 						<p>{t('viaFamily')}</p>
+					) : view.source === 'trial' ? (
+						<>
+							<p>{tTrial('endsOn', { date: date(view.trialEndsMs) })}</p>
+							<Link href="/pricing" className={primary}>
+								{tUnlock('cta')}
+							</Link>
+						</>
 					) : (
 						<>
 							<p className="font-display text-lg">

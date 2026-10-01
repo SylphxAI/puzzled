@@ -320,6 +320,9 @@ impl BillingService for BillingConnectService {
         if let Some(owner) = &entitlement.family_owner {
             response.source = "family".to_string();
             response.family = self.family_view(pool, owner, false).await?.into();
+        } else if let Some(ends) = entitlement.trial_ends_ms {
+            response.source = "trial".to_string();
+            response.trial_ends_ms = Some(ends);
         } else if entitlement.entitled {
             response.source = "plus".to_string();
             // The subscription behind it, when there is one (a manual grant

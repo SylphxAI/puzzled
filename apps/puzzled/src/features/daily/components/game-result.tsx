@@ -17,6 +17,7 @@ import {
 } from '@/features/daily/lib/result-card'
 import { resolveModuleDisplayName } from '@/features/daily/lib/result-share'
 import { shareRitualResultCard } from '@/features/daily/lib/share-result-card'
+import { TrialEndsLine } from '@/features/plus/components/trial-ends-line'
 import { seasonGreeting } from '@/features/seasons/lib/seasons'
 import { type GameSlug, getHowToPlayConfig } from '@/games/how-to-play-registry'
 import { useTodayPercentile } from '@/lib/api'
@@ -360,6 +361,7 @@ export function GameResultCard({
 
 				{/* After the finish only; renders nothing for Plus or while ads are off. */}
 				<div className="mt-4">
+					<TrialEndsLine />
 					<AdSlot />
 				</div>
 			</div>
