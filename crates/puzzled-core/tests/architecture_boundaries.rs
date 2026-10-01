@@ -27,7 +27,7 @@ fn core_generates_and_scores_sudoku_without_shell() {
         .map(|row| row.iter().copied().map(u64::from).collect())
         .collect();
     let result = validate_and_score_sudoku(
-        &puzzle.solution,
+        &puzzle.puzzle_data,
         &GameSubmission {
             status: SubmissionStatus::Won,
             attempts: 1,

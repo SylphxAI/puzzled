@@ -139,7 +139,7 @@ fn scoring_cases_match_golden_baseline() {
         let difficulty = parse_difficulty(&case.difficulty);
         let puzzle = generate_sudoku_puzzle(case.seed, difficulty);
         let submission = build_submission(&case.submission, &puzzle.solution.grid);
-        let actual = validate_and_score_sudoku(&puzzle.solution, &submission);
+        let actual = validate_and_score_sudoku(&puzzle.puzzle_data, &submission);
         let actual_json = scoring_to_json(&actual);
         assert_eq!(actual_json, case.expected, "case {}", case.id);
     }

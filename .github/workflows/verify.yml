@@ -1,0 +1,538 @@
+# Post-merge verification (optimistic merge, SylphxAI/.github
+# docs/optimistic-merge.md): everything the gate dropped - the production web
+# build, the release binary, the full database-backed Rust suite and the
+# served-build harnesses - runs here on each push to main, nightly, and on a
+# pull request marked ready (ci.yml calls this file). The `verified` job is the
+# marker the platform's Release reads.
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  workflow_call:
+    inputs:
+      lanes:
+        type: string
+        default: ""
+  workflow_dispatch:
+    inputs:
+      lanes:
+        description: Comma-separated lanes to run. Empty runs every lane the range selects.
+        type: string
+        default: ""
+  # Nightly: runs every lane (a schedule has no base), including the browser
+  # harnesses.
+  schedule:
+    - cron: '17 3 * * *'
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: sylphx
+  TURBO_API: https://turbo.sylphx.com
+  TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+
+concurrency:
+  group: verify-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  actions: read
+  checks: read
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      base: ${{ steps.range.outputs.base }}
+      run: ${{ steps.range.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          filter: blob:none
+
+      - id: range
+        uses: SylphxAI/.github/.github/actions/ci-range@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+        with:
+          only: ${{ inputs.lanes }}
+          lanes: |
+            rust: crates/* proto/* Cargo.toml Cargo.lock apps/puzzled/atlas/*
+            build: apps/* packages/* proto/* crates/* brand/* package.json bun.lock bunfig.toml turbo.json Cargo.toml Cargo.lock
+
+  build:
+    name: Build (Next.js + release binary)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: plan
+    if: fromJSON(needs.plan.outputs.run).build
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: bun install
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+              exit 0
+            fi
+            echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            sleep $((attempt * 3))
+          done
+          echo "bun install failed after retries"
+          exit 1
+
+      - name: Build web (next build, typecheck enforced)
+        run: bun run build
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          SYLPHX_PUBLIC_URL: https://puzzled.gg
+
+      # The one web build: the SEO, a11y and Lighthouse harnesses serve this
+      # artifact instead of each running next build again.
+      # Tarred, not uploaded as a tree: Turbopack links external server
+      # packages as symlinks under .next/node_modules, and an artifact upload
+      # would copy them away from their dependencies.
+      - name: Pack the web build
+        run: tar -C apps/puzzled --exclude=.next/cache --exclude=.next/standalone -cf web-build.tar .next
+
+      - name: Share the web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: web-build.tar
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: GET / document returns HTML while Connect hangs
+        run: node scripts/assert-document-route.mjs
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Put cargo on PATH
+        run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
+
+      - uses: SylphxAI/.github/.github/actions/rust-sccache@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+        with:
+          s3-access-key: ${{ secrets.SYLPHX_CI_CACHE_ACCESS_KEY }}
+          s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
+
+      - name: Build Rust api binary (locked release)
+        run: |
+          export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:${PATH}"
+          curl -fsSL https://github.com/protocolbuffers/protobuf/releases/download/v36.1/protoc-36.1-linux-x86_64.zip -o protoc.zip
+          echo "c4bc672d9d49214dc8cafdceadf4df92182d6ca8e3ec65a56b2d7de5602669b4  protoc.zip" | sha256sum -c -
+          unzip -qo protoc.zip -d "$HOME/.local"
+          test "$("$HOME/.local/bin/protoc" --version)" = "libprotoc 36.1"
+          export PATH="$HOME/.local/bin:${PATH}"
+          export PROTOC="$HOME/.local/bin/protoc"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "PROTOC=$HOME/.local/bin/protoc" >> "$GITHUB_ENV"
+          cargo build --locked --release -p puzzled-server
+
+  rust-api:
+    name: Rust API (full, database-backed)
+    needs: plan
+    if: fromJSON(needs.plan.outputs.run).rust
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PUZZLED_REQUIRE_DB_TESTS: "1"
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      # Postgres for the Puzzled Plus flow test (buy, unlock, family, cancel,
+      # refund); it creates its own throwaway database. Our runners cannot run
+      # `services:` containers, so this is a host-native scratch server with a
+      # job-private data dir and port.
+      - name: Start scratch Postgres
+        run: |
+          set -euo pipefail
+          if ! ls -d /usr/lib/postgresql/*/bin >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql
+          fi
+          PG_BIN="$(ls -d /usr/lib/postgresql/*/bin | sort -V | tail -1)"
+          PGDATA="${RUNNER_TEMP}/pg-${GITHUB_RUN_ID}-${GITHUB_JOB}"
+          PGPORT="$((20000 + RANDOM % 20000))"
+          rm -rf "${PGDATA}"
+          LC_ALL=C "${PG_BIN}/initdb" -D "${PGDATA}" -U postgres --auth=trust --locale=C -E UTF8 >/dev/null
+          LC_ALL=C "${PG_BIN}/pg_ctl" -D "${PGDATA}" -w -l "${PGDATA}.log" \
+            -o "-p ${PGPORT} -k ${RUNNER_TEMP} -c listen_addresses=127.0.0.1" start
+          echo "PUZZLED_TEST_DATABASE_URL=postgres://postgres:postgres@127.0.0.1:${PGPORT}/postgres" >> "$GITHUB_ENV"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Put cargo on PATH
+        run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
+
+      - uses: SylphxAI/.github/.github/actions/rust-sccache@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+        with:
+          s3-access-key: ${{ secrets.SYLPHX_CI_CACHE_ACCESS_KEY }}
+          s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
+
+      - name: Install protoc
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/protocolbuffers/protobuf/releases/download/v36.1/protoc-36.1-linux-x86_64.zip -o protoc.zip
+          echo "c4bc672d9d49214dc8cafdceadf4df92182d6ca8e3ec65a56b2d7de5602669b4  protoc.zip" | sha256sum -c -
+          unzip -qo protoc.zip -d "$HOME/.local"
+          test "$("$HOME/.local/bin/protoc" --version)" = "libprotoc 36.1"
+          export PATH="$HOME/.local/bin:${PATH}"
+          export PROTOC="$HOME/.local/bin/protoc"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "PROTOC=$HOME/.local/bin/protoc" >> "$GITHUB_ENV"
+          protoc --version
+      - name: cargo fmt
+        run: |
+          export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:${PATH}"
+          cargo fmt -p puzzled-core -p puzzled-server -- --check
+
+      - name: cargo clippy
+        run: |
+          export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:${PATH}"
+          cargo clippy -p puzzled-core -p puzzled-server -- -D warnings -A clippy::double_parens -A clippy::too_many_arguments
+
+      - name: cargo test
+        run: |
+          export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:${PATH}"
+          cargo test -p puzzled-core -p puzzled-server
+
+  seo-contract:
+    name: SEO Contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [plan, build]
+    if: fromJSON(needs.plan.outputs.run).build
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: bun install
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+              exit 0
+            fi
+            echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            sleep $((attempt * 3))
+          done
+          echo "bun install failed after retries"
+          exit 1
+
+      - name: Download the web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+
+      - name: Unpack the web build
+        run: tar -C apps/puzzled -xf web-build.tar
+
+      # apps/puzzled/scripts/seo-verify.ts asserts crawler truth against a
+      # served build, so the job serves one instead of measuring source.
+      - name: Serve the build on :3014
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          SYLPHX_PUBLIC_URL: https://puzzled.gg
+        run: |
+          set -euo pipefail
+          bun run start -p 3014 > "$RUNNER_TEMP/serve-seo.log" 2>&1 &
+          echo "SERVE_PID=$!" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 60); do
+            status="$(curl -s -o "$RUNNER_TEMP/probe.html" -w '%{http_code}' http://localhost:3014/ || true)"
+            if [ "$status" = "200" ]; then
+              echo "served build answered 200 on attempt ${attempt}"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "served build never answered 200 (last status ${status:-none})"
+          cat "$RUNNER_TEMP/serve-seo.log"
+          exit 1
+
+      - name: SEO contract harness (bun run verify:seo)
+        working-directory: apps/puzzled
+        run: bun run verify:seo --base http://localhost:3014
+
+      - name: Show the server log
+        if: failure()
+        run: cat "$RUNNER_TEMP/serve-seo.log" || true
+
+      - name: Stop the served build
+        if: always()
+        run: |
+          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
+
+  a11y:
+    name: Accessibility (WCAG 2.2 AA)
+    # Trunk push, nightly and manual only: a full browser suite on every PR push
+    # costs more than it catches before it lands.
+    if: github.event_name != 'pull_request' && fromJSON(needs.plan.outputs.run).build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    needs: [plan, build]
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: bun install
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+              exit 0
+            fi
+            echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            sleep $((attempt * 3))
+          done
+          echo "bun install failed after retries"
+          exit 1
+
+      # The suite drives a real Chromium; nothing on the runner image is
+      # assumed. Pinned by the @playwright/test version in bun.lock.
+      - name: Install Playwright Chromium
+        working-directory: apps/puzzled
+        run: bunx playwright install --with-deps chromium
+
+      - name: Download the web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+
+      - name: Unpack the web build
+        run: tar -C apps/puzzled -xf web-build.tar
+
+      - name: Serve the build on :3015
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          SYLPHX_PUBLIC_URL: https://puzzled.gg
+        run: |
+          set -euo pipefail
+          bun run start -p 3015 > "$RUNNER_TEMP/serve-a11y.log" 2>&1 &
+          echo "SERVE_PID=$!" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 60); do
+            status="$(curl -s -o "$RUNNER_TEMP/probe.html" -w '%{http_code}' http://localhost:3015/ || true)"
+            if [ "$status" = "200" ]; then
+              echo "served build answered 200 on attempt ${attempt}"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "served build never answered 200 (last status ${status:-none})"
+          cat "$RUNNER_TEMP/serve-a11y.log"
+          exit 1
+
+      # Actions sets CI=true, so playwright.config.ts deliberately leaves its
+      # webServer undefined: this job owns the server and points the suite at
+      # it with BASE_URL. Never retry this gate: quarantine flaky assertions
+      # with an owned exit criterion instead of turning a red attempt green.
+      - name: WCAG 2.2 A/AA suite (bun run test:a11y)
+        working-directory: apps/puzzled
+        env:
+          BASE_URL: http://localhost:3015
+        run: bun run test:a11y --retries=0
+
+      - name: Sudoku authoritative terminal regression
+        working-directory: apps/puzzled
+        env:
+          BASE_URL: http://localhost:3015
+        run: bun run test:e2e e2e-tests/sudoku-terminal.e2e.ts --workers=1 --retries=0
+
+      - name: Upload the Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-playwright-report
+          path: |
+            apps/puzzled/playwright-report
+            apps/puzzled/test-results
+          retention-days: 7
+
+      - name: Stop the served build
+        if: always()
+        run: |
+          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
+
+  lighthouse:
+    name: Lighthouse Budgets
+    # Trunk push, nightly and manual only, like the a11y suite.
+    if: github.event_name != 'pull_request' && fromJSON(needs.plan.outputs.run).build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [plan, build]
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      # The runner does not keep Playwright's browser cache under
+      # $HOME/.cache/ms-playwright, so pin one path for this job: letting the
+      # install below and the CHROME_PATH lookup after it resolve their own
+      # defaults is how they end up disagreeing.
+      - name: Pin the Playwright browser cache
+        run: echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/ms-playwright" >> "$GITHUB_ENV"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: bun install
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+              exit 0
+            fi
+            echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            sleep $((attempt * 3))
+          done
+          echo "bun install failed after retries"
+          exit 1
+
+      # chromium-launcher (used by lhci) resolves CHROME_PATH first, then the
+      # image. Install the Playwright build so the browser is pinned by
+      # bun.lock instead of by whatever the runner happens to ship.
+      - name: Install Chromium for Lighthouse
+        working-directory: apps/puzzled
+        run: bunx playwright install --with-deps chromium
+
+      - name: Point CHROME_PATH at that Chromium
+        run: |
+          set -euo pipefail
+          # The full Chromium build, not the headless shell: lhci launches
+          # Chrome with its own flags and needs a real browser binary.
+          bin="$(find "$PLAYWRIGHT_BROWSERS_PATH"/chromium-* -maxdepth 2 -type f -name chrome -executable | sort | tail -1)"
+          if [ -z "$bin" ]; then
+            echo "no Chromium under $PLAYWRIGHT_BROWSERS_PATH; install step did not land"
+            ls -la "$PLAYWRIGHT_BROWSERS_PATH" || true
+            exit 1
+          fi
+          "$bin" --version
+          echo "CHROME_PATH=$bin" >> "$GITHUB_ENV"
+
+      - name: Download the web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+
+      - name: Unpack the web build
+        run: tar -C apps/puzzled -xf web-build.tar
+
+      # apps/puzzled/lighthouserc.json is used unchanged: the mobile profile
+      # (Lighthouse mobile defaults with applied/devtools throttling — switched
+      # from lantern simulation on 2026-09-21 after it floored at ~3.2 s LCP on
+      # the lightest route; analysis in this PR) over / and the module
+      # pages /games/word-search, /games/nonogram and /games/arithmo — slugs
+      # outside the free rotation, so the anonymous render branch is the same
+      # every day — at the S5 budgets: performance >= 0.9, LCP <= 2500 ms,
+      # CLS <= 0.1, TBT <= 300 ms, FCP <= 2500 ms (raised from 2000 ms: under
+      # applied throttling FCP and LCP land on the same banner paint at ~2.0 s,
+      # inside run-to-run noise) and speed index <= 3000 ms, all at error.
+      # lhci starts `bun run start` itself on port 3000.
+      - name: Lighthouse budget (bun run lighthouse)
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          SYLPHX_PUBLIC_URL: https://puzzled.gg
+        run: bun run lighthouse
+
+      - name: Upload the Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: apps/puzzled/.lighthouseci
+          retention-days: 7
+
+  # The marker: named exactly `verified`; never a required check.
+  verified:
+    name: verified
+    if: always()
+    needs: [plan, build, rust-api, seo-contract, a11y, lighthouse]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: SylphxAI/.github/.github/actions/needs-pass@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+        with:
+          needs: ${{ toJSON(needs) }}
+          required: plan

@@ -1,0 +1,69 @@
+# Applies config/commercial/catalogue.json to Sylphx Money: PATCH price_catalogs/default
+# (allow_missing) then :sync, first to preview and then to production. This
+# workflow is the ONLY writer of the catalogue: no manual catalogue writes.
+# Change the catalogue by PR to that file.
+#
+# No stored secret: after supported Access admission, each job trades a GitHub OIDC token
+# (audience sylphx-access) for a 15-minute billing:write key bound to this
+# repository, this file's path and refs/heads/main
+# (kernel/access/tenant-manifest.toml, cloud#10444). The key's own name gives
+# the org, project and env it belongs to, so none is written here. The path of
+# this file must match the registered manifest declaration: do not rename it.
+# cloud#10444 must first register billing:write and support this ordinary
+# workflow's workflow_ref claim; no runtime/desk-key fallback is allowed.
+name: Money catalogue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'config/commercial/catalogue.json'
+      - 'scripts/money-catalogue-spec.ts'
+      - 'scripts/money-catalogue-apply.sh'
+      - '.github/workflows/money-catalogue.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+# One apply at a time; a newer push waits rather than racing the running one.
+concurrency:
+  group: money-catalogue
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    name: Apply to preview
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ACCESS_NAME: puzzled-money-catalogue-preview
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.0'
+      - name: Apply the catalogue
+        run: bash scripts/money-catalogue-apply.sh
+
+  production:
+    name: Apply to production
+    needs: preview
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ACCESS_NAME: puzzled-money-catalogue-production
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.0'
+      - name: Apply the catalogue
+        run: bash scripts/money-catalogue-apply.sh

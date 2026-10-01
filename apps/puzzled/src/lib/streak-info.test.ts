@@ -11,6 +11,8 @@ describe('projectStreakInfo', () => {
 				totalGamesPlayed: 12,
 				freezesAvailable: 1,
 				autoFreezeEnabled: false,
+				daysUntilNextFreeze: 4,
+				freezeUsedYesterday: false,
 			}),
 		).toEqual({
 			currentStreak: 3,
@@ -19,6 +21,8 @@ describe('projectStreakInfo', () => {
 			totalGamesPlayed: 12,
 			freezesAvailable: 1,
 			autoFreezeEnabled: false,
+			daysUntilNextFreeze: 4,
+			freezeUsedYesterday: false,
 		})
 	})
 
@@ -36,6 +40,8 @@ describe('projectStreakInfo', () => {
 				totalGamesPlayed: BigInt(7),
 				freezesAvailable: BigInt(0),
 				autoFreezeEnabled: true,
+				daysUntilNextFreeze: BigInt(7),
+				freezeUsedYesterday: true,
 			}),
 		).toEqual({
 			currentStreak: 2,
@@ -44,6 +50,8 @@ describe('projectStreakInfo', () => {
 			totalGamesPlayed: 7,
 			freezesAvailable: 0,
 			autoFreezeEnabled: true,
+			daysUntilNextFreeze: 7,
+			freezeUsedYesterday: true,
 		})
 	})
 
@@ -55,7 +63,26 @@ describe('projectStreakInfo', () => {
 				totalGamesPlayed: 1,
 				freezesAvailable: 0,
 				autoFreezeEnabled: false,
+				daysUntilNextFreeze: 7,
+				freezeUsedYesterday: false,
 			}),
 		).toThrow('streak_payload_unavailable:currentStreak')
+	})
+
+	test('fails closed when the freeze fields are absent', () => {
+		const base = {
+			currentStreak: 1,
+			maxStreak: 1,
+			hasPlayedToday: false,
+			totalGamesPlayed: 1,
+			freezesAvailable: 0,
+			autoFreezeEnabled: true,
+		}
+		expect(() => projectStreakInfo({ ...base, freezeUsedYesterday: false })).toThrow(
+			'streak_payload_unavailable:daysUntilNextFreeze',
+		)
+		expect(() => projectStreakInfo({ ...base, daysUntilNextFreeze: 3 })).toThrow(
+			'streak_payload_unavailable:freezeUsedYesterday',
+		)
 	})
 })

@@ -15,9 +15,17 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
+import { adsConfig } from '@/lib/ads'
 import { buildCsp, createNonce, NONCE_HEADER } from '@/lib/csp'
+import { env } from '@/lib/env'
 import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
+import {
+	LEGACY_SESSION_COOKIE,
+	legacySessionToMigrate,
+	SESSION_COOKIE,
+	sessionCookieOptions,
+} from '@/lib/identity/session-cookie'
 import { isInboundPublicPath, isProxySkippedPath } from '@/lib/proxy-paths'
 
 // =============================================================================
@@ -78,14 +86,26 @@ export function rememberedLocaleRedirect(
  */
 export async function proxy(incoming: NextRequest) {
 	const nonce = createNonce()
-	const csp = buildCsp(nonce, { dev: process.env.NODE_ENV === 'development' })
+	const csp = buildCsp(nonce, {
+		dev: process.env.NODE_ENV === 'development',
+		ads: adsConfig(env) !== null,
+	})
 	const headers = new Headers(incoming.headers)
 	headers.set(NONCE_HEADER, nonce)
 	headers.set('Content-Security-Policy', csp)
 	const request = new NextRequest(incoming, { headers })
 	const response = await route(request)
 	response.headers.set('Content-Security-Policy', csp)
+	migrateSessionCookie(request, response)
 	return response
+}
+
+/** A request that still carries the old-named session keeps its sign-in under the new name. */
+function migrateSessionCookie(request: NextRequest, response: NextResponse): void {
+	const token = legacySessionToMigrate(request.cookies)
+	if (!token) return
+	response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions(env.NODE_ENV === 'production'))
+	response.cookies.delete(LEGACY_SESSION_COOKIE)
 }
 
 async function route(request: NextRequest): Promise<NextResponse> {

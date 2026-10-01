@@ -78,40 +78,9 @@ fn sanitize_idempotency(raw: &str) -> String {
     out
 }
 
-pub(crate) fn dest_push_connector_id() -> Result<String, String> {
-    dest_product_env("EVENTS_PUSH_CONNECTOR_ID")
-        .ok_or_else(|| "EVENTS_PUSH_CONNECTOR_ID not configured".to_string())
-}
-
 pub(crate) fn dest_email_connector_id() -> Result<String, String> {
     dest_product_env("EVENTS_EMAIL_CONNECTOR_ID")
         .ok_or_else(|| "EVENTS_EMAIL_CONNECTOR_ID not configured".to_string())
-}
-
-pub(crate) fn dest_push_delivery(
-    connector_id: &str,
-    user_id: &str,
-    title: &str,
-    body: &str,
-    url: &str,
-) -> Value {
-    let today = chrono::Utc::now().date_naive();
-    let idempotency_key = sanitize_idempotency(&format!("daily-reminder-{user_id}-{today}"));
-    json!({
-        "idempotency_key": idempotency_key,
-        "intent": {
-            "push": {
-                "connector_id": connector_id,
-                "message": {
-                    "targets": [user_id],
-                    "title": title,
-                    "body": body,
-                    "data": { "url": url },
-                }
-            }
-        },
-        "retry_policy": retry_policy(),
-    })
 }
 
 pub(crate) fn dest_email_delivery(
@@ -193,15 +162,5 @@ mod tests {
             dest_peel_origin(DEST_EVENTS_ORIGIN, Some("https://puzzled.api.sylphx.com")),
             DEST_EVENTS_ORIGIN
         );
-    }
-
-    #[test]
-    fn dest_push_delivery_uses_events_path_fields() {
-        let body = dest_push_delivery("conn-push", "user-a", "title", "body", "/");
-        assert_eq!(body["intent"]["push"]["connector_id"], "conn-push");
-        assert_eq!(body["intent"]["push"]["message"]["targets"][0], "user-a");
-        assert!(body["idempotency_key"]
-            .as_str()
-            .is_some_and(|key| key.starts_with("daily-reminder-user-a")));
     }
 }

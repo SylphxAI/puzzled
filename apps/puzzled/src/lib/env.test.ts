@@ -64,18 +64,18 @@ describe('env accessors (SSOT)', () => {
 		expect(new Set(names).size).toBe(names.length)
 		expect(names).toContain('NODE_ENV')
 		expect(names).toContain('SYLPHX_PUBLIC_URL')
-		expect(names).toContain('EMAIL_UNSUBSCRIBE_SECRET')
+		expect(names).not.toContain('EMAIL_UNSUBSCRIBE_SECRET')
 		expect(names).toContain('DATABASE_URL')
 		expect(names).toContain('SYLPHX_AUTH_SECRET_KEY')
 	})
 
 	test('accessors are raw and lazy: no defaults, value read at call time', () => {
-		const previous = { EMAIL_UNSUBSCRIBE_SECRET: process.env.EMAIL_UNSUBSCRIBE_SECRET }
+		const previous = { SYLPHX_AUTH_SECRET_KEY: process.env.SYLPHX_AUTH_SECRET_KEY }
 		try {
-			delete process.env.EMAIL_UNSUBSCRIBE_SECRET
-			expect(env.EMAIL_UNSUBSCRIBE_SECRET).toBeUndefined()
-			process.env.EMAIL_UNSUBSCRIBE_SECRET = 'secret-at-call-time'
-			expect(env.EMAIL_UNSUBSCRIBE_SECRET).toBe('secret-at-call-time')
+			delete process.env.SYLPHX_AUTH_SECRET_KEY
+			expect(env.SYLPHX_AUTH_SECRET_KEY).toBeUndefined()
+			process.env.SYLPHX_AUTH_SECRET_KEY = 'secret-at-call-time'
+			expect(env.SYLPHX_AUTH_SECRET_KEY).toBe('secret-at-call-time')
 		} finally {
 			restoreEnv(previous)
 		}

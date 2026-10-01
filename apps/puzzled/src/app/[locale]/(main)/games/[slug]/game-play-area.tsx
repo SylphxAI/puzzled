@@ -1,9 +1,11 @@
 import { getTranslations } from 'next-intl/server'
+import { AdsProvider } from '@/features/ads/components/ad-context'
 import { GameUnlockPanel } from '@/features/catalog/components/game-unlock-panel'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import { deriveDifficultyCompletionStatus } from '@/features/daily/lib/difficulty-completion'
 import type { GameSlug } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
+import { adsConfig, adsFor } from '@/lib/ads'
 import {
 	type DailyStatus,
 	getServerDailyStatus,
@@ -14,6 +16,7 @@ import {
 } from '@/lib/api/server'
 import { isPlayLocked } from '@/lib/billing/plus'
 import type { GameMode } from '@/lib/db/schema'
+import { env } from '@/lib/env'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
 import { productDayKey } from '@/lib/product-day'
@@ -71,6 +74,8 @@ export async function GamePlayArea({
 	const tDaily = await getTranslations('daily')
 
 	const access = await getServerPlusAccess(hasUser)
+	// Result screens show one ad to free viewers; a puzzle in play never does.
+	const ads = adsFor(adsConfig(env), access.entitled)
 	const archive = mode === 'archive' && Boolean(dateParam)
 	if (isPlayLocked(access, { slug, freeSlug: freeGameSlug, archive })) {
 		return (
@@ -180,15 +185,17 @@ export async function GamePlayArea({
 		// the api through the public edge, so hand over to a client-side GetDaily
 		// instead of a retry link that repeats the same failing SSR request.
 		return (
-			<GameDailyFallback
-				slug={slug}
-				gameName={gameName}
-				locale={locale}
-				mode={mode}
-				difficulty={difficulty}
-				supportsDifficulty={supportsDifficulty}
-				puzzleDate={archiveDate}
-			/>
+			<AdsProvider config={ads}>
+				<GameDailyFallback
+					slug={slug}
+					gameName={gameName}
+					locale={locale}
+					mode={mode}
+					difficulty={difficulty}
+					supportsDifficulty={supportsDifficulty}
+					puzzleDate={archiveDate}
+				/>
+			</AdsProvider>
 		)
 	}
 
@@ -217,36 +224,40 @@ export async function GamePlayArea({
 	// Already completed view (server rendered, no game interaction needed)
 	if (hasCompletedToday && completedSession) {
 		return (
-			<AlreadyCompletedView
-				gameSlug={slug}
-				gameName={gameName}
-				puzzleDate={puzzleDate}
-				session={{
-					status: completedSession.status as 'won' | 'lost',
-					score: completedSession.score,
-					attempts: completedSession.attempts ?? 0,
-					completedAt: completedSession.completedAt,
-				}}
-				currentStreak={currentStreak}
-				locale={locale}
-				difficulty={difficulty}
-				supportsDifficulty={supportsDifficulty}
-			/>
+			<AdsProvider config={ads}>
+				<AlreadyCompletedView
+					gameSlug={slug}
+					gameName={gameName}
+					puzzleDate={puzzleDate}
+					session={{
+						status: completedSession.status as 'won' | 'lost',
+						score: completedSession.score,
+						attempts: completedSession.attempts ?? 0,
+						completedAt: completedSession.completedAt,
+					}}
+					currentStreak={currentStreak}
+					locale={locale}
+					difficulty={difficulty}
+					supportsDifficulty={supportsDifficulty}
+				/>
+			</AdsProvider>
 		)
 	}
 
 	// Active game view (client rendered with help modal support)
 	return (
-		<GamePageClient
-			slug={slug}
-			gameName={gameName}
-			puzzleDate={puzzleDate}
-			currentStreak={currentStreak}
-			mode={mode}
-			locale={locale}
-			puzzleId={puzzle.puzzleId}
-			puzzleData={puzzle.puzzleData}
-			difficulty={difficulty}
-		/>
+		<AdsProvider config={ads}>
+			<GamePageClient
+				slug={slug}
+				gameName={gameName}
+				puzzleDate={puzzleDate}
+				currentStreak={currentStreak}
+				mode={mode}
+				locale={locale}
+				puzzleId={puzzle.puzzleId}
+				puzzleData={puzzle.puzzleData}
+				difficulty={difficulty}
+			/>
+		</AdsProvider>
 	)
 }

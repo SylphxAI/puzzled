@@ -20,7 +20,6 @@ export async function POST(request: Request) {
 	const next = safeNext(body?.redirectUrl)
 	const callback = `${await getRequestSiteOrigin()}/api/identity/oauth/callback?next=${encodeURIComponent(next)}`
 	return NextResponse.json({
-		authority: 'sylphx-identity',
 		authorizationUrl: googleStartUrl(config, callback),
 	})
 }

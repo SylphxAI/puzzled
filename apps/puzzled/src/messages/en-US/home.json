@@ -77,16 +77,25 @@
 		"puzzleNumber": "Puzzle #{number}",
 		"resetsIn": "Resets in",
 		"resetsAt": "midnight in Hong Kong",
-		"title": "Today's {game}",
+		"guestTitle": "Nineteen daily puzzles. One always free.",
 		"titleMemberReady": "Today's {game} is ready",
 		"titleMemberStreak": "Your {days}-day streak is waiting",
 		"titleMemberDone": "All done for today — nicely played",
-		"bodyGuest": "A few minutes of real puzzling. No signup, no download, nothing to install.",
+		"bodyGuest": "Word, logic and number puzzles that reset every day, with streaks and a fair leaderboard. No signup to play.",
 		"bodyMember": "Your streak, your stats and today's lineup are one tap away.",
 		"playToday": "Play today's {game}",
 		"playAgain": "Play today again",
 		"browseAll": "Browse all games",
 		"finishersToday": "{count} finished today so far",
 		"freeToday": "Free today"
+	},
+	"seasons": {
+		"newYear": "Happy New Year",
+		"lunarNewYear": "Happy Lunar New Year",
+		"easter": "Happy Easter",
+		"dragonBoat": "Happy Dragon Boat Festival",
+		"midAutumn": "Happy Mid-Autumn Festival",
+		"halloween": "Happy Halloween",
+		"christmas": "Merry Christmas"
 	}
 }

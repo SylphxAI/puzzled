@@ -14,6 +14,8 @@ use crate::capabilities::jobs::adapters::jobs_db;
 
 pub const DAILY_PUZZLES_PATH: &str = "/internal/compute/daily-puzzles";
 pub const AUDIT_RETENTION_PATH: &str = "/internal/compute/audit-log-retention";
+pub const DAILY_REMINDERS_PATH: &str = "/internal/compute/daily-reminders";
+pub const TRYIT_CONVERSIONS_PATH: &str = "/internal/compute/tryit-conversions";
 
 /// Store every missing daily puzzle (14 days ahead, 30-day archive).
 pub async fn daily_puzzles_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
@@ -80,6 +82,57 @@ pub async fn audit_retention_tick(State(state): State<AppState>, headers: Header
             (
                 StatusCode::SERVICE_UNAVAILABLE,
                 Json(json!({"error": "retention_failed"})),
+            )
+                .into_response()
+        }
+    }
+}
+/// Retry the Tryit conversions still queued (a 503 or a failed send).
+pub async fn tryit_conversions_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    if let Err(reject) = state.ticks.admit(&headers, TRYIT_CONVERSIONS_PATH).await {
+        return reject.response().into_response();
+    }
+    let (Some(pool), Some(reporter)) = (&state.pool, &state.tryit) else {
+        // No database, or no SYLPHX_API_KEY: nothing can be sent yet.
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({"error": "not_configured"})),
+        )
+            .into_response();
+    };
+    match crate::capabilities::tryit_conversions::sweep(pool, reporter).await {
+        Ok(reported) => (StatusCode::OK, Json(json!({"reported": reported}))).into_response(),
+        Err(error) => {
+            tracing::warn!(%error, "tryit conversions tick failed");
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({"error": "sweep_failed"})),
+            )
+                .into_response()
+        }
+    }
+}
+
+/// Send the daily reminders that are due now, each at its player's own time.
+pub async fn daily_reminders_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    if let Err(reject) = state.ticks.admit(&headers, DAILY_REMINDERS_PATH).await {
+        return reject.response().into_response();
+    }
+    let Some(pool) = &state.pool else {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({"error": "no_database"})),
+        )
+            .into_response();
+    };
+    match super::connect_jobs::send_due_daily_reminders(pool, chrono::Utc::now()).await {
+        Ok(sent) => (StatusCode::OK, Json(json!({"sent": sent}))).into_response(),
+        Err(errors) => {
+            tracing::warn!(failed = errors.len(), "daily reminders tick had failures");
+            // Failed sends were released; Compute retries and they go out then.
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({"error": "send_failed", "failed": errors.len()})),
             )
                 .into_response()
         }

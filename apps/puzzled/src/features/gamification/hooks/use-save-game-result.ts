@@ -105,6 +105,15 @@ export function useSaveGameResult(gameSlug: string) {
 					data: input.data,
 				})
 
+				// HTTP 200 can still carry an authoritative rejected finish. Keep
+				// its error and release the save lock so an explicit retry works.
+				if (!response.success) {
+					savedRef.current = false
+					setStatus('error')
+					setError(response.error ?? 'Failed to save result')
+					return { success: false, error: response.error }
+				}
+
 				// Leaderboards only for authenticated users. Streak is a Rust
 				// GetStreakInfo read of accepted sessions, not a Platform write.
 				if (userId && input.status === 'won') {
@@ -158,6 +167,7 @@ export function useSaveGameResult(gameSlug: string) {
 				return {
 					success: response.success,
 					score: response.score,
+					error: response.error,
 					reveal: response.reveal,
 				}
 			} catch (err) {

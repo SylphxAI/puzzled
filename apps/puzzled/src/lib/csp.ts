@@ -14,6 +14,8 @@
  *   script, so the XSS protection comes from `script-src`.
  */
 
+import { AD_CSP_HOSTS } from './ads'
+
 /** 16 random bytes, base64: a fresh nonce for one response. */
 export function createNonce(): string {
 	const bytes = new Uint8Array(16)
@@ -23,7 +25,12 @@ export function createNonce(): string {
 
 export const NONCE_HEADER = 'x-nonce'
 
-export function buildCsp(nonce: string, { dev = false }: { dev?: boolean } = {}): string {
+export function buildCsp(
+	nonce: string,
+	{ dev = false, ads = false }: { dev?: boolean; ads?: boolean } = {},
+): string {
+	const adFrames = ads ? ` ${AD_CSP_HOSTS.frame.join(' ')}` : ''
+	const adConnect = ads ? ` ${AD_CSP_HOSTS.connect.join(' ')}` : ''
 	return [
 		"default-src 'self'",
 		// Dev only: React's development build and Turbopack HMR use eval.
@@ -31,9 +38,10 @@ export function buildCsp(nonce: string, { dev = false }: { dev?: boolean } = {})
 		"style-src 'self' 'unsafe-inline'",
 		"img-src 'self' data: blob: https:",
 		"font-src 'self' data:",
-		// Sylphx platform APIs (identity, events, data) and the Iconify icon APIs.
-		"connect-src 'self' https://sylphx.com https://*.sylphx.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com",
-		"frame-src 'self'",
+		// The browser talks only to this origin (identity, events and errors are
+		// same-origin routes) and to the Iconify icon APIs.
+		`connect-src 'self' https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com${adConnect}`,
+		`frame-src 'self'${adFrames}`,
 		"worker-src 'self'",
 		"object-src 'none'",
 		"base-uri 'none'",

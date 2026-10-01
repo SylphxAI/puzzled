@@ -1,7 +1,7 @@
 /**
  * Non-spoiler result card model (S3 slice 2 - closes register row G3).
  *
- * Protocol: docs/north-star/RITUAL-AND-MODULE-PROTOCOL.md section 6
+ * Protocol: docs/game-protocol.md, "Result card"
  * "Result card (viral unit)". The model is the one place the non-spoiler
  * invariants live:
  *
@@ -14,6 +14,8 @@
  * - Day and module are always labelled; the deep link reuses share-text.ts so
  *   the archive contract stays single-sourced (G1).
  */
+
+import { seasonForDayKey } from '@/features/seasons/lib/seasons'
 import type { GameColorTheme } from '@/games/theme-colors'
 import { isValidDayKey } from '@/lib/product-day'
 import { ritualShareDeepLink } from './share-text'
@@ -57,6 +59,8 @@ export interface ResultCardInput {
 	timeSpentMs?: number | null
 	currentStreak?: number | null
 	pattern?: readonly (readonly ResultCardTile[])[] | null
+	/** Server-issued share id; makes the card's link the share landing. */
+	shareId?: string | null
 }
 
 export interface ResultCardModel {
@@ -68,7 +72,7 @@ export interface ResultCardModel {
 	dayKey: string | null
 	/** Day rendered for the viewer, e.g. Sep 21, 2026; null without a day. */
 	dayDisplay: string | null
-	/** Compact deep link: puzzled.gg/games/<slug>[?mode=archive&date=...]. */
+	/** Compact link: the share landing puzzled.gg/daily?ref=<id>, else puzzled.gg/games/<slug>[?mode=archive&date=...]. */
 	deepLink: string
 	attempts: number | null
 	maxAttempts: number | null
@@ -78,6 +82,11 @@ export interface ResultCardModel {
 	timeBand: ResultCardTimeBand | null
 	currentStreak: number | null
 	pattern: ResultCardTile[][] | null
+	/**
+	 * Presentation-only seasonal theme, set only when the card's day is a
+	 * seasonal day (features/seasons). Carries no puzzle content.
+	 */
+	season: { id: string; accent: GameColorTheme; glyph: string } | null
 }
 
 /** Resolved card copy; all values come from messages/<locale>/share.json card.*. */
@@ -102,6 +111,44 @@ export interface ResultCardStrings {
 	altDetailsTemplate: string
 	altLinkTemplate: string
 	detailSeparator: string
+	/** The seasonal greeting; null on every non-seasonal day. */
+	seasonGreeting?: string | null
+}
+
+/**
+ * The card copy from one translator for the `share.card` block, so every
+ * surface that draws a card (the sharer's, the landing, the side-by-side
+ * result) builds the same strings the same way. The translator must return the
+ * raw template (`t.raw`): the sentences keep their `{tokens}` until
+ * `fillCardTemplate` fills them, and a formatted read throws on them.
+ */
+export function resultCardStringsFrom(
+	t: (key: Exclude<keyof ResultCardStrings, 'seasonGreeting'>) => string,
+	seasonGreeting: string | null = null,
+): ResultCardStrings {
+	return {
+		statusWon: t('statusWon'),
+		statusLost: t('statusLost'),
+		attemptsLabel: t('attemptsLabel'),
+		scoreLabel: t('scoreLabel'),
+		streakLabel: t('streakLabel'),
+		timeLabel: t('timeLabel'),
+		mistakesLabel: t('mistakesLabel'),
+		timeUnder1m: t('timeUnder1m'),
+		timeUnder5m: t('timeUnder5m'),
+		timeOver5m: t('timeOver5m'),
+		attemptsOf: t('attemptsOf'),
+		attemptsCount: t('attemptsCount'),
+		scorePoints: t('scorePoints'),
+		streakDays: t('streakDays'),
+		patternSummary: t('patternSummary'),
+		altOnDay: t('altOnDay'),
+		altTemplate: t('altTemplate'),
+		altDetailsTemplate: t('altDetailsTemplate'),
+		altLinkTemplate: t('altLinkTemplate'),
+		detailSeparator: t('detailSeparator'),
+		seasonGreeting,
+	}
 }
 
 export interface ResultCardChip {
@@ -166,7 +213,12 @@ export function buildResultCard(input: ResultCardInput): ResultCardModel {
 		status: input.status === 'won' ? 'won' : 'lost',
 		dayKey,
 		dayDisplay: dayKey ? formatCardDayKey(dayKey, input.locale || 'en') : null,
-		deepLink: ritualShareDeepLink(input.origin, input.gameSlug, dayKey || undefined),
+		deepLink: ritualShareDeepLink(
+			input.origin,
+			input.gameSlug,
+			dayKey || undefined,
+			input.shareId ?? undefined,
+		),
 		attempts: nonNegativeInt(input.attempts),
 		maxAttempts: nonNegativeInt(input.maxAttempts),
 		mistakes: nonNegativeInt(input.mistakes),
@@ -175,7 +227,13 @@ export function buildResultCard(input: ResultCardInput): ResultCardModel {
 		timeBand: resultCardTimeBand(input.timeSpentMs),
 		currentStreak: streak && streak > 0 ? streak : null,
 		pattern: normalizePattern(input.pattern),
+		season: seasonOf(dayKey),
 	}
+}
+
+function seasonOf(dayKey: string | null): ResultCardModel['season'] {
+	const season = seasonForDayKey(dayKey)
+	return season ? { id: season.id, accent: season.accent, glyph: season.glyph } : null
 }
 
 /** Replace {name} tokens; unknown tokens are left untouched. */
@@ -281,7 +339,9 @@ export function resultCardTextAlternative(
 					details: parts.join(strings.detailSeparator),
 				})
 			: ''
+	const greeting = model.season && strings.seasonGreeting ? `${strings.seasonGreeting} ` : ''
 	return (
+		greeting +
 		fillCardTemplate(strings.altTemplate, { game: model.gameName, day, result }) +
 		details +
 		fillCardTemplate(strings.altLinkTemplate, { link: model.deepLink })

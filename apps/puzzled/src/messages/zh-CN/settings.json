@@ -673,6 +673,11 @@
 			"compactMode": "紧凑模式",
 			"compactModeDescription": "使用更紧凑的排版和更小的间距"
 		},
+		"streakFreeze": {
+			"description": "选择是否自动使用冻结来保护你的连胜",
+			"unavailable": "暂时无法加载自动冻结设置，请刷新后重试。",
+			"saveFailed": "未能保存你的更改，请重试。"
+		},
 		"language": {
 			"title": "语言与地区",
 			"description": "设置你的语言和地区偏好",
@@ -732,12 +737,12 @@
 			"heading": "推送通知",
 			"inlineEnabled": "推送通知已开启",
 			"inlineDisabled": "开启通知以接收每日提醒",
-			"enable": "开启",
+			"enable": "每天提醒我",
 			"disable": "关闭",
 			"description": "接收谜题、连胜等通知",
 			"typesHeading": "通知类型",
 			"loading": "正在加载偏好设置…",
-			"dailyReminder": "每日谜题提醒",
+			"dailyReminder": "每天提醒我",
 			"dailyReminderDescription": "新每日谜题推出时提醒你",
 			"streakAlert": "连胜警报",
 			"streakAlertDescription": "连胜即将中断前提醒你",
@@ -746,7 +751,9 @@
 			"saving": "保存中…",
 			"save": "保存偏好设置",
 			"enablePrompt": "开启推送通知以自定义你的偏好设置",
-			"enableNotifications": "开启通知"
+			"enableNotifications": "每天提醒我",
+			"reminderTime": "提醒时间（你的当地时间）",
+			"unavailable": "暂时无法设置每日提醒，请重试。"
 		}
 	},
 	"pushNotifications": "推送通知",

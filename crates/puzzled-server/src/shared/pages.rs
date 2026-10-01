@@ -19,8 +19,6 @@ pub mod events {
     pub const DAILY_GENERATION_FAILED: &str = "puzzled_daily_generation_failed";
     /// Sign-in checks cannot get an answer (Auth or the JWKS), so nobody can sign in.
     pub const SIGNIN_UNAVAILABLE: &str = "puzzled_signin_unavailable";
-    /// Entitlement reads are erroring, so paying accounts are refused.
-    pub const ENTITLEMENT_CHECK_FAILED: &str = "puzzled_entitlement_check_failed";
 }
 
 /// Sign-in is one streak for both paths (Auth session bearers and platform JWT

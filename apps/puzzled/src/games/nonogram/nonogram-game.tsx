@@ -31,6 +31,7 @@ type Props = {
 
 export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.nonogram')
+	const tCommon = useTranslations('common')
 
 	// Served without the solution; the clues judge each line and the finish (#246).
 	const [puzzle] = useState(() => parseNonogramClientPayload(puzzleData))
@@ -50,6 +51,7 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 		mode,
 		puzzleId,
 		puzzleDate,
+		requireServerAccept: true,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
 	})
@@ -66,23 +68,29 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 		}
 	}, [puzzle, isReady, game.init]) // eslint-disable-line react-hooks/exhaustive-deps
 
-	// Track game completion - in useEffect to avoid render-phase side effects
 	const gameEndedRef = useRef(false)
+	const [submissionError, setSubmissionError] = useState<string | null>(null)
+	const [isSubmitting, setIsSubmitting] = useState(false)
+
+	// A locally complete board is retained until the server accepts its finish.
+	const submitCompletion = useCallback(async () => {
+		setIsSubmitting(true)
+		setSubmissionError(null)
+		const result = await endGame({
+			status: 'won',
+			attempts: 1,
+			data: { finalGrid: game.state.userGrid.map((row) => row.map((cell) => cell === 'filled')) },
+		})
+		setIsSubmitting(false)
+		if (!result.success) setSubmissionError(result.error || tCommon('error'))
+	}, [endGame, game.state.userGrid, tCommon])
+
 	useEffect(() => {
 		if (game.state.isComplete && !gameEndedRef.current) {
 			gameEndedRef.current = true
-			// Convert CellState[][] to boolean[][] for server
-			const finalGrid = game.state.userGrid.map((row) => row.map((cell) => cell === 'filled'))
-			endGame({
-				status: 'won',
-				attempts: 1,
-				maxAttempts: 1,
-				data: {
-					finalGrid,
-				},
-			})
+			void submitCompletion()
 		}
-	}, [game.state.isComplete, game.state.userGrid, endGame])
+	}, [game.state.isComplete, submitCompletion])
 
 	// Handle cell click - toggle based on fill mode
 	const handleCellClick = useCallback(
@@ -234,6 +242,15 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 				onClose={() => setShowHelpModal(false)}
 				gameSlug="nonogram"
 			/>
+
+			{submissionError && (
+				<div role="alert" className="mt-4 flex flex-col gap-2">
+					<p>{submissionError}</p>
+					<Button onClick={() => void submitCompletion()} disabled={isSubmitting}>
+						{tCommon('retry')}
+					</Button>
+				</div>
+			)}
 
 			{/* Game Result Modal */}
 			<GameResultModal

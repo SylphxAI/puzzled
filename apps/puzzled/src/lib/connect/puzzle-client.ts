@@ -11,7 +11,10 @@ import {
 	type GetDailyResponse,
 	GetPuzzleRequestSchema,
 	type GetPuzzleResponse,
+	GetSharedResultRequestSchema,
+	type GetSharedResultResponse,
 	PuzzleService,
+	ShareResultRequestSchema,
 	SubmitGuessRequestSchema,
 	type SubmitGuessResponse,
 } from '../../gen/connect/puzzled/v1/puzzle_pb'
@@ -134,4 +137,32 @@ export async function checkGuess(
 		}),
 	)
 	return JSON.parse(response.resultJson)
+}
+
+/**
+ * Record that the player shared their accepted daily finish and get the id the
+ * share link carries as `ref`. Rejects when there is no finish to share.
+ */
+export async function shareResult(
+	input: { gameSlug: string; puzzleDate?: string; tap?: boolean },
+	client?: PuzzleServiceClient,
+): Promise<string> {
+	const c = client ?? createPuzzleServiceClient()
+	const res = await c.shareResult(
+		create(ShareResultRequestSchema, {
+			gameSlug: input.gameSlug.trim(),
+			puzzleDate: input.puzzleDate?.trim() || undefined,
+			tap: input.tap ?? false,
+		}),
+	)
+	return res.shareId
+}
+
+/** One shared result for the landing page and the side-by-side result. Public. */
+export async function getSharedResult(
+	shareId: string,
+	client?: PuzzleServiceClient,
+): Promise<GetSharedResultResponse> {
+	const c = client ?? createPuzzleServiceClient()
+	return c.getSharedResult(create(GetSharedResultRequestSchema, { shareId: shareId.trim() }))
 }

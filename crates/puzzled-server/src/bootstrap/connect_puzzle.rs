@@ -35,16 +35,22 @@ use puzzled_core::puzzle_play::game_slugs::{
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
-use crate::capabilities::billing::service::entitlement;
+use crate::capabilities::billing::service::access as entitlement_access;
 use crate::capabilities::daily_pipeline;
+use crate::capabilities::gamification::adapters::streak_read::load_settled_streak;
 use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::fetch_puzzle_by_id;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
     adopt_guest_sessions, has_completed_session, has_ritual_completion, load_completed_session,
     persist_validated_session,
 };
+use crate::capabilities::puzzle_play::adapters::result_shares_db::{
+    load_shared_result, record_share, set_share_streak,
+};
 use crate::proto::puzzled::v1::{
     CheckGuessRequest, CheckGuessResponse, DailyCompletion, GetDailyRequest, GetDailyResponse,
-    GetPuzzleRequest, GetPuzzleResponse, PuzzleService, SubmitGuessRequest, SubmitGuessResponse,
+    GetPuzzleRequest, GetPuzzleResponse, GetSharedResultRequest, GetSharedResultResponse,
+    PuzzleService, ShareResultRequest, ShareResultResponse, SubmitGuessRequest,
+    SubmitGuessResponse,
 };
 
 const SLICE_PUZZLE: &str = "S2-puzzle-connect";
@@ -127,7 +133,7 @@ impl PuzzleConnectService {
     ///
     /// A future day is refused so no one can read tomorrow's solution early.
     /// Today's featured game is free to everyone; every other game and every
-    /// past day needs Puzzled Plus once it is on sale. While Stripe is not
+    /// past day needs Puzzled Plus once it is on sale. While Money is not
     /// configured nothing is sold, so nothing is locked. An entitlement read
     /// that fails refuses (fail closed to the free floor).
     async fn enforce_play_access(
@@ -155,7 +161,7 @@ impl PuzzleConnectService {
         }
         let entitled = match (user_id, &self.state.pool) {
             (Some(uid), Some(pool)) => {
-                match entitlement(pool, self.state.stripe.as_ref(), uid).await {
+                match entitlement_access(pool, self.state.money.as_ref(), uid).await {
                     Ok(found) => found.entitled,
                     Err(error) => {
                         warn!(%error, "entitlement read failed; refusing paid play");
@@ -165,6 +171,26 @@ impl PuzzleConnectService {
             }
             _ => false,
         };
+        // Money unreachable: it cannot vouch for anyone, so nothing that is
+        // free today is locked behind it.
+        if !entitled {
+            if let (Some(uid), Some(money)) = (user_id, self.state.money.as_ref()) {
+                if money
+                    .try_check(uid, crate::capabilities::money::access::FEATURE_PLUS)
+                    .await
+                    .is_err()
+                {
+                    // Intended: player experience over a small leak while Money
+                    // is down. Counted so an outage-long free ride is visible.
+                    tracing::warn!(
+                        event = "money_entitlement_unanswerable_allowed",
+                        feature = crate::capabilities::money::access::FEATURE_PLUS,
+                        "Money could not answer the Plus check; play allowed"
+                    );
+                    return Ok(());
+                }
+            }
+        }
         play_access(sales_open, entitled, is_today, free_today)
             .map_err(|denied| ConnectError::new(ErrorCode::PermissionDenied, denied.code()))
     }
@@ -669,6 +695,97 @@ impl PuzzleService for PuzzleConnectService {
             result_json: result.to_string(),
             ..Default::default()
         })
+    }
+
+    async fn share_result(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, ShareResultRequest>,
+    ) -> ServiceResult<ShareResultResponse> {
+        let req = request.to_owned_message();
+        let game_slug = canonicalize_game_slug(req.game_slug.trim());
+        if !is_valid_game_slug(game_slug) {
+            return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
+        }
+        let uid = self.identity_for_submit(&ctx)?;
+        self.adopt_guest_progress_if_needed(&ctx).await?;
+        let day =
+            date_from_string(req.puzzle_date.as_deref()).unwrap_or(product_day_key(Utc::now()));
+        let Some(pool) = &self.state.pool else {
+            return Err(ConnectError::new(
+                ErrorCode::Unavailable,
+                "share_unavailable",
+            ));
+        };
+        match record_share(
+            pool,
+            &uid,
+            game_slug,
+            &day.format("%Y-%m-%d").to_string(),
+            req.tap,
+        )
+        .await
+        {
+            Ok(Some(id)) => {
+                // A same-day share carries the sharer's streak on its card.
+                if day == product_day_key(Utc::now()) {
+                    match load_settled_streak(pool, &uid, day).await {
+                        Ok((streak, _, _)) if streak.current_streak > 0 => {
+                            let streak = i32::try_from(streak.current_streak).unwrap_or(i32::MAX);
+                            if let Err(error) = set_share_streak(pool, id, streak).await {
+                                warn!(%error, "share streak not stored");
+                            }
+                        }
+                        Ok(_) => {}
+                        Err(error) => warn!(%error, "share streak not read"),
+                    }
+                }
+                Response::ok(ShareResultResponse {
+                    share_id: id.to_string(),
+                    ..Default::default()
+                })
+            }
+            // Nothing to share until the player has an accepted finish.
+            Ok(None) => Err(ConnectError::new(ErrorCode::NotFound, "no_finish_to_share")),
+            Err(error) => {
+                warn!(%error, "share_result failed");
+                Err(ConnectError::new(ErrorCode::Internal, "share_failed"))
+            }
+        }
+    }
+
+    async fn get_shared_result(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, GetSharedResultRequest>,
+    ) -> ServiceResult<GetSharedResultResponse> {
+        let req = request.to_owned_message();
+        let id = uuid::Uuid::parse_str(req.share_id.trim())
+            .map_err(|_| ConnectError::new(ErrorCode::NotFound, "share_not_found"))?;
+        let Some(pool) = &self.state.pool else {
+            return Err(ConnectError::new(
+                ErrorCode::Unavailable,
+                "share_unavailable",
+            ));
+        };
+        match load_shared_result(pool, id).await {
+            Ok(Some(shared)) => Response::ok(GetSharedResultResponse {
+                game_slug: shared.game_slug,
+                puzzle_date: shared.day_key,
+                difficulty: shared.difficulty.unwrap_or_default(),
+                status: shared.status,
+                attempts: u32::try_from(shared.attempts).unwrap_or_default(),
+                score: shared.score.and_then(|v| u32::try_from(v).ok()),
+                time_spent_ms: shared.time_spent_ms.and_then(|v| u64::try_from(v).ok()),
+                streak: shared.streak.and_then(|v| u32::try_from(v).ok()),
+                ..Default::default()
+            }),
+            Ok(None) => Err(ConnectError::new(ErrorCode::NotFound, "share_not_found")),
+            Err(error) => {
+                warn!(%error, "get_shared_result failed");
+                Err(ConnectError::new(ErrorCode::Internal, "share_read_failed"))
+            }
+        }
     }
 }
 

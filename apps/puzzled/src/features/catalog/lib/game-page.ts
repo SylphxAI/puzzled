@@ -62,3 +62,21 @@ export function parseGameTips(raw: unknown): string[] {
 		return tip ? [tip] : []
 	})
 }
+
+/**
+ * HowTo structured data from the rules a game page already shows, so the
+ * machine-readable steps are the visible steps. No answer, no puzzle content:
+ * only the module's own rule statements.
+ */
+export function howToStructuredData(name: string, rules: readonly string[]) {
+	return {
+		'@context': 'https://schema.org',
+		'@type': 'HowTo',
+		name,
+		step: rules.map((text, index) => ({
+			'@type': 'HowToStep',
+			position: index + 1,
+			text,
+		})),
+	}
+}

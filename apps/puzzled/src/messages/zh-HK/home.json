@@ -77,16 +77,25 @@
 		"puzzleNumber": "第 {number} 題",
 		"resetsIn": "距離重置",
 		"resetsAt": "香港時間午夜",
-		"title": "今日的{game}",
+		"guestTitle": "每日十九款謎題，一款永遠免費。",
 		"titleMemberReady": "今日的{game}已準備好",
 		"titleMemberStreak": "你的 {days} 日連續紀錄等着你",
 		"titleMemberDone": "今日已完成 — 玩得漂亮",
-		"bodyGuest": "幾分鐘的真正解謎，無需註冊、無需下載。",
+		"bodyGuest": "文字、邏輯同數字謎題，每日重設，有連勝紀錄同公平排行榜。毋須註冊即玩。",
 		"bodyMember": "你的連續紀錄、統計和今日陣容，一按即到。",
 		"playToday": "玩今日的{game}",
 		"playAgain": "再玩一次",
 		"browseAll": "瀏覽所有遊戲",
 		"finishersToday": "今日已有 {count} 人完成",
 		"freeToday": "今日免費"
+	},
+	"seasons": {
+		"newYear": "新年快樂",
+		"lunarNewYear": "新年快樂，恭喜發財",
+		"easter": "復活節快樂",
+		"dragonBoat": "端午節快樂",
+		"midAutumn": "中秋節快樂",
+		"halloween": "萬聖節快樂",
+		"christmas": "聖誕快樂"
 	}
 }

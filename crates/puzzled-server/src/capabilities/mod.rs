@@ -7,6 +7,8 @@ pub mod gamification;
 pub mod identity_access;
 pub mod jobs;
 pub mod leaderboard;
+pub mod money;
 pub mod preferences;
 pub mod puzzle_play;
 pub mod stats;
+pub mod tryit_conversions;

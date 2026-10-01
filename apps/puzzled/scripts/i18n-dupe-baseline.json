@@ -10,10 +10,6 @@
 				]
 			},
 			{
-				"value": "2026-09-27",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
-			},
-			{
 				"value": "Account",
 				"keys": [
 					"nav.account",
@@ -723,6 +719,14 @@
 				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
 			},
 			{
+				"value": "Remind me daily",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "Remove",
 				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
 			},
@@ -863,10 +867,6 @@
 			{
 				"value": "Sign Up",
 				"keys": ["auth.signUp", "common.signUp"]
-			},
-			{
-				"value": "Sign in",
-				"keys": ["archive.signInCta", "plus.unlock.signIn"]
 			},
 			{
 				"value": "Sign out",
@@ -1098,10 +1098,6 @@
 				]
 			},
 			{
-				"value": "2026-09-27",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
-			},
-			{
 				"value": "Account",
 				"keys": [
 					"nav.account",
@@ -1811,6 +1807,14 @@
 				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
 			},
 			{
+				"value": "Remind me daily",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "Remove",
 				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
 			},
@@ -1951,10 +1955,6 @@
 			{
 				"value": "Sign Up",
 				"keys": ["auth.signUp", "common.signUp"]
-			},
-			{
-				"value": "Sign in",
-				"keys": ["archive.signInCta", "plus.unlock.signIn"]
 			},
 			{
 				"value": "Sign out",
@@ -2186,10 +2186,6 @@
 				]
 			},
 			{
-				"value": "2026-09-27",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
-			},
-			{
 				"value": "All Users",
 				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
 			},
@@ -2401,10 +2397,6 @@
 			{
 				"value": "使用者名稱",
 				"keys": ["settings.profile.username", "settings.profile.usernamePlaceholder"]
-			},
-			{
-				"value": "保護你的連勝",
-				"keys": ["onboarding.saveStreak", "settings.overview.quickNotifications.streakDesc"]
 			},
 			{
 				"value": "個人檔案",
@@ -2875,6 +2867,14 @@
 				"keys": ["settings.overview.quickNotifications.daily", "settings.pushDailyReminder"]
 			},
 			{
+				"value": "每日提醒我",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "沒有安全警示",
 				"keys": ["settings.securityAlerts.noAlerts", "settings.securityScore.checks.noAlerts"]
 			},
@@ -2931,7 +2931,6 @@
 				"value": "登入",
 				"keys": [
 					"admin.auditLogs.actions.login",
-					"archive.signInCta",
 					"auth.signIn",
 					"common.signIn",
 					"plus.unlock.signIn"
@@ -3251,10 +3250,6 @@
 				]
 			},
 			{
-				"value": "2026-09-27",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
-			},
-			{
 				"value": "All Users",
 				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
 			},
@@ -3465,10 +3460,6 @@
 			{
 				"value": "使用者名稱",
 				"keys": ["settings.profile.username", "settings.profile.usernamePlaceholder"]
-			},
-			{
-				"value": "保護你的連勝",
-				"keys": ["onboarding.saveStreak", "settings.overview.quickNotifications.streakDesc"]
 			},
 			{
 				"value": "個人檔案",
@@ -3930,6 +3921,14 @@
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
 			},
 			{
+				"value": "每天提醒我",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "每日",
 				"keys": ["modes.daily", "settings.notifications.quickActions.daily"]
 			},
@@ -3990,7 +3989,6 @@
 				"value": "登入",
 				"keys": [
 					"admin.auditLogs.actions.login",
-					"archive.signInCta",
 					"auth.signIn",
 					"common.signIn",
 					"plus.unlock.signIn"
@@ -4310,10 +4308,6 @@
 				]
 			},
 			{
-				"value": "2026-09-27",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
-			},
-			{
 				"value": "All Users",
 				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
 			},
@@ -4557,10 +4551,6 @@
 					"settings.notifications.push.saving",
 					"settings.profile.saving"
 				]
-			},
-			{
-				"value": "保护你的连胜",
-				"keys": ["onboarding.saveStreak", "settings.overview.quickNotifications.streakDesc"]
 			},
 			{
 				"value": "偏好设置",
@@ -5047,6 +5037,14 @@
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
 			},
 			{
+				"value": "每天提醒我",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "每日",
 				"keys": ["modes.daily", "settings.notifications.quickActions.daily"]
 			},
@@ -5130,7 +5128,6 @@
 				"value": "登录",
 				"keys": [
 					"admin.auditLogs.actions.login",
-					"archive.signInCta",
 					"auth.signIn",
 					"common.signIn",
 					"plus.unlock.signIn"

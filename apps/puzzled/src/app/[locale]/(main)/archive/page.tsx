@@ -3,14 +3,17 @@ export const dynamic = 'force-dynamic'
 import { Card, CardContent } from '@sylphx/ui'
 import { CalendarDays, Lock, Play } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { AdSlot } from '@/features/ads/components/ad-slot'
 import {
 	ARCHIVE_WINDOW_DAYS,
 	archiveDays,
 	archivePlayPath,
 } from '@/features/daily/lib/archive-days'
 import { getAllGameMetadata } from '@/games/registry'
+import { adsConfig, adsFor } from '@/lib/ads'
 import { getServerPlusAccess } from '@/lib/api/server'
 import { OPEN_ACCESS } from '@/lib/billing/plus'
+import { env } from '@/lib/env'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
@@ -58,9 +61,8 @@ function formatDayKey(dayKey: string, locale: string): string {
  * The archive index (`/archive`) — the surface that lets a player reach past
  * product days.
  *
- * A guest is pointed at sign-in (the archive is per-identity); a signed-in
- * account sees the day list, or the Puzzled Plus path once Plus is on sale and
- * the account has none. Every row links the dated play route,
+ * While Plus is not on sale every viewer, guests included, sees the day list;
+ * once it is on sale a viewer without Plus sees the Puzzled Plus path. Every row links the dated play route,
  * `/games/<slug>?mode=archive&date=YYYY-MM-DD`, which Connect admits or refuses
  * on its own — this page decides nothing about play.
  *
@@ -76,13 +78,14 @@ export default async function ArchivePage({ params }: Props) {
 	const tGames = await getTranslations('games')
 
 	const user = await withPresentationDeadline(currentUser(), null)
-	const isGuest = !user?.id
-	// Past days need Puzzled Plus once it is on sale; Connect enforces it too.
-	const access = isGuest
-		? OPEN_ACCESS
-		: await withPresentationDeadline(getServerPlusAccess(true), OPEN_ACCESS)
-	const locked = !isGuest && access.salesOpen && !access.entitled
+	// Past days need Puzzled Plus once it is on sale, for guests and accounts
+	// alike; until then nothing is locked and every past day is open to everyone
+	// (the rule /pricing states). Connect enforces the same rule.
+	const access = await withPresentationDeadline(getServerPlusAccess(Boolean(user?.id)), OPEN_ACCESS)
+	const locked = access.salesOpen && !access.entitled
 	const tPlus = await getTranslations('plus.unlock')
+	// Free viewers see one labelled ad under the list; Plus removes it.
+	const ads = adsFor(adsConfig(env), access.entitled)
 
 	const todaysFreeGame = getTodaysFreeGame()
 	const freeName = tGames(`${slugToCamelCase(todaysFreeGame)}.name`, {
@@ -90,15 +93,14 @@ export default async function ArchivePage({ params }: Props) {
 	})
 
 	const moduleNames = new Map(getAllGameMetadata().map((game) => [game.slug, game.name]))
-	const days =
-		!isGuest && !locked
-			? archiveDays(productDayKey()).map((day) => ({
-					...day,
-					name: tGames(`${slugToCamelCase(day.gameSlug)}.name`, {
-						defaultValue: moduleNames.get(day.gameSlug) ?? day.gameSlug,
-					}),
-				}))
-			: []
+	const days = !locked
+		? archiveDays(productDayKey()).map((day) => ({
+				...day,
+				name: tGames(`${slugToCamelCase(day.gameSlug)}.name`, {
+					defaultValue: moduleNames.get(day.gameSlug) ?? day.gameSlug,
+				}),
+			}))
+		: []
 
 	return (
 		<main className="flex-1">
@@ -107,31 +109,7 @@ export default async function ArchivePage({ params }: Props) {
 				<h1 className="mt-2 font-display text-3xl md:text-4xl">{t('title')}</h1>
 				<p className="mt-3 max-w-2xl text-muted-foreground">{t('body')}</p>
 
-				{isGuest ? (
-					<Card className="mt-8 max-w-xl">
-						<CardContent className="flex flex-col gap-4 p-6">
-							<div className="flex items-center gap-3">
-								<Lock className="h-5 w-5 text-primary" aria-hidden="true" />
-								<h2 className="font-display text-lg">{t('guestTitle')}</h2>
-							</div>
-							<p className="text-sm text-muted-foreground">{t('guestBody')}</p>
-							<div className="flex flex-wrap items-center gap-3">
-								<Link
-									href="/login"
-									className="inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
-								>
-									{t('signInCta')}
-								</Link>
-								<Link
-									href={`/games/${todaysFreeGame}`}
-									className="inline-flex h-11 items-center rounded-xl border border-border px-5 text-sm font-semibold transition-colors hover:border-primary/30 hover:text-primary"
-								>
-									{t('playFreeToday', { game: freeName })}
-								</Link>
-							</div>
-						</CardContent>
-					</Card>
-				) : locked ? (
+				{locked ? (
 					<Card className="mt-8 max-w-xl">
 						<CardContent className="flex flex-col gap-4 p-6">
 							<div className="flex items-center gap-3">
@@ -210,6 +188,12 @@ export default async function ArchivePage({ params }: Props) {
 										</li>
 									))}
 								</ul>
+
+								{ads ? (
+									<div className="mt-8 max-w-2xl">
+										<AdSlot config={ads} />
+									</div>
+								) : null}
 
 								<div className="mt-6 flex flex-wrap items-center gap-3">
 									<Link

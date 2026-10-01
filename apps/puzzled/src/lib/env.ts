@@ -35,13 +35,7 @@ type EnvSource = Record<string, string | undefined>
 const SERVER_REQUIRED: EnvVar[] = []
 
 // Feature-specific variables (validated when feature is used)
-const FEATURE_VARS: EnvVar[] = [
-	{
-		name: 'RESEND_API_KEY',
-		required: false, // Checked at runtime by email.ts
-		description: 'Resend API key for email',
-	},
-]
+const FEATURE_VARS: EnvVar[] = []
 
 // Security-critical vars that should be set in production
 const PRODUCTION_SECURITY_VARS: string[] = []
@@ -68,16 +62,23 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		required: false,
 		description: 'Next.js phase; phase-production-build relaxes the Redis connect',
 	},
+	// Advertising (off until both are set)
+	{
+		name: 'ADS_ADSENSE_CLIENT_ID',
+		required: false,
+		description:
+			'AdSense publisher id (ca-pub-...); ads stay off until this and ADS_SLOT_ID are set',
+	},
+	{
+		name: 'ADS_SLOT_ID',
+		required: false,
+		description: 'AdSense ad unit id for the archive and result slots',
+	},
 	// Deployment / dev host facts
 	{
 		name: 'SYLPHX_PUBLIC_URL',
 		required: false,
 		description: 'Public site origin the platform sets on each service at runtime',
-	},
-	{
-		name: 'VERCEL_URL',
-		required: false,
-		description: 'Deployment hostname used by site-origin resolution',
 	},
 	{
 		name: 'PORT',
@@ -127,11 +128,6 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		description: 'Models product key; required when Models is called',
 	},
 	// Security / infra
-	{
-		name: 'EMAIL_UNSUBSCRIBE_SECRET',
-		required: false,
-		description: 'HMAC secret for email unsubscribe tokens',
-	},
 	{
 		name: 'DATABASE_URL',
 		required: false,
@@ -234,10 +230,6 @@ export const env = {
 	},
 	/** Configured site origin (baked at build) */
 	/** Sylphx app id for the login surface (baked at build) */
-	/** Deployment hostname fallback */
-	get VERCEL_URL(): string | undefined {
-		return process.env.VERCEL_URL
-	},
 	/** Public site origin (platform, runtime) */
 	get SYLPHX_PUBLIC_URL(): string | undefined {
 		return process.env.SYLPHX_PUBLIC_URL
@@ -274,9 +266,13 @@ export const env = {
 	get AI_API_KEY(): string | undefined {
 		return process.env.AI_API_KEY
 	},
-	/** HMAC key for email unsubscribe tokens; dedicated, shared with no other signer */
-	get EMAIL_UNSUBSCRIBE_SECRET(): string | undefined {
-		return process.env.EMAIL_UNSUBSCRIBE_SECRET
+	/** AdSense publisher id; ads are off while unset */
+	get ADS_ADSENSE_CLIENT_ID(): string | undefined {
+		return process.env.ADS_ADSENSE_CLIENT_ID
+	},
+	/** AdSense ad unit id */
+	get ADS_SLOT_ID(): string | undefined {
+		return process.env.ADS_SLOT_ID
 	},
 	/** Postgres connection string */
 	get DATABASE_URL(): string | undefined {

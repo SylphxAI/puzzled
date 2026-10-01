@@ -673,6 +673,11 @@
 			"compactMode": "Compact Mode",
 			"compactModeDescription": "Use a denser layout with smaller spacing"
 		},
+		"streakFreeze": {
+			"description": "Choose whether a freeze is used automatically to protect your streak",
+			"unavailable": "Auto-freeze could not be loaded. Refresh to try again.",
+			"saveFailed": "Your change was not saved. Try again."
+		},
 		"language": {
 			"title": "Language & Region",
 			"description": "Set your language and regional preferences",
@@ -732,12 +737,12 @@
 			"heading": "Push Notifications",
 			"inlineEnabled": "Notifications are enabled",
 			"inlineDisabled": "Enable notifications to get daily reminders",
-			"enable": "Enable",
+			"enable": "Remind me daily",
 			"disable": "Disable",
 			"description": "Get notified about puzzles, streaks, and more",
 			"typesHeading": "Notification Types",
 			"loading": "Loading preferences...",
-			"dailyReminder": "Daily Puzzle Reminder",
+			"dailyReminder": "Remind me daily",
 			"dailyReminderDescription": "Get reminded when the new daily puzzle is available",
 			"streakAlert": "Streak Alerts",
 			"streakAlertDescription": "Get a reminder before your streak is about to expire",
@@ -746,7 +751,9 @@
 			"saving": "Saving...",
 			"save": "Save Preferences",
 			"enablePrompt": "Enable push notifications to customize your preferences",
-			"enableNotifications": "Enable Notifications"
+			"enableNotifications": "Remind me daily",
+			"reminderTime": "Reminder time (your local time)",
+			"unavailable": "Daily reminders are unavailable. Please try again."
 		}
 	},
 	"pushNotifications": "Push Notifications",

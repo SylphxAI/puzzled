@@ -66,6 +66,8 @@
 		"playedToday": "你今天已完成一个游戏",
 		"notPlayedToday": "今天仍开放",
 		"freezes": "{count} 个连胜保护",
+		"freezeUsedYesterday": "昨天没玩，用了一个连胜保护，连胜依然保住。",
+		"nextFreeze": "再玩 {count} 天可获得一个连胜保护",
 		"autoFreezeOn": "已开启自动保护：若你中断一天，会在还有存货时自动使用。",
 		"autoFreezeOff": "自动保护已关闭。",
 		"unavailableTitle": "连胜数据无法加载",

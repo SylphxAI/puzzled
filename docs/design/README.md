@@ -1,8 +1,12 @@
 # Puzzled design system
 
-**Status:** current brand and interface system, landed 2026-09-26. It replaces the
-"midnight study x arcade" direction in `notes/redesign-spec.md` and the S3 token
-slice in `docs/program/website-refactor/s3-direction.md`.
+Brand, tokens, shell and page list for the site. Target metrics: time to first
+finish, share rate and D7 retention ([metrics.md](../metrics.md)); design choices
+are judged by them, not by conformance to this file. Growth mechanisms were
+reviewed once against the owner
+[mechanics menu](https://github.com/SylphxAI/owner/blob/main/standards/mechanics.md)
+([growth.md](../growth.md)).
+
 **Code:** the brand colours resolve from [`brand/tokens.css`](../../brand/tokens.css),
 whose source is `brand/tokens.json` ([usage sheet](../../brand/README.md)); the rest
 of the tokens live in `apps/puzzled/src/app/globals.css` (`@theme` and `.dark`). A
@@ -145,8 +149,3 @@ band. Leaderboard moved from the top bar to Stats, the menu sheet and the footer
 - Unread personal data renders geometry-matched skeletons, never zeros.
 - Dialogs are bottom sheets on phones (grabber, safe-area padding, 28 px corners) and
   centred cards from 640 px.
-
-## Screens
-
-`docs/design/screens/` holds the release screenshots: every key page at 390×844,
-820×1180 and 1440×900, in light and dark, as WebP.

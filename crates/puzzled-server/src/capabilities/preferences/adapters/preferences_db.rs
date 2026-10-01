@@ -48,6 +48,7 @@ pub async fn upsert_notification_preferences(
     push_streak_alert: Option<bool>,
     push_new_games: Option<bool>,
     daily_reminder_time: Option<&str>,
+    timezone: Option<&str>,
     email_enabled: Option<bool>,
     email_weekly_digest: Option<bool>,
     email_marketing: Option<bool>,
@@ -57,11 +58,11 @@ pub async fn upsert_notification_preferences(
         r#"
         INSERT INTO notification_preferences (
             user_id, push_enabled, push_daily_reminder, push_streak_alert, push_new_games,
-            daily_reminder_time, email_enabled, email_weekly_digest, email_marketing, updated_at
+            daily_reminder_time, timezone, email_enabled, email_weekly_digest, email_marketing, updated_at
         ) VALUES (
             $1,
             COALESCE($2, true), COALESCE($3, true), COALESCE($4, true), COALESCE($5, true),
-            COALESCE($6, '09:00'), COALESCE($7, true), COALESCE($8, true), COALESCE($9, false),
+            COALESCE($6, '09:00'), $10, COALESCE($7, true), COALESCE($8, true), COALESCE($9, false),
             now()
         )
         ON CONFLICT (user_id) DO UPDATE SET
@@ -70,6 +71,7 @@ pub async fn upsert_notification_preferences(
             push_streak_alert = COALESCE($4, notification_preferences.push_streak_alert),
             push_new_games = COALESCE($5, notification_preferences.push_new_games),
             daily_reminder_time = COALESCE($6, notification_preferences.daily_reminder_time),
+            timezone = COALESCE($10, notification_preferences.timezone),
             email_enabled = COALESCE($7, notification_preferences.email_enabled),
             email_weekly_digest = COALESCE($8, notification_preferences.email_weekly_digest),
             email_marketing = COALESCE($9, notification_preferences.email_marketing),
@@ -85,10 +87,31 @@ pub async fn upsert_notification_preferences(
     .bind(email_enabled)
     .bind(email_weekly_digest)
     .bind(email_marketing)
+    .bind(timezone)
     .execute(pool)
     .await
     .map_err(|e| format!("notification prefs upsert failed: {e}"))?;
     Ok(())
+}
+
+/// True for a 24-hour `HH:MM` time.
+#[must_use]
+pub fn is_reminder_time(raw: &str) -> bool {
+    let bytes = raw.as_bytes();
+    bytes.len() == 5
+        && bytes[2] == b':'
+        && raw[..2].parse::<u8>().is_ok_and(|h| h < 24)
+        && raw[3..].parse::<u8>().is_ok_and(|m| m < 60)
+        && bytes[..2].iter().chain(&bytes[3..]).all(u8::is_ascii_digit)
+}
+
+/// True when Postgres knows the IANA time zone name.
+pub async fn timezone_is_known(pool: &PgPool, name: &str) -> Result<bool, String> {
+    sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM pg_timezone_names WHERE name = $1)")
+        .bind(name)
+        .fetch_one(pool)
+        .await
+        .map_err(|e| format!("time zone lookup failed: {e}"))
 }
 
 /// Load a user's app-scoped profile/preferences row (if any).
@@ -136,11 +159,21 @@ pub async fn fetch_notification_preferences(
     user_id: &str,
 ) -> Result<serde_json::Value, String> {
     let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
-    type NotifRow = (bool, bool, bool, bool, String, bool, bool, bool);
+    type NotifRow = (
+        bool,
+        bool,
+        bool,
+        bool,
+        String,
+        bool,
+        bool,
+        bool,
+        Option<String>,
+    );
     let row: Option<NotifRow> = sqlx::query_as(
         r#"
         SELECT push_enabled, push_daily_reminder, push_streak_alert, push_new_games,
-               daily_reminder_time, email_enabled, email_weekly_digest, email_marketing
+               daily_reminder_time, email_enabled, email_weekly_digest, email_marketing, timezone
         FROM notification_preferences
         WHERE user_id = $1
         "#,
@@ -158,6 +191,7 @@ pub async fn fetch_notification_preferences(
         email_enabled,
         email_weekly_digest,
         email_marketing,
+        timezone,
     ) = row.unwrap_or((
         true,
         true,
@@ -167,6 +201,7 @@ pub async fn fetch_notification_preferences(
         true,
         true,
         true,
+        None,
     ));
     Ok(serde_json::json!({
         "pushEnabled": push_enabled,
@@ -177,6 +212,7 @@ pub async fn fetch_notification_preferences(
         "emailEnabled": email_enabled,
         "emailWeeklyDigest": email_weekly_digest,
         "emailMarketing": email_marketing,
+        "timezone": timezone.unwrap_or_default(),
     }))
 }
 

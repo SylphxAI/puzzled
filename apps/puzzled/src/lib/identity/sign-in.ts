@@ -8,11 +8,12 @@ import {
 	redeemTicket,
 	sessionTimes,
 } from './client-auth'
+import { destIdentityProjectId } from './credentials'
 import { setSessionCookie } from './server'
 import { recordSignupAttribution } from './signup-attribution'
 
 export function authFail(status: number, error: string) {
-	return NextResponse.json({ error, authority: 'sylphx-identity' }, { status })
+	return NextResponse.json({ error }, { status })
 }
 
 export function userAgentOf(request: Request): string {
@@ -36,7 +37,7 @@ export async function completeSignIn(
 		const times =
 			typeof session.isNewUser === 'boolean'
 				? {}
-				: await sessionTimes(config, session.token, userAgent)
+				: await sessionTimes(config, session.token, userAgent, destIdentityProjectId())
 		if (isNewUser({ flag: session.isNewUser, ...times, now: Date.now() / 1000 })) {
 			await recordSignupAttribution(session.token, request.headers.get('cookie'), userAgent)
 		}

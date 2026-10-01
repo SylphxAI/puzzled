@@ -13,11 +13,60 @@ use connectrpc::{
 use super::state::AppState;
 use crate::capabilities::jobs::adapters::jobs_db;
 use crate::proto::puzzled::v1::{JobsService, RunRetentionJobRequest, RunRetentionJobResponse};
-use crate::shared::dest_http::{
-    dest_email_connector_id, dest_email_delivery, dest_events_deliver, dest_push_connector_id,
-    dest_push_delivery,
-};
+use crate::shared::dest_http::{dest_email_connector_id, dest_email_delivery, dest_events_deliver};
 use crate::shared::tick_receipt::TickError;
+use puzzled_core::puzzle_play::daily_time::product_day_key;
+
+/// Send the daily reminders due at `now`, each at the player's own reminder
+/// time in their own time zone (see [`jobs_db::claim_due_daily_reminders`]).
+/// Safe to call as often as the schedule likes: a player is reminded once per
+/// local day, and never after finishing today's puzzle.
+pub async fn send_due_daily_reminders(
+    pool: &sqlx::PgPool,
+    now: chrono::DateTime<Utc>,
+) -> Result<u32, Vec<String>> {
+    send_due_daily_reminders_with(pool, now, |user_id| async move {
+        crate::capabilities::preferences::adapters::web_push::send_daily(pool, &user_id).await
+    })
+    .await
+}
+
+/// Injectable delivery keeps the real claim/release loop testable without
+/// contacting browser push services or loading VAPID credentials.
+pub(crate) async fn send_due_daily_reminders_with<F, Fut>(
+    pool: &sqlx::PgPool,
+    now: chrono::DateTime<Utc>,
+    mut send: F,
+) -> Result<u32, Vec<String>>
+where
+    F: FnMut(String) -> Fut,
+    Fut: std::future::Future<Output = Result<(), String>>,
+{
+    let product_day = product_day_key(now).format("%Y-%m-%d").to_string();
+    let due = jobs_db::claim_due_daily_reminders(pool, now, &product_day)
+        .await
+        .map_err(|e| vec![e])?;
+    let mut errors = Vec::new();
+    let mut processed = 0u32;
+    for (user_id, _time) in due {
+        // Delivery returns success if any endpoint received the reminder;
+        // only a wholly unsuccessful retryable delivery releases this claim.
+        match send(user_id.clone()).await {
+            Ok(()) => processed += 1,
+            Err(e) => {
+                errors.push(format!("{user_id}: {e}"));
+                if let Err(release) = jobs_db::release_daily_reminder(pool, &user_id).await {
+                    errors.push(format!("{user_id} release: {release}"));
+                }
+            }
+        }
+    }
+    if errors.is_empty() {
+        Ok(processed)
+    } else {
+        Err(errors)
+    }
+}
 
 #[derive(Clone)]
 pub struct JobsConnectService {
@@ -49,26 +98,7 @@ impl JobsConnectService {
         let Some(pool) = &self.state.pool else {
             return Err(vec!["no database pool".to_string()]);
         };
-        let targets = jobs_db::daily_reminder_targets(pool)
-            .await
-            .map_err(|e| vec![e])?;
-        let connector_id = dest_push_connector_id().map_err(|e| vec![e])?;
-        let mut errors = Vec::new();
-        let mut processed = 0u32;
-        for (user_id, time) in targets {
-            let title = "Your daily puzzle is ready";
-            let body = format!("Play today's puzzles — your daily reminder is set for {time}.");
-            let delivery = dest_push_delivery(&connector_id, &user_id, title, &body, "/");
-            match dest_events_deliver(delivery).await {
-                Ok(()) => processed += 1,
-                Err(e) => errors.push(format!("{user_id}: {e}")),
-            }
-        }
-        if errors.is_empty() {
-            Ok(processed)
-        } else {
-            Err(errors)
-        }
+        send_due_daily_reminders(pool, Utc::now()).await
     }
 
     async fn run_win_back_emails(&self) -> Result<u32, Vec<String>> {
@@ -163,4 +193,120 @@ impl JobsService for JobsConnectService {
 
 pub fn jobs_connect_service(state: AppState) -> Arc<JobsConnectService> {
     Arc::new(JobsConnectService::new(state))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::send_due_daily_reminders_with;
+    use crate::capabilities::preferences::adapters::web_push;
+    use crate::test_support::fresh_database;
+    use chrono::NaiveDate;
+    use uuid::Uuid;
+
+    /// Exercise consecutive Compute ticks through the real database claim/release
+    /// loop, with no outbound delivery and no VAPID configuration.
+    async fn consecutive_reminder_ticks(any_success: bool) {
+        use crate::capabilities::preferences::adapters::web_push_sender::{
+            PushDelivery, PushSender,
+        };
+        use ::web_push::SubscriptionInfo;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        struct TestSender {
+            any_success: bool,
+            attempts: AtomicUsize,
+        }
+        impl PushSender for TestSender {
+            async fn send<'a>(
+                &'a self,
+                subscription: &'a SubscriptionInfo,
+                _payload: &'a str,
+            ) -> Result<PushDelivery, String> {
+                self.attempts.fetch_add(1, Ordering::Relaxed);
+                if self.any_success && subscription.endpoint.ends_with("live") {
+                    Ok(PushDelivery::Delivered)
+                } else {
+                    Err("retryable failure".to_string())
+                }
+            }
+        }
+        let Some(pool) = fresh_database().await else {
+            return;
+        };
+        let player = Uuid::now_v7();
+        sqlx::query("INSERT INTO notification_preferences (user_id, push_enabled, push_daily_reminder, daily_reminder_time, timezone) VALUES ($1, true, true, '08:00', 'UTC')")
+        .bind(player)
+        .execute(&pool)
+        .await
+        .unwrap();
+        let sender = TestSender {
+            any_success,
+            attempts: AtomicUsize::new(0),
+        };
+        let now = NaiveDate::from_ymd_opt(2026, 10, 1)
+            .unwrap()
+            .and_hms_opt(8, 0, 0)
+            .unwrap()
+            .and_utc();
+        for tick in 0..2 {
+            let result = send_due_daily_reminders_with(
+                &pool,
+                now + chrono::Duration::minutes(tick * 15),
+                |user_id| {
+                    let pool = &pool;
+                    let sender = &sender;
+                    async move {
+                        let subscriptions = ["failed", "live"]
+                            .into_iter()
+                            .map(|suffix| {
+                                SubscriptionInfo::new(
+                                    format!("https://fcm.googleapis.com/fcm/send/{suffix}"),
+                                    "public-key".to_string(),
+                                    "auth-key".to_string(),
+                                )
+                            })
+                            .collect();
+                        web_push::deliver_subscriptions(
+                            pool,
+                            Uuid::parse_str(&user_id).unwrap(),
+                            subscriptions,
+                            "{}",
+                            sender,
+                        )
+                        .await
+                    }
+                },
+            )
+            .await;
+            if any_success {
+                assert_eq!(result.unwrap(), if tick == 0 { 1 } else { 0 });
+            } else {
+                assert!(result.is_err());
+            }
+        }
+        let claim: Option<NaiveDate> = sqlx::query_scalar(
+            "SELECT last_daily_reminder_on FROM notification_preferences WHERE user_id = $1",
+        )
+        .bind(player)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        if any_success {
+            assert_eq!(sender.attempts.load(Ordering::Relaxed), 2);
+            assert_eq!(claim, Some(now.date_naive()));
+        } else {
+            assert_eq!(sender.attempts.load(Ordering::Relaxed), 4);
+            assert_eq!(claim, None);
+        }
+    }
+
+    #[tokio::test]
+    async fn mixed_success_keeps_daily_claim_across_consecutive_ticks() {
+        consecutive_reminder_ticks(true).await;
+    }
+
+    #[tokio::test]
+    async fn all_failed_releases_daily_claim_for_next_tick_retry() {
+        consecutive_reminder_ticks(false).await;
+    }
 }

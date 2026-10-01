@@ -12,11 +12,14 @@ import { relations, sql } from 'drizzle-orm'
 import {
 	bigint,
 	boolean,
+	check,
+	date,
 	index,
 	integer,
 	jsonb,
 	pgEnum,
 	pgTable,
+	primaryKey,
 	text,
 	timestamp,
 	uniqueIndex,
@@ -343,12 +346,36 @@ export const userFreezeData = pgTable(
 		freezesUsed: integer('freezes_used').default(0).notNull(),
 
 		/** Auto-freeze enabled setting */
-		autoFreezeEnabled: boolean('auto_freeze_enabled').default(false).notNull(),
+		autoFreezeEnabled: boolean('auto_freeze_enabled').default(true).notNull(),
 
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
 	(table) => [index('user_freeze_data_user_id_idx').on(table.userId)],
+)
+
+/** Milestone days that earned a streak freeze (granted once, ever). */
+export const streakFreezeAwards = pgTable(
+	'streak_freeze_awards',
+	{
+		userId: uuid('user_id').notNull(),
+		dayKey: date('day_key', { mode: 'string' }).notNull(),
+		/** False when the player already held the most freezes allowed */
+		granted: boolean('granted').notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.userId, table.dayKey] })],
+)
+
+/** Missed days a streak freeze covered. */
+export const streakFreezeUses = pgTable(
+	'streak_freeze_uses',
+	{
+		userId: uuid('user_id').notNull(),
+		dayKey: date('day_key', { mode: 'string' }).notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.userId, table.dayKey] })],
 )
 
 // ==========================================
@@ -375,6 +402,10 @@ export const notificationPreferences = pgTable('notification_preferences', {
 	pushNewGames: boolean('push_new_games').default(true).notNull(),
 	/** Daily reminder time (HH:mm format) */
 	dailyReminderTime: text('daily_reminder_time').default('09:00'),
+	/** IANA time zone the reminder time is read in (null reads as UTC) */
+	timezone: text('timezone'),
+	/** Local date of the last daily reminder sent (one per local day) */
+	lastDailyReminderOn: date('last_daily_reminder_on', { mode: 'string' }),
 
 	// Email Notifications
 	/** Master email toggle */
@@ -597,10 +628,18 @@ export const webhookEvents = pgTable(
 )
 
 // ==========================================
-// PUZZLED PLUS (Stripe is the processor; these rows own entitlement and money)
+// FORMER PUZZLED PLUS BILLING (Sylphx Money now holds subscriptions, access
+// and the ledger)
 // ==========================================
+// Kept until the contract migration after Money live proof: that migration
+// (after 2026-10-02, once Money is read back live on Puzzled and the rows are
+// archived) retires these tables. Until then they are defined here only so
+// schema/migration parity holds, under their original table, index and
+// constraint names. No app or server code reads or writes them; a test
+// (account_deletion.rs, retiring_billing_tables_have_no_runtime_reader) fails
+// if any does.
 
-/** One Stripe customer per account. */
+/** One Stripe customer per account (former; see the section note). */
 export const billingCustomers = pgTable('billing_customers', {
 	/** Platform user ID (no FK) */
 	userId: uuid('user_id').primaryKey(),
@@ -687,6 +726,83 @@ export const accountAttribution = pgTable('account_attribution', {
 	landedAt: timestamp('landed_at'),
 	recordedAt: timestamp('recorded_at').defaultNow().notNull(),
 })
+
+/**
+ * Conversions to report back to Tryit: one row per account and event
+ * (`signup`, `purchase`), queued only for an account with a Tryit `ref`, sent
+ * once and retried by the sweep until reported or given up.
+ */
+export const tryitConversions = pgTable(
+	'tryit_conversions',
+	{
+		userId: uuid('user_id').notNull(),
+		event: text('event').notNull(),
+		ref: text('ref').notNull(),
+		occurredAt: timestamp('occurred_at').notNull(),
+		attempts: integer('attempts').default(0).notNull(),
+		lastAttemptAt: timestamp('last_attempt_at'),
+		lastError: text('last_error'),
+		reportedAt: timestamp('reported_at'),
+		gaveUpAt: timestamp('gave_up_at'),
+	},
+	(table) => [
+		primaryKey({ columns: [table.userId, table.event] }),
+		check('tryit_conversions_event_check', sql`${table.event} IN ('signup', 'purchase')`),
+		index('tryit_conversions_pending_idx')
+			.on(table.lastAttemptAt)
+			.where(sql`${table.reportedAt} IS NULL AND ${table.gaveUpAt} IS NULL`),
+	],
+)
+
+/**
+ * A shared daily result. The share link carries `id` as `ref`; the row holds
+ * only what the result card shows (never a solution), and `share_count` counts
+ * share taps. One row per player, module and product day.
+ */
+export const resultShares = pgTable(
+	'result_shares',
+	{
+		/** UUIDv7 minted by the api */
+		id: uuid('id').primaryKey(),
+		/** Platform user ID or guest-day ID (no FK) */
+		userId: uuid('user_id').notNull(),
+		gameSlug: text('game_slug').notNull(),
+		dayKey: text('day_key').notNull(),
+		difficulty: text('difficulty'),
+		status: text('status').notNull(),
+		attempts: integer('attempts').notNull(),
+		score: integer('score'),
+		timeSpentMs: integer('time_spent_ms'),
+		/** The sharer's same-day streak when the share was made; null when none. */
+		streak: integer('streak'),
+		shareCount: integer('share_count').default(0).notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+		lastSharedAt: timestamp('last_shared_at').defaultNow().notNull(),
+	},
+	(table) => [
+		uniqueIndex('result_shares_user_game_day_uidx').on(table.userId, table.gameSlug, table.dayKey),
+	],
+)
+
+/**
+ * The buyer's immediate-supply consent, one row per checkout started through
+ * Sylphx Money: access now, and the 14-day cancellation right is lost.
+ */
+export const checkoutConsents = pgTable(
+	'checkout_consents',
+	{
+		/** UUIDv7 minted by the api */
+		id: uuid('id').primaryKey(),
+		/** Platform user ID (no FK) */
+		userId: uuid('user_id').notNull(),
+		planId: text('plan_id').notNull(),
+		priceKey: text('price_key').notNull(),
+		locale: text('locale').notNull(),
+		statement: text('statement').notNull(),
+		consentedAt: timestamp('consented_at').defaultNow().notNull(),
+	},
+	(t) => [index('checkout_consents_user_id_idx').on(t.userId)],
+)
 
 /** A family plan owner and the invite code members join with. */
 export const familyGroups = pgTable('family_groups', {

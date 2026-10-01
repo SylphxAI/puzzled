@@ -323,6 +323,12 @@ pub async fn adopt_guest_sessions(
         .await
         .map_err(|e| format!("guest reassign failed: {e}"))?;
 
+    super::result_shares_db::adopt_guest_shares(pool, account, guest).await?;
+    crate::capabilities::gamification::adapters::freezes_db::adopt_guest_freezes(
+        pool, account, guest,
+    )
+    .await?;
+
     Ok(updated.rows_affected())
 }
 

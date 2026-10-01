@@ -10,10 +10,11 @@
 import 'server-only'
 
 import { create } from '@bufbuild/protobuf'
-import { createClient } from '@connectrpc/connect'
+import { Code, ConnectError, createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
+import { type SharedResult, toSharedResult } from '@/features/daily/lib/challenge'
 import { loadDailyCompletionMap } from '@/features/daily/lib/daily-completion'
 import {
 	BillingService,
@@ -24,7 +25,11 @@ import {
 	GamificationService,
 	GetStreakInfoRequestSchema,
 } from '@/gen/connect/puzzled/v1/gamification_pb'
-import { GetDailyRequestSchema, PuzzleService } from '@/gen/connect/puzzled/v1/puzzle_pb'
+import {
+	GetDailyRequestSchema,
+	GetSharedResultRequestSchema,
+	PuzzleService,
+} from '@/gen/connect/puzzled/v1/puzzle_pb'
 import {
 	GetHistoryRequestSchema,
 	GetTodayOverviewRequestSchema,
@@ -39,6 +44,8 @@ import {
 	type TodaysPuzzle,
 } from '@/lib/api/domain/daily'
 import { OPEN_ACCESS, type PlusAccess } from '@/lib/billing/plus'
+import { getLeaderboard } from '@/lib/connect/stats-client'
+import type { GetLeaderboardInput } from '@/lib/connect/stats-domain'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
 import { logger } from '@/lib/logger'
 import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
@@ -47,9 +54,7 @@ import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
 // Response types (unchanged public shapes)
 // ==========================================
 
-export type { StreakInfo }
-
-export type { DailyStatus, TodaysPuzzle }
+export type { DailyStatus, StreakInfo, TodaysPuzzle }
 
 export type UserStats = {
 	[gameSlug: string]: {
@@ -105,22 +110,43 @@ export async function hasServerProgressIdentity(): Promise<boolean> {
 // Server data accessors (sole Connect)
 // ==========================================
 
-export const getServerDailyStatus = cache(
-	async (input: {
-		gameSlug: string
-		difficulty?: string
-		puzzleDate?: string
-	}): Promise<DailyStatus> => {
-		const transport = await getServerTransport()
-		const client = createClient(PuzzleService, transport)
-		const res = await client.getDaily(
-			create(GetDailyRequestSchema, {
-				gameSlug: input.gameSlug.trim(),
-				difficulty: (input.difficulty ?? '').trim(),
-				puzzleDate: input.puzzleDate?.trim() || undefined,
-			}),
-		)
-		return mapDailyStatus(res, input.difficulty)
+async function fetchServerDailyStatus(input: {
+	gameSlug: string
+	difficulty?: string
+	puzzleDate?: string
+}): Promise<DailyStatus> {
+	const transport = await getServerTransport()
+	const client = createClient(PuzzleService, transport)
+	const res = await client.getDaily(
+		create(GetDailyRequestSchema, {
+			gameSlug: input.gameSlug.trim(),
+			difficulty: (input.difficulty ?? '').trim(),
+			puzzleDate: input.puzzleDate?.trim() || undefined,
+		}),
+	)
+	return mapDailyStatus(res, input.difficulty)
+}
+
+export const getServerDailyStatus = cache(fetchServerDailyStatus)
+
+/**
+ * The result behind a share link, for the public landing. Null for an unknown
+ * or unreadable share, so the landing falls back to today's puzzle.
+ */
+export const getServerSharedResult = cache(
+	async (shareId: string): Promise<SharedResult | null> => {
+		try {
+			const transport = await getServerTransport()
+			const client = createClient(PuzzleService, transport)
+			return toSharedResult(
+				await client.getSharedResult(create(GetSharedResultRequestSchema, { shareId })),
+			)
+		} catch (error) {
+			logger.warn('share.read-failed', {
+				error: error instanceof Error ? error.message : String(error),
+			})
+			return null
+		}
 	},
 )
 
@@ -152,6 +178,27 @@ export type PersonalDailyResult = {
 	statusAvailable: boolean
 }
 
+/** The api answered that this viewer has no identity yet: nothing to read. */
+function isNoIdentityError(error: unknown): boolean {
+	const code = ConnectError.from(error).code
+	return code === Code.Unauthenticated || code === Code.NotFound
+}
+
+/**
+ * One retry for a transient failure. The first request after a cold start can
+ * miss the short SSR deadline for a few of the parallel reads; a second try
+ * is served warm. A missing identity is final and is not retried.
+ */
+async function readDailyStatusWithRetry(gameSlug: string): Promise<DailyStatus> {
+	try {
+		return await getServerDailyStatus({ gameSlug })
+	} catch (error) {
+		if (isNoIdentityError(error)) throw error
+		// Uncached: React cache() would replay the first rejection.
+		return await fetchServerDailyStatus({ gameSlug })
+	}
+}
+
 /**
  * Personal home/progress today-state. GetTodayOverview is a public aggregate
  * for social proof, not a user's completion state; guests and accounts both
@@ -168,10 +215,13 @@ export async function getServerPersonalDailyResults(input: {
 		isGuest: input.isGuest,
 		read: async (gameSlug) => {
 			try {
-				const status = await getServerDailyStatus({ gameSlug })
+				const status = await readDailyStatusWithRetry(gameSlug)
 				statuses.set(gameSlug, status)
 				return status.hasCompleted
 			} catch (error) {
+				// A missing or stale session/guest id is an expected empty state
+				// (nothing to read yet), not a failed read.
+				if (isNoIdentityError(error)) return false
 				unavailableSlugs.add(gameSlug)
 				logger.error('home.personal-result-read-failed', { gameSlug, error })
 				throw error
@@ -227,6 +277,12 @@ export const getServerHistory = cache(
 		}))
 	},
 )
+
+/** Request-scoped authenticated board read; never use the browser transport in SSR. */
+export const getServerLeaderboard = cache(async (input: GetLeaderboardInput) => {
+	const transport = await getServerTransport()
+	return getLeaderboard(input, createClient(StatsService, transport))
+})
 
 export const getServerUserStats = cache(async (): Promise<UserStats> => {
 	const transport = await getServerTransport()
@@ -288,7 +344,7 @@ export const getServerPlans = cache(async () => {
 	return createClient(BillingService, transport).listPlans(create(ListPlansRequestSchema, {}))
 })
 
-/** The signed-in account's subscription; `refresh` reads it back from Stripe first. */
+/** The signed-in account's subscription; `refresh` is accepted for compatibility; access is Sylphx Money's answer. */
 export const getServerSubscription = cache(async (refresh = false) => {
 	const transport = await getServerTransport()
 	return createClient(BillingService, transport).getSubscription(

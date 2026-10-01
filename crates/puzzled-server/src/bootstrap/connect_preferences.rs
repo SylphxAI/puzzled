@@ -5,20 +5,24 @@ use std::sync::Arc;
 use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
+use uuid::Uuid;
 
 use super::identity::require_identity;
 use super::state::AppState;
+use crate::capabilities::identity_access::adapters::auth_subjects;
 use crate::capabilities::preferences::adapters::account_deletion::delete_account_data;
 use crate::capabilities::preferences::adapters::preferences_db::{
-    fetch_notification_preferences, fetch_user_preferences, upsert_notification_preferences,
-    upsert_user_preferences, username_taken,
+    fetch_notification_preferences, fetch_user_preferences, is_reminder_time, timezone_is_known,
+    upsert_notification_preferences, upsert_user_preferences, username_taken,
 };
 use crate::proto::puzzled::v1::{
     CheckUsernameRequest, CheckUsernameResponse, DeleteAccountDataRequest,
     DeleteAccountDataResponse, GetNotificationPreferencesRequest,
     GetNotificationPreferencesResponse, GetProfileRequest, GetProfileResponse,
-    NotificationPreferences, PreferencesService, Profile, RecordSignupAttributionRequest,
-    RecordSignupAttributionResponse, UpdateEmailPreferencesRequest, UpdateEmailPreferencesResponse,
+    GetWebPushConfigRequest, GetWebPushConfigResponse, NotificationPreferences, PreferencesService,
+    Profile, RecordSignupAttributionRequest, RecordSignupAttributionResponse,
+    SaveWebPushSubscriptionRequest, SaveWebPushSubscriptionResponse, UnsubscribeEmailRequest,
+    UnsubscribeEmailResponse, UpdateEmailPreferencesRequest, UpdateEmailPreferencesResponse,
     UpdateProfileRequest, UpdateProfileResponse, UpdatePushPreferencesRequest,
     UpdatePushPreferencesResponse,
 };
@@ -102,6 +106,11 @@ impl PreferencesConnectService {
                 .get("emailMarketing")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(false),
+            timezone: value
+                .get("timezone")
+                .and_then(|v| v.as_str())
+                .unwrap_or_default()
+                .to_string(),
             ..Default::default()
         }
     }
@@ -109,6 +118,66 @@ impl PreferencesConnectService {
 
 #[allow(refining_impl_trait_internal, refining_impl_trait_reachable)]
 impl PreferencesService for PreferencesConnectService {
+    async fn get_web_push_config(
+        &self,
+        _ctx: RequestContext,
+        _request: ServiceRequest<'_, GetWebPushConfigRequest>,
+    ) -> ServiceResult<GetWebPushConfigResponse> {
+        Response::ok(GetWebPushConfigResponse {
+            public_key: std::env::var("VAPID_PUBLIC_KEY").unwrap_or_default(),
+            ..Default::default()
+        })
+    }
+
+    async fn save_web_push_subscription(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, SaveWebPushSubscriptionRequest>,
+    ) -> ServiceResult<SaveWebPushSubscriptionResponse> {
+        use crate::capabilities::preferences::adapters::web_push;
+        let identity = require_identity(&ctx)?;
+        let player = Uuid::parse_str(&identity.user_id)
+            .map_err(|_| ConnectError::new(ErrorCode::Internal, "invalid_player"))?;
+        let req = request.to_owned_message();
+        if !web_push::valid_endpoint(&req.endpoint)
+            || (!req.remove && !web_push::valid_keys(&req.p256dh, &req.auth))
+            || (!req.locale.is_empty()
+                && !matches!(
+                    req.locale.as_str(),
+                    "en-US" | "en-GB" | "zh-HK" | "zh-TW" | "zh-CN"
+                ))
+        {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "invalid_push_subscription",
+            ));
+        }
+        let pool =
+            self.state.pool.as_ref().ok_or_else(|| {
+                ConnectError::new(ErrorCode::Unavailable, "push_store_unavailable")
+            })?;
+        let result = if req.remove {
+            web_push::remove(pool, player, &req.endpoint).await
+        } else {
+            web_push::save(
+                pool,
+                player,
+                &req.endpoint,
+                &req.p256dh,
+                &req.auth,
+                if req.locale.is_empty() {
+                    "en-US"
+                } else {
+                    &req.locale
+                },
+            )
+            .await
+        };
+        result
+            .map_err(|_| ConnectError::new(ErrorCode::Internal, "push_subscription_save_failed"))?;
+        Response::ok(SaveWebPushSubscriptionResponse::default())
+    }
+
     async fn get_profile(
         &self,
         ctx: RequestContext,
@@ -264,6 +333,26 @@ impl PreferencesService for PreferencesConnectService {
     ) -> ServiceResult<UpdatePushPreferencesResponse> {
         let identity = require_identity(&ctx)?;
         let req = request.to_owned_message();
+        if let Some(time) = req.daily_reminder_time.as_deref() {
+            if !is_reminder_time(time) {
+                return Err(ConnectError::new(
+                    ErrorCode::InvalidArgument,
+                    "invalid_reminder_time",
+                ));
+            }
+        }
+        if let (Some(zone), Some(pool)) = (req.timezone.as_deref(), &self.state.pool) {
+            let known = timezone_is_known(pool, zone).await.map_err(|error| {
+                tracing::warn!(%error, "time zone check failed");
+                ConnectError::new(ErrorCode::Internal, "preferences_update_failed")
+            })?;
+            if !known {
+                return Err(ConnectError::new(
+                    ErrorCode::InvalidArgument,
+                    "invalid_timezone",
+                ));
+            }
+        }
         if let Some(pool) = &self.state.pool {
             if let Err(error) = upsert_notification_preferences(
                 pool,
@@ -273,6 +362,7 @@ impl PreferencesService for PreferencesConnectService {
                 req.push_streak_alert,
                 req.push_new_games,
                 req.daily_reminder_time.as_deref(),
+                req.timezone.as_deref(),
                 None,
                 None,
                 None,
@@ -299,6 +389,45 @@ impl PreferencesService for PreferencesConnectService {
         })
     }
 
+    async fn unsubscribe_email(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, UnsubscribeEmailRequest>,
+    ) -> ServiceResult<UnsubscribeEmailResponse> {
+        let verifier = self.state.unsubscribe.as_ref().ok_or_else(|| {
+            ConnectError::new(ErrorCode::Unavailable, "unsubscribe_not_configured")
+        })?;
+        let req = request.to_owned_message();
+        let user_id = verifier
+            .verify(&req.token, chrono::Utc::now().timestamp_millis())
+            .ok_or_else(|| {
+                ConnectError::new(ErrorCode::InvalidArgument, "invalid_unsubscribe_token")
+            })?;
+        let pool =
+            self.state.pool.as_ref().ok_or_else(|| {
+                ConnectError::new(ErrorCode::Unavailable, "preferences_unavailable")
+            })?;
+        upsert_notification_preferences(
+            pool,
+            &user_id.to_string(),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(false),
+        )
+        .await
+        .map_err(|error| {
+            tracing::warn!(%error, "unsubscribe upsert failed");
+            ConnectError::new(ErrorCode::Internal, "preferences_update_failed")
+        })?;
+        Response::ok(UnsubscribeEmailResponse::default())
+    }
+
     async fn update_email_preferences(
         &self,
         ctx: RequestContext,
@@ -310,6 +439,7 @@ impl PreferencesService for PreferencesConnectService {
             if let Err(error) = upsert_notification_preferences(
                 pool,
                 &identity.user_id,
+                None,
                 None,
                 None,
                 None,
@@ -360,23 +490,70 @@ impl PreferencesService for PreferencesConnectService {
                 "account_deletion_unavailable",
             ));
         };
-        // A subscription that still renews would keep charging an erased
-        // account: the player cancels it first (Settings > Subscription).
-        let entitlement = crate::capabilities::billing::service::entitlement(
-            pool,
-            self.state.stripe.as_ref(),
-            &identity.user_id,
-        )
-        .await
-        .map_err(|error| {
-            tracing::warn!(%error, "subscription check before erasure failed");
-            ConnectError::new(ErrorCode::Unavailable, "account_deletion_unavailable")
+        // A subscription held in Money renews too: same rule. Money that
+        // cannot answer refuses erasure (retryable) rather than erasing a
+        // paying account.
+        if let Some(money) = &self.state.money {
+            match money.has_renewing_subscription(&identity.user_id).await {
+                Ok(true) => {
+                    return Err(ConnectError::new(
+                        ErrorCode::FailedPrecondition,
+                        "cancel_subscription_first",
+                    ))
+                }
+                Ok(false) => {}
+                Err(error) => {
+                    tracing::warn!(%error, "Money subscription check before erasure failed");
+                    return Err(ConnectError::new(
+                        ErrorCode::Unavailable,
+                        "account_deletion_unavailable",
+                    ));
+                }
+            }
+        }
+        // The player's rows are only half the person: the Sylphx Auth subject
+        // is the sign-in they came in with, so deleting the rows alone would
+        // leave a live sign-in behind a purged account (an erasure that is not
+        // an erasure). Auth's deletion is filed first — it suspends the
+        // subject and ends its sessions at once — because the subject map
+        // rows are themselves deleted below, and a failure after that would
+        // leave no name to give Auth: this order means a refused erasure
+        // leaves every row intact and the retry repeats the same Auth request
+        // (fixed idempotency key) rather than filing a second.
+        let erasure = self.state.erasure.as_ref().ok_or_else(|| {
+            tracing::error!("account erasure refused: Enable Auth is not configured");
+            ConnectError::new(ErrorCode::Unavailable, "identity_credential_unconfigured")
         })?;
-        if entitlement.own.is_some_and(|own| !own.cancel_at_period_end) {
-            return Err(ConnectError::new(
-                ErrorCode::FailedPrecondition,
-                "cancel_subscription_first",
-            ));
+        let player = Uuid::parse_str(&identity.user_id).map_err(|error| {
+            tracing::warn!(%error, "account erasure: identity is not a player id");
+            ConnectError::new(ErrorCode::Internal, "account_deletion_failed")
+        })?;
+        let subjects = auth_subjects::subjects_naming_player(pool, player)
+            .await
+            .map_err(|error| {
+                tracing::warn!(%error, "account erasure: subject lookup failed");
+                ConnectError::new(ErrorCode::Unavailable, "account_deletion_unavailable")
+            })?;
+        for subject in &subjects {
+            match erasure.delete_principal(subject).await {
+                Ok(Some(request_id)) => tracing::info!(
+                    subject,
+                    privacy_request_id = %request_id,
+                    "sylphx auth account deletion requested"
+                ),
+                // Auth holds no such account (already deleted, or never
+                // created): the person has nothing left to sign in with.
+                Ok(None) => {
+                    tracing::info!(subject, "sylphx auth holds no account to delete")
+                }
+                Err(error) => {
+                    tracing::error!(%error, subject, "sylphx auth account deletion failed");
+                    return Err(ConnectError::new(
+                        ErrorCode::Unavailable,
+                        "identity_account_deletion_failed",
+                    ));
+                }
+            }
         }
         match delete_account_data(pool, &identity.user_id).await {
             Ok(rows_deleted) => {
@@ -422,6 +599,29 @@ impl PreferencesService for PreferencesConnectService {
                 tracing::warn!(%error, "signup attribution failed");
                 ConnectError::new(ErrorCode::Unavailable, "attribution_unavailable")
             })?;
+        if recorded {
+            // Tryit-referred: queue the sign-up and send it once now (3s cap);
+            // a failure stays queued for the sweep.
+            let queued = crate::capabilities::tryit_conversions::enqueue(
+                pool,
+                &identity.user_id,
+                &tags,
+                crate::capabilities::tryit_conversions::Event::Signup,
+            )
+            .await
+            .unwrap_or_else(|error| {
+                tracing::warn!(%error, "tryit sign-up not queued");
+                false
+            });
+            if queued {
+                crate::capabilities::tryit_conversions::report_now(
+                    pool,
+                    self.state.tryit.as_ref(),
+                    &identity.user_id,
+                )
+                .await;
+            }
+        }
         Response::ok(RecordSignupAttributionResponse {
             recorded,
             ..Default::default()

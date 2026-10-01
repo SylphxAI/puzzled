@@ -22,6 +22,12 @@ export function PWAInstallPrompt() {
 	const [isStandalone, setIsStandalone] = useState(false)
 
 	useEffect(() => {
+		// Installability and push share one root-scoped worker; no puzzle caching.
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker
+				.register('/sw.js', { scope: '/', updateViaCache: 'none' })
+				.catch(() => undefined)
+		}
 		// Check if already installed
 		const standalone = window.matchMedia('(display-mode: standalone)').matches
 		setIsStandalone(standalone)

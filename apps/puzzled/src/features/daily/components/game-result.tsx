@@ -4,20 +4,26 @@ import { Button } from '@sylphx/ui'
 import { BarChart3, Clock, Image, Share2, Target, Trophy, Users } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { AdSlot } from '@/features/ads/components/ad-slot'
+import { ChallengeComparison } from '@/features/daily/components/challenge-comparison'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
+import { TomorrowGameLine } from '@/features/daily/components/tomorrow-game-line'
+import { countShareTap, knownShareId, useWarmShareId } from '@/features/daily/hooks/use-share-id'
 import {
 	buildResultCard,
-	type ResultCardStrings,
 	type ResultCardTile,
+	resultCardStringsFrom,
 	resultCardTextAlternative,
 } from '@/features/daily/lib/result-card'
 import { resolveModuleDisplayName } from '@/features/daily/lib/result-share'
 import { shareRitualResultCard } from '@/features/daily/lib/share-result-card'
+import { seasonGreeting } from '@/features/seasons/lib/seasons'
 import { type GameSlug, getHowToPlayConfig } from '@/games/how-to-play-registry'
 import { useTodayPercentile } from '@/lib/api'
 import { Link } from '@/lib/i18n/routing'
 import { productDayKey } from '@/lib/product-day'
 import { cn, getBaseUrl } from '@/lib/utils'
+import { SaveStreakPrompt } from './save-streak-prompt'
 
 type MissedCategory = {
 	name: string
@@ -73,7 +79,9 @@ export function GameResultCard({
 	const t = useTranslations('gameResult')
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
+	const tHome = useTranslations('home')
 	const tGames = useTranslations('games')
+	useWarmShareId(gameType, puzzleDate, mode === 'daily')
 	const [cardBusy, setCardBusy] = useState(false)
 	const [cardNotice, setCardNotice] = useState<string | null>(null)
 
@@ -81,32 +89,16 @@ export function GameResultCard({
 
 	// One copy object for the model, the image and the text alternative, so the
 	// card and the accessible sentence always speak the same words.
-	const cardStrings: ResultCardStrings = {
-		statusWon: tShare('card.statusWon'),
-		statusLost: tShare('card.statusLost'),
-		attemptsLabel: tShare('card.attemptsLabel'),
-		scoreLabel: tShare('card.scoreLabel'),
-		streakLabel: tShare('card.streakLabel'),
-		timeLabel: tShare('card.timeLabel'),
-		mistakesLabel: tShare('card.mistakesLabel'),
-		timeUnder1m: tShare('card.timeUnder1m'),
-		timeUnder5m: tShare('card.timeUnder5m'),
-		timeOver5m: tShare('card.timeOver5m'),
-		attemptsOf: tShare('card.attemptsOf'),
-		attemptsCount: tShare('card.attemptsCount'),
-		scorePoints: tShare('card.scorePoints'),
-		streakDays: tShare('card.streakDays'),
-		patternSummary: tShare('card.patternSummary'),
-		altOnDay: tShare('card.altOnDay'),
-		altTemplate: tShare('card.altTemplate'),
-		altDetailsTemplate: tShare('card.altDetailsTemplate'),
-		altLinkTemplate: tShare('card.altLinkTemplate'),
-		detailSeparator: tShare('card.detailSeparator'),
-	}
+	const cardDayKey = puzzleDate ?? (mode === 'daily' ? productDayKey() : undefined)
+	const cardStrings = resultCardStringsFrom(
+		(key) => tShare.raw(`card.${key}`) as string,
+		seasonGreeting(tHome, cardDayKey),
+	)
 
 	/** Card model for this result: non-spoiler by construction (see result-card.ts). */
-	const buildCard = () =>
+	const buildCard = (shareId?: string) =>
 		buildResultCard({
+			shareId,
 			origin: getBaseUrl('origin'),
 			gameSlug: gameType,
 			gameName: resolveModuleDisplayName(tGames, gameType),
@@ -115,7 +107,7 @@ export function GameResultCard({
 			status,
 			locale,
 			// A daily finish still in its day can label itself; archive runs carry their own day.
-			puzzleDate: puzzleDate ?? (mode === 'daily' ? productDayKey() : undefined),
+			puzzleDate: cardDayKey,
 			attempts: stats.attempts,
 			maxAttempts: stats.maxAttempts,
 			mistakes: stats.mistakes,
@@ -133,8 +125,11 @@ export function GameResultCard({
 		setCardBusy(true)
 		setCardNotice(null)
 		try {
+			// The id was created when this screen showed, so the link is the share landing.
+			const shareId = mode === 'daily' ? knownShareId(gameType, puzzleDate) : undefined
+			if (mode === 'daily') countShareTap(gameType, puzzleDate)
 			const result = await shareRitualResultCard({
-				model: buildCard(),
+				model: buildCard(shareId),
 				strings: cardStrings,
 				title: tShare('card.title'),
 			})
@@ -193,6 +188,7 @@ export function GameResultCard({
 
 	return (
 		<div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+			<SaveStreakPrompt daily={mode === 'daily'} />
 			{/* Screen reader announcement */}
 			<output aria-live="polite" className="sr-only">
 				{getAnnouncementMessage()}
@@ -272,6 +268,15 @@ export function GameResultCard({
 					)}
 				</div>
 
+				{/* "Beat my result": both results, when the player opened a share link for this puzzle. */}
+				{mode === 'daily' && (
+					<ChallengeComparison
+						mine={buildCard()}
+						strings={cardStrings}
+						gameName={resolveModuleDisplayName(tGames, gameType)}
+					/>
+				)}
+
 				{/* Stats Grid */}
 				<div className="mb-6 flex divide-x divide-border rounded-2xl border border-border">
 					{/* Attempts (Wordle/Connections) */}
@@ -337,14 +342,26 @@ export function GameResultCard({
 					>
 						{t('backToHome')}
 					</Link>
+					<a
+						href="https://tryit.fun/daily"
+						className="flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+					>
+						{t('moreOnTryit')}
+					</a>
 				</div>
 
 				{/* Daily mode: Countdown to next puzzle */}
 				{mode === 'daily' && (
 					<div className="mt-4 border-t pt-4">
 						<NextPuzzleCountdown variant="compact" className="justify-center" />
+						<TomorrowGameLine className="mt-1.5" />
 					</div>
 				)}
+
+				{/* After the finish only; renders nothing for Plus or while ads are off. */}
+				<div className="mt-4">
+					<AdSlot />
+				</div>
 			</div>
 		</div>
 	)

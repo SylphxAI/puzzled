@@ -12,6 +12,8 @@ context = "."
 # PR previews are admitted (ADR-170 deploy-layer proof); project policy,
 # labels, and capacity gates still apply on the platform side.
 preview_deploys = true
+merge = "optimistic"
+on_red = "notify"
 
 # Project-level schema gate (ADR-089 / DEPLOY-GUIDE). Ephemeral Job runs once
 # per push BEFORE writer services roll. Supersedes web-only release_command:
@@ -25,7 +27,9 @@ engine = "atlas"
 dir = "apps/puzzled/atlas/migrations"
 image = "api"
 # Pure atlas argv only (Platform migration gate rejects shell wrappers).
-command = "atlas migrate apply --dir file:///app/apps/puzzled/atlas/migrations --url $MIGRATOR_DATABASE_URL --revisions-schema public --baseline 20260222000000"
+# Empty databases execute the baseline DDL; managed databases resume from their ledger.
+# Unmanaged populated databases still require an explicit lifecycle-owner decision.
+command = "atlas migrate apply --dir file:///app/apps/puzzled/atlas/migrations --url $MIGRATOR_DATABASE_URL --revisions-schema public"
 timeout = "10m"
 watch_paths = [
   "apps/puzzled/atlas/migrations/**",
@@ -64,8 +68,6 @@ path_prefixes = [
   "/puzzled.v1.StatsService",
   "/healthz",
   "/readyz",
-  # Stripe posts subscription and payment events here (signature-verified).
-  "/webhooks/stripe",
   # Key-guarded production check for error capture (docs/observability.md).
   # The web service's own trigger is /api/observability/test.
   "/observability/test",
@@ -80,6 +82,13 @@ watch_paths = [
   "Cargo.lock",
   "sylphx.toml",
 ]
+
+# Dedicated email-link verification key; the web route needs only API_INTERNAL_URL.
+[services.env.EMAIL_UNSUBSCRIBE_SECRET]
+from_secret = "EMAIL_UNSUBSCRIBE_SECRET"
+
+[services.env.SYLPHX_MONEY_API_KEY]
+from_secret = "SYLPHX_MONEY_API_KEY"
 
 [services.health]
 mode = "http"
@@ -118,6 +127,33 @@ path = "/internal/compute/audit-log-retention"
 calendar = { kind = "cron", expression = "23 3 * * *", timezone = "UTC" }
 overlap = "skip"
 catch_up = "skip"
+target = { kind = "http", method = "POST", signed = true }
+retry = { max_attempts = 3 }
+pause = false
+
+# Daily reminders: every quarter hour, send the push whose owner's own reminder
+# time (in their own time zone) has just come; a player gets one per local day.
+[[compute.schedules]]
+id = "puzzled-daily-reminders"
+idempotency_key = "puzzled-daily-reminders-v1"
+service = "api"
+path = "/internal/compute/daily-reminders"
+calendar = { kind = "cron", expression = "*/15 * * * *", timezone = "UTC" }
+overlap = "skip"
+catch_up = "skip"
+target = { kind = "http", method = "POST", signed = true }
+retry = { max_attempts = 3 }
+pause = false
+
+# Tryit conversions: retry sign-ups and purchases not yet reported to Tryit.
+[[compute.schedules]]
+id = "puzzled-tryit-conversions"
+idempotency_key = "puzzled-tryit-conversions-v1"
+service = "api"
+path = "/internal/compute/tryit-conversions"
+calendar = { kind = "cron", expression = "3,13,23,33,43,53 * * * *", timezone = "UTC" }
+overlap = "skip"
+catch_up = "last_only"
 target = { kind = "http", method = "POST", signed = true }
 retry = { max_attempts = 3 }
 pause = false

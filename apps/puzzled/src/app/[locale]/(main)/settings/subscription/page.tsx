@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props) {
 
 /**
  * Puzzled Plus for the signed-in account. Returning from checkout reads the
- * subscription back from Stripe first, so the page never waits on a webhook.
+ * subscription back from Sylphx Money first, so the page never waits on a webhook.
  */
 export default async function SubscriptionSettingsPage({ params, searchParams }: Props) {
 	const { locale } = await params

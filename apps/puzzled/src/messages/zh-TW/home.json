@@ -60,11 +60,11 @@
 		}
 	},
 	"day": {
-		"title": "今天的{game}",
+		"guestTitle": "每天十九款謎題，永遠有一款免費。",
 		"titleMemberReady": "今天的{game}已準備好",
 		"titleMemberStreak": "你的 {days} 天連續紀錄等著你",
 		"titleMemberDone": "今天已完成 — 玩得漂亮",
-		"bodyGuest": "幾分鐘的真正解謎，不必註冊、不必下載。",
+		"bodyGuest": "文字、邏輯與數字謎題，每天重置，有連續紀錄與公平排行榜。不必註冊即可玩。",
 		"bodyMember": "你的連續紀錄、統計與今日陣容，一按即到。",
 		"playToday": "玩今天的{game}",
 		"finishersToday": "今天已有 {count} 人完成",

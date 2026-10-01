@@ -1,4 +1,3 @@
-//! Billing adapters: Stripe REST and SQL.
+//! Billing adapters: family plan SQL.
 
 pub mod billing_db;
-pub mod stripe;

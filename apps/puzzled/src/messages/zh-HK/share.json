@@ -29,5 +29,21 @@
 		"altDetailsTemplate": " {details}。",
 		"altLinkTemplate": " 一齊玩：{link}",
 		"detailSeparator": "、"
+	},
+	"challenge": {
+		"title": "並排比較",
+		"theirs": "佢嘅成績",
+		"yours": "你嘅成績"
+	},
+	"landing": {
+		"metaTitle": "分享咗嘅謎題成績",
+		"ogTitle": "{game}：一個等你挑戰嘅成績",
+		"metaDescription": "睇朋友嘅成績，然後免費玩今日嘅 Puzzled 謎題。",
+		"eyebrow": "朋友分享咗一個成績",
+		"titleSame": "你贏得到佢嗎？",
+		"titleOther": "睇吓佢嘅成績，再玩今日嘅謎題",
+		"bodySame": "同一題、同一日。免費玩，毋須註冊，完成後並排睇兩個成績。",
+		"bodyOther": "呢題係另一日嘅謎題。今日嘅免費謎題已經準備好，毋須註冊。",
+		"note": "分享嘅成績唔會包含答案。"
 	}
 }

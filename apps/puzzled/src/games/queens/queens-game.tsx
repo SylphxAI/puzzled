@@ -52,29 +52,38 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		mode,
 		puzzleId,
 		puzzleDate,
+		requireServerAccept: true,
 	})
 
 	// Game-specific state
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const gameEndedRef = useRef(false)
+	const [submissionError, setSubmissionError] = useState<string | null>(null)
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	// Game hook
 	const game = useQueens(puzzle)
 	const conflictingCells = game.getConflictingCells()
 
-	// Handle game completion - in useEffect to avoid render-phase side effects
+	// A locally complete board is retained until the server accepts its finish.
+	const submitCompletion = useCallback(async () => {
+		setIsSubmitting(true)
+		setSubmissionError(null)
+		const result = await endGame({
+			status: 'won',
+			attempts: 1,
+			data: { finalGrid: game.state.grid },
+		})
+		setIsSubmitting(false)
+		if (!result.success) setSubmissionError(result.error || tCommon('error'))
+	}, [endGame, game.state.grid, tCommon])
+
 	useEffect(() => {
 		if (game.state.isComplete && !gameEndedRef.current) {
 			gameEndedRef.current = true
-			endGame({
-				status: 'won',
-				attempts: 1,
-				data: {
-					finalGrid: game.state.grid,
-				},
-			})
+			void submitCompletion()
 		}
-	}, [game.state.isComplete, game.state.grid, endGame])
+	}, [game.state.isComplete, submitCompletion])
 
 	// Share result
 	const shareResult = useResultShare()
@@ -220,6 +229,15 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 				onClose={() => setShowHelpModal(false)}
 				gameSlug="crowns"
 			/>
+
+			{submissionError && (
+				<div role="alert" className="mt-4 flex flex-col gap-2">
+					<p>{submissionError}</p>
+					<Button onClick={() => void submitCompletion()} disabled={isSubmitting}>
+						{tCommon('retry')}
+					</Button>
+				</div>
+			)}
 
 			{/* Game Result Modal */}
 			<GameResultModal

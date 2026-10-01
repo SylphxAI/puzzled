@@ -46,11 +46,19 @@ clean-break end state that replaces all of it.
 - `SubmitGuess` requires verified identity **or** stable guest-day id
   (`X-Puzzled-Guest-Id` / `puzzled_guest_id` → `guest_<uuid>`), derives the
   served puzzle (`puzzle_id`/`puzzle_date`, never a client seed), validates the
-  final submission against the server's solution via the pure per-game dispatch
+  final submission against the server's frozen puzzle constraints via the pure per-game dispatch
   (all 17 games), rejects already-played, and persists verified results.
   Guests count toward daily puzzle completers on qualifying finishes; archive
   finishes never count.
 - Completion is server-derived; `has_completed` client input is deleted.
+- Sudoku accepts any complete 9×9 integer grid with digits 1–9 once in each
+  row, column and 3×3 box that preserves every frozen given clue. Existing
+  daily puzzles can admit multiple solutions; the generated canonical answer
+  is not an exclusive win condition. No puzzle rotation or progress rewrite
+  is required. Scoring, one-finish guards and guest completion counting stay
+  unchanged. Sudoku, Nonogram and Crowns presentations wait for server acceptance before
+  celebration/result/signup affordances; a rejected finish displays the
+  authoritative error and keeps the board for an explicit retry.
 
 ### 3. Services (Connect)
 
@@ -60,9 +68,9 @@ clean-break end state that replaces all of it.
 | PuzzleService | GetPuzzle (practice), GetDaily (daily/archive), SubmitGuess |
 | StatsService | leaderboard, percentile, user stats, history, today overview |
 | PreferencesService | profile, username, push/email preferences |
-| GamificationService | streak info, streak freezes (admin add) |
+| GamificationService | streak info (reading it settles earned freezes: one per 7 played days, at most 2 held, a held freeze covers up to 3 missed days unless the player turns auto-freeze off; rules in `personal_streak.rs`), admin freeze grant |
 | AdminService | announcements, settings, audit logs, DLQ, games overview/analytics, system health (exact admin scope) |
-| JobsService | retention jobs (daily-reminder, win-back-emails) via Platform BaaS HTTP; `x-app-secret` auth |
+| JobsService | retention jobs (daily-reminder, win-back-emails) via Platform BaaS HTTP; `x-app-secret` auth. The daily reminder also runs as the `puzzled-daily-reminders` Compute schedule every 15 minutes: each player is sent it once per local day at their own `daily_reminder_time` in their own `timezone`, never after finishing the day's puzzle |
 
 ### 4. Content model
 

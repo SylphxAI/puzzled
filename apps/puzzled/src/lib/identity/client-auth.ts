@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { authIdValue } from './dest'
+
 /**
  * Puzzled's players are end users of its own Sylphx Auth instance, reached
  * through the Auth client API in server mode:
@@ -156,18 +158,31 @@ export function isNewUser(input: {
 	return reference - input.principalCreatedAt <= NEW_USER_WINDOW_SECONDS
 }
 
-/** Creation times from `GET /v1/sessions/current` (seconds). */
+/**
+ * Creation times from `GET /v1/sessions/current` (seconds). None unless the
+ * session belongs to this product's own Auth instance (`expectedProjectId`).
+ */
 export async function sessionTimes(
 	config: AuthConfig,
 	token: string,
 	userAgent: string,
+	expectedProjectId: string | undefined,
 ): Promise<{ principalCreatedAt?: number; sessionCreatedAt?: number }> {
 	const body = await call<{
 		session?: {
 			created_at_unix_seconds?: number | string
-			principal?: { created_at_unix_seconds?: number | string }
+			principal?: {
+				created_at_unix_seconds?: number | string
+				project_id?: string
+				projectId?: string
+			}
 		}
 	}>(config, '/v1/sessions/current', { method: 'GET', bearer: token, userAgent })
+	const principal = body.session?.principal
+	const expected = authIdValue(expectedProjectId)
+	if (!expected || authIdValue(principal?.project_id ?? principal?.projectId) !== expected) {
+		return {}
+	}
 	const num = (v: number | string | undefined) => (v === undefined ? undefined : Number(v))
 	return {
 		principalCreatedAt: num(body.session?.principal?.created_at_unix_seconds),

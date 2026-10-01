@@ -12,16 +12,13 @@ use super::identity::{
 };
 use super::state::AppState;
 use crate::capabilities::gamification::adapters::freezes_db::{
-    load_freezes_available, upsert_freeze_data,
+    load_freeze_row, upsert_freeze_data,
 };
-use crate::capabilities::gamification::adapters::streak_sessions_db::load_accepted_ritual_days;
+use crate::capabilities::gamification::adapters::streak_read::load_settled_streak;
 use crate::capabilities::gamification::interfaces::gamification_api::{
-    add_streak_freezes, project_personal_streak, require_streak_store, try_auto_freeze, FreezeData,
-    FreezeReason, StreakReadError,
+    add_streak_freezes, require_streak_store, FreezeData, FreezeReason, StreakReadError,
 };
-use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
-    adopt_guest_sessions, count_sessions,
-};
+use crate::capabilities::puzzle_play::adapters::game_sessions_db::adopt_guest_sessions;
 use crate::proto::puzzled::v1::{
     AddStreakFreezesRequest, AddStreakFreezesResponse, GamificationService, GetStreakInfoRequest,
     GetStreakInfoResponse, StreakInfo, ToggleAutoFreezeRequest, ToggleAutoFreezeResponse,
@@ -61,37 +58,28 @@ impl GamificationConnectService {
         Ok(())
     }
 
-    async fn load_freeze(&self, user_id: &str) -> FreezeData {
-        let mut data = FreezeData::new(user_id);
-        if let Some(pool) = &self.state.pool {
-            match load_freezes_available(pool, user_id).await {
-                Ok(available) => data.freezes_available = available,
-                Err(error) => tracing::warn!(%error, "freeze load failed"),
-            }
-        }
-        data
-    }
-
+    /// The player's streak with freezes settled: milestones earned since the
+    /// last read are granted and a missed day a held freeze covers is recorded,
+    /// so every response (and the next) shows the same run.
     async fn load_personal_streak(
         &self,
         user_id: &str,
-    ) -> Result<(PersonalStreak, u32), ConnectError> {
+    ) -> Result<(PersonalStreak, u32, FreezeData), ConnectError> {
         let pool = require_streak_store(self.state.pool.as_ref()).map_err(map_streak_error)?;
         let today = product_day_key(Utc::now());
-        let days = load_accepted_ritual_days(pool, user_id).await;
-        let total = count_sessions(pool, user_id).await;
-        let read = match (days, total) {
-            (Ok(days), Ok(total)) => Ok((days, total)),
-            (Err(error), _) => {
-                tracing::warn!(%error, "personal streak days lookup failed");
-                Err(error)
-            }
-            (_, Err(error)) => {
-                tracing::warn!(%error, "streak total lookup failed");
-                Err(error)
+        let read = load_settled_streak(pool, user_id, today).await;
+        let (streak, total, row) = match read {
+            Ok(read) => read,
+            Err(error) => {
+                tracing::warn!(%error, "personal streak lookup failed");
+                return Err(map_streak_error(StreakReadError::ReadFailed));
             }
         };
-        project_personal_streak(today, read).map_err(map_streak_error)
+        let mut freeze = FreezeData::new(user_id);
+        freeze.freezes_available = row.available;
+        freeze.freezes_used = row.used;
+        freeze.auto_freeze_enabled = row.auto_enabled;
+        Ok((streak, total, freeze))
     }
 
     fn to_info(
@@ -107,6 +95,8 @@ impl GamificationConnectService {
             total_games_played: total_played,
             freezes_available: freeze.freezes_available.max(0) as u32,
             auto_freeze_enabled: freeze.auto_freeze_enabled,
+            days_until_next_freeze: streak.days_until_next_freeze,
+            freeze_used_yesterday: streak.freeze_used_yesterday,
             ..Default::default()
         }
     }
@@ -130,8 +120,7 @@ impl GamificationService for GamificationConnectService {
     ) -> ServiceResult<GetStreakInfoResponse> {
         self.adopt_guest_progress_if_needed(&ctx).await?;
         let identity = require_identity_or_guest(&ctx)?;
-        let (streak, total) = self.load_personal_streak(&identity.user_id).await?;
-        let freeze = self.load_freeze(&identity.user_id).await;
+        let (streak, total, freeze) = self.load_personal_streak(&identity.user_id).await?;
         Response::ok(GetStreakInfoResponse {
             info: self.to_info(&freeze, streak, total).into(),
             ..Default::default()
@@ -145,64 +134,45 @@ impl GamificationService for GamificationConnectService {
     ) -> ServiceResult<ToggleAutoFreezeResponse> {
         let identity = require_identity(&ctx)?;
         let req = request.to_owned_message();
-        let mut freeze = self.load_freeze(&identity.user_id).await;
-        freeze.auto_freeze_enabled = req.enabled;
         if let Some(pool) = &self.state.pool {
-            if let Err(error) = upsert_freeze_data(
+            let row = load_freeze_row(pool, &identity.user_id)
+                .await
+                .map_err(|error| {
+                    tracing::warn!(%error, "freeze load failed");
+                    ConnectError::new(ErrorCode::Internal, "freeze_update_failed")
+                })?;
+            upsert_freeze_data(
                 pool,
-                &freeze.user_id,
-                freeze.freezes_available,
-                freeze.freezes_used,
-                freeze.auto_freeze_enabled,
+                &identity.user_id,
+                row.available,
+                row.used,
+                req.enabled,
             )
             .await
-            {
+            .map_err(|error| {
                 tracing::warn!(%error, "freeze upsert failed");
-                return Err(ConnectError::new(
-                    ErrorCode::Internal,
-                    "freeze_update_failed",
-                ));
-            }
+                ConnectError::new(ErrorCode::Internal, "freeze_update_failed")
+            })?;
         }
-        let (streak, total) = self.load_personal_streak(&identity.user_id).await?;
+        let (streak, total, freeze) = self.load_personal_streak(&identity.user_id).await?;
         Response::ok(ToggleAutoFreezeResponse {
             info: self.to_info(&freeze, streak, total).into(),
             ..Default::default()
         })
     }
 
+    /// Freezes are applied automatically when the streak is read, so this
+    /// settles and reports whether a freeze covered yesterday. `is_premium`
+    /// no longer matters: freezes are earned by play.
     async fn try_auto_freeze(
         &self,
         ctx: RequestContext,
-        request: ServiceRequest<'_, TryAutoFreezeRequest>,
+        _request: ServiceRequest<'_, TryAutoFreezeRequest>,
     ) -> ServiceResult<TryAutoFreezeResponse> {
         let identity = require_identity(&ctx)?;
-        let req = request.to_owned_message();
-        let mut freeze = self.load_freeze(&identity.user_id).await;
-        let (used, updated) = try_auto_freeze(freeze.clone(), req.is_premium);
-        freeze = updated;
-        if used {
-            if let Some(pool) = &self.state.pool {
-                if let Err(error) = upsert_freeze_data(
-                    pool,
-                    &freeze.user_id,
-                    freeze.freezes_available,
-                    freeze.freezes_used,
-                    freeze.auto_freeze_enabled,
-                )
-                .await
-                {
-                    tracing::warn!(%error, "freeze upsert failed");
-                    return Err(ConnectError::new(
-                        ErrorCode::Internal,
-                        "freeze_update_failed",
-                    ));
-                }
-            }
-        }
-        let (streak, total) = self.load_personal_streak(&identity.user_id).await?;
+        let (streak, total, freeze) = self.load_personal_streak(&identity.user_id).await?;
         Response::ok(TryAutoFreezeResponse {
-            used_freeze: used,
+            used_freeze: streak.freeze_used_yesterday,
             info: self.to_info(&freeze, streak, total).into(),
             ..Default::default()
         })
@@ -218,17 +188,25 @@ impl GamificationService for GamificationConnectService {
         FreezeReason::parse(&req.reason).ok_or_else(|| {
             ConnectError::new(ErrorCode::InvalidArgument, "invalid_freeze_reason")
         })?;
-        let mut freeze = self.load_freeze(&req.user_id).await;
+        let mut freeze = FreezeData::new(&req.user_id);
+        if let Some(pool) = &self.state.pool {
+            let row = load_freeze_row(pool, &req.user_id).await.map_err(|error| {
+                tracing::warn!(%error, "freeze load failed");
+                ConnectError::new(ErrorCode::Internal, "freeze_update_failed")
+            })?;
+            freeze.freezes_available = row.available;
+            freeze.freezes_used = row.used;
+            freeze.auto_freeze_enabled = row.auto_enabled;
+        }
         let (updated, _) = add_streak_freezes(freeze.clone(), req.count as i32, &req.reason)
             .map_err(|e| ConnectError::new(ErrorCode::InvalidArgument, format!("{e:?}")))?;
-        freeze = updated;
         if let Some(pool) = &self.state.pool {
             if let Err(error) = upsert_freeze_data(
                 pool,
-                &freeze.user_id,
-                freeze.freezes_available,
-                freeze.freezes_used,
-                freeze.auto_freeze_enabled,
+                &updated.user_id,
+                updated.freezes_available,
+                updated.freezes_used,
+                updated.auto_freeze_enabled,
             )
             .await
             {
@@ -239,7 +217,7 @@ impl GamificationService for GamificationConnectService {
                 ));
             }
         }
-        let (streak, total) = self.load_personal_streak(&req.user_id).await?;
+        let (streak, total, freeze) = self.load_personal_streak(&req.user_id).await?;
         Response::ok(AddStreakFreezesResponse {
             info: self.to_info(&freeze, streak, total).into(),
             ..Default::default()
