@@ -462,6 +462,8 @@ jobs:
           grep -Eq '^test guest_ownership_tests::second_guest_cookie_never_reads_or_adopts_a_public_player_id \.\.\. ok$' "$LOG"
           grep -Eq '^test guest_ownership_tests::existing_cookie_parallel_bootstrap_keeps_one_registry_player \.\.\. ok$' "$LOG"
           grep -Eq '^test guest_ownership_tests::legacy_guest_write_and_completion_paths_have_no_player_effects \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::bootstrap_is_zero_database_and_unknown_read_does_not_allocate \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::four_concurrent_submits_with_two_connections_do_not_hold_pool_during_content_lookup \.\.\. ok$' "$LOG"
           grep -Eq '^test result: ok\. [1-9][0-9]* passed;' "$LOG"
           grep -Eq '^test retention_push_tests::connect_push_foreign_endpoint_returns_404_without_any_writes \.\.\. ok$' "$LOG"
 

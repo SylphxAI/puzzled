@@ -140,23 +140,53 @@ impl RequestAccess {
 pub async fn admitted_request_identities(
     ctx: &RequestContext,
     pool: Option<&sqlx::PgPool>,
+    guest_write: bool,
 ) -> Result<RequestAccess, ConnectError> {
     use crate::capabilities::identity_access::adapters::guest_credentials;
     use puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid;
     let internal = || ConnectError::new(ErrorCode::Internal, "identity_store_failed");
     let mut identities = resolve_request_identities(ctx);
+    if guest_credential_hash(ctx).is_none() && identities.platform.is_none() {
+        return Ok(RequestAccess { identities, transaction: None });
+    }
     let Some(pool) = pool else {
         return Ok(RequestAccess { identities, transaction: None });
     };
-    let mut tx = pool.begin().await.map_err(|_| internal())?;
     let hash = guest_credential_hash(ctx);
-    let candidate: Option<uuid::Uuid> = match hash {
-        Some(hash) => sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE token_hash = $1")
-            .bind(hash).fetch_optional(&mut *tx).await.map_err(|_| internal())?,
-        None => None,
-    };
     let account = identities.platform.as_ref().and_then(|identity| user_id_to_storage_uuid(&identity.user_id));
-    guest_credentials::lock_players(&mut tx, candidate.into_iter().chain(account).collect()).await.map_err(|_| internal())?;
+    let (mut tx, candidate) = loop {
+        let mut tx = pool.begin().await.map_err(|_| internal())?;
+        // Serialize token allocation BEFORE common player locks. A loser
+        // never holds an unused candidate lock while acquiring the winner.
+        if let Some(hash) = hash {
+            sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended('puzzled:guest-token:' || $1, 0))")
+                .bind(hash).execute(&mut *tx).await.map_err(|_| internal())?;
+        }
+        let mut candidate: Option<uuid::Uuid> = match hash {
+            Some(hash) => sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE token_hash = $1")
+                .bind(hash).fetch_optional(&mut *tx).await.map_err(|_| internal())?,
+            None => None,
+        };
+        let allocate = candidate.is_none() && hash.is_some() && guest_write && identities.platform.is_none();
+        if allocate { candidate = Some(uuid::Uuid::now_v7()); }
+        guest_credentials::lock_players(&mut tx, candidate.into_iter().chain(account).collect()).await.map_err(|_| internal())?;
+        if allocate {
+            let player = candidate.ok_or_else(internal)?;
+            if !guest_credentials::unused_player(&mut tx, player).await.map_err(|_| internal())? {
+                tx.rollback().await.map_err(|_| internal())?;
+                continue;
+            }
+            let winner: uuid::Uuid = sqlx::query_scalar("INSERT INTO guest_credentials (token_hash, user_id, provenance) VALUES ($1, $2, 'server_issued') ON CONFLICT (token_hash) DO UPDATE SET token_hash = guest_credentials.token_hash RETURNING user_id")
+                .bind(hash.ok_or_else(internal)?).bind(player).fetch_one(&mut *tx).await.map_err(|_| internal())?;
+            if winner != player {
+                // All app allocation takes the token lock. A separately
+                // inserted winner is retried without the unused player lock.
+                tx.rollback().await.map_err(|_| internal())?;
+                continue;
+            }
+        }
+        break (tx, candidate);
+    };
     if let Some(player) = account {
         let collision: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)")
             .bind(player).fetch_one(&mut *tx).await.map_err(|_| internal())?;

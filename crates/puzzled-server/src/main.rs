@@ -17,6 +17,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .init();
     puzzled_server::observability::init();
+    if let Err(message) = puzzled_server::shared::public_origin::public_origin() {
+        tracing::error!(message, "public origin configuration refused");
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, message).into());
+    }
 
     // Cold-start + managed DNS: allow longer first connect so free-floor ritual
     // persist is not permanently demoted to S0 on a transient 3s timeout.

@@ -1022,5 +1022,13 @@ export const guestCredentials = pgTable(
         provenance: text('provenance').notNull(),
         createdAt: timestamp('created_at').defaultNow().notNull(),
     },
-    (table) => [index('guest_credentials_adopted_user_id_idx').on(table.adoptedUserId)],
+    (table) => [
+        index('guest_credentials_adopted_user_id_idx').on(table.adoptedUserId),
+        check('guest_credentials_provenance_check', sql`${table.provenance} = 'server_issued'`),
+        check('guest_credentials_revocation_check', sql`(
+            (${table.revokedAt} IS NULL AND ${table.revocationReason} IS NULL AND ${table.adoptedUserId} IS NULL)
+            OR (${table.revokedAt} IS NOT NULL AND ${table.revocationReason} IS NOT NULL AND ${table.revocationReason} = 'adopted' AND ${table.adoptedUserId} IS NOT NULL)
+            OR (${table.revokedAt} IS NOT NULL AND ${table.revocationReason} IS NOT NULL AND ${table.revocationReason} = 'account_collision' AND ${table.adoptedUserId} IS NULL)
+        )`),
+    ],
 )

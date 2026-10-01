@@ -41,7 +41,7 @@ impl GamificationConnectService {
         &self,
         ctx: &RequestContext,
     ) -> Result<crate::bootstrap::identity::RequestAccess, ConnectError> {
-        crate::bootstrap::identity::admitted_request_identities(ctx, self.state.pool.as_ref()).await
+        crate::bootstrap::identity::admitted_request_identities(ctx, self.state.pool.as_ref(), false).await
     }
 
     /// The player's streak with freezes settled: milestones earned since the

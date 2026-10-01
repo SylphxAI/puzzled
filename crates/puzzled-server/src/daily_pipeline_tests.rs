@@ -18,14 +18,14 @@ use crate::capabilities::daily_pipeline::{self, store};
 use crate::test_support::fresh_database;
 use crate::{router, AppState};
 
-const GUEST: &str = "a1b2c3d4-e5f6-4890-abcd-ef1234567890";
+const GUEST_COOKIE: &str = "__Host-puzzled_guest=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
 async fn call(app: &Router, path: &str, body: Value) -> (StatusCode, Value) {
     let request = Request::builder()
         .method(Method::POST)
         .uri(path)
         .header("content-type", "application/json")
-        .header("x-puzzled-guest-id", GUEST)
+        .header("cookie", GUEST_COOKIE)
         .body(Body::from(body.to_string()))
         .unwrap_or_else(|e| panic!("request: {e}"));
     let response = app

@@ -57,11 +57,18 @@ async fn issued_cookie_is_fresh_host_only_and_progress_adopts_without_deleting_c
     assert_eq!(body, json!({}));
     let cookie = cookie.unwrap();
     assert!(cookie.starts_with("__Host-puzzled_guest="));
-    for attribute in ["Path=/", "HttpOnly", "Secure", "SameSite=Lax"] { assert!(cookie.contains(attribute)); }
+    for attribute in ["Path=/", "HttpOnly", "Secure", "SameSite=Lax", "Max-Age=34560000"] { assert!(cookie.contains(attribute)); }
     assert!(!cookie.contains("Domain="));
     let pair = cookie.split(';').next().unwrap();
     let raw = pair.split_once('=').unwrap().1;
     let hash = guest_credentials::token_hash(raw).unwrap();
+    assert!(guest_credentials::lookup_hash(&pool, &hash).await.unwrap().is_none());
+    let mut headers = axum::http::HeaderMap::new();
+    headers.insert(guest_credentials::VERIFIED_GUEST_HEADER, hash.parse().unwrap());
+    let first_write = crate::bootstrap::identity::admitted_request_identities(
+        &connectrpc::RequestContext::new(headers), Some(&pool), true,
+    ).await.unwrap();
+    first_write.commit().await.unwrap();
     let guest = guest_credentials::lookup_hash(&pool, &hash).await.unwrap().unwrap();
     assert_eq!(guest.get_version_num(), 7);
     assert_ne!(hash, raw);
@@ -134,7 +141,7 @@ async fn private_access_lease_serializes_adoption_and_revocation() {
     let mut headers = axum::http::HeaderMap::new();
     headers.insert(guest_credentials::VERIFIED_GUEST_HEADER, hash.parse().unwrap());
     let context = connectrpc::RequestContext::new(headers);
-    let mut access = admitted_request_identities(&context, Some(&pool)).await.unwrap();
+    let mut access = admitted_request_identities(&context, Some(&pool), false).await.unwrap();
     let app = router(AppState::new(Some(pool.clone())));
     let signed = token(&account.to_string());
     let account_app = app.clone();
@@ -269,8 +276,8 @@ async fn existing_cookie_parallel_bootstrap_keeps_one_registry_player() {
     );
     assert_eq!(first.0,StatusCode::OK);
     assert_eq!(second.0,StatusCode::OK);
-    assert!(first.2.is_none());
-    assert!(second.2.is_none());
+    assert!(first.2.unwrap().contains("Max-Age=34560000"));
+    assert!(second.2.unwrap().contains("Max-Age=34560000"));
     let count: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials").fetch_one(&pool).await.unwrap();
     assert_eq!(count,1);
     pool.close().await;
@@ -305,4 +312,65 @@ async fn legacy_guest_write_and_completion_paths_have_no_player_effects() {
         assert_eq!(count,0,"{table}");
     }
     pool.close().await;
+}
+
+#[tokio::test]
+async fn bootstrap_is_zero_database_and_unknown_read_does_not_allocate() {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    let app = router(AppState::new(None));
+    let (status, body, cookie) = request(&app,"/v1/guest/session",None,None,None).await;
+    assert_eq!(status,StatusCode::OK);
+    assert_eq!(body,json!({}));
+    let cookie = cookie.unwrap();
+    assert!(cookie.contains("Max-Age=34560000"));
+    let pair = cookie.split(';').next().unwrap();
+    let Some(pool) = fresh_database().await else { return; };
+    let app = router(AppState::new(Some(pool.clone())));
+    assert_eq!(request(&app,"/puzzled.v1.StatsService/GetHistory",Some(pair),None,None).await.0,StatusCode::UNAUTHORIZED);
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials").fetch_one(&pool).await.unwrap();
+    assert_eq!(count,0);
+    let account = Uuid::now_v7();
+    assert_eq!(request(&app,"/puzzled.v1.StatsService/GetHistory",Some(pair),Some(&token(&account.to_string())),None).await.0,StatusCode::OK);
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials").fetch_one(&pool).await.unwrap();
+    assert_eq!(count,0);
+    let _ = guest_credentials::COOKIE;
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn four_concurrent_submits_with_two_connections_do_not_hold_pool_during_content_lookup() {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    let Some(admin_pool) = fresh_database().await else { return; };
+    let options = admin_pool.connect_options();
+    let pool = sqlx::postgres::PgPoolOptions::new().max_connections(2)
+        .acquire_timeout(std::time::Duration::from_secs(2))
+        .connect_with((*options).clone()).await.unwrap();
+    let day = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
+    let slug = puzzled_core::puzzle_play::game_slugs::todays_free_game(day);
+    crate::capabilities::daily_pipeline::resolve(Some(&pool),slug,day,None).await.unwrap();
+    let cookie = guest_credentials::mint_cookie(None).unwrap();
+    let pair = cookie.split(';').next().unwrap().to_string();
+    let app = router(AppState::new(Some(pool.clone())));
+    let mut tasks = Vec::new();
+    for _ in 0..4 {
+        let app = app.clone();
+        let cookie = pair.clone();
+        tasks.push(tokio::spawn(async move {
+            let body = json!({"gameSlug":slug,"status":"won","attempts":1,"submissionJson":"{}"});
+            let response = app.oneshot(Request::builder().method("POST")
+                .uri("/puzzled.v1.PuzzleService/SubmitGuess").header("content-type","application/json")
+                .header("cookie",cookie).body(Body::from(body.to_string())).unwrap()).await.unwrap();
+            assert_eq!(response.status(),StatusCode::OK);
+        }));
+    }
+    tokio::time::timeout(std::time::Duration::from_secs(8),async {
+        for task in tasks { task.await.unwrap(); }
+    }).await.unwrap();
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials").fetch_one(&pool).await.unwrap();
+    assert_eq!(count,1);
+    let hash = guest_credentials::token_hash(pair.split_once('=').unwrap().1).unwrap();
+    let guest = guest_credentials::lookup_hash(&pool,&hash).await.unwrap().unwrap();
+    assert_eq!(guest.get_version_num(),7);
+    pool.close().await;
+    admin_pool.close().await;
 }

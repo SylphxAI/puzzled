@@ -95,8 +95,9 @@ impl PuzzleConnectService {
     async fn adopt_guest_progress_if_needed(
         &self,
         ctx: &RequestContext,
+        guest_write: bool,
     ) -> Result<crate::bootstrap::identity::RequestAccess, ConnectError> {
-        crate::bootstrap::identity::admitted_request_identities(ctx, self.state.pool.as_ref()).await
+        crate::bootstrap::identity::admitted_request_identities(ctx, self.state.pool.as_ref(), guest_write).await
     }
 
     /// Admit a served puzzle (Puzzled Plus gate, the one admission point).
@@ -265,8 +266,7 @@ impl PuzzleService for PuzzleConnectService {
             return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
         }
 
-        let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
-        let identity = access.primary().map(|identity| identity.user_id.clone());
+        let platform = crate::bootstrap::identity::require_identity(&ctx).ok();
         let difficulty = {
             let d = req.difficulty.trim();
             if d.is_empty() {
@@ -280,7 +280,7 @@ impl PuzzleService for PuzzleConnectService {
         let puzzle_date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
         let is_archive = puzzle_date != today;
 
-        self.enforce_play_access(identity.as_deref(), game_slug, puzzle_date)
+        self.enforce_play_access(platform.as_ref().map(|identity| identity.user_id.as_str()), game_slug, puzzle_date)
             .await?;
 
         // The stored puzzle for this day, generated and stored first on a miss
@@ -308,6 +308,8 @@ impl PuzzleService for PuzzleConnectService {
             }
         };
 
+        let mut access = self.adopt_guest_progress_if_needed(&ctx, false).await?;
+        let identity = access.primary().map(|identity| identity.user_id.clone());
         // Completion is server-derived from the user's sessions.
         let completed_session = match (identity.as_deref(), access.connection()) {
             (Some(uid), Some(connection)) => {
@@ -418,8 +420,10 @@ impl PuzzleService for PuzzleConnectService {
             ));
         };
         // Platform auth **or** stable guest-day id (free-ritual protocol default).
-        let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
-        let uid = access.primary().map(|identity| identity.user_id.clone()).ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"))?;
+        let platform = crate::bootstrap::identity::require_identity(&ctx).ok();
+        if platform.is_none() && crate::bootstrap::identity::guest_credential_hash(&ctx).is_none() {
+            return Err(ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"));
+        }
 
         let data: Value = if req.submission_json.trim().is_empty() {
             Value::Null
@@ -438,7 +442,7 @@ impl PuzzleService for PuzzleConnectService {
         let now = Utc::now();
         let today = product_day_key(now);
         let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
-        self.enforce_play_access(Some(&uid), game_slug, date)
+        self.enforce_play_access(platform.as_ref().map(|identity| identity.user_id.as_str()), game_slug, date)
             .await?;
         let difficulty = {
             let d = req.difficulty.trim();
@@ -498,6 +502,8 @@ impl PuzzleService for PuzzleConnectService {
             ));
         };
 
+        let mut access = self.adopt_guest_progress_if_needed(&ctx, true).await?;
+        let uid = access.primary().map(|identity| identity.user_id.clone()).ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"))?;
         // One verified finish per served puzzle **and** per free-daily
         // (user, game_slug, product day). Must not require resolved puzzle_id:
         // deterministic sudoku has no store row and sessions may store null
@@ -635,20 +641,15 @@ impl PuzzleService for PuzzleConnectService {
                 "game_not_graded_per_guess",
             ));
         }
-        let access = self.adopt_guest_progress_if_needed(&ctx).await?;
-        let uid = access.primary().map(|identity| identity.user_id.clone()).ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"))?;
+        let platform = crate::bootstrap::identity::require_identity(&ctx).ok();
+        if platform.is_none() && crate::bootstrap::identity::guest_credential_hash(&ctx).is_none() {
+            return Err(ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"));
+        }
         let today = product_day_key(Utc::now());
         let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
-        self.enforce_play_access(Some(&uid), game_slug, date)
+        self.enforce_play_access(platform.as_ref().map(|identity| identity.user_id.as_str()), game_slug, date)
             .await?;
         let difficulty = Some(req.difficulty.trim()).filter(|d| !d.is_empty());
-        let key = format!("{uid}|{game_slug}|{date}|{}", difficulty.unwrap_or(""));
-        if !self.take_guess(key, today, guess_limit(game_slug).unwrap_or(0)) {
-            return Err(ConnectError::new(
-                ErrorCode::ResourceExhausted,
-                "guess_limit_reached",
-            ));
-        }
         let guess: Value = serde_json::from_str(&req.guess_json)
             .map_err(|_| ConnectError::new(ErrorCode::InvalidArgument, "invalid_guess_json"))?;
         let puzzle = match (req.puzzle_id.as_deref(), &self.state.pool) {
@@ -664,6 +665,15 @@ impl PuzzleService for PuzzleConnectService {
         let Some(solution) = puzzle else {
             return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
         };
+        let access = self.adopt_guest_progress_if_needed(&ctx, true).await?;
+        let uid = access.primary().map(|identity| identity.user_id.clone()).ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"))?;
+        let key = format!("{uid}|{game_slug}|{date}|{}", difficulty.unwrap_or(""));
+        if !self.take_guess(key, today, guess_limit(game_slug).unwrap_or(0)) {
+            return Err(ConnectError::new(
+                ErrorCode::ResourceExhausted,
+                "guess_limit_reached",
+            ));
+        }
         let result = grade_guess(game_slug, &solution, &guess)
             .map_err(|error| ConnectError::new(ErrorCode::InvalidArgument, error))?;
         access.commit().await?;
@@ -683,7 +693,7 @@ impl PuzzleService for PuzzleConnectService {
         if !is_valid_game_slug(game_slug) {
             return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
         }
-        let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
+        let mut access = self.adopt_guest_progress_if_needed(&ctx, true).await?;
         let uid = access.primary().map(|identity| identity.user_id.clone()).ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"))?;
         let day =
             date_from_string(req.puzzle_date.as_deref()).unwrap_or(product_day_key(Utc::now()));

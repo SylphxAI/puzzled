@@ -48,42 +48,70 @@ pub async fn validate_locked(connection: &mut PgConnection, player: Uuid, hash: 
     Ok(live == Some(player) && !account_backed(connection, player).await?)
 }
 
-/// No client player id is accepted: every issuance allocates a fresh UUIDv7.
+pub fn mint_cookie(existing: Option<&str>) -> Result<String, sqlx::Error> {
+    let token = match existing.filter(|token| token_hash(token).is_some()) {
+        Some(token) => token.to_string(),
+        None => {
+            let mut raw = [0_u8; 32];
+            getrandom::fill(&mut raw).map_err(|error| sqlx::Error::Io(std::io::Error::other(error.to_string())))?;
+            URL_SAFE_NO_PAD.encode(raw)
+        }
+    };
+    Ok(format!("{COOKIE}={token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=34560000"))
+}
+
+pub async fn unused_player(connection: &mut PgConnection, player: Uuid) -> Result<bool, sqlx::Error> {
+    if account_backed(connection, player).await? { return Ok(false); }
+    for (table, column, _) in crate::capabilities::preferences::adapters::account_deletion::USER_KEYED_COLUMNS {
+        let statement = format!("SELECT EXISTS (SELECT 1 FROM \"{table}\" WHERE \"{column}\" = $1)");
+        let exists: bool = sqlx::query_scalar(sqlx::AssertSqlSafe(statement))
+            .bind(player).fetch_one(&mut *connection).await?;
+        if exists { return Ok(false); }
+    }
+    Ok(true)
+}
+
+/// Test fixture that performs a first guest write's allocation. Production
+/// bootstrap only returns a cookie and never populates the registry.
+#[cfg(test)]
 pub async fn issue(pool: &PgPool) -> Result<String, sqlx::Error> {
     issue_with_first_candidate(pool, Uuid::now_v7()).await
 }
 
+#[cfg(test)]
 pub(crate) async fn issue_with_first_candidate(pool: &PgPool, mut player: Uuid) -> Result<String, sqlx::Error> {
-    use std::io::Read;
-    let mut raw = [0_u8; 32];
-    std::fs::File::open("/dev/urandom")
-        .and_then(|mut file| file.read_exact(&mut raw))
-        .map_err(sqlx::Error::Io)?;
-    let token = URL_SAFE_NO_PAD.encode(raw);
-    let hash = URL_SAFE_NO_PAD.encode(Sha256::digest(raw));
+    let cookie = mint_cookie(None)?;
+    let token = cookie.split(';').next().and_then(|pair| pair.split_once('=').map(|(_, token)| token))
+        .ok_or(sqlx::Error::RowNotFound)?;
+    let hash = token_hash(token).ok_or(sqlx::Error::RowNotFound)?;
     loop {
         let mut tx = pool.begin().await?;
         lock_players(&mut tx, vec![player]).await?;
-        let mut unused = !account_backed(&mut tx, player).await?;
-        for (table, column, _) in crate::capabilities::preferences::adapters::account_deletion::USER_KEYED_COLUMNS {
-            let statement = format!("SELECT EXISTS (SELECT 1 FROM \"{table}\" WHERE \"{column}\" = $1)");
-            let exists: bool = sqlx::query_scalar(sqlx::AssertSqlSafe(statement))
-                .bind(player).fetch_one(&mut *tx).await?;
-            if exists { unused = false; break; }
+        if !unused_player(&mut tx, player).await? {
+            tx.rollback().await?;
+            player = Uuid::now_v7();
+            continue;
         }
-        if !unused { tx.rollback().await?; player = Uuid::now_v7(); continue; }
         sqlx::query("INSERT INTO guest_credentials (token_hash, user_id, provenance) VALUES ($1, $2, 'server_issued')")
             .bind(&hash).bind(player).execute(&mut *tx).await?;
         tx.commit().await?;
-        break;
+        return Ok(cookie);
     }
-    Ok(format!("{COOKIE}={token}; Path=/; HttpOnly; Secure; SameSite=Lax"))
 }
 
 pub fn cookie_token(headers: &axum::http::HeaderMap) -> Option<&str> {
-    headers.get(axum::http::header::COOKIE)?.to_str().ok()?.split(';')
-        .filter_map(|pair| pair.trim().split_once('='))
-        .find_map(|(name, value)| (name == COOKIE).then_some(value))
+    let mut token = None;
+    for value in headers.get_all(axum::http::header::COOKIE) {
+        for pair in value.to_str().ok()?.split(';') {
+            if let Some((name, value)) = pair.trim().split_once('=') {
+                if name == COOKIE {
+                    if token.is_some() { return None; }
+                    token = Some(value);
+                }
+            }
+        }
+    }
+    token
 }
 
 pub async fn attach_guest(
@@ -112,15 +140,9 @@ pub async fn attach_guest(
             }
         }
     }
-    if let (Some(pool), Some(hash)) = (&pool, cookie_token(request.headers()).and_then(token_hash)) {
-        match lookup_hash(pool, &hash).await {
-            Ok(Some(_player)) => {
-                if let Ok(value) = hash.parse() {
-                    request.headers_mut().insert(VERIFIED_GUEST_HEADER, value);
-                }
-            }
-            Ok(None) => {}
-            Err(_) => return (axum::http::StatusCode::INTERNAL_SERVER_ERROR, axum::Json(serde_json::json!({"code":"internal", "message":"identity_store_failed"}))).into_response(),
+    if let Some(hash) = cookie_token(request.headers()).and_then(token_hash) {
+        if let Ok(value) = hash.parse() {
+            request.headers_mut().insert(VERIFIED_GUEST_HEADER, value);
         }
     }
     next.run(request).await
@@ -140,28 +162,8 @@ pub async fn session(
     {
         return axum::http::StatusCode::FORBIDDEN.into_response();
     }
-    let Some(pool) = &state.pool else { return axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response(); };
-    if let Some(hash) = cookie_token(&headers).and_then(token_hash) {
-        match lookup_hash(pool, &hash).await {
-            Ok(Some(player)) => {
-                let result = async {
-                    let mut tx = pool.begin().await?;
-                    lock_players(&mut tx, vec![player]).await?;
-                    let admitted = validate_locked(&mut tx, player, &hash).await?;
-                    tx.commit().await?;
-                    Ok::<_, sqlx::Error>(admitted)
-                }.await;
-                match result {
-                    Ok(true) => return axum::Json(serde_json::json!({})).into_response(),
-                    Ok(false) => {}
-                    Err(_) => return axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-                }
-            }
-            Ok(None) => {}
-            Err(_) => return axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-        }
-    }
-    match issue(pool).await {
+    let _ = state; // Bootstrap does not acquire a connection or write rows.
+    match mint_cookie(cookie_token(&headers)) {
         Ok(cookie) => match cookie.parse() {
             Ok(value) => {
                 let mut response = axum::Json(serde_json::json!({})).into_response();
@@ -172,6 +174,7 @@ pub async fn session(
         },
         Err(_) => axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     }
+
 }
 
 /// Issuance origin and JSON admission precede Auth verification and database
