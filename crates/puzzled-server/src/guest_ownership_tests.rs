@@ -1444,3 +1444,38 @@ async fn signed_in_player_with_legacy_id_ends_with_history_on_the_account() {
     assert!(sessions >= 2 && freezes == 1, "{sessions} {freezes}");
     pool.close().await;
 }
+
+async fn bootstrap_without_database(body: Value) -> (StatusCode, Value) {
+    let app = router(AppState::new(None));
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/v1/guest/session")
+                .header("content-type", "application/json")
+                .header("origin", "https://puzzled.gg")
+                .body(Body::from(body.to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let status = response.status();
+    let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    (
+        status,
+        serde_json::from_slice(&bytes).unwrap_or_else(|_| json!(null)),
+    )
+}
+
+#[tokio::test]
+async fn legacy_claim_without_database_is_unavailable_so_the_client_keeps_its_key() {
+    let (status, _) = bootstrap_without_database(json!({"legacyGuestId": Uuid::now_v7()})).await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+}
+
+#[tokio::test]
+async fn plain_bootstrap_without_database_still_issues() {
+    let (status, body) = bootstrap_without_database(json!({})).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body, json!({"issued": true}));
+}

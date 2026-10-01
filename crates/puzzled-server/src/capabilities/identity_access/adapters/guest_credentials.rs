@@ -339,6 +339,10 @@ pub async fn session(
     let Ok(cookie) = mint_cookie(existing) else {
         return axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response();
     };
+    // Without a database the claim cannot run; a 200 would make the client forget its key.
+    if state.pool.is_none() && legacy_guest_id(&headers, &body).is_some() {
+        return axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
+    }
     let mut claimed = false;
     if let (Some(pool), Some(legacy)) = (&state.pool, legacy_guest_id(&headers, &body)) {
         let hash = cookie

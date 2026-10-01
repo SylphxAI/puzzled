@@ -162,9 +162,23 @@ describe('browser guest cookie admission', () => {
 				},
 			},
 		})
+		const store = new Map<string, string>([
+			[GUEST_DAY_ID_KEY, '7f5d3b0a-1c2e-4a6b-9d8f-0123456789ab'],
+		])
+		const previousStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+		Object.defineProperty(globalThis, 'localStorage', {
+			configurable: true,
+			value: {
+				getItem: (k: string) => store.get(k) ?? null,
+				setItem: (k: string, v: string) => void store.set(k, v),
+				removeItem: (k: string) => void store.delete(k),
+			},
+		})
+		const bodies: unknown[] = []
 		const events: string[] = []
 		const releases: Array<(r: Response) => void> = []
-		globalThis.fetch = (async () => {
+		globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+			bodies.push(JSON.parse(String(init?.body)))
 			events.push(`start${releases.length}`)
 			return new Promise<Response>((resolve) => {
 				releases.push((r) => {
@@ -188,8 +202,13 @@ describe('browser guest cookie admission', () => {
 			releases[1]?.(respond({ issued: false }))
 			expect(await b).toEqual({ issued: false })
 			expect(events).toEqual(['start0', 'done0', 'start1', 'done1'])
+			// Tab A claimed and dropped the key, so tab B never offers the legacy id again.
+			expect(bodies[0]).toEqual({ legacyGuestId: '7f5d3b0a-1c2e-4a6b-9d8f-0123456789ab' })
+			expect(bodies[1]).toEqual({})
 			expect(lockNames).toEqual(['puzzled-guest-session', 'puzzled-guest-session'])
 		} finally {
+			if (previousStorage) Object.defineProperty(globalThis, 'localStorage', previousStorage)
+			else Reflect.deleteProperty(globalThis, 'localStorage')
 			if (previousNav) Object.defineProperty(globalThis, 'navigator', previousNav)
 			else Reflect.deleteProperty(globalThis, 'navigator')
 		}
