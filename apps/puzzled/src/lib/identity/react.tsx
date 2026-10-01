@@ -97,12 +97,14 @@ export function SylphxProvider({
 	const [isLoading, setIsLoading] = useState(true)
 	const [isLoaded, setIsLoaded] = useState(false)
 	const accountGeneration = useRef(0)
+	const adoptionAbort = useRef<AbortController | null>(null)
 
 	useEffect(() => {
 		let cancelled = false
 		const generation = ++accountGeneration.current
 		const current = () => !cancelled && accountGeneration.current === generation
 		const adoption = new AbortController()
+		adoptionAbort.current = adoption
 		let deadline: ReturnType<typeof setTimeout> | undefined
 		setIsLoading(true)
 		void loadIdentitySession(
@@ -148,6 +150,7 @@ export function SylphxProvider({
 
 	const signOut = useCallback(async () => {
 		++accountGeneration.current
+		adoptionAbort.current?.abort()
 		setUser(null)
 		setIsLoading(false)
 		setIsLoaded(true)

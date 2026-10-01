@@ -22,8 +22,6 @@ use serde_json::{json, Value};
 
 const DEFAULT_AUTH_URL: &str = "https://api.sylphx.com";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
-/// Auth's own reason, kept short in logs and error text.
-const DETAIL_LIMIT: usize = 240;
 
 /// The Auth instance's secret-key handle on a person's sign-in account.
 #[derive(Clone)]
@@ -80,28 +78,50 @@ impl AuthErasure {
             }))
             .send()
             .await
-            .map_err(|error| format!("auth privacy request failed: {error}"))?;
+            .map_err(|_| "auth privacy request unavailable".to_string())?;
         let status = response.status();
         let payload = response.json::<Value>().await.unwrap_or_else(|_| json!({}));
+        self.validate_receipt(status, &payload, principal_id)
+    }
+
+    /// Accept only evidence identifying this exact configured instance and subject.
+    fn validate_receipt(
+        &self,
+        status: reqwest::StatusCode,
+        payload: &Value,
+        principal_id: &str,
+    ) -> Result<Option<String>, String> {
         if status.is_success() {
-            return payload
-                .pointer("/privacy_request/request_id")
-                .and_then(Value::as_str)
+            let receipt = &payload["privacy_request"];
+            let request_id = receipt["request_id"]
+                .as_str()
+                .filter(|id| !id.trim().is_empty());
+            if receipt["organization_id"].as_str() != Some(self.organization_id.as_str())
+                || receipt["principal_id"].as_str() != Some(principal_id)
+                || receipt["request_type"].as_str() != Some("delete")
+                || !matches!(
+                    receipt["state"].as_str(),
+                    Some("pending" | "running" | "completed" | "failed")
+                )
+            {
+                return Err("auth privacy receipt unconfirmed".to_string());
+            }
+            return request_id
                 .map(|id| Some(id.to_string()))
-                .ok_or_else(|| "auth answered without a privacy request id".to_string());
+                .ok_or_else(|| "auth privacy receipt unconfirmed".to_string());
         }
-        // No such account of this instance: nothing left to delete.
-        if status == reqwest::StatusCode::NOT_FOUND {
+        // A proxy/router/HTML 404 is not proof that this identity is absent.
+        if status == reqwest::StatusCode::NOT_FOUND
+            && payload["code"].as_str() == Some("not_found")
+            && payload["authority"].as_str() == Some("identity")
+            && payload["error"].as_str() == Some("user not found")
+        {
             return Ok(None);
         }
-        let detail = payload
-            .get("error")
-            .and_then(Value::as_str)
-            .unwrap_or_default();
+        // Never echo arbitrary Auth response text or bodies into errors/logs.
         Err(format!(
-            "auth privacy request refused ({}) {}",
-            status.as_u16(),
-            detail.chars().take(DETAIL_LIMIT).collect::<String>()
+            "auth privacy request refused ({})",
+            status.as_u16()
         ))
     }
 }
@@ -160,7 +180,7 @@ mod tests {
         let seen: Seen = Arc::default();
         let (base, _server) = spawn_auth(
             202,
-            json!({"privacy_request": {"request_id": "privacy-request-1", "state": "accepted"}}),
+            json!({"privacy_request": {"request_id": "privacy-request-1", "state": "pending", "organization_id": "org_test", "principal_id": "principal-0199aa10-7b2c-7d3e-8f00-1234567890ab", "request_type": "delete"}}),
             seen.clone(),
         )
         .await;
@@ -188,7 +208,12 @@ mod tests {
     #[tokio::test]
     async fn an_account_auth_does_not_hold_is_not_an_error() {
         let seen: Seen = Arc::default();
-        let (base, _server) = spawn_auth(404, json!({"error": "principal_not_found"}), seen).await;
+        let (base, _server) = spawn_auth(
+            404,
+            json!({"code": "not_found", "authority": "identity", "error": "user not found"}),
+            seen,
+        )
+        .await;
         assert_eq!(erasure(&base).delete_principal("usr_gone").await, Ok(None));
     }
 
@@ -199,9 +224,9 @@ mod tests {
             spawn_auth(403, json!({"error": "privacy_request_forbidden"}), seen).await;
         let refused = erasure(&base).delete_principal("usr_a").await;
         assert!(
-            refused.as_ref().is_err_and(
-                |error| error.contains("403") && error.contains("privacy_request_forbidden")
-            ),
+            refused
+                .as_ref()
+                .is_err_and(|error| error == "auth privacy request refused (403)"),
             "{refused:?}"
         );
 
@@ -211,8 +236,51 @@ mod tests {
         assert!(
             accepted
                 .as_ref()
-                .is_err_and(|error| error.contains("without a privacy request id")),
+                .is_err_and(|error| error == "auth privacy receipt unconfirmed"),
             "{accepted:?}"
         );
+    }
+    #[test]
+    fn unconfirmed_absence_or_ownership_never_authorizes_local_erasure() {
+        let adapter = erasure("https://identity.test");
+        for payload in [
+            json!({}),
+            json!({"error": "user not found"}),
+            json!({"code": "not_found", "authority": "proxy", "error": "user not found"}),
+            json!({"code": "not_found", "authority": "identity", "error": "route not found"}),
+            json!("<html>not found</html>"),
+        ] {
+            assert!(adapter
+                .validate_receipt(reqwest::StatusCode::NOT_FOUND, &payload, "subject-fixture")
+                .is_err());
+        }
+        let valid = json!({"privacy_request": {
+            "request_id": "receipt-fixture", "organization_id": "org_test",
+            "principal_id": "subject-fixture", "request_type": "delete", "state": "pending"
+        }});
+        assert_eq!(
+            adapter.validate_receipt(reqwest::StatusCode::ACCEPTED, &valid, "subject-fixture"),
+            Ok(Some("receipt-fixture".into()))
+        );
+        for (field, value) in [
+            ("request_id", ""),
+            ("organization_id", "other-org"),
+            ("principal_id", "other-subject"),
+            ("request_type", "export"),
+            ("state", "accepted"),
+        ] {
+            let mut invalid = valid.clone();
+            invalid["privacy_request"][field] = json!(value);
+            assert!(adapter
+                .validate_receipt(reqwest::StatusCode::ACCEPTED, &invalid, "subject-fixture")
+                .is_err());
+        }
+        for state in ["pending", "running", "completed", "failed"] {
+            let mut receipt = valid.clone();
+            receipt["privacy_request"]["state"] = json!(state);
+            assert!(adapter
+                .validate_receipt(reqwest::StatusCode::ACCEPTED, &receipt, "subject-fixture")
+                .is_ok());
+        }
     }
 }

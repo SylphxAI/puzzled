@@ -42,7 +42,7 @@ impl StubAuth {
             seen: Arc::default(),
             status: 202,
             answer: json!({"privacy_request": {"request_id": "privacy-request-1",
-                                                "state": "accepted"}}),
+                                                "state": "pending", "organization_id": ORGANIZATION_ID, "request_type": "delete"}}),
         }
     }
 
@@ -88,10 +88,12 @@ async fn spawn_auth(stub: StubAuth) -> String {
                         .unwrap_or_default(),
                     "body": serde_json::from_str::<Value>(&body).unwrap_or(Value::Null),
                 }));
-                (
-                    StatusCode::from_u16(stub.status).unwrap(),
-                    Json(stub.answer.clone()),
-                )
+                let mut answer = stub.answer.clone();
+                if answer["privacy_request"].is_object() {
+                    answer["privacy_request"]["principal_id"] =
+                        serde_json::from_str::<Value>(&body).unwrap()["principal_id"].clone();
+                }
+                (StatusCode::from_u16(stub.status).unwrap(), Json(answer))
             }
         }),
     );
@@ -255,7 +257,10 @@ async fn an_account_auth_does_not_hold_is_still_erased() {
         return;
     };
     // Auth holds no such account (already deleted, or never created).
-    let stub = StubAuth::answering(404, json!({"error": "principal_not_found"}));
+    let stub = StubAuth::answering(
+        404,
+        json!({"code": "not_found", "authority": "identity", "error": "user not found"}),
+    );
     let base = spawn_auth(stub.clone()).await;
 
     let player = Uuid::now_v7();
@@ -442,4 +447,41 @@ async fn money_failure_is_named_before_auth_or_product_erasure() {
     assert_diagnostic(&body, "money_unavailable");
     assert!(stub.seen.lock().unwrap().is_empty());
     assert_eq!(preference_rows(&pool, player).await, 1);
+}
+
+#[tokio::test]
+async fn unconfirmed_auth_absence_or_authority_keeps_product_rows() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    for (status, answer) in [
+        (
+            404,
+            json!({"code":"not_found", "authority":"proxy", "error":"user not found"}),
+        ),
+        (
+            202,
+            json!({"privacy_request":{"request_id":"receipt-fixture", "organization_id":"other-org", "state":"pending", "request_type":"delete"}}),
+        ),
+        (
+            202,
+            json!({"privacy_request":{"request_id":"", "organization_id":ORGANIZATION_ID, "state":"pending", "request_type":"delete"}}),
+        ),
+        (403, json!({"error":"private-upstream-detail"})),
+    ] {
+        let stub = StubAuth::answering(status, answer);
+        let base = spawn_auth(stub).await;
+        let player = Uuid::now_v7();
+        seed(&pool, player, &["subject-fixture"]).await;
+        let (status, body) =
+            delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
+        assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+        assert_diagnostic(&body, "auth_delete_failed");
+        assert!(!message(&body).contains("private-upstream-detail"));
+        assert_eq!(preference_rows(&pool, player).await, 1);
+        assert_eq!(subject_rows(&pool, player).await, 1);
+    }
 }
