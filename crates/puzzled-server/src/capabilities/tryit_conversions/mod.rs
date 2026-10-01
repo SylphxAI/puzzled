@@ -209,7 +209,7 @@ async fn send_row(
     candidate: &Pending,
 ) -> Result<Option<Outcome>, String> {
     let mut tx = pool
-        .begin()
+        .begin_with("BEGIN ISOLATION LEVEL READ COMMITTED")
         .await
         .map_err(|_| "tryit admission unavailable".to_string())?;
     let admitted: bool = sqlx::query_scalar("SELECT puzzled_erasure_try_admit($1)")

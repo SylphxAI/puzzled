@@ -1005,7 +1005,7 @@ async fn auth_subject_fence_is_failed_precondition_not_guest_or_retryable_error(
     let (url, calls) = session_auth_for(player).await;
     let sessions = crate::capabilities::identity_access::adapters::auth_session::AuthSessions::new(
         url,
-        ORGANIZATION_ID.into(),
+        SESSION_TEST_ORG.into(),
     )
     .with_pool(Some(pool.clone()));
     let app = router(AppState::new(Some(pool.clone())).with_auth(sessions));
@@ -1026,7 +1026,7 @@ async fn cached_positive_auth_identity_still_cannot_write_after_erasure_intent()
     let (url, calls) = session_auth_for(player).await;
     let sessions = crate::capabilities::identity_access::adapters::auth_session::AuthSessions::new(
         url,
-        ORGANIZATION_ID.into(),
+        SESSION_TEST_ORG.into(),
     )
     .with_pool(Some(pool.clone()));
     let app = router(AppState::new(Some(pool.clone())).with_auth(sessions));
