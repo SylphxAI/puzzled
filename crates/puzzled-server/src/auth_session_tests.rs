@@ -108,7 +108,11 @@ async fn subscription(app: &Router, headers: &[(&str, String)]) -> (StatusCode, 
 async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
     let calls = Arc::new(AtomicUsize::new(0));
     let base = spawn_fake_auth(calls.clone()).await;
-    let app = router(AppState::new(None).with_auth(AuthSessions::new(base.clone(), ORG.into(), KEY.into())));
+    let app = router(AppState::new(None).with_auth(AuthSessions::new(
+        base.clone(),
+        ORG.into(),
+        KEY.into(),
+    )));
 
     // The web's session cookie is verified with Auth.
     let cookie = ("cookie", format!("x=1; puzzled_session={GOOD}"));
@@ -147,7 +151,11 @@ async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
     // Without our own instance id configured, no session is accepted.
-    let unset = router(AppState::new(None).with_auth(AuthSessions::new(base.clone(), String::new(), KEY.into())));
+    let unset = router(AppState::new(None).with_auth(AuthSessions::new(
+        base.clone(),
+        String::new(),
+        KEY.into(),
+    )));
     let (status, _) = subscription(&unset, &[("authorization", format!("Bearer {GOOD}"))]).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 

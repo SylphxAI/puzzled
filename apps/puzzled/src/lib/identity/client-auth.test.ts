@@ -65,13 +65,13 @@ describe('Sylphx Auth client', () => {
 				(init?.headers as Record<string, string>)?.['x-sylphx-caller-key'] !== 'pk'
 					? new Response('{}', { status: 401 })
 					: new Response(
-					JSON.stringify({
-						session: {
-							created_at_unix_seconds: '1030',
-							principal: { created_at_unix_seconds: 1000, project_id: project },
-						},
-					}),
-				)) as unknown as typeof fetch
+							JSON.stringify({
+								session: {
+									created_at_unix_seconds: '1030',
+									principal: { created_at_unix_seconds: 1000, project_id: project },
+								},
+							}),
+						)) as unknown as typeof fetch
 		}
 		const config = { url: 'https://auth.example', publishableKey: 'pk', secretKey: 'sk' }
 
