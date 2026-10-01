@@ -167,6 +167,9 @@ pub async fn purge_audit_logs(pool: &PgPool) -> Result<(u64, u64), String> {
     .await
     .map_err(|e| format!("audit row purge failed: {e}"))?
     .rows_affected();
+    let consents_deleted =
+        crate::capabilities::money::consent_db::purge_expired_unlinked(pool).await?;
+    tracing::info!(consents_deleted, "unlinked checkout consent retention ran");
     Ok((stripped, deleted))
 }
 

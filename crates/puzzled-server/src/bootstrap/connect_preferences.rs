@@ -9,8 +9,7 @@ use uuid::Uuid;
 
 use super::identity::require_identity;
 use super::state::AppState;
-use crate::capabilities::identity_access::adapters::auth_subjects;
-use crate::capabilities::preferences::adapters::account_deletion::delete_account_data;
+use crate::capabilities::identity_access::erasure;
 use crate::capabilities::preferences::adapters::preferences_db::{
     fetch_notification_preferences, fetch_user_preferences, is_reminder_time, timezone_is_known,
     upsert_notification_preferences, upsert_user_preferences, username_taken,
@@ -26,6 +25,90 @@ use crate::proto::puzzled::v1::{
     UpdateProfileRequest, UpdateProfileResponse, UpdatePushPreferencesRequest,
     UpdatePushPreferencesResponse,
 };
+
+/// Fixed stages only: never attach upstream errors, subjects or credentials.
+#[derive(Clone, Copy)]
+enum ErasureFailure {
+    DatabaseUnavailable,
+    MoneyUnavailable,
+    ErasureUnconfigured,
+    SubjectLookupFailed,
+    AuthDeleteFailed,
+    InvalidPlayer,
+    ProductDeleteFailed,
+}
+
+impl ErasureFailure {
+    fn error(self, correlation: Uuid) -> ConnectError {
+        let (code, message, stage) = match self {
+            Self::DatabaseUnavailable => (
+                ErrorCode::Unavailable,
+                "account_deletion_unavailable",
+                "database_unavailable",
+            ),
+            Self::MoneyUnavailable => (
+                ErrorCode::Unavailable,
+                "account_deletion_unavailable",
+                "money_unavailable",
+            ),
+            Self::ErasureUnconfigured => (
+                ErrorCode::Unavailable,
+                "identity_credential_unconfigured",
+                "erasure_unconfigured",
+            ),
+            Self::SubjectLookupFailed => (
+                ErrorCode::Unavailable,
+                "account_deletion_unavailable",
+                "subject_lookup_failed",
+            ),
+            Self::AuthDeleteFailed => (
+                ErrorCode::Unavailable,
+                "identity_account_deletion_failed",
+                "auth_delete_failed",
+            ),
+            Self::InvalidPlayer => (
+                ErrorCode::Internal,
+                "account_deletion_failed",
+                "invalid_player",
+            ),
+            Self::ProductDeleteFailed => (
+                ErrorCode::Internal,
+                "account_deletion_failed",
+                "product_delete_failed",
+            ),
+        };
+        tracing::warn!(stage, %correlation, "account erasure failed");
+        ConnectError::new(
+            code,
+            format!("{message} reason={stage} request_ref={correlation}"),
+        )
+    }
+}
+
+fn durable_erasure_error(failure: erasure::Failure, correlation: Uuid) -> ConnectError {
+    use erasure::Failure;
+    match failure {
+        Failure::DatabaseUnavailable => ErasureFailure::DatabaseUnavailable.error(correlation),
+        Failure::MoneyUnavailable => ErasureFailure::MoneyUnavailable.error(correlation),
+        Failure::ErasureUnconfigured => ErasureFailure::ErasureUnconfigured.error(correlation),
+        Failure::SubjectLookupFailed => ErasureFailure::SubjectLookupFailed.error(correlation),
+        Failure::AuthDeleteFailed => ErasureFailure::AuthDeleteFailed.error(correlation),
+        Failure::ProductDeleteFailed => ErasureFailure::ProductDeleteFailed.error(correlation),
+        other => {
+            let stage = other.stage();
+            tracing::warn!(stage, %correlation, "account erasure deferred");
+            let code = if other == Failure::CancelSubscriptionFirst {
+                ErrorCode::FailedPrecondition
+            } else {
+                ErrorCode::Unavailable
+            };
+            ConnectError::new(
+                code,
+                format!("account_deletion_unavailable reason={stage} request_ref={correlation}"),
+            )
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct PreferencesConnectService {
@@ -484,93 +567,26 @@ impl PreferencesService for PreferencesConnectService {
                 "confirmation_required",
             ));
         }
+        let correlation = Uuid::now_v7();
         let Some(pool) = &self.state.pool else {
-            return Err(ConnectError::new(
-                ErrorCode::Unavailable,
-                "account_deletion_unavailable",
-            ));
+            return Err(ErasureFailure::DatabaseUnavailable.error(correlation));
         };
-        // A subscription held in Money renews too: same rule. Money that
-        // cannot answer refuses erasure (retryable) rather than erasing a
-        // paying account.
-        if let Some(money) = &self.state.money {
-            match money.has_renewing_subscription(&identity.user_id).await {
-                Ok(true) => {
-                    return Err(ConnectError::new(
-                        ErrorCode::FailedPrecondition,
-                        "cancel_subscription_first",
-                    ))
-                }
-                Ok(false) => {}
-                Err(error) => {
-                    tracing::warn!(%error, "Money subscription check before erasure failed");
-                    return Err(ConnectError::new(
-                        ErrorCode::Unavailable,
-                        "account_deletion_unavailable",
-                    ));
-                }
-            }
-        }
-        // The player's rows are only half the person: the Sylphx Auth subject
-        // is the sign-in they came in with, so deleting the rows alone would
-        // leave a live sign-in behind a purged account (an erasure that is not
-        // an erasure). Auth's deletion is filed first — it suspends the
-        // subject and ends its sessions at once — because the subject map
-        // rows are themselves deleted below, and a failure after that would
-        // leave no name to give Auth: this order means a refused erasure
-        // leaves every row intact and the retry repeats the same Auth request
-        // (fixed idempotency key) rather than filing a second.
-        let erasure = self.state.erasure.as_ref().ok_or_else(|| {
-            tracing::error!("account erasure refused: Enable Auth is not configured");
-            ConnectError::new(ErrorCode::Unavailable, "identity_credential_unconfigured")
-        })?;
-        let player = Uuid::parse_str(&identity.user_id).map_err(|error| {
-            tracing::warn!(%error, "account erasure: identity is not a player id");
-            ConnectError::new(ErrorCode::Internal, "account_deletion_failed")
-        })?;
-        let subjects = auth_subjects::subjects_naming_player(pool, player)
-            .await
-            .map_err(|error| {
-                tracing::warn!(%error, "account erasure: subject lookup failed");
-                ConnectError::new(ErrorCode::Unavailable, "account_deletion_unavailable")
-            })?;
-        for subject in &subjects {
-            match erasure.delete_principal(subject).await {
-                Ok(Some(request_id)) => tracing::info!(
-                    subject,
-                    privacy_request_id = %request_id,
-                    "sylphx auth account deletion requested"
-                ),
-                // Auth holds no such account (already deleted, or never
-                // created): the person has nothing left to sign in with.
-                Ok(None) => {
-                    tracing::info!(subject, "sylphx auth holds no account to delete")
-                }
-                Err(error) => {
-                    tracing::error!(%error, subject, "sylphx auth account deletion failed");
-                    return Err(ConnectError::new(
-                        ErrorCode::Unavailable,
-                        "identity_account_deletion_failed",
-                    ));
-                }
-            }
-        }
-        match delete_account_data(pool, &identity.user_id).await {
-            Ok(rows_deleted) => {
-                tracing::info!(rows_deleted, "account data erased");
-                Response::ok(DeleteAccountDataResponse {
-                    rows_deleted,
-                    ..Default::default()
-                })
-            }
-            Err(error) => {
-                tracing::warn!(%error, "account deletion failed");
-                Err(ConnectError::new(
-                    ErrorCode::Internal,
-                    "account_deletion_failed",
-                ))
-            }
-        }
+        let player = Uuid::parse_str(&identity.user_id)
+            .map_err(|_| ErasureFailure::InvalidPlayer.error(correlation))?;
+        let status = erasure::request(
+            pool,
+            self.state.erasure.as_ref(),
+            self.state.money.as_ref(),
+            player,
+        )
+        .await
+        .map_err(|failure| durable_erasure_error(failure, correlation))?;
+        Response::ok(DeleteAccountDataResponse {
+            rows_deleted: status.rows_deleted,
+            request_id: status.request_id.to_string(),
+            state: status.state,
+            ..Default::default()
+        })
     }
 
     async fn record_signup_attribution(
@@ -631,4 +647,59 @@ impl PreferencesService for PreferencesConnectService {
 
 pub fn preferences_connect_service(state: AppState) -> Arc<PreferencesConnectService> {
     Arc::new(PreferencesConnectService::new(state))
+}
+
+#[cfg(test)]
+mod erasure_diagnostic_tests {
+    use super::*;
+
+    #[test]
+    fn every_erasure_failure_returns_only_fixed_reason_and_random_request_reference() {
+        for (failure, reason, code) in [
+            (
+                ErasureFailure::DatabaseUnavailable,
+                "database_unavailable",
+                ErrorCode::Unavailable,
+            ),
+            (
+                ErasureFailure::MoneyUnavailable,
+                "money_unavailable",
+                ErrorCode::Unavailable,
+            ),
+            (
+                ErasureFailure::ErasureUnconfigured,
+                "erasure_unconfigured",
+                ErrorCode::Unavailable,
+            ),
+            (
+                ErasureFailure::SubjectLookupFailed,
+                "subject_lookup_failed",
+                ErrorCode::Unavailable,
+            ),
+            (
+                ErasureFailure::AuthDeleteFailed,
+                "auth_delete_failed",
+                ErrorCode::Unavailable,
+            ),
+            (
+                ErasureFailure::InvalidPlayer,
+                "invalid_player",
+                ErrorCode::Internal,
+            ),
+            (
+                ErasureFailure::ProductDeleteFailed,
+                "product_delete_failed",
+                ErrorCode::Internal,
+            ),
+        ] {
+            let correlation = Uuid::now_v7();
+            let error = failure.error(correlation);
+            assert_eq!(error.code, code);
+            let message = error.message.unwrap();
+            assert!(message.ends_with(&format!("reason={reason} request_ref={correlation}")));
+            assert_eq!(correlation.get_version_num(), 7);
+            assert!(error.details.is_empty());
+            assert_ne!(correlation, Uuid::now_v7());
+        }
+    }
 }

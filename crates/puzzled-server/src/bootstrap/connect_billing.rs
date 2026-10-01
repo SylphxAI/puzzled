@@ -6,6 +6,7 @@
 
 use std::sync::Arc;
 
+use crate::capabilities::identity_access::erasure;
 use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
@@ -13,6 +14,7 @@ use hmac::{Hmac, KeyInit, Mac};
 use sha2::Sha256;
 use sqlx::PgPool;
 use tracing::warn;
+use uuid::Uuid;
 
 use super::identity::{require_identity, require_purchase_allowed};
 use super::state::AppState;
@@ -165,10 +167,15 @@ impl BillingConnectService {
         let stored = attribution_for_user(pool, &identity.user_id)
             .await
             .map_err(CheckoutError::Failed)?;
-        consent_db::record(pool, &identity.user_id, plan_id, &plan.price_key, locale)
+        let player = Uuid::parse_str(&identity.user_id)
+            .map_err(|_| CheckoutError::Failed("invalid_player".into()))?;
+        let mut tx = erasure::admitted_transaction(pool, player)
+            .await
+            .map_err(|failure| CheckoutError::Failed(failure.stage().into()))?;
+        consent_db::record_in_transaction(&mut tx, player, plan_id, &plan.price_key, locale)
             .await
             .map_err(CheckoutError::Failed)?;
-        money_checkout::create_session(
+        let session = money_checkout::create_session(
             money,
             &catalog,
             &identity.user_id,
@@ -178,7 +185,11 @@ impl BillingConnectService {
             stored.as_ref().or(landing),
             consent,
         )
-        .await
+        .await?;
+        tx.commit()
+            .await
+            .map_err(|_| CheckoutError::Failed("checkout_commit_failed".into()))?;
+        Ok(session)
     }
 
     /// A Platform account; a guest-day id cannot hold a subscription.
@@ -471,7 +482,12 @@ impl BillingService for BillingConnectService {
     ) -> ServiceResult<ResumeSubscriptionResponse> {
         let identity = Self::account(&ctx)?;
         require_purchase_allowed(&identity)?;
-        let (_, money) = self.store()?;
+        let (pool, money) = self.store()?;
+        let player = Uuid::parse_str(&identity.user_id)
+            .map_err(|_| internal("resume_unavailable")("invalid_player".into()))?;
+        let tx = erasure::admitted_transaction(pool, player)
+            .await
+            .map_err(|failure| internal("resume_unavailable")(failure.stage().into()))?;
         let subs = money
             .subscriptions(&identity.user_id)
             .await
@@ -486,6 +502,9 @@ impl BillingService for BillingConnectService {
             .resume(&sub.id)
             .await
             .map_err(|e| internal("resume_unavailable")(e.to_string()))?;
+        tx.commit()
+            .await
+            .map_err(|_| internal("resume_unavailable")("resume_commit_failed".into()))?;
         Response::ok(ResumeSubscriptionResponse::default())
     }
 

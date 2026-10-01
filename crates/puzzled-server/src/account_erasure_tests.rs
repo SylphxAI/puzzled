@@ -1,10 +1,6 @@
-//! Account erasure end to end: deleting an account in the app must also
-//! delete the player's Sylphx Auth sign-in.
-//!
-//! The product's rows and the Auth subject are two halves of one person, so
-//! `DeleteAccountData` files Auth's privacy delete for every subject that
-//! names the player before it deletes the rows, and refuses to report success
-//! when Auth refuses. Needs `PUZZLED_TEST_DATABASE_URL` (a server where a
+//! Durable account-erasure acceptance, suppression, and ownership proofs.
+//! Acceptance preserves rows and never calls Auth before Money preparation.
+//! Adapter proofs keep malformed receipts distinct from authoritative absence. Needs `PUZZLED_TEST_DATABASE_URL` (a server where a
 //! throwaway database can be created); CI sets it and
 //! `PUZZLED_REQUIRE_DB_TESTS=1`, so a missing database fails there instead of
 //! skipping.
@@ -42,7 +38,7 @@ impl StubAuth {
             seen: Arc::default(),
             status: 202,
             answer: json!({"privacy_request": {"request_id": "privacy-request-1",
-                                                "state": "accepted"}}),
+                                                "state": "pending", "organization_id": ORGANIZATION_ID, "request_type": "delete"}}),
         }
     }
 
@@ -63,16 +59,6 @@ impl StubAuth {
             .filter_map(|request| request["body"]["principal_id"].as_str().map(str::to_string))
             .collect()
     }
-
-    /// The secret key each request carried.
-    fn authorizations(&self) -> Vec<String> {
-        self.seen
-            .lock()
-            .unwrap()
-            .iter()
-            .filter_map(|request| request["authorization"].as_str().map(str::to_string))
-            .collect()
-    }
 }
 
 async fn spawn_auth(stub: StubAuth) -> String {
@@ -88,10 +74,12 @@ async fn spawn_auth(stub: StubAuth) -> String {
                         .unwrap_or_default(),
                     "body": serde_json::from_str::<Value>(&body).unwrap_or(Value::Null),
                 }));
-                (
-                    StatusCode::from_u16(stub.status).unwrap(),
-                    Json(stub.answer.clone()),
-                )
+                let mut answer = stub.answer.clone();
+                if answer["privacy_request"].is_object() {
+                    answer["privacy_request"]["principal_id"] =
+                        serde_json::from_str::<Value>(&body).unwrap()["principal_id"].clone();
+                }
+                (StatusCode::from_u16(stub.status).unwrap(), Json(answer))
             }
         }),
     );
@@ -168,8 +156,19 @@ fn message(body: &Value) -> String {
     body["message"].as_str().unwrap_or_default().to_string()
 }
 
+fn assert_diagnostic(body: &Value, expected_reason: &str) {
+    let message = message(body);
+    assert!(message.contains(&format!("reason={expected_reason} ")));
+    let reference = message
+        .split("request_ref=")
+        .nth(1)
+        .expect("request reference");
+    assert_eq!(Uuid::parse_str(reference).unwrap().get_version_num(), 7);
+    assert!(!message.contains(SECRET_KEY));
+}
+
 #[tokio::test]
-async fn every_subject_naming_the_player_loses_its_sign_in_with_the_rows() {
+async fn accepted_erasure_persists_owned_snapshot_without_auth_effects() {
     let _key = test_key_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -178,44 +177,58 @@ async fn every_subject_naming_the_player_loses_its_sign_in_with_the_rows() {
     };
     let stub = StubAuth::accepting();
     let base = spawn_auth(stub.clone()).await;
-
-    // The player is mid-migration: Auth still reports the old form as the
-    // legacy subject while the new form is the one published.
     let player = Uuid::now_v7();
-    seed(
-        &pool,
-        player,
-        &[
-            "usr_01kmp4wyhhfgxsyrjvh8e0tkkf",
-            &format!("principal-{player}"),
-        ],
-    )
-    .await;
-
-    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
+    let names = ["subject-fixture".to_string(), format!("principal-{player}")];
+    seed(&pool, player, &[&names[0], &names[1]]).await;
+    let application = app(&pool, Some(base));
+    let (status, body) = delete_account(&application, &token(&player.to_string())).await;
     assert_eq!(status, StatusCode::OK, "{body}");
-
-    // Both subject forms are named to Auth, under the instance secret key.
-    let mut subjects = stub.subjects();
-    subjects.sort();
-    let mut expected = vec![
-        "usr_01kmp4wyhhfgxsyrjvh8e0tkkf".to_string(),
-        format!("principal-{player}"),
-    ];
-    expected.sort();
-    assert_eq!(subjects, expected);
+    assert_eq!(body["state"], "pending");
     assert_eq!(
-        stub.authorizations(),
-        vec![format!("Bearer {SECRET_KEY}"); 2]
+        Uuid::parse_str(body["requestId"].as_str().unwrap())
+            .unwrap()
+            .get_version_num(),
+        7
     );
-
-    // The rows are gone, the subject map included (it is part of the erasure).
-    assert_eq!(preference_rows(&pool, player).await, 0);
-    assert_eq!(subject_rows(&pool, player).await, 0);
+    let snapshot: Value =
+        sqlx::query_scalar("SELECT subjects FROM erasure_requests WHERE player_id=$1")
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    let subjects = snapshot.as_array().unwrap();
+    assert_eq!(subjects.len(), 2);
+    for subject in subjects {
+        assert!(names.contains(&subject["principal_id"].as_str().unwrap().to_string()));
+        assert!(subject["request_id"].is_null());
+    }
+    let (status, replay) = delete_account(&application, &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body, replay, "owned replay is the same operation");
+    let auth = AuthErasure::new(
+        "http://127.0.0.1:1".into(),
+        ORGANIZATION_ID.into(),
+        SECRET_KEY.into(),
+    );
+    let counts = crate::capabilities::identity_access::erasure::sweep(&pool, Some(&auth))
+        .await
+        .unwrap();
+    assert_eq!(counts.pending, 1);
+    assert_eq!(counts.completed, 0);
+    assert!(stub.subjects().is_empty());
+    assert_eq!(preference_rows(&pool, player).await, 1);
+    assert_eq!(subject_rows(&pool, player).await, 2);
+    let reason: String =
+        sqlx::query_scalar("SELECT last_reason FROM erasure_requests WHERE player_id=$1")
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(reason, "money_preflight_unavailable");
 }
 
 #[tokio::test]
-async fn a_player_with_no_subject_row_is_deleted_under_the_old_form() {
+async fn legacy_subject_fallback_is_persisted_not_sent_before_preparation() {
     let _key = test_key_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -224,61 +237,21 @@ async fn a_player_with_no_subject_row_is_deleted_under_the_old_form() {
     };
     let stub = StubAuth::accepting();
     let base = spawn_auth(stub.clone()).await;
-
-    // Signed in before the subject map existed: no row, old form only.
     let player = Uuid::now_v7();
     seed(&pool, player, &[]).await;
-
     let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
     assert_eq!(status, StatusCode::OK, "{body}");
-    assert_eq!(stub.subjects(), vec![format!("principal-{player}")]);
-    assert_eq!(preference_rows(&pool, player).await, 0);
-}
-
-#[tokio::test]
-async fn an_account_auth_does_not_hold_is_still_erased() {
-    let _key = test_key_lock()
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let Some(pool) = fresh_database().await else {
-        return;
-    };
-    // Auth holds no such account (already deleted, or never created).
-    let stub = StubAuth::answering(404, json!({"error": "principal_not_found"}));
-    let base = spawn_auth(stub.clone()).await;
-
-    let player = Uuid::now_v7();
-    seed(&pool, player, &[]).await;
-
-    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
-    assert_eq!(status, StatusCode::OK, "{body}");
-    assert_eq!(stub.subjects(), vec![format!("principal-{player}")]);
-    assert_eq!(preference_rows(&pool, player).await, 0);
-}
-
-#[tokio::test]
-async fn a_refused_auth_deletion_leaves_every_row_in_place() {
-    let _key = test_key_lock()
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let Some(pool) = fresh_database().await else {
-        return;
-    };
-    let stub = StubAuth::answering(502, json!({"error": "identity_unavailable"}));
-    let base = spawn_auth(stub.clone()).await;
-
-    let player = Uuid::now_v7();
-    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
-    seed(&pool, player, &[subject]).await;
-
-    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
-    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE, "{body}");
-    assert!(message(&body).contains("identity_account_deletion_failed"));
-    // Nothing was erased: the account stays whole and the retry repeats the
-    // same Auth request (its idempotency key is fixed per subject).
+    assert_eq!(body["state"], "pending");
+    let subject: String = sqlx::query_scalar(
+        "SELECT subjects->0->>'principal_id' FROM erasure_requests WHERE player_id=$1",
+    )
+    .bind(player)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(subject, format!("principal-{player}"));
+    assert!(stub.subjects().is_empty());
     assert_eq!(preference_rows(&pool, player).await, 1);
-    assert_eq!(subject_rows(&pool, player).await, 1);
-    assert_eq!(stub.subjects(), vec![subject.to_string()]);
 }
 
 #[tokio::test]
@@ -298,6 +271,7 @@ async fn an_unbound_auth_credential_refuses_the_erasure() {
     let (status, body) = delete_account(&app(&pool, None), &token(&player.to_string())).await;
     assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE, "{body}");
     assert!(message(&body).contains("identity_credential_unconfigured"));
+    assert_diagnostic(&body, "erasure_unconfigured");
     assert_eq!(preference_rows(&pool, player).await, 1);
     assert_eq!(subject_rows(&pool, player).await, 1);
 }
@@ -361,4 +335,820 @@ async fn an_identity_that_is_not_a_player_id_erases_nothing() {
     assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR, "{body}");
     assert!(message(&body).contains("account_deletion_failed"));
     assert!(stub.seen.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn missing_product_database_has_a_fixed_diagnostic() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let (status, body) = delete_account(
+        &router(AppState::new(None)),
+        &token(&Uuid::now_v7().to_string()),
+    )
+    .await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    assert_diagnostic(&body, "database_unavailable");
+}
+
+#[tokio::test]
+async fn subject_lookup_failure_is_named_before_auth_or_product_erasure() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let stub = StubAuth::accepting();
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    seed(&pool, player, &[]).await;
+    // Only this test's disposable database: force the actual lookup failure.
+    sqlx::query("ALTER TABLE auth_subjects RENAME TO auth_subjects_unavailable")
+        .execute(&pool)
+        .await
+        .unwrap();
+    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    assert_diagnostic(&body, "subject_lookup_failed");
+    assert!(stub.seen.lock().unwrap().is_empty());
+    assert_eq!(preference_rows(&pool, player).await, 1);
+}
+
+#[tokio::test]
+async fn money_failure_is_named_before_auth_or_product_erasure() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let stub = StubAuth::answering(503, json!({"error":"unavailable"}));
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    seed(&pool, player, &[]).await;
+    let state = AppState::new(Some(pool.clone()))
+        .with_money(Some(crate::capabilities::money::Money::new(
+            &base,
+            "fixture",
+            "https://puzzled.test",
+        )))
+        .with_erasure(Some(AuthErasure::new(
+            base,
+            ORGANIZATION_ID.into(),
+            SECRET_KEY.into(),
+        )));
+    let (status, body) = delete_account(&router(state), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    assert_diagnostic(&body, "money_unavailable");
+    assert!(stub.seen.lock().unwrap().is_empty());
+    assert_eq!(preference_rows(&pool, player).await, 1);
+}
+
+#[tokio::test]
+async fn unconfirmed_auth_absence_or_authority_keeps_product_rows() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    for (status, answer) in [
+        (
+            404,
+            json!({"code":"not_found", "authority":"proxy", "error":"user not found"}),
+        ),
+        (
+            202,
+            json!({"privacy_request":{"request_id":"receipt-fixture", "organization_id":"other-org", "state":"pending", "request_type":"delete"}}),
+        ),
+        (
+            202,
+            json!({"privacy_request":{"request_id":"", "organization_id":ORGANIZATION_ID, "state":"pending", "request_type":"delete"}}),
+        ),
+        (403, json!({"error":"private-upstream-detail"})),
+    ] {
+        let stub = StubAuth::answering(status, answer);
+        let base = spawn_auth(stub).await;
+        let player = Uuid::now_v7();
+        let subject = format!("subject-fixture-{player}");
+        seed(&pool, player, &[&subject]).await;
+        let auth = AuthErasure::new(base, ORGANIZATION_ID.into(), SECRET_KEY.into());
+        let error = auth
+            .request_delete(&subject, "stable-fixture")
+            .await
+            .err()
+            .unwrap();
+        assert!(!error.contains("private-upstream-detail"));
+        assert_eq!(preference_rows(&pool, player).await, 1);
+        assert_eq!(subject_rows(&pool, player).await, 1);
+    }
+}
+
+#[tokio::test]
+async fn a_real_wrong_route_html_404_preserves_preferences_subjects_and_consent() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    // No privacy route exists here. This is an actual HTTP HTML fallback,
+    // not JSON encoded text, and cannot assert any account's absence.
+    let wrong_route = Router::new().fallback(|| async {
+        (
+            StatusCode::NOT_FOUND,
+            axum::response::Html("<html>route not found</html>"),
+        )
+    });
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    let server = tokio::spawn(async move { axum::serve(listener, wrong_route).await.unwrap() });
+    let player = Uuid::now_v7();
+    seed(&pool, player, &["subject-fixture"]).await;
+    crate::capabilities::money::consent_db::record(
+        &pool,
+        &player.to_string(),
+        "plus",
+        "fixture-price",
+        "en-US",
+    )
+    .await
+    .unwrap();
+    let before: Value =
+        sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c WHERE user_id=$1")
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    let auth = AuthErasure::new(
+        format!("http://{addr}"),
+        ORGANIZATION_ID.into(),
+        SECRET_KEY.into(),
+    );
+    assert!(auth
+        .request_delete("subject-fixture", "stable-fixture")
+        .await
+        .is_err());
+    assert_eq!(preference_rows(&pool, player).await, 1);
+    assert_eq!(subject_rows(&pool, player).await, 1);
+    let after: Value =
+        sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c WHERE user_id=$1")
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(before, after);
+    server.abort();
+}
+
+async fn seed_erasure_intent(pool: &PgPool, player: Uuid) -> Uuid {
+    let operation = Uuid::now_v7();
+    sqlx::query("INSERT INTO erasure_requests (request_id,player_id,suppression_hash,organization_id,subjects) VALUES ($1,$2,puzzled_erasure_player_hash($2),'org_test',$3)")
+        .bind(operation).bind(player)
+        .bind(json!([{"principal_id":"subject-fixture", "idempotency_key":"stable-fixture", "request_id":null, "state":null}]))
+        .execute(pool).await.unwrap();
+    operation
+}
+
+#[tokio::test]
+async fn pending_and_completed_erasure_fences_everyday_writers_and_retains_consent() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    seed(&pool, player, &[]).await;
+    crate::capabilities::money::consent_db::record(
+        &pool,
+        &player.to_string(),
+        "plus",
+        "fixture-price",
+        "en-US",
+    )
+    .await
+    .unwrap();
+    let operation = seed_erasure_intent(&pool, player).await;
+    for statement in [
+        "INSERT INTO account_attribution(user_id) VALUES($1)",
+        "INSERT INTO auth_subjects(subject,user_id) VALUES('late-subject',$1)",
+        "INSERT INTO family_groups(owner_user_id,invite_code) VALUES($1,'late-family')",
+        "UPDATE notification_preferences SET last_daily_reminder_on='2026-10-01' WHERE user_id=$1",
+    ] {
+        assert!(sqlx::query(statement)
+            .bind(player)
+            .execute(&pool)
+            .await
+            .is_err());
+    }
+    let admitted: bool = sqlx::query_scalar("SELECT puzzled_erasure_try_admit($1)")
+        .bind(player)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert!(!admitted);
+    crate::capabilities::preferences::adapters::account_deletion::delete_account_data(
+        &pool,
+        &player.to_string(),
+    )
+    .await
+    .unwrap();
+    let consent: Value = sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert!(consent["user_id"].is_null());
+    assert_eq!(
+        consent["statement"],
+        crate::capabilities::money::consent_db::IMMEDIATE_SUPPLY_STATEMENT
+    );
+    assert_eq!(consent["plan_id"], "plus");
+    sqlx::query("UPDATE erasure_requests SET state='completed',player_id=NULL,organization_id=NULL,subjects=NULL,local_erased_at=now(),completed_at=now() WHERE request_id=$1")
+        .bind(operation).execute(&pool).await.unwrap();
+    assert!(
+        sqlx::query("INSERT INTO notification_preferences(user_id) VALUES($1)")
+            .bind(player)
+            .execute(&pool)
+            .await
+            .is_err()
+    );
+}
+
+#[tokio::test]
+async fn old_repeatable_read_snapshots_cannot_admit_writers() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let mut tx = pool.begin().await.unwrap();
+    sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    assert!(sqlx::query("SELECT puzzled_erasure_try_admit($1)")
+        .bind(Uuid::now_v7())
+        .execute(&mut *tx)
+        .await
+        .is_err());
+    tx.rollback().await.unwrap();
+}
+
+#[tokio::test]
+async fn already_dispatched_write_waits_for_intent_then_refuses_fresh_snapshot() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    seed(&pool, player, &[]).await;
+    let mut admission = pool.begin().await.unwrap();
+    sqlx::query("SELECT puzzled_erasure_lock($1)")
+        .bind(player)
+        .execute(&mut *admission)
+        .await
+        .unwrap();
+    let writer_pool = pool.clone();
+    let writer = tokio::spawn(async move {
+        sqlx::query("UPDATE notification_preferences SET push_enabled=true WHERE user_id=$1")
+            .bind(player)
+            .execute(&writer_pool)
+            .await
+    });
+    sqlx::query("INSERT INTO erasure_requests(request_id,player_id,suppression_hash,organization_id,subjects) VALUES($1,$2,puzzled_erasure_player_hash($2),'org_test',$3)")
+        .bind(Uuid::now_v7()).bind(player)
+        .bind(json!([{"principal_id":"subject-fixture","idempotency_key":"stable-fixture","request_id":null,"state":null}]))
+        .execute(&mut *admission).await.unwrap();
+    admission.commit().await.unwrap();
+    assert!(writer.await.unwrap().is_err());
+}
+
+#[tokio::test]
+async fn consent_retention_expiry_replay_and_rollback_preserve_evidence() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    crate::capabilities::money::consent_db::record(
+        &pool,
+        &player.to_string(),
+        "plus",
+        "fixture-price",
+        "en-US",
+    )
+    .await
+    .unwrap();
+    let original: Value = sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    let mut tx = pool.begin().await.unwrap();
+    crate::capabilities::preferences::adapters::account_deletion::erase_in_transaction(
+        &mut tx, player,
+    )
+    .await
+    .unwrap();
+    let exact: bool = sqlx::query_scalar("SELECT retention_expires_at = (transaction_timestamp() AT TIME ZONE 'UTC') + interval '6 years' FROM checkout_consents").fetch_one(&mut *tx).await.unwrap();
+    assert!(exact);
+    tx.rollback().await.unwrap();
+    let after: Value = sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(
+        original, after,
+        "failed local erasure changes no consent evidence"
+    );
+    crate::capabilities::preferences::adapters::account_deletion::delete_account_data(
+        &pool,
+        &player.to_string(),
+    )
+    .await
+    .unwrap();
+    let first: Value = sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    crate::capabilities::preferences::adapters::account_deletion::delete_account_data(
+        &pool,
+        &player.to_string(),
+    )
+    .await
+    .unwrap();
+    let replay: Value = sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(first, replay, "replay must not extend expiry");
+    let leap: String =
+        sqlx::query_scalar("SELECT (timestamp '2024-02-29 23:12:13' + interval '6 years')::text")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(leap, "2030-02-28 23:12:13");
+}
+
+#[tokio::test]
+async fn consent_retention_boundary_linked_rows_and_concurrent_skip_locked() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    use crate::capabilities::money::consent_db::{purge_expired_unlinked, record};
+    let player = Uuid::now_v7();
+    record(&pool, &player.to_string(), "plus", "fixture-price", "en-US")
+        .await
+        .unwrap();
+    // Linked evidence is preserved even if its expiry happens to be past.
+    sqlx::query("UPDATE checkout_consents SET retention_expires_at=timestamp '2000-01-01'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    let mut lock = pool.begin().await.unwrap();
+    // statement_timestamp is stable throughout one DO statement. Execute
+    // the actual production purge at equality and one microsecond before
+    // expiry, without changing the clock or inventing a test transport.
+    let boundary_id = Uuid::now_v7();
+    let future_id = Uuid::now_v7();
+    let boundary = format!(
+        "DO $boundary$ BEGIN
+        INSERT INTO checkout_consents(id,plan_id,price_key,locale,statement,retention_expires_at)
+        VALUES ('{boundary_id}','plus','fixture','en-US','fixture',statement_timestamp() AT TIME ZONE 'UTC'),
+               ('{future_id}','plus','fixture','en-US','fixture',(statement_timestamp() AT TIME ZONE 'UTC') + interval '1 microsecond');
+        {};
+        IF EXISTS(SELECT 1 FROM checkout_consents WHERE id='{boundary_id}') OR NOT EXISTS(SELECT 1 FROM checkout_consents WHERE id='{future_id}') THEN
+            RAISE EXCEPTION 'retention expiry boundary incorrect';
+        END IF;
+        DELETE FROM checkout_consents WHERE id='{future_id}';
+        END $boundary$",
+        crate::capabilities::money::consent_db::PURGE_EXPIRED_UNLINKED
+    );
+    // Audited: only a compile-time production SQL constant and canonical
+    // UUIDs minted in this test are interpolated; there is no caller input.
+    sqlx::query(sqlx::AssertSqlSafe(boundary))
+        .execute(&pool)
+        .await
+        .unwrap();
+    let expired = Uuid::now_v7();
+    let unlocked = Uuid::now_v7();
+    let future = Uuid::now_v7();
+    for (id, expiry) in [
+        (expired, "2000-01-01"),
+        (unlocked, "2000-01-02"),
+        (future, "9999-01-01"),
+    ] {
+        sqlx::query("INSERT INTO checkout_consents(id,plan_id,price_key,locale,statement,retention_expires_at) VALUES($1,'plus','fixture','en-US','fixture',$2::text::timestamp)").bind(id).bind(expiry).execute(&pool).await.unwrap();
+    }
+    sqlx::query("SELECT id FROM checkout_consents WHERE id=$1 FOR UPDATE")
+        .bind(expired)
+        .execute(&mut *lock)
+        .await
+        .unwrap();
+    assert_eq!(purge_expired_unlinked(&pool).await.unwrap(), 1);
+    assert_eq!(purge_expired_unlinked(&pool).await.unwrap(), 0);
+    lock.commit().await.unwrap();
+    assert_eq!(purge_expired_unlinked(&pool).await.unwrap(), 1);
+    let remaining: i64 = sqlx::query_scalar("SELECT count(*) FROM checkout_consents")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(remaining, 2, "linked and future evidence remain");
+}
+
+/// A request/response barrier, not a sleep: the sender holds admission while
+/// the fake receiver waits for this test to acknowledge the observed request.
+async fn gated_tryit() -> (
+    crate::capabilities::tryit_conversions::TryitReporter,
+    Arc<std::sync::atomic::AtomicUsize>,
+    Arc<tokio::sync::Notify>,
+    Arc<tokio::sync::Notify>,
+) {
+    let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let entered = Arc::new(tokio::sync::Notify::new());
+    let release = Arc::new(tokio::sync::Notify::new());
+    let handler = {
+        let calls = calls.clone();
+        let entered = entered.clone();
+        let release = release.clone();
+        move || {
+            let calls = calls.clone();
+            let entered = entered.clone();
+            let release = release.clone();
+            async move {
+                calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                entered.notify_one();
+                release.notified().await;
+                StatusCode::CREATED
+            }
+        }
+    };
+    let app = Router::new().route("/api/attribution/conversions", axum::routing::post(handler));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    (
+        crate::capabilities::tryit_conversions::TryitReporter::new(
+            &format!("http://{address}"),
+            "fixture-key",
+        )
+        .unwrap(),
+        calls,
+        entered,
+        release,
+    )
+}
+
+async fn queue_tryit(pool: &PgPool, player: Uuid) {
+    let tags =
+        puzzled_core::attribution::Attribution::from_cookie("s=tryit&r=fixture-ref").unwrap();
+    crate::capabilities::tryit_conversions::enqueue(
+        pool,
+        &player.to_string(),
+        &tags,
+        crate::capabilities::tryit_conversions::Event::Signup,
+    )
+    .await
+    .unwrap();
+}
+
+#[tokio::test]
+async fn outbox_send_holds_admission_until_outcome_then_erasure_prevents_any_later_send() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    queue_tryit(&pool, player).await;
+    let (reporter, calls, entered, release) = gated_tryit().await;
+    // One connection proves there is no nested pool acquisition while the
+    // send's admission transaction is held.
+    let sender_pool = sqlx::postgres::PgPoolOptions::new()
+        .max_connections(1)
+        .connect_with(pool.connect_options().as_ref().clone())
+        .await
+        .unwrap();
+    let sender = {
+        let sender_pool = sender_pool.clone();
+        let reporter = reporter.clone();
+        tokio::spawn(async move {
+            crate::capabilities::tryit_conversions::report_now(
+                &sender_pool,
+                Some(&reporter),
+                &player.to_string(),
+            )
+            .await;
+        })
+    };
+    tokio::time::timeout(std::time::Duration::from_secs(5), entered.notified())
+        .await
+        .unwrap();
+    let mut erasure = pool.begin().await.unwrap();
+    let locked: bool = sqlx::query_scalar("SELECT pg_try_advisory_xact_lock(hashtextextended('puzzled:erasure:' || $1::uuid::text,0))")
+        .bind(player).fetch_one(&mut *erasure).await.unwrap();
+    assert!(
+        !locked,
+        "the receiver barrier proves erasure cannot commit during send"
+    );
+    erasure.rollback().await.unwrap();
+    release.notify_one();
+    tokio::time::timeout(std::time::Duration::from_secs(5), sender)
+        .await
+        .unwrap()
+        .unwrap();
+    let attempts: i32 =
+        sqlx::query_scalar("SELECT attempts FROM tryit_conversions WHERE user_id=$1")
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(attempts, 1);
+    seed_erasure_intent(&pool, player).await;
+    crate::capabilities::preferences::adapters::account_deletion::delete_account_data(
+        &pool,
+        &player.to_string(),
+    )
+    .await
+    .unwrap();
+    crate::capabilities::tryit_conversions::report_now(
+        &sender_pool,
+        Some(&reporter),
+        &player.to_string(),
+    )
+    .await;
+    assert_eq!(
+        crate::capabilities::tryit_conversions::sweep(&sender_pool, &reporter)
+            .await
+            .unwrap(),
+        0
+    );
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    sender_pool.close().await;
+}
+
+#[tokio::test]
+async fn outbox_skips_busy_or_suppressed_player_without_poisoning_unrelated_conversion() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let suppressed = Uuid::now_v7();
+    let unrelated = Uuid::now_v7();
+    queue_tryit(&pool, suppressed).await;
+    sqlx::query("UPDATE tryit_conversions SET occurred_at=(now() AT TIME ZONE 'utc')-interval '40 days' WHERE user_id=$1")
+        .bind(suppressed).execute(&pool).await.unwrap();
+    let (reporter, calls, entered, release) = gated_tryit().await;
+    let mut intent = pool.begin().await.unwrap();
+    sqlx::query("SELECT puzzled_erasure_lock($1)")
+        .bind(suppressed)
+        .execute(&mut *intent)
+        .await
+        .unwrap();
+    // The intent has the lock but has not committed yet. Nonblocking admission
+    // skips it and performs no external call; no timing-only sleep needed.
+    crate::capabilities::tryit_conversions::report_now(
+        &pool,
+        Some(&reporter),
+        &suppressed.to_string(),
+    )
+    .await;
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 0);
+    sqlx::query("INSERT INTO erasure_requests(request_id,player_id,suppression_hash,organization_id,subjects) VALUES($1,$2,puzzled_erasure_player_hash($2),'org_test',$3)")
+        .bind(Uuid::now_v7()).bind(suppressed).bind(json!([{"principal_id":"subject-fixture","idempotency_key":"stable-fixture","request_id":null,"state":null}]))
+        .execute(&mut *intent).await.unwrap();
+    intent.commit().await.unwrap();
+    // Expired suppressed rows also cannot poison a bulk expiry UPDATE.
+    queue_tryit(&pool, unrelated).await;
+    let worker = {
+        let pool = pool.clone();
+        let reporter = reporter.clone();
+        tokio::spawn(async move {
+            crate::capabilities::tryit_conversions::sweep(&pool, &reporter)
+                .await
+                .unwrap()
+        })
+    };
+    tokio::time::timeout(std::time::Duration::from_secs(5), entered.notified())
+        .await
+        .unwrap();
+    release.notify_one();
+    assert_eq!(
+        tokio::time::timeout(std::time::Duration::from_secs(5), worker)
+            .await
+            .unwrap()
+            .unwrap(),
+        1
+    );
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    let attempts: i32 =
+        sqlx::query_scalar("SELECT attempts FROM tryit_conversions WHERE user_id=$1")
+            .bind(suppressed)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(attempts, 0);
+}
+
+const SESSION_TEST_ORG: &str = "organization-0199aa10-7b2c-7d3e-8f00-00000000c0de";
+
+async fn session_auth_for(player: Uuid) -> (String, Arc<std::sync::atomic::AtomicUsize>) {
+    let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let handler = {
+        let calls = calls.clone();
+        move || {
+            let calls = calls.clone();
+            async move {
+                calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                Json(json!({"session":{"principal":{
+                    "principal_id":format!("principal-{player}"),
+                    "project_id":SESSION_TEST_ORG,"state":"active","display_name":"Fixture"
+                }}}))
+            }
+        }
+    };
+    let app = Router::new().route("/v1/sessions/current", axum::routing::get(handler));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    (format!("http://{address}"), calls)
+}
+
+async fn session_profile(app: &Router, update: bool) -> (StatusCode, Value) {
+    let response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method(Method::POST)
+                .uri(if update {
+                    "/puzzled.v1.PreferencesService/UpdateProfile"
+                } else {
+                    "/puzzled.v1.PreferencesService/GetProfile"
+                })
+                .header("content-type", "application/json")
+                .header("authorization", "Bearer identity_org_session_fixture")
+                .body(Body::from(if update {
+                    json!({"bio":"late-write"}).to_string()
+                } else {
+                    "{}".to_string()
+                }))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let status = response.status();
+    let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    (
+        status,
+        serde_json::from_slice(&bytes).unwrap_or(Value::Null),
+    )
+}
+
+#[tokio::test]
+async fn auth_subject_fence_is_failed_precondition_not_guest_or_retryable_error() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    seed_erasure_intent(&pool, player).await;
+    let (url, calls) = session_auth_for(player).await;
+    let sessions = crate::capabilities::identity_access::adapters::auth_session::AuthSessions::new(
+        url,
+        SESSION_TEST_ORG.into(),
+    )
+    .with_pool(Some(pool.clone()));
+    let app = router(AppState::new(Some(pool.clone())).with_auth(sessions));
+    let (status, body) = session_profile(&app, false).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST, "{body}");
+    assert_eq!(body["code"], "failed_precondition");
+    assert_eq!(body["message"], "account_erasure_pending");
+    assert_eq!(subject_rows(&pool, player).await, 0);
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+}
+
+#[tokio::test]
+async fn cached_positive_auth_identity_still_cannot_write_after_erasure_intent() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    let (url, calls) = session_auth_for(player).await;
+    let sessions = crate::capabilities::identity_access::adapters::auth_session::AuthSessions::new(
+        url,
+        SESSION_TEST_ORG.into(),
+    )
+    .with_pool(Some(pool.clone()));
+    let app = router(AppState::new(Some(pool.clone())).with_auth(sessions));
+    assert_eq!(session_profile(&app, false).await.0, StatusCode::OK);
+    seed_erasure_intent(&pool, player).await;
+    let (status, _) = session_profile(&app, true).await;
+    assert!(
+        !status.is_success(),
+        "cached positive identity cannot bypass the database fence"
+    );
+    assert_eq!(
+        calls.load(std::sync::atomic::Ordering::SeqCst),
+        1,
+        "positive Auth cache is actually used"
+    );
+    let rows: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM user_preferences WHERE user_id=$1 AND bio='late-write'",
+    )
+    .bind(player)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(rows, 0);
+}
+
+#[tokio::test]
+async fn stale_or_expired_erasure_worker_cannot_release_replacement_lease() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    use crate::capabilities::identity_access::erasure::{release_for_retry, Failure};
+    let operation = seed_erasure_intent(&pool, Uuid::now_v7()).await;
+    let stale = Uuid::now_v7();
+    let replacement = Uuid::now_v7();
+    sqlx::query("UPDATE erasure_requests SET lease_token=$2,lease_until=now()+interval '2 minutes',last_reason='auth_request_pending' WHERE request_id=$1")
+        .bind(operation).bind(replacement).execute(&pool).await.unwrap();
+    let before: Value =
+        sqlx::query_scalar("SELECT to_jsonb(e) FROM erasure_requests e WHERE request_id=$1")
+            .bind(operation)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(
+        release_for_retry(&pool, operation, stale, Failure::MoneyPreflightUnavailable).await,
+        Err(Failure::LeaseLost)
+    );
+    let after: Value =
+        sqlx::query_scalar("SELECT to_jsonb(e) FROM erasure_requests e WHERE request_id=$1")
+            .bind(operation)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(
+        before, after,
+        "stale worker changes no lease, reason, retry or snapshot"
+    );
+    sqlx::query(
+        "UPDATE erasure_requests SET lease_until=now()-interval '1 second' WHERE request_id=$1",
+    )
+    .bind(operation)
+    .execute(&pool)
+    .await
+    .unwrap();
+    assert_eq!(
+        release_for_retry(
+            &pool,
+            operation,
+            replacement,
+            Failure::MoneyPreflightUnavailable
+        )
+        .await,
+        Err(Failure::LeaseLost)
+    );
+    sqlx::query(
+        "UPDATE erasure_requests SET lease_until=now()+interval '2 minutes' WHERE request_id=$1",
+    )
+    .bind(operation)
+    .execute(&pool)
+    .await
+    .unwrap();
+    assert_eq!(
+        release_for_retry(
+            &pool,
+            operation,
+            replacement,
+            Failure::MoneyPreflightUnavailable
+        )
+        .await,
+        Ok(())
+    );
+    let state: (bool, String, bool) = sqlx::query_as("SELECT lease_token IS NULL,last_reason,retry_due>now() FROM erasure_requests WHERE request_id=$1").bind(operation).fetch_one(&pool).await.unwrap();
+    assert_eq!(state, (true, "money_preflight_unavailable".into(), true));
+}
+
+#[tokio::test]
+async fn erasure_retry_resumes_expired_claim_but_never_calls_foreign_auth_or_asserts_completion() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    let operation = seed_erasure_intent(&pool, player).await;
+    sqlx::query("UPDATE erasure_requests SET lease_token=$2,lease_until=now()-interval '1 second' WHERE request_id=$1")
+        .bind(operation).bind(Uuid::now_v7()).execute(&pool).await.unwrap();
+    let stub = StubAuth::accepting();
+    let base = spawn_auth(stub.clone()).await;
+    let foreign = AuthErasure::new(base, "foreign-org-fixture".into(), SECRET_KEY.into());
+    let counts = crate::capabilities::identity_access::erasure::sweep(&pool, Some(&foreign))
+        .await
+        .unwrap();
+    assert_eq!(
+        (counts.attempted, counts.pending, counts.completed),
+        (1, 1, 0)
+    );
+    assert!(stub.subjects().is_empty());
+    let evidence: (String, String, bool, bool, i32) = sqlx::query_as("SELECT state,last_reason,lease_token IS NULL,completed_at IS NULL,attempts FROM erasure_requests WHERE request_id=$1")
+        .bind(operation).fetch_one(&pool).await.unwrap();
+    assert_eq!(
+        evidence,
+        ("pending".into(), "instance_changed".into(), true, true, 1)
+    );
+    let replay = crate::capabilities::identity_access::erasure::sweep(&pool, Some(&foreign))
+        .await
+        .unwrap();
+    assert_eq!((replay.attempted, replay.completed), (0, 0));
 }

@@ -18,7 +18,8 @@ import {
 export function ResetPasswordForm() {
 	const t = useTranslations('auth')
 	const searchParams = useSearchParams()
-	const token = searchParams.get('token') ?? ''
+	const challengeId = searchParams.get('challenge_id')?.trim() ?? ''
+	const secret = searchParams.get('token')?.trim() ?? ''
 	const [touched, setTouched] = useState(false)
 	const [attempted, setAttempted] = useState(false)
 	// Submission guard that survives two clicks in the same tick: `isLoading`
@@ -37,13 +38,14 @@ export function ResetPasswordForm() {
 		success,
 		handleSubmit,
 	} = useResetPasswordForm({
-		token,
+		challengeId,
+		secret,
 		minPasswordLength: MIN_PASSWORD_LENGTH,
 		afterResetUrl: '/login',
 	})
 
-	// No token at all: the link that brought the visitor here is incomplete.
-	if (!token) {
+	// Both values come from Auth: the proof must never stand in for its challenge.
+	if (!challengeId || !secret) {
 		return (
 			<div className="surface-card p-6 text-center sm:p-8">
 				<span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">

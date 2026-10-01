@@ -54,6 +54,35 @@ async function readJson(response: Response): Promise<Record<string, unknown>> {
 	return ((await response.json().catch(() => null)) as Record<string, unknown> | null) ?? {}
 }
 
+/** Session readiness does not wait for best-effort retention work. */
+export async function loadIdentitySession(
+	read: () => Promise<IdentityUser | null>,
+	current: () => boolean,
+	publish: (user: IdentityUser | null) => void,
+	ready: () => void,
+	adopt: () => Promise<unknown>,
+): Promise<void> {
+	let next: IdentityUser | null
+	try {
+		next = await read()
+	} catch {
+		if (current()) {
+			publish(null)
+			ready()
+		}
+		return
+	}
+	if (!current()) return
+	publish(next)
+	ready()
+	if (next && current())
+		void Promise.resolve()
+			.then(() => {
+				if (current()) return adopt()
+			})
+			.catch(() => undefined)
+}
+
 export function SylphxProvider({
 	children,
 	config,
@@ -67,48 +96,64 @@ export function SylphxProvider({
 	const [user, setUser] = useState<IdentityUser | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
 	const [isLoaded, setIsLoaded] = useState(false)
+	const accountGeneration = useRef(0)
+	const adoptionAbort = useRef<AbortController | null>(null)
 
 	useEffect(() => {
 		let cancelled = false
+		const generation = ++accountGeneration.current
+		const current = () => !cancelled && accountGeneration.current === generation
+		const adoption = new AbortController()
+		adoptionAbort.current = adoption
+		let deadline: ReturnType<typeof setTimeout> | undefined
 		setIsLoading(true)
-		fetch('/api/identity/session', { credentials: 'same-origin' })
-			.then(async (response) => {
+		void loadIdentitySession(
+			async () => {
+				const response = await fetch('/api/identity/session', { credentials: 'same-origin' })
+				if (!response.ok) throw new Error('session unavailable')
 				const body = await readJson(response)
-				const next = (body.user as IdentityUser | null) ?? null
-				if (!cancelled) setUser(next)
-				// Reuse GetStreakInfo's existing guest adoption. This runs after
-				// every sign-in method, including OAuth, without a second claim API.
-				if (next) {
-					// Restore this browser's persisted subscription after every
-					// authentication method, including a shared-device account switch.
-					if ('serviceWorker' in navigator && 'PushManager' in window) {
-						pushRegistration()
-							.then(async (registration) => {
-								const sub = await registration.pushManager.getSubscription()
-								if (sub && !cancelled) await persistSubscription(sub)
-							})
-							.catch(() => undefined)
-					}
-					await createClient(GamificationService, getConnectTransport())
-						.getStreakInfo(create(GetStreakInfoRequestSchema, {}))
+				return (body.user as IdentityUser | null) ?? null
+			},
+			current,
+			setUser,
+			() => {
+				setIsLoading(false)
+				setIsLoaded(true)
+			},
+			async () => {
+				// Subscription restore cannot hold auth readiness either.
+				if ('serviceWorker' in navigator && 'PushManager' in window) {
+					void pushRegistration()
+						.then(async (registration) => {
+							const sub = await registration.pushManager.getSubscription()
+							if (sub && current()) await persistSubscription(sub)
+						})
 						.catch(() => undefined)
 				}
-			})
-			.catch(() => {
-				if (!cancelled) setUser(null)
-			})
-			.finally(() => {
-				if (!cancelled) {
-					setIsLoading(false)
-					setIsLoaded(true)
+				deadline = setTimeout(() => adoption.abort(), 5000)
+				try {
+					await createClient(GamificationService, getConnectTransport()).getStreakInfo(
+						create(GetStreakInfoRequestSchema, {}),
+						{ signal: adoption.signal },
+					)
+				} finally {
+					clearTimeout(deadline)
 				}
-			})
+			},
+		)
 		return () => {
 			cancelled = true
+			adoption.abort()
+			clearTimeout(deadline)
 		}
 	}, [])
 
 	const signOut = useCallback(async () => {
+		++accountGeneration.current
+		adoptionAbort.current?.abort()
+		setUser(null)
+		setIsLoading(false)
+		setIsLoaded(true)
 		// Revoke the browser endpoint too: account reminders must not be left
 		// on a shared device after sign-out. Server removal is best-effort;
 		// browser revocation prevents delivery even if that request fails.
@@ -120,7 +165,10 @@ export function SylphxProvider({
 				await sub.unsubscribe().catch(() => undefined)
 			}
 		}
-		await fetch('/api/identity/logout', { method: 'POST', credentials: 'same-origin' })
+		await fetch('/api/identity/logout', {
+			method: 'POST',
+			credentials: 'same-origin',
+		})
 		setUser(null)
 	}, [])
 
@@ -360,7 +408,8 @@ export function useForgotPasswordForm(_opts?: unknown) {
 }
 
 export function useResetPasswordForm(opts?: {
-	token?: string
+	challengeId?: string
+	secret?: string
 	minPasswordLength?: number
 	afterResetUrl?: string
 }) {
@@ -372,6 +421,7 @@ export function useResetPasswordForm(opts?: {
 	const [success, setSuccess] = useState(false)
 	const minLength = opts?.minPasswordLength ?? 8
 	const passwordsMatch = password === confirmPassword
+	const hasRecoveryProof = !!opts?.challengeId?.trim() && !!opts?.secret?.trim()
 	return {
 		form: { password, confirmPassword, email: '' },
 		setPassword,
@@ -379,7 +429,7 @@ export function useResetPasswordForm(opts?: {
 		showPassword,
 		toggleShowPassword: () => setShowPassword((value) => !value),
 		passwordsMatch,
-		isValid: passwordsMatch && password.length >= minLength,
+		isValid: hasRecoveryProof && passwordsMatch && password.length >= minLength,
 		isLoading,
 		error,
 		success,
@@ -387,18 +437,22 @@ export function useResetPasswordForm(opts?: {
 			event?.preventDefault?.()
 			setIsLoading(true)
 			setError(null)
+			setSuccess(false)
 			try {
+				if (!hasRecoveryProof) throw new Error('reset failed')
 				const response = await fetch('/api/identity/recovery/complete', {
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
 					credentials: 'same-origin',
 					body: JSON.stringify({
-						token: opts?.token,
-						secret: opts?.token,
+						challengeId: opts?.challengeId,
+						secret: opts?.secret,
 						password,
 					}),
 				})
 				if (!response.ok) throw new Error('reset failed')
+				const result = (await response.json()) as { accepted?: boolean }
+				if (result.accepted !== true) throw new Error('reset failed')
 				setSuccess(true)
 			} catch (err) {
 				setError(err instanceof Error ? err.message : 'reset failed')
@@ -529,7 +583,9 @@ type Achievement = {
  */
 export function useSafeAchievements() {
 	const [achievements, setAchievements] = useState<Achievement[]>([])
-	const [recentUnlock, setRecentUnlock] = useState<{ achievement: { id: string } } | null>(null)
+	const [recentUnlock, setRecentUnlock] = useState<{
+		achievement: { id: string }
+	} | null>(null)
 
 	const seen = useRef(new Set<string>())
 

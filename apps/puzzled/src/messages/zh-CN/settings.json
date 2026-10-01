@@ -427,9 +427,10 @@
 		"deleting": "正在删除…",
 		"deleteFailed": "数据未被删除。请重试，或联系支持。",
 		"deleteConfirmTitle": "删除你所有 Puzzled 数据？",
-		"deleteConfirmDescription": "你的记录、统计、连续记录和设置会立即清除，无法恢复。你将被退出登录。",
+		"deleteConfirmDescription": "我们会建立可持续重试的清除请求。完成可能需要时间；确认完成前，我们不会声称数据已删除。",
 		"deleteConfirmCta": "全部删除",
-		"deleteCancel": "保留我的数据"
+		"deleteCancel": "保留我的数据",
+		"deletePending": "删除请求已接收，但清除尚未完成。请求编号：{requestId}。你可重试以查看同一请求。"
 	},
 	"connectedAccounts": {
 		"title": "已关联的账户",

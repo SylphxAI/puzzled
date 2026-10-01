@@ -427,9 +427,10 @@
 		"deleting": "Deleting…",
 		"deleteFailed": "Your data was not deleted. Try again, or contact support.",
 		"deleteConfirmTitle": "Delete all your Puzzled data?",
-		"deleteConfirmDescription": "Your history, stats, streaks and settings are erased now and cannot be recovered. You will be signed out.",
+		"deleteConfirmDescription": "We will start a durable erasure request. Completion may take time; we will not claim your data is deleted until it is confirmed.",
 		"deleteConfirmCta": "Delete everything",
-		"deleteCancel": "Keep my data"
+		"deleteCancel": "Keep my data",
+		"deletePending": "Deletion request accepted; erasure is not yet complete. Request reference: {requestId}. You can retry to check the same request."
 	},
 	"connectedAccounts": {
 		"title": "Connected Accounts",

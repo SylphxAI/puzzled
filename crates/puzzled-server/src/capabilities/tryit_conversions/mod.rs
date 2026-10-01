@@ -169,7 +169,11 @@ pub async fn enqueue_purchase(pool: &PgPool, user_id: &str) -> Result<bool, Stri
 
 type Pending = (Uuid, String, String, NaiveDateTime, i32);
 
-async fn record_outcome(pool: &PgPool, row: &Pending, outcome: &Outcome) -> Result<(), String> {
+async fn record_outcome(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    row: &Pending,
+    outcome: &Outcome,
+) -> Result<(), String> {
     let (user, event, _, _, attempts) = row;
     let (reported, gave_up, error) = match outcome {
         Outcome::Reported => (true, false, None),
@@ -190,23 +194,77 @@ async fn record_outcome(pool: &PgPool, row: &Pending, outcome: &Outcome) -> Resu
     .bind(error)
     .bind(reported)
     .bind(gave_up)
-    .execute(pool)
+    .execute(&mut **tx)
     .await
     .map_err(|e| format!("tryit conversion outcome failed: {e}"))?;
     Ok(())
 }
 
-async fn send_row(pool: &PgPool, reporter: &TryitReporter, row: &Pending) -> Outcome {
+/// Admit the player before locking its row. One connection and one transaction
+/// cover the bounded external send and its outcome, so erasure cannot commit
+/// between admission and delivery. Busy/suppressed players skip independently.
+async fn send_row(
+    pool: &PgPool,
+    reporter: &TryitReporter,
+    candidate: &Pending,
+) -> Result<Option<Outcome>, String> {
+    let mut tx = pool
+        .begin_with("BEGIN ISOLATION LEVEL READ COMMITTED")
+        .await
+        .map_err(|_| "tryit admission unavailable".to_string())?;
+    let admitted: bool = sqlx::query_scalar("SELECT puzzled_erasure_try_admit($1)")
+        .bind(candidate.0)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(|_| "tryit admission failed".to_string())?;
+    if !admitted {
+        return Ok(None);
+    }
+    let row: Option<Pending> = sqlx::query_as(
+        r#"SELECT user_id,event,ref,occurred_at,attempts FROM tryit_conversions
+        WHERE user_id=$1 AND event=$2 AND reported_at IS NULL AND gave_up_at IS NULL
+        FOR UPDATE SKIP LOCKED"#,
+    )
+    .bind(candidate.0)
+    .bind(&candidate.1)
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(|_| "tryit row claim failed".to_string())?;
+    let Some(row) = row else { return Ok(None) };
+    // Expiry is per admitted row, not an unfenced bulk UPDATE that could
+    // poison unrelated players when a suppressed row occurs in the page.
+    let expired: bool = sqlx::query_scalar(
+        "SELECT $1::timestamp < (now() AT TIME ZONE 'utc') - make_interval(days => $2)",
+    )
+    .bind(row.3)
+    .bind(WINDOW_DAYS)
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(|_| "tryit expiry read failed".to_string())?;
+    if expired {
+        sqlx::query("UPDATE tryit_conversions SET gave_up_at=(now() AT TIME ZONE 'utc'),last_error=COALESCE(last_error,'outside window') WHERE user_id=$1 AND event=$2")
+            .bind(row.0).bind(&row.1).execute(&mut *tx).await.map_err(|_| "tryit expiry write failed".to_string())?;
+        tx.commit()
+            .await
+            .map_err(|_| "tryit expiry commit failed".to_string())?;
+        return Ok(None);
+    }
     let event = if row.1 == "purchase" {
         Event::Purchase
     } else {
         Event::Signup
     };
-    let outcome = reporter.send(&row.2, event, row.3.and_utc()).await;
-    if let Err(error) = record_outcome(pool, row, &outcome).await {
-        tracing::warn!(%error, "tryit conversion outcome not stored");
-    }
-    outcome
+    let outcome = tokio::time::timeout(
+        Duration::from_secs(5),
+        reporter.send(&row.2, event, row.3.and_utc()),
+    )
+    .await
+    .unwrap_or_else(|_| Outcome::Retry("timeout".into()));
+    record_outcome(&mut tx, &row, &outcome).await?;
+    tx.commit()
+        .await
+        .map_err(|_| "tryit outcome commit failed".to_string())?;
+    Ok(Some(outcome))
 }
 
 /// Send the account's unreported conversions once, inline. A failure is kept
@@ -226,7 +284,9 @@ pub async fn report_now(pool: &PgPool, reporter: Option<&TryitReporter>, user_id
     match rows {
         Ok(rows) => {
             for row in &rows {
-                send_row(pool, reporter, row).await;
+                if send_row(pool, reporter, row).await.is_err() {
+                    tracing::warn!("tryit conversion send/outcome unavailable");
+                }
             }
         }
         Err(error) => tracing::warn!(%error, "tryit conversion read failed"),
@@ -236,16 +296,6 @@ pub async fn report_now(pool: &PgPool, reporter: Option<&TryitReporter>, user_id
 /// One sweep: retry unreported rows not tried in the last five minutes;
 /// rows past Tryit's 30-day window are given up. Returns rows reported.
 pub async fn sweep(pool: &PgPool, reporter: &TryitReporter) -> Result<u32, String> {
-    sqlx::query(
-        r#"UPDATE "tryit_conversions" SET "gave_up_at" = (now() AT TIME ZONE 'utc'),
-             "last_error" = COALESCE("last_error", 'outside window')
-           WHERE "reported_at" IS NULL AND "gave_up_at" IS NULL
-             AND "occurred_at" < (now() AT TIME ZONE 'utc') - make_interval(days => $1)"#,
-    )
-    .bind(WINDOW_DAYS)
-    .execute(pool)
-    .await
-    .map_err(|e| format!("tryit conversion expiry failed: {e}"))?;
     let rows: Vec<Pending> = sqlx::query_as(
         r#"SELECT "user_id", "event", "ref", "occurred_at", "attempts"
            FROM "tryit_conversions"
@@ -260,7 +310,7 @@ pub async fn sweep(pool: &PgPool, reporter: &TryitReporter) -> Result<u32, Strin
     .map_err(|e| format!("tryit conversion sweep read failed: {e}"))?;
     let mut reported = 0;
     for row in &rows {
-        if send_row(pool, reporter, row).await == Outcome::Reported {
+        if send_row(pool, reporter, row).await? == Some(Outcome::Reported) {
             reported += 1;
         }
     }

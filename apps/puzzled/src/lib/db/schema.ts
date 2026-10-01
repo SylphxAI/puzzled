@@ -793,15 +793,82 @@ export const checkoutConsents = pgTable(
 	{
 		/** UUIDv7 minted by the api */
 		id: uuid('id').primaryKey(),
-		/** Platform user ID (no FK) */
-		userId: uuid('user_id').notNull(),
+		/** Unlinked on erasure; retain the legal statement without identity. */
+		userId: uuid('user_id'),
 		planId: text('plan_id').notNull(),
 		priceKey: text('price_key').notNull(),
 		locale: text('locale').notNull(),
 		statement: text('statement').notNull(),
 		consentedAt: timestamp('consented_at').defaultNow().notNull(),
+		/** Six calendar years in UTC from local erasure; never renewed on replay. */
+		retentionExpiresAt: timestamp('retention_expires_at'),
 	},
-	(t) => [index('checkout_consents_user_id_idx').on(t.userId)],
+	(t) => [
+		index('checkout_consents_user_id_idx').on(t.userId),
+		index('checkout_consents_retention_idx')
+			.on(t.retentionExpiresAt, t.id)
+			.where(sql`${t.userId} IS NULL`),
+		check(
+			'checkout_consents_retention_check',
+			sql`${t.userId} IS NOT NULL OR ${t.retentionExpiresAt} IS NOT NULL`,
+		),
+	],
+)
+
+/** Durable owned erasure. Completed rows retain only pseudonymous suppression and counts. */
+export const erasureRequests = pgTable(
+	'erasure_requests',
+	{
+		requestId: uuid('request_id').primaryKey(),
+		playerId: uuid('player_id'),
+		suppressionHash: text('suppression_hash').notNull().unique(),
+		organizationId: text('organization_id'),
+		subjects: jsonb('subjects'),
+		state: text('state').default('pending').notNull(),
+		leaseToken: uuid('lease_token'),
+		leaseUntil: timestamp('lease_until'),
+		retryDue: timestamp('retry_due').defaultNow().notNull(),
+		attempts: integer('attempts').default(0).notNull(),
+		lastReason: text('last_reason'),
+		localErasedAt: timestamp('local_erased_at'),
+		completedAt: timestamp('completed_at'),
+		evidence: jsonb('evidence').default({}).notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+		updatedAt: timestamp('updated_at').defaultNow().notNull(),
+	},
+	(t) => [
+		index('erasure_requests_retry_idx').on(t.retryDue).where(sql`${t.state} <> 'completed'`),
+		check(
+			'erasure_requests_state_check',
+			sql`${t.state} IN ('pending', 'auth_pending', 'local_erased', 'completed')`,
+		),
+		check('erasure_requests_hash_check', sql`${t.suppressionHash} ~ '^[0-9a-f]{64}$'`),
+		check('erasure_requests_attempts_check', sql`${t.attempts} >= 0`),
+		check(
+			'erasure_requests_evidence_check',
+			sql`jsonb_typeof(${t.evidence}) = 'object' AND NOT jsonb_path_exists(${t.evidence}, '$.* ? (@.type() != "number" || @ < 0 || @ != @.floor())')`,
+		),
+		check(
+			'erasure_requests_reason_check',
+			sql`${t.lastReason} IS NULL OR ${t.lastReason} IN ('database_unavailable', 'money_unavailable', 'money_preflight_unavailable', 'checkout_unsettled', 'cancel_subscription_first', 'erasure_unconfigured', 'subject_lookup_failed', 'auth_delete_failed', 'auth_receipt_unconfirmed', 'auth_request_pending', 'auth_request_failed', 'auth_request_missing', 'product_delete_failed', 'lease_lost', 'instance_changed')`,
+		),
+		check(
+			'erasure_requests_lease_check',
+			sql`(${t.leaseUntil} IS NULL) = (${t.leaseToken} IS NULL)`,
+		),
+		check(
+			'erasure_requests_active_check',
+			sql`${t.state} = 'completed' OR (${t.playerId} IS NOT NULL AND ${t.organizationId} IS NOT NULL AND length(btrim(${t.organizationId})) > 0 AND ${t.subjects} IS NOT NULL AND jsonb_typeof(${t.subjects}) = 'array' AND jsonb_array_length(${t.subjects}) > 0)`,
+		),
+		check(
+			'erasure_requests_local_check',
+			sql`${t.state} NOT IN ('local_erased', 'completed') OR ${t.localErasedAt} IS NOT NULL`,
+		),
+		check(
+			'erasure_requests_completed_check',
+			sql`${t.state} <> 'completed' OR (${t.completedAt} IS NOT NULL AND ${t.playerId} IS NULL AND ${t.organizationId} IS NULL AND ${t.subjects} IS NULL AND ${t.leaseUntil} IS NULL AND ${t.leaseToken} IS NULL AND ${t.lastReason} IS NULL)`,
+		),
+	],
 )
 
 /** A family plan owner and the invite code members join with. */

@@ -17,6 +17,16 @@ use uuid::Uuid;
 /// erased account.
 pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
+        "announcements",
+        "created_by",
+        r#"UPDATE "announcements" SET "created_by" = NULL WHERE "created_by" = $1"#,
+    ),
+    (
+        "app_settings",
+        "updated_by",
+        r#"UPDATE "app_settings" SET "updated_by" = NULL WHERE "updated_by" = $1"#,
+    ),
+    (
         "tryit_conversions",
         "user_id",
         r#"DELETE FROM "tryit_conversions" WHERE "user_id" = $1"#,
@@ -34,7 +44,7 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
         "checkout_consents",
         "user_id",
-        r#"DELETE FROM "checkout_consents" WHERE "user_id" = $1"#,
+        r#"UPDATE "checkout_consents" SET "user_id" = NULL, "retention_expires_at" = COALESCE("retention_expires_at", (transaction_timestamp() AT TIME ZONE 'UTC') + interval '6 years') WHERE "user_id" = $1"#,
     ),
     (
         "family_members",
@@ -125,19 +135,40 @@ pub async fn delete_account_data(pool: &PgPool, user_id: &str) -> Result<u64, St
         .begin()
         .await
         .map_err(|e| format!("account deletion begin failed: {e}"))?;
-    let mut deleted = 0u64;
-    for (table, column, statement) in USER_KEYED_COLUMNS {
-        let result = sqlx::query(*statement)
-            .bind(uid)
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| format!("account deletion failed on {table}.{column}: {e}"))?;
-        deleted += result.rows_affected();
-    }
+    let evidence = erase_in_transaction(&mut tx, uid).await?;
     tx.commit()
         .await
-        .map_err(|e| format!("account deletion commit failed: {e}"))?;
-    Ok(deleted)
+        .map_err(|_| "account deletion commit failed".to_string())?;
+    Ok(evidence.values().sum())
+}
+
+/// Inventory mutation and caller's completion evidence share one transaction.
+pub async fn erase_in_transaction(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    player: Uuid,
+) -> Result<std::collections::BTreeMap<String, u64>, String> {
+    sqlx::query("SELECT puzzled_erasure_lock($1)")
+        .bind(player)
+        .execute(&mut **tx)
+        .await
+        .map_err(|_| "account deletion lock failed".to_string())?;
+    let mut evidence = std::collections::BTreeMap::new();
+    for (table, column, statement) in USER_KEYED_COLUMNS {
+        let result = sqlx::query(*statement)
+            .bind(player)
+            .execute(&mut **tx)
+            .await
+            .map_err(|_| "account deletion failed".to_string())?;
+        let action = if statement.starts_with("UPDATE") {
+            "unlinked"
+        } else {
+            "deleted"
+        };
+        *evidence
+            .entry(format!("{action}:{table}.{column}"))
+            .or_insert(0) += result.rows_affected();
+    }
+    Ok(evidence)
 }
 
 #[cfg(test)]
@@ -162,8 +193,13 @@ mod tests {
             sql.push('\n');
         }
 
-        let is_player_column =
-            |name: &str| name == "user_id" || name.ends_with("_user_id") || name == "actor_id";
+        let is_player_column = |name: &str| {
+            name == "user_id"
+                || name.ends_with("_user_id")
+                || name == "actor_id"
+                || name == "created_by"
+                || name == "updated_by"
+        };
         let mut found = BTreeSet::new();
         let mut table: Option<String> = None;
         for line in sql.lines() {
@@ -223,8 +259,22 @@ mod tests {
     #[test]
     fn each_statement_erases_its_own_column() {
         for (table, column, statement) in USER_KEYED_COLUMNS {
-            let delete = format!(r#"DELETE FROM "{table}" WHERE "{column}" = $1"#);
-            assert_eq!(*statement, delete);
+            if *table == "checkout_consents" {
+                assert!(statement.contains("COALESCE(\"retention_expires_at\""));
+                assert!(statement.contains("AT TIME ZONE 'UTC'"));
+                assert!(statement.contains("interval '6 years'"));
+                assert!(statement.ends_with("WHERE \"user_id\" = $1"));
+                continue;
+            }
+            let expected = if matches!(
+                *table,
+                "checkout_consents" | "announcements" | "app_settings"
+            ) {
+                format!(r#"UPDATE "{table}" SET "{column}" = NULL WHERE "{column}" = $1"#)
+            } else {
+                format!(r#"DELETE FROM "{table}" WHERE "{column}" = $1"#)
+            };
+            assert_eq!(*statement, expected);
         }
     }
 
@@ -264,6 +314,30 @@ mod tests {
             stale.is_empty(),
             "USER_KEYED_COLUMNS names columns no migration declares: {stale:?}"
         );
+    }
+
+    #[test]
+    fn database_fence_covers_every_erasure_inventory_column() {
+        let migration = include_str!(
+            "../../../../../../apps/puzzled/atlas/migrations/20261002000000_erasure_requests.sql"
+        );
+        for (table, column, _) in USER_KEYED_COLUMNS {
+            let trigger = migration
+                .lines()
+                .find(|line| {
+                    line.starts_with("CREATE TRIGGER erasure_write_fence ")
+                        && line.contains(&format!("ON \"{table}\""))
+                })
+                .unwrap_or_else(|| panic!("unfenced player table: {table}"));
+            assert!(
+                trigger.contains(&format!("'{column}'")),
+                "unfenced player column: {table}.{column}"
+            );
+        }
+        assert!(migration.contains("transaction_isolation"));
+        assert!(migration.contains("read committed"));
+        assert!(migration.contains("SELECT DISTINCT hashtextextended"));
+        assert!(migration.contains("puzzled_erasure_try_admit"));
     }
 
     /// No runtime code path (server, core, or web app) names a retiring

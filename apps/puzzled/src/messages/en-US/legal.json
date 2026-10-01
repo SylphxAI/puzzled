@@ -2,7 +2,7 @@
 	"privacy": {
 		"title": "Privacy Policy",
 		"lastUpdated": "Last Updated",
-		"revision": "2026-09-29",
+		"revision": "2026-10-01",
 		"eyebrow": "Legal",
 		"lead": "This policy explains what data Puzzled collects, why it is collected, and how to contact us about it.",
 		"toc": {
@@ -65,7 +65,7 @@
 			},
 			"retention": {
 				"title": "How long we keep data",
-				"content": "We keep your account and game data while your account is open. When you delete your account, we erase your game history, stats, streaks, profile and settings. We keep other data only for as long as we need it for the purposes above, including to meet legal obligations, prevent fraud and abuse, and establish or defend legal claims. Backups and logs are overwritten in the normal course of operation."
+				"content": "We keep your account and game data while your account is open. When you delete your account, we erase your game history, stats, streaks, profile and settings. We keep other data only for as long as we need it for the purposes above, including to meet legal obligations, prevent fraud and abuse, and establish or defend legal claims. Backups and logs are overwritten in the normal course of operation. After local account erasure or closure, we keep only unlinked checkout consent evidence (the statement, plan, price key, language, consent time, record ID and expiry) for six calendar years, calculated in UTC. This is our policy for establishing or defending claims, not a universal legal requirement. It contains no player ID or payment reference. We remove expired evidence in the first successful scheduled retention run after expiry, not necessarily at the exact expiry second."
 			},
 			"cookies": {
 				"title": "Cookies",

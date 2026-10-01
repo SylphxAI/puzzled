@@ -21,7 +21,7 @@ Cite the ID column.
 | PUZ-OBS | Errors to Sylphx Observability through the Sylphx SDK, no third-party error service: api panics and every 5xx (service, release, route template, message, stack) are scrubbed of emails, tokens, JWTs, keys and card-like numbers, deduplicated per fingerprint for 10 seconds and queued (64) for one worker that drops when full. Needs the environment key to carry `observability:ingest` (cloud#9450). See [observability.md](observability.md) | supported | `crates/puzzled-server/src/observability.rs` | none |
 | PUZ-AUTH-CONTINUE | Sign-in on puzzled.gg with a session cookie named `puzzled_session` (the old `sylphx_identity_session` is still read until 2026-10-31 and migrated on the next request, so nobody is signed out); email and password plus Google through same-origin `/api/identity/*` routes; no `sylphx` name in the browser policy, cookie or API responses. One Continue flow with an email code is not built | partial | `apps/puzzled/src/lib/identity/session-cookie.ts`, `apps/puzzled/src/app/[locale]/(auth)` | Sylphx Auth |
 | PUZ-AUTH-PASSKEY | Passkey create, autofill and button | blocked-on-platform | none | Sylphx Auth passkeys, SDK `<SignIn />` |
-| PUZ-AUTH-RECOVERY | Password reset by email; recovery by code that ends other sessions and notifies every channel is not built | partial | `apps/puzzled/src/app/api/identity/recovery` | Sylphx Auth recovery by code |
+| PUZ-AUTH-RECOVERY | Password reset by email carries Auth's distinct challenge id and secret through the existing completion route; recovery by code that ends other sessions and notifies every channel is not built | partial | `apps/puzzled/src/app/api/identity/recovery` | Sylphx Auth recovery by code |
 | PUZ-AUTH-SESSIONS | Sign-out ends the server session; the sessions list shows a count only, with no end-one or end-all | partial | `apps/puzzled/src/app/[locale]/(main)/settings/security` | Sylphx Auth sessions API |
 | PUZ-AUTH-DELETE | In-app account deletion with confirmation; no public web deletion link or recent-sign-in step-up | partial | `apps/puzzled/src/app/[locale]/(main)/settings/account` | Sylphx Auth step-up |
 | PUZ-AUTH-GUEST | A guest with at least two streak days is offered a free account after a daily finish. Sign-in (including OAuth) invokes the existing idempotent guest-session adoption, carrying accepted results, streak days, shares and freezes onto the account. The guest itself remains browser-local, not an Auth account | partial | `apps/puzzled/src/features/daily/components/save-streak-prompt.tsx`, `crates/puzzled-server/src/capabilities/puzzle_play/adapters/game_sessions_db.rs` | Sylphx Auth; browser cookie retained until claim |
@@ -34,6 +34,51 @@ Cite the ID column.
 | PUZ-PUSH-DAILY | Opt-in daily browser reminder at the player's saved local time and zone. Subscriptions are player-scoped in the existing table; unsubscribe/account erasure remove them, expired endpoints are pruned. The existing Compute reminder job sends encrypted RFC 8291/8292 Web Push directly with VAPID, in all five locales | partial | `crates/puzzled-server/src/capabilities/preferences/adapters/web_push.rs`, `apps/puzzled/src/features/push` | api `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`; browser delivery verification pending |
 
 ## Boundaries
+
+- **Account controls and recovery (source-level regressions):** resolving the
+  Auth session makes account controls ready independently of best-effort guest
+  streak adoption. Adoption has a five-second cancellation deadline, and stale
+  session completions are fenced after sign-out or unmount. Reset links must
+  contain Auth's separate `challenge_id` and `token`; the token is the proof,
+  never a replacement challenge identifier. Deletion failures return a fixed
+  stage and random `request_ref`, with only stage/reference in the deletion
+  logs. These changes do not establish the cause of the observed production
+  503 or prove completed account erasure; own-account production recovery and
+  cleanup still require readback.
+
+- **Migration bootstrap:** the standard Atlas deploy command executes the
+  baseline DDL on an empty database, including a new PR preview, and continues
+  from the revision ledger on an existing Atlas-managed database. It never
+  uses `--baseline` to pretend the schema already exists or `--allow-dirty` to
+  adopt unmanaged data. Baseline adoption of a populated, unmanaged database
+  is an explicit operator procedure, not automatic deployment. This prevents
+  later `ALTER TABLE` migrations from running before their tables exist.
+  A database already marked baselined without its DDL is not repaired by this
+  command change: normal apply still refuses the missing-table state. Any
+  retained affected preview needs its supported database/preview lifecycle
+  owner, not revision-ledger hand edits or an ad hoc destructive migration.
+
+- **Durable erasure and external conversion admission (draft source):** an
+  accepted deletion returns its stable operation reference and pending state,
+  not a claim that local data or Auth sign-in is already erased. The existing
+  signed retry tick runs independently of conversion-reporter availability.
+  Each Tryit outbox send uses one explicit READ COMMITTED transaction: player
+  admission first, then an unreported row lock with `SKIP LOCKED`, a bounded
+  external send, and outcome commit before releasing admission. Busy or
+  suppressed players are skipped without poisoning unrelated conversions;
+  expiry is handled per admitted row, not by an unfenced bulk update. An Auth
+  subject-map write denied by the erasure fence returns Connect
+  `failed_precondition` / `account_erasure_pending`, never a guest fallback.
+  Cached positive identities still cannot bypass the ordinary-write triggers.
+  Retry bookkeeping compares the captured, unexpired lease token; a stale
+  worker cannot release a replacement lease or count a refused update as
+  progress. An expired claim can be recovered, but a changed Auth instance
+  remains pending without contacting the foreign authority.
+  Real Money erasure preparation remains unavailable: no Auth erasure effect
+  is activated until that owned contract is supplied. Credential/adoption
+  migration integration waits for the separate incident prerequisite, then
+  whole-head architecture review; these are source guarantees, not production
+  completion claims.
 
 - **Auth post-deploy check** ([owner standard](https://github.com/SylphxAI/owner/blob/main/standards/auth.md#how-a-product-proves-it)):
   after each deploy, with a test account on `https://puzzled.gg`, sign in and

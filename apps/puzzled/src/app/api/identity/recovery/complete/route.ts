@@ -5,7 +5,6 @@ export async function POST(request: Request) {
 	const body = (await request.json().catch(() => null)) as {
 		challengeId?: string
 		challenge_id?: string
-		token?: string
 		secret?: string
 		password?: string
 		newPassword?: string
@@ -13,9 +12,11 @@ export async function POST(request: Request) {
 		stepUpGrantJws?: string
 		step_up_grant_jws?: string
 	} | null
-	const challengeId = (body?.challengeId ?? body?.challenge_id ?? body?.token ?? '').trim()
-	const secret = (body?.secret ?? '').trim()
-	const newPassword = (body?.newPassword ?? body?.new_password ?? body?.password ?? '').trim()
+	const challenge = body?.challengeId ?? body?.challenge_id
+	const challengeId = typeof challenge === 'string' ? challenge.trim() : ''
+	const secret = typeof body?.secret === 'string' ? body.secret.trim() : ''
+	const password = body?.newPassword ?? body?.new_password ?? body?.password
+	const newPassword = typeof password === 'string' ? password.trim() : ''
 	if (!challengeId || !secret || !newPassword) {
 		return identityFail(400, 'invalid_recovery')
 	}
