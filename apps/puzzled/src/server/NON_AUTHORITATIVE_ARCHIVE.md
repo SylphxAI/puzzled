@@ -4,7 +4,7 @@ Work: `wi_01KYFN6993PMG8WD00Q51AE231`
 
 ## Sole-Rust public API
 `sylphx.toml` service `api` (`crates/puzzled-server`) path_prefixes:
-`/healthz`, `/readyz`, `/api/leaderboard`, `/api/v1` (complete public API namespace).
+`/healthz`, `/readyz` and the Connect services under `/puzzled.v1.*` (the complete public API namespace; leaderboards are served by `/puzzled.v1.StatsService`).
 
 ## Retired source
 The stale TypeScript puzzle-generation and display-cache implementations that
