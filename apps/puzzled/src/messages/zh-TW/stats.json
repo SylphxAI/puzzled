@@ -1,6 +1,6 @@
 {
 	"unavailableTitle": "統計資料無法載入",
-	"dailyStatusUnavailableTitle": "今日進度無法載入",
+	"dailyStatusUnavailableTitle": "今天的進度無法載入",
 	"dailyStatusUnavailableDescription": "此頁面無法確認今天哪些遊戲已完成，重試後再判斷遊戲是否仍開放。",
 	"streakLabel": "目前連續 {days} 天",
 	"descriptionMember": "{name}，你好。這裡的資料全部來自你完成的遊戲。",
