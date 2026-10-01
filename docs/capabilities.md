@@ -53,6 +53,10 @@ Cite the ID column.
   adopt unmanaged data. Baseline adoption of a populated, unmanaged database
   is an explicit operator procedure, not automatic deployment. This prevents
   later `ALTER TABLE` migrations from running before their tables exist.
+  A database already marked baselined without its DDL is not repaired by this
+  command change: normal apply still refuses the missing-table state. Any
+  retained affected preview needs its supported database/preview lifecycle
+  owner, not revision-ledger hand edits or an ad hoc destructive migration.
 
 - **Durable erasure and external conversion admission (draft source):** an
   accepted deletion returns its stable operation reference and pending state,
