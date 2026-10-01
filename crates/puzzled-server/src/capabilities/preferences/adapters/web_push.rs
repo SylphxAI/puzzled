@@ -58,11 +58,12 @@ pub async fn save(
 }
 
 pub async fn remove(pool: &PgPool, player: Uuid, endpoint: &str) -> Result<(), sqlx::Error> {
-    let removed = sqlx::query("DELETE FROM push_subscriptions WHERE user_id = $1 AND endpoint = $2")
-        .bind(player)
-        .bind(endpoint)
-        .execute(pool)
-        .await?;
+    let removed =
+        sqlx::query("DELETE FROM push_subscriptions WHERE user_id = $1 AND endpoint = $2")
+            .bind(player)
+            .bind(endpoint)
+            .execute(pool)
+            .await?;
     if removed.rows_affected() == 0 {
         return Err(sqlx::Error::RowNotFound);
     }

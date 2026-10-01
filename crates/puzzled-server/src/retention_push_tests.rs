@@ -198,11 +198,7 @@ async fn connect_push_foreign_endpoint_returns_404_without_any_writes() {
     use serde_json::{json, Value};
     use tower::ServiceExt;
 
-    async fn save_request(
-        app: &axum::Router,
-        token: &str,
-        body: Value,
-    ) -> (StatusCode, Value) {
+    async fn save_request(app: &axum::Router, token: &str, body: Value) -> (StatusCode, Value) {
         let response = app
             .clone()
             .oneshot(
@@ -240,7 +236,9 @@ async fn connect_push_foreign_endpoint_returns_404_without_any_writes() {
     });
     for _ in 0..2 {
         assert_eq!(
-            save_request(&app, &first_token, registration.clone()).await.0,
+            save_request(&app, &first_token, registration.clone())
+                .await
+                .0,
             StatusCode::OK
         );
     }
@@ -249,7 +247,10 @@ async fn connect_push_foreign_endpoint_returns_404_without_any_writes() {
         "endpoint": endpoint, "p256dh": URL_SAFE_NO_PAD.encode(key),
         "auth": URL_SAFE_NO_PAD.encode([2_u8; 16]), "locale": "zh-TW"
     });
-    for body in [forged.clone(), json!({"endpoint": endpoint, "remove": true})] {
+    for body in [
+        forged.clone(),
+        json!({"endpoint": endpoint, "remove": true}),
+    ] {
         let (status, body) = save_request(&app, &second_token, body).await;
         assert_eq!(status, StatusCode::NOT_FOUND);
         assert_eq!(body["code"], "not_found");
@@ -270,9 +271,18 @@ async fn connect_push_foreign_endpoint_returns_404_without_any_writes() {
         assert_eq!(prefs, [(first, "zh-HK".into())]);
     }
     // The current owner can still rotate its keys and remove its subscription.
-    assert_eq!(save_request(&app, &first_token, forged).await.0, StatusCode::OK);
     assert_eq!(
-        save_request(&app, &first_token, json!({"endpoint": endpoint, "remove": true})).await.0,
+        save_request(&app, &first_token, forged).await.0,
+        StatusCode::OK
+    );
+    assert_eq!(
+        save_request(
+            &app,
+            &first_token,
+            json!({"endpoint": endpoint, "remove": true})
+        )
+        .await
+        .0,
         StatusCode::OK
     );
     let remaining: i64 = sqlx::query_scalar("SELECT count(*) FROM push_subscriptions")
@@ -283,6 +293,9 @@ async fn connect_push_foreign_endpoint_returns_404_without_any_writes() {
     // A shared-device account switch registers a genuinely fresh endpoint.
     let mut fresh = registration;
     fresh["endpoint"] = json!("https://fcm.googleapis.com/fcm/send/fresh-subscription");
-    assert_eq!(save_request(&app, &second_token, fresh).await.0, StatusCode::OK);
+    assert_eq!(
+        save_request(&app, &second_token, fresh).await.0,
+        StatusCode::OK
+    );
     pool.close().await;
 }
