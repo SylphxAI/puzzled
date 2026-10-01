@@ -63,7 +63,7 @@ Existing links keep the `userId.base36Milliseconds.first16HexHmacSha256` format,
 30-day expiry and five-minute future clock tolerance. Legacy, malformed,
 forged and expired links are refused. `/api/email/unsubscribe` is only a Connect
 forwarder: JSON POST carries `{token}`, browser GET redirects to the existing
-landing page, and RFC 8058 POST carries `List-Unsubscribe=One-Click` as
+landing page on the public site origin (never the internal `request.url` listener), and RFC 8058 POST carries `List-Unsubscribe=One-Click` as
 `application/x-www-form-urlencoded` or `multipart/form-data` with the signed
 token in the URL. No login
 or redirect is required for the one-click POST. Repeated valid links are safe.

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { createPreferencesServiceClient } from '@/lib/connect/preferences-client'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
 import { correlationIdFrom, logger } from '@/lib/logger'
+import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -62,24 +63,30 @@ export async function POST(request: Request) {
 	}
 }
 
-/** Browser email links retain their success/error landing page. */
+/**
+ * Browser email links retain their success/error landing page. The redirect
+ * target is the public site origin: behind the edge `request.url` carries the
+ * internal listener (0.0.0.0:3000), which is never a valid public Location.
+ */
 export async function GET(request: Request) {
+	const landing = async (query: string) =>
+		NextResponse.redirect(new URL(`/unsubscribe?${query}`, await getRequestSiteOrigin()))
 	const token = new URL(request.url).searchParams.get('token')
 	if (!token) {
-		return NextResponse.redirect(new URL('/unsubscribe?error=missing_token', request.url))
+		return landing('error=missing_token')
 	}
 	try {
 		await unsubscribe(token)
-		return NextResponse.redirect(new URL('/unsubscribe?success=true', request.url))
+		return landing('success=true')
 	} catch (error) {
 		if (invalidToken(error)) {
-			return NextResponse.redirect(new URL('/unsubscribe?error=invalid_token', request.url))
+			return landing('error=invalid_token')
 		}
 		logger.error('unsubscribe.failed', {
 			source: 'link',
 			error,
 			correlationId: correlationIdFrom(request.headers),
 		})
-		return NextResponse.redirect(new URL('/unsubscribe?error=failed', request.url))
+		return landing('error=failed')
 	}
 }
