@@ -77,24 +77,36 @@ export function resolveServerConnectBaseUrl(
 	return normalizeConnectBaseUrl(internal)
 }
 
-let guestSession: Promise<void> | null = null
+export type GuestSessionResult = { issued: boolean }
+let guestSession: Promise<GuestSessionResult> | null = null
 
-export function ensureGuestSession(base = resolveConnectBaseUrl()): Promise<void> {
-    if (typeof window === 'undefined') return Promise.resolve()
-    guestSession ??= fetch(`${base}/v1/guest/session`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: '{}',
-    }).then((response) => {
-        if (!response.ok) throw new Error('guest_session_unavailable')
-    })
-    return guestSession
-}
-
-const guestSessionInterceptor: Interceptor = (next) => async (req) => {
-    await ensureGuestSession()
-    return next(req)
+/** One cookie bootstrap at a time; a refusal is surfaced and can be retried later. */
+export function ensureGuestSession(base = resolveConnectBaseUrl()): Promise<GuestSessionResult> {
+	if (typeof window === 'undefined') return Promise.resolve({ issued: false })
+	if (guestSession) return guestSession
+	const pending = fetch(`${normalizeConnectBaseUrl(base)}/v1/guest/session`, {
+		method: 'POST',
+		credentials: 'include',
+		headers: { 'Content-Type': 'application/json' },
+		body: '{}',
+	}).then(async (response) => {
+		if (!response.ok) throw new Error('guest_session_unavailable')
+		const result: unknown = await response.json()
+		if (
+			!result ||
+			typeof result !== 'object' ||
+			!('issued' in result) ||
+			typeof result.issued !== 'boolean'
+		) {
+			throw new Error('guest_session_invalid_response')
+		}
+		return { issued: result.issued }
+	})
+	guestSession = pending
+	void pending.catch(() => {
+		if (guestSession === pending) guestSession = null
+	})
+	return pending
 }
 
 let cachedBase: string | null = null
@@ -107,15 +119,20 @@ export function getConnectTransport(baseUrl?: string): Transport {
 	cachedTransport = createConnectTransport({
 		baseUrl: base,
 		useBinaryFormat: false, // browserDefaultEncoding: protojson
-		interceptors: [guestSessionInterceptor],
-		// Cookie-auth fetch credentials (cast: connect-web option surface varies by minor).
-		...({ credentials: 'include' } as Record<string, string>),
+		interceptors: [
+			((next) => async (req) => {
+				await ensureGuestSession(base)
+				return next(req)
+			}) satisfies Interceptor,
+		],
+		fetch: ((input: RequestInfo | URL, init?: RequestInit) =>
+			fetch(input, { ...init, credentials: 'include' })) as typeof fetch,
 	})
 	return cachedTransport
 }
 
 export function resetConnectTransportCache(): void {
-    guestSession = null
+	guestSession = null
 	cachedBase = null
 	cachedTransport = null
 }

@@ -47,6 +47,7 @@ import { OPEN_ACCESS, type PlusAccess } from '@/lib/billing/plus'
 import { getLeaderboard } from '@/lib/connect/stats-client'
 import type { GetLeaderboardInput } from '@/lib/connect/stats-domain'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
+import { SESSION_COOKIE_NAMES } from '@/lib/identity/session-cookie'
 import { logger } from '@/lib/logger'
 import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
 
@@ -76,7 +77,16 @@ export type UserStats = {
 
 async function getServerTransport() {
 	const cookieStore = await cookies()
-	const cookie = cookieStore.toString()
+	const cookie = cookieStore
+		.getAll()
+		.filter(
+			(cookie) =>
+				cookie.name === '__Host-puzzled_guest' ||
+				SESSION_COOKIE_NAMES.some((name) => name === cookie.name) ||
+				(cookie.name.startsWith('__sylphx_') && cookie.name.endsWith('_session')),
+		)
+		.map((cookie) => `${cookie.name}=${cookie.value}`)
+		.join('; ')
 	// The api checks the Sylphx Auth session with Auth, which binds it to the
 	// browser's User-Agent.
 	const userAgent = (await headers()).get('user-agent')
@@ -100,8 +110,8 @@ export async function hasServerProgressIdentity(): Promise<boolean> {
 		.getAll()
 		.some(
 			(cookie) =>
-				cookie.name.startsWith('__sylphx_') &&
-				cookie.name.endsWith('_session') &&
+				(SESSION_COOKIE_NAMES.some((name) => name === cookie.name) ||
+					(cookie.name.startsWith('__sylphx_') && cookie.name.endsWith('_session'))) &&
 				Boolean(cookie.value),
 		)
 }
