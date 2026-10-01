@@ -1,11 +1,11 @@
 {
 	"title": "Support & Help",
-	"description": "Email the Puzzled support team about your account, games or data. A person replies, usually within 24-48 hours.",
+	"description": "Email Puzzled about your account, games or data. We reply by email.",
 	"hero": {
 		"eyebrow": "Support",
-		"lead": "Email the support team about your account, progress or a bug. One inbox, read by people — there is no phone line and no live chat.",
-		"factHuman": "Replies from the support team",
-		"factReply": "Usually replies within 24-48 hours",
+		"lead": "Email us about your account, progress or a bug. We reply by email.",
+		"factHuman": "One inbox for everything",
+		"factReply": "We reply by email.",
 		"emailCta": "Email support",
 		"faqCta": "Read the FAQ"
 	},
@@ -17,20 +17,16 @@
 		"screenshot": "A screenshot, if you have one"
 	},
 	"contact": {
-		"title": "Talk to a person",
-		"subtitle": "The support inbox takes playing and account questions. Privacy and legal requests have their own addresses.",
+		"title": "Get in touch",
+		"subtitle": "One address takes playing, account, privacy and legal questions.",
 		"support": {
-			"title": "Playing and account",
-			"body": "Sign-in trouble, a puzzle that misbehaved, or feedback on a puzzle — write to support and the team will pick it up."
+			"title": "Support, privacy and legal",
+			"body": "Sign-in trouble, a puzzle that misbehaved, feedback, or a request to access, export, correct or delete your data — write to us and we will pick it up."
 		},
-		"data": {
-			"title": "Privacy and legal",
-			"body": "For access, export, correction or deletion of your data, write to {privacy}. For questions about the terms, write to {legal}."
-		},
-		"note": "There is no phone line and no live chat — email is the only support channel, and the people who can check your account are there."
+		"note": "Email is the support channel. Write from the address on your account so we can check it."
 	},
 	"email": {
-		"responseTime": "Usually replies within 24-48 hours"
+		"responseTime": "We reply by email."
 	},
 	"faq": {
 		"title": "Questions this page can answer",
@@ -57,7 +53,19 @@
 		},
 		"data": {
 			"question": "How do I get a copy of my data, or delete it?",
-			"answer": "Write to {email} for access, an export, correction or deletion; the privacy inbox handles those requests. The Privacy Policy lists what is collected, which third parties are involved and the rights you can exercise."
+			"answer": "Write to {email} for access, an export, correction or deletion; that one address handles those requests. The Privacy Policy lists what is collected, which third parties are involved and the rights you can exercise."
+		},
+		"cancel": {
+			"question": "How do I cancel Puzzled Plus?",
+			"answer": "You can cancel at any time in Settings > Subscription. Cancelling stops future renewals."
+		},
+		"afterCancel": {
+			"question": "What happens to my access after I cancel?",
+			"answer": "You keep Plus until the end of the period you have paid for and are not charged again. After that you are back on the free daily puzzle, and your account stays."
+		},
+		"refunds": {
+			"question": "Can I get a refund?",
+			"answer": "Payments are non-refundable and we do not refund part-used periods, except where the terms or the law say otherwise. If something we delivered did not work, we put it right, and your statutory rights as a consumer are not affected. When you subscribe you ask for access to start at once and acknowledge that this ends your 14-day right to cancel. For a question about a payment, write to {email}."
 		}
 	},
 	"resources": {

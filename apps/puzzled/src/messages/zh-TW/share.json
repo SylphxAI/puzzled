@@ -6,5 +6,8 @@
 		"timeOver5m": "超過 5 分鐘",
 		"streakDays": "連續 {days} 天",
 		"altLinkTemplate": " 一起玩：{link}"
+	},
+	"landing": {
+		"metaTitle": "分享的謎題成績"
 	}
 }

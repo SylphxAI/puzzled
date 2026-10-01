@@ -85,5 +85,8 @@
 				}
 			]
 		}
+	},
+	"gamePage": {
+		"metaDescription": "{game}是每日{genre}謎題。{rule}每日更新一道新題，當日精選謎題免費，無須帳號。"
 	}
 }

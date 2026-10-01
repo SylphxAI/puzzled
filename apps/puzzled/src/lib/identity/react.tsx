@@ -629,7 +629,7 @@ export function CookieBanner(props: {
 		>
 			<section
 				aria-label={t('title')}
-				className="mx-auto flex max-w-3xl flex-col gap-1.5 rounded-xl border bg-background/95 p-2 text-xs leading-tight shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:rounded-2xl sm:p-4 sm:text-sm sm:leading-snug"
+				className="mx-auto flex max-w-3xl flex-col gap-1 rounded-xl border bg-background/95 px-2 py-1.5 text-xs leading-tight shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:rounded-2xl sm:p-4 sm:text-sm sm:leading-snug"
 			>
 				{step === 'choose' ? (
 					<>
@@ -638,7 +638,7 @@ export function CookieBanner(props: {
 							{props.privacyPolicyUrl ? (
 								<a
 									href={props.privacyPolicyUrl}
-									className="font-medium text-primary underline underline-offset-4"
+									className="-my-4 inline-block py-4 font-medium text-primary underline underline-offset-4"
 								>
 									{t('learnMore')}
 								</a>

@@ -17,6 +17,8 @@ export type LegalSection = {
 	after?: readonly ReactNode[]
 	/** Address of the contact section, rendered as a `mailto:` link. */
 	contactEmail?: string
+	/** Company telephone shown under the address, rendered as a `tel:` link. */
+	contactPhone?: string
 }
 
 type LegalDocumentProps = {
@@ -151,6 +153,16 @@ export function LegalDocument({
 												className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 											>
 												{section.contactEmail}
+											</a>
+										</p>
+									)}
+									{section.contactPhone && (
+										<p>
+											<a
+												href={`tel:${section.contactPhone.replace(/\s/g, '')}`}
+												className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+											>
+												{section.contactPhone}
 											</a>
 										</p>
 									)}

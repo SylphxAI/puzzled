@@ -102,7 +102,7 @@ export async function HomeDay({
 					</p>
 				</div>
 
-				<div className="grid items-center gap-6 pb-10 pt-6 md:gap-10 md:pb-14 md:pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+				<div className="grid items-center gap-5 pb-10 pt-4 md:gap-10 md:pb-14 md:pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
 					<div>
 						{isMember && currentStreak > 0 ? (
 							<p className="eyebrow flex items-center gap-1.5 text-stat-streak">
@@ -302,7 +302,7 @@ export function HomeDaySkeleton() {
 					<div className="h-4 w-52 animate-pulse rounded bg-muted" />
 					<div className="h-4 w-28 animate-pulse rounded bg-muted" />
 				</div>
-				<div className="grid items-center gap-6 pb-10 pt-6 md:gap-10 md:pb-14 md:pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+				<div className="grid items-center gap-5 pb-10 pt-4 md:gap-10 md:pb-14 md:pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
 					<div>
 						<div className="h-3 w-24 animate-pulse rounded bg-muted" />
 						<div className="mt-3 h-10 w-full animate-pulse rounded-lg bg-muted sm:h-12" />
