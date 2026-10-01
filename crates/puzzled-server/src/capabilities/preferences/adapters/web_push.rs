@@ -1,6 +1,6 @@
 //! Browser subscriptions are player-scoped; delivery uses RFC 8291/8292 directly.
 use super::web_push_sender::{DirectVapidSender, PushDelivery, PushSender};
-use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use sqlx::PgPool;
 use uuid::Uuid;
 use web_push::SubscriptionInfo;

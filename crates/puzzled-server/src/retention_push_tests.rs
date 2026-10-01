@@ -170,9 +170,7 @@ async fn sender_outcomes_preserve_live_endpoints_and_prune_expired_ones() {
     .unwrap();
     assert_eq!(endpoints.len(), 2);
     assert!(endpoints.iter().any(|endpoint| endpoint.ends_with("live")));
-    assert!(
-        endpoints
-            .iter()
-            .any(|endpoint| endpoint.ends_with("failed"))
-    );
+    assert!(endpoints
+        .iter()
+        .any(|endpoint| endpoint.ends_with("failed")));
 }
