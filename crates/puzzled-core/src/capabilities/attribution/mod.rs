@@ -2,9 +2,11 @@
 //!
 //! The web stores the first tagged landing (utm_* and `ref`) in the
 //! `puzzled_attr` cookie after analytics consent, as a query string
-//! (`s`, `m`, `c`, `t`, `n`, `r`, `p`, `at`). This module parses and bounds
-//! it; the shell stores it on the account at sign-up and on the subscription
-//! at checkout.
+//! (`s`, `m`, `c`, `t`, `n`, `r`, `p`, `at`). A Google Ads click id (`g`
+//! gclid, `gb` gbraid, `wb` wbraid) is stored there only after marketing
+//! consent. This module parses and bounds it; the shell stores the tags on the
+//! account at sign-up and sends tags and click id at checkout. The click id is
+//! never stored on the account.
 
 /// Cookie holding the first tagged landing.
 pub const ATTRIBUTION_COOKIE: &str = "puzzled_attr";
@@ -24,6 +26,22 @@ pub struct Attribution {
     pub landing_path: Option<String>,
     /// Landing time, Unix milliseconds.
     pub landed_at_ms: Option<i64>,
+    /// Google Ads click ids; present only after marketing consent.
+    pub gclid: Option<String>,
+    pub gbraid: Option<String>,
+    pub wbraid: Option<String>,
+}
+
+/// A Google Ads click id is 1-100 of letters, digits, `-` and `_`. Anything
+/// else is dropped, so a forged cookie cannot smuggle other data into Money.
+#[must_use]
+pub fn click_id(raw: &str) -> Option<String> {
+    let valid = !raw.is_empty()
+        && raw.len() <= MAX_VALUE
+        && raw
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_');
+    valid.then(|| raw.to_string())
 }
 
 fn percent_decode(raw: &str) -> Option<String> {
@@ -83,10 +101,14 @@ impl Attribution {
                 "r" => out.referral = value,
                 "p" => out.landing_path = value.filter(|p| p.starts_with('/')),
                 "at" => out.landed_at_ms = value.and_then(|v| v.parse().ok()),
+                // Validated on the untruncated value: a long id is dropped, not cut.
+                "g" => out.gclid = percent_decode(raw).and_then(|v| click_id(&v)),
+                "gb" => out.gbraid = percent_decode(raw).and_then(|v| click_id(&v)),
+                "wb" => out.wbraid = percent_decode(raw).and_then(|v| click_id(&v)),
                 _ => {}
             }
         }
-        out.has_tag().then_some(out)
+        (out.has_tag() || out.has_click_id()).then_some(out)
     }
 
     #[must_use]
@@ -97,6 +119,39 @@ impl Attribution {
             || self.term.is_some()
             || self.content.is_some()
             || self.referral.is_some()
+    }
+
+    #[must_use]
+    pub fn has_click_id(&self) -> bool {
+        self.gclid.is_some() || self.gbraid.is_some() || self.wbraid.is_some()
+    }
+
+    /// Click ids as they are named in Money checkout metadata (Money has no
+    /// `client_reference_id`; `metadata` is copied to the subscription).
+    #[must_use]
+    pub fn click_id_pairs(&self) -> Vec<(&'static str, &str)> {
+        [
+            ("gclid", &self.gclid),
+            ("gbraid", &self.gbraid),
+            ("wbraid", &self.wbraid),
+        ]
+        .into_iter()
+        .filter_map(|(k, v)| v.as_deref().map(|v| (k, v)))
+        .collect()
+    }
+
+    /// The tags to send at checkout: the account's first-touch tags (or the
+    /// landing's, without them) plus the landing's live click id.
+    #[must_use]
+    pub fn for_checkout(stored: Option<&Self>, landing: Option<&Self>) -> Option<Self> {
+        let mut out = stored.or(landing).cloned();
+        if let Some(landing) = landing.filter(|l| l.has_click_id()) {
+            let base = out.get_or_insert_with(Self::default);
+            base.gclid.clone_from(&landing.gclid);
+            base.gbraid.clone_from(&landing.gbraid);
+            base.wbraid.clone_from(&landing.wbraid);
+        }
+        out
     }
 
     /// The Tryit handoff `ref`, when this landing came from Tryit
@@ -168,6 +223,48 @@ mod tests {
                 ("ref", "res_123")
             ]
         );
+    }
+
+    #[test]
+    fn click_ids_are_parsed_and_validated() {
+        let found = Attribution::from_cookie("g=Cj0KCQ_abc-123&wb=ok").expect("click id only");
+        assert!(!found.has_tag());
+        assert_eq!(found.gclid.as_deref(), Some("Cj0KCQ_abc-123"));
+        assert_eq!(
+            found.click_id_pairs(),
+            vec![("gclid", "Cj0KCQ_abc-123"), ("wbraid", "ok")]
+        );
+        // Spaces, punctuation and over-long values are dropped.
+        assert_eq!(Attribution::from_cookie("g=a%20b"), None);
+        // A smuggled extra pair is just another (unknown) key, never a value.
+        let smuggled = Attribution::from_cookie("g=a%26plan%3Dfree").expect("click id");
+        assert_eq!(smuggled.click_id_pairs(), vec![("gclid", "a")]);
+        assert_eq!(Attribution::from_cookie("g=a%2Fb"), None);
+        assert_eq!(
+            Attribution::from_cookie(&format!("g={}", "a".repeat(101))),
+            None
+        );
+        let mixed = Attribution::from_cookie("s=ads&g=%3Cscript%3E").expect("tag");
+        assert_eq!(mixed.gclid, None);
+    }
+
+    #[test]
+    fn checkout_takes_stored_tags_and_the_landing_click_id() {
+        let stored = Attribution::from_cookie("s=tryit&r=abc").expect("stored");
+        let landing = Attribution::from_cookie("s=ads&g=click1").expect("landing");
+        let merged = Attribution::for_checkout(Some(&stored), Some(&landing)).expect("merged");
+        assert_eq!(merged.source.as_deref(), Some("tryit"));
+        assert_eq!(merged.gclid.as_deref(), Some("click1"));
+        // No landing click id: the stored tags go unchanged and carry none.
+        let plain = Attribution::from_cookie("s=ads").expect("landing");
+        assert_eq!(
+            Attribution::for_checkout(Some(&stored), Some(&plain)),
+            Some(stored.clone())
+        );
+        let only = Attribution::from_cookie("g=click2").expect("landing");
+        let alone = Attribution::for_checkout(None, Some(&only)).expect("alone");
+        assert_eq!(alone.gclid.as_deref(), Some("click2"));
+        assert_eq!(Attribution::for_checkout(None, None), None);
     }
 
     #[test]

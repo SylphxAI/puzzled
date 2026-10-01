@@ -19,7 +19,7 @@
 
 import { useEffect } from 'react'
 import { CookieBanner, useSafeConsent } from '@/lib/identity/react'
-import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY } from '@/lib/storage-keys'
+import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY, MARKETING_CONSENT_KEY } from '@/lib/storage-keys'
 
 /**
  * Mirror the SDK's stored decision onto the key client-side scripts read
@@ -38,6 +38,10 @@ function mirrorStoredConsent(): void {
 	const analyticsConsent = preferences.analytics === true
 	const timestamp = new Date().toISOString()
 	localStorage.setItem(CONSENT_KEY, analyticsConsent ? 'accepted' : 'declined')
+	localStorage.setItem(
+		MARKETING_CONSENT_KEY,
+		preferences.marketing === true ? 'accepted' : 'declined',
+	)
 	localStorage.setItem(CONSENT_TIMESTAMP_KEY, timestamp)
 
 	// Dispatch event for client-side scripts listening

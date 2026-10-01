@@ -8,7 +8,7 @@
  * which uses server-side storage as SSOT.
  */
 
-import { CONSENT_KEY } from '@/lib/storage-keys'
+import { CONSENT_KEY, MARKETING_CONSENT_KEY } from '@/lib/storage-keys'
 
 export type ConsentStatus = 'pending' | 'accepted' | 'declined'
 
@@ -44,6 +44,16 @@ export function hasAnalyticsConsent(): boolean {
  */
 export function canTrackAnalytics(): boolean {
 	return typeof window !== 'undefined' && hasAnalyticsConsent()
+}
+
+/**
+ * Has advertising/marketing storage been granted? Default deny: only an
+ * explicit `accepted` counts, and the banner grants it only when the visitor
+ * chose marketing.
+ */
+export function canStoreMarketing(): boolean {
+	if (typeof window === 'undefined') return false
+	return localStorage.getItem(MARKETING_CONSENT_KEY) === 'accepted'
 }
 
 /**

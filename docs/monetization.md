@@ -127,7 +127,15 @@ A landing with campaign tags (`utm_*`, `ref`; Tryit links use
 first-touch for 30 days in the `puzzled_attr` first-party cookie, only after
 analytics consent (declining clears it). Sign-up stores it once in
 `account_attribution`. Checkout passes the account's tags (or, without them,
-the cookie) to Money's checkout-session attribution. No Stripe subscription
+the cookie) to Money's checkout-session attribution. A Google Ads click id
+(`gclid`, `gbraid`, `wbraid`) on a landing is kept in the same cookie for 90
+days, only after *marketing* consent (the SDK `marketing` preference, mirrored
+to `puzzled:consent:marketing`; the banner grants analytics only today, so the
+click id is not stored until a marketing choice is offered). Withdrawing
+marketing consent removes it; declining everything clears the cookie. Checkout
+sends it from the live cookie, never from the account row, as
+`metadata.gclid` (or `gbraid` / `wbraid`) after a `[A-Za-z0-9_-]{1,100}`
+check; Money has no `client_reference_id`. No Stripe subscription
 metadata or local billing table is written. `/daily` redirects to today's
 free game and keeps the query string.
 

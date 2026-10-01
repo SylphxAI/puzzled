@@ -17,6 +17,7 @@
 // Consent & Privacy
 // ==========================================
 export const CONSENT_KEY = 'puzzled:consent:cookie'
+export const MARKETING_CONSENT_KEY = 'puzzled:consent:marketing'
 export const CONSENT_TIMESTAMP_KEY = 'puzzled:consent:timestamp'
 
 // ==========================================
