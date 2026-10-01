@@ -44,6 +44,12 @@ where
     Fut: std::future::Future<Output = Result<(), String>>,
 {
     let started = std::time::Instant::now();
+    let elapsed_now = || {
+        chrono::Duration::from_std(started.elapsed())
+            .ok()
+            .and_then(|elapsed| now.checked_add_signed(elapsed))
+            .ok_or_else(|| vec!["daily reminder elapsed clock overflow".to_string()])
+    };
     let mut claim_at = now;
     let mut processed = 0u32;
     loop {
@@ -62,17 +68,13 @@ where
             // Do not start abandoned batch work after its lease has expired.
             // Keep the adapter's per-endpoint timeout: cancelling a whole player
             // midway would discard its already-successful endpoint outcomes.
-            let delivery_started_at = now
-                + chrono::Duration::from_std(started.elapsed())
-                    .expect("reminder elapsed duration fits chrono");
+            let delivery_started_at = elapsed_now()?;
             if delivery_started_at >= claim.lease_until {
                 errors.push(format!("{user_id}: reminder lease expired before delivery"));
                 continue;
             }
             let delivery = send(user_id.clone()).await;
-            let completed_at = now
-                + chrono::Duration::from_std(started.elapsed())
-                    .expect("reminder elapsed duration fits chrono");
+            let completed_at = elapsed_now()?;
             match delivery {
                 Ok(()) => {
                     match jobs_db::acknowledge_daily_reminder(pool, &claim, completed_at).await {
@@ -99,9 +101,7 @@ where
         if !errors.is_empty() {
             return Err(errors);
         }
-        claim_at = now
-            + chrono::Duration::from_std(started.elapsed())
-                .expect("reminder elapsed duration fits chrono");
+        claim_at = elapsed_now()?;
     }
 }
 
