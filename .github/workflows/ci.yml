@@ -447,7 +447,14 @@ jobs:
       # database (billing flow, result shares, account erasure, push ownership)
       # and the one that parses every table for player-id columns.
       - name: Migration-backed tests
-        run: cargo test -p puzzled-server --lib -- billing_flow_tests result_shares_tests account_erasure_tests account_deletion retention_push_tests
+        run: |
+          set -euo pipefail
+          LOG="${RUNNER_TEMP}/puzzled-migration-backed-tests.log"
+          cargo test -p puzzled-server --lib -- billing_flow_tests result_shares_tests account_erasure_tests account_deletion retention_push_tests | tee "$LOG"
+          # Fail closed if a renamed filter selects nothing, or if the actual
+          # two-user HTTP ownership regression was not exercised.
+          grep -Eq '^test result: ok\. [1-9][0-9]* passed;' "$LOG"
+          grep -Eq '^test retention_push_tests::connect_push_foreign_endpoint_returns_404_without_any_writes \.\.\. ok$' "$LOG"
 
   # The full suite on a ready pull request; never in a merge group or a draft.
   suite:
