@@ -14,8 +14,8 @@ use puzzled_core::puzzle_play::daily_time::product_day_key;
 use puzzled_core::puzzle_play::game_slugs::all_game_slugs;
 use puzzled_core::puzzle_play::generate::difficulties_for;
 
-use crate::billing_flow_tests::fresh_database;
 use crate::capabilities::daily_pipeline::{self, store};
+use crate::test_support::fresh_database;
 use crate::{router, AppState};
 
 const GUEST: &str = "a1b2c3d4-e5f6-4890-abcd-ef1234567890";

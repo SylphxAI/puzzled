@@ -10,25 +10,34 @@ import {
 	DialogTitle,
 } from '@sylphx/ui'
 import { Sparkles } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useRouter } from '@/lib/i18n/routing'
+import { signupHref } from './save-streak-prompt'
 
 type GuestSignupPromptProps = {
 	open: boolean
 	onClose: () => void
 	streakCount?: number
+	/** Game the player came from; sign-up sends them back here. */
+	gameSlug?: string
 }
 
 /**
- * Modal shown after guest completes their first puzzle
- * Encourages sign up to save progress and access features
+ * Modal shown after a guest finishes a daily with a streak of at least two days.
+ * The inline `StreakSaveCard` carries the first ask; this is the stronger one
+ * once there is a run worth keeping.
  */
-export function GuestSignupPrompt({ open, onClose, streakCount = 1 }: GuestSignupPromptProps) {
+export function GuestSignupPrompt({
+	open,
+	onClose,
+	streakCount = 1,
+	gameSlug,
+}: GuestSignupPromptProps) {
 	const t = useTranslations('onboarding')
 	const router = useRouter()
 
 	const handleSignup = () => {
-		router.push('/signup')
+		router.push(signupHref(gameSlug))
 	}
 
 	return (
@@ -37,13 +46,15 @@ export function GuestSignupPrompt({ open, onClose, streakCount = 1 }: GuestSignu
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
 						<Sparkles className="h-5 w-5 text-primary" />
-						<span>{t('niceWork')}</span>
+						<span>{t('saveStreak')}</span>
 					</DialogTitle>
 				</DialogHeader>
 				<DialogBody className="space-y-4">
 					{/* Main message */}
 					<div className="text-center">
-						<p className="text-sm text-muted-foreground">{t('signupPromptDesc')}</p>
+						<p className="text-sm text-muted-foreground">
+							{t('keepStreak', { days: streakCount })}
+						</p>
 					</div>
 
 					{/* Benefits list */}
@@ -54,11 +65,6 @@ export function GuestSignupPrompt({ open, onClose, streakCount = 1 }: GuestSignu
 							</div>
 							<div className="flex-1">
 								<p className="text-sm font-medium">{t('saveStreak')}</p>
-								{streakCount > 1 && (
-									<p className="text-xs text-muted-foreground">
-										{t('keepStreak', { days: streakCount })}
-									</p>
-								)}
 							</div>
 						</div>
 

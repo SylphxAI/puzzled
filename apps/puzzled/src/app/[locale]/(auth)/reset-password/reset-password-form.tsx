@@ -116,9 +116,13 @@ export function ResetPasswordForm() {
 					onBlur={() => setTouched(true)}
 					autoComplete="new-password"
 					disabled={isLoading}
-					error={(attempted || touched) && passwordIssue ? t(passwordIssue) : undefined}
+					error={
+						(attempted || touched) && passwordIssue
+							? t(passwordIssue, { min: MIN_PASSWORD_LENGTH })
+							: undefined
+					}
 					showStrength
-					hint={t('passwordHint')}
+					hint={t('passwordHint', { min: MIN_PASSWORD_LENGTH })}
 					required
 					enterKeyHint="next"
 				/>

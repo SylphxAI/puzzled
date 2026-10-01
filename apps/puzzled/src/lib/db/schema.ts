@@ -628,10 +628,18 @@ export const webhookEvents = pgTable(
 )
 
 // ==========================================
-// PUZZLED PLUS (Stripe is the processor; these rows own entitlement and money)
+// FORMER PUZZLED PLUS BILLING (Sylphx Money now holds subscriptions, access
+// and the ledger)
 // ==========================================
+// Kept until the contract migration after Money live proof: that migration
+// (after 2026-10-02, once Money is read back live on Puzzled and the rows are
+// archived) retires these tables. Until then they are defined here only so
+// schema/migration parity holds, under their original table, index and
+// constraint names. No app or server code reads or writes them; a test
+// (account_deletion.rs, retiring_billing_tables_have_no_runtime_reader) fails
+// if any does.
 
-/** One Stripe customer per account. */
+/** One Stripe customer per account (former; see the section note). */
 export const billingCustomers = pgTable('billing_customers', {
 	/** Platform user ID (no FK) */
 	userId: uuid('user_id').primaryKey(),
@@ -774,6 +782,26 @@ export const resultShares = pgTable(
 	(table) => [
 		uniqueIndex('result_shares_user_game_day_uidx').on(table.userId, table.gameSlug, table.dayKey),
 	],
+)
+
+/**
+ * The buyer's immediate-supply consent, one row per checkout started through
+ * Sylphx Money: access now, and the 14-day cancellation right is lost.
+ */
+export const checkoutConsents = pgTable(
+	'checkout_consents',
+	{
+		/** UUIDv7 minted by the api */
+		id: uuid('id').primaryKey(),
+		/** Platform user ID (no FK) */
+		userId: uuid('user_id').notNull(),
+		planId: text('plan_id').notNull(),
+		priceKey: text('price_key').notNull(),
+		locale: text('locale').notNull(),
+		statement: text('statement').notNull(),
+		consentedAt: timestamp('consented_at').defaultNow().notNull(),
+	},
+	(t) => [index('checkout_consents_user_id_idx').on(t.userId)],
 )
 
 /** A family plan owner and the invite code members join with. */

@@ -25,10 +25,30 @@ export function createNonce(): string {
 
 export const NONCE_HEADER = 'x-nonce'
 
+/** Hosts the Google tag reports to, added to connect-src only while it is configured. */
+export const GOOGLE_TAG_CONNECT_HOSTS = [
+	'https://www.googletagmanager.com',
+	'https://*.google-analytics.com',
+	'https://*.analytics.google.com',
+	'https://*.g.doubleclick.net',
+	'https://www.google.com',
+	'https://www.googleadservices.com',
+	'https://pagead2.googlesyndication.com',
+] as const
+
+/** Frame host the Ads conversion tag may use, added only while the tag is configured. */
+export const GOOGLE_TAG_FRAME_HOSTS = ['https://td.doubleclick.net'] as const
+
 export function buildCsp(
 	nonce: string,
-	{ dev = false, ads = false }: { dev?: boolean; ads?: boolean } = {},
+	{
+		dev = false,
+		ads = false,
+		googleTag = false,
+	}: { dev?: boolean; ads?: boolean; googleTag?: boolean } = {},
 ): string {
+	const tagFrames = googleTag ? ` ${GOOGLE_TAG_FRAME_HOSTS.join(' ')}` : ''
+	const tagConnect = googleTag ? ` ${GOOGLE_TAG_CONNECT_HOSTS.join(' ')}` : ''
 	const adFrames = ads ? ` ${AD_CSP_HOSTS.frame.join(' ')}` : ''
 	const adConnect = ads ? ` ${AD_CSP_HOSTS.connect.join(' ')}` : ''
 	return [
@@ -38,9 +58,10 @@ export function buildCsp(
 		"style-src 'self' 'unsafe-inline'",
 		"img-src 'self' data: blob: https:",
 		"font-src 'self' data:",
-		// Sylphx platform APIs (identity, events, data) and the Iconify icon APIs.
-		`connect-src 'self' https://sylphx.com https://*.sylphx.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com${adConnect}`,
-		`frame-src 'self'${adFrames}`,
+		// The browser talks only to this origin (identity, events and errors are
+		// same-origin routes) and to the Iconify icon APIs.
+		`connect-src 'self' https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com${adConnect}${tagConnect}`,
+		`frame-src 'self'${adFrames}${tagFrames}`,
 		"worker-src 'self'",
 		"object-src 'none'",
 		"base-uri 'none'",

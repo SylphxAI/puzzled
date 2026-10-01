@@ -84,7 +84,7 @@
 				"keys": ["archive.eyebrow", "modes.archive", "nav.archive"]
 			},
 			{
-				"value": "At least 8 characters",
+				"value": "At least {min} characters",
 				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
 			},
 			{
@@ -719,6 +719,14 @@
 				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
 			},
 			{
+				"value": "Remind me daily",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "Remove",
 				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
 			},
@@ -763,6 +771,10 @@
 			{
 				"value": "Save Changes",
 				"keys": ["admin.plans.saveChanges", "settings.profile.saveChanges"]
+			},
+			{
+				"value": "Save your streak",
+				"keys": ["catalog.gamePage.guestSignIn", "onboarding.saveStreak"]
 			},
 			{
 				"value": "Saving...",
@@ -859,10 +871,6 @@
 			{
 				"value": "Sign Up",
 				"keys": ["auth.signUp", "common.signUp"]
-			},
-			{
-				"value": "Sign in",
-				"keys": ["archive.signInCta", "plus.unlock.signIn"]
 			},
 			{
 				"value": "Sign out",
@@ -1168,7 +1176,7 @@
 				"keys": ["archive.eyebrow", "modes.archive", "nav.archive"]
 			},
 			{
-				"value": "At least 8 characters",
+				"value": "At least {min} characters",
 				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
 			},
 			{
@@ -1803,6 +1811,14 @@
 				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
 			},
 			{
+				"value": "Remind me daily",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "Remove",
 				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
 			},
@@ -1847,6 +1863,10 @@
 			{
 				"value": "Save Changes",
 				"keys": ["admin.plans.saveChanges", "settings.profile.saveChanges"]
+			},
+			{
+				"value": "Save your streak",
+				"keys": ["catalog.gamePage.guestSignIn", "onboarding.saveStreak"]
 			},
 			{
 				"value": "Saving...",
@@ -1943,10 +1963,6 @@
 			{
 				"value": "Sign Up",
 				"keys": ["auth.signUp", "common.signUp"]
-			},
-			{
-				"value": "Sign in",
-				"keys": ["archive.signInCta", "plus.unlock.signIn"]
 			},
 			{
 				"value": "Sign out",
@@ -2389,10 +2405,6 @@
 			{
 				"value": "使用者名稱",
 				"keys": ["settings.profile.username", "settings.profile.usernamePlaceholder"]
-			},
-			{
-				"value": "保護你的連勝",
-				"keys": ["onboarding.saveStreak", "settings.overview.quickNotifications.streakDesc"]
 			},
 			{
 				"value": "個人檔案",
@@ -2863,6 +2875,14 @@
 				"keys": ["settings.overview.quickNotifications.daily", "settings.pushDailyReminder"]
 			},
 			{
+				"value": "每日提醒我",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "沒有安全警示",
 				"keys": ["settings.securityAlerts.noAlerts", "settings.securityScore.checks.noAlerts"]
 			},
@@ -2919,7 +2939,6 @@
 				"value": "登入",
 				"keys": [
 					"admin.auditLogs.actions.login",
-					"archive.signInCta",
 					"auth.signIn",
 					"common.signIn",
 					"plus.unlock.signIn"
@@ -2998,6 +3017,10 @@
 			{
 				"value": "聯絡我們",
 				"keys": ["footer.contact", "legal.privacy.sections.contact.title"]
+			},
+			{
+				"value": "至少 {min} 個字元",
+				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
 			},
 			{
 				"value": "良好",
@@ -3449,10 +3472,6 @@
 			{
 				"value": "使用者名稱",
 				"keys": ["settings.profile.username", "settings.profile.usernamePlaceholder"]
-			},
-			{
-				"value": "保護你的連勝",
-				"keys": ["onboarding.saveStreak", "settings.overview.quickNotifications.streakDesc"]
 			},
 			{
 				"value": "個人檔案",
@@ -3914,6 +3933,14 @@
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
 			},
 			{
+				"value": "每天提醒我",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "每日",
 				"keys": ["modes.daily", "settings.notifications.quickActions.daily"]
 			},
@@ -3974,7 +4001,6 @@
 				"value": "登入",
 				"keys": [
 					"admin.auditLogs.actions.login",
-					"archive.signInCta",
 					"auth.signIn",
 					"common.signIn",
 					"plus.unlock.signIn"
@@ -4040,6 +4066,10 @@
 			{
 				"value": "聯絡我們",
 				"keys": ["footer.contact", "legal.privacy.sections.contact.title"]
+			},
+			{
+				"value": "至少 {min} 個字元",
+				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
 			},
 			{
 				"value": "良好",
@@ -4539,10 +4569,6 @@
 				]
 			},
 			{
-				"value": "保护你的连胜",
-				"keys": ["onboarding.saveStreak", "settings.overview.quickNotifications.streakDesc"]
-			},
-			{
 				"value": "偏好设置",
 				"keys": [
 					"settings.nav.preferences",
@@ -5027,6 +5053,14 @@
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
 			},
 			{
+				"value": "每天提醒我",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
 				"value": "每日",
 				"keys": ["modes.daily", "settings.notifications.quickActions.daily"]
 			},
@@ -5110,7 +5144,6 @@
 				"value": "登录",
 				"keys": [
 					"admin.auditLogs.actions.login",
-					"archive.signInCta",
 					"auth.signIn",
 					"common.signIn",
 					"plus.unlock.signIn"
@@ -5156,6 +5189,10 @@
 					"stats.modules.winRate",
 					"stats.winRate"
 				]
+			},
+			{
+				"value": "至少 {min} 个字符",
+				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
 			},
 			{
 				"value": "良好",

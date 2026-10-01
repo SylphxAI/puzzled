@@ -4,9 +4,10 @@ use std::time::Instant;
 
 use sqlx::PgPool;
 
-use crate::capabilities::billing::adapters::stripe::Stripe;
 use crate::capabilities::identity_access::adapters::auth_erasure::AuthErasure;
 use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
+use crate::capabilities::money::{pricing, Money};
+use crate::capabilities::preferences::unsubscribe::UnsubscribeTokens;
 use crate::capabilities::tryit_conversions::TryitReporter;
 use crate::shared::tick_receipt::TickVerifier;
 
@@ -14,8 +15,10 @@ use crate::shared::tick_receipt::TickVerifier;
 pub struct AppState {
     started_at: Instant,
     pub pool: Option<PgPool>,
-    /// Stripe, when Puzzled Plus is on sale. None: nothing is sold or locked.
-    pub stripe: Option<Stripe>,
+    /// Dedicated signed-link verifier; missing key refuses unsubscribe.
+    pub unsubscribe: Option<UnsubscribeTokens>,
+    /// Sylphx Money, when configured: entitlements, checkout and prices.
+    pub money: Option<Money>,
     /// Sylphx Auth end-user session checks.
     pub auth: AuthSessions,
     /// Deleting a player's Sylphx Auth sign-in (privacy request). None until
@@ -34,10 +37,11 @@ impl AppState {
     pub fn new(pool: Option<PgPool>) -> Self {
         Self {
             started_at: Instant::now(),
+            unsubscribe: UnsubscribeTokens::from_env(),
             auth: AuthSessions::from_env().with_pool(pool.clone()),
             erasure: AuthErasure::from_env(),
             pool,
-            stripe: None,
+            money: None,
             ticks: TickVerifier::from_env(),
             tryit: TryitReporter::from_env(),
         }
@@ -68,25 +72,24 @@ impl AppState {
     }
 
     #[must_use]
-    pub fn with_stripe(mut self, stripe: Option<Stripe>) -> Self {
-        self.stripe = stripe;
+    pub fn with_money(mut self, money: Option<Money>) -> Self {
+        self.money = money;
         self
     }
 
-    /// Puzzled Plus is on sale: Stripe and the database are configured and
-    /// Stripe publishes at least one Puzzled Plus price (cached five minutes).
-    /// A Stripe read that fails counts as on sale, so paid play fails closed;
-    /// the free daily puzzle never asks.
+    /// Puzzled Plus is on sale: Money is configured and its catalogue sells at
+    /// least one Puzzled plan. A catalogue read that fails counts as not on
+    /// sale: nothing is locked and no purchase is offered until Money answers.
     pub async fn sales_open(&self) -> bool {
-        match (&self.pool, &self.stripe) {
-            (Some(_), Some(stripe)) => match stripe.prices().await {
-                Ok(prices) => !prices.is_empty(),
-                Err(error) => {
-                    tracing::warn!(%error, "Stripe price read failed; treating Plus as on sale");
-                    true
-                }
-            },
-            _ => false,
+        let (Some(_), Some(money)) = (&self.pool, &self.money) else {
+            return false;
+        };
+        match money.catalog().await {
+            Ok(catalog) => !pricing::plans(&catalog).is_empty(),
+            Err(error) => {
+                tracing::warn!(%error, "Money catalogue read failed; treating Plus as not on sale");
+                false
+            }
         }
     }
 
@@ -99,5 +102,22 @@ impl AppState {
 impl Default for AppState {
     fn default() -> Self {
         Self::new(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Money down: sales read as closed, so nothing free today is locked and
+    /// no purchase is offered.
+    #[tokio::test]
+    async fn money_unreachable_means_sales_closed() {
+        let money = Money::new("http://127.0.0.1:9/env", "sk_test", "https://puzzled.test");
+        let state = AppState::new(Some(
+            PgPool::connect_lazy("postgres://u@127.0.0.1:9/d").unwrap(),
+        ))
+        .with_money(Some(money));
+        assert!(!state.sales_open().await);
     }
 }

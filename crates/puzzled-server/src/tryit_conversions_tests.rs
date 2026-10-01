@@ -15,11 +15,11 @@ use serde_json::Value;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::billing_flow_tests::fresh_database;
 use crate::capabilities::preferences::adapters::attribution_db::record_attribution;
 use crate::capabilities::tryit_conversions::{
     enqueue, enqueue_purchase, report_now, sweep, Event, TryitReporter,
 };
+use crate::test_support::fresh_database;
 
 type Calls = Arc<Mutex<Vec<Value>>>;
 

@@ -9,7 +9,7 @@ import {
 import { identityDestAdmission, setSessionCookie } from './server'
 
 export function identityFail(status: number, error: string) {
-	return NextResponse.json({ error, authority: 'sylphx-identity' }, { status })
+	return NextResponse.json({ error }, { status })
 }
 
 export function identityOrigin(): string {

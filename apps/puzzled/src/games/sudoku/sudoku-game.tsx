@@ -11,7 +11,6 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
@@ -29,6 +28,7 @@ type Props = {
 
 export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.sudoku')
+	const tCommon = useTranslations('common')
 
 	// Type-safe puzzle parsing - no config import needed
 	const [puzzle] = useState(() => parseSudokuClientPayload(puzzleData))
@@ -44,35 +44,46 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
 	} = useGameSession({
 		gameSlug: 'sudoku',
 		mode,
 		puzzleId,
 		puzzleDate,
+		requireServerAccept: true,
 	})
 
 	// Game-specific state
 	const gameEndedRef = useRef(false)
+	const [submissionError, setSubmissionError] = useState<string | null>(null)
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	// Game hook
 	const game = useSudoku(puzzle)
 	const conflictingCells = game.getConflictingCells()
 
-	// Handle game completion - in useEffect to avoid render-phase side effects
+	// Local completion is a candidate, never an accepted terminal result.
+	const submitCompletion = useCallback(async () => {
+		setIsSubmitting(true)
+		setSubmissionError(null)
+		const result = await endGame({
+			status: 'won',
+			attempts: 1,
+			data: {
+				finalGrid: game.state.userGrid.map((row) => row.map((cell) => cell.value)),
+			},
+		})
+		setIsSubmitting(false)
+		if (!result.success) {
+			setSubmissionError(result.error || tCommon('error'))
+		}
+	}, [endGame, game.state.userGrid, tCommon])
+
 	useEffect(() => {
 		if (game.state.isComplete && !gameEndedRef.current) {
 			gameEndedRef.current = true
-			endGame({
-				status: 'won',
-				attempts: 1,
-				data: {
-					finalGrid: game.state.userGrid.map((row) => row.map((cell) => cell.value)),
-				},
-			})
+			void submitCompletion()
 		}
-	}, [game.state.isComplete, game.state.userGrid, endGame])
+	}, [game.state.isComplete, submitCompletion])
 
 	// Share result — non-spoiler; deep-links free module (day key on already-completed path).
 	const shareResult = useResultShare()
@@ -146,6 +157,15 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 				/>
 			</div>
 
+			{submissionError && (
+				<div role="alert" className="mt-4 flex flex-col gap-2">
+					<p>{submissionError}</p>
+					<Button onClick={() => void submitCompletion()} disabled={isSubmitting}>
+						{tCommon('retry')}
+					</Button>
+				</div>
+			)}
+
 			{/* Game Result Modal */}
 			<GameResultModal
 				open={showResultModal}
@@ -161,9 +181,6 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 				mode={mode}
 				onShare={handleShare}
 			/>
-
-			{/* Guest signup prompt */}
-			<GuestSignupPrompt open={showGuestSignupPrompt} onClose={handleCloseGuestPrompt} />
 		</div>
 	)
 }

@@ -15,6 +15,8 @@ export type HomeDayGame = {
 	tagline?: string
 	/** Typical duration from the module config, e.g. "~10 min". */
 	duration?: string
+	/** Straight to today's board (`todayPlayPath`), not the game page's start card. */
+	playHref: string
 }
 
 /**
@@ -82,7 +84,7 @@ export async function HomeDay({
 			: currentStreak > 0 && !hasPlayedToday
 				? t('day.titleMemberStreak', { days: currentStreak })
 				: t('day.titleMemberReady', { game: freeGame.name })
-		: t('day.guestTitle')
+		: t('day.guestTitle', { game: freeGame.name })
 
 	return (
 		<section className="day-surface relative">
@@ -138,6 +140,7 @@ export async function HomeDay({
 							numberLabel={t('day.puzzleNumber', { number: puzzleNumber })}
 							label={t('day.freeToday')}
 							cta={allDone ? t('day.playAgain') : t('day.playToday', { game: freeGame.name })}
+							note={isMember ? undefined : t('day.guestNote')}
 						/>
 						<div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground lg:hidden">
 							<DayFacts
@@ -215,11 +218,14 @@ function FeaturedCard({
 	numberLabel,
 	label,
 	cta,
+	note,
 }: {
 	game: HomeDayGame
 	numberLabel: string
 	label: string
 	cta: string
+	/** Reassurance under the action, shown to first-time visitors only. */
+	note?: string
 }) {
 	const colors = getGameColors(game.theme)
 	return (
@@ -253,11 +259,12 @@ function FeaturedCard({
 					</p>
 				) : null}
 				<Link
-					href={`/games/${game.slug}`}
+					href={game.playHref}
 					className="pressable mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary px-6 text-[16px] font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
 				>
 					{cta}
 				</Link>
+				{note ? <p className="mt-3 text-center text-sm text-muted-foreground">{note}</p> : null}
 			</div>
 		</div>
 	)

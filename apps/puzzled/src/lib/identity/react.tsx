@@ -1,5 +1,7 @@
 'use client'
 
+import { create } from '@bufbuild/protobuf'
+import { createClient } from '@connectrpc/connect'
 import { useTranslations } from 'next-intl'
 import {
 	createContext,
@@ -12,7 +14,18 @@ import {
 	useState,
 	useSyncExternalStore,
 } from 'react'
+import {
+	persistSubscription,
+	pushRegistration,
+	subscribeBrowser,
+} from '@/features/push/lib/web-push'
+import {
+	GamificationService,
+	GetStreakInfoRequestSchema,
+} from '@/gen/connect/puzzled/v1/gamification_pb'
+import { getConnectTransport } from '@/lib/connect/transport'
 import { type AppConfig, DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type IdentityUser } from './dest'
+import { MIN_PASSWORD_LENGTH } from './password-policy'
 
 type AuthState = {
 	user: IdentityUser | null
@@ -64,6 +77,23 @@ export function SylphxProvider({
 				const body = await readJson(response)
 				const next = (body.user as IdentityUser | null) ?? null
 				if (!cancelled) setUser(next)
+				// Reuse GetStreakInfo's existing guest adoption. This runs after
+				// every sign-in method, including OAuth, without a second claim API.
+				if (next) {
+					// Restore this browser's persisted subscription after every
+					// authentication method, including a shared-device account switch.
+					if ('serviceWorker' in navigator && 'PushManager' in window) {
+						pushRegistration()
+							.then(async (registration) => {
+								const sub = await registration.pushManager.getSubscription()
+								if (sub && !cancelled) await persistSubscription(sub)
+							})
+							.catch(() => undefined)
+					}
+					await createClient(GamificationService, getConnectTransport())
+						.getStreakInfo(create(GetStreakInfoRequestSchema, {}))
+						.catch(() => undefined)
+				}
 			})
 			.catch(() => {
 				if (!cancelled) setUser(null)
@@ -80,6 +110,17 @@ export function SylphxProvider({
 	}, [])
 
 	const signOut = useCallback(async () => {
+		// Revoke the browser endpoint too: account reminders must not be left
+		// on a shared device after sign-out. Server removal is best-effort;
+		// browser revocation prevents delivery even if that request fails.
+		if ('serviceWorker' in navigator && 'PushManager' in window) {
+			const registration = await navigator.serviceWorker.getRegistration('/').catch(() => undefined)
+			const sub = await registration?.pushManager.getSubscription().catch(() => null)
+			if (sub) {
+				await persistSubscription(sub, true).catch(() => undefined)
+				await sub.unsubscribe().catch(() => undefined)
+			}
+		}
 		await fetch('/api/identity/logout', { method: 'POST', credentials: 'same-origin' })
 		setUser(null)
 	}, [])
@@ -244,7 +285,7 @@ export function useSignUpForm(
 	const [step, setStep] = useState<number | 'verify-email'>(1)
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
-	const minLength = opts.minPasswordLength ?? 8
+	const minLength = opts.minPasswordLength ?? MIN_PASSWORD_LENGTH
 	return {
 		form: { email, password, name },
 		setEmail,
@@ -266,10 +307,12 @@ export function useSignUpForm(
 					credentials: 'same-origin',
 					body: JSON.stringify({ email, password, name }),
 				})
-				if (!response.ok) throw new Error('sign-up failed')
 				const result = await readJson(response)
+				if (!response.ok) {
+					throw new Error(typeof result.error === 'string' ? result.error : 'sign-up failed')
+				}
 				if (result.signedIn === true) {
-					window.location.assign('/')
+					window.location.assign(opts.afterSignUpUrl ?? '/')
 					return
 				}
 				setStep('verify-email')
@@ -330,7 +373,7 @@ export function useResetPasswordForm(opts?: {
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [success, setSuccess] = useState(false)
-	const minLength = opts?.minPasswordLength ?? 8
+	const minLength = opts?.minPasswordLength ?? MIN_PASSWORD_LENGTH
 	const passwordsMatch = password === confirmPassword
 	return {
 		form: { password, confirmPassword, email: '' },
@@ -415,71 +458,65 @@ export function useSafeConsent() {
 	}
 }
 export function useNotifications() {
-	const [permission, setPermission] = useState<NotificationPermission>(
-		typeof Notification === 'undefined' ? 'denied' : Notification.permission,
-	)
-	const [deviceId, setDeviceId] = useState<string | null>(null)
+	const { user } = useSafeUser()
+	const [subscription, setSubscription] = useState<PushSubscription | null>(null)
 	const [error, setError] = useState<{ message?: string } | null>(null)
-	const [preferences, setPreferences] = useState<Record<string, unknown>>({})
+	const isSupported =
+		typeof window !== 'undefined' &&
+		'Notification' in window &&
+		'PushManager' in window &&
+		'serviceWorker' in navigator
 	useEffect(() => {
-		fetch('/api/events/inbox', { credentials: 'same-origin' })
-			.then(async (response) => {
-				const body = await readJson(response)
-				setPreferences({ messages: body.messages ?? [] })
+		setSubscription(null)
+		if (!isSupported || !user) return
+		let cancelled = false
+		pushRegistration()
+			.then(async (registration) => {
+				const sub = await registration.pushManager.getSubscription()
+				if (sub) await persistSubscription(sub)
+				if (!cancelled) setSubscription(sub)
 			})
-			.catch(() => undefined)
-	}, [])
+			.catch(() => {
+				if (!cancelled) setError({ message: 'push_subscription_unavailable' })
+			})
+		return () => {
+			cancelled = true
+		}
+	}, [isSupported, user])
 	return {
-		permission,
-		isSupported: typeof Notification !== 'undefined',
-		isSubscribed: Boolean(deviceId),
+		isSupported,
+		isSubscribed: Boolean(subscription),
 		subscribe: async () => {
-			if (typeof Notification === 'undefined') return false
-			const next = await Notification.requestPermission()
-			setPermission(next)
-			if (next !== 'granted') return false
-			const registration = await navigator.serviceWorker?.ready.catch(() => undefined)
-			const push = await registration?.pushManager
-				.subscribe({ userVisibleOnly: true })
-				.catch(() => undefined)
-			const response = await fetch('/api/events/devices', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				credentials: 'same-origin',
-				body: JSON.stringify({
-					token: push?.endpoint ?? `web-push-${crypto.randomUUID()}`,
-					p256dh: push ? arrayBufferToB64(push.getKey('p256dh')) : '',
-					auth: push ? arrayBufferToB64(push.getKey('auth')) : '',
-				}),
-			})
-			const body = await readJson(response)
-			if (!response.ok) {
-				setError({ message: typeof body.error === 'string' ? body.error : 'subscribe_failed' })
+			if (!isSupported || !user) return false
+			try {
+				const sub = await subscribeBrowser()
+				setSubscription(sub)
+				setError(null)
+				return Boolean(sub)
+			} catch {
+				setError({ message: 'push_subscription_unavailable' })
 				return false
 			}
-			setDeviceId(typeof body.deviceId === 'string' ? body.deviceId : 'events-device')
-			setError(null)
-			return true
 		},
 		unsubscribe: async () => {
-			if (!deviceId) return
-			await fetch('/api/events/devices', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				credentials: 'same-origin',
-				body: JSON.stringify({ unregister: true, deviceId }),
-			})
-			setDeviceId(null)
+			try {
+				const sub = subscription ?? (await (await pushRegistration()).pushManager.getSubscription())
+				if (sub) {
+					await persistSubscription(sub, true)
+					await sub.unsubscribe()
+				}
+				setSubscription(null)
+				setError(null)
+			} catch {
+				setError({ message: 'push_subscription_unavailable' })
+				throw new Error('push_subscription_unavailable')
+			}
 		},
 		error,
-		preferences,
+		preferences: {},
 	}
 }
 
-function arrayBufferToB64(value: ArrayBuffer | null): string {
-	if (!value) return ''
-	return btoa(String.fromCharCode(...new Uint8Array(value)))
-}
 type Achievement = {
 	unlocked: boolean
 	achievementId: string
@@ -524,6 +561,38 @@ export const PlatformContext = createContext({
 	submitScore: async (_board?: string, _score?: number, _metadata?: unknown, _opts?: unknown) =>
 		undefined,
 })
+const bannerButton =
+	'inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 font-medium text-foreground sm:rounded-xl sm:px-4 transition-colors hover:bg-muted sm:flex-none'
+
+/**
+ * One switch row in the Settings step. Off until the visitor turns it on:
+ * nothing is pre-ticked, and advertising is its own choice, never part of
+ * "Accept".
+ */
+function ConsentSwitch(props: {
+	label: string
+	hint: string
+	checked: boolean
+	onChange: (next: boolean) => void
+}) {
+	return (
+		<label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-1.5">
+			<span className="min-w-0">
+				<span className="block font-medium text-foreground">{props.label}</span>
+				<span className="block text-muted-foreground">{props.hint}</span>
+			</span>
+			<input
+				type="checkbox"
+				role="switch"
+				aria-checked={props.checked}
+				className="h-5 w-5 shrink-0"
+				checked={props.checked}
+				onChange={(event) => props.onChange(event.target.checked)}
+			/>
+		</label>
+	)
+}
+
 export function CookieBanner(props: {
 	position?: string
 	privacyPolicyUrl?: string
@@ -532,7 +601,14 @@ export function CookieBanner(props: {
 }) {
 	const { hasConsented, setConsent } = useSafeConsent()
 	const t = useTranslations('consent')
+	const tCommon = useTranslations('common')
+	const [step, setStep] = useState<'choose' | 'settings'>('choose')
+	const [analytics, setAnalytics] = useState(false)
+	const [marketing, setMarketing] = useState(false)
 	if (hasConsented) return null
+	const save = (next: { analytics: boolean; marketing: boolean }) => {
+		void setConsent(next).then(() => props.onSave?.())
+	}
 	return (
 		<div
 			// Stable hook for the settled-visitor hide rule: the pre-paint script
@@ -543,45 +619,78 @@ export function CookieBanner(props: {
 			// unusable until consent was given.
 			className={
 				props.position === 'bottom'
-					? 'fixed inset-x-0 z-toast p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
+					? 'fixed inset-x-0 z-toast px-2 pb-1.5 sm:p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
 					: undefined
 			}
 		>
 			<section
 				aria-label={t('title')}
-				className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border bg-background/95 p-4 text-sm shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+				className="mx-auto flex max-w-3xl flex-col gap-1.5 rounded-xl border bg-background/95 p-2 text-xs leading-tight shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:rounded-2xl sm:p-4 sm:text-sm sm:leading-snug"
 			>
-				<p className="text-muted-foreground">
-					{t('message')}{' '}
-					{props.privacyPolicyUrl ? (
-						<a
-							href={props.privacyPolicyUrl}
-							className="font-medium text-primary underline underline-offset-4"
-						>
-							{t('learnMore')}
-						</a>
-					) : null}
-				</p>
-				<div className="flex shrink-0 items-center gap-2">
-					<button
-						type="button"
-						className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 font-medium text-foreground transition-colors hover:bg-muted"
-						onClick={() => {
-							void setConsent({ analytics: false, marketing: false }).then(() => props.onSave?.())
-						}}
-					>
-						{t('decline')}
-					</button>
-					<button
-						type="button"
-						className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
-						onClick={() => {
-							void setConsent({ analytics: true, marketing: false }).then(() => props.onSave?.())
-						}}
-					>
-						{t('accept')}
-					</button>
-				</div>
+				{step === 'choose' ? (
+					<>
+						<p className="text-muted-foreground">
+							{t('message')}{' '}
+							{props.privacyPolicyUrl ? (
+								<a
+									href={props.privacyPolicyUrl}
+									className="font-medium text-primary underline underline-offset-4"
+								>
+									{t('learnMore')}
+								</a>
+							) : null}
+						</p>
+						{/* Same size and weight: no answer is steered. Accept never includes advertising. */}
+						<div className="flex shrink-0 items-center gap-2">
+							<button
+								type="button"
+								className={bannerButton}
+								onClick={() => save({ analytics: false, marketing: false })}
+							>
+								{t('decline')}
+							</button>
+							<button type="button" className={bannerButton} onClick={() => setStep('settings')}>
+								{tCommon('settings')}
+							</button>
+							<button
+								type="button"
+								className={bannerButton}
+								onClick={() => save({ analytics: true, marketing: false })}
+							>
+								{t('accept')}
+							</button>
+						</div>
+					</>
+				) : (
+					<>
+						<div className="flex flex-col gap-1.5 sm:flex-1">
+							<ConsentSwitch
+								label={t('analyticsLabel')}
+								hint={t('analyticsHint')}
+								checked={analytics}
+								onChange={setAnalytics}
+							/>
+							<ConsentSwitch
+								label={t('marketingLabel')}
+								hint={t('marketingHint')}
+								checked={marketing}
+								onChange={setMarketing}
+							/>
+						</div>
+						<div className="flex shrink-0 items-center gap-2">
+							<button type="button" className={bannerButton} onClick={() => setStep('choose')}>
+								{tCommon('back')}
+							</button>
+							<button
+								type="button"
+								className={bannerButton}
+								onClick={() => save({ analytics, marketing })}
+							>
+								{tCommon('save')}
+							</button>
+						</div>
+					</>
+				)}
 			</section>
 		</div>
 	)

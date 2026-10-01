@@ -2,7 +2,7 @@
 
 use std::time::Duration;
 
-use puzzled_server::shared::db_config::select_database_url;
+use puzzled_server::shared::db_config::{select_database_url, writer_pool_options};
 use puzzled_server::{http_port, router, shutdown_signal, AppState};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
@@ -21,21 +21,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Cold-start + managed DNS: allow longer first connect so free-floor ritual
     // persist is not permanently demoted to S0 on a transient 3s timeout.
     let pool = match select_database_url() {
-        Some(url) => match PgPoolOptions::new()
-            .max_connections(5)
-            .acquire_timeout(Duration::from_secs(15))
-            .test_before_acquire(true)
-            .max_lifetime(Some(Duration::from_secs(600)))
-            .connect(&url)
-            .await
+        Some(url) => match writer_pool_options(
+            PgPoolOptions::new()
+                .max_connections(5)
+                .acquire_timeout(Duration::from_secs(15))
+                .max_lifetime(Some(Duration::from_secs(600))),
+        )
+        .connect(&url)
+        .await
         {
             Ok(pool) => {
                 info!("postgres pool connected (ADR-168 S1)");
                 Some(pool)
             }
             Err(error) => {
-                tracing::warn!(%error, "postgres connect failed — running S0 stub leaderboard");
-                None
+                // A configured store that cannot be reached must not leave a
+                // stub pod in rotation for the life of the process: exit so the
+                // platform restarts it until the database is back.
+                tracing::error!(%error, "postgres connect failed; exiting");
+                std::process::exit(1);
             }
         },
         None => {
@@ -58,15 +62,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _daily_fill =
         puzzled_server::capabilities::daily_pipeline::spawn_startup_fill(pool.clone());
 
-    let stripe = puzzled_server::capabilities::billing::adapters::stripe::Stripe::from_env();
-    match &stripe {
-        Some(stripe) if stripe.live_mode() => {
-            info!("Stripe configured (live mode); Plus is on sale once prices exist")
+    let money = puzzled_server::capabilities::money::Money::from_env();
+    if let Some(money) = &money {
+        // The org, project and env come from the key's own whoami.
+        if let Err(error) = money.warm().await {
+            tracing::warn!(%error, "Sylphx Money environment not resolved at start-up; retrying on use");
         }
-        Some(_) => info!("Stripe configured (test mode); Plus is on sale once prices exist"),
-        None => info!("Stripe not configured: Puzzled Plus is not on sale and nothing is locked"),
     }
-    let state = AppState::new(pool).with_stripe(stripe);
+    match &money {
+        Some(_) => {
+            info!("Sylphx Money configured: entitlements, checkout and prices come from Money")
+        }
+        None => {
+            info!("Sylphx Money not configured: Puzzled Plus is not on sale and nothing is locked")
+        }
+    }
+    let state = AppState::new(pool).with_money(money);
     let slice = if state.pool.is_some() { "S1" } else { "S0" };
     let port = http_port();
     let listener = TcpListener::bind(("0.0.0.0", port)).await?;

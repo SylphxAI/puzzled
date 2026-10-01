@@ -12,10 +12,9 @@ use uuid::Uuid;
 /// erases it. Rows matching the player are deleted, including audit rows where
 /// they are the subject or the actor.
 ///
-/// Money facts are the exception: a subscription row and a ledger row are kept
-/// for accounting (UK tax records), with the player id cleared so they no
-/// longer identify the player. The erasure call refuses while a subscription
-/// still renews, so nothing is charged to an erased account.
+/// Money facts are Sylphx Money's, not this database's. The erasure call
+/// refuses while a Money subscription still renews, so nothing is charged to an
+/// erased account.
 pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
         "tryit_conversions",
@@ -33,19 +32,9 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
         r#"DELETE FROM "auth_subjects" WHERE "user_id" = $1"#,
     ),
     (
-        "billing_customers",
+        "checkout_consents",
         "user_id",
-        r#"DELETE FROM "billing_customers" WHERE "user_id" = $1"#,
-    ),
-    (
-        "billing_ledger",
-        "user_id",
-        r#"UPDATE "billing_ledger" SET "user_id" = NULL WHERE "user_id" = $1"#,
-    ),
-    (
-        "billing_subscriptions",
-        "user_id",
-        r#"UPDATE "billing_subscriptions" SET "user_id" = NULL WHERE "user_id" = $1"#,
+        r#"DELETE FROM "checkout_consents" WHERE "user_id" = $1"#,
     ),
     (
         "family_members",
@@ -201,6 +190,18 @@ mod tests {
                     }
                 }
             }
+            // A table renamed to `..._retired_...` is empty (its migration
+            // refuses to run over rows), so it holds no player data to erase.
+            if let Some(rest) = trimmed.strip_prefix("ALTER TABLE ") {
+                let parts: Vec<&str> = rest.split('"').collect();
+                if let (Some(old), true) = (
+                    parts.get(1),
+                    parts.iter().any(|p| p.contains("RENAME TO"))
+                        && parts.get(3).is_some_and(|new| new.contains("__retired_")),
+                ) {
+                    found.retain(|(t, _)| t != old);
+                }
+            }
             // ALTER TABLE "t" ADD COLUMN "user_id" ...
             if let Some(rest) = trimmed.strip_prefix("ALTER TABLE ") {
                 let parts: Vec<&str> = rest.split('"').collect();
@@ -223,17 +224,28 @@ mod tests {
     fn each_statement_erases_its_own_column() {
         for (table, column, statement) in USER_KEYED_COLUMNS {
             let delete = format!(r#"DELETE FROM "{table}" WHERE "{column}" = $1"#);
-            // Money facts keep the row and drop the player id.
-            let unlink = format!(r#"UPDATE "{table}" SET "{column}" = NULL WHERE "{column}" = $1"#);
-            let is_money = matches!(*table, "billing_ledger" | "billing_subscriptions");
-            let expected = if is_money { unlink } else { delete };
-            assert_eq!(*statement, expected);
+            assert_eq!(*statement, delete);
         }
     }
 
+    /// Puzzled's former billing tables. Sylphx Money holds subscriptions and
+    /// the ledger now; these tables are kept, unread and unwritten, until the
+    /// contract migration after Money live proof retires them (its guard
+    /// refuses to run over any row). No code touches them, so erasure has
+    /// nothing to erase there: `retiring_billing_tables_have_no_runtime_reader`
+    /// holds that.
+    const RETIRING_TABLES: [&str; 3] = [
+        "billing_customers",
+        "billing_subscriptions",
+        "billing_ledger",
+    ];
+
     #[test]
     fn erasure_covers_every_player_id_column() {
-        let declared = player_id_columns_in_migrations();
+        let declared: BTreeSet<(String, String)> = player_id_columns_in_migrations()
+            .into_iter()
+            .filter(|(table, _)| !RETIRING_TABLES.contains(&table.as_str()))
+            .collect();
         assert!(
             !declared.is_empty(),
             "no player-id columns parsed from migrations"
@@ -251,6 +263,79 @@ mod tests {
         assert!(
             stale.is_empty(),
             "USER_KEYED_COLUMNS names columns no migration declares: {stale:?}"
+        );
+    }
+
+    /// No runtime code path (server, core, or web app) names a retiring
+    /// billing table: they stay only for schema/migration parity until the
+    /// contract migration. Tests and the Drizzle schema are the exceptions.
+    #[test]
+    fn retiring_billing_tables_have_no_runtime_reader() {
+        fn walk(dir: &Path, out: &mut Vec<std::path::PathBuf>) {
+            for entry in std::fs::read_dir(dir)
+                .unwrap_or_else(|e| panic!("read {}: {e}", dir.display()))
+                .flatten()
+            {
+                let path = entry.path();
+                if path.is_dir() {
+                    walk(&path, out);
+                } else {
+                    out.push(path);
+                }
+            }
+        }
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let mut files = Vec::new();
+        for dir in [
+            "crates/puzzled-core/src",
+            "crates/puzzled-server/src",
+            "apps/puzzled/src",
+        ] {
+            walk(&root.join(dir), &mut files);
+        }
+        let schema = root.join("apps/puzzled/src/lib/db/schema.ts");
+        let needles = RETIRING_TABLES
+            .iter()
+            .map(|t| (*t).to_string())
+            .chain(
+                ["billingCustomers", "billingSubscriptions", "billingLedger"]
+                    .iter()
+                    .map(|n| (*n).to_string()),
+            )
+            .collect::<Vec<_>>();
+        // The scan sees the schema, so an empty result is not a blind scan.
+        let schema_text = std::fs::read_to_string(&schema).unwrap_or_default();
+        assert!(
+            needles.iter().all(|n| schema_text.contains(n.as_str())),
+            "the Drizzle schema no longer defines the retiring tables; update this test"
+        );
+        let mut readers = Vec::new();
+        for file in &files {
+            let name = file
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or_default();
+            let runtime = match file.extension().and_then(|e| e.to_str()) {
+                Some("rs") => !name.ends_with("tests.rs"),
+                Some("ts" | "tsx") => {
+                    !name.contains(".test.") && !file.ends_with("lib/db/schema.ts")
+                }
+                _ => false,
+            };
+            if !runtime {
+                continue;
+            }
+            let text = std::fs::read_to_string(file).unwrap_or_default();
+            let code = text.split("#[cfg(test)]").next().unwrap_or_default();
+            for needle in &needles {
+                if code.contains(needle.as_str()) {
+                    readers.push(format!("{}: {needle}", file.display()));
+                }
+            }
+        }
+        assert!(
+            readers.is_empty(),
+            "runtime code names a retiring billing table: {readers:?}"
         );
     }
 }

@@ -30,12 +30,15 @@ use serde_json::Value;
 use sqlx::PgPool;
 
 use super::auth_subjects;
-use super::platform_jwt::VerifiedIdentity;
+use super::platform_jwt::{actor_from_claim, VerifiedIdentity};
 
 /// Internal header carrying the verified end user (base64url JSON).
 pub const VERIFIED_IDENTITY_HEADER: &str = "x-puzzled-verified-identity";
-/// The web's session cookie (set by `apps/puzzled/src/lib/identity/server.ts`).
-pub const SESSION_COOKIE: &str = "sylphx_identity_session";
+/// The web's session cookie (set by `apps/puzzled/src/lib/identity/session-cookie.ts`).
+pub const SESSION_COOKIE: &str = "puzzled_session";
+/// The cookie's previous name, still read so the rename signs nobody out.
+// TODO(2026-10-31): drop LEGACY_SESSION_COOKIE and its read in `session_token`.
+pub const LEGACY_SESSION_COOKIE: &str = "sylphx_identity_session";
 const SESSION_PREFIX: &str = "identity_org_session_";
 const DEFAULT_AUTH_URL: &str = "https://api.sylphx.com";
 const POSITIVE_TTL: Duration = Duration::from_secs(60);
@@ -173,6 +176,7 @@ impl AuthSessions {
             display_name: principal.display_name,
             email: principal.email,
             is_admin: false,
+            actor: principal.actor,
         })
     }
 }
@@ -195,6 +199,12 @@ pub struct SessionPrincipal {
     pub legacy_subject: Option<String>,
     pub display_name: Option<String>,
     pub email: Option<String>,
+    /// Who acts for this principal when the session is delegated (an `act` or
+    /// `actor` field). Auth's published `GetCurrentSessionResponse` does not
+    /// declare one (cloud identity contract `sylphx.identity.v1`), so this is
+    /// read defensively and is None until Auth adds it; see
+    /// docs/capabilities.md PUZ-AUTH-DELEGATED.
+    pub actor: Option<String>,
 }
 
 /// Read `GetCurrentSessionResponse` (snake or camel case). An inactive
@@ -240,7 +250,17 @@ pub fn principal_from_session(
         legacy_subject,
         display_name: text(&["display_name", "displayName"]),
         email: text(&["primary_email", "primaryEmail"]),
+        actor: delegation_actor(body, session, principal),
     })
+}
+
+/// The delegation claim of a session read, wherever Auth puts it: `act` or
+/// `actor` on the response, the session or the principal.
+fn delegation_actor(body: &Value, session: &Value, principal: &Value) -> Option<String> {
+    [body, session, principal]
+        .into_iter()
+        .flat_map(|node| ["act", "actor"].into_iter().map(move |k| node.get(k)))
+        .find_map(actor_from_claim)
 }
 
 /// The 128-bit value an Auth id carries, in any of its forms:
@@ -291,16 +311,21 @@ pub fn session_token(headers: &HeaderMap) -> Option<String> {
     {
         return Some(bearer.to_string());
     }
-    headers
-        .get_all(COOKIE)
-        .iter()
-        .filter_map(|v| v.to_str().ok())
-        .flat_map(|v| v.split(';'))
-        .find_map(|pair| {
-            let (name, value) = pair.trim().split_once('=')?;
-            let value = value.trim();
-            (name.trim() == SESSION_COOKIE && value.starts_with(SESSION_PREFIX))
-                .then(|| value.to_string())
+    // The new name first, then the old one.
+    [SESSION_COOKIE, LEGACY_SESSION_COOKIE]
+        .into_iter()
+        .find_map(|wanted| {
+            headers
+                .get_all(COOKIE)
+                .iter()
+                .filter_map(|v| v.to_str().ok())
+                .flat_map(|v| v.split(';'))
+                .find_map(|pair| {
+                    let (name, value) = pair.trim().split_once('=')?;
+                    let value = value.trim();
+                    (name.trim() == wanted && value.starts_with(SESSION_PREFIX))
+                        .then(|| value.to_string())
+                })
         })
 }
 
@@ -483,7 +508,7 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert(
             COOKIE,
-            "a=1; sylphx_identity_session=identity_org_session_abc"
+            "a=1; puzzled_session=identity_org_session_abc"
                 .parse()
                 .unwrap(),
         );
@@ -505,12 +530,82 @@ mod tests {
     }
 
     #[test]
+    fn old_cookie_name_still_signs_in_and_the_new_name_wins() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            COOKIE,
+            "sylphx_identity_session=identity_org_session_old"
+                .parse()
+                .unwrap(),
+        );
+        assert_eq!(
+            session_token(&headers).as_deref(),
+            Some("identity_org_session_old")
+        );
+        headers.insert(
+            COOKIE,
+            "sylphx_identity_session=identity_org_session_old; puzzled_session=identity_org_session_new"
+                .parse()
+                .unwrap(),
+        );
+        assert_eq!(
+            session_token(&headers).as_deref(),
+            Some("identity_org_session_new")
+        );
+    }
+
+    #[test]
+    fn delegation_fields_are_kept_wherever_auth_puts_them() {
+        let principal = json!({"principal_id": "usr_a", "project_id": ORG, "state": "active"});
+        let plain = json!({"session": {"principal": principal.clone()}});
+        assert_eq!(principal_from_session(&plain, ORG).unwrap().actor, None);
+        let on_session = json!({"session": {"principal": principal.clone(),
+            "act": {"sub": "agent_1"}}});
+        assert_eq!(
+            principal_from_session(&on_session, ORG)
+                .unwrap()
+                .actor
+                .as_deref(),
+            Some("agent_1")
+        );
+        let on_body = json!({"actor": "agent_2", "session": {"principal": principal.clone()}});
+        assert_eq!(
+            principal_from_session(&on_body, ORG)
+                .unwrap()
+                .actor
+                .as_deref(),
+            Some("agent_2")
+        );
+        let mut on_principal = principal.clone();
+        on_principal["actor"] = json!({"kind": "agent"});
+        let body = json!({"session": {"principal": on_principal}});
+        assert_eq!(
+            principal_from_session(&body, ORG).unwrap().actor.as_deref(),
+            Some("delegated")
+        );
+        // Presence alone is delegation, whatever the value.
+        for value in [json!(null), json!(false), json!(""), json!({})] {
+            for key in ["act", "actor"] {
+                let mut session = json!({"principal": principal.clone()});
+                session[key] = value.clone();
+                let body = json!({ "session": session });
+                assert_eq!(
+                    principal_from_session(&body, ORG).unwrap().actor.as_deref(),
+                    Some("delegated"),
+                    "{key}={value}"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn header_round_trips() {
         let id = VerifiedIdentity {
             user_id: "0199aa10-7b2c-7d3e-8f00-1234567890ab".into(),
             display_name: Some("Ada".into()),
             email: None,
             is_admin: false,
+            actor: Some("agent_1".into()),
         };
         let mut headers = HeaderMap::new();
         headers.insert(VERIFIED_IDENTITY_HEADER, encode_identity(&id).unwrap());

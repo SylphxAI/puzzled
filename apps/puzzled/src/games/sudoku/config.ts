@@ -21,7 +21,7 @@ import type {
 	SudokuPuzzleClientData,
 	SudokuSolution,
 } from './types'
-import { GRID_SIZE } from './types'
+import { GRID_SIZE, isValidPlacement } from './types'
 
 export type { SudokuPuzzleClientData, SudokuSolution }
 
@@ -119,8 +119,8 @@ export const sudokuConfig: GameConfig<
 	 * - Minimum: 100 points for a win
 	 */
 	validateAndScore(
-		solution: SudokuSolution,
-		_puzzleData: SudokuPuzzleClientData,
+		_solution: SudokuSolution,
+		puzzleData: SudokuPuzzleClientData,
 		submission: GameSubmission,
 	): GameResult {
 		const data = submission.data as
@@ -139,34 +139,51 @@ export const sudokuConfig: GameConfig<
 			return { valid: false, error: 'Invalid grid dimensions' }
 		}
 
-		// Check each cell matches solution
+		if (
+			puzzleData.grid.length !== GRID_SIZE ||
+			puzzleData.grid.some(
+				(row) =>
+					row.length !== GRID_SIZE ||
+					row.some((v) => v !== null && (!Number.isInteger(v) || v < 1 || v > 9)),
+			)
+		) {
+			return { valid: false, error: 'Invalid sudoku given clues' }
+		}
+
+		// Every legitimate completion preserves the served clues and Sudoku rules.
 		let allCorrect = true
 		for (let row = 0; row < GRID_SIZE; row++) {
 			if (!Array.isArray(finalGrid[row]) || finalGrid[row].length !== GRID_SIZE) {
 				return { valid: false, error: `Invalid row ${row} dimensions` }
 			}
+		}
+		for (let row = 0; row < GRID_SIZE; row++) {
 			for (let col = 0; col < GRID_SIZE; col++) {
-				const submitted = finalGrid[row][col]
-				const expected = solution.grid[row][col]
-				if (submitted !== expected) {
+				const value = finalGrid[row][col]
+				const given = puzzleData.grid[row][col]
+				if (
+					typeof value !== 'number' ||
+					!Number.isInteger(value) ||
+					value < 1 ||
+					value > 9 ||
+					(given !== null && given !== value) ||
+					!isValidPlacement(finalGrid, row, col, value)
+				)
 					allCorrect = false
-					break
-				}
 			}
-			if (!allCorrect) break
 		}
 
 		// Verify claimed status
 		if (submission.status === 'won' && !allCorrect) {
 			return {
 				valid: false,
-				error: 'Invalid win claim - grid does not match solution',
+				error: 'Invalid win claim - grid violates Sudoku rules or given clues',
 			}
 		}
 		if (submission.status === 'lost' && allCorrect) {
 			return {
 				valid: false,
-				error: 'Invalid loss claim - grid matches solution',
+				error: 'Invalid loss claim - grid solves puzzle',
 			}
 		}
 

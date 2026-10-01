@@ -11,7 +11,6 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
@@ -45,8 +44,6 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
 	} = useGameSession({
 		gameSlug: 'cryptogram',
 		mode,
@@ -342,12 +339,6 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				}}
 				mode={mode}
 				onShare={handleShare}
-			/>
-
-			<GuestSignupPrompt
-				open={showGuestSignupPrompt}
-				onClose={handleCloseGuestPrompt}
-				streakCount={1}
 			/>
 		</div>
 	)

@@ -1,40 +1,45 @@
 'use client'
 
 import { useEffect } from 'react'
-import { canTrackAnalytics, onConsentChange } from '@/features/analytics/lib/consent'
+import {
+	canStoreMarketing,
+	canTrackAnalytics,
+	onConsentChange,
+} from '@/features/analytics/lib/consent'
 import {
 	attributionCookieString,
-	attributionCookieValue,
-	hasAttributionCookie,
+	nextAttributionCookie,
+	readAttributionCookie,
 } from '@/lib/attribution'
 
 /**
- * Keeps the first tagged landing (utm_*, ref) for 30 days, only with
- * analytics consent. A visitor who accepts on the landing page is captured
- * then; declining clears any stored tags. Renders nothing.
+ * Keeps the first tagged landing (utm_*, ref) for 30 days with analytics
+ * consent, and an ad click id (gclid, gbraid, wbraid) for 90 days with
+ * marketing consent. A visitor who accepts on the landing page is captured
+ * then; declining removes what that consent covered. Renders nothing.
  */
 export function AttributionCapture() {
 	useEffect(() => {
-		const landing = attributionCookieValue(
-			window.location.search,
-			window.location.pathname,
-			Date.now(),
-		)
 		const secure = window.location.protocol === 'https:'
-		const store = () => {
-			if (landing && canTrackAnalytics() && !hasAttributionCookie(document.cookie)) {
+		const sync = () => {
+			const action = nextAttributionCookie({
+				existing: readAttributionCookie(document.cookie),
+				search: window.location.search,
+				landingPath: window.location.pathname,
+				now: Date.now(),
+				analytics: canTrackAnalytics(),
+				marketing: canStoreMarketing(),
+			})
+			if (action.kind === 'set') {
 				// biome-ignore lint/suspicious/noDocumentCookie: first-party tag cookie, read by the api
-				document.cookie = attributionCookieString(landing, secure)
-			}
-		}
-		store()
-		return onConsentChange((status) => {
-			if (status === 'accepted') store()
-			if (status === 'declined' && hasAttributionCookie(document.cookie)) {
+				document.cookie = attributionCookieString(action.value, secure)
+			} else if (action.kind === 'clear') {
 				// biome-ignore lint/suspicious/noDocumentCookie: clearing the tag cookie on decline
 				document.cookie = attributionCookieString(null, secure)
 			}
-		})
+		}
+		sync()
+		return onConsentChange(sync)
 	}, [])
 	return null
 }

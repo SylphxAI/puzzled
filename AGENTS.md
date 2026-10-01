@@ -45,14 +45,20 @@ Run the narrowest affected check first; the full workspace is for the end.
 
 ## Gotchas the code will not teach you
 
+- **No manual catalogue writes:** `config/commercial/catalogue.json` is applied
+  to Sylphx Money only by `.github/workflows/money-catalogue.yml` (preview, then
+  production, with a 15-minute key from GitHub OIDC, no stored secret; the path
+  must match its Access declaration, do not rename it); change prices, features
+  and seats by PR to that file.
+
 - **Day key is `Asia/Hong_Kong`, computed on the server.** Never derive "today"
   from a client clock or UTC; the shared daily puzzle and the finish rule depend on it.
 - **One finish per `(user, game, day_key)`.** Keep the already-played guard even
   when a deterministic generator gives no `puzzle_id`.
 - **The free daily puzzle never reads billing.** A failed entitlement read must
-  refuse paid play and leave the free floor open. Puzzled Plus is built but not
-  on sale, and its Stripe code is replaced by Sylphx Money rather than switched
-  on ([docs/monetization.md](docs/monetization.md)).
+  refuse paid play and leave the free floor open. Payments run only through
+  Sylphx Money; Puzzled holds no Stripe code or keys
+  ([docs/monetization.md](docs/monetization.md)).
 - **Migrations are forward-only in production.** Use expand then contract, run
   `atlas migrate hash` after editing, and take the next free migration number
   because open branches also add migrations.

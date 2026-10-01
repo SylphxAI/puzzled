@@ -28,6 +28,8 @@ export type ResultShareFacts = {
 	currentStreak?: number
 	/** Server-issued share id (see useShareId); carried in the link as `ref`. */
 	shareId?: string
+	/** Seasonal greeting for the caption; only on a seasonal day. */
+	greeting?: string
 }
 
 export type ResultShareOutcome = 'shared' | 'copied' | 'cancelled' | 'unavailable'

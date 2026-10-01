@@ -20,7 +20,7 @@
 	"topPercent": "Top {percent}% today!",
 	"perfectGame": "Perfect game! 🎯",
 	"playersToday": "{count} players today",
-	"moreOnTryit": "在 Tryit 玩更多每日谜题",
+	"playNext": "下一款：{game}",
 	"backToHome": "Back to Home",
 	"missedCategories": "You missed:"
 }

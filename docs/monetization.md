@@ -7,7 +7,7 @@ Decided in [#235](https://github.com/SylphxAI/puzzled/issues/235): sell a paid t
 - **Model:** consumer subscription in the NYT Games class. Today's featured puzzle is free; Puzzled Plus opens everything else.
 - **Seller:** Sylphx Limited, England and Wales, company 16438428, registered office 128 City Road, London EC1V 2NX. VAT GB 502 7862 95.
 - **Billing system:** Sylphx Money, the platform's payments service: catalogue, hosted checkout, subscription state, entitlements API, portal, Stripe Tax and ledger. Puzzled builds no billing of its own.
-- **State:** the earlier direct-Stripe code (its details are in sections 3 to 5) is deployed but closed: no Stripe keys are set, nothing is sold, nothing is locked and there are no payers. It is replaced by Money in one migration, not switched on; the prices and rules here carry over.
+- **State:** the earlier direct-Stripe code was removed in [#292](https://github.com/SylphxAI/puzzled/pull/292) (Money cutover part 3), including the `/webhooks/stripe` handler. Billing is Sylphx Money only, and Puzzled polls Money for subscription state. Sections 3 to 5 describe the retired design; the prices and rules carry over to Money.
 
 ## 1. Objective
 
@@ -89,13 +89,12 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 - Cancellation right: an account's first subscription can be cancelled within
   14 days of starting it for a full refund, however much was played
   (Consumer Contracts Regulations 2013). The api refunds every paid invoice of
-  that subscription through Stripe, ends access at once, and appends negative
-  ledger rows. A later subscription has no refund window.
-- The Stripe Customer Portal handles payment methods, invoices and plan
+  that subscription through Sylphx Money, which owns the refund records and ends access at once. A later subscription has no refund window.
+- Sylphx Money's hosted portal handles payment methods, invoices and plan
   changes; cancellation stays in Settings so the refund rule applies.
 - An account with a subscription that still renews cannot be erased until it
-  is cancelled. On erasure, subscription and ledger rows are kept for six
-  years (UK tax records) with the player id removed.
+  is cancelled. Money retains legally required financial records under its own retention
+  policy; Puzzled has no subscription or payment-ledger rows to retain.
 - Erasure also deletes the player's Sylphx Auth sign-in, through Auth's
   privacy-request API, for every subject that names the player. A refused
   Auth deletion erases nothing: the account stays whole and the request can
@@ -105,31 +104,39 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 
 ## 5. Money and entitlement (commercial standard)
 
-- Stripe webhooks (`POST /webhooks/stripe`) are signature-verified and treated
-  as hints: each event is read back from Stripe before a row changes.
-  Returning from checkout also reads the subscription back
-  (`GetSubscription{refresh}`), so access never waits on a webhook.
-- `billing_subscriptions` holds the last read-back state per subscription;
-  entitlement is derived from it (`active`, `trialing` or `past_due` inside the
-  paid period). A row whose period has passed while Stripe still calls it live
-  is read back before it can lock a player out.
-- `billing_ledger` is append-only: one row per paid invoice and per refund,
-  signed integer minor units, unique per Stripe source id.
+- Sylphx Money is the sole payments owner. Puzzled creates Money hosted
+  checkout sessions, reads `catalogs/default` for prices, and asks
+  `entitlement_grants:check` for Plus access. It holds no Stripe keys,
+  processor webhooks, billing subscriptions or payment ledger.
+- Checkout return reads Money's subscription status; a browser redirect
+  cannot assert a paid entitlement. Cancellation and the first-subscription
+  14-day refund are requests to Money; Money owns invoice, refund and tax
+  records. Puzzled stores only checkout consent evidence and family membership.
 - Family: the family-plan subscriber gets an invite link; up to 3 others join
   with their own accounts. The subscriber can remove members and reset the
-  link. Members lose access when the plan ends.
+  link. Membership is not an entitlement: access still requires the owner's
+  live family entitlement from Money.
+- Money is called server-side with the dedicated `SYLPHX_MONEY_API_KEY`
+  (`billing:read` + `billing:write`), never a browser or general platform key.
+  The free daily puzzle never reads Money. The outage policy is stated below.
 
 ### Referral attribution
 
 A landing with campaign tags (`utm_*`, `ref`; Tryit links use
 `utm_source=tryit&utm_medium=referral&utm_campaign=…&ref=<result id>`) is kept
 first-touch for 30 days in the `puzzled_attr` first-party cookie, only after
-analytics consent (declining clears it). Email sign-up stores it once in
-`account_attribution`. Checkout copies the account's tags (or, without them,
-the cookie) into the Stripe subscription metadata, which is read back into
-`billing_subscriptions.attribution`. Gap: an OAuth sign-up completes at Sylphx
-Identity with no Puzzled sign-up hook, so its account row is not written; its
-subscription still carries the cookie's tags. `/daily` redirects to today's
+analytics consent (declining clears it). Sign-up stores it once in
+`account_attribution`. Checkout passes the account's tags (or, without them,
+the cookie) to Money's checkout-session attribution. A Google Ads click id
+(`gclid`, `gbraid`, `wbraid`) on a landing is kept in the same cookie for 90
+days, only after *marketing* consent (the SDK `marketing` preference, mirrored
+to `puzzled:consent:marketing`; the banner grants analytics only today, so the
+click id is not stored until a marketing choice is offered). Withdrawing
+marketing consent removes it; declining everything clears the cookie. Checkout
+sends it from the live cookie, never from the account row, as
+`metadata.gclid` (or `gbraid` / `wbraid`) after a `[A-Za-z0-9_-]{1,100}`
+check; Money has no `client_reference_id`. No Stripe subscription
+metadata or local billing table is written. `/daily` redirects to today's
 free game and keeps the query string.
 
 ## 6. Conversion moments (ethical)
@@ -151,6 +158,25 @@ never for a Puzzled Plus subscriber ("no ads" is a Plus perk). The ad loads only
 after the visitor accepts cookies. The site's Content Security Policy allows the
 ad network's hosts only while ads are configured.
 
+### Google Analytics and Ads conversions
+
+Off until `GA_MEASUREMENT_ID` (GA4, `G-...`) or `GOOGLE_ADS_ID` (`AW-...`) is set in
+the web environment; with neither, no Google script, request or CSP host exists.
+The cookie banner has three equal choices: Decline, Settings (separate Analytics and
+Advertising switches, both off) and Accept (analytics only, never advertising). gtag.js is
+injected, and `config` sent, only after a stored choice grants something: GA4 needs
+Analytics, Ads needs Advertising (`ad_storage`, `ad_user_data`); `ad_personalization`
+is always denied and Google signals are off. Basic consent mode: unanswered or declined
+loads nothing. There is no geo signal, so the denied defaults apply everywhere.
+Google sees only the site origin plus public paths (`/`, `/pricing`, `/privacy`, `/terms`,
+`/support`, `/login`, `/signup`), a fixed title and no referrer; game, share and account
+addresses never reach it. Turn **enhanced measurement** and **Google signals** off in the
+GA4 property. Events: `sign_up` (new account only, from Auth's new-account answer),
+`trial_start` (value = the plan's post-trial price in the checkout currency, plan as item id)
+and `purchase` on the checkout return, each once per Money checkout session (`s`); mark them as
+Ads conversions. "Change cookie choice" on the privacy page withdraws consent, deletes
+`_ga*` and `_gcl_*`, and reopens the banner.
+
 ## 7. Metrics (supporting, not the North Star)
 
 See [metrics.md](metrics.md): paid conversion among players with
@@ -160,7 +186,7 @@ Star.
 
 ## 8. Channels
 
-- Web: Sylphx Money hosted checkout (planned). The Stripe Checkout path from #237 is dormant.
+- Web: Sylphx Money hosted checkout. Purchases open only when Money is configured.
 - App Store and Google Play in-app purchase: not built. When a store app
   ships, Sylphx Money validates its receipts and serves the same
   entitlement.
@@ -170,3 +196,10 @@ Star.
 Each new module costs content, verification, attention, runtime and a way to
 disable it without breaking the app. Ship modules when the expected lift in
 daily puzzle completers or paid conversion justifies that.
+
+## When Money cannot answer
+
+This is the intended behaviour, a business choice of player experience over a small leak:
+
+- If the Money catalogue can't be read, Plus counts as not on sale. Nothing is locked, and the pricing page says "Purchases open shortly".
+- If Money can't answer a Plus entitlement check, play is allowed. Each such allowance logs `event = "money_entitlement_unanswerable_allowed"` at warn level, so a free ride lasting a whole outage shows up in logs and alerts.

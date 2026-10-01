@@ -60,14 +60,15 @@
 		}
 	},
 	"day": {
-		"guestTitle": "每天十九款謎題，永遠有一款免費。",
+		"guestTitle": "今天的{game}，免費玩",
 		"titleMemberReady": "今天的{game}已準備好",
 		"titleMemberStreak": "你的 {days} 天連續紀錄等著你",
 		"titleMemberDone": "今天已完成 — 玩得漂亮",
-		"bodyGuest": "文字、邏輯與數字謎題，每天重置，有連續紀錄與公平排行榜。不必註冊即可玩。",
+		"bodyGuest": "Puzzled 每天提供一組文字、邏輯與數字謎題。每天一個免費，幾分鐘就能玩完，不必註冊。",
 		"bodyMember": "你的連續紀錄、統計與今日陣容，一按即到。",
 		"playToday": "玩今天的{game}",
 		"finishersToday": "今天已有 {count} 人完成",
-		"freeToday": "今天免費"
+		"freeToday": "今天免費",
+		"guestNote": "不必註冊、不必信用卡，幾分鐘玩完。"
 	}
 }

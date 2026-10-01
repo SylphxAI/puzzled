@@ -35,22 +35,22 @@ use puzzled_core::puzzle_play::game_slugs::{
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
-use crate::capabilities::billing::service::entitlement;
+use crate::capabilities::billing::service::access as entitlement_access;
 use crate::capabilities::daily_pipeline;
 use crate::capabilities::gamification::adapters::streak_read::load_settled_streak;
 use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::fetch_puzzle_by_id;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
     adopt_guest_sessions, has_completed_session, has_ritual_completion, load_completed_session,
-    persist_validated_session,
+    load_today_progress, persist_validated_session, CompletedSession,
 };
 use crate::capabilities::puzzle_play::adapters::result_shares_db::{
     load_shared_result, record_share, set_share_streak,
 };
 use crate::proto::puzzled::v1::{
-    CheckGuessRequest, CheckGuessResponse, DailyCompletion, GetDailyRequest, GetDailyResponse,
-    GetPuzzleRequest, GetPuzzleResponse, GetSharedResultRequest, GetSharedResultResponse,
-    PuzzleService, ShareResultRequest, ShareResultResponse, SubmitGuessRequest,
-    SubmitGuessResponse,
+    CheckGuessRequest, CheckGuessResponse, DailyCompletion, GameProgress, GetDailyRequest,
+    GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse, GetSharedResultRequest,
+    GetSharedResultResponse, GetTodayProgressRequest, GetTodayProgressResponse, PuzzleService,
+    ShareResultRequest, ShareResultResponse, SubmitGuessRequest, SubmitGuessResponse,
 };
 
 const SLICE_PUZZLE: &str = "S2-puzzle-connect";
@@ -133,7 +133,7 @@ impl PuzzleConnectService {
     ///
     /// A future day is refused so no one can read tomorrow's solution early.
     /// Today's featured game is free to everyone; every other game and every
-    /// past day needs Puzzled Plus once it is on sale. While Stripe is not
+    /// past day needs Puzzled Plus once it is on sale. While Money is not
     /// configured nothing is sold, so nothing is locked. An entitlement read
     /// that fails refuses (fail closed to the free floor).
     async fn enforce_play_access(
@@ -161,7 +161,7 @@ impl PuzzleConnectService {
         }
         let entitled = match (user_id, &self.state.pool) {
             (Some(uid), Some(pool)) => {
-                match entitlement(pool, self.state.stripe.as_ref(), uid).await {
+                match entitlement_access(pool, self.state.money.as_ref(), uid).await {
                     Ok(found) => found.entitled,
                     Err(error) => {
                         warn!(%error, "entitlement read failed; refusing paid play");
@@ -171,6 +171,26 @@ impl PuzzleConnectService {
             }
             _ => false,
         };
+        // Money unreachable: it cannot vouch for anyone, so nothing that is
+        // free today is locked behind it.
+        if !entitled {
+            if let (Some(uid), Some(money)) = (user_id, self.state.money.as_ref()) {
+                if money
+                    .try_check(uid, crate::capabilities::money::access::FEATURE_PLUS)
+                    .await
+                    .is_err()
+                {
+                    // Intended: player experience over a small leak while Money
+                    // is down. Counted so an outage-long free ride is visible.
+                    tracing::warn!(
+                        event = "money_entitlement_unanswerable_allowed",
+                        feature = crate::capabilities::money::access::FEATURE_PLUS,
+                        "Money could not answer the Plus check; play allowed"
+                    );
+                    return Ok(());
+                }
+            }
+        }
         play_access(sales_open, entitled, is_today, free_today)
             .map_err(|denied| ConnectError::new(ErrorCode::PermissionDenied, denied.code()))
     }
@@ -215,6 +235,64 @@ fn sudoku_puzzle_data(seed: i64, difficulty: SudokuDifficulty) -> Value {
 
 /// Deterministic mini-crossword fallback when no stored row exists.
 /// Free rotation includes crossword; free floor must not depend on pre-seed.
+/// Most slugs one GetTodayProgress may name (the catalogue is nineteen).
+const MAX_PROGRESS_SLUGS: usize = 64;
+
+/// Requested slugs paired with their canonical storage slug, request order kept.
+fn progress_slugs(raw: &[String]) -> Result<Vec<(String, String)>, ConnectError> {
+    if raw.len() > MAX_PROGRESS_SLUGS {
+        return Err(ConnectError::new(
+            ErrorCode::InvalidArgument,
+            "too_many_games",
+        ));
+    }
+    raw.iter()
+        .map(|slug| {
+            let canonical = canonicalize_game_slug(slug.trim());
+            if canonical.is_empty() {
+                return Err(ConnectError::new(
+                    ErrorCode::InvalidArgument,
+                    "game_slug_required",
+                ));
+            }
+            if !is_valid_game_slug(canonical) {
+                return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
+            }
+            Ok((slug.clone(), canonical.to_string()))
+        })
+        .collect()
+}
+
+/// Per-game flags in request order. A finish is reported only when the row
+/// exists; nothing here carries a puzzle or an answer.
+fn progress_entries(
+    slugs: &[(String, String)],
+    finished: &HashMap<String, CompletedSession>,
+) -> Vec<GameProgress> {
+    slugs
+        .iter()
+        .map(|(requested, canonical)| {
+            let session = finished.get(canonical);
+            GameProgress {
+                game_slug: requested.clone(),
+                has_completed: session.is_some(),
+                completed_session: session
+                    .map(|session| DailyCompletion {
+                        status: session.status.clone(),
+                        score: session.score.and_then(|score| u32::try_from(score).ok()),
+                        attempts: u32::try_from(session.attempts).ok(),
+                        completed_at_ms: session
+                            .completed_at
+                            .map(|completed_at| completed_at.and_utc().timestamp_millis()),
+                        ..Default::default()
+                    })
+                    .into(),
+                ..Default::default()
+            }
+        })
+        .collect()
+}
+
 fn date_from_string(raw: Option<&str>) -> Option<NaiveDate> {
     let raw = raw?.trim();
     if raw.is_empty() {
@@ -398,6 +476,39 @@ impl PuzzleService for PuzzleConnectService {
                 "invalid_query",
             )),
         }
+    }
+
+    async fn get_today_progress(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, GetTodayProgressRequest>,
+    ) -> ServiceResult<GetTodayProgressResponse> {
+        let req = request.to_owned_message();
+        let slugs = progress_slugs(&req.game_slugs)?;
+
+        self.adopt_guest_progress_if_needed(&ctx).await?;
+        let identity = self.identity(&ctx)?;
+        // The product day is the server's; the client never names it.
+        let today = product_day_key(Utc::now());
+
+        let finished = match (identity.as_deref(), &self.state.pool) {
+            (Some(uid), Some(pool)) if !slugs.is_empty() => {
+                let canonical: Vec<String> = slugs.iter().map(|(_, c)| c.clone()).collect();
+                load_today_progress(pool, uid, &canonical, today)
+                    .await
+                    .map_err(|error| {
+                        warn!(%error, "get_today_progress lookup failed");
+                        ConnectError::new(ErrorCode::Internal, "session_lookup_failed")
+                    })?
+            }
+            _ => HashMap::new(),
+        };
+
+        Response::ok(GetTodayProgressResponse {
+            day_key: today.format("%Y-%m-%d").to_string(),
+            games: progress_entries(&slugs, &finished),
+            ..Default::default()
+        })
     }
 
     async fn submit_guess(
@@ -771,4 +882,47 @@ impl PuzzleService for PuzzleConnectService {
 
 pub fn puzzle_connect_service(state: AppState) -> Arc<PuzzleConnectService> {
     Arc::new(PuzzleConnectService::new(state))
+}
+
+#[cfg(test)]
+mod today_progress_tests {
+    use super::*;
+
+    fn session(score: i32) -> CompletedSession {
+        CompletedSession {
+            status: "won".into(),
+            score: Some(score),
+            attempts: 2,
+            completed_at: None,
+        }
+    }
+
+    #[test]
+    fn aliases_resolve_to_storage_slugs_and_keep_the_requested_name() {
+        let slugs = progress_slugs(&["queens".to_string(), "sudoku".to_string()]).unwrap();
+        assert_eq!(slugs[0], ("queens".to_string(), "crowns".to_string()));
+        assert_eq!(slugs[1].1, "sudoku");
+    }
+
+    #[test]
+    fn unknown_empty_and_oversized_requests_are_refused() {
+        assert!(progress_slugs(&["nope".to_string()]).is_err());
+        assert!(progress_slugs(&["  ".to_string()]).is_err());
+        let many = vec!["sudoku".to_string(); MAX_PROGRESS_SLUGS + 1];
+        assert!(progress_slugs(&many).is_err());
+    }
+
+    #[test]
+    fn only_finished_games_are_flagged_and_order_is_kept() {
+        let slugs = progress_slugs(&["sudoku".to_string(), "queens".to_string()]).unwrap();
+        let mut finished = HashMap::new();
+        finished.insert("crowns".to_string(), session(80));
+        let out = progress_entries(&slugs, &finished);
+        assert_eq!(out[0].game_slug, "sudoku");
+        assert!(!out[0].has_completed);
+        assert!(out[0].completed_session.is_unset());
+        assert_eq!(out[1].game_slug, "queens");
+        assert!(out[1].has_completed);
+        assert_eq!(out[1].completed_session.score, Some(80));
+    }
 }

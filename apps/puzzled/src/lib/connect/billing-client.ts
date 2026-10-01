@@ -1,6 +1,6 @@
 /**
  * BillingService browser client (Puzzled Plus). The api owns every decision;
- * these calls only start a checkout, open the Stripe portal, or change the
+ * these calls only start a checkout, open the Sylphx Money billing portal, or change the
  * account's own subscription and family.
  */
 import { create } from '@bufbuild/protobuf'
@@ -22,9 +22,14 @@ function client() {
 	return createClient(BillingService, getConnectTransport())
 }
 
-export async function startCheckout(planId: string, locale: string, currency: string) {
+export async function startCheckout(
+	planId: string,
+	locale: string,
+	currency: string,
+	immediateSupplyConsent: boolean,
+) {
 	const res = await client().createCheckout(
-		create(CreateCheckoutRequestSchema, { planId, locale, currency }),
+		create(CreateCheckoutRequestSchema, { planId, locale, currency, immediateSupplyConsent }),
 	)
 	return res.url
 }
@@ -35,7 +40,7 @@ export async function openPortal(locale: string) {
 
 export async function cancelSubscription() {
 	const res = await client().cancelSubscription(create(CancelSubscriptionRequestSchema, {}))
-	return { refunded: res.refunded, accessEndsAtMs: Number(res.accessEndsAtMs) }
+	return { accessEndsAtMs: Number(res.accessEndsAtMs) }
 }
 
 export async function resumeSubscription() {
@@ -50,8 +55,10 @@ export async function leaveFamily() {
 	await client().leaveFamily(create(LeaveFamilyRequestSchema, {}))
 }
 
-export async function removeFamilyMember(userId: string) {
-	await client().removeFamilyMember(create(RemoveFamilyMemberRequestSchema, { userId }))
+export async function removeFamilyMember(memberHandle: string) {
+	await client().removeFamilyMember(
+		create(RemoveFamilyMemberRequestSchema, { userId: memberHandle }),
+	)
 }
 
 export async function resetFamilyInvite() {

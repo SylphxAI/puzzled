@@ -111,7 +111,7 @@ async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
     let app = router(AppState::new(None).with_auth(AuthSessions::new(base.clone(), ORG.into(), KEY.into())));
 
     // The web's session cookie is verified with Auth.
-    let cookie = ("cookie", format!("x=1; sylphx_identity_session={GOOD}"));
+    let cookie = ("cookie", format!("x=1; puzzled_session={GOOD}"));
     let (status, body) = subscription(&app, std::slice::from_ref(&cookie)).await;
     assert_eq!(status, StatusCode::OK, "{body}");
     // A bearer works too, and the answer is cached (one Auth call so far).
@@ -126,7 +126,7 @@ async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
     // A session Auth refuses is not signed in.
     let bad = (
         "cookie",
-        "sylphx_identity_session=identity_org_session_revoked".to_string(),
+        "puzzled_session=identity_org_session_revoked".to_string(),
     );
     let (status, _) = subscription(&app, &[bad]).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
@@ -165,6 +165,7 @@ async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
         display_name: None,
         email: None,
         is_admin: true,
+        actor: None,
     })
     .unwrap();
     let (status, _) = subscription(
@@ -186,7 +187,7 @@ async fn both_auth_subject_forms_reach_the_same_player() {
     use crate::capabilities::identity_access::adapters::auth_subjects::{
         player_for, LINK_FROM_ID_MAP, SPLIT_PLAYERS_AFTER_LINK,
     };
-    let Some(pool) = crate::billing_flow_tests::fresh_database().await else {
+    let Some(pool) = crate::test_support::fresh_database().await else {
         return;
     };
     const OLD: &str = "principal-0199aa10-7b2c-7d3e-8f00-1234567890ab";

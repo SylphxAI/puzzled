@@ -43,6 +43,17 @@ async function hasHorizontalOverflow(page: import('@playwright/test').Page) {
 }
 
 test.describe('Game catalog responsiveness', () => {
+	// Regression guard: an unshrinkable flex/fieldset child once widened /games
+	// to 421px at a 390px viewport.
+	test('the catalog and home do not scroll sideways at 390px', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 })
+		for (const path of ['/games', '/']) {
+			await page.goto(path, { waitUntil: 'domcontentloaded' })
+			await settle(page)
+			expect(await hasHorizontalOverflow(page), `${path} overflows at 390px`).toBe(false)
+		}
+	})
+
 	test('every module in the catalog renders without horizontal overflow', async ({ page }) => {
 		const slugs = await catalogSlugs(page)
 		expect(slugs.length, 'catalog exposes game modules').toBeGreaterThan(5)

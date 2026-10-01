@@ -4,9 +4,12 @@ import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
+import { GoogleTag } from '@/features/analytics/components/google-tag'
+import { CONSENT_DEFAULT_SCRIPT, googleTagIds } from '@/features/analytics/lib/google-tag'
 import { ErrorCapture } from '@/features/monitoring/components/error-capture'
 import { ApiProvider } from '@/lib/api/provider'
 import { NONCE_HEADER } from '@/lib/csp'
+import { env } from '@/lib/env'
 import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
 import { routing } from '@/lib/i18n/routing'
 import { getAppConfig } from '@/lib/identity/app-config'
@@ -151,6 +154,9 @@ export default async function LocaleLayout({ children, params }: Props) {
 	// The proxy's per-request CSP nonce; inline scripts run only with it.
 	const nonce = (await headers()).get(NONCE_HEADER) ?? undefined
 
+	// Null unless a Google id is configured; then nothing Google-related renders.
+	const googleTag = googleTagIds(env)
+
 	// Validate locale
 	if (!routing.locales.includes(locale as (typeof routing.locales)[number])) {
 		notFound()
@@ -175,11 +181,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 				<link rel="mask-icon" href="/brand/mark-mono.svg" color="#1a1712" />
 				<link rel="icon" href="/favicon.ico" sizes="48x48" />
 				<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-				{/*
-				 * Fonts are self-hosted by next/font, so no Google Fonts preconnect
-				 * is needed. Stripe is only contacted when checkout opens.
-				 */}
-				<link rel="dns-prefetch" href="https://js.stripe.com" />
+				{/* Fonts are self-hosted by next/font, so no preconnect is needed. */}
 				{/* FOUC prevention: Apply theme class before React hydration */}
 				<script
 					nonce={nonce}
@@ -240,6 +242,14 @@ export default async function LocaleLayout({ children, params }: Props) {
 						`,
 					}}
 				/>
+				{googleTag ? (
+					// Denied consent defaults, before any tag; gtag.js itself loads only after consent.
+					<script
+						nonce={nonce}
+						// biome-ignore lint/security/noDangerouslySetInnerHtml: static consent defaults
+						dangerouslySetInnerHTML={{ __html: CONSENT_DEFAULT_SCRIPT }}
+					/>
+				) : null}
 				<JsonLd baseUrl={baseUrl} />
 			</head>
 			<body className="antialiased">
@@ -247,6 +257,8 @@ export default async function LocaleLayout({ children, params }: Props) {
 				<ErrorCapture />
 				<ThemeProvider nonce={nonce}>
 					<PlatformProvider appId={config.app.id} config={config}>
+						{/* Before the children so its effects register first. */}
+						{googleTag ? <GoogleTag ids={googleTag} /> : null}
 						<ApiProvider>
 							<NextIntlClientProvider messages={pickMessages(messages, CLIENT_NAMESPACES)}>
 								{children}

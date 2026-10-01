@@ -71,6 +71,7 @@ fn resolve_guest(headers: &axum::http::HeaderMap) -> Option<VerifiedIdentity> {
         display_name: Some("Guest".to_string()),
         email: None,
         is_admin: false,
+        actor: None,
     })
 }
 
@@ -154,6 +155,20 @@ pub fn require_identity_or_guest(ctx: &RequestContext) -> Result<VerifiedIdentit
         })
 }
 
+/// The one guard for every authenticated purchase or spend (checkout, billing
+/// portal, and any future wallet spend): a delegated agent credential (an `act`
+/// or `actor` claim) is refused with 403 until delegated purchasing exists.
+/// Call it on the identity a purchase acts for, before any money call.
+pub fn require_purchase_allowed(identity: &VerifiedIdentity) -> Result<(), ConnectError> {
+    if identity.is_delegated() {
+        return Err(ConnectError::new(
+            ErrorCode::PermissionDenied,
+            "purchases by delegated agents are not available yet",
+        ));
+    }
+    Ok(())
+}
+
 /// Require identity with an exact admin scope claim.
 pub fn require_admin(ctx: &RequestContext) -> Result<VerifiedIdentity, ConnectError> {
     let identity = require_identity(ctx)?;
@@ -224,6 +239,25 @@ mod tests {
     }
 
     #[test]
+    fn delegated_identity_cannot_purchase_and_a_normal_one_can() {
+        let mut identity = VerifiedIdentity {
+            user_id: "f715210b-9df3-4945-b5bd-94fc4609bc30".to_string(),
+            display_name: None,
+            email: None,
+            is_admin: false,
+            actor: None,
+        };
+        assert!(require_purchase_allowed(&identity).is_ok());
+        identity.actor = Some("agent_1".to_string());
+        let denied = require_purchase_allowed(&identity).unwrap_err();
+        assert_eq!(denied.code, ErrorCode::PermissionDenied);
+        assert_eq!(
+            denied.message.as_deref(),
+            Some("purchases by delegated agents are not available yet")
+        );
+    }
+
+    #[test]
     fn invalid_guest_rejected() {
         let mut headers = HeaderMap::new();
         headers.insert(GUEST_ID_HEADER, "not-a-uuid".parse().unwrap());
@@ -238,12 +272,14 @@ mod tests {
                 display_name: Some("Ada".to_string()),
                 email: None,
                 is_admin: false,
+                actor: None,
             }),
             guest: Some(VerifiedIdentity {
                 user_id: "guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890".to_string(),
                 display_name: Some("Guest".to_string()),
                 email: None,
                 is_admin: false,
+                actor: None,
             }),
         };
         assert_eq!(

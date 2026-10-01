@@ -4,6 +4,7 @@ import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from '@/features/daily/lib/home-exposure'
 import { deriveHomePlayState, scopeHomePlayState } from '@/features/daily/lib/home-play-state'
 import { getPuzzleNumber } from '@/features/daily/lib/puzzle-utils'
+import { todayPlayPath } from '@/features/daily/lib/today-play-path'
 import {
 	HomeDay,
 	HomeDayFallback,
@@ -18,6 +19,7 @@ import {
 } from '@/features/home/components/today-lineup'
 import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from '@/features/home/lib/home-faq'
 import { MarketingFaq } from '@/features/marketing/components'
+import { SeasonalBanner } from '@/features/seasons/components/seasonal-banner'
 import { getAllGameMetadata } from '@/games/registry'
 import {
 	getServerPersonalDailyResults,
@@ -93,10 +95,7 @@ const readHomeFacts = cache(async (): Promise<HomeFacts> => {
 	const [overviewResult, streakResult, personalResult] = await Promise.allSettled([
 		getServerTodayOverview(),
 		hasIdentity ? getServerStreakInfo() : Promise.resolve(null),
-		getServerPersonalDailyResults({
-			gameSlugs,
-			isGuest: !user,
-		}),
+		getServerPersonalDailyResults({ gameSlugs }),
 	])
 
 	let todayPlayerCount: number | null = null
@@ -297,6 +296,7 @@ export default async function HomePage({ params }: Props) {
 		theme: freeGameMeta?.display.theme ?? 'violet',
 		tagline: freeGameMeta ? t(`games.${slugToCamelCase(todaysFreeGame)}.tagline`) : undefined,
 		duration: freeGameMeta?.display.duration,
+		playHref: todayPlayPath(todaysFreeGame),
 	}
 	// The day has an identity: this is the puzzle number `getPuzzleNumber`
 	// already computes for the module and the product day.
@@ -321,6 +321,7 @@ export default async function HomePage({ params }: Props) {
 
 	return (
 		<main className="flex-1">
+			<SeasonalBanner />
 			<Suspense
 				fallback={
 					hasProgressIdentity ? (

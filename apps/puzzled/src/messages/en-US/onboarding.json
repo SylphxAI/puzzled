@@ -11,10 +11,10 @@
 	"noAccountNeeded": "No account needed to start playing",
 	"niceWork": "Nice work!",
 	"signupPromptDesc": "Create a free account to save your progress",
-	"saveStreak": "Keep your streak safe",
+	"saveStreak": "Save your streak",
 	"leaderboards": "Compete on leaderboards",
 	"trackStats": "Track your statistics",
-	"keepStreak": "Keep your {days}-day streak!",
+	"keepStreak": "Create a free account to keep your streak of {days, plural, one {# day} other {# days}} and today’s result.",
 	"createFreeAccount": "Create Free Account",
 	"maybeLater": "Maybe later",
 	"signupBannerTitle": "Save your progress!",
@@ -28,5 +28,6 @@
 	"leaderboardAccess": "Full leaderboard access",
 	"continueFree": "Continue with Free",
 	"viewPlans": "View Plans",
-	"learnMore": "Learn More"
+	"learnMore": "Learn More",
+	"saveStreakNote": "Takes about 20 seconds."
 }

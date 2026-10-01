@@ -13,6 +13,7 @@ import {
 	OAuthButtons,
 	PasswordField,
 	passwordProblem,
+	SIGN_IN_MIN_PASSWORD_LENGTH,
 } from '../_components/auth-fields'
 
 type OAuthSignInProvider = NonNullable<
@@ -54,7 +55,7 @@ export function LoginForm({ providers }: LoginFormProps) {
 	})
 
 	const emailIssue = emailProblem(form.email)
-	const passwordIssue = passwordProblem(form.password)
+	const passwordIssue = passwordProblem(form.password, SIGN_IN_MIN_PASSWORD_LENGTH)
 	const emailError = (attempted || touched.email) && emailIssue ? t(emailIssue) : undefined
 	const passwordError =
 		(attempted || touched.password) && passwordIssue ? t(passwordIssue) : undefined

@@ -30,6 +30,7 @@ const STRINGS: ResultCardStrings = {
 	altDetailsTemplate: ' {details}.',
 	altLinkTemplate: ' Play: {link}',
 	detailSeparator: ', ',
+	seasonGreeting: null,
 }
 
 const THEMES: GameColorTheme[] = [
@@ -276,5 +277,39 @@ describe('resultCardFileName', () => {
 		expect(resultCardFileName(buildResultCard(baseInput({ gameSlug: 'Word Groups!?' })))).toBe(
 			'puzzled-result-word-groups-2026-09-21.png',
 		)
+	})
+})
+
+describe('seasonal card', () => {
+	const GREETING = 'Merry Christmas'
+
+	test('paints the greeting only on a seasonal day', () => {
+		const themed = recordingContext()
+		paintResultCard(themed.ctx, buildResultCard(baseInput({ puzzleDate: '2026-12-25' })), {
+			...STRINGS,
+			seasonGreeting: GREETING,
+		})
+		expect(themed.texts.join('\n')).toContain(GREETING)
+
+		const plain = recordingContext()
+		paintResultCard(plain.ctx, buildResultCard(baseInput({ puzzleDate: '2026-09-21' })), {
+			...STRINGS,
+			seasonGreeting: null,
+		})
+		expect(plain.texts.join('\n')).not.toContain(GREETING)
+	})
+
+	test('a themed card still carries no answer', () => {
+		const rec = recordingContext()
+		const contaminated = {
+			...baseInput({ puzzleDate: '2026-10-31' }),
+			solution: 'CROWN',
+			answer: 'CROWN',
+		}
+		paintResultCard(rec.ctx, buildResultCard(contaminated), {
+			...STRINGS,
+			seasonGreeting: 'Happy Halloween',
+		})
+		expect(rec.texts.join('\n')).not.toContain('CROWN')
 	})
 })

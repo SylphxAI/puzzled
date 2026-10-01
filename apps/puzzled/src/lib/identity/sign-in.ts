@@ -13,7 +13,7 @@ import { setSessionCookie } from './server'
 import { recordSignupAttribution } from './signup-attribution'
 
 export function authFail(status: number, error: string) {
-	return NextResponse.json({ error, authority: 'sylphx-identity' }, { status })
+	return NextResponse.json({ error }, { status })
 }
 
 export function userAgentOf(request: Request): string {
@@ -23,27 +23,30 @@ export function userAgentOf(request: Request): string {
 /**
  * Redeem a sign-in ticket into the session cookie. When the account is new,
  * credit the link that brought the player (first-touch tags). Returns the
- * session token, or throws `AuthCallError`.
+ * session token and whether Auth says the account is new, or throws
+ * `AuthCallError`.
  */
 export async function completeSignIn(
 	config: AuthConfig,
 	request: Request,
 	ticket: string,
-): Promise<string> {
+): Promise<{ token: string; newAccount: boolean }> {
 	const userAgent = userAgentOf(request)
 	const session = await redeemTicket(config, ticket, userAgent)
 	await setSessionCookie(session.token)
+	let newAccount = false
 	try {
 		const times =
 			typeof session.isNewUser === 'boolean'
 				? {}
 				: await sessionTimes(config, session.token, userAgent, destIdentityProjectId())
 		if (isNewUser({ flag: session.isNewUser, ...times, now: Date.now() / 1000 })) {
+			newAccount = true
 			await recordSignupAttribution(session.token, request.headers.get('cookie'), userAgent)
 		}
 	} catch (error) {
 		// Attribution never blocks a sign-in.
 		if (!(error instanceof AuthCallError)) throw error
 	}
-	return session.token
+	return { token: session.token, newAccount }
 }

@@ -132,3 +132,20 @@ the live subset):
 Evidence layers follow the owner standard: a merged change, a deployed change
 and a working product are different claims
 ([owner docs standard](https://github.com/SylphxAI/owner/blob/main/standards/docs.md#claims-stay-inside-their-layer)).
+
+## Public player disclosure boundary
+
+Public leaderboard rows expose rank, score and display name, never an account or
+player UUID or a stable surrogate derived from one. The compatibility `user_id`
+wire field is a fresh random per-response entry identifier. A private `is_viewer`
+marker preserves own-row highlighting; avatar URLs are omitted because their
+paths can reveal stable account identifiers. Responses use private/no-store
+browser and CDN directives. Internal aggregate caches still hold private join
+keys; sanitization runs after every cache read and before serialization.
+
+Share cards remain puzzle/result summaries rather than identity links; `/profile`
+is the signed-in player's own card, not a public directory. Removing disclosure
+reduces discovery but does not revoke already cached identifiers or repair object
+authorization. Identity/adoption authorization containment is a separate concurrent
+security outcome. Ops must invalidate previously cached leaderboard API/page
+responses through the platform/CDN owner and verify the deployed public boundary.
