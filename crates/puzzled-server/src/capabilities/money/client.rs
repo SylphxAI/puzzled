@@ -33,7 +33,11 @@ const DEFAULT_API_URL: &str = "https://api.sylphx.com";
 pub enum MoneyError {
     /// Money could not be reached or answered 5xx / unreadable.
     Unavailable(String),
-    /// Money answered with a refusal (4xx); `code` is its problem code.
+    /// Money answered 404: the thing asked about does not exist there (for
+    /// a subscription lookup, no subscription can exist). `code` is its
+    /// problem code.
+    NotFound { code: String },
+    /// Money answered with a refusal (other 4xx); `code` is its problem code.
     Refused { status: u16, code: String },
 }
 
@@ -41,6 +45,7 @@ impl std::fmt::Display for MoneyError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Unavailable(why) => write!(f, "money unavailable: {why}"),
+            Self::NotFound { code } => write!(f, "money refused (404): {code}"),
             Self::Refused { status, code } => write!(f, "money refused ({status}): {code}"),
         }
     }
@@ -305,6 +310,9 @@ impl Money {
             .find_map(|key| body.get(key).and_then(Value::as_str))
             .unwrap_or("refused")
             .to_string();
+        if status == reqwest::StatusCode::NOT_FOUND {
+            return Err(MoneyError::NotFound { code });
+        }
         Err(MoneyError::Refused {
             status: status.as_u16(),
             code,
@@ -488,14 +496,16 @@ impl Money {
         }
     }
 
-    /// Does `user_id` hold a subscription that still renews? Errors are
-    /// returned, never read as "no".
+    /// Does `user_id` hold a subscription that still renews? Money answering
+    /// 404 (nothing there, e.g. the catalogue is not applied yet) means no
+    /// subscription can exist: `false`. Every other error is returned, never
+    /// read as "no".
     pub async fn has_renewing_subscription(&self, user_id: &str) -> Result<bool, MoneyError> {
-        Ok(self
-            .subscriptions(user_id)
-            .await?
-            .iter()
-            .any(Subscription::renews))
+        match self.subscriptions(user_id).await {
+            Ok(subs) => Ok(subs.iter().any(Subscription::renews)),
+            Err(MoneyError::NotFound { .. }) => Ok(false),
+            Err(error) => Err(error),
+        }
     }
 
     /// A hosted billing-portal page for `user_id` (payment method, invoices).

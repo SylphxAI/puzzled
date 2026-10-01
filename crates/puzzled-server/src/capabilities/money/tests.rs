@@ -491,6 +491,29 @@ async fn erasure_guard_errors_when_money_is_unavailable() {
 }
 
 #[tokio::test]
+async fn erasure_guard_reads_money_404_as_no_subscription() {
+    let (money, _) = fake_money(404, json!({"code": "NOT_FOUND"})).await;
+    assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
+    // Other callers still see the refusal, with the same text as before.
+    let error = money.subscriptions(USER).await.unwrap_err();
+    assert_eq!(error.to_string(), "money refused (404): NOT_FOUND");
+}
+
+#[tokio::test]
+async fn erasure_guard_still_refuses_on_5xx_and_other_4xx() {
+    let (money, _) = fake_money(500, json!({})).await;
+    assert!(matches!(
+        money.has_renewing_subscription(USER).await,
+        Err(super::MoneyError::Unavailable(_))
+    ));
+    let (money, _) = fake_money(403, json!({"code": "FORBIDDEN"})).await;
+    assert!(matches!(
+        money.has_renewing_subscription(USER).await,
+        Err(super::MoneyError::Refused { status: 403, .. })
+    ));
+}
+
+#[tokio::test]
 async fn a_failed_check_is_asked_again_after_five_seconds() {
     let (money, fake) = fake_money(503, json!({})).await;
     assert!(!is_premium(&money, USER).await);
