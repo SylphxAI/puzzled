@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "next dev --turbopack",
 		"build": "next build",
-		"build:with-migrate": "atlas migrate apply --env production --baseline 20260222000000 && next build",
+		"build:with-migrate": "atlas migrate apply --env production && next build",
 		"start": "next start",
 		"verify:seo": "bun run scripts/seo-verify.ts",
 		"lint": "biome check .",
