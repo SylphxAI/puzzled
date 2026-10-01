@@ -8,6 +8,7 @@ import {
 	formatPrice,
 	type PlanCard,
 	planCards,
+	trialEndDate,
 	yearlySavingPercent,
 } from '@/lib/billing/plus'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
@@ -82,6 +83,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 		...(family ? [t('includesFamily', { count: familyMax })] : []),
 	]
 
+	const now = new Date()
 	const priceLine = (card: PlanCard | undefined) =>
 		card ? formatPrice(card.amountMinor, card.currency, locale) : null
 
@@ -152,6 +154,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 							{groups.map((group) => {
 								const month = monthly(group.family)
 								const year = yearly(group.family)
+								const trialEnd = year ? trialEndDate(now, year.trialDays, locale) : null
 								const saving =
 									month && year ? yearlySavingPercent(month.amountMinor, year.amountMinor) : null
 								return (
@@ -192,6 +195,15 @@ export default async function PricingPage({ params, searchParams }: Props) {
 													) : null}
 												</div>
 											) : null}
+											{year && trialEnd ? (
+												<p className="pt-1 text-sm font-semibold">
+													{t('trialLine', {
+														days: year.trialDays,
+														price: priceLine(year) ?? '',
+														date: trialEnd,
+													})}
+												</p>
+											) : null}
 										</dl>
 										<ul className="mt-5 flex-1 space-y-2.5">
 											{includes(group.family).map((line) => (
@@ -208,7 +220,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 											))}
 										</ul>
 										<div className="mt-5 grid gap-2">
-											{[month, year].map((card) =>
+											{[year, month].map((card) =>
 												card ? (
 													<SubscribeButton
 														key={card.id}
@@ -217,7 +229,11 @@ export default async function PricingPage({ params, searchParams }: Props) {
 														locale={locale}
 														signedIn={Boolean(user)}
 														subscribed={Boolean(access?.entitled)}
-														label={`${t('subscribe')} · ${card.interval === 'year' ? t('yearly') : t('monthly')}`}
+														label={
+															card.trialDays > 0
+																? t('startTrial', { days: card.trialDays })
+																: `${t('subscribe')} · ${card.interval === 'year' ? t('yearly') : t('monthly')}`
+														}
 													/>
 												) : null,
 											)}

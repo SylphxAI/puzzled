@@ -24,6 +24,8 @@
 		"includesArchive": "往日题库中的每一天",
 		"includesStats": "每款游戏的统计和连续记录",
 		"includesFamily": "最多与 {count} 人共享",
+		"trialLine": "免费试用 {days} 天，之后每年 {price}，首次扣款日为 {date}。可随时在“设置”中一步取消。",
+		"startTrial": "开始 {days} 天免费试用",
 		"subscribe": "订阅",
 		"subscribing": "正在打开付款页面……",
 		"signInToSubscribe": "登录以订阅",

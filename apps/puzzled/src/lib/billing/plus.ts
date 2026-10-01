@@ -48,6 +48,8 @@ export type PlanCard = {
 	currency: string
 	/** Minor units, tax included. */
 	amountMinor: number
+	/** Free trial days before the first charge; 0 when none. */
+	trialDays: number
 }
 
 /** Plan cards in one currency; a plan without a price in it is left out. */
@@ -64,6 +66,7 @@ export function planCards(plans: ListPlansResponse['plans'], currency: string): 
 			interval: plan.interval === 'year' ? 'year' : 'month',
 			currency: price.currency,
 			amountMinor: Number(price.unitAmountMinor),
+			trialDays: plan.trialDays,
 		})
 	}
 	return cards
@@ -125,4 +128,14 @@ export function subscriptionView(res: GetSubscriptionResponse): SubscriptionView
 				}
 			: null,
 	}
+}
+
+/**
+ * The day a trial ends and the first charge happens: `trialDays` whole days
+ * after `now`, formatted for the viewer. Null when the plan has no trial.
+ */
+export function trialEndDate(now: Date, trialDays: number, locale: string): string | null {
+	if (trialDays <= 0) return null
+	const end = new Date(now.getTime() + trialDays * 86_400_000)
+	return new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone: 'UTC' }).format(end)
 }

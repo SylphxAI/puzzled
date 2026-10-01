@@ -27,6 +27,8 @@ message Plan {
   string interval = 3;
   // Prices per currency, tax included.
   repeated PlanPrice prices = 4;
+  // Free trial days before the first charge; 0 when the plan has no trial.
+  int32 trial_days = 5;
 }
 
 message PlanPrice {

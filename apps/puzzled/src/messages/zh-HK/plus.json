@@ -24,6 +24,8 @@
 		"includesArchive": "往日題庫中的每一天",
 		"includesStats": "每款遊戲的統計和連續紀錄",
 		"includesFamily": "最多與 {count} 人共用",
+		"trialLine": "免費試用 {days} 日，之後每年 {price}，首次收費日為 {date}。可隨時在「設定」一步取消。",
+		"startTrial": "開始 {days} 日免費試用",
 		"subscribe": "訂閱",
 		"subscribing": "正在開啟付款頁面⋯⋯",
 		"signInToSubscribe": "登入以訂閱",

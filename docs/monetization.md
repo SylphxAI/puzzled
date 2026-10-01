@@ -77,8 +77,10 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 - A price change creates a new Stripe price that takes over the lookup key;
   existing subscribers keep their price until they change plan. Players get
   at least 30 days' notice before a new price applies to their renewal.
-- Trials and discounts (a 7-day trial on the yearly plan, a win-back offer) are
-  allowed once Sylphx Money is live. Each states its real end date and real
+- Trials and discounts (a win-back offer) are allowed once Sylphx Money is live. The 7-day trial on
+  the yearly plan is declared in `config/commercial/catalogue.json`
+  (`trial_days`), read back through `ListPlans`, and the pricing page states its
+  real first-charge date. Each states its real end date and real
   price; the plan and price settings are in
   [growth.md](growth.md#ships-when-money-is-live).
 

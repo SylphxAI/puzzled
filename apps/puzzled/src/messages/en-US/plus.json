@@ -24,6 +24,8 @@
 		"includesArchive": "Every past day in the archive",
 		"includesStats": "Stats and streaks for every game",
 		"includesFamily": "Share with up to {count} people",
+		"trialLine": "Free for {days} days, then {price} a year, first charged on {date}. Cancel any time in Settings, in one step.",
+		"startTrial": "Start {days}-day free trial",
 		"subscribe": "Subscribe",
 		"subscribing": "Opening checkout...",
 		"signInToSubscribe": "Sign in to subscribe",

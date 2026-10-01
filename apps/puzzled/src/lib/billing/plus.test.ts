@@ -11,6 +11,7 @@ import {
 	isPlusRequiredError,
 	planCards,
 	subscriptionView,
+	trialEndDate,
 	yearlySavingPercent,
 } from './plus'
 
@@ -62,11 +63,29 @@ describe('Puzzled Plus presentation', () => {
 			interval: 'month',
 			currency: 'gbp',
 			amountMinor: 399,
+			trialDays: 0,
 		})
 		expect(cards[1].currency).toBe('usd')
 		expect(formatPrice(399, 'gbp', 'en-GB')).toBe('£3.99')
 		expect(yearlySavingPercent(499, 3999)).toBe(33)
 		expect(yearlySavingPercent(499, 6000)).toBe(null)
+	})
+
+	test('a trial plan carries its days and a real end date', () => {
+		const plans = create(ListPlansResponseSchema, {
+			plans: [
+				{
+					id: 'individual_yearly',
+					interval: 'year',
+					trialDays: 7,
+					prices: [{ currency: 'usd', unitAmountMinor: BigInt(3999) }],
+				},
+			],
+		}).plans
+		expect(planCards(plans, 'usd')[0].trialDays).toBe(7)
+		const now = new Date('2026-10-01T23:30:00Z')
+		expect(trialEndDate(now, 7, 'en-US')).toBe('October 8, 2026')
+		expect(trialEndDate(now, 0, 'en-US')).toBe(null)
 	})
 
 	test('subscription view reads optional fields as null', () => {
