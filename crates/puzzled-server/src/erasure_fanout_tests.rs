@@ -25,7 +25,7 @@ const PATH: &str = "/webhooks/sylphx/erasure";
 const PROJECT: &str = "org_own";
 const PROJECT_ID: &str = "proj_01kmp4wyhhfgxsyrjvh8e0tkkf";
 const SECRET_KEY: &str = "sk_test_erasure";
-const WEBHOOK_SECRET: &str = "whsec_c2VjcmV0LXNlY3JldC1zZWNyZXQ=";
+const WEBHOOK_SECRET: &str = "test-erasure-signing-fixture";
 
 /// A fake evidence endpoint: records each post, fails the first `fail` calls.
 #[derive(Clone, Default)]
@@ -301,7 +301,7 @@ async fn unverified_and_foreign_deliveries_touch_nothing() {
     let (status, _) = deliver(
         &app,
         event(user, "pr_4", PROJECT_ID),
-        "whsec_b3RoZXItc2VjcmV0LWtleQ==",
+        "test-erasure-wrong-signing-fixture",
     )
     .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
@@ -396,7 +396,7 @@ async fn an_old_form_id_with_no_subject_row_reaches_its_player() {
 fn stripe_at(base: String) -> Stripe {
     Stripe::new(
         "sk_test_flow".into(),
-        "whsec_test_flow".into(),
+        "test-billing-signing-fixture".into(),
         base,
         "https://puzzled.test".into(),
     )

@@ -287,7 +287,7 @@ impl ErasureTransport {
 mod tests {
     use super::*;
 
-    const SECRET: &str = "whsec_c2VjcmV0LXNlY3JldC1zZWNyZXQ=";
+    const SECRET: &str = "test-erasure-signing-fixture";
     const PROJECT: &str = "proj_01kmp4wyhhfgxsyrjvh8e0tkkf";
 
     fn transport(environment: Option<&str>) -> ErasureTransport {

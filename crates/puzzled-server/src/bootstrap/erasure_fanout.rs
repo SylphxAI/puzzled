@@ -82,7 +82,7 @@ pub(crate) async fn erasure_fanout_signed(
     headers.insert(
         "webhook-signature",
         crate::capabilities::identity_access::adapters::erasure_delivery::sign_delivery(
-            "whsec_c2VjcmV0LXNlY3JldC1zZWNyZXQ=",
+            "test-erasure-signing-fixture",
             "msg_t",
             now,
             body,
