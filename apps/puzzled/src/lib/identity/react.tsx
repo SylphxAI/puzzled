@@ -580,13 +580,13 @@ export function CookieBanner(props: {
 			// unusable until consent was given.
 			className={
 				props.position === 'bottom'
-					? 'fixed inset-x-0 z-toast p-2 sm:p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
+					? 'fixed inset-x-0 z-toast px-2 pb-1.5 sm:p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
 					: undefined
 			}
 		>
 			<section
 				aria-label={t('title')}
-				className="mx-auto flex max-w-3xl flex-col gap-2 rounded-2xl border bg-background/95 p-3 text-[13px] leading-snug shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4 sm:text-sm"
+				className="mx-auto flex max-w-3xl flex-col gap-1.5 rounded-xl border bg-background/95 p-2 text-xs leading-tight shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:rounded-2xl sm:p-4 sm:text-sm sm:leading-snug"
 			>
 				<p className="text-muted-foreground">
 					{t('message')}{' '}
@@ -603,7 +603,7 @@ export function CookieBanner(props: {
 				<div className="flex shrink-0 items-center gap-2">
 					<button
 						type="button"
-						className="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border px-4 font-medium text-foreground transition-colors hover:bg-muted sm:flex-none"
+						className="inline-flex min-h-9 flex-1 items-center justify-center rounded-lg border px-4 font-medium text-foreground sm:min-h-10 sm:rounded-xl transition-colors hover:bg-muted sm:flex-none"
 						onClick={() => {
 							void setConsent({ analytics: false, marketing: false }).then(() => props.onSave?.())
 						}}
@@ -612,7 +612,7 @@ export function CookieBanner(props: {
 					</button>
 					<button
 						type="button"
-						className="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border px-4 font-medium text-foreground transition-colors hover:bg-muted sm:flex-none"
+						className="inline-flex min-h-9 flex-1 items-center justify-center rounded-lg border px-4 font-medium text-foreground sm:min-h-10 sm:rounded-xl transition-colors hover:bg-muted sm:flex-none"
 						onClick={() => {
 							void setConsent({ analytics: true, marketing: false }).then(() => props.onSave?.())
 						}}
