@@ -34,20 +34,20 @@ use crate::proto::puzzled::v1::{
 use puzzled_core::attribution::Attribution;
 
 // Family references are scoped to one owner and never contain an account id.
-fn family_handle(secret: &str, owner: &str, member: &str) -> String {
+fn family_handle(secret: &str, owner: &str, member: &str) -> Result<String, ConnectError> {
     let mut mac = Hmac::<Sha256>::new_from_slice(secret.as_bytes())
-        .expect("HMAC accepts arbitrary key lengths");
+        .map_err(|_| ConnectError::new(ErrorCode::Unavailable, "family_unavailable"))?;
     mac.update(b"puzzled:family-member:v1\0");
     mac.update(owner.as_bytes());
     mac.update(b"\0");
     mac.update(member.as_bytes());
     let tag = mac.finalize().into_bytes();
-    format!(
+    Ok(format!(
         "fm_{}",
         tag.iter()
             .map(|byte| format!("{byte:02x}"))
             .collect::<String>()
-    )
+    ))
 }
 
 fn family_handle_key() -> Result<String, ConnectError> {
@@ -63,11 +63,13 @@ fn resolve_family_handle<'a>(
     owner: &str,
     handle: &str,
     members: &'a [(String, Option<String>, i64)],
-) -> Option<&'a str> {
-    members
-        .iter()
-        .find(|(member, _, _)| family_handle(secret, owner, member) == handle)
-        .map(|(member, _, _)| member.as_str())
+) -> Result<Option<&'a str>, ConnectError> {
+    for (member, _, _) in members {
+        if family_handle(secret, owner, member)? == handle {
+            return Ok(Some(member.as_str()));
+        }
+    }
+    Ok(None)
 }
 
 #[derive(Clone)]
@@ -213,7 +215,7 @@ impl BillingConnectService {
             .map_err(internal("family_unavailable"))?;
         let handle_key = family_handle_key()?;
         let mut members = vec![FamilyMember {
-            user_id: family_handle(&handle_key, owner, owner),
+            user_id: family_handle(&handle_key, owner, owner)?,
             display_name: owner_name.unwrap_or_default(),
             owner: true,
             ..Default::default()
@@ -223,7 +225,7 @@ impl BillingConnectService {
             .map_err(internal("family_unavailable"))?
         {
             members.push(FamilyMember {
-                user_id: family_handle(&handle_key, owner, &user_id),
+                user_id: family_handle(&handle_key, owner, &user_id)?,
                 display_name: name.unwrap_or_default(),
                 owner: false,
                 joined_at_ms,
@@ -565,7 +567,7 @@ impl BillingService for BillingConnectService {
         let members = billing_db::family_members(pool, &identity.user_id)
             .await
             .map_err(internal("family_unavailable"))?;
-        let member = resolve_family_handle(&handle_key, &identity.user_id, &handle, &members)
+        let member = resolve_family_handle(&handle_key, &identity.user_id, &handle, &members)?
             .ok_or_else(|| ConnectError::new(ErrorCode::NotFound, "member_not_found"))?;
         if billing_db::remove_family_member(pool, Some(&identity.user_id), member)
             .await
@@ -625,29 +627,31 @@ mod tests {
 mod family_reference_tests {
     use super::*;
     #[test]
-    fn family_references_are_scoped_and_actions_accept_only_owned_handles() {
+    fn family_references_are_scoped_and_actions_accept_only_owned_handles(
+    ) -> Result<(), ConnectError> {
         let rows = vec![("member-a".into(), Some("Player".into()), 0)];
-        let handle = family_handle("test-key", "owner-a", "member-a");
+        let handle = family_handle("test-key", "owner-a", "member-a")?;
         assert!(!handle.contains("member-a"));
         assert_eq!(
-            resolve_family_handle("test-key", "owner-a", &handle, &rows),
+            resolve_family_handle("test-key", "owner-a", &handle, &rows)?,
             Some("member-a")
         );
         assert_eq!(
-            resolve_family_handle("test-key", "owner-b", &handle, &rows),
+            resolve_family_handle("test-key", "owner-b", &handle, &rows)?,
             None
         );
         assert_eq!(
-            resolve_family_handle("test-key", "owner-a", "member-a", &rows),
+            resolve_family_handle("test-key", "owner-a", "member-a", &rows)?,
             None
         );
         assert_eq!(
-            resolve_family_handle("test-key", "owner-a", "unknown", &rows),
+            resolve_family_handle("test-key", "owner-a", "unknown", &rows)?,
             None
         );
         assert_eq!(
-            resolve_family_handle("other-key", "owner-a", &handle, &rows),
+            resolve_family_handle("other-key", "owner-a", &handle, &rows)?,
             None
         );
+        Ok(())
     }
 }
