@@ -58,14 +58,17 @@ function sameOrigin(request: Request): boolean {
 		if (supplied.origin !== origin) return false
 		return (
 			origin ===
-			resolveSiteOrigin({
-				host: request.headers.get('host'),
-				forwardedHost: request.headers.get('x-forwarded-host'),
-				forwardedProto: request.headers.get('x-forwarded-proto'),
-				configuredUrl: env.SYLPHX_PUBLIC_URL,
-				nodeEnv: env.NODE_ENV,
-				port: env.PORT,
-			})
+			resolveSiteOrigin(
+				{
+					host: request.headers.get('host'),
+					forwardedHost: request.headers.get('x-forwarded-host'),
+					forwardedProto: request.headers.get('x-forwarded-proto'),
+					configuredUrl: env.SYLPHX_PUBLIC_URL,
+					nodeEnv: env.NODE_ENV,
+					port: env.PORT,
+				},
+				'request',
+			)
 		)
 	} catch {
 		return false

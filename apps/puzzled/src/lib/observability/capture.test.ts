@@ -79,6 +79,8 @@ describe('relayBrowserError', () => {
 		headers: Record<string, string> = {
 			'sec-fetch-site': 'same-origin',
 			origin: 'http://localhost:3000',
+			'x-forwarded-host': 'localhost:3000',
+			'x-forwarded-proto': 'http',
 		},
 	) => new Request('https://app.test/api/observability/errors', { method: 'POST', body, headers })
 

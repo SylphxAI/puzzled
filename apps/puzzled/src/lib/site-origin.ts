@@ -64,7 +64,7 @@ function splitHostPort(host: string): { hostname: string; port: string | null } 
 	return { hostname: host.slice(0, separator), port: host.slice(separator + 1) }
 }
 
-function isValidRequestHost(host: string): boolean {
+function isValidRequestHost(host: string, strict = false): boolean {
 	if (host.length === 0 || host.length > 255) return false
 	for (const char of host) {
 		const code = char.codePointAt(0) ?? 0
@@ -74,6 +74,16 @@ function isValidRequestHost(host: string): boolean {
 	const { hostname, port } = splitHostPort(host)
 	if (hostname.length === 0) return false
 	if (port !== null && !/^\d{1,5}$/.test(port)) return false
+	if (strict) {
+		if (port !== null && (Number(port) < 1 || Number(port) > 65535)) return false
+		if (
+			!isLoopbackHostname(hostname) &&
+			!hostname
+				.split('.')
+				.every((label) => label.length <= 63 && /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(label))
+		)
+			return false
+	}
 	return true
 }
 
@@ -122,8 +132,65 @@ function originIsLoopback(origin: string): boolean {
 	}
 }
 
-export function resolveSiteOrigin(input: SiteOriginInput = {}): string {
+export function resolveSiteOrigin(input: SiteOriginInput, mode: 'request'): string | null
+export function resolveSiteOrigin(input?: SiteOriginInput, mode?: 'canonical'): string
+export function resolveSiteOrigin(
+	input: SiteOriginInput = {},
+	mode: 'canonical' | 'request' = 'canonical',
+): string | null {
 	const isProduction = input.nodeEnv === 'production'
+
+	// Browser writes need an actual authority, not the SEO fallback below.
+	if (mode === 'request') {
+		for (const value of [input.host, input.forwardedHost, input.forwardedProto]) {
+			if (value != null && (!value || value !== value.trim() || value.includes(','))) return null
+		}
+		if (input.host != null && !isValidRequestHost(input.host, true)) return null
+
+		let forwarded: string | null = null
+		if (input.forwardedHost != null || input.forwardedProto != null) {
+			const host = input.forwardedHost
+			const proto = input.forwardedProto
+			if (!host || !isValidRequestHost(host, true) || (proto !== 'https' && proto !== 'http'))
+				return null
+			const { hostname, port } = splitHostPort(host)
+			const owned = normalizeProductHostname(hostname)
+			if (!owned || (isProduction && isLoopbackHostname(owned))) return null
+			if (!isLoopbackHostname(owned) && proto !== 'https') return null
+			try {
+				const candidate = hostToOrigin(owned, port, proto)
+				if (new URL(candidate).origin !== candidate) return null
+				forwarded = candidate
+			} catch {
+				return null
+			}
+		}
+
+		if (input.configuredUrl != null && input.configuredUrl !== '') {
+			try {
+				const configured = new URL(input.configuredUrl)
+				const owned = normalizeProductHostname(configured.hostname)
+				if (
+					!owned ||
+					!isValidRequestHost(configured.host, true) ||
+					configured.origin !== input.configuredUrl
+				)
+					return null
+				const loopback = isLoopbackHostname(owned)
+				if ((isProduction && loopback) || (!loopback && configured.protocol !== 'https:'))
+					return null
+				if (configured.protocol !== 'https:' && configured.protocol !== 'http:') return null
+				return hostToOrigin(
+					owned,
+					configured.port || null,
+					configured.protocol === 'https:' ? 'https' : 'http',
+				)
+			} catch {
+				return null
+			}
+		}
+		return forwarded
+	}
 
 	// 1. Operator-configured origin wins when present.
 	const configured = normalizeOriginCandidate(input.configuredUrl)
