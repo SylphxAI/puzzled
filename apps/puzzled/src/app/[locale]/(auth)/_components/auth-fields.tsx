@@ -21,6 +21,9 @@ const PROVIDER_ICONS: Record<string, ProviderIcon> = OAuthIcons
 
 export { MIN_PASSWORD_LENGTH }
 
+/** Sign-in only checks that a password was entered: older accounts may have shorter ones. */
+export const SIGN_IN_MIN_PASSWORD_LENGTH = 1
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 export function emailProblem(value: string): 'emailRequired' | 'emailInvalid' | null {
