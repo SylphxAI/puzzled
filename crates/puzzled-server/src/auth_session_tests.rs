@@ -19,6 +19,7 @@ use crate::{router, AppState};
 const GOOD: &str = "identity_org_session_good";
 /// A valid session of another tenant's Auth instance.
 const FOREIGN: &str = "identity_org_session_foreign";
+const KEY: &str = "sk_test_caller";
 const ORG: &str = "organization-0199aa10-7b2c-7d3e-8f00-00000000c0de";
 
 async fn spawn_fake_auth(calls: Arc<AtomicUsize>) -> String {
@@ -36,6 +37,16 @@ async fn spawn_fake_auth(calls: Arc<AtomicUsize>) -> String {
                     .get("user-agent")
                     .and_then(|v| v.to_str().ok())
                     .unwrap_or("");
+                if headers
+                    .get("x-sylphx-caller-key")
+                    .and_then(|v| v.to_str().ok())
+                    != Some(KEY)
+                {
+                    return (
+                        StatusCode::UNAUTHORIZED,
+                        Json(json!({"error": "caller key required"})),
+                    );
+                }
                 let project = if bearer == format!("Bearer {GOOD}") {
                     Some(ORG)
                 } else if bearer == format!("Bearer {FOREIGN}") {
@@ -97,7 +108,11 @@ async fn subscription(app: &Router, headers: &[(&str, String)]) -> (StatusCode, 
 async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
     let calls = Arc::new(AtomicUsize::new(0));
     let base = spawn_fake_auth(calls.clone()).await;
-    let app = router(AppState::new(None).with_auth(AuthSessions::new(base.clone(), ORG.into())));
+    let app = router(AppState::new(None).with_auth(AuthSessions::new(
+        base.clone(),
+        ORG.into(),
+        KEY.into(),
+    )));
 
     // The web's session cookie is verified with Auth.
     let cookie = ("cookie", format!("x=1; puzzled_session={GOOD}"));
@@ -136,9 +151,21 @@ async fn auth_sessions_sign_players_in_and_forged_headers_do_not() {
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
     // Without our own instance id configured, no session is accepted.
-    let unset = router(AppState::new(None).with_auth(AuthSessions::new(base, String::new())));
+    let unset = router(AppState::new(None).with_auth(AuthSessions::new(
+        base.clone(),
+        String::new(),
+        KEY.into(),
+    )));
     let (status, _) = subscription(&unset, &[("authorization", format!("Bearer {GOOD}"))]).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
+
+    // Without the caller key, Auth is never called and no session is accepted.
+    let calls_before = calls.load(Ordering::SeqCst);
+    let keyless =
+        router(AppState::new(None).with_auth(AuthSessions::new(base, ORG.into(), String::new())));
+    let (status, _) = subscription(&keyless, &[("authorization", format!("Bearer {GOOD}"))]).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    assert_eq!(calls.load(Ordering::SeqCst), calls_before);
 
     // A client cannot set the internal header itself.
     let forged = encode_identity(&VerifiedIdentity {
