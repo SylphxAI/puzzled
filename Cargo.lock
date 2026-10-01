@@ -1799,6 +1799,7 @@ dependencies = [
  "connectrpc",
  "connectrpc-build",
  "ed25519-dalek",
+ "hmac 0.13.0",
  "jsonwebtoken",
  "puzzled-core",
  "rand 0.10.3",

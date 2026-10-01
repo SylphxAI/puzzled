@@ -16,7 +16,8 @@ option features.(pb.cpp).string_type = STRING;
 import "google/protobuf/cpp_features.proto";
 
 // PreferencesService: durable app-scoped user settings. Identity comes from
-// the verified Bearer JWT; the request body never carries a user id.
+// the verified Bearer JWT, except UnsubscribeEmail which verifies a signed link.
+// The request body never carries an unsigned user id.
 
 message Profile {
   string username = 1;
@@ -90,6 +91,12 @@ message UpdateEmailPreferencesResponse {
   NotificationPreferences preferences = 1;
 }
 
+// Signed email link; no session required. Only disables marketing email.
+message UnsubscribeEmailRequest {
+  string token = 1;
+}
+message UnsubscribeEmailResponse {}
+
 // Erase every row keyed to the signed-in player. `confirm` must be "DELETE".
 message DeleteAccountDataRequest {
   string confirm = 1;
@@ -114,6 +121,7 @@ service PreferencesService {
   rpc GetNotificationPreferences(GetNotificationPreferencesRequest) returns (GetNotificationPreferencesResponse);
   rpc UpdatePushPreferences(UpdatePushPreferencesRequest) returns (UpdatePushPreferencesResponse);
   rpc UpdateEmailPreferences(UpdateEmailPreferencesRequest) returns (UpdateEmailPreferencesResponse);
+  rpc UnsubscribeEmail(UnsubscribeEmailRequest) returns (UnsubscribeEmailResponse);
   rpc DeleteAccountData(DeleteAccountDataRequest) returns (DeleteAccountDataResponse);
   rpc RecordSignupAttribution(RecordSignupAttributionRequest) returns (RecordSignupAttributionResponse);
 }
