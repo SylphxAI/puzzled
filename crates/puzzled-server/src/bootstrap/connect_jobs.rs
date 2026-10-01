@@ -19,8 +19,9 @@ use puzzled_core::puzzle_play::daily_time::product_day_key;
 
 /// Send the daily reminders due at `now`, each at the player's own reminder
 /// time in their own time zone (see [`jobs_db::claim_due_daily_reminders`]).
-/// Safe to call as often as the schedule likes: a player is reminded once per
-/// local day, and never after finishing today's puzzle.
+/// Completed reminders suppress later ticks on the same local day. Leases
+/// recover interrupted workers; delivery-before-ack crashes may duplicate a
+/// reminder (at-least-once). Finished players are excluded when claimed.
 pub async fn send_due_daily_reminders(
     pool: &sqlx::PgPool,
     now: chrono::DateTime<Utc>,
@@ -42,29 +43,65 @@ where
     F: FnMut(String) -> Fut,
     Fut: std::future::Future<Output = Result<(), String>>,
 {
-    let product_day = product_day_key(now).format("%Y-%m-%d").to_string();
-    let due = jobs_db::claim_due_daily_reminders(pool, now, &product_day)
-        .await
-        .map_err(|e| vec![e])?;
-    let mut errors = Vec::new();
+    let started = std::time::Instant::now();
+    let mut claim_at = now;
     let mut processed = 0u32;
-    for (user_id, _time) in due {
-        // Delivery returns success if any endpoint received the reminder;
-        // only a wholly unsuccessful retryable delivery releases this claim.
-        match send(user_id.clone()).await {
-            Ok(()) => processed += 1,
-            Err(e) => {
-                errors.push(format!("{user_id}: {e}"));
-                if let Err(release) = jobs_db::release_daily_reminder(pool, &user_id).await {
-                    errors.push(format!("{user_id} release: {release}"));
+    loop {
+        let product_day = product_day_key(claim_at).format("%Y-%m-%d").to_string();
+        let due = jobs_db::claim_due_daily_reminders(pool, claim_at, &product_day)
+            .await
+            .map_err(|e| vec![e])?;
+        if due.is_empty() {
+            return Ok(processed);
+        }
+        let mut errors = Vec::new();
+        for claim in due {
+            let user_id = &claim.user_id;
+            // Delivery returns success if any endpoint received the reminder;
+            // only a wholly unsuccessful retryable delivery releases this claim.
+            // Do not start abandoned batch work after its lease has expired.
+            // Keep the adapter's per-endpoint timeout: cancelling a whole player
+            // midway would discard its already-successful endpoint outcomes.
+            let delivery_started_at = now
+                + chrono::Duration::from_std(started.elapsed())
+                    .expect("reminder elapsed duration fits chrono");
+            if delivery_started_at >= claim.lease_until {
+                errors.push(format!("{user_id}: reminder lease expired before delivery"));
+                continue;
+            }
+            let delivery = send(user_id.clone()).await;
+            let completed_at = now
+                + chrono::Duration::from_std(started.elapsed())
+                    .expect("reminder elapsed duration fits chrono");
+            match delivery {
+                Ok(()) => {
+                    match jobs_db::acknowledge_daily_reminder(pool, &claim, completed_at).await {
+                        Ok(true) => processed += 1,
+                        Ok(false) => {
+                            errors.push(format!("{user_id}: reminder lease expired or replaced"))
+                        }
+                        Err(e) => errors.push(format!("{user_id} acknowledge: {e}")),
+                    }
+                }
+                Err(e) => {
+                    errors.push(format!("{user_id}: {e}"));
+                    if let Err(release) =
+                        jobs_db::release_daily_reminder(pool, &claim, completed_at).await
+                    {
+                        errors.push(format!("{user_id} release: {release}"));
+                    }
                 }
             }
         }
-    }
-    if errors.is_empty() {
-        Ok(processed)
-    } else {
-        Err(errors)
+        // Drain successful batches without limiting the whole tick to 16
+        // players. Stop after a failed batch so released players are retried
+        // by the next Compute tick, never immediately in a tight retry loop.
+        if !errors.is_empty() {
+            return Err(errors);
+        }
+        claim_at = now
+            + chrono::Duration::from_std(started.elapsed())
+                .expect("reminder elapsed duration fits chrono");
     }
 }
 

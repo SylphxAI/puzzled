@@ -8,73 +8,127 @@ use uuid::Uuid;
 /// a missed or late tick does not lose the day's reminder.
 pub const REMINDER_GRACE_MINUTES: i32 = 120;
 
-/// Claim the daily reminders due at `now`: push-opted-in players whose own
-/// local time has reached their reminder time (within
-/// [`REMINDER_GRACE_MINUTES`]), who have not had one on their local date and
-/// have not finished today's puzzle (`product_day`). Each player is marked as
-/// reminded in the same statement, so overlapping ticks send once; a failed
-/// send releases the claim with [`release_daily_reminder`].
-///
-/// The reminder time is read in the player's time zone (unknown or unset reads
-/// as UTC). Returns (user id, reminder time).
+/// Bound work acquired by one tick; unprocessed leases expire for later ticks.
+pub const REMINDER_CLAIM_BATCH: i64 = 16;
+pub const REMINDER_LEASE_SECONDS: i64 = 300;
+
+#[derive(Debug, Clone)]
+pub struct DailyReminderClaim {
+    pub user_id: String,
+    pub local_day: NaiveDate,
+    pub token: Uuid,
+    pub lease_until: DateTime<Utc>,
+}
+
+/// Claim due players without recording delivery. Expired leases are reclaimed
+/// by the existing Jobs/Compute tick, including after a worker restart.
+/// A crash after delivery but before acknowledgement can duplicate delivery:
+/// this is at-least-once, not exactly-once. Rollback must drain this executor
+/// or forward-fix it; old executors ignore leases. Additive fields stay put.
 pub async fn claim_due_daily_reminders(
     pool: &PgPool,
     now: DateTime<Utc>,
     product_day: &str,
-) -> Result<Vec<(String, String)>, String> {
-    let rows: Vec<(Uuid, String)> = sqlx::query_as(
+) -> Result<Vec<DailyReminderClaim>, String> {
+    let token = Uuid::now_v7();
+    let rows: Vec<(Uuid, NaiveDate)> = sqlx::query_as(
         r#"
-        WITH zoned AS (
-            SELECT np.user_id,
-                   np.daily_reminder_time AS reminder_time,
-                   ($1::timestamptz AT TIME ZONE COALESCE(z.name, 'UTC')) AS local_now
+        WITH due AS (
+            SELECT np.user_id, local.local_now::date AS local_date
             FROM notification_preferences np
             LEFT JOIN pg_timezone_names z ON z.name = np.timezone
+            CROSS JOIN LATERAL (
+                SELECT $1::timestamptz AT TIME ZONE COALESCE(z.name, 'UTC') AS local_now
+            ) local
             WHERE np.push_enabled AND np.push_daily_reminder
               AND np.daily_reminder_time ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'
-        ), due AS (
-            SELECT user_id, reminder_time, local_now::date AS local_date
-            FROM zoned
-            WHERE floor(extract(epoch FROM local_now::time) / 60)
-                  BETWEEN extract(epoch FROM reminder_time::time) / 60
-                      AND extract(epoch FROM reminder_time::time) / 60 + $3::int
+              AND floor(extract(epoch FROM local.local_now::time) / 60)
+                  BETWEEN extract(epoch FROM np.daily_reminder_time::time) / 60
+                      AND extract(epoch FROM np.daily_reminder_time::time) / 60 + $3::int
+              AND np.last_daily_reminder_on IS DISTINCT FROM local.local_now::date
+              AND (np.daily_reminder_lease_until IS NULL OR np.daily_reminder_lease_until <= $1)
+              AND NOT EXISTS (
+                  SELECT 1 FROM game_sessions gs
+                  WHERE gs.user_id = np.user_id AND gs.day_key = $2
+                    AND gs.is_ritual AND gs.status IN ('won', 'lost')
+              )
+            ORDER BY np.user_id
+            LIMIT $4
+            FOR UPDATE OF np SKIP LOCKED
         )
         UPDATE notification_preferences np
-        SET last_daily_reminder_on = due.local_date
+        SET daily_reminder_claim_token = $5,
+            daily_reminder_claim_on = due.local_date,
+            daily_reminder_lease_until = $1 + make_interval(secs => $6)
         FROM due
         WHERE np.user_id = due.user_id
-          AND np.last_daily_reminder_on IS DISTINCT FROM due.local_date
-          AND NOT EXISTS (
-              SELECT 1 FROM game_sessions gs
-              WHERE gs.user_id = np.user_id AND gs.day_key = $2
-                AND gs.is_ritual AND gs.status IN ('won', 'lost')
-          )
-        RETURNING np.user_id, due.reminder_time
+        RETURNING np.user_id, due.local_date
         "#,
     )
     .bind(now)
     .bind(product_day)
     .bind(REMINDER_GRACE_MINUTES)
+    .bind(REMINDER_CLAIM_BATCH)
+    .bind(token)
+    .bind(REMINDER_LEASE_SECONDS as f64)
     .fetch_all(pool)
     .await
     .map_err(|e| format!("daily reminder claim failed: {e}"))?;
     Ok(rows
         .into_iter()
-        .map(|(uid, time)| (uid.to_string(), time))
+        .map(|(uid, local_day)| DailyReminderClaim {
+            user_id: uid.to_string(),
+            local_day,
+            token,
+            lease_until: now + Duration::seconds(REMINDER_LEASE_SECONDS),
+        })
         .collect())
 }
 
-/// Give back a claimed reminder whose send failed, so the next tick retries it.
-pub async fn release_daily_reminder(pool: &PgPool, user_id: &str) -> Result<(), String> {
-    let uid = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
-    sqlx::query(
-        "UPDATE notification_preferences SET last_daily_reminder_on = NULL WHERE user_id = $1",
+/// Only the still-live token/day owner may acknowledge successful delivery.
+/// An expired or replaced worker cannot mark a newer claim as delivered.
+pub async fn acknowledge_daily_reminder(
+    pool: &PgPool,
+    claim: &DailyReminderClaim,
+    now: DateTime<Utc>,
+) -> Result<bool, String> {
+    finish_daily_reminder(pool, claim, now, true).await
+}
+
+/// Give back only this worker's live lease, preserving the delivered date.
+pub async fn release_daily_reminder(
+    pool: &PgPool,
+    claim: &DailyReminderClaim,
+    now: DateTime<Utc>,
+) -> Result<bool, String> {
+    finish_daily_reminder(pool, claim, now, false).await
+}
+
+async fn finish_daily_reminder(
+    pool: &PgPool,
+    claim: &DailyReminderClaim,
+    now: DateTime<Utc>,
+    delivered: bool,
+) -> Result<bool, String> {
+    let uid = Uuid::parse_str(&claim.user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let changed = sqlx::query(
+        r#"UPDATE notification_preferences
+        SET last_daily_reminder_on = CASE WHEN $5 THEN $3 ELSE last_daily_reminder_on END,
+            daily_reminder_claim_token = NULL, daily_reminder_claim_on = NULL,
+            daily_reminder_lease_until = NULL
+        WHERE user_id = $1 AND daily_reminder_claim_token = $2
+          AND daily_reminder_claim_on = $3 AND daily_reminder_lease_until > $4"#,
     )
     .bind(uid)
+    .bind(claim.token)
+    .bind(claim.local_day)
+    .bind(now)
+    .bind(delivered)
     .execute(pool)
     .await
-    .map_err(|e| format!("daily reminder release failed: {e}"))?;
-    Ok(())
+    .map_err(|e| format!("daily reminder completion failed: {e}"))?
+    .rows_affected();
+    Ok(changed == 1)
 }
 
 /// Email-opted-in users with no completed session in the last `days` and no
