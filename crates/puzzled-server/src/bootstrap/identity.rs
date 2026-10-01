@@ -5,21 +5,18 @@
 //! - the Platform session cookie `__sylphx_<namespace>_session` (HttpOnly JWT,
 //!   5-minute access token) which the browser sends same-origin to the
 //!   edge-routed api paths. This closes the browser -> Connect auth loop.
-//! - Guest free-ritual path: `X-Puzzled-Guest-Id` (UUID) or cookie
-//!   `puzzled_guest_id` — stable day identity for viral / unauthenticated
-//!   finishes (North Star protocol; counts toward daily puzzle completers as distinct user key).
+//! - Guest free ritual: the server-issued host-only browser credential. Raw
+//!   client UUIDs do not establish identity and never authorize adoption.
 
 use connectrpc::{ConnectError, ErrorCode, RequestContext};
-use puzzled_core::identity_policy::guest_day_id::normalize_guest_user_id;
 
 use crate::capabilities::identity_access::adapters::platform_jwt::{
     extract_bearer, verify_platform_jwt, VerifiedIdentity,
 };
 
-/// Request header for client-stable guest day id (UUID).
+/// Legacy header exercised by denial tests; it supplies no authority.
+#[cfg(test)]
 pub const GUEST_ID_HEADER: &str = "x-puzzled-guest-id";
-/// Cookie name for the same guest id (browser same-origin).
-pub const GUEST_ID_COOKIE: &str = "puzzled_guest_id";
 
 /// Extract the Platform session JWT from the Cookie header, if present.
 fn extract_session_cookie_jwt(headers: &axum::http::HeaderMap) -> Option<String> {
@@ -41,41 +38,13 @@ fn extract_session_cookie_jwt(headers: &axum::http::HeaderMap) -> Option<String>
     None
 }
 
-fn extract_cookie_value(headers: &axum::http::HeaderMap, cookie_name: &str) -> Option<String> {
-    let cookie = headers.get(axum::http::header::COOKIE)?.to_str().ok()?;
-    for pair in cookie.split(';') {
-        let pair = pair.trim();
-        let Some((name, value)) = pair.split_once('=') else {
-            continue;
-        };
-        if name.trim() == cookie_name {
-            let value = value.trim();
-            if !value.is_empty() {
-                return Some(value.to_string());
-            }
-        }
-    }
+/// Synchronous resolution does not admit browser guests; database admission does.
+fn resolve_guest(_headers: &axum::http::HeaderMap) -> Option<VerifiedIdentity> {
+    // Only asynchronous database admission resolves the internal hash.
     None
 }
 
-/// Resolve guest-day identity from header or cookie (UUID → `guest_<uuid>`).
-fn resolve_guest(headers: &axum::http::HeaderMap) -> Option<VerifiedIdentity> {
-    let raw = headers
-        .get(GUEST_ID_HEADER)
-        .and_then(|v| v.to_str().ok())
-        .map(str::to_string)
-        .or_else(|| extract_cookie_value(headers, GUEST_ID_COOKIE))?;
-    let user_id = normalize_guest_user_id(&raw)?;
-    Some(VerifiedIdentity {
-        user_id,
-        display_name: Some("Guest".to_string()),
-        email: None,
-        is_admin: false,
-        actor: None,
-    })
-}
-
-fn verify(headers: &axum::http::HeaderMap) -> Result<VerifiedIdentity, ConnectError> {
+pub(crate) fn verify(headers: &axum::http::HeaderMap) -> Result<VerifiedIdentity, ConnectError> {
     // A Sylphx Auth end-user session, already checked by the router middleware.
     if let Some(identity) =
         crate::capabilities::identity_access::adapters::auth_session::verified_identity(headers)
@@ -98,7 +67,7 @@ fn verify(headers: &axum::http::HeaderMap) -> Result<VerifiedIdentity, ConnectEr
 
 /// Verify the identity from Bearer or session cookie (fails closed when absent).
 ///
-/// Does **not** accept guest headers — use [`require_identity_or_guest`] for
+/// Does **not** accept guest headers — use [`admitted_request_identities`] for
 /// free-ritual SubmitGuess.
 pub fn require_identity(ctx: &RequestContext) -> Result<VerifiedIdentity, ConnectError> {
     verify(ctx.headers())
@@ -122,7 +91,8 @@ impl RequestIdentities {
         self.platform.as_ref().or(self.guest.as_ref())
     }
 
-    /// Account/guest pair that must be merged. None when adoption is a no-op.
+    /// Account/guest pair inspected by identity precedence tests.
+    #[cfg(test)]
     #[must_use]
     pub fn adoption_pair(&self) -> Option<(&str, &str)> {
         match (&self.platform, &self.guest) {
@@ -144,15 +114,157 @@ pub fn resolve_request_identities(ctx: &RequestContext) -> RequestIdentities {
     }
 }
 
-/// Platform JWT/session **or** stable guest-day id (protocol default for free
-/// ritual finishes). Platform identity wins when both are present.
-pub fn require_identity_or_guest(ctx: &RequestContext) -> Result<VerifiedIdentity, ConnectError> {
-    resolve_request_identities(ctx)
-        .primary()
-        .cloned()
-        .ok_or_else(|| {
-            ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
-        })
+pub struct RequestAccess {
+    identities: RequestIdentities,
+    transaction: Option<sqlx::Transaction<'static, sqlx::Postgres>>,
+}
+
+impl std::ops::Deref for RequestAccess {
+    type Target = RequestIdentities;
+    fn deref(&self) -> &Self::Target {
+        &self.identities
+    }
+}
+
+impl RequestAccess {
+    pub fn connection(&mut self) -> Option<&mut sqlx::PgConnection> {
+        self.transaction.as_deref_mut()
+    }
+    pub async fn commit(self) -> Result<(), ConnectError> {
+        if let Some(tx) = self.transaction {
+            tx.commit()
+                .await
+                .map_err(|_| ConnectError::new(ErrorCode::Internal, "identity_store_failed"))?;
+        }
+        Ok(())
+    }
+}
+
+/// Admission and all player SQL retain this same transaction and lock lease.
+pub async fn admitted_request_identities(
+    ctx: &RequestContext,
+    pool: Option<&sqlx::PgPool>,
+    guest_write: bool,
+) -> Result<RequestAccess, ConnectError> {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    use puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid;
+    let internal = || ConnectError::new(ErrorCode::Internal, "identity_store_failed");
+    let mut identities = resolve_request_identities(ctx);
+    if guest_credential_hash(ctx).is_none() && identities.platform.is_none() {
+        return Ok(RequestAccess {
+            identities,
+            transaction: None,
+        });
+    }
+    let Some(pool) = pool else {
+        return Ok(RequestAccess {
+            identities,
+            transaction: None,
+        });
+    };
+    let hash = guest_credential_hash(ctx);
+    let account = identities
+        .platform
+        .as_ref()
+        .and_then(|identity| user_id_to_storage_uuid(&identity.user_id));
+    let (mut tx, candidate) = loop {
+        let mut tx = pool.begin().await.map_err(|_| internal())?;
+        // Serialize token allocation BEFORE common player locks. A loser
+        // never holds an unused candidate lock while acquiring the winner.
+        if let Some(hash) = hash {
+            sqlx::query(
+                "SELECT pg_advisory_xact_lock(hashtextextended('puzzled:guest-token:' || $1, 0))",
+            )
+            .bind(hash)
+            .execute(&mut *tx)
+            .await
+            .map_err(|_| internal())?;
+        }
+        let mut candidate: Option<uuid::Uuid> = match hash {
+            Some(hash) => {
+                sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE token_hash = $1")
+                    .bind(hash)
+                    .fetch_optional(&mut *tx)
+                    .await
+                    .map_err(|_| internal())?
+            }
+            None => None,
+        };
+        let allocate =
+            candidate.is_none() && hash.is_some() && guest_write && identities.platform.is_none();
+        if allocate {
+            candidate = Some(uuid::Uuid::now_v7());
+        }
+        guest_credentials::lock_players(&mut tx, candidate.into_iter().chain(account).collect())
+            .await
+            .map_err(|_| internal())?;
+        if allocate {
+            let player = candidate.ok_or_else(internal)?;
+            if !guest_credentials::unused_player(&mut tx, player)
+                .await
+                .map_err(|_| internal())?
+            {
+                tx.rollback().await.map_err(|_| internal())?;
+                continue;
+            }
+            let winner: uuid::Uuid = sqlx::query_scalar("INSERT INTO guest_credentials (token_hash, user_id, provenance) VALUES ($1, $2, 'server_issued') ON CONFLICT (token_hash) DO UPDATE SET token_hash = guest_credentials.token_hash RETURNING user_id")
+                .bind(hash.ok_or_else(internal)?).bind(player).fetch_one(&mut *tx).await.map_err(|_| internal())?;
+            if winner != player {
+                // All app allocation takes the token lock. A separately
+                // inserted winner is retried without the unused player lock.
+                tx.rollback().await.map_err(|_| internal())?;
+                continue;
+            }
+        }
+        break (tx, candidate);
+    };
+    if let Some(player) = account {
+        let collision: bool = sqlx::query_scalar(
+            "SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)",
+        )
+        .bind(player)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(|_| internal())?;
+        if collision {
+            identities.platform = None;
+        }
+    }
+    if let (Some(player), Some(hash)) = (candidate, hash) {
+        let live: Option<uuid::Uuid> = sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL AND adopted_user_id IS NULL FOR SHARE")
+            .bind(player).bind(hash).fetch_optional(&mut *tx).await.map_err(|_| internal())?;
+        if live == Some(player)
+            && account != Some(player)
+            && !guest_credentials::account_backed(&mut tx, player)
+                .await
+                .map_err(|_| internal())?
+        {
+            identities.guest = Some(VerifiedIdentity {
+                user_id: format!("guest_{player}"),
+                display_name: Some("Guest".into()),
+                email: None,
+                is_admin: false,
+                actor: None,
+            });
+        }
+    }
+    if let (Some(verified), Some(guest), Some(hash)) =
+        (&identities.platform, &identities.guest, hash)
+    {
+        crate::capabilities::puzzle_play::adapters::game_sessions_db::adopt_guest_sessions_on_connection(
+            &mut tx, verified, &guest.user_id, hash,
+        ).await.map_err(|_| internal())?;
+        identities.guest = None;
+    }
+    Ok(RequestAccess {
+        identities,
+        transaction: Some(tx),
+    })
+}
+
+pub fn guest_credential_hash(ctx: &RequestContext) -> Option<&str> {
+    use crate::capabilities::identity_access::adapters::guest_credentials::VERIFIED_GUEST_HEADER;
+    ctx.headers().get(VERIFIED_GUEST_HEADER)?.to_str().ok()
 }
 
 /// The one guard for every authenticated purchase or spend (checkout, billing
@@ -211,31 +323,19 @@ mod tests {
     }
 
     #[test]
-    fn guest_header_normalizes_to_guest_user_id() {
+    fn raw_guest_header_and_cookie_are_not_credentials() {
         let mut headers = HeaderMap::new();
         headers.insert(
             GUEST_ID_HEADER,
             "a1b2c3d4-e5f6-7890-abcd-ef1234567890".parse().unwrap(),
         );
-        let identity = resolve_guest(&headers).expect("guest");
-        assert_eq!(
-            identity.user_id,
-            "guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-        );
-        assert!(!identity.is_admin);
-    }
-
-    #[test]
-    fn guest_cookie_accepted() {
-        let mut headers = HeaderMap::new();
         headers.insert(
             COOKIE,
             "puzzled_guest_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890"
                 .parse()
                 .unwrap(),
         );
-        let identity = resolve_guest(&headers).expect("guest cookie");
-        assert!(identity.user_id.starts_with("guest_"));
+        assert!(resolve_guest(&headers).is_none());
     }
 
     #[test]

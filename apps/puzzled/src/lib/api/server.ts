@@ -48,6 +48,7 @@ import { OPEN_ACCESS, type PlusAccess } from '@/lib/billing/plus'
 import { getLeaderboard } from '@/lib/connect/stats-client'
 import type { GetLeaderboardInput } from '@/lib/connect/stats-domain'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
+import { SESSION_COOKIE_NAMES } from '@/lib/identity/session-cookie'
 import { logger } from '@/lib/logger'
 import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
 
@@ -77,7 +78,16 @@ export type UserStats = {
 
 async function getServerTransport() {
 	const cookieStore = await cookies()
-	const cookie = cookieStore.toString()
+	const cookie = cookieStore
+		.getAll()
+		.filter(
+			(cookie) =>
+				cookie.name === '__Host-puzzled_guest' ||
+				SESSION_COOKIE_NAMES.some((name) => name === cookie.name) ||
+				(cookie.name.startsWith('__sylphx_') && cookie.name.endsWith('_session')),
+		)
+		.map((cookie) => `${cookie.name}=${cookie.value}`)
+		.join('; ')
 	// The api checks the Sylphx Auth session with Auth, which binds it to the
 	// browser's User-Agent.
 	const userAgent = (await headers()).get('user-agent')
@@ -96,13 +106,13 @@ async function getServerTransport() {
 /** True when SSR can attach a guest or Platform identity to Connect reads. */
 export async function hasServerProgressIdentity(): Promise<boolean> {
 	const cookieStore = await cookies()
-	if (cookieStore.get('puzzled_guest_id')?.value) return true
+	if (cookieStore.get('__Host-puzzled_guest')?.value) return true
 	return cookieStore
 		.getAll()
 		.some(
 			(cookie) =>
-				cookie.name.startsWith('__sylphx_') &&
-				cookie.name.endsWith('_session') &&
+				(SESSION_COOKIE_NAMES.some((name) => name === cookie.name) ||
+					(cookie.name.startsWith('__sylphx_') && cookie.name.endsWith('_session'))) &&
 				Boolean(cookie.value),
 		)
 }

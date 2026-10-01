@@ -17,6 +17,26 @@ use uuid::Uuid;
 /// erased account.
 pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
+        "guest_credentials",
+        "user_id",
+        r#"DELETE FROM "guest_credentials" WHERE "user_id" = $1"#,
+    ),
+    (
+        "guest_credentials",
+        "adopted_user_id",
+        r#"DELETE FROM "guest_credentials" WHERE "adopted_user_id" = $1"#,
+    ),
+    (
+        "game_sessions",
+        "adopted_from_guest",
+        r#"DELETE FROM "game_sessions" WHERE "adopted_from_guest" = $1"#,
+    ),
+    (
+        "result_shares",
+        "adopted_from_guest",
+        r#"DELETE FROM "result_shares" WHERE "adopted_from_guest" = $1"#,
+    ),
+    (
         "tryit_conversions",
         "user_id",
         r#"DELETE FROM "tryit_conversions" WHERE "user_id" = $1"#,
@@ -118,26 +138,61 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     ),
 ];
 
-/// Delete every row keyed to `user_id` in one transaction; returns rows deleted.
+/// Erase an account and its adopted source guests, retaining the complete
+/// linked identity set until all player-keyed rows have been removed. Trail
+/// columns name the SOURCE guest UUID, not the destination account UUID.
 pub async fn delete_account_data(pool: &PgPool, user_id: &str) -> Result<u64, String> {
     let uid = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
-    let mut tx = pool
-        .begin()
+    for _ in 0..3 {
+        let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+        let linked: Vec<Uuid> = sqlx::query_scalar(
+            "SELECT user_id FROM guest_credentials WHERE adopted_user_id = $1 ORDER BY user_id",
+        )
+        .bind(uid)
+        .fetch_all(&mut *tx)
         .await
-        .map_err(|e| format!("account deletion begin failed: {e}"))?;
-    let mut deleted = 0u64;
-    for (table, column, statement) in USER_KEYED_COLUMNS {
-        let result = sqlx::query(*statement)
-            .bind(uid)
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| format!("account deletion failed on {table}.{column}: {e}"))?;
-        deleted += result.rows_affected();
+        .map_err(|e| e.to_string())?;
+        let mut players = vec![uid];
+        players.extend(linked.iter().copied());
+        crate::capabilities::identity_access::adapters::guest_credentials::lock_players(
+            &mut tx,
+            players.clone(),
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+        let locked_linked: Vec<Uuid> = sqlx::query_scalar(
+            "SELECT user_id FROM guest_credentials WHERE adopted_user_id = $1 ORDER BY user_id",
+        )
+        .bind(uid)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+        if linked != locked_linked {
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            continue;
+        }
+        let mut deleted = 0u64;
+        // Registry rows are last: never erase the only source-guest linkage
+        // before visiting its collision rows, freezes, and adoption trails.
+        for credentials in [false, true] {
+            for player in &players {
+                for (table, column, statement) in USER_KEYED_COLUMNS {
+                    if (*table == "guest_credentials") != credentials {
+                        continue;
+                    }
+                    let result = sqlx::query(*statement)
+                        .bind(player)
+                        .execute(&mut *tx)
+                        .await
+                        .map_err(|e| format!("account deletion failed on {table}.{column}: {e}"))?;
+                    deleted += result.rows_affected();
+                }
+            }
+        }
+        tx.commit().await.map_err(|e| e.to_string())?;
+        return Ok(deleted);
     }
-    tx.commit()
-        .await
-        .map_err(|e| format!("account deletion commit failed: {e}"))?;
-    Ok(deleted)
+    Err("account deletion identity set changed".into())
 }
 
 #[cfg(test)]
@@ -162,8 +217,12 @@ mod tests {
             sql.push('\n');
         }
 
-        let is_player_column =
-            |name: &str| name == "user_id" || name.ends_with("_user_id") || name == "actor_id";
+        let is_player_column = |name: &str| {
+            name == "user_id"
+                || name.ends_with("_user_id")
+                || name == "actor_id"
+                || name == "adopted_from_guest"
+        };
         let mut found = BTreeSet::new();
         let mut table: Option<String> = None;
         for line in sql.lines() {
@@ -322,7 +381,9 @@ mod tests {
                 }
                 _ => false,
             };
-            if !runtime {
+            // Identity classification only asks whether a historic account
+            // exists; it does not consume billing entitlements or payments.
+            if !runtime || file.ends_with("identity_access/adapters/guest_credentials.rs") {
                 continue;
             }
             let text = std::fs::read_to_string(file).unwrap_or_default();

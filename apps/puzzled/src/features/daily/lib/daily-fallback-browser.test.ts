@@ -1,9 +1,4 @@
-/**
- * Browser-transport behaviour of the game-page GetDaily fallback: the read must
- * carry the stable guest-day id (X-Puzzled-Guest-Id) so a guest's completion is
- * resolved by the server exactly like the SSR path does.
- */
-
+/** Browser fallback awaits server cookie admission before GetDaily, without local identity headers. */
 import { afterEach, expect, test } from 'bun:test'
 import { create, toJson } from '@bufbuild/protobuf'
 import { GetDailyResponseSchema } from '@/gen/connect/puzzled/v1/puzzle_pb'
@@ -13,15 +8,12 @@ import { GUEST_DAY_ID_KEY } from '@/lib/storage-keys'
 import { loadDailySnapshot } from './daily-fallback'
 
 const CONNECT_BASE = 'https://guest-transport.test'
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
 type BrowserGlobals = {
 	window?: unknown
 	localStorage?: unknown
 	document?: unknown
 	fetch: typeof fetch
 }
-
 const globals = globalThis as unknown as BrowserGlobals
 const original = {
 	window: globals.window,
@@ -29,7 +21,6 @@ const original = {
 	document: globals.document,
 	fetch: globalThis.fetch,
 }
-
 afterEach(() => {
 	globals.window = original.window
 	globals.localStorage = original.localStorage
@@ -38,8 +29,10 @@ afterEach(() => {
 	resetConnectTransportCache()
 })
 
-test('the fallback GetDaily carries the persisted guest-day id', async () => {
-	const store = new Map<string, string>()
+test('fallback GetDaily awaits cookie bootstrap and leaves stored progress data unchanged', async () => {
+	resetConnectTransportCache()
+	const legacyData = 'test-local-progress-reference'
+	const store = new Map<string, string>([[GUEST_DAY_ID_KEY, legacyData]])
 	globals.window = globalThis
 	globals.localStorage = {
 		getItem: (key: string) => store.get(key) ?? null,
@@ -47,11 +40,20 @@ test('the fallback GetDaily carries the persisted guest-day id', async () => {
 			store.set(key, value)
 		},
 	}
-	globals.document = { cookie: '' }
-
-	const sentHeaders: Headers[] = []
-	globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
-		sentHeaders.push(new Headers(init?.headers))
+	globals.document = { cookie: 'puzzled_guest_id=legacy-data-only' }
+	const requests: Request[] = []
+	let admitted = false
+	globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+		const request = new Request(input, init)
+		requests.push(request)
+		if (request.url.endsWith('/v1/guest/session')) {
+			expect(request.method).toBe('POST')
+			expect(request.credentials).toBe('include')
+			expect(await request.json()).toEqual({})
+			admitted = true
+			return new Response('{"issued":true}', { headers: { 'content-type': 'application/json' } })
+		}
+		expect(admitted).toBe(true)
 		return new Response(
 			JSON.stringify(
 				toJson(
@@ -64,19 +66,20 @@ test('the fallback GetDaily carries the persisted guest-day id', async () => {
 					}),
 				),
 			),
-			{ status: 200, headers: { 'content-type': 'application/json' } },
+			{ headers: { 'content-type': 'application/json' } },
 		)
-	}) as unknown as typeof fetch
+	}) as typeof fetch
 
 	const snapshot = await loadDailySnapshot(
 		{ gameSlug: 'sudoku' },
 		createPuzzleServiceClient(CONNECT_BASE),
 	)
-
-	const guestId = sentHeaders[0]?.get('x-puzzled-guest-id')
-	expect(guestId).toBeString()
-	expect(UUID_RE.test(String(guestId))).toBe(true)
-	// The same id is persisted so a later SSR read resolves the same guest.
-	expect(store.get(GUEST_DAY_ID_KEY)).toBe(String(guestId))
+	expect(requests).toHaveLength(2)
+	expect(requests[0]?.url).toBe(`${CONNECT_BASE}/v1/guest/session`)
+	expect(requests[1]?.url).toBe(`${CONNECT_BASE}/puzzled.v1.PuzzleService/GetDaily`)
+	expect(requests[1]?.credentials).toBe('include')
+	expect(requests.every((request) => request.headers.get('x-puzzled-guest-id') === null)).toBe(true)
+	expect(store.get(GUEST_DAY_ID_KEY)).toBe(legacyData)
+	expect((globals.document as { cookie: string }).cookie).toBe('puzzled_guest_id=legacy-data-only')
 	expect(snapshot).toMatchObject({ kind: 'playable', puzzleDate: '2026-09-10' })
 })

@@ -25,7 +25,7 @@ pub const FAILED_CACHE_TTL: Duration = Duration::from_secs(5);
 /// How long a read catalogue is reused.
 pub const CATALOG_CACHE_TTL: Duration = Duration::from_secs(300);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(8);
-const DEFAULT_PUBLIC_URL: &str = "https://puzzled.gg";
+use crate::shared::public_origin::{parse_public_origin, DEFAULT_PUBLIC_URL};
 const DEFAULT_API_URL: &str = "https://api.sylphx.com";
 
 /// Why a Money call did not answer.
@@ -243,7 +243,11 @@ impl Money {
         Some(Self::discovering(
             &get("SYLPHX_API_URL").unwrap_or_else(|| DEFAULT_API_URL.into()),
             &get("SYLPHX_MONEY_API_KEY")?,
-            &get("PUZZLED_PUBLIC_URL").unwrap_or_else(|| DEFAULT_PUBLIC_URL.into()),
+            &parse_public_origin(
+                &get("PUZZLED_PUBLIC_URL").unwrap_or_else(|| DEFAULT_PUBLIC_URL.into()),
+                !cfg!(debug_assertions),
+            )
+            .ok()?,
         ))
     }
 
