@@ -46,11 +46,19 @@ clean-break end state that replaces all of it.
 - `SubmitGuess` requires verified identity **or** stable guest-day id
   (`X-Puzzled-Guest-Id` / `puzzled_guest_id` → `guest_<uuid>`), derives the
   served puzzle (`puzzle_id`/`puzzle_date`, never a client seed), validates the
-  final submission against the server's solution via the pure per-game dispatch
+  final submission against the server's frozen puzzle constraints via the pure per-game dispatch
   (all 17 games), rejects already-played, and persists verified results.
   Guests count toward daily puzzle completers on qualifying finishes; archive
   finishes never count.
 - Completion is server-derived; `has_completed` client input is deleted.
+- Sudoku accepts any complete 9×9 integer grid with digits 1–9 once in each
+  row, column and 3×3 box that preserves every frozen given clue. Existing
+  daily puzzles can admit multiple solutions; the generated canonical answer
+  is not an exclusive win condition. No puzzle rotation or progress rewrite
+  is required. Scoring, one-finish guards and guest completion counting stay
+  unchanged. Sudoku, Nonogram and Crowns presentations wait for server acceptance before
+  celebration/result/signup affordances; a rejected finish displays the
+  authoritative error and keeps the board for an explicit retry.
 
 ### 3. Services (Connect)
 
