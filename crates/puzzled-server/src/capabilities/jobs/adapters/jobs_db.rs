@@ -22,6 +22,10 @@ pub struct DailyReminderClaim {
 
 /// Claim due players without recording delivery. Expired leases are reclaimed
 /// by the existing Jobs/Compute tick, including after a worker restart.
+/// Privacy admission uses the erasure owner's fresh-snapshot try-lock helper:
+/// a busy/fenced player is skipped, never poisoning another player's batch.
+/// Both materialized pages bound helper calls and retain admission locks through
+/// the UPDATE; the ordinary write-fence trigger remains authoritative.
 /// A crash after delivery but before acknowledgement can duplicate delivery:
 /// this is at-least-once, not exactly-once. Rollback must drain this executor
 /// or forward-fix it; old executors ignore leases. Additive fields stay put.
@@ -33,7 +37,7 @@ pub async fn claim_due_daily_reminders(
     let token = Uuid::now_v7();
     let rows: Vec<(Uuid, NaiveDate)> = sqlx::query_as(
         r#"
-        WITH due AS (
+        WITH candidates AS MATERIALIZED (
             SELECT np.user_id, local.local_now::date AS local_date
             FROM notification_preferences np
             LEFT JOIN pg_timezone_names z ON z.name = np.timezone
@@ -41,6 +45,10 @@ pub async fn claim_due_daily_reminders(
                 SELECT $1::timestamptz AT TIME ZONE COALESCE(z.name, 'UTC') AS local_now
             ) local
             WHERE np.push_enabled AND np.push_daily_reminder
+              AND NOT EXISTS (
+                  SELECT 1 FROM erasure_requests e
+                  WHERE e.suppression_hash = puzzled_erasure_player_hash(np.user_id)
+              )
               AND np.daily_reminder_time ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'
               AND floor(extract(epoch FROM local.local_now::time) / 60)
                   BETWEEN extract(epoch FROM np.daily_reminder_time::time) / 60
@@ -55,6 +63,9 @@ pub async fn claim_due_daily_reminders(
             ORDER BY np.user_id
             LIMIT $4
             FOR UPDATE OF np SKIP LOCKED
+        ), due AS MATERIALIZED (
+            SELECT user_id, local_date FROM candidates
+            WHERE puzzled_erasure_try_admit(user_id)
         )
         UPDATE notification_preferences np
         SET daily_reminder_claim_token = $5,

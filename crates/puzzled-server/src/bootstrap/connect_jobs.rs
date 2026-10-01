@@ -236,7 +236,7 @@ pub fn jobs_connect_service(state: AppState) -> Arc<JobsConnectService> {
 mod tests {
     use super::send_due_daily_reminders_with;
     use crate::capabilities::preferences::adapters::web_push;
-    use crate::test_support::fresh_database;
+    use crate::daily_reminder_tests::reminder_database as fresh_database;
     use chrono::NaiveDate;
     use uuid::Uuid;
 

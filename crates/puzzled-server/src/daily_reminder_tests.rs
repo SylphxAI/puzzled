@@ -16,6 +16,27 @@ use crate::capabilities::preferences::adapters::preferences_db::is_reminder_time
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::persist_validated_session;
 use crate::test_support::fresh_database;
 
+/// Temporary disposable-only fixture from privacy owner #319, exact head
+/// f2035cb8a586730174afd4f68e4945da7dc9b6ab. Remove after reconciling #319's
+/// migration onto this branch; it is not a second production schema owner.
+pub(crate) async fn reminder_database() -> Option<PgPool> {
+    let pool = fresh_database().await?;
+    let installed: bool =
+        sqlx::query_scalar("SELECT to_regprocedure('puzzled_erasure_try_admit(uuid)') IS NOT NULL")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    if !installed {
+        sqlx::raw_sql(sqlx::AssertSqlSafe(include_str!(
+            "../testdata/erasure_admission_fixture.sql"
+        )))
+        .execute(&pool)
+        .await
+        .unwrap();
+    }
+    Some(pool)
+}
+
 /// 01:00 UTC on 30 September: 09:00 in Hong Kong, 21:00 the evening before in
 /// New York, and the product day (Hong Kong) is 2026-09-30.
 fn now() -> DateTime<Utc> {
@@ -55,7 +76,7 @@ async fn due(pool: &PgPool, at: DateTime<Utc>) -> Vec<String> {
 
 #[tokio::test]
 async fn each_player_is_reminded_at_their_own_local_time() {
-    let Some(pool) = fresh_database().await else {
+    let Some(pool) = reminder_database().await else {
         return;
     };
     let hong_kong = player(&pool, "09:00", Some("Asia/Hong_Kong"), true).await;
@@ -86,7 +107,7 @@ async fn each_player_is_reminded_at_their_own_local_time() {
 
 #[tokio::test]
 async fn a_late_tick_still_sends_within_the_grace_and_not_beyond() {
-    let Some(pool) = fresh_database().await else {
+    let Some(pool) = reminder_database().await else {
         return;
     };
     // 09:00 in Hong Kong now; 90 minutes and 150 minutes after the set time.
@@ -105,7 +126,7 @@ async fn a_late_tick_still_sends_within_the_grace_and_not_beyond() {
 
 #[tokio::test]
 async fn a_player_is_reminded_once_per_local_day() {
-    let Some(pool) = fresh_database().await else {
+    let Some(pool) = reminder_database().await else {
         return;
     };
     let user = player(&pool, "09:00", Some("Asia/Hong_Kong"), true).await;
@@ -122,7 +143,7 @@ async fn a_player_is_reminded_once_per_local_day() {
 
 #[tokio::test]
 async fn a_failed_send_is_released_for_the_next_tick() {
-    let Some(pool) = fresh_database().await else {
+    let Some(pool) = reminder_database().await else {
         return;
     };
     let user = player(&pool, "09:00", Some("Asia/Hong_Kong"), true).await;
@@ -142,7 +163,7 @@ async fn a_failed_send_is_released_for_the_next_tick() {
 
 #[tokio::test]
 async fn nobody_is_reminded_after_finishing_todays_puzzle() {
-    let Some(pool) = fresh_database().await else {
+    let Some(pool) = reminder_database().await else {
         return;
     };
     let finished = player(&pool, "09:00", Some("Asia/Hong_Kong"), true).await;
@@ -182,7 +203,7 @@ fn a_reminder_time_is_a_24_hour_clock_time() {
 
 #[tokio::test]
 async fn expired_claim_is_recovered_and_old_token_or_day_cannot_finish_it() {
-    let Some(pool) = fresh_database().await else {
+    let Some(pool) = reminder_database().await else {
         return;
     };
     let user = player(&pool, "09:00", Some("Asia/Hong_Kong"), true).await;
@@ -247,7 +268,7 @@ async fn expired_claim_is_recovered_and_old_token_or_day_cannot_finish_it() {
 
 #[tokio::test]
 async fn overlapping_workers_claim_disjoint_bounded_batches() {
-    let Some(pool) = fresh_database().await else {
+    let Some(pool) = reminder_database().await else {
         return;
     };
     for _ in 0..(REMINDER_CLAIM_BATCH * 2 + 1) {
@@ -275,7 +296,7 @@ async fn overlapping_workers_claim_disjoint_bounded_batches() {
 
 #[tokio::test]
 async fn acknowledgement_records_the_claimed_local_day_not_the_product_day() {
-    let Some(pool) = fresh_database().await else {
+    let Some(pool) = reminder_database().await else {
         return;
     };
     let user = player(&pool, "21:00", Some("America/New_York"), true).await;
@@ -295,4 +316,85 @@ async fn acknowledgement_records_the_claimed_local_day_not_the_product_day() {
     .await
     .unwrap();
     assert_eq!(delivered, claim.local_day);
+}
+
+async fn suppress(pool: &PgPool, user: Uuid, completed: bool) {
+    if completed {
+        sqlx::query("INSERT INTO erasure_requests (request_id, suppression_hash, state, local_erased_at, completed_at) VALUES ($1, puzzled_erasure_player_hash($2), 'completed', now(), now())")
+            .bind(Uuid::now_v7()).bind(user).execute(pool).await.unwrap();
+    } else {
+        sqlx::query("INSERT INTO erasure_requests (request_id, player_id, suppression_hash, organization_id, subjects) VALUES ($1, $2, puzzled_erasure_player_hash($2), 'test-org', '[\"test-subject\"]'::jsonb)")
+            .bind(Uuid::now_v7()).bind(user).execute(pool).await.unwrap();
+    }
+}
+
+#[tokio::test]
+async fn pending_and_terminal_suppression_are_filtered_before_the_bounded_page() {
+    let Some(pool) = reminder_database().await else {
+        return;
+    };
+    // All these suppressed players precede the healthy player in UUID order:
+    // filtering only after LIMIT would starve it behind a full fenced page.
+    for i in 1..=(REMINDER_CLAIM_BATCH + 1) {
+        let uid = Uuid::from_u128(i as u128);
+        sqlx::query("INSERT INTO notification_preferences (user_id, push_enabled, push_daily_reminder, daily_reminder_time, timezone) VALUES ($1, true, true, '09:00', 'Asia/Hong_Kong')")
+            .bind(uid).execute(&pool).await.unwrap();
+        suppress(&pool, uid, i % 2 == 0).await;
+    }
+    let healthy = player(&pool, "09:00", Some("Asia/Hong_Kong"), true).await;
+    let claims = claim_due_daily_reminders(&pool, now(), PRODUCT_DAY)
+        .await
+        .unwrap();
+    assert_eq!(claims.len(), 1);
+    assert_eq!(claims[0].user_id, healthy.to_string());
+    assert!(acknowledge_daily_reminder(&pool, &claims[0], now())
+        .await
+        .unwrap());
+    let fenced_claims: i64 = sqlx::query_scalar("SELECT count(*) FROM notification_preferences WHERE user_id <> $1 AND (daily_reminder_claim_token IS NOT NULL OR last_daily_reminder_on IS NOT NULL)")
+        .bind(healthy).fetch_one(&pool).await.unwrap();
+    assert_eq!(fenced_claims, 0);
+}
+
+#[tokio::test]
+async fn erasure_lock_busy_player_does_not_block_or_poison_a_healthy_claim() {
+    let Some(pool) = reminder_database().await else {
+        return;
+    };
+    let blocked = player(&pool, "09:00", Some("Asia/Hong_Kong"), true).await;
+    let healthy = player(&pool, "09:00", Some("Asia/Hong_Kong"), true).await;
+    let mut erasure = pool.begin().await.unwrap();
+    sqlx::query("SELECT puzzled_erasure_lock($1)")
+        .bind(blocked)
+        .execute(&mut *erasure)
+        .await
+        .unwrap();
+    sqlx::query("INSERT INTO erasure_requests (request_id, player_id, suppression_hash, organization_id, subjects) VALUES ($1, $2, puzzled_erasure_player_hash($2), 'test-org', '[\"test-subject\"]'::jsonb)")
+        .bind(Uuid::now_v7()).bind(blocked).execute(&mut *erasure).await.unwrap();
+    // The claim's statement snapshot cannot see this uncommitted suppression.
+    // Try-admission skips the busy identity without waiting on its transaction.
+    let claims = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        claim_due_daily_reminders(&pool, now(), PRODUCT_DAY),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(claims.len(), 1);
+    assert_eq!(claims[0].user_id, healthy.to_string());
+    erasure.commit().await.unwrap();
+    assert!(acknowledge_daily_reminder(&pool, &claims[0], now())
+        .await
+        .unwrap());
+    assert!(claim_due_daily_reminders(&pool, now(), PRODUCT_DAY)
+        .await
+        .unwrap()
+        .is_empty());
+    let claim: Option<Uuid> = sqlx::query_scalar(
+        "SELECT daily_reminder_claim_token FROM notification_preferences WHERE user_id = $1",
+    )
+    .bind(blocked)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(claim, None);
 }
