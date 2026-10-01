@@ -74,10 +74,13 @@ export function attributionCookieValue(
 		}
 	}
 	if ([...out.keys()].length === 0) return null
-	if (landingPath.startsWith('/') && !landingPath.startsWith('//')) {
-		out.set('p', landingPath.slice(0, MAX_VALUE))
+	// Landing path and time are analytics data: only with analytics consent.
+	if (allow.tags) {
+		if (landingPath.startsWith('/') && !landingPath.startsWith('//')) {
+			out.set('p', landingPath.slice(0, MAX_VALUE))
+		}
+		out.set('at', String(now))
 	}
-	out.set('at', String(now))
 	return encodeURIComponent(out.toString())
 }
 

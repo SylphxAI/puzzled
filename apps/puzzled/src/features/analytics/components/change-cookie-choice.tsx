@@ -9,7 +9,7 @@ import { useSafeConsent } from '@/lib/identity/react'
  * and the Google cookies), records the withdrawal, and reloads so the cookie
  * banner asks again.
  */
-export function ChangeCookieChoice() {
+export function ChangeCookieChoice({ tagIds = [] }: { tagIds?: string[] }) {
 	const t = useTranslations('consent')
 	const { setConsent } = useSafeConsent()
 	return (
@@ -20,7 +20,7 @@ export function ChangeCookieChoice() {
 				void setConsent({ analytics: false, marketing: false })
 					.catch(() => undefined)
 					.finally(() => {
-						withdrawCookieChoice()
+						withdrawCookieChoice(tagIds)
 						window.location.reload()
 					})
 			}}

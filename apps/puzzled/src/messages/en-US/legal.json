@@ -31,7 +31,7 @@
 					"payment": "Payment information: Sylphx Money, the payments service of Sylphx Limited, and its payment processor Stripe collect your card details; we receive your subscription status, amounts, dates and payment references",
 					"technical": "Technical data: IP address, browser type, and device information",
 					"errors": "Error reports: when a page or our server fails, we record the error message, stack trace and page path (never the query string, email addresses or anything you typed) in our own error-monitoring service, to find and fix the fault",
-					"referral": "Referral and ad tags: if you arrive through a link that carries campaign tags (utm_ parameters or a referral id, for example from another Sylphx product), and you have accepted analytics cookies, we keep those tags for 30 days in a first-party cookie. If you arrive from a Google ad and have turned on advertising cookies, we also keep the ad click id for 90 days in the same cookie. We store them with your account and subscription if you sign up or subscribe, to know which link or ad brought you, and we do not sell them."
+					"referral": "Referral and ad tags: if you arrive through a link that carries campaign tags (utm_ parameters or a referral id, for example from another Sylphx product), and you have accepted analytics cookies, we keep those tags for 30 days in a first-party cookie and store them with your account if you sign up. If you arrive from a Google ad and have turned on advertising cookies, we keep the ad click id for 90 days in the same cookie and pass it only to the payment record of a subscription you start, not to your account. We use them to know which link or ad brought you, and we do not sell them."
 				}
 			},
 			"dataUse": {
@@ -43,7 +43,7 @@
 					"communicate": "To send you messages about your account, subscription and changes to Puzzled: our contract with you and our legitimate interests",
 					"analytics": "To measure how Puzzled is played, which links and ads bring players, and whether they sign up or subscribe, using analytics, advertising measurement and the referral cookie: your consent (analytics and advertising are separate choices), which you can withdraw at any time with Change cookie choice in the Cookies section",
 					"legal": "To keep tax and accounting records, respond to lawful requests, and establish, exercise or defend legal claims: our legal obligations and our legitimate interests",
-					"noSale": "We do not sell your personal data. Players without Puzzled Plus may see advertising on the archive and result screens (never during a puzzle), served by Google AdSense; the ad is shown, and advertising cookies are set, only if you accepted cookies."
+					"noSale": "We do not sell your personal data. Players without Puzzled Plus may see advertising on the archive and result screens (never during a puzzle), served by Google AdSense; the ad is shown, and advertising cookies are set, only if you turned on advertising cookies."
 				}
 			},
 			"payments": {

@@ -33,38 +33,40 @@ export function afterSignUpDestination(callbackUrl: string | null | undefined): 
 }
 
 /**
- * One-shot marker the server adds to the landing address when Auth says the
- * account was just created. It carries the sign-in method for the `sign_up`
- * conversion; the landing reads it once and removes it.
+ * One-shot cookie the server sets when Auth says the account was just created.
+ * Its value is the sign-in method for the `sign_up` conversion. A link cannot
+ * set it, so only a real new account fires; the landing reads and deletes it.
  */
-export const SIGNUP_METHOD_PARAM = 'signupVia'
+export const SIGNUP_COOKIE = 'puzzled_signup'
 
 const SIGNUP_METHODS = ['email', 'oauth'] as const
 export type SignUpMethod = (typeof SIGNUP_METHODS)[number]
 
-/** The method named by a marker value, or null for anything else. */
+/** The method named by a cookie value, or null for anything else. */
 export function signUpMethodFrom(value: string | null | undefined): SignUpMethod | null {
 	return SIGNUP_METHODS.find((method) => method === value) ?? null
 }
 
-/** `path` with the new-account marker added (a marker already in it is replaced). */
-export function withNewAccountMarker(path: string, method: SignUpMethod): string {
-	const safe = safeCallbackPath(path) ?? '/'
-	const hashAt = safe.indexOf('#')
-	const hash = hashAt === -1 ? '' : safe.slice(hashAt)
-	const [base = '/', query = ''] = (hashAt === -1 ? safe : safe.slice(0, hashAt)).split('?')
-	const params = new URLSearchParams(query)
-	params.set(SIGNUP_METHOD_PARAM, method)
-	return `${base}?${params.toString()}${hash}`
+/** `Set-Cookie` value for a new account: readable by the page (not HttpOnly), 10 minutes. */
+export function signUpCookieHeader(method: SignUpMethod): string {
+	return `${SIGNUP_COOKIE}=${method}; Max-Age=600; Path=/; SameSite=Lax; Secure`
 }
 
-/** `path` without any new-account marker, so a forged or stale one is never forwarded. */
-export function withoutNewAccountMarker(path: string): string {
-	const hashAt = path.indexOf('#')
-	const hash = hashAt === -1 ? '' : path.slice(hashAt)
-	const [base = '/', query = ''] = (hashAt === -1 ? path : path.slice(0, hashAt)).split('?')
-	const params = new URLSearchParams(query)
-	params.delete(SIGNUP_METHOD_PARAM)
-	const rest = params.toString()
-	return `${base}${rest ? `?${rest}` : ''}${hash}`
+/** The method held in a `document.cookie` string, or null. */
+export function readSignUpCookie(cookies: string): SignUpMethod | null {
+	for (const pair of cookies.split(';')) {
+		const [name, value] = pair.trim().split('=')
+		if (name === SIGNUP_COOKIE) return signUpMethodFrom(value)
+	}
+	return null
+}
+
+/** `document.cookie` assignment that deletes the cookie. */
+export const SIGNUP_COOKIE_DELETE = `${SIGNUP_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax; Secure`
+
+/** Read and delete the one-shot cookie; the method it held, or null when absent. */
+export function consumeSignUpCookie(doc: { cookie: string }): SignUpMethod | null {
+	const method = readSignUpCookie(doc.cookie)
+	if (method) doc.cookie = SIGNUP_COOKIE_DELETE
+	return method
 }

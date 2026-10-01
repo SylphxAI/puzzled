@@ -134,4 +134,22 @@ describe('ad click id capture', () => {
 			decodeURIComponent(attributionCookieValue('?utm_source=spring&utm_term=a@b.c', '/', 1) ?? ''),
 		).toContain('s=spring')
 	})
+
+	test('advertising-only consent stores the click id but no landing path or time', () => {
+		const value = attributionCookieValue('?gclid=abc123&utm_source=x', '/pricing', 5, {
+			clickId: true,
+		})
+		const decoded = new URLSearchParams(decodeURIComponent(value ?? ''))
+		expect(decoded.get('g')).toBe('abc123')
+		expect(decoded.get('s')).toBeNull()
+		expect(decoded.get('p')).toBeNull()
+		expect(decoded.get('at')).toBeNull()
+	})
+
+	test('analytics consent still stores the landing path and time with the tags', () => {
+		const value = attributionCookieValue('?utm_source=x', '/pricing', 5, { tags: true })
+		const decoded = new URLSearchParams(decodeURIComponent(value ?? ''))
+		expect(decoded.get('p')).toBe('/pricing')
+		expect(decoded.get('at')).toBe('5')
+	})
 })

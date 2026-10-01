@@ -227,7 +227,10 @@ export function createGoogleTag(input: {
 			}
 			if (wantAds && ids.ads && !adsOn) {
 				win[`ga-disable-${ids.ads}`] = false
-				gtag('config', ids.ads, { allow_ad_personalization_signals: false })
+				gtag('config', ids.ads, {
+					allow_google_signals: false,
+					allow_ad_personalization_signals: false,
+				})
 			}
 			if (!wantGa && gaOn && ids.ga) win[`ga-disable-${ids.ga}`] = true
 			if (!wantAds && adsOn && ids.ads) win[`ga-disable-${ids.ads}`] = true

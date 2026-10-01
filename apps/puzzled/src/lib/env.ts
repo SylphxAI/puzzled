@@ -282,7 +282,6 @@ export const env = {
 	get ADS_ADSENSE_CLIENT_ID(): string | undefined {
 		return process.env.ADS_ADSENSE_CLIENT_ID
 	},
-	/** AdSense ad unit id */
 	/** GA4 measurement id (G-...) */
 	get GA_MEASUREMENT_ID(): string | undefined {
 		return process.env.GA_MEASUREMENT_ID
@@ -291,6 +290,7 @@ export const env = {
 	get GOOGLE_ADS_ID(): string | undefined {
 		return process.env.GOOGLE_ADS_ID
 	},
+	/** AdSense ad unit id */
 	get ADS_SLOT_ID(): string | undefined {
 		return process.env.ADS_SLOT_ID
 	},

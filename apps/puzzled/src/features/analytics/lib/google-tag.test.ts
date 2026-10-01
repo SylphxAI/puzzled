@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import {
 	CONSENT_DEFAULT_SCRIPT,
 	cleanEventParams,
@@ -39,6 +39,10 @@ function harness(choice: { analytics: boolean; marketing: boolean }, ids = IDS) 
 
 const names = (calls: unknown[][]) =>
 	calls.map((c) => (c[0] === 'event' ? `event:${c[1]}` : String(c[0])))
+
+beforeEach(() => {
+	setActiveGoogleTag(null)
+})
 
 afterEach(() => {
 	setActiveGoogleTag(null)
@@ -133,6 +137,7 @@ describe('loading', () => {
 		expect(last?.[1]).toBe('update')
 		expect(last?.[2]).toMatchObject({ ad_storage: 'denied', analytics_storage: 'denied' })
 		expect(h.win['ga-disable-G-TEST1234']).toBe(true)
+		expect(h.win['ga-disable-AW-123456789']).toBe(true)
 		expect(h.tag.event('sign_up', { method: 'email' })).toBe(false)
 	})
 })
@@ -258,8 +263,9 @@ describe('conversions', () => {
 	})
 
 	test('without consent nothing is stored or sent, and the quote is not consumed', () => {
-		const { h } = install({ analytics: false, marketing: false })
+		const { h, items } = install({ analytics: false, marketing: false })
 		rememberCheckoutQuote({ plan: 'individual_yearly', value: 39.99, currency: 'USD' })
+		expect(items.size).toBe(0)
 		expect(trackCheckoutReturn({ sessionId: 'cs_test_2', status: 'trialing' })).toBe(false)
 		expect(sent(h)).toEqual([])
 	})
@@ -307,5 +313,17 @@ describe('cookies', () => {
 		expect(writes).toContain('_ga=; Path=/; Max-Age=0')
 		expect(writes).toContain('_ga=; Path=/; Max-Age=0; Domain=.puzzled.gg')
 		expect(writes.some((w) => w.startsWith('puzzled_attr') || w.startsWith('theme'))).toBe(false)
+	})
+})
+
+describe('config privacy flags', () => {
+	test('Ads config also turns off personalization signals', () => {
+		const h = harness({ analytics: false, marketing: true })
+		h.tag.sync()
+		const cfg = h.calls.find((c) => c[0] === 'config')
+		expect(cfg?.[2]).toMatchObject({
+			allow_google_signals: false,
+			allow_ad_personalization_signals: false,
+		})
 	})
 })

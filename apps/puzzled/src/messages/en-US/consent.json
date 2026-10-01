@@ -1,6 +1,6 @@
 {
 	"title": "Analytics consent",
-	"message": "We use privacy-friendly analytics; advertising cookies stay off unless you turn them on in Settings.",
+	"message": "We use Google Analytics to count plays; advertising cookies stay off unless you turn them on.",
 	"accept": "Accept",
 	"decline": "Decline",
 	"learnMore": "Privacy policy",

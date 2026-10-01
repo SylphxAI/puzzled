@@ -24,7 +24,6 @@ import {
 	GetStreakInfoRequestSchema,
 } from '@/gen/connect/puzzled/v1/gamification_pb'
 import { getConnectTransport } from '@/lib/connect/transport'
-import { withNewAccountMarker } from './after-sign-up'
 import { type AppConfig, DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type IdentityUser } from './dest'
 import { MIN_PASSWORD_LENGTH } from './password-policy'
 
@@ -313,11 +312,7 @@ export function useSignUpForm(
 					throw new Error(typeof result.error === 'string' ? result.error : 'sign-up failed')
 				}
 				if (result.signedIn === true) {
-					// Only the server's own new-account answer marks the landing for the sign_up conversion.
-					const landing = opts.afterSignUpUrl ?? '/'
-					window.location.assign(
-						result.newAccount === true ? withNewAccountMarker(landing, 'email') : landing,
-					)
+					window.location.assign(opts.afterSignUpUrl ?? '/')
 					return
 				}
 				setStep('verify-email')

@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 import {
 	afterSignUpDestination,
+	consumeSignUpCookie,
+	readSignUpCookie,
 	safeCallbackPath,
+	signUpCookieHeader,
 	signUpMethodFrom,
-	withNewAccountMarker,
-	withoutNewAccountMarker,
 } from './after-sign-up'
 
 describe('safeCallbackPath', () => {
@@ -45,24 +46,28 @@ describe('afterSignUpDestination', () => {
 	})
 })
 
-describe('new-account marker', () => {
-	test('adds the method once, keeping query and hash', () => {
-		expect(withNewAccountMarker('/', 'oauth')).toBe('/?signupVia=oauth')
-		expect(withNewAccountMarker('/games/x?d=1&signupVia=email#top', 'oauth')).toBe(
-			'/games/x?d=1&signupVia=oauth#top',
-		)
+describe('new-account cookie', () => {
+	test('the server cookie is one-shot, readable by the page, Secure and short-lived', () => {
+		const header = signUpCookieHeader('oauth')
+		expect(header).toBe('puzzled_signup=oauth; Max-Age=600; Path=/; SameSite=Lax; Secure')
+		expect(header).not.toContain('HttpOnly')
 	})
 
-	test('a forged marker is stripped', () => {
-		expect(withoutNewAccountMarker('/a?signupVia=email')).toBe('/a')
-		expect(withoutNewAccountMarker('/a?x=1&signupVia=email#h')).toBe('/a?x=1#h')
-		expect(withoutNewAccountMarker('/a?x=1')).toBe('/a?x=1')
+	test('a link cannot fire: no cookie means no method, whatever the address says', () => {
+		const doc = { cookie: 'theme=dark' }
+		expect(consumeSignUpCookie(doc)).toBeNull()
+		expect(doc.cookie).toBe('theme=dark')
+	})
+
+	test('the cookie is read once and deleted', () => {
+		const doc = { cookie: 'a=1; puzzled_signup=email' }
+		expect(consumeSignUpCookie(doc)).toBe('email')
+		expect(doc.cookie).toContain('puzzled_signup=; Max-Age=0')
 	})
 
 	test('only known methods are read', () => {
 		expect(signUpMethodFrom('email')).toBe('email')
-		expect(signUpMethodFrom('oauth')).toBe('oauth')
 		expect(signUpMethodFrom('a@b.example')).toBeNull()
-		expect(signUpMethodFrom(null)).toBeNull()
+		expect(readSignUpCookie('puzzled_signup=x%40y')).toBeNull()
 	})
 })

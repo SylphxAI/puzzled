@@ -315,6 +315,15 @@ mod tests {
     }
 
     #[test]
+    fn a_click_id_only_cookie_has_no_tag_so_no_analytics_row_is_written() {
+        let found = Attribution::from_cookie("g=abc123").expect("click id");
+        assert!(found.has_click_id());
+        assert!(!found.has_tag());
+        let tagged = Attribution::from_cookie("s=spring&g=abc123").expect("both");
+        assert!(tagged.has_tag());
+    }
+
+    #[test]
     fn a_value_that_looks_like_an_email_address_is_dropped() {
         assert_eq!(clean_value("someone@example.com"), None);
         assert_eq!(Attribution::from_cookie("s=a%40b.example"), None);

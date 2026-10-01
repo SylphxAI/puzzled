@@ -28,6 +28,12 @@ describe('content security policy', () => {
 		const connect = directive(buildCsp('abc', { googleTag: true }), 'connect-src')
 		expect(connect).toContain('https://www.googletagmanager.com')
 		expect(connect).toContain('https://*.google-analytics.com')
+		expect(connect).toContain('https://www.googleadservices.com')
+		expect(connect).toContain('https://pagead2.googlesyndication.com')
+		expect(directive(buildCsp('abc', { googleTag: true }), 'frame-src')).toContain(
+			'https://td.doubleclick.net',
+		)
+		expect(directive(buildCsp('abc'), 'frame-src')).not.toContain('doubleclick')
 		expect(directive(buildCsp('abc', { googleTag: true }), 'script-src')).toBe(
 			"script-src 'self' 'nonce-abc' 'strict-dynamic'",
 		)

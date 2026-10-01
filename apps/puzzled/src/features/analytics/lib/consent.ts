@@ -72,18 +72,23 @@ export function onConsentChange(callback: (status: ConsentStatus) => void): () =
 	return () => window.removeEventListener('consent-change', handler)
 }
 
+const QUOTE_KEY = 'puzzled:ads:checkout-quote'
+
 /**
  * Withdraw the stored cookie choice: forget the decision (so the banner asks
- * again), delete the Google cookies, and tell listeners so the tag stops and
- * the attribution cookie is cleared. The caller records the withdrawal with
- * the api and reloads the page to show the banner.
+ * again), delete the Google cookies and the stored checkout quote, switch off
+ * the resident tag (`ga-disable-<id>`), and tell listeners so the attribution
+ * cookie is cleared. The caller records the withdrawal with the api, then
+ * calls `reload` to show the banner and drop the loaded gtag.js.
  */
-export function withdrawCookieChoice(): void {
+export function withdrawCookieChoice(ids: string[] = []): void {
 	if (typeof window === 'undefined') return
 	localStorage.removeItem('puzzled-consent')
+	localStorage.removeItem(QUOTE_KEY)
 	localStorage.setItem(CONSENT_KEY, 'declined')
 	localStorage.setItem(MARKETING_CONSENT_KEY, 'declined')
 	localStorage.setItem(CONSENT_TIMESTAMP_KEY, new Date().toISOString())
+	for (const id of ids) (window as unknown as Record<string, unknown>)[`ga-disable-${id}`] = true
 	deleteGoogleCookies(document, window.location.hostname)
 	window.dispatchEvent(
 		new CustomEvent('consent-change', { detail: { status: 'declined', timestamp: Date.now() } }),
