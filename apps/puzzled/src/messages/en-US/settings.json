@@ -673,6 +673,11 @@
 			"compactMode": "Compact Mode",
 			"compactModeDescription": "Use a denser layout with smaller spacing"
 		},
+		"streakFreeze": {
+			"description": "Choose whether a freeze is used automatically to protect your streak",
+			"unavailable": "Auto-freeze could not be loaded. Refresh to try again.",
+			"saveFailed": "Your change was not saved. Try again."
+		},
 		"language": {
 			"title": "Language & Region",
 			"description": "Set your language and regional preferences",

@@ -673,6 +673,11 @@
 			"compactMode": "紧凑模式",
 			"compactModeDescription": "使用更紧凑的排版和更小的间距"
 		},
+		"streakFreeze": {
+			"description": "选择是否自动使用冻结来保护你的连胜",
+			"unavailable": "暂时无法加载自动冻结设置，请刷新后重试。",
+			"saveFailed": "未能保存你的更改，请重试。"
+		},
 		"language": {
 			"title": "语言与地区",
 			"description": "设置你的语言和地区偏好",

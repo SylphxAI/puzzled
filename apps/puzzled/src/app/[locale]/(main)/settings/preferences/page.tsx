@@ -4,6 +4,8 @@ import { Globe, Palette } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { ConsoleCard, ConsoleHeader } from '@/features/console/components/console-chrome'
 import { requireMember } from '@/features/console/lib/require-member'
+import { AutoFreezeToggle } from '@/features/settings/components/auto-freeze-toggle'
+import { getServerStreakInfo } from '@/lib/api/server'
 import { buildPageMetadata } from '@/lib/seo/metadata'
 import { LanguageSwitcher } from '@/shared/components/layout'
 import { ThemeToggle } from '@/shared/components/theme'
@@ -32,6 +34,11 @@ export default async function PreferencesPage({ params }: Props) {
 	await requireMember({ locale, returnTo: '/settings/preferences' })
 
 	const t = await getTranslations('settings')
+	// Same read the Stats page uses; null when it cannot be proven, never a guess.
+	const autoFreezeEnabled = await getServerStreakInfo().then(
+		(info) => info.autoFreezeEnabled,
+		() => null,
+	)
 
 	return (
 		<>
@@ -75,6 +82,13 @@ export default async function PreferencesPage({ params }: Props) {
 						<LanguageSwitcher variant="button" />
 					</div>
 				</div>
+			</ConsoleCard>
+
+			<ConsoleCard
+				title={t('streakFreeze.title')}
+				description={t('preferences.streakFreeze.description')}
+			>
+				<AutoFreezeToggle initialEnabled={autoFreezeEnabled} />
 			</ConsoleCard>
 		</>
 	)
