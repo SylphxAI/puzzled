@@ -1,3 +1,4 @@
+import { uuidv7 } from '@sylphx/sdk/runtime'
 import { NextResponse } from 'next/server'
 import { destEventsJson } from '@/lib/identity/peels'
 import { currentUser } from '@/lib/identity/server'
@@ -5,13 +6,6 @@ import { currentUser } from '@/lib/identity/server'
 type Device = { device_id: string; user_id: string; platform: string }
 type DevicePage = { devices?: Device[]; page?: { next_cursor?: string; has_more?: boolean } }
 const WEB_PUSH = 'DEVICE_PLATFORM_WEB_PUSH'
-
-// One server-operation UUIDv7 shared by the body and transport header.
-function operationId(): string {
-	const time = Date.now().toString(16).padStart(12, '0')
-	const random = crypto.randomUUID()
-	return `${time.slice(0, 8)}-${time.slice(8)}-7${random.slice(15, 18)}-${random.slice(19)}`
-}
 
 function deviceQuery(userId: string, cursor?: string, webPushOnly = false): string {
 	const query = new URLSearchParams({ user_id: userId, limit: '100' })
@@ -63,7 +57,7 @@ export async function POST(request: Request) {
 						device.platform === WEB_PUSH,
 				)
 				if (owned) {
-					const idempotencyKey = operationId()
+					const idempotencyKey = uuidv7()
 					await destEventsJson(`/v1/devices/${encodeURIComponent(deviceId)}/unregister`, {
 						method: 'POST',
 						headers: { 'Idempotency-Key': idempotencyKey },
@@ -85,7 +79,7 @@ export async function POST(request: Request) {
 		if (!token || token.length < 8) {
 			return NextResponse.json({ error: 'device_token_required' }, { status: 400 })
 		}
-		const idempotencyKey = operationId()
+		const idempotencyKey = uuidv7()
 		const registered = await destEventsJson<{ device?: { device_id?: string } }>('/v1/devices', {
 			method: 'POST',
 			headers: { 'Idempotency-Key': idempotencyKey },
