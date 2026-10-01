@@ -718,7 +718,12 @@ async fn consent_retention_boundary_linked_rows_and_concurrent_skip_locked() {
         END $boundary$",
         crate::capabilities::money::consent_db::PURGE_EXPIRED_UNLINKED
     );
-    sqlx::query(&boundary).execute(&pool).await.unwrap();
+    // Audited: only a compile-time production SQL constant and canonical
+    // UUIDs minted in this test are interpolated; there is no caller input.
+    sqlx::query(sqlx::AssertSqlSafe(boundary))
+        .execute(&pool)
+        .await
+        .unwrap();
     let expired = Uuid::now_v7();
     let unlocked = Uuid::now_v7();
     let future = Uuid::now_v7();
