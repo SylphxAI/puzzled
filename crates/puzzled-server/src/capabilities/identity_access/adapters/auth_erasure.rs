@@ -32,6 +32,12 @@ pub struct AuthErasure {
     secret_key: String,
 }
 
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub struct PrivacyReceipt {
+    pub request_id: String,
+    pub state: String,
+}
+
 impl AuthErasure {
     #[must_use]
     pub fn new(auth_url: String, organization_id: String, secret_key: String) -> Self {
@@ -66,12 +72,29 @@ impl AuthErasure {
     /// or never created); `Err` when Auth refused or was unreachable, which
     /// the caller surfaces instead of reporting a success.
     pub async fn delete_principal(&self, principal_id: &str) -> Result<Option<String>, String> {
+        self.request_delete(
+            principal_id,
+            &format!("puzzled-account-erasure-{principal_id}"),
+        )
+        .await
+        .map(|receipt| receipt.map(|receipt| receipt.request_id))
+    }
+
+    pub fn organization_id(&self) -> &str {
+        &self.organization_id
+    }
+
+    pub async fn request_delete(
+        &self,
+        principal_id: &str,
+        idempotency_key: &str,
+    ) -> Result<Option<PrivacyReceipt>, String> {
         let response = self
             .http
             .post(format!("{}/v1/privacy-requests", self.auth_url))
             .bearer_auth(&self.secret_key)
             .json(&json!({
-                "idempotency_key": format!("puzzled-account-erasure-{principal_id}"),
+                "idempotency_key": idempotency_key,
                 "principal_id": principal_id,
                 "request_type": "delete",
                 "organization_id": self.organization_id,
@@ -82,6 +105,58 @@ impl AuthErasure {
         let status = response.status();
         let payload = response.json::<Value>().await.unwrap_or_else(|_| json!({}));
         self.validate_receipt(status, &payload, principal_id)
+            .map(|request_id| {
+                request_id.map(|request_id| PrivacyReceipt {
+                    request_id,
+                    state: payload["privacy_request"]["state"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .into(),
+                })
+            })
+    }
+
+    /// A request GET404 says nothing about whether a user is absent.
+    pub async fn read_receipt(
+        &self,
+        principal_id: &str,
+        request_id: &str,
+    ) -> Result<PrivacyReceipt, String> {
+        let mut url = reqwest::Url::parse(&format!("{}/v1/privacy-requests/", self.auth_url))
+            .map_err(|_| "auth privacy request unavailable".to_string())?;
+        url.path_segments_mut()
+            .map_err(|_| "auth privacy request unavailable".to_string())?
+            .pop_if_empty()
+            .push(request_id);
+        let response = self
+            .http
+            .get(url)
+            .query(&[("organization_id", &self.organization_id)])
+            .bearer_auth(&self.secret_key)
+            .send()
+            .await
+            .map_err(|_| "auth privacy request unavailable".to_string())?;
+        let status = response.status();
+        if !status.is_success() {
+            return Err("auth privacy receipt unconfirmed".into());
+        }
+        let payload = response
+            .json::<Value>()
+            .await
+            .map_err(|_| "auth privacy receipt unconfirmed".to_string())?;
+        let id = self
+            .validate_receipt(status, &payload, principal_id)?
+            .ok_or_else(|| "auth privacy receipt unconfirmed".to_string())?;
+        if id != request_id {
+            return Err("auth privacy receipt unconfirmed".into());
+        }
+        Ok(PrivacyReceipt {
+            request_id: id,
+            state: payload["privacy_request"]["state"]
+                .as_str()
+                .unwrap_or_default()
+                .into(),
+        })
     }
 
     /// Accept only evidence identifying this exact configured instance and subject.

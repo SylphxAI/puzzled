@@ -24,7 +24,7 @@ CREATE TABLE "erasure_requests" (
     CONSTRAINT "erasure_requests_hash_check" CHECK ("suppression_hash" ~ '^[0-9a-f]{64}$'),
     CONSTRAINT "erasure_requests_attempts_check" CHECK ("attempts" >= 0),
     CONSTRAINT "erasure_requests_evidence_check" CHECK (jsonb_typeof("evidence") = 'object' AND NOT jsonb_path_exists("evidence", '$.* ? (@.type() != "number" || @ < 0 || @ != @.floor())')),
-    CONSTRAINT "erasure_requests_reason_check" CHECK ("last_reason" IS NULL OR "last_reason" IN ('database_unavailable', 'money_unavailable', 'erasure_unconfigured', 'subject_lookup_failed', 'auth_delete_failed', 'auth_read_failed', 'invalid_player', 'product_delete_failed', 'operation_unavailable', 'lease_lost')),
+    CONSTRAINT "erasure_requests_reason_check" CHECK ("last_reason" IS NULL OR "last_reason" IN ('database_unavailable', 'money_unavailable', 'money_preflight_unavailable', 'checkout_unsettled', 'cancel_subscription_first', 'erasure_unconfigured', 'subject_lookup_failed', 'auth_delete_failed', 'auth_receipt_unconfirmed', 'auth_request_pending', 'auth_request_failed', 'auth_request_missing', 'product_delete_failed', 'lease_lost', 'instance_changed')),
     CONSTRAINT "erasure_requests_lease_check" CHECK (("lease_until" IS NULL) = ("lease_token" IS NULL)),
     CONSTRAINT "erasure_requests_active_check" CHECK (
         "state" = 'completed' OR ("player_id" IS NOT NULL AND "organization_id" IS NOT NULL

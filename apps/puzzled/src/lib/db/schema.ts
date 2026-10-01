@@ -839,7 +839,7 @@ export const erasureRequests = pgTable(
 		),
 		check(
 			'erasure_requests_reason_check',
-			sql`${t.lastReason} IS NULL OR ${t.lastReason} IN ('database_unavailable', 'money_unavailable', 'erasure_unconfigured', 'subject_lookup_failed', 'auth_delete_failed', 'auth_read_failed', 'invalid_player', 'product_delete_failed', 'operation_unavailable', 'lease_lost')`,
+			sql`${t.lastReason} IS NULL OR ${t.lastReason} IN ('database_unavailable', 'money_unavailable', 'money_preflight_unavailable', 'checkout_unsettled', 'cancel_subscription_first', 'erasure_unconfigured', 'subject_lookup_failed', 'auth_delete_failed', 'auth_receipt_unconfirmed', 'auth_request_pending', 'auth_request_failed', 'auth_request_missing', 'product_delete_failed', 'lease_lost', 'instance_changed')`,
 		),
 		check(
 			'erasure_requests_lease_check',

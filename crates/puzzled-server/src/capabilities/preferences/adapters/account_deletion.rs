@@ -135,19 +135,40 @@ pub async fn delete_account_data(pool: &PgPool, user_id: &str) -> Result<u64, St
         .begin()
         .await
         .map_err(|e| format!("account deletion begin failed: {e}"))?;
-    let mut deleted = 0u64;
-    for (table, column, statement) in USER_KEYED_COLUMNS {
-        let result = sqlx::query(*statement)
-            .bind(uid)
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| format!("account deletion failed on {table}.{column}: {e}"))?;
-        deleted += result.rows_affected();
-    }
+    let evidence = erase_in_transaction(&mut tx, uid).await?;
     tx.commit()
         .await
-        .map_err(|e| format!("account deletion commit failed: {e}"))?;
-    Ok(deleted)
+        .map_err(|_| "account deletion commit failed".to_string())?;
+    Ok(evidence.values().sum())
+}
+
+/// Inventory mutation and caller's completion evidence share one transaction.
+pub async fn erase_in_transaction(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    player: Uuid,
+) -> Result<std::collections::BTreeMap<String, u64>, String> {
+    sqlx::query("SELECT puzzled_erasure_lock($1)")
+        .bind(player)
+        .execute(&mut **tx)
+        .await
+        .map_err(|_| "account deletion lock failed".to_string())?;
+    let mut evidence = std::collections::BTreeMap::new();
+    for (table, column, statement) in USER_KEYED_COLUMNS {
+        let result = sqlx::query(*statement)
+            .bind(player)
+            .execute(&mut **tx)
+            .await
+            .map_err(|_| "account deletion failed".to_string())?;
+        let action = if statement.starts_with("UPDATE") {
+            "unlinked"
+        } else {
+            "deleted"
+        };
+        *evidence
+            .entry(format!("{action}:{table}.{column}"))
+            .or_insert(0) += result.rows_affected();
+    }
+    Ok(evidence)
 }
 
 #[cfg(test)]
