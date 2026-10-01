@@ -580,13 +580,13 @@ export function CookieBanner(props: {
 			// unusable until consent was given.
 			className={
 				props.position === 'bottom'
-					? 'fixed inset-x-0 z-toast p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
+					? 'fixed inset-x-0 z-toast p-2 sm:p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
 					: undefined
 			}
 		>
 			<section
 				aria-label={t('title')}
-				className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border bg-background/95 p-4 text-sm shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+				className="mx-auto flex max-w-3xl flex-col gap-2 rounded-2xl border bg-background/95 p-3 text-[13px] leading-snug shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4 sm:text-sm"
 			>
 				<p className="text-muted-foreground">
 					{t('message')}{' '}
@@ -599,10 +599,11 @@ export function CookieBanner(props: {
 						</a>
 					) : null}
 				</p>
+				{/* Same size and weight: neither answer is steered. */}
 				<div className="flex shrink-0 items-center gap-2">
 					<button
 						type="button"
-						className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 font-medium text-foreground transition-colors hover:bg-muted"
+						className="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border px-4 font-medium text-foreground transition-colors hover:bg-muted sm:flex-none"
 						onClick={() => {
 							void setConsent({ analytics: false, marketing: false }).then(() => props.onSave?.())
 						}}
@@ -611,7 +612,7 @@ export function CookieBanner(props: {
 					</button>
 					<button
 						type="button"
-						className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+						className="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border px-4 font-medium text-foreground transition-colors hover:bg-muted sm:flex-none"
 						onClick={() => {
 							void setConsent({ analytics: true, marketing: false }).then(() => props.onSave?.())
 						}}
