@@ -635,7 +635,7 @@ impl PuzzleService for PuzzleConnectService {
                 "game_not_graded_per_guess",
             ));
         }
-        let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
+        let access = self.adopt_guest_progress_if_needed(&ctx).await?;
         let uid = access.primary().map(|identity| identity.user_id.clone()).ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit"))?;
         let today = product_day_key(Utc::now());
         let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
