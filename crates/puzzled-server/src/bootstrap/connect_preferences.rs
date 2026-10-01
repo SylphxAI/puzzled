@@ -587,7 +587,10 @@ impl PreferencesService for PreferencesConnectService {
             .find_map(puzzled_core::attribution::from_cookie_header);
         // An advertising-only cookie (click id, no tags) writes no analytics row and
         // does not use up the account's one first-touch row.
-        let (Some(tags), Some(pool)) = (tags.filter(puzzled_core::attribution::Attribution::has_tag), &self.state.pool) else {
+        let (Some(tags), Some(pool)) = (
+            tags.filter(puzzled_core::attribution::Attribution::has_tag),
+            &self.state.pool,
+        ) else {
             return Response::ok(RecordSignupAttributionResponse::default());
         };
         let recorded =
