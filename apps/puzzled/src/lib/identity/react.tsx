@@ -312,7 +312,7 @@ export function useSignUpForm(
 					throw new Error(typeof result.error === 'string' ? result.error : 'sign-up failed')
 				}
 				if (result.signedIn === true) {
-					window.location.assign('/')
+					window.location.assign(opts.afterSignUpUrl ?? '/')
 					return
 				}
 				setStep('verify-email')

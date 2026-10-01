@@ -1,10 +1,12 @@
 'use client'
 
 import { MailCheck } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { FormEvent } from 'react'
 import { useRef, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
+import { afterSignUpDestination } from '@/lib/identity/after-sign-up'
 import { type OAuthProvider, useSafeAuth, useSignUpForm } from '@/lib/identity/react'
 import {
 	AuthField,
@@ -37,6 +39,8 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 	// second submit while the first request is in flight.
 	const submittingRef = useRef(false)
 	const { signInWithOAuth } = useSafeAuth()
+	// Back to the game that asked for the account (safe same-origin path only).
+	const afterSignUpUrl = afterSignUpDestination(useSearchParams().get('callbackUrl'))
 
 	const {
 		form,
@@ -52,10 +56,13 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		handleOAuthSignUp,
 	} = useSignUpForm({
 		providers,
-		afterSignUpUrl: '/',
+		afterSignUpUrl,
 		minPasswordLength: MIN_PASSWORD_LENGTH,
 		oauthHandler: async (provider: string) => {
-			await signInWithOAuth?.({ provider: provider as OAuthSignInProvider, redirectUrl: '/' })
+			await signInWithOAuth?.({
+				provider: provider as OAuthSignInProvider,
+				redirectUrl: afterSignUpUrl,
+			})
 		},
 	})
 

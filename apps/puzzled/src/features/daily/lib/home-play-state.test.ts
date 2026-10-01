@@ -209,10 +209,24 @@ describe('home play scopes (bounded grid, full progress)', () => {
 		expect(progress.allCompleted).toBe(false)
 	})
 
-	test('a non-exposed unverified module still lifts the unverified banner', () => {
+	test('only the free module being unknown lifts the banner', () => {
+		const withFreeKnown = deriveHomePlayState({
+			gameSlugs: ['sudoku', 'crossword'],
+			personalResults: {
+				sudoku: { hasCompleted: false, completedSession: null, statusAvailable: true },
+				crossword: unverified,
+			},
+			freeGameSlug: 'sudoku',
+		})
+		expect(game(withFreeKnown, 'crossword').statusUnknown).toBe(true)
+		expect(withFreeKnown.hasUnverifiedStatus).toBe(false)
+	})
+
+	test('a non-exposed unverified free module still lifts the unverified banner', () => {
 		const personalResults: Record<string, HomePersonalResult> = {
 			...provedResults(provedSlugs),
 			'word-search': unverified,
+			sudoku: unverified,
 		}
 		const exposure = exposureFor('2026-09-11', personalResults)
 		const playState = deriveHomePlayState({
