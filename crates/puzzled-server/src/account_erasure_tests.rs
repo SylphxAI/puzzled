@@ -168,6 +168,17 @@ fn message(body: &Value) -> String {
     body["message"].as_str().unwrap_or_default().to_string()
 }
 
+fn assert_diagnostic(body: &Value, expected_reason: &str) {
+    let message = message(body);
+    assert!(message.contains(&format!("reason={expected_reason} ")));
+    let reference = message
+        .split("request_ref=")
+        .nth(1)
+        .expect("request reference");
+    assert_eq!(Uuid::parse_str(reference).unwrap().get_version_num(), 4);
+    assert!(!message.contains(SECRET_KEY));
+}
+
 #[tokio::test]
 async fn every_subject_naming_the_player_loses_its_sign_in_with_the_rows() {
     let _key = test_key_lock()
@@ -274,6 +285,7 @@ async fn a_refused_auth_deletion_leaves_every_row_in_place() {
     let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
     assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE, "{body}");
     assert!(message(&body).contains("identity_account_deletion_failed"));
+    assert_diagnostic(&body, "auth_delete_failed");
     // Nothing was erased: the account stays whole and the retry repeats the
     // same Auth request (its idempotency key is fixed per subject).
     assert_eq!(preference_rows(&pool, player).await, 1);
@@ -298,6 +310,7 @@ async fn an_unbound_auth_credential_refuses_the_erasure() {
     let (status, body) = delete_account(&app(&pool, None), &token(&player.to_string())).await;
     assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE, "{body}");
     assert!(message(&body).contains("identity_credential_unconfigured"));
+    assert_diagnostic(&body, "erasure_unconfigured");
     assert_eq!(preference_rows(&pool, player).await, 1);
     assert_eq!(subject_rows(&pool, player).await, 1);
 }
@@ -361,4 +374,72 @@ async fn an_identity_that_is_not_a_player_id_erases_nothing() {
     assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR, "{body}");
     assert!(message(&body).contains("account_deletion_failed"));
     assert!(stub.seen.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn missing_product_database_has_a_fixed_diagnostic() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let (status, body) = delete_account(
+        &router(AppState::new(None)),
+        &token(&Uuid::now_v7().to_string()),
+    )
+    .await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    assert_diagnostic(&body, "database_unavailable");
+}
+
+#[tokio::test]
+async fn subject_lookup_failure_is_named_before_auth_or_product_erasure() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let stub = StubAuth::accepting();
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    seed(&pool, player, &[]).await;
+    // Only this test's disposable database: force the actual lookup failure.
+    sqlx::query("ALTER TABLE auth_subjects RENAME TO auth_subjects_unavailable")
+        .execute(&pool)
+        .await
+        .unwrap();
+    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    assert_diagnostic(&body, "subject_lookup_failed");
+    assert!(stub.seen.lock().unwrap().is_empty());
+    assert_eq!(preference_rows(&pool, player).await, 1);
+}
+
+#[tokio::test]
+async fn money_failure_is_named_before_auth_or_product_erasure() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let stub = StubAuth::answering(503, json!({"error":"unavailable"}));
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    seed(&pool, player, &[]).await;
+    let state = AppState::new(Some(pool.clone()))
+        .with_money(Some(crate::capabilities::money::Money::new(
+            &base,
+            "fixture",
+            "https://puzzled.test",
+        )))
+        .with_erasure(Some(AuthErasure::new(
+            base,
+            ORGANIZATION_ID.into(),
+            SECRET_KEY.into(),
+        )));
+    let (status, body) = delete_account(&router(state), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    assert_diagnostic(&body, "money_unavailable");
+    assert!(stub.seen.lock().unwrap().is_empty());
+    assert_eq!(preference_rows(&pool, player).await, 1);
 }
