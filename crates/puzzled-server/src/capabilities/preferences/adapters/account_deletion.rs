@@ -17,6 +17,16 @@ use uuid::Uuid;
 /// erased account.
 pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
+        "announcements",
+        "created_by",
+        r#"UPDATE "announcements" SET "created_by" = NULL WHERE "created_by" = $1"#,
+    ),
+    (
+        "app_settings",
+        "updated_by",
+        r#"UPDATE "app_settings" SET "updated_by" = NULL WHERE "updated_by" = $1"#,
+    ),
+    (
         "tryit_conversions",
         "user_id",
         r#"DELETE FROM "tryit_conversions" WHERE "user_id" = $1"#,
@@ -34,7 +44,7 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
         "checkout_consents",
         "user_id",
-        r#"DELETE FROM "checkout_consents" WHERE "user_id" = $1"#,
+        r#"UPDATE "checkout_consents" SET "user_id" = NULL WHERE "user_id" = $1"#,
     ),
     (
         "family_members",
@@ -162,8 +172,13 @@ mod tests {
             sql.push('\n');
         }
 
-        let is_player_column =
-            |name: &str| name == "user_id" || name.ends_with("_user_id") || name == "actor_id";
+        let is_player_column = |name: &str| {
+            name == "user_id"
+                || name.ends_with("_user_id")
+                || name == "actor_id"
+                || name == "created_by"
+                || name == "updated_by"
+        };
         let mut found = BTreeSet::new();
         let mut table: Option<String> = None;
         for line in sql.lines() {
@@ -223,8 +238,15 @@ mod tests {
     #[test]
     fn each_statement_erases_its_own_column() {
         for (table, column, statement) in USER_KEYED_COLUMNS {
-            let delete = format!(r#"DELETE FROM "{table}" WHERE "{column}" = $1"#);
-            assert_eq!(*statement, delete);
+            let expected = if matches!(
+                *table,
+                "checkout_consents" | "announcements" | "app_settings"
+            ) {
+                format!(r#"UPDATE "{table}" SET "{column}" = NULL WHERE "{column}" = $1"#)
+            } else {
+                format!(r#"DELETE FROM "{table}" WHERE "{column}" = $1"#)
+            };
+            assert_eq!(*statement, expected);
         }
     }
 
@@ -264,6 +286,30 @@ mod tests {
             stale.is_empty(),
             "USER_KEYED_COLUMNS names columns no migration declares: {stale:?}"
         );
+    }
+
+    #[test]
+    fn database_fence_covers_every_erasure_inventory_column() {
+        let migration = include_str!(
+            "../../../../../../apps/puzzled/atlas/migrations/20261002000000_erasure_requests.sql"
+        );
+        for (table, column, _) in USER_KEYED_COLUMNS {
+            let trigger = migration
+                .lines()
+                .find(|line| {
+                    line.starts_with("CREATE TRIGGER erasure_write_fence ")
+                        && line.contains(&format!("ON \"{table}\""))
+                })
+                .unwrap_or_else(|| panic!("unfenced player table: {table}"));
+            assert!(
+                trigger.contains(&format!("'{column}'")),
+                "unfenced player column: {table}.{column}"
+            );
+        }
+        assert!(migration.contains("transaction_isolation"));
+        assert!(migration.contains("read committed"));
+        assert!(migration.contains("SELECT DISTINCT hashtextextended"));
+        assert!(migration.contains("puzzled_erasure_try_admit"));
     }
 
     /// No runtime code path (server, core, or web app) names a retiring

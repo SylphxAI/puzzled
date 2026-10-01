@@ -540,3 +540,120 @@ async fn a_real_wrong_route_html_404_preserves_preferences_subjects_and_consent(
     assert_eq!(before, after);
     server.abort();
 }
+
+async fn seed_erasure_intent(pool: &PgPool, player: Uuid) -> Uuid {
+    let operation = Uuid::now_v7();
+    sqlx::query("INSERT INTO erasure_requests (request_id,player_id,suppression_hash,organization_id,subjects) VALUES ($1,$2,puzzled_erasure_player_hash($2),'org_test',$3)")
+        .bind(operation).bind(player)
+        .bind(json!([{"principal_id":"subject-fixture", "idempotency_key":"stable-fixture", "request_id":null, "state":null}]))
+        .execute(pool).await.unwrap();
+    operation
+}
+
+#[tokio::test]
+async fn pending_and_completed_erasure_fences_everyday_writers_and_retains_consent() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    seed(&pool, player, &[]).await;
+    crate::capabilities::money::consent_db::record(
+        &pool,
+        &player.to_string(),
+        "plus",
+        "fixture-price",
+        "en-US",
+    )
+    .await
+    .unwrap();
+    let operation = seed_erasure_intent(&pool, player).await;
+    for statement in [
+        "INSERT INTO account_attribution(user_id) VALUES($1)",
+        "INSERT INTO auth_subjects(subject,user_id) VALUES('late-subject',$1)",
+        "INSERT INTO family_groups(owner_user_id,invite_code) VALUES($1,'late-family')",
+        "UPDATE notification_preferences SET last_daily_reminder_on='2026-10-01' WHERE user_id=$1",
+    ] {
+        assert!(sqlx::query(statement)
+            .bind(player)
+            .execute(&pool)
+            .await
+            .is_err());
+    }
+    let admitted: bool = sqlx::query_scalar("SELECT puzzled_erasure_try_admit($1)")
+        .bind(player)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert!(!admitted);
+    crate::capabilities::preferences::adapters::account_deletion::delete_account_data(
+        &pool,
+        &player.to_string(),
+    )
+    .await
+    .unwrap();
+    let consent: Value = sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert!(consent["user_id"].is_null());
+    assert_eq!(
+        consent["statement"],
+        crate::capabilities::money::consent_db::IMMEDIATE_SUPPLY_STATEMENT
+    );
+    assert_eq!(consent["plan_id"], "plus");
+    sqlx::query("UPDATE erasure_requests SET state='completed',player_id=NULL,organization_id=NULL,subjects=NULL,local_erased_at=now(),completed_at=now() WHERE request_id=$1")
+        .bind(operation).execute(&pool).await.unwrap();
+    assert!(
+        sqlx::query("INSERT INTO notification_preferences(user_id) VALUES($1)")
+            .bind(player)
+            .execute(&pool)
+            .await
+            .is_err()
+    );
+}
+
+#[tokio::test]
+async fn old_repeatable_read_snapshots_cannot_admit_writers() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let mut tx = pool.begin().await.unwrap();
+    sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    assert!(sqlx::query("SELECT puzzled_erasure_try_admit($1)")
+        .bind(Uuid::now_v7())
+        .execute(&mut *tx)
+        .await
+        .is_err());
+    tx.rollback().await.unwrap();
+}
+
+#[tokio::test]
+async fn already_dispatched_write_waits_for_intent_then_refuses_fresh_snapshot() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    seed(&pool, player, &[]).await;
+    let mut admission = pool.begin().await.unwrap();
+    sqlx::query("SELECT puzzled_erasure_lock($1)")
+        .bind(player)
+        .execute(&mut *admission)
+        .await
+        .unwrap();
+    let writer_pool = pool.clone();
+    let writer = tokio::spawn(async move {
+        sqlx::query("UPDATE notification_preferences SET push_enabled=true WHERE user_id=$1")
+            .bind(player)
+            .execute(&writer_pool)
+            .await
+    });
+    sqlx::query("INSERT INTO erasure_requests(request_id,player_id,suppression_hash,organization_id,subjects) VALUES($1,$2,puzzled_erasure_player_hash($2),'org_test',$3)")
+        .bind(Uuid::now_v7()).bind(player)
+        .bind(json!([{"principal_id":"subject-fixture","idempotency_key":"stable-fixture","request_id":null,"state":null}]))
+        .execute(&mut *admission).await.unwrap();
+    admission.commit().await.unwrap();
+    assert!(writer.await.unwrap().is_err());
+}
