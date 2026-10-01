@@ -657,3 +657,112 @@ async fn already_dispatched_write_waits_for_intent_then_refuses_fresh_snapshot()
     admission.commit().await.unwrap();
     assert!(writer.await.unwrap().is_err());
 }
+
+#[tokio::test]
+async fn consent_retention_expiry_replay_and_rollback_preserve_evidence() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let player = Uuid::now_v7();
+    crate::capabilities::money::consent_db::record(
+        &pool,
+        &player.to_string(),
+        "plus",
+        "fixture-price",
+        "en-US",
+    )
+    .await
+    .unwrap();
+    let original: Value = sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    let mut tx = pool.begin().await.unwrap();
+    crate::capabilities::preferences::adapters::account_deletion::erase_in_transaction(
+        &mut tx, player,
+    )
+    .await
+    .unwrap();
+    let exact: bool = sqlx::query_scalar("SELECT retention_expires_at = (transaction_timestamp() AT TIME ZONE 'UTC') + interval '6 years' FROM checkout_consents").fetch_one(&mut *tx).await.unwrap();
+    assert!(exact);
+    tx.rollback().await.unwrap();
+    let after: Value = sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(
+        original, after,
+        "failed local erasure changes no consent evidence"
+    );
+    crate::capabilities::preferences::adapters::account_deletion::delete_account_data(
+        &pool,
+        &player.to_string(),
+    )
+    .await
+    .unwrap();
+    let first: Value = sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    crate::capabilities::preferences::adapters::account_deletion::delete_account_data(
+        &pool,
+        &player.to_string(),
+    )
+    .await
+    .unwrap();
+    let replay: Value = sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(first, replay, "replay must not extend expiry");
+    let leap: String =
+        sqlx::query_scalar("SELECT (timestamp '2024-02-29 23:12:13' + interval '6 years')::text")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(leap, "2030-02-28 23:12:13");
+}
+
+#[tokio::test]
+async fn consent_retention_boundary_linked_rows_and_concurrent_skip_locked() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    use crate::capabilities::money::consent_db::{purge_expired_unlinked, record};
+    let player = Uuid::now_v7();
+    record(&pool, &player.to_string(), "plus", "fixture-price", "en-US")
+        .await
+        .unwrap();
+    // Linked evidence is preserved even if its expiry happens to be past.
+    sqlx::query("UPDATE checkout_consents SET retention_expires_at=timestamp '2000-01-01'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    let mut lock = pool.begin().await.unwrap();
+    let boundary: bool = sqlx::query_scalar("SELECT (statement_timestamp() AT TIME ZONE 'UTC') <= (statement_timestamp() AT TIME ZONE 'UTC')").fetch_one(&mut *lock).await.unwrap();
+    assert!(boundary, "the expiry boundary is inclusive");
+    let expired = Uuid::now_v7();
+    let unlocked = Uuid::now_v7();
+    let future = Uuid::now_v7();
+    for (id, expiry) in [
+        (expired, "2000-01-01"),
+        (unlocked, "2000-01-02"),
+        (future, "9999-01-01"),
+    ] {
+        sqlx::query("INSERT INTO checkout_consents(id,plan_id,price_key,locale,statement,retention_expires_at) VALUES($1,'plus','fixture','en-US','fixture',$2::text::timestamp)").bind(id).bind(expiry).execute(&pool).await.unwrap();
+    }
+    sqlx::query("SELECT id FROM checkout_consents WHERE id=$1 FOR UPDATE")
+        .bind(expired)
+        .execute(&mut *lock)
+        .await
+        .unwrap();
+    assert_eq!(purge_expired_unlinked(&pool).await.unwrap(), 1);
+    assert_eq!(purge_expired_unlinked(&pool).await.unwrap(), 0);
+    lock.commit().await.unwrap();
+    assert_eq!(purge_expired_unlinked(&pool).await.unwrap(), 1);
+    let remaining: i64 = sqlx::query_scalar("SELECT count(*) FROM checkout_consents")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(remaining, 2, "linked and future evidence remain");
+}

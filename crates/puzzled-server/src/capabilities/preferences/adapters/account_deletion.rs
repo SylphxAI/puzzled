@@ -44,7 +44,7 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
         "checkout_consents",
         "user_id",
-        r#"UPDATE "checkout_consents" SET "user_id" = NULL WHERE "user_id" = $1"#,
+        r#"UPDATE "checkout_consents" SET "user_id" = NULL, "retention_expires_at" = COALESCE("retention_expires_at", (transaction_timestamp() AT TIME ZONE 'UTC') + interval '6 years') WHERE "user_id" = $1"#,
     ),
     (
         "family_members",
@@ -259,6 +259,13 @@ mod tests {
     #[test]
     fn each_statement_erases_its_own_column() {
         for (table, column, statement) in USER_KEYED_COLUMNS {
+            if *table == "checkout_consents" {
+                assert!(statement.contains("COALESCE(\"retention_expires_at\""));
+                assert!(statement.contains("AT TIME ZONE 'UTC'"));
+                assert!(statement.contains("interval '6 years'"));
+                assert!(statement.ends_with("WHERE \"user_id\" = $1"));
+                continue;
+            }
             let expected = if matches!(
                 *table,
                 "checkout_consents" | "announcements" | "app_settings"

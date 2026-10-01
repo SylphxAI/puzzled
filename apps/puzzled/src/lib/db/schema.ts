@@ -800,8 +800,19 @@ export const checkoutConsents = pgTable(
 		locale: text('locale').notNull(),
 		statement: text('statement').notNull(),
 		consentedAt: timestamp('consented_at').defaultNow().notNull(),
+		/** Six calendar years in UTC from local erasure; never renewed on replay. */
+		retentionExpiresAt: timestamp('retention_expires_at'),
 	},
-	(t) => [index('checkout_consents_user_id_idx').on(t.userId)],
+	(t) => [
+		index('checkout_consents_user_id_idx').on(t.userId),
+		index('checkout_consents_retention_idx')
+			.on(t.retentionExpiresAt, t.id)
+			.where(sql`${t.userId} IS NULL`),
+		check(
+			'checkout_consents_retention_check',
+			sql`${t.userId} IS NOT NULL OR ${t.retentionExpiresAt} IS NOT NULL`,
+		),
+	],
 )
 
 /** Durable owned erasure. Completed rows retain only pseudonymous suppression and counts. */

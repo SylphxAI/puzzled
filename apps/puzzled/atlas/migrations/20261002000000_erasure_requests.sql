@@ -44,6 +44,9 @@ CREATE INDEX "erasure_requests_retry_idx" ON "erasure_requests" ("retry_due") WH
 
 -- Retain the legal statement and purchase context, unlinking only identity.
 ALTER TABLE "checkout_consents" ALTER COLUMN "user_id" DROP NOT NULL;
+ALTER TABLE "checkout_consents" ADD COLUMN "retention_expires_at" timestamp;
+ALTER TABLE "checkout_consents" ADD CONSTRAINT "checkout_consents_retention_check" CHECK ("user_id" IS NOT NULL OR "retention_expires_at" IS NOT NULL);
+CREATE INDEX "checkout_consents_retention_idx" ON "checkout_consents" ("retention_expires_at", "id") WHERE "user_id" IS NULL;
 
 CREATE FUNCTION puzzled_erasure_player_hash(player uuid) RETURNS text
 LANGUAGE sql IMMUTABLE STRICT AS $$

@@ -99,6 +99,15 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   privacy-request API, for every subject that names the player. A refused
   Auth deletion erases nothing: the account stays whole and the request can
   be repeated.
+- Checkout consent evidence is retained without a player link for six calendar
+  years after local erasure/closure, calculated in UTC. This is company claims
+  policy, not a universal statutory mandate. The unlink and expiry assignment
+  share the local erasure transaction; replay never extends the expiry. Only
+  statement, plan, price key, locale, consent time, intrinsic row ID and expiry
+  remain, with no principal, suppression hash, request, email, IP or payment
+  reference. The existing retention job removes bounded, ordered pages of
+  expired unlinked rows with `SKIP LOCKED`, on the first successful run after
+  expiry; linked rows and failed-erasure rows are not removed.
 - Terms, Privacy and checkout name Sylphx Limited, state VAT-inclusive prices,
   automatic renewal, the 14-day right, and UK GDPR with the ICO.
 
