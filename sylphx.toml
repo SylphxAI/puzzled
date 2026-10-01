@@ -27,7 +27,9 @@ engine = "atlas"
 dir = "apps/puzzled/atlas/migrations"
 image = "api"
 # Pure atlas argv only (Platform migration gate rejects shell wrappers).
-command = "atlas migrate apply --dir file:///app/apps/puzzled/atlas/migrations --url $MIGRATOR_DATABASE_URL --revisions-schema public --baseline 20260222000000"
+# Fresh previews execute the baseline DDL; migrated databases resume from
+# their existing Atlas revision ledger. Never skip the baseline globally.
+command = "atlas migrate apply --dir file:///app/apps/puzzled/atlas/migrations --url $MIGRATOR_DATABASE_URL --revisions-schema public"
 timeout = "10m"
 watch_paths = [
   "apps/puzzled/atlas/migrations/**",
@@ -81,6 +83,11 @@ watch_paths = [
   "Cargo.lock",
   "sylphx.toml",
 ]
+
+# Browser origin verified against the live production web/api route binding.
+# This table belongs only to the api service declared above.
+[services.env]
+PUZZLED_PUBLIC_URL = "https://puzzled.gg"
 
 # Dedicated email-link verification key; the web route needs only API_INTERNAL_URL.
 [services.env.EMAIL_UNSUBSCRIBE_SECRET]
