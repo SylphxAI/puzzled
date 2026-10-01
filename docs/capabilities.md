@@ -46,6 +46,14 @@ Cite the ID column.
   503 or prove completed account erasure; own-account production recovery and
   cleanup still require readback.
 
+- **Migration bootstrap:** the standard Atlas deploy command executes the
+  baseline DDL on an empty database, including a new PR preview, and continues
+  from the revision ledger on an existing Atlas-managed database. It never
+  uses `--baseline` to pretend the schema already exists or `--allow-dirty` to
+  adopt unmanaged data. Baseline adoption of a populated, unmanaged database
+  is an explicit operator procedure, not automatic deployment. This prevents
+  later `ALTER TABLE` migrations from running before their tables exist.
+
 - **Durable erasure and external conversion admission (draft source):** an
   accepted deletion returns its stable operation reference and pending state,
   not a claim that local data or Auth sign-in is already erased. The existing

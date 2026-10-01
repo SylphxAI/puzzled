@@ -27,7 +27,11 @@ engine = "atlas"
 dir = "apps/puzzled/atlas/migrations"
 image = "api"
 # Pure atlas argv only (Platform migration gate rejects shell wrappers).
-command = "atlas migrate apply --dir file:///app/apps/puzzled/atlas/migrations --url $MIGRATOR_DATABASE_URL --revisions-schema public --baseline 20260222000000"
+# Empty preview databases must execute the baseline DDL, not merely mark it
+# applied. Existing Atlas-managed databases continue from their revision ledger.
+# An unmanaged nonempty database still fails closed; baseline adoption is an
+# explicit operator operation, never an automatic deploy shortcut.
+command = "atlas migrate apply --dir file:///app/apps/puzzled/atlas/migrations --url $MIGRATOR_DATABASE_URL --revisions-schema public"
 timeout = "10m"
 watch_paths = [
   "apps/puzzled/atlas/migrations/**",
