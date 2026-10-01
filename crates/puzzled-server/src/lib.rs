@@ -49,6 +49,14 @@ mod unsubscribe_tests;
 
 #[cfg(test)]
 mod tests {
+    /// A freshly minted server-issued guest cookie pair (`name=value`).
+    fn guest_cookie_pair() -> String {
+        let cookie =
+            crate::capabilities::identity_access::adapters::guest_credentials::mint_cookie(None)
+                .expect("mint guest cookie");
+        cookie.split(';').next().expect("cookie pair").to_string()
+    }
+
     use super::*;
     use axum::body::{to_bytes, Body};
     use axum::http::{Method, Request, StatusCode};
@@ -349,7 +357,7 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.GamificationService/GetStreakInfo")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("x-puzzled-guest-id", "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+            .header("cookie", guest_cookie_pair())
             .body(Body::from("{}"))
         {
             Ok(request) => request,
@@ -657,7 +665,7 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("x-puzzled-guest-id", "f1e2d3c4-b5a6-7890-abcd-ef1234567890")
+            .header("cookie", guest_cookie_pair())
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -751,7 +759,7 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("x-puzzled-guest-id", "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+            .header("cookie", guest_cookie_pair())
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -792,7 +800,7 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("x-puzzled-guest-id", "b2c3d4e5-f6a7-8901-bcde-f12345678901")
+            .header("cookie", guest_cookie_pair())
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -831,7 +839,7 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("x-puzzled-guest-id", "c3d4e5f6-a7b8-9012-cdef-123456789012")
+            .header("cookie", guest_cookie_pair())
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -875,12 +883,12 @@ mod tests {
         ));
     }
 
-    fn guest_submit(body: String, guest: &str) -> Request<Body> {
+    fn guest_submit(body: String) -> Request<Body> {
         match Request::builder()
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("x-puzzled-guest-id", guest)
+            .header("cookie", guest_cookie_pair())
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -972,10 +980,7 @@ mod tests {
             "submissionJson": submission.to_string(),
         })
         .to_string();
-        let response = match app
-            .oneshot(guest_submit(body, "d4e5f6a7-b8c9-0123-def0-123456789012"))
-            .await
-        {
+        let response = match app.oneshot(guest_submit(body)).await {
             Ok(r) => r,
             Err(error) => panic!("submit: {error}"),
         };
@@ -1020,10 +1025,7 @@ mod tests {
             "submissionJson": submission.to_string(),
         })
         .to_string();
-        let response = match app
-            .oneshot(guest_submit(body, "e5f6a7b8-c9d0-1234-ef01-234567890123"))
-            .await
-        {
+        let response = match app.oneshot(guest_submit(body)).await {
             Ok(r) => r,
             Err(error) => panic!("submit: {error}"),
         };
@@ -1047,10 +1049,7 @@ mod tests {
             "submissionJson": submission.to_string(),
         })
         .to_string();
-        let response = match app
-            .oneshot(guest_submit(body, "f6a7b8c9-d0e1-2345-f012-345678901234"))
-            .await
-        {
+        let response = match app.oneshot(guest_submit(body)).await {
             Ok(r) => r,
             Err(error) => panic!("submit: {error}"),
         };
