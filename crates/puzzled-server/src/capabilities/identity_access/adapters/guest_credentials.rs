@@ -197,6 +197,28 @@ pub async fn attach_guest(
     next.run(request).await
 }
 
+/// True when any user-keyed table still holds rows owned by the player
+/// (credential and adoption-provenance columns are not ownership).
+async fn has_player_rows(connection: &mut PgConnection, player: Uuid) -> Result<bool, sqlx::Error> {
+    for (table, column, _) in
+        crate::capabilities::preferences::adapters::account_deletion::USER_KEYED_COLUMNS
+    {
+        if *table == "guest_credentials" || *column == "adopted_from_guest" {
+            continue;
+        }
+        let statement =
+            format!("SELECT EXISTS (SELECT 1 FROM \"{table}\" WHERE \"{column}\" = $1)");
+        if sqlx::query_scalar(sqlx::AssertSqlSafe(statement))
+            .bind(player)
+            .fetch_one(&mut *connection)
+            .await?
+        {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
 const LEGACY_COOKIE: &str = "puzzled_guest_id";
 
 /// A legacy raw player id: the body field, else exactly one cookie.
@@ -253,7 +275,7 @@ async fn claim_legacy(pool: &PgPool, hash: &str, legacy: Uuid) -> Result<bool, S
     .map_err(e)?;
     if registered
         || account_backed(&mut tx, legacy).await.map_err(e)?
-        || unused_player(&mut tx, legacy).await.map_err(e)?
+        || !has_player_rows(&mut tx, legacy).await.map_err(e)?
     {
         tx.rollback().await.map_err(e)?;
         return Ok(false);
@@ -291,7 +313,7 @@ async fn claim_legacy(pool: &PgPool, hash: &str, legacy: Uuid) -> Result<bool, S
             .map_err(|err| format!("legacy claim failed on {table}.{column}: {err}"))?;
     }
     // Nothing may stay under the legacy id.
-    if !unused_player(&mut tx, legacy).await.map_err(e)? {
+    if has_player_rows(&mut tx, legacy).await.map_err(e)? {
         return Err("legacy claim left rows behind".into());
     }
     tx.commit().await.map_err(e)?;
@@ -338,8 +360,12 @@ pub async fn session(
     ) else {
         return axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response();
     };
-    let mut response =
-        axum::Json(serde_json::json!({"issued": issued, "claimed": claimed})).into_response();
+    let mut response = axum::Json(if claimed {
+        serde_json::json!({"issued": issued, "claimed": true})
+    } else {
+        serde_json::json!({"issued": issued})
+    })
+    .into_response();
     response
         .headers_mut()
         .append(axum::http::header::SET_COOKIE, value);

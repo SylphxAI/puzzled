@@ -1316,7 +1316,7 @@ async fn replaying_the_legacy_id_with_another_token_claims_nothing() {
     let (status, second, second_cookies) =
         bootstrap(&app, ORIGIN, None, json!({"legacyGuestId": legacy})).await;
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(second["claimed"], false);
+    assert_ne!(second["claimed"], true);
     assert!(!second_cookies
         .iter()
         .any(|c| c.starts_with("puzzled_guest_id=")));
@@ -1340,7 +1340,7 @@ async fn account_backed_or_registered_legacy_id_is_refused() {
         .unwrap();
     seed_legacy_progress(&pool, account).await;
     let (status, body, _) = bootstrap(&app, ORIGIN, None, json!({"legacyGuestId": account})).await;
-    assert_eq!((status, &body["claimed"]), (StatusCode::OK, &json!(false)));
+    assert_eq!((status, &body["claimed"]), (StatusCode::OK, &json!(null)));
     assert_eq!(rows_for(&pool, account).await, (2, 1));
 
     use crate::capabilities::identity_access::adapters::guest_credentials as g;
@@ -1351,7 +1351,7 @@ async fn account_backed_or_registered_legacy_id_is_refused() {
     seed_legacy_progress(&pool, registered).await;
     let (_, body, cookies) =
         bootstrap(&app, ORIGIN, None, json!({"legacyGuestId": registered})).await;
-    assert_eq!(body["claimed"], false);
+    assert_ne!(body["claimed"], true);
     assert!(player_of(&pool, &token_of(&cookies)).await.is_none());
     assert_eq!(rows_for(&pool, registered).await, (2, 1));
     pool.close().await;
