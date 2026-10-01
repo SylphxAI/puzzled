@@ -49,6 +49,30 @@ teaser (`getTomorrowsFreeGame` in `lib/free-rotation.ts`), the installable web a
 campaign attribution, Tryit conversion reporting ([capabilities.md](capabilities.md), PUZ-TRYIT), and
 the daily-reminder, streak-at-risk and win-back email jobs.
 
+## Notification consent and email links
+
+Rust `PreferencesService` is the only writer of notification consent. Signed-in
+settings use `UpdateEmailPreferences` / `UpdatePushPreferences`; emailed links
+use `UnsubscribeEmail` without a session. The api verifies the dedicated
+`EMAIL_UNSUBSCRIBE_SECRET` HMAC before upserting only `email_marketing=false`;
+other consent fields remain unchanged. A missing key or database refuses the
+request instead of reporting success. Bind the same existing email-link key to
+the api (declared in `sylphx.toml`); the web service no longer needs it.
+
+Existing links keep the `userId.base36Milliseconds.first16HexHmacSha256` format,
+30-day expiry and five-minute future clock tolerance. Legacy, malformed,
+forged and expired links are refused. `/api/email/unsubscribe` is only a Connect
+forwarder: JSON POST carries `{token}`, browser GET redirects to the existing
+landing page, and RFC 8058 POST carries `List-Unsubscribe=One-Click` as
+`application/x-www-form-urlencoded` or `multipart/form-data` with the signed
+token in the URL. No login
+or redirect is required for the one-click POST. Repeated valid links are safe.
+
+Tests: `route.test.ts` verifies forwarding and the no-web-database boundary;
+`unsubscribe_tests.rs` drives the real Rust Connect router against a throwaway
+Postgres, including preserved consent, repeated/first-row opt-out and refused
+tokens. The verifier unit tests include a Node-compatible signed-link fixture.
+
 ## North Star and inputs
 
 North Star: daily puzzle completers ([metrics.md](metrics.md)), recomputable from `game_sessions`

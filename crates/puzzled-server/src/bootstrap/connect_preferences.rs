@@ -21,9 +21,10 @@ use crate::proto::puzzled::v1::{
     GetNotificationPreferencesResponse, GetProfileRequest, GetProfileResponse,
     GetWebPushConfigRequest, GetWebPushConfigResponse, NotificationPreferences, PreferencesService,
     Profile, RecordSignupAttributionRequest, RecordSignupAttributionResponse,
-    SaveWebPushSubscriptionRequest, SaveWebPushSubscriptionResponse, UpdateEmailPreferencesRequest,
-    UpdateEmailPreferencesResponse, UpdateProfileRequest, UpdateProfileResponse,
-    UpdatePushPreferencesRequest, UpdatePushPreferencesResponse,
+    SaveWebPushSubscriptionRequest, SaveWebPushSubscriptionResponse, UnsubscribeEmailRequest,
+    UnsubscribeEmailResponse, UpdateEmailPreferencesRequest, UpdateEmailPreferencesResponse,
+    UpdateProfileRequest, UpdateProfileResponse, UpdatePushPreferencesRequest,
+    UpdatePushPreferencesResponse,
 };
 
 #[derive(Clone)]
@@ -386,6 +387,45 @@ impl PreferencesService for PreferencesConnectService {
             preferences: prefs.into(),
             ..Default::default()
         })
+    }
+
+    async fn unsubscribe_email(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, UnsubscribeEmailRequest>,
+    ) -> ServiceResult<UnsubscribeEmailResponse> {
+        let verifier = self.state.unsubscribe.as_ref().ok_or_else(|| {
+            ConnectError::new(ErrorCode::Unavailable, "unsubscribe_not_configured")
+        })?;
+        let req = request.to_owned_message();
+        let user_id = verifier
+            .verify(&req.token, chrono::Utc::now().timestamp_millis())
+            .ok_or_else(|| {
+                ConnectError::new(ErrorCode::InvalidArgument, "invalid_unsubscribe_token")
+            })?;
+        let pool =
+            self.state.pool.as_ref().ok_or_else(|| {
+                ConnectError::new(ErrorCode::Unavailable, "preferences_unavailable")
+            })?;
+        upsert_notification_preferences(
+            pool,
+            &user_id.to_string(),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(false),
+        )
+        .await
+        .map_err(|error| {
+            tracing::warn!(%error, "unsubscribe upsert failed");
+            ConnectError::new(ErrorCode::Internal, "preferences_update_failed")
+        })?;
+        Response::ok(UnsubscribeEmailResponse::default())
     }
 
     async fn update_email_preferences(
