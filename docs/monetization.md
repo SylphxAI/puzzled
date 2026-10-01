@@ -7,7 +7,7 @@ Decided in [#235](https://github.com/SylphxAI/puzzled/issues/235): sell a paid t
 - **Model:** consumer subscription in the NYT Games class. Today's featured puzzle is free; Puzzled Plus opens everything else.
 - **Seller:** Sylphx Limited, England and Wales, company 16438428, registered office 128 City Road, London EC1V 2NX. VAT GB 502 7862 95.
 - **Billing system:** Sylphx Money, the platform's payments service: catalogue, hosted checkout, subscription state, entitlements API, portal, Stripe Tax and ledger. Puzzled builds no billing of its own.
-- **State:** the earlier direct-Stripe code (its details are in sections 3 to 5) is deployed but closed: no Stripe keys are set, nothing is sold, nothing is locked and there are no payers. It is replaced by Money in one migration, not switched on; the prices and rules here carry over.
+- **State:** the earlier direct-Stripe code was removed in [#292](https://github.com/SylphxAI/puzzled/pull/292) (Money cutover part 3), including the `/webhooks/stripe` handler. Billing is Sylphx Money only, and Puzzled polls Money for subscription state. Sections 3 to 5 describe the retired design; the prices and rules carry over to Money.
 
 ## 1. Objective
 
