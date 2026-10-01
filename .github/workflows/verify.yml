@@ -392,12 +392,13 @@ jobs:
 
       # Actions sets CI=true, so playwright.config.ts deliberately leaves its
       # webServer undefined: this job owns the server and points the suite at
-      # it with BASE_URL. Retries (2 on CI) are the config's own.
+      # it with BASE_URL. Never retry this gate: quarantine flaky assertions
+      # with an owned exit criterion instead of turning a red attempt green.
       - name: WCAG 2.2 A/AA suite (bun run test:a11y)
         working-directory: apps/puzzled
         env:
           BASE_URL: http://localhost:3015
-        run: bun run test:a11y
+        run: bun run test:a11y --retries=0
 
       - name: Sudoku authoritative terminal regression
         working-directory: apps/puzzled
