@@ -17,6 +17,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGuestGameState } from '@/features/daily/hooks/use-guest-game-state'
+import { START_PARAM } from '@/features/daily/lib/start-param'
 import { useSaveGameResult } from '@/features/gamification'
 import type { PuzzleDifficulty } from '@/games/types'
 import { logger } from '@/lib/logger'
@@ -207,7 +208,19 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		}
 		setStartTime(Date.now())
 		setGamePhase('playing')
+		// Bring the board under the sticky headers (the #play anchor reserves
+		// their height with scroll-margin).
+		requestAnimationFrame(() => {
+			document.getElementById('play')?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+		})
 	}, [storageKey])
+
+	// A link that says "start" (the home play button) opens straight onto the
+	// board; the start card stays for everyone who browses to the game.
+	useEffect(() => {
+		if (gamePhase !== 'ready') return
+		if (new URLSearchParams(window.location.search).get(START_PARAM) === '1') startGame()
+	}, [gamePhase, startGame])
 
 	/**
 	 * End game - save result (server calculates score), show celebration, show modal

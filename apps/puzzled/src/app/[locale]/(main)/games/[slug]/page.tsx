@@ -170,7 +170,10 @@ export default async function GamePage({ params, searchParams }: Props) {
 			 * first state (game header plus start card or difficulty list), so the
 			 * rules and FAQ below do not jump when it lands.
 			 */}
-			<div id="play" className="page-shell min-h-[36rem] py-6 md:py-8">
+			<div
+				id="play"
+				className="page-shell min-h-[36rem] scroll-mt-[calc(6.75rem+env(safe-area-inset-top))] py-6 md:scroll-mt-28 md:py-8"
+			>
 				<h2 className="sr-only">{tCatalog('gamePage.playCta')}</h2>
 				<Suspense fallback={<GamePlaySkeleton />}>
 					<GamePlayArea

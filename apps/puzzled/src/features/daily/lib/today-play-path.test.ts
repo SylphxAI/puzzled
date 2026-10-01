@@ -7,13 +7,13 @@ describe('todayPlayPath', () => {
 		const withLevels = getAllGameMetadata().find((game) => game.supportsDifficulty)
 		expect(withLevels).toBeDefined()
 		expect(todayPlayPath(withLevels?.slug ?? '')).toBe(
-			`/games/${withLevels?.slug}?difficulty=medium#play`,
+			`/games/${withLevels?.slug}?difficulty=medium&start=1#play`,
 		)
 	})
 
 	it('goes to the play area for a game without levels', () => {
 		const without = getAllGameMetadata().find((game) => !game.supportsDifficulty)
 		expect(without).toBeDefined()
-		expect(todayPlayPath(without?.slug ?? '')).toBe(`/games/${without?.slug}#play`)
+		expect(todayPlayPath(without?.slug ?? '')).toBe(`/games/${without?.slug}?start=1#play`)
 	})
 })

@@ -77,7 +77,7 @@
 		"puzzleNumber": "Puzzle #{number}",
 		"resetsIn": "Resets in",
 		"resetsAt": "midnight in Hong Kong",
-		"guestTitle": "Nineteen daily puzzles. One always free.",
+		"guestTitle": "Play today's {game}, free",
 		"titleMemberReady": "Today's {game} is ready",
 		"titleMemberStreak": "Your {days}-day streak is waiting",
 		"titleMemberDone": "All done for today — nicely played",
