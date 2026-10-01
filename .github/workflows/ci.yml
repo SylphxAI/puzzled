@@ -444,10 +444,10 @@ jobs:
           s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
 
       # The tests that apply apps/puzzled/atlas/migrations to a throwaway
-      # database (billing flow, result shares, account erasure) and the one
-      # that parses every table for player-id columns.
+      # database (billing flow, result shares, account erasure, push ownership)
+      # and the one that parses every table for player-id columns.
       - name: Migration-backed tests
-        run: cargo test -p puzzled-server --lib -- billing_flow_tests result_shares_tests account_erasure_tests account_deletion
+        run: cargo test -p puzzled-server --lib -- billing_flow_tests result_shares_tests account_erasure_tests account_deletion retention_push_tests
 
   # The full suite on a ready pull request; never in a merge group or a draft.
   suite:
