@@ -20,6 +20,9 @@ afterEach(() => {
 	resetConnectTransportCache()
 })
 
+// A fresh module instance per tab, like separate browser tabs.
+const tabModule = (tab: string): string => `./transport.ts?tab=${tab}`
+
 function respond(body: unknown, status = 200) {
 	return new Response(JSON.stringify(body), {
 		status,
@@ -116,6 +119,79 @@ describe('browser guest cookie admission', () => {
 		} finally {
 			if (previousStorage) Object.defineProperty(globalThis, 'localStorage', previousStorage)
 			else Reflect.deleteProperty(globalThis, 'localStorage')
+		}
+	})
+
+	test('removes the legacy key on any 200, including a refused claim', async () => {
+		const store = new Map<string, string>([
+			[GUEST_DAY_ID_KEY, '7f5d3b0a-1c2e-4a6b-9d8f-0123456789ab'],
+		])
+		const previousStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+		Object.defineProperty(globalThis, 'localStorage', {
+			configurable: true,
+			value: {
+				getItem: (k: string) => store.get(k) ?? null,
+				setItem: (k: string, v: string) => void store.set(k, v),
+				removeItem: (k: string) => void store.delete(k),
+			},
+		})
+		try {
+			globalThis.fetch = (async () => respond({ issued: false })) as unknown as typeof fetch
+			await ensureGuestSession('https://puzzled.test')
+			expect(store.has(GUEST_DAY_ID_KEY)).toBe(false)
+		} finally {
+			if (previousStorage) Object.defineProperty(globalThis, 'localStorage', previousStorage)
+			else Reflect.deleteProperty(globalThis, 'localStorage')
+		}
+	})
+
+	test('two tabs bootstrap one after the other under the guest-session lock', async () => {
+		const previousNav = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
+		let chain: Promise<unknown> = Promise.resolve()
+		const lockNames: string[] = []
+		Object.defineProperty(globalThis, 'navigator', {
+			configurable: true,
+			value: {
+				locks: {
+					request: (name: string, cb: () => Promise<unknown>) => {
+						lockNames.push(name)
+						const run = chain.then(cb)
+						chain = run.catch(() => undefined)
+						return run
+					},
+				},
+			},
+		})
+		const events: string[] = []
+		const releases: Array<(r: Response) => void> = []
+		globalThis.fetch = (async () => {
+			events.push(`start${releases.length}`)
+			return new Promise<Response>((resolve) => {
+				releases.push((r) => {
+					events.push(`done${releases.length - 1}`)
+					resolve(r)
+				})
+			})
+		}) as unknown as typeof fetch
+		try {
+			const tabA = (await import(tabModule('a'))) as typeof import('./transport')
+			const tabB = (await import(tabModule('b'))) as typeof import('./transport')
+			const a = tabA.ensureGuestSession('https://puzzled.test')
+			const b = tabB.ensureGuestSession('https://puzzled.test')
+			await Promise.resolve()
+			await new Promise((r) => setTimeout(r, 5))
+			expect(releases).toHaveLength(1)
+			releases[0]?.(respond({ issued: true }))
+			expect(await a).toEqual({ issued: true })
+			await new Promise((r) => setTimeout(r, 5))
+			expect(releases).toHaveLength(2)
+			releases[1]?.(respond({ issued: false }))
+			expect(await b).toEqual({ issued: false })
+			expect(events).toEqual(['start0', 'done0', 'start1', 'done1'])
+			expect(lockNames).toEqual(['puzzled-guest-session', 'puzzled-guest-session'])
+		} finally {
+			if (previousNav) Object.defineProperty(globalThis, 'navigator', previousNav)
+			else Reflect.deleteProperty(globalThis, 'navigator')
 		}
 	})
 
