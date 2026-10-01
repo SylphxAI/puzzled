@@ -25,6 +25,23 @@ pub async fn send_due_daily_reminders(
     pool: &sqlx::PgPool,
     now: chrono::DateTime<Utc>,
 ) -> Result<u32, Vec<String>> {
+    send_due_daily_reminders_with(pool, now, |user_id| async move {
+        crate::capabilities::preferences::adapters::web_push::send_daily(pool, &user_id).await
+    })
+    .await
+}
+
+/// Injectable delivery keeps the real claim/release loop testable without
+/// contacting browser push services or loading VAPID credentials.
+pub(crate) async fn send_due_daily_reminders_with<F, Fut>(
+    pool: &sqlx::PgPool,
+    now: chrono::DateTime<Utc>,
+    mut send: F,
+) -> Result<u32, Vec<String>>
+where
+    F: FnMut(String) -> Fut,
+    Fut: std::future::Future<Output = Result<(), String>>,
+{
     let product_day = product_day_key(now).format("%Y-%m-%d").to_string();
     let due = jobs_db::claim_due_daily_reminders(pool, now, &product_day)
         .await
@@ -32,8 +49,9 @@ pub async fn send_due_daily_reminders(
     let mut errors = Vec::new();
     let mut processed = 0u32;
     for (user_id, _time) in due {
-        match crate::capabilities::preferences::adapters::web_push::send_daily(pool, &user_id).await
-        {
+        // Delivery returns success if any endpoint received the reminder;
+        // only a wholly unsuccessful retryable delivery releases this claim.
+        match send(user_id.clone()).await {
             Ok(()) => processed += 1,
             Err(e) => {
                 errors.push(format!("{user_id}: {e}"));

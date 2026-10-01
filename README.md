@@ -99,5 +99,8 @@ time, and can disable notifications there. iOS requires home-screen installation
 the existing player-keyed table with UUIDv7 ids minted in code; no new migration
 is needed. Account erasure removes them through the existing erasure inventory;
 unsubscribe/sign-out revoke the browser endpoint, and 404/410 deliveries prune
-expired endpoints. Delivery is not verified until Ops sets the keys and a real
-browser receives and opens a reminder in production.
+expired endpoints. The reminder claim is once per player per local day: if any
+browser receives it, the claim stays held even when another endpoint fails.
+Only a retryable failure with no successful delivery releases the claim for the
+next tick. Delivery is not verified until Ops sets the keys and a real browser
+receives and opens a reminder in production.

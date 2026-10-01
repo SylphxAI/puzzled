@@ -1,6 +1,6 @@
 //! Browser subscriptions are player-scoped; delivery uses RFC 8291/8292 directly.
 use super::web_push_sender::{DirectVapidSender, PushDelivery, PushSender};
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use sqlx::PgPool;
 use uuid::Uuid;
 use web_push::SubscriptionInfo;
@@ -93,7 +93,7 @@ pub fn reminder_payload(locale: &str) -> serde_json::Value {
 }
 
 /// Send to every active browser. Expired endpoints are removed; transient
-/// failures release the existing daily-reminder claim so the next tick retries.
+/// failures release the daily claim only if no browser received the reminder.
 pub async fn send_daily(pool: &PgPool, player: &str) -> Result<(), String> {
     let player = Uuid::parse_str(player).map_err(|_| "invalid player".to_string())?;
     let rows: Vec<(String, String, String)> =
@@ -131,18 +131,23 @@ pub async fn deliver_subscriptions(
     sender: &impl PushSender,
 ) -> Result<(), String> {
     let mut failed = false;
+    let mut delivered = false;
     for subscription in subscriptions {
         match sender.send(&subscription, payload).await {
-            Ok(PushDelivery::Delivered) => {}
+            Ok(PushDelivery::Delivered) => delivered = true,
             Ok(PushDelivery::Expired) => {
-                remove(pool, player, &subscription.endpoint)
-                    .await
-                    .map_err(|_| "expired push removal failed".to_string())?;
+                // Continue after pruning errors: a later browser may receive the
+                // reminder, in which case the player-level claim must stay held.
+                if remove(pool, player, &subscription.endpoint).await.is_err() {
+                    failed = true;
+                }
             }
             Err(_) => failed = true,
         }
     }
-    if failed {
+    // A claim is per player, not per endpoint. Retrying after partial success
+    // would notify the successful browser again during the grace window.
+    if failed && !delivered {
         Err("web push delivery failed".to_string())
     } else {
         Ok(())

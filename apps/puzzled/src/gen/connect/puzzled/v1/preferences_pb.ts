@@ -516,7 +516,7 @@ export type GetWebPushConfigRequest = Message<'puzzled.v1.GetWebPushConfigReques
  */
 export const GetWebPushConfigRequestSchema: GenMessage<GetWebPushConfigRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_preferences, 18)
+	messageDesc(file_puzzled_v1_preferences, 20)
 
 /**
  * @generated from message puzzled.v1.GetWebPushConfigResponse
@@ -534,7 +534,7 @@ export type GetWebPushConfigResponse = Message<'puzzled.v1.GetWebPushConfigRespo
  */
 export const GetWebPushConfigResponseSchema: GenMessage<GetWebPushConfigResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_preferences, 19)
+	messageDesc(file_puzzled_v1_preferences, 21)
 
 /**
  * @generated from message puzzled.v1.SaveWebPushSubscriptionRequest
@@ -577,7 +577,7 @@ export type SaveWebPushSubscriptionRequest =
  */
 export const SaveWebPushSubscriptionRequestSchema: GenMessage<SaveWebPushSubscriptionRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_preferences, 20)
+	messageDesc(file_puzzled_v1_preferences, 22)
 
 /**
  * @generated from message puzzled.v1.SaveWebPushSubscriptionResponse
@@ -591,7 +591,7 @@ export type SaveWebPushSubscriptionResponse =
  */
 export const SaveWebPushSubscriptionResponseSchema: GenMessage<SaveWebPushSubscriptionResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_preferences, 21)
+	messageDesc(file_puzzled_v1_preferences, 23)
 
 /**
  * @generated from service puzzled.v1.PreferencesService
