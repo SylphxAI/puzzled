@@ -142,7 +142,9 @@ impl GamificationService for GamificationConnectService {
                 ConnectError::new(ErrorCode::Internal, "freeze_update_failed")
             })?;
         }
+        let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
         let (streak, total, freeze) = self.load_personal_streak(&identity.user_id, access.connection()).await?;
+        access.commit().await?;
         Response::ok(ToggleAutoFreezeResponse {
             info: self.to_info(&freeze, streak, total).into(),
             ..Default::default()
@@ -158,7 +160,9 @@ impl GamificationService for GamificationConnectService {
         _request: ServiceRequest<'_, TryAutoFreezeRequest>,
     ) -> ServiceResult<TryAutoFreezeResponse> {
         let identity = require_identity(&ctx)?;
+        let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
         let (streak, total, freeze) = self.load_personal_streak(&identity.user_id, access.connection()).await?;
+        access.commit().await?;
         Response::ok(TryAutoFreezeResponse {
             used_freeze: streak.freeze_used_yesterday,
             info: self.to_info(&freeze, streak, total).into(),
@@ -205,7 +209,14 @@ impl GamificationService for GamificationConnectService {
                 ));
             }
         }
-        let (streak, total, freeze) = self.load_personal_streak(&req.user_id).await?;
+        let pool = self.state.pool.as_ref().ok_or_else(|| map_streak_error(StreakReadError::StoreUnavailable))?;
+        let mut transaction = pool.begin().await.map_err(|_| map_streak_error(StreakReadError::ReadFailed))?;
+        let player = uuid::Uuid::parse_str(&req.user_id)
+            .map_err(|_| ConnectError::new(ErrorCode::InvalidArgument, "invalid_user_id"))?;
+        crate::capabilities::identity_access::adapters::guest_credentials::lock_players(&mut transaction, vec![player])
+            .await.map_err(|_| map_streak_error(StreakReadError::ReadFailed))?;
+        let (streak, total, freeze) = self.load_personal_streak(&req.user_id, Some(&mut transaction)).await?;
+        transaction.commit().await.map_err(|_| map_streak_error(StreakReadError::ReadFailed))?;
         Response::ok(AddStreakFreezesResponse {
             info: self.to_info(&freeze, streak, total).into(),
             ..Default::default()
