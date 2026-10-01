@@ -1,4 +1,7 @@
 {
-	"message": "我們使用重視隱私的分析工具了解大家如何玩謎題，也不會販售你的資料。",
-	"learnMore": "隱私政策"
+	"message": "我們使用 Google Analytics 了解大家如何玩謎題，廣告 Cookie 預設關閉，需要在「設定」中自行開啟。",
+	"learnMore": "隱私政策",
+	"analyticsHint": "統計大家如何玩謎題。",
+	"marketingHint": "讓我們了解 Google 廣告是否帶來註冊。預設關閉。",
+	"change": "變更 Cookie 選擇"
 }

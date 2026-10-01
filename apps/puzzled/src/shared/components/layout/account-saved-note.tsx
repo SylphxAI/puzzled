@@ -2,7 +2,8 @@
 
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
-import { SIGNED_UP_PARAM } from '@/lib/identity/after-sign-up'
+import { trackSignUp } from '@/features/analytics/lib/google-tag'
+import { consumeSignUpCookie, SIGNED_UP_PARAM } from '@/lib/identity/after-sign-up'
 
 /**
  * A calm, one-time confirmation after creating an account. The sign-up flow
@@ -15,10 +16,16 @@ export function AccountSavedNote() {
 
 	useEffect(() => {
 		const url = new URL(window.location.href)
-		if (url.searchParams.get(SIGNED_UP_PARAM) !== '1') return
+		// Only the server's one-shot cookie (set for an account Auth just created)
+		// counts; a link cannot forge it. It is deleted before firing.
+		// biome-ignore lint/suspicious/noDocumentCookie: delete the one-shot sign-up cookie
+		const method = consumeSignUpCookie(document)
+		const saved = url.searchParams.get(SIGNED_UP_PARAM) === '1'
+		if (!saved && !method) return
 		url.searchParams.delete(SIGNED_UP_PARAM)
 		window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash)
-		setVisible(true)
+		if (method) trackSignUp(method)
+		if (saved) setVisible(true)
 	}, [])
 
 	if (!visible) return null

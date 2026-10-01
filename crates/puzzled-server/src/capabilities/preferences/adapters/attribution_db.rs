@@ -69,5 +69,8 @@ pub async fn attribution_for_user(
         referral: get("ref"),
         landing_path: get("landing_path"),
         landed_at_ms: None,
+        gclid: None,
+        gbraid: None,
+        wbraid: None,
     }))
 }

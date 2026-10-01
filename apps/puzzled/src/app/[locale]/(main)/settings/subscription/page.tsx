@@ -4,11 +4,12 @@ import { getServerSubscription } from '@/lib/api/server'
 import { subscriptionView } from '@/lib/billing/plus'
 import { logger } from '@/lib/logger'
 import { buildPageMetadata } from '@/lib/seo/metadata'
+import { CheckoutReturnTracker } from './checkout-return-tracker'
 import { SubscriptionPanel } from './subscription-client'
 
 type Props = {
 	params: Promise<{ locale: string }>
-	searchParams: Promise<{ checkout?: string }>
+	searchParams: Promise<{ checkout?: string; s?: string }>
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -29,9 +30,9 @@ export async function generateMetadata({ params }: Props) {
  */
 export default async function SubscriptionSettingsPage({ params, searchParams }: Props) {
 	const { locale } = await params
-	const { checkout } = await searchParams
+	const { checkout, s: checkoutSession } = await searchParams
 	setRequestLocale(locale)
-	await requireMember({ locale, returnTo: '/settings/subscription' })
+	const user = await requireMember({ locale, returnTo: '/settings/subscription' })
 
 	const fromCheckout = checkout === 'success'
 	let view = null
@@ -41,5 +42,22 @@ export default async function SubscriptionSettingsPage({ params, searchParams }:
 		logger.error('plus.subscription-page-read-failed', { error })
 	}
 
-	return <SubscriptionPanel view={view} locale={locale} fromCheckout={fromCheckout} />
+	// A confirmed subscription coming back from Money checkout is a conversion.
+	const conversion =
+		fromCheckout && checkoutSession && view?.entitled
+			? view.status === 'trialing'
+				? 'trialing'
+				: view.status === 'active'
+					? 'paid'
+					: null
+			: null
+
+	return (
+		<>
+			{conversion && checkoutSession ? (
+				<CheckoutReturnTracker sessionId={checkoutSession} status={conversion} userId={user?.id} />
+			) : null}
+			<SubscriptionPanel view={view} locale={locale} fromCheckout={fromCheckout} />
+		</>
+	)
 }

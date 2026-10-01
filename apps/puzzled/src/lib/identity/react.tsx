@@ -561,6 +561,38 @@ export const PlatformContext = createContext({
 	submitScore: async (_board?: string, _score?: number, _metadata?: unknown, _opts?: unknown) =>
 		undefined,
 })
+const bannerButton =
+	'inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 font-medium text-foreground sm:rounded-xl sm:px-4 transition-colors hover:bg-muted sm:flex-none'
+
+/**
+ * One switch row in the Settings step. Off until the visitor turns it on:
+ * nothing is pre-ticked, and advertising is its own choice, never part of
+ * "Accept".
+ */
+function ConsentSwitch(props: {
+	label: string
+	hint: string
+	checked: boolean
+	onChange: (next: boolean) => void
+}) {
+	return (
+		<label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-1.5">
+			<span className="min-w-0">
+				<span className="block font-medium text-foreground">{props.label}</span>
+				<span className="block text-muted-foreground">{props.hint}</span>
+			</span>
+			<input
+				type="checkbox"
+				role="switch"
+				aria-checked={props.checked}
+				className="h-5 w-5 shrink-0"
+				checked={props.checked}
+				onChange={(event) => props.onChange(event.target.checked)}
+			/>
+		</label>
+	)
+}
+
 export function CookieBanner(props: {
 	position?: string
 	privacyPolicyUrl?: string
@@ -569,7 +601,14 @@ export function CookieBanner(props: {
 }) {
 	const { hasConsented, setConsent } = useSafeConsent()
 	const t = useTranslations('consent')
+	const tCommon = useTranslations('common')
+	const [step, setStep] = useState<'choose' | 'settings'>('choose')
+	const [analytics, setAnalytics] = useState(false)
+	const [marketing, setMarketing] = useState(false)
 	if (hasConsented) return null
+	const save = (next: { analytics: boolean; marketing: boolean }) => {
+		void setConsent(next).then(() => props.onSave?.())
+	}
 	return (
 		<div
 			// Stable hook for the settled-visitor hide rule: the pre-paint script
@@ -588,38 +627,70 @@ export function CookieBanner(props: {
 				aria-label={t('title')}
 				className="mx-auto flex max-w-3xl flex-col gap-1.5 rounded-xl border bg-background/95 p-2 text-xs leading-tight shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:rounded-2xl sm:p-4 sm:text-sm sm:leading-snug"
 			>
-				<p className="text-muted-foreground">
-					{t('message')}{' '}
-					{props.privacyPolicyUrl ? (
-						<a
-							href={props.privacyPolicyUrl}
-							className="font-medium text-primary underline underline-offset-4"
-						>
-							{t('learnMore')}
-						</a>
-					) : null}
-				</p>
-				{/* Same size and weight: neither answer is steered. */}
-				<div className="flex shrink-0 items-center gap-2">
-					<button
-						type="button"
-						className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-4 font-medium text-foreground sm:rounded-xl transition-colors hover:bg-muted sm:flex-none"
-						onClick={() => {
-							void setConsent({ analytics: false, marketing: false }).then(() => props.onSave?.())
-						}}
-					>
-						{t('decline')}
-					</button>
-					<button
-						type="button"
-						className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-4 font-medium text-foreground sm:rounded-xl transition-colors hover:bg-muted sm:flex-none"
-						onClick={() => {
-							void setConsent({ analytics: true, marketing: false }).then(() => props.onSave?.())
-						}}
-					>
-						{t('accept')}
-					</button>
-				</div>
+				{step === 'choose' ? (
+					<>
+						<p className="text-muted-foreground">
+							{t('message')}{' '}
+							{props.privacyPolicyUrl ? (
+								<a
+									href={props.privacyPolicyUrl}
+									className="font-medium text-primary underline underline-offset-4"
+								>
+									{t('learnMore')}
+								</a>
+							) : null}
+						</p>
+						{/* Same size and weight: no answer is steered. Accept never includes advertising. */}
+						<div className="flex shrink-0 items-center gap-2">
+							<button
+								type="button"
+								className={bannerButton}
+								onClick={() => save({ analytics: false, marketing: false })}
+							>
+								{t('decline')}
+							</button>
+							<button type="button" className={bannerButton} onClick={() => setStep('settings')}>
+								{tCommon('settings')}
+							</button>
+							<button
+								type="button"
+								className={bannerButton}
+								onClick={() => save({ analytics: true, marketing: false })}
+							>
+								{t('accept')}
+							</button>
+						</div>
+					</>
+				) : (
+					<>
+						<div className="flex flex-col gap-1.5 sm:flex-1">
+							<ConsentSwitch
+								label={t('analyticsLabel')}
+								hint={t('analyticsHint')}
+								checked={analytics}
+								onChange={setAnalytics}
+							/>
+							<ConsentSwitch
+								label={t('marketingLabel')}
+								hint={t('marketingHint')}
+								checked={marketing}
+								onChange={setMarketing}
+							/>
+						</div>
+						<div className="flex shrink-0 items-center gap-2">
+							<button type="button" className={bannerButton} onClick={() => setStep('choose')}>
+								{tCommon('back')}
+							</button>
+							<button
+								type="button"
+								className={bannerButton}
+								onClick={() => save({ analytics, marketing })}
+							>
+								{tCommon('save')}
+							</button>
+						</div>
+					</>
+				)}
 			</section>
 		</div>
 	)

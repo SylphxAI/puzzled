@@ -175,7 +175,7 @@ impl BillingConnectService {
             plan_id,
             locale,
             &req.currency,
-            stored.as_ref().or(landing),
+            Attribution::for_checkout(stored.as_ref(), landing).as_ref(),
             consent,
         )
         .await

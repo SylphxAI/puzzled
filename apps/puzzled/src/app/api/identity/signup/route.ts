@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { signUpCookieHeader } from '@/lib/identity/after-sign-up'
 import { AuthCallError, authConfig, passwordTicket, signUp } from '@/lib/identity/client-auth'
 import { MIN_PASSWORD_LENGTH } from '@/lib/identity/password-policy'
 import { authFail, completeSignIn, userAgentOf } from '@/lib/identity/sign-in'
@@ -37,8 +38,10 @@ export async function POST(request: Request) {
 	}
 	try {
 		const ticket = await passwordTicket(config, { email, password, userAgent })
-		await completeSignIn(config, request, ticket)
-		return NextResponse.json({ signedIn: true })
+		const { newAccount } = await completeSignIn(config, request, ticket)
+		const response = NextResponse.json({ signedIn: true })
+		if (newAccount) response.headers.append('set-cookie', signUpCookieHeader('email'))
+		return response
 	} catch {
 		return NextResponse.json({ signedIn: false })
 	}

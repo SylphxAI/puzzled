@@ -585,7 +585,12 @@ impl PreferencesService for PreferencesConnectService {
             .iter()
             .filter_map(|value| value.to_str().ok())
             .find_map(puzzled_core::attribution::from_cookie_header);
-        let (Some(tags), Some(pool)) = (tags, &self.state.pool) else {
+        // An advertising-only cookie (click id, no tags) writes no analytics row and
+        // does not use up the account's one first-touch row.
+        let (Some(tags), Some(pool)) = (
+            tags.filter(puzzled_core::attribution::Attribution::has_tag),
+            &self.state.pool,
+        ) else {
             return Response::ok(RecordSignupAttributionResponse::default());
         };
         let recorded =
