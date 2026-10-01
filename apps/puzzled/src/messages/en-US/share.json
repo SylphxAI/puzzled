@@ -5,7 +5,6 @@
 	"copy": "Copy",
 	"card": {
 		"title": "Puzzled result card",
-		"share": "Share result card",
 		"downloaded": "Card image saved; caption copied to the clipboard.",
 		"copied": "Caption copied to the clipboard; this browser could not build the image.",
 		"unavailable": "Sharing is not available in this browser.",
