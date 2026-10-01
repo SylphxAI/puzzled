@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import type { FormEvent } from 'react'
 import { useRef, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
-import { afterSignUpDestination } from '@/lib/identity/after-sign-up'
+import { afterSignUpDestination, safeCallbackPath } from '@/lib/identity/after-sign-up'
 import { type OAuthProvider, useSafeAuth, useSignUpForm } from '@/lib/identity/react'
 import {
 	AuthField,
@@ -40,7 +40,8 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 	const submittingRef = useRef(false)
 	const { signInWithOAuth } = useSafeAuth()
 	// Back to the game that asked for the account (safe same-origin path only).
-	const afterSignUpUrl = afterSignUpDestination(useSearchParams().get('callbackUrl'))
+	const callbackUrl = safeCallbackPath(useSearchParams().get('callbackUrl'))
+	const afterSignUpUrl = afterSignUpDestination(callbackUrl)
 
 	const {
 		form,
@@ -208,7 +209,10 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 
 			<p className="mt-6 text-center text-sm text-muted-foreground">
 				{t('hasAccount')}{' '}
-				<Link href="/login" className="font-semibold text-primary hover:underline">
+				<Link
+					href={callbackUrl ? { pathname: '/login', query: { callbackUrl } } : '/login'}
+					className="inline-flex min-h-11 items-center px-1 font-semibold text-primary hover:underline"
+				>
 					{tCommon('signIn')}
 				</Link>
 			</p>
