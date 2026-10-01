@@ -44,6 +44,8 @@ import {
 	type TodaysPuzzle,
 } from '@/lib/api/domain/daily'
 import { OPEN_ACCESS, type PlusAccess } from '@/lib/billing/plus'
+import { getLeaderboard } from '@/lib/connect/stats-client'
+import type { GetLeaderboardInput } from '@/lib/connect/stats-domain'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
 import { logger } from '@/lib/logger'
 import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
@@ -275,6 +277,12 @@ export const getServerHistory = cache(
 		}))
 	},
 )
+
+/** Request-scoped authenticated board read; never use the browser transport in SSR. */
+export const getServerLeaderboard = cache(async (input: GetLeaderboardInput) => {
+	const transport = await getServerTransport()
+	return getLeaderboard(input, createClient(StatsService, transport))
+})
 
 export const getServerUserStats = cache(async (): Promise<UserStats> => {
 	const transport = await getServerTransport()
