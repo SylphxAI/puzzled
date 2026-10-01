@@ -14,6 +14,8 @@
  * - Day and module are always labelled; the deep link reuses share-text.ts so
  *   the archive contract stays single-sourced (G1).
  */
+
+import { seasonForDayKey } from '@/features/seasons/lib/seasons'
 import type { GameColorTheme } from '@/games/theme-colors'
 import { isValidDayKey } from '@/lib/product-day'
 import { ritualShareDeepLink } from './share-text'
@@ -80,6 +82,11 @@ export interface ResultCardModel {
 	timeBand: ResultCardTimeBand | null
 	currentStreak: number | null
 	pattern: ResultCardTile[][] | null
+	/**
+	 * Presentation-only seasonal theme, set only when the card's day is a
+	 * seasonal day (features/seasons). Carries no puzzle content.
+	 */
+	season: { id: string; accent: GameColorTheme; glyph: string } | null
 }
 
 /** Resolved card copy; all values come from messages/<locale>/share.json card.*. */
@@ -104,6 +111,8 @@ export interface ResultCardStrings {
 	altDetailsTemplate: string
 	altLinkTemplate: string
 	detailSeparator: string
+	/** The seasonal greeting; null on every non-seasonal day. */
+	seasonGreeting?: string | null
 }
 
 /**
@@ -114,7 +123,8 @@ export interface ResultCardStrings {
  * `fillCardTemplate` fills them, and a formatted read throws on them.
  */
 export function resultCardStringsFrom(
-	t: (key: keyof ResultCardStrings) => string,
+	t: (key: Exclude<keyof ResultCardStrings, 'seasonGreeting'>) => string,
+	seasonGreeting: string | null = null,
 ): ResultCardStrings {
 	return {
 		statusWon: t('statusWon'),
@@ -137,6 +147,7 @@ export function resultCardStringsFrom(
 		altDetailsTemplate: t('altDetailsTemplate'),
 		altLinkTemplate: t('altLinkTemplate'),
 		detailSeparator: t('detailSeparator'),
+		seasonGreeting,
 	}
 }
 
@@ -216,7 +227,13 @@ export function buildResultCard(input: ResultCardInput): ResultCardModel {
 		timeBand: resultCardTimeBand(input.timeSpentMs),
 		currentStreak: streak && streak > 0 ? streak : null,
 		pattern: normalizePattern(input.pattern),
+		season: seasonOf(dayKey),
 	}
+}
+
+function seasonOf(dayKey: string | null): ResultCardModel['season'] {
+	const season = seasonForDayKey(dayKey)
+	return season ? { id: season.id, accent: season.accent, glyph: season.glyph } : null
 }
 
 /** Replace {name} tokens; unknown tokens are left untouched. */
@@ -322,7 +339,9 @@ export function resultCardTextAlternative(
 					details: parts.join(strings.detailSeparator),
 				})
 			: ''
+	const greeting = model.season && strings.seasonGreeting ? `${strings.seasonGreeting} ` : ''
 	return (
+		greeting +
 		fillCardTemplate(strings.altTemplate, { game: model.gameName, day, result }) +
 		details +
 		fillCardTemplate(strings.altLinkTemplate, { link: model.deepLink })

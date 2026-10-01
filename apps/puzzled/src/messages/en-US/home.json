@@ -88,5 +88,14 @@
 		"browseAll": "Browse all games",
 		"finishersToday": "{count} finished today so far",
 		"freeToday": "Free today"
+	},
+	"seasons": {
+		"newYear": "Happy New Year",
+		"lunarNewYear": "Happy Lunar New Year",
+		"easter": "Happy Easter",
+		"dragonBoat": "Happy Dragon Boat Festival",
+		"midAutumn": "Happy Mid-Autumn Festival",
+		"halloween": "Happy Halloween",
+		"christmas": "Merry Christmas"
 	}
 }

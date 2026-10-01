@@ -19,6 +19,7 @@ import {
 } from '@/features/home/components/today-lineup'
 import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from '@/features/home/lib/home-faq'
 import { MarketingFaq } from '@/features/marketing/components'
+import { SeasonalBanner } from '@/features/seasons/components/seasonal-banner'
 import { getAllGameMetadata } from '@/games/registry'
 import {
 	getServerPersonalDailyResults,
@@ -323,6 +324,7 @@ export default async function HomePage({ params }: Props) {
 
 	return (
 		<main className="flex-1">
+			<SeasonalBanner />
 			<Suspense
 				fallback={
 					hasProgressIdentity ? (

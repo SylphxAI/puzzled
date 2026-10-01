@@ -17,6 +17,7 @@ import {
 } from '@/features/daily/lib/result-card'
 import { resolveModuleDisplayName } from '@/features/daily/lib/result-share'
 import { shareRitualResultCard } from '@/features/daily/lib/share-result-card'
+import { seasonGreeting } from '@/features/seasons/lib/seasons'
 import { type GameSlug, getHowToPlayConfig } from '@/games/how-to-play-registry'
 import { useTodayPercentile } from '@/lib/api'
 import { Link } from '@/lib/i18n/routing'
@@ -78,6 +79,7 @@ export function GameResultCard({
 	const t = useTranslations('gameResult')
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
+	const tHome = useTranslations('home')
 	const tGames = useTranslations('games')
 	useWarmShareId(gameType, puzzleDate, mode === 'daily')
 	const [cardBusy, setCardBusy] = useState(false)
@@ -87,7 +89,11 @@ export function GameResultCard({
 
 	// One copy object for the model, the image and the text alternative, so the
 	// card and the accessible sentence always speak the same words.
-	const cardStrings = resultCardStringsFrom((key) => tShare.raw(`card.${key}`) as string)
+	const cardDayKey = puzzleDate ?? (mode === 'daily' ? productDayKey() : undefined)
+	const cardStrings = resultCardStringsFrom(
+		(key) => tShare.raw(`card.${key}`) as string,
+		seasonGreeting(tHome, cardDayKey),
+	)
 
 	/** Card model for this result: non-spoiler by construction (see result-card.ts). */
 	const buildCard = (shareId?: string) =>
@@ -101,7 +107,7 @@ export function GameResultCard({
 			status,
 			locale,
 			// A daily finish still in its day can label itself; archive runs carry their own day.
-			puzzleDate: puzzleDate ?? (mode === 'daily' ? productDayKey() : undefined),
+			puzzleDate: cardDayKey,
 			attempts: stats.attempts,
 			maxAttempts: stats.maxAttempts,
 			mistakes: stats.mistakes,

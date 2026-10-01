@@ -673,6 +673,11 @@
 			"compactMode": "精簡模式",
 			"compactModeDescription": "使用更緊密的排版與更小的間距"
 		},
+		"streakFreeze": {
+			"description": "選擇是否自動使用凍結來保護你的連勝",
+			"unavailable": "暫時未能載入自動凍結設定，請重新整理再試。",
+			"saveFailed": "未能儲存你的更改，請再試一次。"
+		},
 		"language": {
 			"title": "語言與地區",
 			"description": "設定你的語言與地區偏好",
