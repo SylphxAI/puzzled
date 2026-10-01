@@ -64,7 +64,15 @@
 		"tipsTitle": "Tips and strategy for {game}",
 		"faqTitle": "Questions about {game}",
 		"relatedTitle": "More puzzles to try",
-		"relatedAll": "See all games"
+		"relatedAll": "See all games",
+		"metaTitle": "{game}: free daily {genre} puzzle",
+		"metaDescription": "{game} is a daily {genre} puzzle. {rule} A new puzzle every day; today's featured puzzle is free, no account needed.",
+		"genre": {
+			"word": "word",
+			"logic": "logic",
+			"math": "number",
+			"spatial": "spatial"
+		}
 	},
 	"game": {
 		"word-guess": {

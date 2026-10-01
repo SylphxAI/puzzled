@@ -77,7 +77,7 @@ export async function CatalogHero({ gameCount, visibleCount, query, category }: 
 						{category !== 'all' && <input type="hidden" name="category" value={category} />}
 						<button
 							type="submit"
-							className="absolute right-1 top-1 inline-flex h-9 items-center rounded-lg px-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+							className="absolute right-0 top-0 inline-flex h-11 min-w-11 items-center rounded-lg px-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
 						>
 							{t('searchSubmit')}
 						</button>

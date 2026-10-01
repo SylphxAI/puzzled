@@ -188,6 +188,10 @@
 				"keys": ["admin.analytics.conversionRate", "admin.dashboard.conversionRate"]
 			},
 			{
+				"value": "Cookies",
+				"keys": ["footer.cookies", "legal.privacy.sections.cookies.title"]
+			},
+			{
 				"value": "Copied!",
 				"keys": ["settings.recoveryCodes.copied", "settings.security.copied"]
 			},
@@ -1002,10 +1006,6 @@
 				"keys": ["admin.analytics.users", "admin.sidebar.users", "admin.users.title"]
 			},
 			{
-				"value": "Usually replies within 24-48 hours",
-				"keys": ["support.email.responseTime", "support.hero.factReply"]
-			},
-			{
 				"value": "Verification failed",
 				"keys": ["auth.verificationFailed", "settings.security.verificationFailed"]
 			},
@@ -1032,6 +1032,10 @@
 					"settings.privacy.deleteAccount.verifyTitle",
 					"settings.security.verifyIdentity"
 				]
+			},
+			{
+				"value": "We reply within 24-48 hours",
+				"keys": ["support.email.responseTime", "support.hero.factReply"]
 			},
 			{
 				"value": "Welcome back",
@@ -1280,6 +1284,10 @@
 				"keys": ["admin.analytics.conversionRate", "admin.dashboard.conversionRate"]
 			},
 			{
+				"value": "Cookies",
+				"keys": ["footer.cookies", "legal.privacy.sections.cookies.title"]
+			},
+			{
 				"value": "Copied!",
 				"keys": ["settings.recoveryCodes.copied", "settings.security.copied"]
 			},
@@ -2094,10 +2102,6 @@
 				"keys": ["admin.analytics.users", "admin.sidebar.users", "admin.users.title"]
 			},
 			{
-				"value": "Usually replies within 24-48 hours",
-				"keys": ["support.email.responseTime", "support.hero.factReply"]
-			},
-			{
 				"value": "Verification failed",
 				"keys": ["auth.verificationFailed", "settings.security.verificationFailed"]
 			},
@@ -2124,6 +2128,10 @@
 					"settings.privacy.deleteAccount.verifyTitle",
 					"settings.security.verifyIdentity"
 				]
+			},
+			{
+				"value": "We reply within 24-48 hours",
+				"keys": ["support.email.responseTime", "support.hero.factReply"]
 			},
 			{
 				"value": "Welcome back",
@@ -2194,6 +2202,10 @@
 				]
 			},
 			{
+				"value": "24-48 小時內回覆",
+				"keys": ["support.email.responseTime", "support.hero.factReply"]
+			},
+			{
 				"value": "All Users",
 				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
 			},
@@ -2216,6 +2228,10 @@
 			{
 				"value": "Conversion Rate",
 				"keys": ["admin.analytics.conversionRate", "admin.dashboard.conversionRate"]
+			},
+			{
+				"value": "Cookie",
+				"keys": ["footer.cookies", "legal.privacy.sections.cookies.title"]
 			},
 			{
 				"value": "Create Announcement",
@@ -2748,6 +2764,14 @@
 				"keys": ["nav.support", "support.hero.eyebrow"]
 			},
 			{
+				"value": "數字",
+				"keys": ["catalog.category.math", "catalog.gamePage.genre.math"]
+			},
+			{
+				"value": "文字",
+				"keys": ["catalog.category.word", "catalog.gamePage.genre.word"]
+			},
+			{
 				"value": "新密碼",
 				"keys": ["auth.newPassword", "settings.account.password.newPassword"]
 			},
@@ -2995,6 +3019,10 @@
 				"keys": ["admin.auditLogs.title", "admin.sidebar.auditLogs"]
 			},
 			{
+				"value": "空間",
+				"keys": ["catalog.category.spatial", "catalog.gamePage.genre.spatial"]
+			},
+			{
 				"value": "管理操作",
 				"keys": ["admin.auditLogs.actions.admin_action", "admin.auditLogs.stats.adminActions"]
 			},
@@ -3016,7 +3044,7 @@
 			},
 			{
 				"value": "聯絡我們",
-				"keys": ["footer.contact", "legal.privacy.sections.contact.title"]
+				"keys": ["footer.contact", "legal.privacy.sections.contact.title", "support.contact.title"]
 			},
 			{
 				"value": "至少 {min} 個字元",
@@ -3083,10 +3111,6 @@
 				"keys": ["common.theme.system", "settings.preferences.appearance.system"]
 			},
 			{
-				"value": "通常 24-48 小時內回覆",
-				"keys": ["support.email.responseTime", "support.hero.factReply"]
-			},
-			{
 				"value": "通知",
 				"keys": [
 					"settings.nav.notifications",
@@ -3136,6 +3160,10 @@
 			{
 				"value": "遊玩過去的謎題",
 				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
+			},
+			{
+				"value": "邏輯",
+				"keys": ["catalog.category.logic", "catalog.gamePage.genre.logic"]
 			},
 			{
 				"value": "重新產生代碼",
@@ -3262,6 +3290,10 @@
 				]
 			},
 			{
+				"value": "24-48 小時內回覆",
+				"keys": ["support.email.responseTime", "support.hero.factReply"]
+			},
+			{
 				"value": "All Users",
 				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
 			},
@@ -3284,6 +3316,10 @@
 			{
 				"value": "Conversion Rate",
 				"keys": ["admin.analytics.conversionRate", "admin.dashboard.conversionRate"]
+			},
+			{
+				"value": "Cookie",
+				"keys": ["footer.cookies", "legal.privacy.sections.cookies.title"]
 			},
 			{
 				"value": "Create Announcement",
@@ -3822,6 +3858,14 @@
 				"keys": ["nav.support", "support.hero.eyebrow"]
 			},
 			{
+				"value": "數字",
+				"keys": ["catalog.category.math", "catalog.gamePage.genre.math"]
+			},
+			{
+				"value": "文字",
+				"keys": ["catalog.category.word", "catalog.gamePage.genre.word"]
+			},
+			{
 				"value": "新密碼",
 				"keys": ["auth.newPassword", "settings.account.password.newPassword"]
 			},
@@ -4044,6 +4088,10 @@
 				"keys": ["admin.auditLogs.title", "admin.sidebar.auditLogs"]
 			},
 			{
+				"value": "空間",
+				"keys": ["catalog.category.spatial", "catalog.gamePage.genre.spatial"]
+			},
+			{
 				"value": "管理操作",
 				"keys": ["admin.auditLogs.actions.admin_action", "admin.auditLogs.stats.adminActions"]
 			},
@@ -4065,7 +4113,7 @@
 			},
 			{
 				"value": "聯絡我們",
-				"keys": ["footer.contact", "legal.privacy.sections.contact.title"]
+				"keys": ["footer.contact", "legal.privacy.sections.contact.title", "support.contact.title"]
 			},
 			{
 				"value": "至少 {min} 個字元",
@@ -4132,10 +4180,6 @@
 				"keys": ["common.theme.system", "settings.preferences.appearance.system"]
 			},
 			{
-				"value": "通常 24-48 小時內回覆",
-				"keys": ["support.email.responseTime", "support.hero.factReply"]
-			},
-			{
 				"value": "通知",
 				"keys": [
 					"settings.nav.notifications",
@@ -4185,6 +4229,10 @@
 			{
 				"value": "遊玩過去的謎題",
 				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
+			},
+			{
+				"value": "邏輯",
+				"keys": ["catalog.category.logic", "catalog.gamePage.genre.logic"]
 			},
 			{
 				"value": "重新產生代碼",
@@ -4324,6 +4372,10 @@
 				]
 			},
 			{
+				"value": "24-48 小时内回复",
+				"keys": ["support.email.responseTime", "support.hero.factReply"]
+			},
+			{
 				"value": "All Users",
 				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
 			},
@@ -4350,6 +4402,10 @@
 			{
 				"value": "Conversion Rate",
 				"keys": ["admin.analytics.conversionRate", "admin.dashboard.conversionRate"]
+			},
+			{
+				"value": "Cookie",
+				"keys": ["footer.cookies", "legal.privacy.sections.cookies.title"]
 			},
 			{
 				"value": "Create Announcement",
@@ -4938,6 +4994,14 @@
 				"keys": ["nav.support", "support.hero.eyebrow"]
 			},
 			{
+				"value": "数字",
+				"keys": ["catalog.category.math", "catalog.gamePage.genre.math"]
+			},
+			{
+				"value": "文字",
+				"keys": ["catalog.category.word", "catalog.gamePage.genre.word"]
+			},
+			{
 				"value": "新密码",
 				"keys": ["auth.newPassword", "settings.account.password.newPassword"]
 			},
@@ -5158,6 +5222,10 @@
 				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
 			},
 			{
+				"value": "空间",
+				"keys": ["catalog.category.spatial", "catalog.gamePage.genre.spatial"]
+			},
+			{
 				"value": "管理操作",
 				"keys": ["admin.auditLogs.actions.admin_action", "admin.auditLogs.stats.adminActions"]
 			},
@@ -5171,7 +5239,7 @@
 			},
 			{
 				"value": "联系我们",
-				"keys": ["footer.contact", "legal.privacy.sections.contact.title"]
+				"keys": ["footer.contact", "legal.privacy.sections.contact.title", "support.contact.title"]
 			},
 			{
 				"value": "胜出",
@@ -5285,10 +5353,6 @@
 				"keys": ["common.signOut", "settings.sessions.signOut"]
 			},
 			{
-				"value": "通常 24-48 小时内回复",
-				"keys": ["support.email.responseTime", "support.hero.factReply"]
-			},
-			{
 				"value": "通知",
 				"keys": [
 					"settings.nav.notifications",
@@ -5297,6 +5361,10 @@
 					"settings.overview.sections.notifications",
 					"settings.preferences.notifications.title"
 				]
+			},
+			{
+				"value": "逻辑",
+				"keys": ["catalog.category.logic", "catalog.gamePage.genre.logic"]
 			},
 			{
 				"value": "邮箱",

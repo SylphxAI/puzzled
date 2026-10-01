@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { GamePageContent } from '@/features/catalog/components/game-page-content'
 import { GamePageHero } from '@/features/catalog/components/game-page-hero'
 import { readMessage, relatedCatalogSlugs } from '@/features/catalog/lib/catalog'
+import { gameMetaDescription, gameMetaTitle } from '@/features/catalog/lib/game-meta'
 import { parseGameFaq, parseGameTips, requireGamePage } from '@/features/catalog/lib/game-page'
 import { resolveGameDayRequest } from '@/features/daily/lib/day-request'
 import { gameSupportsDifficulty, getAllGameMetadata, getGameSlugs } from '@/games/registry'
@@ -55,11 +56,14 @@ export async function generateMetadata({ params }: Props) {
 		page.metadata.description,
 	)
 
+	const category = page.metadata.category
+	const stop = locale.startsWith('zh') ? '。' : '.'
+
 	return buildPageMetadata({
 		locale,
 		path: `/games/${page.slug}`,
-		title: gameName,
-		description: [gameTagline, gameDescription].filter(Boolean).join(' — '),
+		title: gameMetaTitle(tCatalog, gameName, category),
+		description: gameMetaDescription(tCatalog, gameName, category, gameDescription, stop),
 		imagePath: ogImagePath({
 			title: gameName,
 			subtitle: gameTagline,
