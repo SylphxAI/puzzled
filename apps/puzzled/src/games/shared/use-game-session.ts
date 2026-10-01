@@ -20,7 +20,9 @@ import { useGuestGameState } from '@/features/daily/hooks/use-guest-game-state'
 import { useSaveGameResult } from '@/features/gamification'
 import type { PuzzleDifficulty } from '@/games/types'
 import { logger } from '@/lib/logger'
+import { productDayKey } from '@/lib/product-day'
 import { getGameSessionKey } from '@/lib/storage-keys'
+import { recordFirstFinishDay } from '@/shared/components/pwa-install-policy'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { finishRecordingFor } from './finish-recording'
 
@@ -311,6 +313,9 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 					attempts: endData.attempts ?? 1,
 				})
 			}
+
+			// The install offer waits for a player who has finished a day.
+			if (finish.success) recordFirstFinishDay(productDayKey())
 
 			return finish
 		},

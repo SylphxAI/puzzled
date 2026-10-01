@@ -55,3 +55,6 @@ export function getGameSessionKey(gameSlug: string, puzzleId?: string): string {
 		? `puzzled:game:${gameSlug}:${puzzleId}:started`
 		: `puzzled:game:${gameSlug}:started`
 }
+
+/** Product day (YYYY-MM-DD) of this browser's first finished puzzle; gates the install offer. */
+export const FIRST_FINISH_DAY_KEY = 'puzzled:pwa:first-finish-day'
