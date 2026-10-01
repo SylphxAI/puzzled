@@ -366,6 +366,36 @@ async fn checkout_refuses_unknown_archived_and_already_subscribed() {
 }
 
 #[test]
+fn session_body_carries_the_click_id_in_metadata() {
+    let money = Money::new("http://x/env", "k", "https://puzzled.test/");
+    let tags = puzzled_core::attribution::Attribution {
+        gclid: Some("Cj0KCQ_abc-1".into()),
+        ..Default::default()
+    };
+    let body = session_body(
+        &money,
+        USER,
+        "individual_monthly",
+        "k_solo_m",
+        "",
+        None,
+        Some(&tags),
+    );
+    assert_eq!(body["metadata"]["gclid"], "Cj0KCQ_abc-1");
+    assert!(body.get("client_reference_id").is_none());
+    let none = session_body(
+        &money,
+        USER,
+        "individual_monthly",
+        "k_solo_m",
+        "",
+        None,
+        None,
+    );
+    assert!(none["metadata"].get("gclid").is_none());
+}
+
+#[test]
 fn session_body_carries_attribution() {
     let money = Money::new("http://x/env", "k", "https://puzzled.test/");
     let tags = puzzled_core::attribution::Attribution {
@@ -647,4 +677,25 @@ async fn money_calls_carry_the_money_key() {
         "https://puzzled.test",
     );
     assert!(is_premium(&money, USER).await);
+}
+
+#[test]
+fn env_url_uses_full_resource_names_once() {
+    let url = super::client::env_url(
+        "https://m.example",
+        &json!({"org":"orgs/o1","project":"orgs/o1/projects/p1","env":"orgs/o1/projects/p1/envs/e1"}),
+    )
+    .unwrap();
+    assert_eq!(url, "https://m.example/v1/orgs/o1/projects/p1/envs/e1");
+}
+
+#[test]
+fn env_url_keeps_the_bare_id_format() {
+    let url = super::client::env_url(
+        "https://m.example",
+        &json!({"org":"o1","project":"p1","env":"e1"}),
+    )
+    .unwrap();
+    assert_eq!(url, "https://m.example/v1/orgs/o1/projects/p1/envs/e1");
+    assert!(super::client::env_url("https://m.example", &json!({"org":"o1"})).is_err());
 }

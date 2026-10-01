@@ -4,6 +4,8 @@ import { Button } from '@sylphx/ui'
 import { Download, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useState } from 'react'
+import { usePathname } from '@/lib/i18n/routing'
+import { productDayKey } from '@/lib/product-day'
 import { PWA_PROMPT_DISMISSED_KEY } from '@/lib/storage-keys'
 import { cn } from '@/lib/utils'
 import {
@@ -12,6 +14,7 @@ import {
 	getInstallPrompt,
 	onInstallPrompt,
 } from '@/shared/components/pwa-install-event'
+import { isInstallOfferEligible, readFirstFinishDay } from './pwa-install-policy'
 
 export function PWAInstallPrompt() {
 	const t = useTranslations('pwa')
@@ -20,6 +23,19 @@ export function PWAInstallPrompt() {
 	const [showPrompt, setShowPrompt] = useState(false)
 	const [isIOS, setIsIOS] = useState(false)
 	const [isStandalone, setIsStandalone] = useState(false)
+	const pathname = usePathname()
+	const [eligible, setEligible] = useState(false)
+
+	// Re-checked on every navigation: a game page can never show the offer.
+	useEffect(() => {
+		setEligible(
+			isInstallOfferEligible({
+				firstFinishDay: readFirstFinishDay(),
+				today: productDayKey(),
+				pathname,
+			}),
+		)
+	}, [pathname])
 
 	useEffect(() => {
 		// Installability and push share one root-scoped worker; no puzzle caching.
@@ -104,7 +120,7 @@ export function PWAInstallPrompt() {
 	}, [showPrompt, handleDismiss])
 
 	// Don't show if already installed or prompt not ready
-	if (isStandalone || !showPrompt) return null
+	if (isStandalone || !showPrompt || !eligible) return null
 
 	return (
 		// `<output>` is the native status region: the prompt is announced when it

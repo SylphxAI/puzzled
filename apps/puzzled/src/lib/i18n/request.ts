@@ -105,6 +105,7 @@ import zhTWDaily from '@/messages/zh-TW/daily.json'
 import zhTWFooter from '@/messages/zh-TW/footer.json'
 import zhTWHome from '@/messages/zh-TW/home.json'
 import zhTWLeaderboard from '@/messages/zh-TW/leaderboard.json'
+import zhTWLegal from '@/messages/zh-TW/legal.json'
 import zhTWNav from '@/messages/zh-TW/nav.json'
 import zhTWOnboarding from '@/messages/zh-TW/onboarding.json'
 import zhTWSettings from '@/messages/zh-TW/settings.json'
@@ -231,6 +232,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		daily: zhTWDaily,
 		footer: zhTWFooter,
 		leaderboard: zhTWLeaderboard,
+		legal: zhTWLegal,
 		share: zhTWShare,
 		stats: zhTWStats,
 		support: zhTWSupport,

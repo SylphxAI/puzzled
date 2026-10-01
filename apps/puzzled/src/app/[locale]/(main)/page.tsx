@@ -95,10 +95,7 @@ const readHomeFacts = cache(async (): Promise<HomeFacts> => {
 	const [overviewResult, streakResult, personalResult] = await Promise.allSettled([
 		getServerTodayOverview(),
 		hasIdentity ? getServerStreakInfo() : Promise.resolve(null),
-		getServerPersonalDailyResults({
-			gameSlugs,
-			isGuest: !user,
-		}),
+		getServerPersonalDailyResults({ gameSlugs }),
 	])
 
 	let todayPlayerCount: number | null = null

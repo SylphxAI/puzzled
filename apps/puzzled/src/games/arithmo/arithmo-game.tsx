@@ -11,7 +11,6 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
@@ -58,8 +57,6 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
 	} = useGameSession({
 		gameSlug: 'arithmo',
 		mode,
@@ -257,13 +254,6 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 				}}
 				mode={mode}
 				onShare={handleShare}
-			/>
-
-			{/* Guest signup prompt */}
-			<GuestSignupPrompt
-				open={showGuestSignupPrompt}
-				onClose={handleCloseGuestPrompt}
-				streakCount={1}
 			/>
 		</div>
 	)

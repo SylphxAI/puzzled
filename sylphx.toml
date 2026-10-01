@@ -93,7 +93,8 @@ from_secret = "SYLPHX_MONEY_API_KEY"
 [services.health]
 mode = "http"
 # ADR-141 single path (api). Web uses per-service health.path = "/".
-path = "/healthz"
+path = "/readyz"
+liveness_path = "/healthz"
 
 [services.build]
 strategy = "dockerfile"

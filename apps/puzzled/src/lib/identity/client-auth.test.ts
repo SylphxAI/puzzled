@@ -60,15 +60,18 @@ describe('Sylphx Auth client', () => {
 		})
 		const own = 'organization-0199aa10-7b2c-7d3e-8f00-00000000c0de'
 		const answer = (project?: string) => {
-			globalThis.fetch = (async () =>
-				new Response(
-					JSON.stringify({
-						session: {
-							created_at_unix_seconds: '1030',
-							principal: { created_at_unix_seconds: 1000, project_id: project },
-						},
-					}),
-				)) as unknown as typeof fetch
+			globalThis.fetch = (async (_url: string, init?: RequestInit) =>
+				// The fake Auth requires the product's own caller key.
+				(init?.headers as Record<string, string>)?.['x-sylphx-caller-key'] !== 'pk'
+					? new Response('{}', { status: 401 })
+					: new Response(
+							JSON.stringify({
+								session: {
+									created_at_unix_seconds: '1030',
+									principal: { created_at_unix_seconds: 1000, project_id: project },
+								},
+							}),
+						)) as unknown as typeof fetch
 		}
 		const config = { url: 'https://auth.example', publishableKey: 'pk', secretKey: 'sk' }
 

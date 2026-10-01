@@ -1,6 +1,6 @@
 import { cookies, headers } from 'next/headers'
 import { env } from '../env'
-import { destIdentityCredential, destIdentityProjectId } from './credentials'
+import { destIdentityCredential, destIdentityProjectId, destProductCredential } from './credentials'
 import {
 	type AppConfig,
 	destIdentityJson,
@@ -36,10 +36,14 @@ export async function browserUserAgent(): Promise<string> {
 export async function currentUser(): Promise<IdentityUser | null> {
 	const token = await sessionToken()
 	if (!token) return null
+	// Auth requires the product's publishable key on every session read; without it there is no session.
+	// TODO: switch to the identity SDK's `callerKey` option once cloud#11034 publishes.
+	const callerKey = destProductCredential(['SYLPHX_PUBLISHABLE_KEY'])
+	if (!callerKey) return null
 	try {
 		const current = await destIdentityJson(identityOrigin(), '/v1/sessions/current', {
 			credential: token,
-			headers: { 'user-agent': await browserUserAgent() },
+			headers: { 'user-agent': await browserUserAgent(), 'x-sylphx-caller-key': callerKey },
 		})
 		return destIdentityUser(current, destIdentityProjectId())
 	} catch {

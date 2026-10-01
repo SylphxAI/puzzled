@@ -9,7 +9,11 @@
  * while the server read the real `completed_session`.
  */
 
-import type { GetDailyResponse } from '@/gen/connect/puzzled/v1/puzzle_pb'
+import type {
+	DailyCompletion,
+	GetDailyResponse,
+	GetTodayProgressResponse,
+} from '@/gen/connect/puzzled/v1/puzzle_pb'
 import { servedPuzzleId } from '@/lib/product-day'
 
 export type DailyStatus = {
@@ -48,9 +52,11 @@ function parsePuzzleData(json: string): unknown {
 	}
 }
 
-function parseCompletedSession(res: GetDailyResponse): DailyStatus['completedSession'] {
-	const completion = res.completedSession
-	if (!res.hasCompleted || !completion) return null
+function parseCompletedSession(
+	hasCompleted: boolean,
+	completion: DailyCompletion | undefined,
+): DailyStatus['completedSession'] {
+	if (!hasCompleted || !completion) return null
 	if (completion.status !== 'won' && completion.status !== 'lost') return null
 
 	const completedAt =
@@ -67,7 +73,7 @@ function parseCompletedSession(res: GetDailyResponse): DailyStatus['completedSes
 export function mapDailyStatus(res: GetDailyResponse, difficulty?: string): DailyStatus {
 	return {
 		hasCompleted: res.hasCompleted,
-		completedSession: parseCompletedSession(res),
+		completedSession: parseCompletedSession(res.hasCompleted, res.completedSession),
 		puzzle: {
 			id: servedPuzzleId(res.puzzleId) || '',
 			puzzleNumber: Number(res.puzzleNumber),
@@ -89,4 +95,25 @@ export function mapTodaysPuzzle(res: GetDailyResponse, difficulty?: string): Tod
 		puzzleData: parsePuzzleData(res.puzzleDataJson),
 		difficulty: res.difficulty || difficulty || null,
 	}
+}
+
+export type TodayProgress = {
+	hasCompleted: boolean
+	completedSession: DailyStatus['completedSession']
+}
+
+/**
+ * GetTodayProgress -> per-game completion for the requested slugs. A slug the
+ * server did not report is absent, never assumed finished or unfinished.
+ */
+export function mapTodayProgress(res: GetTodayProgressResponse): Record<string, TodayProgress> {
+	return Object.fromEntries(
+		res.games.map((game) => [
+			game.gameSlug,
+			{
+				hasCompleted: game.hasCompleted,
+				completedSession: parseCompletedSession(game.hasCompleted, game.completedSession),
+			},
+		]),
+	)
 }

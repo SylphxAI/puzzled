@@ -25,6 +25,7 @@ import {
 } from '@/gen/connect/puzzled/v1/gamification_pb'
 import { getConnectTransport } from '@/lib/connect/transport'
 import { type AppConfig, DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type IdentityUser } from './dest'
+import { MIN_PASSWORD_LENGTH } from './password-policy'
 
 type AuthState = {
 	user: IdentityUser | null
@@ -284,7 +285,7 @@ export function useSignUpForm(
 	const [step, setStep] = useState<number | 'verify-email'>(1)
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
-	const minLength = opts.minPasswordLength ?? 8
+	const minLength = opts.minPasswordLength ?? MIN_PASSWORD_LENGTH
 	return {
 		form: { email, password, name },
 		setEmail,
@@ -306,10 +307,12 @@ export function useSignUpForm(
 					credentials: 'same-origin',
 					body: JSON.stringify({ email, password, name }),
 				})
-				if (!response.ok) throw new Error('sign-up failed')
 				const result = await readJson(response)
+				if (!response.ok) {
+					throw new Error(typeof result.error === 'string' ? result.error : 'sign-up failed')
+				}
 				if (result.signedIn === true) {
-					window.location.assign('/')
+					window.location.assign(opts.afterSignUpUrl ?? '/')
 					return
 				}
 				setStep('verify-email')
@@ -370,7 +373,7 @@ export function useResetPasswordForm(opts?: {
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [success, setSuccess] = useState(false)
-	const minLength = opts?.minPasswordLength ?? 8
+	const minLength = opts?.minPasswordLength ?? MIN_PASSWORD_LENGTH
 	const passwordsMatch = password === confirmPassword
 	return {
 		form: { password, confirmPassword, email: '' },
@@ -410,6 +413,7 @@ export function useResetPasswordForm(opts?: {
 }
 
 export function useSafeConsent() {
+	const { user } = useSafeUser()
 	const [consent, setConsent] = useState<Record<string, boolean>>({})
 	const [hasConsented, setHasConsented] = useState(false)
 	const [isLoading, setIsLoading] = useState(true)
@@ -438,6 +442,9 @@ export function useSafeConsent() {
 			if (typeof window !== 'undefined') {
 				window.localStorage.setItem('puzzled-consent', JSON.stringify(next))
 			}
+			// A guest's choice lives in this browser only; the consent ledger needs an account, so
+			// calling it as a guest would just be a 401 in the console.
+			if (!user) return
 			await Promise.all(
 				DEST_CONSENT_PURPOSES.filter((purpose) => purpose !== 'necessary').map((purpose) =>
 					fetch('/api/identity/consent', {
@@ -448,7 +455,7 @@ export function useSafeConsent() {
 							purpose,
 							state: next[purpose] ? 'granted' : 'denied',
 						}),
-					}),
+					}).catch(() => undefined),
 				),
 			)
 		},
@@ -558,6 +565,38 @@ export const PlatformContext = createContext({
 	submitScore: async (_board?: string, _score?: number, _metadata?: unknown, _opts?: unknown) =>
 		undefined,
 })
+const bannerButton =
+	'inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 font-medium text-foreground sm:rounded-xl sm:px-4 transition-colors hover:bg-muted sm:flex-none'
+
+/**
+ * One switch row in the Settings step. Off until the visitor turns it on:
+ * nothing is pre-ticked, and advertising is its own choice, never part of
+ * "Accept".
+ */
+function ConsentSwitch(props: {
+	label: string
+	hint: string
+	checked: boolean
+	onChange: (next: boolean) => void
+}) {
+	return (
+		<label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-1.5">
+			<span className="min-w-0">
+				<span className="block font-medium text-foreground">{props.label}</span>
+				<span className="block text-muted-foreground">{props.hint}</span>
+			</span>
+			<input
+				type="checkbox"
+				role="switch"
+				aria-checked={props.checked}
+				className="h-5 w-5 shrink-0"
+				checked={props.checked}
+				onChange={(event) => props.onChange(event.target.checked)}
+			/>
+		</label>
+	)
+}
+
 export function CookieBanner(props: {
 	position?: string
 	privacyPolicyUrl?: string
@@ -566,7 +605,14 @@ export function CookieBanner(props: {
 }) {
 	const { hasConsented, setConsent } = useSafeConsent()
 	const t = useTranslations('consent')
+	const tCommon = useTranslations('common')
+	const [step, setStep] = useState<'choose' | 'settings'>('choose')
+	const [analytics, setAnalytics] = useState(false)
+	const [marketing, setMarketing] = useState(false)
 	if (hasConsented) return null
+	const save = (next: { analytics: boolean; marketing: boolean }) => {
+		void setConsent(next).then(() => props.onSave?.())
+	}
 	return (
 		<div
 			// Stable hook for the settled-visitor hide rule: the pre-paint script
@@ -577,45 +623,78 @@ export function CookieBanner(props: {
 			// unusable until consent was given.
 			className={
 				props.position === 'bottom'
-					? 'fixed inset-x-0 z-toast p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
+					? 'fixed inset-x-0 z-toast px-2 pb-1.5 sm:p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
 					: undefined
 			}
 		>
 			<section
 				aria-label={t('title')}
-				className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border bg-background/95 p-4 text-sm shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+				className="mx-auto flex max-w-3xl flex-col gap-1.5 rounded-xl border bg-background/95 p-2 text-xs leading-tight shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:rounded-2xl sm:p-4 sm:text-sm sm:leading-snug"
 			>
-				<p className="text-muted-foreground">
-					{t('message')}{' '}
-					{props.privacyPolicyUrl ? (
-						<a
-							href={props.privacyPolicyUrl}
-							className="font-medium text-primary underline underline-offset-4"
-						>
-							{t('learnMore')}
-						</a>
-					) : null}
-				</p>
-				<div className="flex shrink-0 items-center gap-2">
-					<button
-						type="button"
-						className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 font-medium text-foreground transition-colors hover:bg-muted"
-						onClick={() => {
-							void setConsent({ analytics: false, marketing: false }).then(() => props.onSave?.())
-						}}
-					>
-						{t('decline')}
-					</button>
-					<button
-						type="button"
-						className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
-						onClick={() => {
-							void setConsent({ analytics: true, marketing: false }).then(() => props.onSave?.())
-						}}
-					>
-						{t('accept')}
-					</button>
-				</div>
+				{step === 'choose' ? (
+					<>
+						<p className="text-muted-foreground">
+							{t('message')}{' '}
+							{props.privacyPolicyUrl ? (
+								<a
+									href={props.privacyPolicyUrl}
+									className="font-medium text-primary underline underline-offset-4"
+								>
+									{t('learnMore')}
+								</a>
+							) : null}
+						</p>
+						{/* Same size and weight: no answer is steered. Accept never includes advertising. */}
+						<div className="flex shrink-0 items-center gap-2">
+							<button
+								type="button"
+								className={bannerButton}
+								onClick={() => save({ analytics: false, marketing: false })}
+							>
+								{t('decline')}
+							</button>
+							<button type="button" className={bannerButton} onClick={() => setStep('settings')}>
+								{tCommon('settings')}
+							</button>
+							<button
+								type="button"
+								className={bannerButton}
+								onClick={() => save({ analytics: true, marketing: false })}
+							>
+								{t('accept')}
+							</button>
+						</div>
+					</>
+				) : (
+					<>
+						<div className="flex flex-col gap-1.5 sm:flex-1">
+							<ConsentSwitch
+								label={t('analyticsLabel')}
+								hint={t('analyticsHint')}
+								checked={analytics}
+								onChange={setAnalytics}
+							/>
+							<ConsentSwitch
+								label={t('marketingLabel')}
+								hint={t('marketingHint')}
+								checked={marketing}
+								onChange={setMarketing}
+							/>
+						</div>
+						<div className="flex shrink-0 items-center gap-2">
+							<button type="button" className={bannerButton} onClick={() => setStep('choose')}>
+								{tCommon('back')}
+							</button>
+							<button
+								type="button"
+								className={bannerButton}
+								onClick={() => save({ analytics, marketing })}
+							>
+								{tCommon('save')}
+							</button>
+						</div>
+					</>
+				)}
 			</section>
 		</div>
 	)

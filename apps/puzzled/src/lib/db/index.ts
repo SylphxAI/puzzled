@@ -25,6 +25,9 @@ function getDb(): NodePgDatabase<typeof schema> {
 			)
 		}
 		_pool = new Pool({ connectionString: url })
+		// An idle client erroring (server restart, edge drop) emits "error" on the
+		// Pool; with no listener that is an uncaught exception and the process exits.
+		_pool.on('error', (e) => console.error('[db] idle client error', e.message))
 		_db = drizzle(_pool, { schema })
 	}
 	return _db

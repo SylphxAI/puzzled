@@ -92,7 +92,7 @@ should move.
 | # | Capability | Job it serves | Where it appears | Metric | Effort | Depends on |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Earned streak freezes (streak freeze) | Keep a streak alive through a missed day without guilt; free players earn one per 7 played days, hold at most 2, and a held freeze covers one missed day automatically (auto-cover is on by default; the `ToggleAutoFreeze` RPC turns it off, no settings control yet) | Stats streak card (freezes held, days to the next one), streak calculation | D7 retention | M | shipped (#299): rules in `puzzled-core` `personal_streak`, ledgers `streak_freeze_awards` and `streak_freeze_uses`; guests and signed-in players alike |
-| 2 | Save-your-streak account ask (try before signup, saved progress) | Guests keep streak and stats across devices | Result screen, raised as the streak grows; never before the first finish | Guest to account rate, D7 retention | S | none |
+| 2 | Save-your-streak account ask (try before signup, saved progress) | Guests keep streak and stats across devices | Result screen: an inline card at the first finish (streak of 1 or more), plus a modal once the streak reaches 2; the button goes to `/signup?callbackUrl=/games/<game>` so the player returns to the game; the game-page link says "Save your streak"; never before the first finish | Guest to account rate, D7 retention | S | none |
 | 3 | Daily reminder at each player's own time and time zone (personalised notification timing) | Gentle return without guilt | The player's saved reminder time is stored but does not schedule the send today: the daily-reminder job sends on its own schedule. Email (opt-in) at the player's time in their zone; browser Web Push through the existing reminder job (VAPID configuration required) | D7 retention | S | none for Puzzled's own email; cloud#9826 for caps across our products |
 | 4 | Streak on the shared card (share cards) | Show the sharer's run on the card and landing, so a friend has something to beat | Share landing, share image, challenge comparison | Landing rate, conversion | S | none |
 | 5 | How-to-play structured data on game pages (programmatic pages) | Rank for "how to play X" from the rules the pages already show | Per-game page markup | Search landings | S | none |
@@ -109,8 +109,9 @@ no countdown, no motion and nothing on other days.
 
 Design notes for the open items:
 
-- **Save-your-streak ask:** after a guest finishes a daily with at least two streak days, the client
-  reads the authoritative streak and offers a free account. Sign-in adopts accepted
+- **Save-your-streak ask:** after a guest finishes a daily, the client reads the authoritative streak
+  and shows an inline card (streak of 1 or more) and, from 2, the modal, each offering a free account.
+  There is one prompt path (`SaveStreakPrompt`); the per-game local-count prompt was removed. Sign-in adopts accepted
   guest sessions through the existing claim path (`gamification`, `identity`).
 - **Reminder time:** invitation copy only, one-tap unsubscribe (`jobs_policy`, `jobs_db`); using the
   player's own setting rather than inferring a median finish hour is enough to start.

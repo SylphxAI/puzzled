@@ -1,9 +1,11 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { FormEvent } from 'react'
 import { useRef, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
+import { safeCallbackPath } from '@/lib/identity/after-sign-up'
 import { type OAuthProvider, useSafeAuth, useSignInForm } from '@/lib/identity/react'
 import {
 	AuthField,
@@ -13,6 +15,7 @@ import {
 	OAuthButtons,
 	PasswordField,
 	passwordProblem,
+	SIGN_IN_MIN_PASSWORD_LENGTH,
 } from '../_components/auth-fields'
 
 type OAuthSignInProvider = NonNullable<
@@ -33,6 +36,9 @@ export function LoginForm({ providers }: LoginFormProps) {
 	// second submit while the first request is in flight.
 	const submittingRef = useRef(false)
 	const { signInWithOAuth } = useSafeAuth()
+	// Back to the page that asked for the sign-in (safe same-origin path only), e.g. the pricing page.
+	const callbackUrl = safeCallbackPath(useSearchParams().get('callbackUrl'))
+	const afterSignInUrl = callbackUrl ?? '/'
 
 	const {
 		form,
@@ -46,15 +52,18 @@ export function LoginForm({ providers }: LoginFormProps) {
 	} = useSignInForm({
 		methods: ['password'],
 		providers,
-		afterSignInUrl: '/',
+		afterSignInUrl,
 		// OAuth goes straight to the provider: no platform hop in between.
 		oauthHandler: async (provider: string) => {
-			await signInWithOAuth?.({ provider: provider as OAuthSignInProvider, redirectUrl: '/' })
+			await signInWithOAuth?.({
+				provider: provider as OAuthSignInProvider,
+				redirectUrl: afterSignInUrl,
+			})
 		},
 	})
 
 	const emailIssue = emailProblem(form.email)
-	const passwordIssue = passwordProblem(form.password)
+	const passwordIssue = passwordProblem(form.password, SIGN_IN_MIN_PASSWORD_LENGTH)
 	const emailError = (attempted || touched.email) && emailIssue ? t(emailIssue) : undefined
 	const passwordError =
 		(attempted || touched.password) && passwordIssue ? t(passwordIssue) : undefined
@@ -133,7 +142,10 @@ export function LoginForm({ providers }: LoginFormProps) {
 
 			<p className="mt-6 text-center text-sm text-muted-foreground">
 				{t('noAccount')}{' '}
-				<Link href="/signup" className="font-semibold text-primary hover:underline">
+				<Link
+					href={callbackUrl ? { pathname: '/signup', query: { callbackUrl } } : '/signup'}
+					className="inline-flex min-h-11 items-center px-1 font-semibold text-primary hover:underline"
+				>
 					{tCommon('signUp')}
 				</Link>
 			</p>

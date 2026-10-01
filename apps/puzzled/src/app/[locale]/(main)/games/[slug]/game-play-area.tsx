@@ -2,7 +2,10 @@ import { getTranslations } from 'next-intl/server'
 import { AdsProvider } from '@/features/ads/components/ad-context'
 import { GameUnlockPanel } from '@/features/catalog/components/game-unlock-panel'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
-import { deriveDifficultyCompletionStatus } from '@/features/daily/lib/difficulty-completion'
+import {
+	deriveDifficultyCompletionStatus,
+	finishedLevelToShow,
+} from '@/features/daily/lib/difficulty-completion'
 import { PlusTrialProvider } from '@/features/plus/components/trial-ends-line'
 import type { GameSlug } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -116,6 +119,39 @@ export async function GamePlayArea({
 			hard: hardStatus.status === 'fulfilled' ? hardStatus.value : null,
 		})
 
+		// Every level finished: show the result, with Share, not a 3/3 checklist.
+		const levelRead = (result: typeof easyStatus) =>
+			result.status === 'fulfilled'
+				? {
+						completedSession: result.value.completedSession,
+						puzzleDate: result.value.puzzle.puzzleDate,
+					}
+				: null
+		const finished = finishedLevelToShow({
+			easy: levelRead(easyStatus),
+			medium: levelRead(mediumStatus),
+			hard: levelRead(hardStatus),
+		})
+		if (finished) {
+			return (
+				<AdsProvider config={ads}>
+					<AlreadyCompletedView
+						gameSlug={slug}
+						gameName={gameName}
+						puzzleDate={finished.puzzleDate}
+						session={{
+							status: finished.session.status,
+							score: finished.session.score,
+							attempts: finished.session.attempts ?? 0,
+							completedAt: finished.session.completedAt,
+						}}
+						locale={locale}
+						difficulty={finished.difficulty}
+						allLevelsFinished
+					/>
+				</AdsProvider>
+			)
+		}
 		return (
 			<DifficultySelectionView
 				gameSlug={slug}

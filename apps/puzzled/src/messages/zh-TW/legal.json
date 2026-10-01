@@ -1,0 +1,24 @@
+{
+	"privacy": {
+		"sections": {
+			"dataCollection": {
+				"items": {
+					"referral": "推薦與廣告標記：如果你透過帶有推廣標記（utm_ 參數或推薦編號，例如來自其他 Sylphx 產品）的連結造訪，並已接受分析 Cookie，我們會把這些標記保存在第一方 Cookie 中 30 天，並在你註冊時與你的帳號一併保存。如果你從 Google 廣告造訪並已開啟廣告 Cookie，我們會在同一 Cookie 中保存廣告點擊編號 90 天，只在你開始訂閱時寫入該訂閱的付款記錄，不會存入你的帳號。我們用它們了解你經由哪個連結或廣告到來，不會販售這些標記。"
+				}
+			},
+			"dataUse": {
+				"items": {
+					"analytics": "透過分析工具、廣告成效衡量與推薦 Cookie 了解大家如何玩 Puzzled、玩家經由哪些連結與廣告到來，以及是否註冊或訂閱：你的同意（分析與廣告是分開的選擇），你可以隨時透過 Cookie 部分的「變更 Cookie 選擇」撤回",
+					"noSale": "我們不會販售你的個人資料。沒有 Puzzled Plus 的玩家可能會在存檔及結果畫面（解謎過程中不會）看到由 Google AdSense 提供的廣告；只有在你開啟廣告 cookie 後，才會顯示廣告並設定廣告 cookie。"
+				}
+			},
+			"cookies": {
+				"content": "我們使用登入、保障 Puzzled 安全與記住你的設定所必需的 Cookie。分析 Cookie 與推薦 Cookie 只會在你接受分析後使用；廣告成效衡量只會在你另外於設定中開啟廣告後使用。所有選項預設不勾選，拒絕不影響你使用。",
+				"google": "如果本網站啟用了 Google Analytics 或 Google Ads，它們只會在你同意後才載入：Google Analytics 用於分析，Google Ads 用於衡量廣告是否帶來註冊或購買，只涉及方案與價格，不含姓名或電子郵件。我們關閉廣告個人化與 Google 訊號，只向 Google 傳送公開頁面網址。你可以隨時按下方按鈕撤回，同時會刪除 Google Cookie。"
+			},
+			"thirdParty": {
+				"googleMeasurement": "分析與廣告成效衡量（僅在你同意後）"
+			}
+		}
+	}
+}

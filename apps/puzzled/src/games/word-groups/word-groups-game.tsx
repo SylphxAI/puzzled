@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration, StarBurst } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
@@ -56,8 +55,6 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		showStarBurst,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
 	} = useGameSession({
 		gameSlug: 'word-groups',
 		mode,
@@ -233,11 +230,6 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	return (
 		<div className="flex w-full max-w-md flex-col items-center gap-4 px-2 sm:gap-5 sm:px-0">
 			{/* Guest Signup Prompt */}
-			<GuestSignupPrompt
-				open={showGuestSignupPrompt}
-				onClose={handleCloseGuestPrompt}
-				streakCount={1}
-			/>
 
 			{/* Celebrations */}
 			<Celebration show={showCelebration} />

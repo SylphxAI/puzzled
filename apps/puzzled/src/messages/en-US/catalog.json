@@ -58,9 +58,8 @@
 	"breadcrumbLabel": "Breadcrumb",
 	"gamePage": {
 		"playCta": "Play today's puzzle",
-		"freeNote": "Today's pick — no account needed.",
 		"guestNote": "No account needed to play.",
-		"guestSignIn": "Sign in to keep your streak.",
+		"guestSignIn": "Save your streak",
 		"howToPlayTitle": "How to play {game}",
 		"tipsTitle": "Tips and strategy for {game}",
 		"faqTitle": "Questions about {game}",

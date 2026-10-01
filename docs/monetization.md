@@ -142,7 +142,15 @@ A landing with campaign tags (`utm_*`, `ref`; Tryit links use
 first-touch for 30 days in the `puzzled_attr` first-party cookie, only after
 analytics consent (declining clears it). Sign-up stores it once in
 `account_attribution`. Checkout passes the account's tags (or, without them,
-the cookie) to Money's checkout-session attribution. No Stripe subscription
+the cookie) to Money's checkout-session attribution. A Google Ads click id
+(`gclid`, `gbraid`, `wbraid`) on a landing is kept in the same cookie for 90
+days, only after *marketing* consent (the SDK `marketing` preference, mirrored
+to `puzzled:consent:marketing`; the banner grants analytics only today, so the
+click id is not stored until a marketing choice is offered). Withdrawing
+marketing consent removes it; declining everything clears the cookie. Checkout
+sends it from the live cookie, never from the account row, as
+`metadata.gclid` (or `gbraid` / `wbraid`) after a `[A-Za-z0-9_-]{1,100}`
+check; Money has no `client_reference_id`. No Stripe subscription
 metadata or local billing table is written. `/daily` redirects to today's
 free game and keeps the query string.
 
@@ -164,6 +172,25 @@ view). Never on a puzzle in play, never on the pricing or account pages, and
 never for a Puzzled Plus subscriber ("no ads" is a Plus perk). The ad loads only
 after the visitor accepts cookies. The site's Content Security Policy allows the
 ad network's hosts only while ads are configured.
+
+### Google Analytics and Ads conversions
+
+Off until `GA_MEASUREMENT_ID` (GA4, `G-...`) or `GOOGLE_ADS_ID` (`AW-...`) is set in
+the web environment; with neither, no Google script, request or CSP host exists.
+The cookie banner has three equal choices: Decline, Settings (separate Analytics and
+Advertising switches, both off) and Accept (analytics only, never advertising). gtag.js is
+injected, and `config` sent, only after a stored choice grants something: GA4 needs
+Analytics, Ads needs Advertising (`ad_storage`, `ad_user_data`); `ad_personalization`
+is always denied and Google signals are off. Basic consent mode: unanswered or declined
+loads nothing. There is no geo signal, so the denied defaults apply everywhere.
+Google sees only the site origin plus public paths (`/`, `/pricing`, `/privacy`, `/terms`,
+`/support`, `/login`, `/signup`), a fixed title and no referrer; game, share and account
+addresses never reach it. Turn **enhanced measurement** and **Google signals** off in the
+GA4 property. Events: `sign_up` (new account only, from Auth's new-account answer),
+`trial_start` (value = the plan's post-trial price in the checkout currency, plan as item id)
+and `purchase` on the checkout return, each once per Money checkout session (`s`); mark them as
+Ads conversions. "Change cookie choice" on the privacy page withdraws consent, deletes
+`_ga*` and `_gcl_*`, and reopens the banner.
 
 ## 7. Metrics (supporting, not the North Star)
 

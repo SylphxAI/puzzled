@@ -35,8 +35,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Some(pool)
             }
             Err(error) => {
-                tracing::warn!(%error, "postgres connect failed — running S0 stub leaderboard");
-                None
+                // A configured store that cannot be reached must not leave a
+                // stub pod in rotation for the life of the process: exit so the
+                // platform restarts it until the database is back.
+                tracing::error!(%error, "postgres connect failed; exiting");
+                std::process::exit(1);
             }
         },
         None => {

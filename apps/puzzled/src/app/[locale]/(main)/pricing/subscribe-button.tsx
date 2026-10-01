@@ -3,6 +3,7 @@
 import { ExternalLink } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { rememberCheckoutQuote } from '@/features/analytics/lib/google-tag'
 import { startCheckout } from '@/lib/connect/billing-client'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
@@ -10,6 +11,8 @@ import { logger } from '@/lib/logger'
 type Props = {
 	planId: string
 	currency: string
+	/** The plan's price in `currency`, minor units: what a trial converts to. */
+	amountMinor: number
 	locale: string
 	signedIn: boolean
 	subscribed: boolean
@@ -17,7 +20,15 @@ type Props = {
 }
 
 /** Starts checkout for one plan once the buyer has consented to immediate supply; guests are sent to sign in first. */
-export function SubscribeButton({ planId, currency, locale, signedIn, subscribed, label }: Props) {
+export function SubscribeButton({
+	planId,
+	currency,
+	amountMinor,
+	locale,
+	signedIn,
+	subscribed,
+	label,
+}: Props) {
 	const t = useTranslations('plus.pricing')
 	const [busy, setBusy] = useState(false)
 	const [error, setError] = useState<string | null>(null)
@@ -45,10 +56,10 @@ export function SubscribeButton({ planId, currency, locale, signedIn, subscribed
 
 	return (
 		<div>
-			<label className="mb-3 flex items-start gap-2 text-sm">
+			<label className="mb-3 flex min-h-11 cursor-pointer items-start gap-3 text-sm">
 				<input
 					type="checkbox"
-					className="mt-1 h-4 w-4"
+					className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
 					checked={consent}
 					onChange={(event) => setConsent(event.target.checked)}
 				/>
@@ -62,6 +73,12 @@ export function SubscribeButton({ planId, currency, locale, signedIn, subscribed
 					setBusy(true)
 					setError(null)
 					try {
+						// What the checkout return reports to Google Ads (kept only with consent).
+						rememberCheckoutQuote({
+							plan: planId,
+							value: amountMinor / 100,
+							currency: currency.toUpperCase(),
+						})
 						window.location.assign(await startCheckout(planId, locale, currency, consent))
 					} catch (err) {
 						logger.error('plus.checkout-failed', { planId, error: err })

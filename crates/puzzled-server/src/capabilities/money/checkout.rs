@@ -61,7 +61,11 @@ pub fn session_body(
     metadata.insert("plan_id".into(), json!(plan_id));
     metadata.insert("immediate_supply_consent".into(), json!("true"));
     if let Some(tags) = attribution {
-        for (key, value) in tags.metadata_pairs() {
+        for (key, value) in tags
+            .metadata_pairs()
+            .into_iter()
+            .chain(tags.click_id_pairs())
+        {
             metadata.insert(key.into(), json!(value));
         }
     }

@@ -5,7 +5,6 @@
 	"copy": "複製",
 	"card": {
 		"title": "Puzzled 成績卡",
-		"share": "分享成績卡",
 		"downloaded": "成績卡已儲存，說明文字已複製到剪貼簿。",
 		"copied": "說明文字已複製；此瀏覽器未能產生圖片。",
 		"unavailable": "此瀏覽器不支援分享功能。",

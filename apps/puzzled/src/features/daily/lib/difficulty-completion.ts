@@ -34,3 +34,20 @@ export function deriveDifficultyCompletionStatus(read: {
 		verified: status.easy !== null && status.medium !== null && status.hard !== null,
 	}
 }
+
+export type FinishedLevel<S> = { difficulty: PuzzleDifficulty; session: S; puzzleDate: string }
+
+/**
+ * When every level of today's daily is finished, the result to show instead of
+ * the level checklist: the hardest level's finish. Null while any level is
+ * open or unverified, or a finish carries no result.
+ */
+export function finishedLevelToShow<S>(read: {
+	easy: { completedSession: S | null; puzzleDate: string } | null
+	medium: { completedSession: S | null; puzzleDate: string } | null
+	hard: { completedSession: S | null; puzzleDate: string } | null
+}): FinishedLevel<S> | null {
+	const { easy, medium, hard } = read
+	if (!easy?.completedSession || !medium?.completedSession || !hard?.completedSession) return null
+	return { difficulty: 'hard', session: hard.completedSession, puzzleDate: hard.puzzleDate }
+}
