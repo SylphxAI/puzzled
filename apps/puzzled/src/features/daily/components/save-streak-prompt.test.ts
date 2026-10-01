@@ -27,3 +27,14 @@ describe('the first-finish card', () => {
 		expect(signupHref()).toEqual({ pathname: '/signup' })
 	})
 })
+
+describe('first-finish and sign-up copy', () => {
+	test('the guest ask and the sign-up card carry their reassurance lines in en-US', async () => {
+		const onboarding = (await import('@/messages/en-US/onboarding.json')).default
+		const auth = (await import('@/messages/en-US/auth.json')).default
+		const home = (await import('@/messages/en-US/home.json')).default
+		expect(onboarding.saveStreakNote.length).toBeGreaterThan(0)
+		expect(auth.signupBenefitSaved.length).toBeGreaterThan(0)
+		expect(home.day.guestNote.length).toBeGreaterThan(0)
+	})
+})

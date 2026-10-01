@@ -1,6 +1,6 @@
 'use client'
 
-import { MailCheck } from 'lucide-react'
+import { Check, MailCheck } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { FormEvent } from 'react'
@@ -117,6 +117,17 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		<div className="surface-card p-5 sm:p-7">
 			<h1 className="font-display text-2xl">{t('createAccount')}</h1>
 			<p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{t('joinToContinue')}</p>
+			{/* The desktop brand panel makes a different pitch (free, no account, midnight); on a phone the card is the whole page, so the sign-up reasons live here. */}
+			<ul className="mt-3 space-y-1.5 text-sm lg:hidden">
+				{(['signupBenefitSaved', 'signupBenefitDevices', 'signupBenefitFree'] as const).map(
+					(key) => (
+						<li key={key} className="flex items-center gap-2">
+							<Check className="h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+							{t(key)}
+						</li>
+					),
+				)}
+			</ul>
 
 			<div className="mt-6">
 				<OAuthButtons

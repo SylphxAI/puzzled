@@ -140,6 +140,7 @@ export async function HomeDay({
 							numberLabel={t('day.puzzleNumber', { number: puzzleNumber })}
 							label={t('day.freeToday')}
 							cta={allDone ? t('day.playAgain') : t('day.playToday', { game: freeGame.name })}
+							note={isMember ? undefined : t('day.guestNote')}
 						/>
 						<div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground lg:hidden">
 							<DayFacts
@@ -217,11 +218,14 @@ function FeaturedCard({
 	numberLabel,
 	label,
 	cta,
+	note,
 }: {
 	game: HomeDayGame
 	numberLabel: string
 	label: string
 	cta: string
+	/** Reassurance under the action, shown to first-time visitors only. */
+	note?: string
 }) {
 	const colors = getGameColors(game.theme)
 	return (
@@ -260,6 +264,7 @@ function FeaturedCard({
 				>
 					{cta}
 				</Link>
+				{note ? <p className="mt-3 text-center text-sm text-muted-foreground">{note}</p> : null}
 			</div>
 		</div>
 	)
