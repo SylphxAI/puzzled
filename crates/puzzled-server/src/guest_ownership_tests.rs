@@ -719,10 +719,11 @@ async fn four_concurrent_submits_with_two_connections_do_not_hold_pool_during_co
         .await
         .unwrap();
     let day = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
-    let slug = puzzled_core::puzzle_play::game_slugs::todays_free_game(day);
-    crate::capabilities::daily_pipeline::resolve(Some(&pool), slug, day, None)
+    let slug = "word-guess";
+    let puzzle = crate::capabilities::daily_pipeline::resolve(Some(&pool), slug, day, None)
         .await
         .unwrap();
+    let submission = json!({"guesses": [puzzle.solution["word"]]}).to_string();
     let cookie = guest_credentials::mint_cookie(None).unwrap();
     let pair = cookie.split(';').next().unwrap().to_string();
     let app = router(AppState::new(Some(pool.clone())));
@@ -730,8 +731,9 @@ async fn four_concurrent_submits_with_two_connections_do_not_hold_pool_during_co
     for _ in 0..4 {
         let app = app.clone();
         let cookie = pair.clone();
+        let submission = submission.clone();
         tasks.push(tokio::spawn(async move {
-            let body = json!({"gameSlug":slug,"status":"won","attempts":1,"submissionJson":"{}"});
+            let body = json!({"gameSlug":slug,"status":"won","attempts":1,"submissionJson":submission});
             let response = app
                 .oneshot(
                     Request::builder()
@@ -744,7 +746,7 @@ async fn four_concurrent_submits_with_two_connections_do_not_hold_pool_during_co
                 )
                 .await
                 .unwrap();
-            assert_eq!(response.status(), StatusCode::OK);
+            assert!(matches!(response.status(), StatusCode::OK | StatusCode::CONFLICT));
         }));
     }
     tokio::time::timeout(std::time::Duration::from_secs(8), async {
@@ -765,6 +767,9 @@ async fn four_concurrent_submits_with_two_connections_do_not_hold_pool_during_co
         .unwrap()
         .unwrap();
     assert_eq!(guest.get_version_num(), 7);
+    let sessions: i64 = sqlx::query_scalar("SELECT count(*) FROM game_sessions")
+        .fetch_one(&pool).await.unwrap();
+    assert_eq!(sessions, 1);
     pool.close().await;
     admin_pool.close().await;
 }
@@ -776,13 +781,14 @@ async fn fifty_parallel_first_write_pairs_keep_one_winning_namespace_each() {
         return;
     };
     let day = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
-    let slug = puzzled_core::puzzle_play::game_slugs::todays_free_game(day);
-    crate::capabilities::daily_pipeline::resolve(Some(&pool), slug, day, None)
+    let slug = "word-guess";
+    let puzzle = crate::capabilities::daily_pipeline::resolve(Some(&pool), slug, day, None)
         .await
         .unwrap();
+    let submission = json!({"guesses": [puzzle.solution["word"]]}).to_string();
     let app = router(AppState::new(Some(pool.clone())));
-    async fn submit(app: axum::Router, cookie: String, slug: &'static str) {
-        let body = json!({"gameSlug":slug,"status":"won","attempts":1,"submissionJson":"{}"});
+    async fn submit(app: axum::Router, cookie: String, slug: &'static str, submission: String) {
+        let body = json!({"gameSlug":slug,"status":"won","attempts":1,"submissionJson":submission});
         let response = app
             .oneshot(
                 Request::builder()
@@ -795,13 +801,13 @@ async fn fifty_parallel_first_write_pairs_keep_one_winning_namespace_each() {
             )
             .await
             .unwrap();
-        assert_eq!(response.status(), StatusCode::OK);
+        assert!(matches!(response.status(), StatusCode::OK | StatusCode::CONFLICT));
     }
     for iteration in 0..50 {
         let cookie = guest_credentials::mint_cookie(None).unwrap();
         let pair = cookie.split(';').next().unwrap().to_string();
-        let first = tokio::spawn(submit(app.clone(), pair.clone(), slug));
-        let second = tokio::spawn(submit(app.clone(), pair.clone(), slug));
+        let first = tokio::spawn(submit(app.clone(), pair.clone(), slug, submission.clone()));
+        let second = tokio::spawn(submit(app.clone(), pair.clone(), slug, submission.clone()));
         tokio::time::timeout(std::time::Duration::from_secs(8), async {
             first.await.unwrap();
             second.await.unwrap();
@@ -822,6 +828,9 @@ async fn fifty_parallel_first_write_pairs_keep_one_winning_namespace_each() {
         .await
         .unwrap();
     assert_eq!(count, 50);
+    let sessions: i64 = sqlx::query_scalar("SELECT count(*) FROM game_sessions")
+        .fetch_one(&pool).await.unwrap();
+    assert_eq!(sessions, 50);
     pool.close().await;
 }
 
@@ -1021,5 +1030,85 @@ async fn raced_adoption_and_erasure_preserve_only_unclaimed_guest_or_erase_linke
                 .unwrap();
         assert_eq!(linked, 0);
     }
+    pool.close().await;
+}
+
+async fn puzzle_request(app: &axum::Router, method: &str, cookie: &str, bearer: Option<&str>, body: Value) -> (StatusCode, Value) {
+    let mut request = Request::builder().method("POST")
+        .uri(format!("/puzzled.v1.PuzzleService/{method}"))
+        .header("content-type", "application/json").header("cookie", cookie);
+    if let Some(bearer) = bearer {
+        request = request.header("authorization", format!("Bearer {bearer}"));
+    }
+    let response = app.clone().oneshot(request.body(Body::from(body.to_string())).unwrap()).await.unwrap();
+    let status = response.status();
+    let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    (status, serde_json::from_slice(&bytes).unwrap())
+}
+
+#[tokio::test]
+async fn unregistered_guess_budget_uses_hash_without_allocating_player() {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    let Some(pool) = fresh_database().await else { return; };
+    let day = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
+    crate::capabilities::daily_pipeline::resolve(Some(&pool), "word-guess", day, None).await.unwrap();
+    let cookie = guest_credentials::mint_cookie(None).unwrap();
+    let pair = cookie.split(';').next().unwrap();
+    let app = router(AppState::new(Some(pool.clone())));
+    for attempt in 0..7 {
+        let (status, _) = puzzle_request(&app, "CheckGuess", pair, None,
+            json!({"gameSlug":"word-guess","guessJson":"{\"word\":\"crane\"}"})).await;
+        assert_eq!(status, if attempt < 6 { StatusCode::OK } else { StatusCode::TOO_MANY_REQUESTS });
+    }
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials").fetch_one(&pool).await.unwrap();
+    assert_eq!(count, 0);
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn invalid_submit_rolls_back_allocation_and_adoption_until_valid_finish() {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    let Some(pool) = fresh_database().await else { return; };
+    let day = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
+    let puzzle = crate::capabilities::daily_pipeline::resolve(Some(&pool), "word-guess", day, None).await.unwrap();
+    let valid = json!({"gameSlug":"word-guess","status":"won","attempts":1,
+        "submissionJson":json!({"guesses":[puzzle.solution["word"]]}).to_string()});
+    let invalid = json!({"gameSlug":"word-guess","status":"won","attempts":1,"submissionJson":"{}"});
+    let app = router(AppState::new(Some(pool.clone())));
+    let cookie = guest_credentials::mint_cookie(None).unwrap();
+    let pair = cookie.split(';').next().unwrap();
+    let (status, body) = puzzle_request(&app, "SubmitGuess", pair, None, invalid.clone()).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["valid"], false);
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials").fetch_one(&pool).await.unwrap();
+    assert_eq!(count, 0);
+    let (status, body) = puzzle_request(&app, "SubmitGuess", pair, None, valid.clone()).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["valid"], true);
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials").fetch_one(&pool).await.unwrap();
+    assert_eq!(count, 1);
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM game_sessions").fetch_one(&pool).await.unwrap();
+    assert_eq!(count, 1);
+
+    let cookie = guest_credentials::issue(&pool).await.unwrap();
+    let pair = cookie.split(';').next().unwrap();
+    let hash = guest_credentials::token_hash(pair.split_once('=').unwrap().1).unwrap();
+    let guest = guest_credentials::lookup_hash(&pool, &hash).await.unwrap().unwrap();
+    let account = Uuid::now_v7();
+    sqlx::query("INSERT INTO auth_subjects(subject,user_id) VALUES($1,$2)")
+        .bind(format!("principal-{account}")).bind(account).execute(&pool).await.unwrap();
+    sqlx::query("INSERT INTO game_sessions(user_id,game_slug,status,attempts,mode,is_ritual,day_key) VALUES($1,'word-guess','won',1,'daily',true,'2026-09-01')")
+        .bind(guest).execute(&pool).await.unwrap();
+    let bearer = token(&account.to_string());
+    let (_, body) = puzzle_request(&app, "SubmitGuess", pair, Some(&bearer), invalid).await;
+    assert_eq!(body["valid"], false);
+    let live: bool = sqlx::query_scalar("SELECT revoked_at IS NULL AND adopted_user_id IS NULL FROM guest_credentials WHERE token_hash=$1")
+        .bind(&hash).fetch_one(&pool).await.unwrap();
+    assert!(live);
+    let (_, body) = puzzle_request(&app, "SubmitGuess", pair, Some(&bearer), valid).await;
+    assert_eq!(body["valid"], true);
+    let adopted: Option<Uuid> = sqlx::query_scalar("SELECT adopted_user_id FROM guest_credentials WHERE token_hash=$1")
+        .bind(&hash).fetch_one(&pool).await.unwrap();
+    assert_eq!(adopted, Some(account));
     pool.close().await;
 }

@@ -585,7 +585,7 @@ impl PuzzleService for PuzzleConnectService {
         let verdict = validate_submission(game_slug, &puzzle_data, &solution, &envelope);
 
         if !verdict.valid {
-            access.commit().await?;
+            // Dropping access rolls back any first-write allocation or adoption.
             return Response::ok(SubmitGuessResponse {
                 valid: false,
                 status: String::new(),
@@ -697,10 +697,14 @@ impl PuzzleService for PuzzleConnectService {
         let Some(solution) = puzzle else {
             return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
         };
-        let access = self.adopt_guest_progress_if_needed(&ctx, true).await?;
+        let access = self.adopt_guest_progress_if_needed(&ctx, false).await?;
         let uid = access
             .primary()
             .map(|identity| identity.user_id.clone())
+            .or_else(|| {
+                crate::bootstrap::identity::guest_credential_hash(&ctx)
+                    .map(|hash| format!("tok:{hash}"))
+            })
             .ok_or_else(|| {
                 ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
             })?;

@@ -339,6 +339,25 @@ mod tests {
     }
 
     #[test]
+    fn delegated_identity_cannot_purchase_and_a_normal_one_can() {
+        let mut identity = VerifiedIdentity {
+            user_id: "f715210b-9df3-4945-b5bd-94fc4609bc30".to_string(),
+            display_name: None,
+            email: None,
+            is_admin: false,
+            actor: None,
+        };
+        assert!(require_purchase_allowed(&identity).is_ok());
+        identity.actor = Some("agent_1".to_string());
+        let denied = require_purchase_allowed(&identity).unwrap_err();
+        assert_eq!(denied.code, ErrorCode::PermissionDenied);
+        assert_eq!(
+            denied.message.as_deref(),
+            Some("purchases by delegated agents are not available yet")
+        );
+    }
+
+    #[test]
     fn invalid_guest_rejected() {
         let mut headers = HeaderMap::new();
         headers.insert(GUEST_ID_HEADER, "not-a-uuid".parse().unwrap());

@@ -1014,7 +1014,7 @@ export type NewAppSetting = typeof appSettings.$inferInsert
 export const guestCredentials = pgTable(
 	'guest_credentials',
 	{
-		tokenHash: text('token_hash').primaryKey(),
+		tokenHash: text('token_hash').primaryKey(), // identifiers: allow credential digest lookup key, not an entity id
 		userId: uuid('user_id').notNull().unique('guest_credentials_user_id_key'),
 		adoptedUserId: uuid('adopted_user_id'),
 		revokedAt: timestamp('revoked_at'),
