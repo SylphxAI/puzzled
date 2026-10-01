@@ -485,3 +485,58 @@ async fn unconfirmed_auth_absence_or_authority_keeps_product_rows() {
         assert_eq!(subject_rows(&pool, player).await, 1);
     }
 }
+
+#[tokio::test]
+async fn a_real_wrong_route_html_404_preserves_preferences_subjects_and_consent() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    // No privacy route exists here. This is an actual HTTP HTML fallback,
+    // not JSON encoded text, and cannot assert any account's absence.
+    let wrong_route = Router::new().fallback(|| async {
+        (
+            StatusCode::NOT_FOUND,
+            axum::response::Html("<html>route not found</html>"),
+        )
+    });
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    let server = tokio::spawn(async move { axum::serve(listener, wrong_route).await.unwrap() });
+    let player = Uuid::now_v7();
+    seed(&pool, player, &["subject-fixture"]).await;
+    crate::capabilities::money::consent_db::record(
+        &pool,
+        &player.to_string(),
+        "plus",
+        "fixture-price",
+        "en-US",
+    )
+    .await
+    .unwrap();
+    let before: Value =
+        sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c WHERE user_id=$1")
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    let (status, body) = delete_account(
+        &app(&pool, Some(format!("http://{addr}"))),
+        &token(&player.to_string()),
+    )
+    .await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    assert_diagnostic(&body, "auth_delete_failed");
+    assert_eq!(preference_rows(&pool, player).await, 1);
+    assert_eq!(subject_rows(&pool, player).await, 1);
+    let after: Value =
+        sqlx::query_scalar("SELECT to_jsonb(c) FROM checkout_consents c WHERE user_id=$1")
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(before, after);
+    server.abort();
+}
