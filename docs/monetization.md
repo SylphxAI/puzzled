@@ -95,10 +95,15 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 - An account with a subscription that still renews cannot be erased until it
   is cancelled. Money retains legally required financial records under its own retention
   policy; Puzzled has no subscription or payment-ledger rows to retain.
-- Erasure also deletes the player's Sylphx Auth sign-in, through Auth's
-  privacy-request API, for every subject that names the player. A refused
-  Auth deletion erases nothing: the account stays whole and the request can
-  be repeated.
+- Account erasure is a durable request, not an immediate-completion claim.
+  Acceptance records the player's exact Auth subjects and a stable operation
+  reference, and fences subsequent local writes. Retrying returns that same
+  operation. No Auth effect is permitted before Money's owned preparation
+  confirms outstanding hosted checkouts cannot charge the erased account;
+  an unavailable preparation leaves the request pending and local data intact.
+  Auth's privacy-request receipts must confirm completion for every subject
+  before the local erasure transaction can run. The draft implementation
+  currently refuses preparation until that real Money contract is available.
 - Checkout consent evidence is retained without a player link for six calendar
   years after local erasure/closure, calculated in UTC. This is company claims
   policy, not a universal statutory mandate. The unlink and expiry assignment
