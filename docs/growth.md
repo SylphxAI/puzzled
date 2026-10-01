@@ -97,8 +97,15 @@ should move.
 | 4 | Streak on the shared card (share cards) | Show the sharer's run on the card and landing, so a friend has something to beat | Share landing, share image, challenge comparison | Landing rate, conversion | S | none |
 | 5 | How-to-play structured data on game pages (programmatic pages) | Rank for "how to play X" from the rules the pages already show | Per-game page markup | Search landings | S | none |
 | 6 | Friends' results for today (friends leaderboard) | Compare with people you know, no public shame board | Result screen, opt-in | Share and return rates | M | cloud#9830 |
-| 7 | Seasonal themes and holiday puzzles | Fresh reasons to share on festival days | Home and result card on the day | Share rate | S | cloud#9828 (calendar); a hand-set list works until then |
+| 7 | Seasonal themes (shipped; holiday puzzles are not built) | Fresh reasons to share on festival days | Home banner, result card and share caption on the day | Share rate | S | none; the hand-set list in `apps/puzzled/src/features/seasons/lib/seasons.ts` stands in for cloud#9828 (calendar) and is replaced when it exists |
 | 8 | Own-product promotion at session end (cross-promotion) | Point finished players to our other products | Already-played view, at most one card a day | Cross-product signups | S | cloud#9826 |
+
+Seasonal themes: one typed list of days keyed to the product day (Asia/Hong_Kong), each with an id,
+inclusive day ranges for 2026-2027, an accent from the game colour themes and a glyph; the greeting
+is `home.seasons.<id>` in every locale. Adding a season is one list entry plus its greeting. On a
+seasonal day only presentation changes: a banner on home, and a greeting pill on the result card and
+a greeting line in the share caption. Puzzles, answers, scoring and streaks are untouched; there is
+no countdown, no motion and nothing on other days.
 
 Design notes for the open items:
 

@@ -88,5 +88,14 @@
 		"browseAll": "瀏覽所有遊戲",
 		"finishersToday": "今日已有 {count} 人完成",
 		"freeToday": "今日免費"
+	},
+	"seasons": {
+		"newYear": "新年快樂",
+		"lunarNewYear": "新年快樂，恭喜發財",
+		"easter": "復活節快樂",
+		"dragonBoat": "端午節快樂",
+		"midAutumn": "中秋節快樂",
+		"halloween": "萬聖節快樂",
+		"christmas": "聖誕快樂"
 	}
 }

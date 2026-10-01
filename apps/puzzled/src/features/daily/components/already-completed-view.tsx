@@ -8,6 +8,7 @@ import { AdSlot } from '@/features/ads/components/ad-slot'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useWarmShareId } from '@/features/daily/hooks/use-share-id'
 import { buildResultCard, resultCardStringsFrom } from '@/features/daily/lib/result-card'
+import { seasonGreeting } from '@/features/seasons/lib/seasons'
 import { getHowToPlayConfig } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
@@ -79,6 +80,7 @@ export function AlreadyCompletedView({
 	const tCommon = useTranslations('common')
 	const tResult = useTranslations('gameResult')
 	const tShareCard = useTranslations('share.card')
+	const tHome = useTranslations('home')
 	const tDifficulty = useTranslations('common.difficulty')
 	const [showToast, setShowToast] = useState(false)
 	const [animate, setAnimate] = useState(false)
@@ -234,7 +236,10 @@ export function AlreadyCompletedView({
 					attempts: session.attempts > 0 ? session.attempts : null,
 					score: session.score,
 				})}
-				strings={resultCardStringsFrom((key) => tShareCard.raw(key) as string)}
+				strings={resultCardStringsFrom(
+					(key) => tShareCard.raw(key) as string,
+					seasonGreeting(tHome, puzzleDate),
+				)}
 				gameName={gameName}
 			/>
 
