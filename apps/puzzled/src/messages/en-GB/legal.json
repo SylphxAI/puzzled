@@ -10,12 +10,8 @@
 			},
 			"security": {
 				"content": "We protect personal data with appropriate technical and organisational measures, but no service is completely secure. If a personal data breach occurs, we notify the Information Commissioner's Office where the law requires, and we tell you directly where the breach is likely to result in a high risk to your rights and freedoms."
-			},
-			"retention": {
-				"content": "We keep your account and game data while your account is open. When you delete your account, we erase your game history, stats, streaks, profile and settings. We keep other data only for as long as we need it for the purposes above, including to meet legal obligations, prevent fraud and abuse, and establish or defend legal claims. Backups and logs are overwritten in the normal course of operation. After local account erasure or closure, we keep only unlinked checkout consent evidence (the statement, plan, price key, language, consent time, record ID and expiry) for six calendar years, calculated in UTC. This is our policy for establishing or defending claims, not a universal legal requirement. It contains no player ID or payment reference. We remove expired evidence in the first successful scheduled retention run after expiry, not necessarily at the exact expiry second."
 			}
-		},
-		"revision": "2026-10-01"
+		}
 	},
 	"terms": {
 		"lead": "These terms set out the rules that apply when you use Puzzled, including accounts, subscriptions and conduct.",

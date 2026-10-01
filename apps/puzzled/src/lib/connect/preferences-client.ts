@@ -132,11 +132,25 @@ export async function updateEmailPreferences(
 	return res.preferences
 }
 
-/** Erase every row keyed to the signed-in player. Returns the rows deleted. */
-export async function deleteAccountData(client?: PreferencesServiceClient): Promise<bigint> {
+/** Acceptance is not completion; expose the durable operation and state. */
+export async function deleteAccountData(client?: PreferencesServiceClient): Promise<{
+	requestId: string
+	state: string
+	rowsDeleted: bigint
+}> {
 	const c = client ?? createPreferencesServiceClient()
 	const res = await c.deleteAccountData(
 		create(DeleteAccountDataRequestSchema, { confirm: 'DELETE' }),
 	)
-	return res.rowsDeleted
+	if (
+		!res.requestId ||
+		!['pending', 'auth_pending', 'local_erased', 'completed'].includes(res.state)
+	) {
+		throw new Error('invalid_erasure_receipt')
+	}
+	return {
+		requestId: res.requestId,
+		state: res.state,
+		rowsDeleted: res.rowsDeleted,
+	}
 }

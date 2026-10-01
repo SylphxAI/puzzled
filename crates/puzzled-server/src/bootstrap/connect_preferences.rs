@@ -9,8 +9,7 @@ use uuid::Uuid;
 
 use super::identity::require_identity;
 use super::state::AppState;
-use crate::capabilities::identity_access::adapters::auth_subjects;
-use crate::capabilities::preferences::adapters::account_deletion::delete_account_data;
+use crate::capabilities::identity_access::erasure;
 use crate::capabilities::preferences::adapters::preferences_db::{
     fetch_notification_preferences, fetch_user_preferences, is_reminder_time, timezone_is_known,
     upsert_notification_preferences, upsert_user_preferences, username_taken,
@@ -83,6 +82,31 @@ impl ErasureFailure {
             code,
             format!("{message} reason={stage} request_ref={correlation}"),
         )
+    }
+}
+
+fn durable_erasure_error(failure: erasure::Failure, correlation: Uuid) -> ConnectError {
+    use erasure::Failure;
+    match failure {
+        Failure::DatabaseUnavailable => ErasureFailure::DatabaseUnavailable.error(correlation),
+        Failure::MoneyUnavailable => ErasureFailure::MoneyUnavailable.error(correlation),
+        Failure::ErasureUnconfigured => ErasureFailure::ErasureUnconfigured.error(correlation),
+        Failure::SubjectLookupFailed => ErasureFailure::SubjectLookupFailed.error(correlation),
+        Failure::AuthDeleteFailed => ErasureFailure::AuthDeleteFailed.error(correlation),
+        Failure::ProductDeleteFailed => ErasureFailure::ProductDeleteFailed.error(correlation),
+        other => {
+            let stage = other.stage();
+            tracing::warn!(stage, %correlation, "account erasure deferred");
+            let code = if other == Failure::CancelSubscriptionFirst {
+                ErrorCode::FailedPrecondition
+            } else {
+                ErrorCode::Unavailable
+            };
+            ConnectError::new(
+                code,
+                format!("account_deletion_unavailable reason={stage} request_ref={correlation}"),
+            )
+        }
     }
 }
 
@@ -547,67 +571,22 @@ impl PreferencesService for PreferencesConnectService {
         let Some(pool) = &self.state.pool else {
             return Err(ErasureFailure::DatabaseUnavailable.error(correlation));
         };
-        // A subscription held in Money renews too: same rule. Money that
-        // cannot answer refuses erasure (retryable) rather than erasing a
-        // paying account.
-        if let Some(money) = &self.state.money {
-            match money.has_renewing_subscription(&identity.user_id).await {
-                Ok(true) => {
-                    return Err(ConnectError::new(
-                        ErrorCode::FailedPrecondition,
-                        "cancel_subscription_first",
-                    ))
-                }
-                Ok(false) => {}
-                Err(_) => {
-                    return Err(ErasureFailure::MoneyUnavailable.error(correlation));
-                }
-            }
-        }
-        // The player's rows are only half the person: the Sylphx Auth subject
-        // is the sign-in they came in with, so deleting the rows alone would
-        // leave a live sign-in behind a purged account (an erasure that is not
-        // an erasure). Auth's deletion is filed first — it suspends the
-        // subject and ends its sessions at once — because the subject map
-        // rows are themselves deleted below, and a failure after that would
-        // leave no name to give Auth: this order means a refused erasure
-        // leaves every row intact and the retry repeats the same Auth request
-        // (fixed idempotency key) rather than filing a second.
-        let erasure = self
-            .state
-            .erasure
-            .as_ref()
-            .ok_or_else(|| ErasureFailure::ErasureUnconfigured.error(correlation))?;
         let player = Uuid::parse_str(&identity.user_id)
             .map_err(|_| ErasureFailure::InvalidPlayer.error(correlation))?;
-        let subjects = auth_subjects::subjects_naming_player(pool, player)
-            .await
-            .map_err(|_| ErasureFailure::SubjectLookupFailed.error(correlation))?;
-        for subject in &subjects {
-            match erasure.delete_principal(subject).await {
-                Ok(Some(_)) => tracing::info!(
-                    stage = "auth_delete_accepted", %correlation, "account erasure progressed"
-                ),
-                // Auth holds no such account (already deleted, or never
-                // created): the person has nothing left to sign in with.
-                Ok(None) => {
-                    tracing::info!(stage = "auth_subject_absent", %correlation, "account erasure progressed")
-                }
-                Err(_) => {
-                    return Err(ErasureFailure::AuthDeleteFailed.error(correlation));
-                }
-            }
-        }
-        match delete_account_data(pool, &identity.user_id).await {
-            Ok(rows_deleted) => {
-                tracing::info!(stage = "product_delete_completed", %correlation, "account erasure completed");
-                Response::ok(DeleteAccountDataResponse {
-                    rows_deleted,
-                    ..Default::default()
-                })
-            }
-            Err(_) => Err(ErasureFailure::ProductDeleteFailed.error(correlation)),
-        }
+        let status = erasure::request(
+            pool,
+            self.state.erasure.as_ref(),
+            self.state.money.as_ref(),
+            player,
+        )
+        .await
+        .map_err(|failure| durable_erasure_error(failure, correlation))?;
+        Response::ok(DeleteAccountDataResponse {
+            rows_deleted: status.rows_deleted,
+            request_id: status.request_id.to_string(),
+            state: status.state,
+            ..Default::default()
+        })
     }
 
     async fn record_signup_attribution(

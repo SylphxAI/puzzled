@@ -94,8 +94,25 @@ pub async fn tryit_conversions_tick(State(state): State<AppState>, headers: Head
     if let Err(reject) = state.ticks.admit(&headers, TRYIT_CONVERSIONS_PATH).await {
         return reject.response().into_response();
     }
-    let (Some(pool), Some(reporter)) = (&state.pool, &state.tryit) else {
+    let Some(pool) = &state.pool else {
         // No database, or no SYLPHX_API_KEY: nothing can be sent yet.
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({"error": "not_configured"})),
+        )
+            .into_response();
+    };
+    // The signed admission and pool are sufficient for the independent owned
+    // erasure sweep. A missing/failing Tryit reporter must not starve retries.
+    let erasure_result =
+        crate::capabilities::identity_access::erasure::sweep(pool, state.erasure.as_ref()).await;
+    if let Err(failure) = erasure_result {
+        tracing::warn!(
+            stage = failure.stage(),
+            "account erasure retry sweep failed"
+        );
+    }
+    let Some(reporter) = &state.tryit else {
         return (
             StatusCode::SERVICE_UNAVAILABLE,
             Json(json!({"error": "not_configured"})),

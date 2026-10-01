@@ -32,6 +32,7 @@ export function AccountSettingsContent() {
 	const [confirmingDelete, setConfirmingDelete] = useState(false)
 	const [deleting, setDeleting] = useState(false)
 	const [deleteFailed, setDeleteFailed] = useState(false)
+	const [pendingRequest, setPendingRequest] = useState<string | null>(null)
 
 	const displayName = user?.name?.trim() || t('playerCard.nameFallback')
 
@@ -49,9 +50,15 @@ export function AccountSettingsContent() {
 		setDeleting(true)
 		setDeleteFailed(false)
 		try {
-			await deleteAccountData()
-			await signOut()
-			window.location.href = '/'
+			const receipt = await deleteAccountData()
+			if (receipt.state === 'completed') {
+				await signOut()
+				window.location.href = '/'
+			} else {
+				setPendingRequest(receipt.requestId)
+				setConfirmingDelete(false)
+				setDeleting(false)
+			}
 		} catch {
 			setDeleteFailed(true)
 			setDeleting(false)
@@ -147,6 +154,11 @@ export function AccountSettingsContent() {
 						<Trash2 className="h-4 w-4" aria-hidden="true" />
 						{deleting ? t('account.deleting') : t('account.deleteCta')}
 					</Button>
+					{pendingRequest ? (
+						<output className="mt-3 block text-sm text-muted-foreground">
+							{t('account.deletePending', { requestId: pendingRequest })}
+						</output>
+					) : null}
 					{deleteFailed ? (
 						<p role="alert" className="mt-3 text-sm text-destructive">
 							{t('account.deleteFailed')}

@@ -121,7 +121,13 @@ pub async fn request(
             state,
             rows_deleted: evidence
                 .as_object()
-                .map(|counts| counts.values().filter_map(serde_json::Value::as_u64).sum())
+                .map(|counts| {
+                    counts
+                        .iter()
+                        .filter(|(key, _)| key.starts_with("deleted:"))
+                        .filter_map(|(_, value)| value.as_u64())
+                        .sum()
+                })
                 .unwrap_or(0),
         });
     }

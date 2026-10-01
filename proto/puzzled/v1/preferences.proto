@@ -97,12 +97,17 @@ message UnsubscribeEmailRequest {
 }
 message UnsubscribeEmailResponse {}
 
-// Erase every row keyed to the signed-in player. `confirm` must be "DELETE".
+// Request durable erasure of the signed-in player. `confirm` must be "DELETE".
 message DeleteAccountDataRequest {
   string confirm = 1;
 }
 message DeleteAccountDataResponse {
+  // Deleted rows only, not retained rows whose player links were removed.
   uint64 rows_deleted = 1;
+  // Stable operation ID: an accepted request is not erasure completion.
+  string request_id = 2;
+  // pending, auth_pending, local_erased, or completed.
+  string state = 3;
 }
 
 // Record the first-touch campaign tags (the `puzzled_attr` cookie on this

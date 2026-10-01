@@ -427,9 +427,10 @@
 		"deleting": "正在刪除…",
 		"deleteFailed": "資料未有刪除。請再試一次，或聯絡支援。",
 		"deleteConfirmTitle": "刪除你所有 Puzzled 資料？",
-		"deleteConfirmDescription": "你的紀錄、統計、連續紀錄和設定會即時清除，無法復原。你會被登出。",
+		"deleteConfirmDescription": "我們會建立可持續重試的清除要求。完成可能需要時間；確認完成前，我們不會聲稱資料已刪除。",
 		"deleteConfirmCta": "全部刪除",
-		"deleteCancel": "保留我的資料"
+		"deleteCancel": "保留我的資料",
+		"deletePending": "刪除要求已接收，但清除尚未完成。要求編號：{requestId}。你可重試以查看同一要求。"
 	},
 	"connectedAccounts": {
 		"title": "已連結的帳戶",

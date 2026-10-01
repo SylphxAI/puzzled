@@ -1,10 +1,6 @@
-//! Account erasure end to end: deleting an account in the app must also
-//! delete the player's Sylphx Auth sign-in.
-//!
-//! The product's rows and the Auth subject are two halves of one person, so
-//! `DeleteAccountData` files Auth's privacy delete for every subject that
-//! names the player before it deletes the rows, and refuses to report success
-//! when Auth refuses. Needs `PUZZLED_TEST_DATABASE_URL` (a server where a
+//! Durable account-erasure acceptance, suppression, and ownership proofs.
+//! Acceptance preserves rows and never calls Auth before Money preparation.
+//! Adapter proofs keep malformed receipts distinct from authoritative absence. Needs `PUZZLED_TEST_DATABASE_URL` (a server where a
 //! throwaway database can be created); CI sets it and
 //! `PUZZLED_REQUIRE_DB_TESTS=1`, so a missing database fails there instead of
 //! skipping.
@@ -61,16 +57,6 @@ impl StubAuth {
             .unwrap()
             .iter()
             .filter_map(|request| request["body"]["principal_id"].as_str().map(str::to_string))
-            .collect()
-    }
-
-    /// The secret key each request carried.
-    fn authorizations(&self) -> Vec<String> {
-        self.seen
-            .lock()
-            .unwrap()
-            .iter()
-            .filter_map(|request| request["authorization"].as_str().map(str::to_string))
             .collect()
     }
 }
@@ -182,7 +168,7 @@ fn assert_diagnostic(body: &Value, expected_reason: &str) {
 }
 
 #[tokio::test]
-async fn every_subject_naming_the_player_loses_its_sign_in_with_the_rows() {
+async fn accepted_erasure_persists_owned_snapshot_without_auth_effects() {
     let _key = test_key_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -191,44 +177,58 @@ async fn every_subject_naming_the_player_loses_its_sign_in_with_the_rows() {
     };
     let stub = StubAuth::accepting();
     let base = spawn_auth(stub.clone()).await;
-
-    // The player is mid-migration: Auth still reports the old form as the
-    // legacy subject while the new form is the one published.
     let player = Uuid::now_v7();
-    seed(
-        &pool,
-        player,
-        &[
-            "usr_01kmp4wyhhfgxsyrjvh8e0tkkf",
-            &format!("principal-{player}"),
-        ],
-    )
-    .await;
-
-    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
+    let names = ["subject-fixture".to_string(), format!("principal-{player}")];
+    seed(&pool, player, &[&names[0], &names[1]]).await;
+    let application = app(&pool, Some(base));
+    let (status, body) = delete_account(&application, &token(&player.to_string())).await;
     assert_eq!(status, StatusCode::OK, "{body}");
-
-    // Both subject forms are named to Auth, under the instance secret key.
-    let mut subjects = stub.subjects();
-    subjects.sort();
-    let mut expected = vec![
-        "usr_01kmp4wyhhfgxsyrjvh8e0tkkf".to_string(),
-        format!("principal-{player}"),
-    ];
-    expected.sort();
-    assert_eq!(subjects, expected);
+    assert_eq!(body["state"], "pending");
     assert_eq!(
-        stub.authorizations(),
-        vec![format!("Bearer {SECRET_KEY}"); 2]
+        Uuid::parse_str(body["requestId"].as_str().unwrap())
+            .unwrap()
+            .get_version_num(),
+        7
     );
-
-    // The rows are gone, the subject map included (it is part of the erasure).
-    assert_eq!(preference_rows(&pool, player).await, 0);
-    assert_eq!(subject_rows(&pool, player).await, 0);
+    let snapshot: Value =
+        sqlx::query_scalar("SELECT subjects FROM erasure_requests WHERE player_id=$1")
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    let subjects = snapshot.as_array().unwrap();
+    assert_eq!(subjects.len(), 2);
+    for subject in subjects {
+        assert!(names.contains(&subject["principal_id"].as_str().unwrap().to_string()));
+        assert!(subject["request_id"].is_null());
+    }
+    let (status, replay) = delete_account(&application, &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body, replay, "owned replay is the same operation");
+    let auth = AuthErasure::new(
+        "http://127.0.0.1:1".into(),
+        ORGANIZATION_ID.into(),
+        SECRET_KEY.into(),
+    );
+    let counts = crate::capabilities::identity_access::erasure::sweep(&pool, Some(&auth))
+        .await
+        .unwrap();
+    assert_eq!(counts.pending, 1);
+    assert_eq!(counts.completed, 0);
+    assert!(stub.subjects().is_empty());
+    assert_eq!(preference_rows(&pool, player).await, 1);
+    assert_eq!(subject_rows(&pool, player).await, 2);
+    let reason: String =
+        sqlx::query_scalar("SELECT last_reason FROM erasure_requests WHERE player_id=$1")
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(reason, "money_preflight_unavailable");
 }
 
 #[tokio::test]
-async fn a_player_with_no_subject_row_is_deleted_under_the_old_form() {
+async fn legacy_subject_fallback_is_persisted_not_sent_before_preparation() {
     let _key = test_key_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -237,65 +237,21 @@ async fn a_player_with_no_subject_row_is_deleted_under_the_old_form() {
     };
     let stub = StubAuth::accepting();
     let base = spawn_auth(stub.clone()).await;
-
-    // Signed in before the subject map existed: no row, old form only.
     let player = Uuid::now_v7();
     seed(&pool, player, &[]).await;
-
     let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
     assert_eq!(status, StatusCode::OK, "{body}");
-    assert_eq!(stub.subjects(), vec![format!("principal-{player}")]);
-    assert_eq!(preference_rows(&pool, player).await, 0);
-}
-
-#[tokio::test]
-async fn an_account_auth_does_not_hold_is_still_erased() {
-    let _key = test_key_lock()
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let Some(pool) = fresh_database().await else {
-        return;
-    };
-    // Auth holds no such account (already deleted, or never created).
-    let stub = StubAuth::answering(
-        404,
-        json!({"code": "not_found", "authority": "identity", "error": "user not found"}),
-    );
-    let base = spawn_auth(stub.clone()).await;
-
-    let player = Uuid::now_v7();
-    seed(&pool, player, &[]).await;
-
-    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
-    assert_eq!(status, StatusCode::OK, "{body}");
-    assert_eq!(stub.subjects(), vec![format!("principal-{player}")]);
-    assert_eq!(preference_rows(&pool, player).await, 0);
-}
-
-#[tokio::test]
-async fn a_refused_auth_deletion_leaves_every_row_in_place() {
-    let _key = test_key_lock()
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let Some(pool) = fresh_database().await else {
-        return;
-    };
-    let stub = StubAuth::answering(502, json!({"error": "identity_unavailable"}));
-    let base = spawn_auth(stub.clone()).await;
-
-    let player = Uuid::now_v7();
-    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
-    seed(&pool, player, &[subject]).await;
-
-    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
-    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE, "{body}");
-    assert!(message(&body).contains("identity_account_deletion_failed"));
-    assert_diagnostic(&body, "auth_delete_failed");
-    // Nothing was erased: the account stays whole and the retry repeats the
-    // same Auth request (its idempotency key is fixed per subject).
+    assert_eq!(body["state"], "pending");
+    let subject: String = sqlx::query_scalar(
+        "SELECT subjects->0->>'principal_id' FROM erasure_requests WHERE player_id=$1",
+    )
+    .bind(player)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(subject, format!("principal-{player}"));
+    assert!(stub.subjects().is_empty());
     assert_eq!(preference_rows(&pool, player).await, 1);
-    assert_eq!(subject_rows(&pool, player).await, 1);
-    assert_eq!(stub.subjects(), vec![subject.to_string()]);
 }
 
 #[tokio::test]
@@ -475,12 +431,15 @@ async fn unconfirmed_auth_absence_or_authority_keeps_product_rows() {
         let stub = StubAuth::answering(status, answer);
         let base = spawn_auth(stub).await;
         let player = Uuid::now_v7();
-        seed(&pool, player, &["subject-fixture"]).await;
-        let (status, body) =
-            delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
-        assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
-        assert_diagnostic(&body, "auth_delete_failed");
-        assert!(!message(&body).contains("private-upstream-detail"));
+        let subject = format!("subject-fixture-{player}");
+        seed(&pool, player, &[&subject]).await;
+        let auth = AuthErasure::new(base, ORGANIZATION_ID.into(), SECRET_KEY.into());
+        let error = auth
+            .request_delete(&subject, "stable-fixture")
+            .await
+            .err()
+            .unwrap();
+        assert!(!error.contains("private-upstream-detail"));
         assert_eq!(preference_rows(&pool, player).await, 1);
         assert_eq!(subject_rows(&pool, player).await, 1);
     }
@@ -522,13 +481,15 @@ async fn a_real_wrong_route_html_404_preserves_preferences_subjects_and_consent(
             .fetch_one(&pool)
             .await
             .unwrap();
-    let (status, body) = delete_account(
-        &app(&pool, Some(format!("http://{addr}"))),
-        &token(&player.to_string()),
-    )
-    .await;
-    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
-    assert_diagnostic(&body, "auth_delete_failed");
+    let auth = AuthErasure::new(
+        format!("http://{addr}"),
+        ORGANIZATION_ID.into(),
+        SECRET_KEY.into(),
+    );
+    assert!(auth
+        .request_delete("subject-fixture", "stable-fixture")
+        .await
+        .is_err());
     assert_eq!(preference_rows(&pool, player).await, 1);
     assert_eq!(subject_rows(&pool, player).await, 1);
     let after: Value =

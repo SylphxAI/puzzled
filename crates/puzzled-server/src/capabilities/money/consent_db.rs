@@ -19,6 +19,25 @@ pub async fn record(
     locale: &str,
 ) -> Result<(), String> {
     let user = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|_| "consent database unavailable".to_string())?;
+    record_in_transaction(&mut tx, user, plan_id, price_key, locale).await?;
+    tx.commit()
+        .await
+        .map_err(|_| "consent commit failed".to_string())
+}
+
+/// Checkout admission holds this same transaction across its external effect.
+/// Do not write through the pool while holding the player advisory lock.
+pub async fn record_in_transaction(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    user: Uuid,
+    plan_id: &str,
+    price_key: &str,
+    locale: &str,
+) -> Result<(), String> {
     sqlx::query(
         r#"INSERT INTO "checkout_consents" ("id", "user_id", "plan_id", "price_key", "locale", "statement")
            VALUES ($1, $2, $3, $4, $5, $6)"#,
@@ -29,10 +48,10 @@ pub async fn record(
     .bind(price_key)
     .bind(locale)
     .bind(IMMEDIATE_SUPPLY_STATEMENT)
-    .execute(pool)
+    .execute(&mut **tx)
     .await
     .map(|_| ())
-    .map_err(|e| e.to_string())
+    .map_err(|_| "consent write failed".to_string())
 }
 
 /// One bounded retention page, shared by the existing Jobs/startup owner.
