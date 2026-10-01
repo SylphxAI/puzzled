@@ -47,7 +47,14 @@ landing reads `GetSharedResult`, which returns only card facts), the challenge l
 remembers the share and the result screen shows both results for the same game and day), the tomorrow
 teaser (`getTomorrowsFreeGame` in `lib/free-rotation.ts`), the installable web app, first-touch
 campaign attribution, Tryit conversion reporting ([capabilities.md](capabilities.md), PUZ-TRYIT), and
-the daily-reminder, streak-at-risk and win-back email jobs.
+the daily-reminder, streak-at-risk and win-back email jobs. Also built and checked against `main`'s code:
+earned streak freezes (`freezes_db.rs`); the save-your-streak ask for a guest with a 2+ day streak
+(`save-streak-prompt.tsx`); the daily reminder sent at each player's own saved time and zone, with a
+late-tick grace and one send per local day (`jobs_db.rs`, `daily_reminder_tests.rs`; email and Web
+Push); the sharer's streak on the share (`result_shares.streak`, set once on a same-day share) shown on
+the landing card, the challenge comparison, the share text and the share image badge; and HowTo
+structured data built from the rules a game page already shows (`howToStructuredData` in
+`features/catalog/lib/game-page.ts`) beside the page's FAQPage data.
 
 ## Notification consent and email links
 
@@ -91,22 +98,14 @@ should move.
 
 | # | Capability | Job it serves | Where it appears | Metric | Effort | Depends on |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Earned streak freezes (streak freeze) | Keep a streak alive through a missed day without guilt; free players earn one per 7 played days | Stats streak card, streak calculation | D7 retention | M | none; today the streak calculation ignores freezes |
-| 2 | Save-your-streak account ask (try before signup, saved progress) | Guests keep streak and stats across devices | Result screen, raised as the streak grows; never before the first finish | Guest to account rate, D7 retention | S | none |
-| 3 | Daily reminder at each player's own time and time zone (personalised notification timing) | Gentle return without guilt | The player's saved reminder time is stored but does not schedule the send today: the daily-reminder job sends on its own schedule. Email (opt-in) at the player's time in their zone; browser Web Push through the existing reminder job (VAPID configuration required) | D7 retention | S | none for Puzzled's own email; cloud#9826 for caps across our products |
-| 4 | Streak on the shared card (share cards) | Show the sharer's run on the card and landing, so a friend has something to beat | Share landing, share image, challenge comparison | Landing rate, conversion | S | none |
-| 5 | How-to-play structured data on game pages (programmatic pages) | Rank for "how to play X" from the rules the pages already show | Per-game page markup | Search landings | S | none |
 | 6 | Friends' results for today (friends leaderboard) | Compare with people you know, no public shame board | Result screen, opt-in | Share and return rates | M | cloud#9830 |
 | 7 | Seasonal themes and holiday puzzles | Fresh reasons to share on festival days | Home and result card on the day | Share rate | S | cloud#9828 (calendar); a hand-set list works until then |
 | 8 | Own-product promotion at session end (cross-promotion) | Point finished players to our other products | Already-played view, at most one card a day | Cross-product signups | S | cloud#9826 |
 
-Design notes for the open items:
+Rows 1 to 5 of the earlier backlog (streak freezes, save-your-streak ask, reminder at the player's own
+time, streak on the shared card, how-to-play structured data) are built; see Already live. Design notes
+for the open items:
 
-- **Save-your-streak ask:** after a guest finishes a daily with at least two streak days, the client
-  reads the authoritative streak and offers a free account. Sign-in adopts accepted
-  guest sessions through the existing claim path (`gamification`, `identity`).
-- **Reminder time:** invitation copy only, one-tap unsubscribe (`jobs_policy`, `jobs_db`); using the
-  player's own setting rather than inferring a median finish hour is enough to start.
 - **Not building yet:** a per-game "today's hint" generator that cannot be proven to leak nothing, and
   public archive pages that would only exist to rank.
 
@@ -139,7 +138,7 @@ industry benchmarks; the product has no payers yet, so none is measured.
       days", using the existing `result_shares` id and `ref` attribution; the reward is an entitlement
       grant, so it needs Money's grant API.
 - [ ] **Paid streak freeze and Plus freezes** (S). Sell one freeze as a small one-off in Money; Plus
-      gets 2 per month. Needs freezes to count toward the streak first (backlog: earned streak freezes).
+      gets 2 per month. Earned freezes already count toward the streak.
 - [ ] **Plus-nudge emails** (S). Day 3 and day 7 of a streak, consent-gated, with the yearly price and
       no false urgency.
 - [ ] **Price localisation** (M). Money price tiers for HKD, EUR, JPY, INR, BRL and MXN alongside
