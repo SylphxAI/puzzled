@@ -46,6 +46,24 @@ Cite the ID column.
   503 or prove completed account erasure; own-account production recovery and
   cleanup still require readback.
 
+- **Durable erasure and external conversion admission (draft source):** an
+  accepted deletion returns its stable operation reference and pending state,
+  not a claim that local data or Auth sign-in is already erased. The existing
+  signed retry tick runs independently of conversion-reporter availability.
+  Each Tryit outbox send uses one explicit READ COMMITTED transaction: player
+  admission first, then an unreported row lock with `SKIP LOCKED`, a bounded
+  external send, and outcome commit before releasing admission. Busy or
+  suppressed players are skipped without poisoning unrelated conversions;
+  expiry is handled per admitted row, not by an unfenced bulk update. An Auth
+  subject-map write denied by the erasure fence returns Connect
+  `failed_precondition` / `account_erasure_pending`, never a guest fallback.
+  Cached positive identities still cannot bypass the ordinary-write triggers.
+  Real Money erasure preparation remains unavailable: no Auth erasure effect
+  is activated until that owned contract is supplied. Credential/adoption
+  migration integration waits for the separate incident prerequisite, then
+  whole-head architecture review; these are source guarantees, not production
+  completion claims.
+
 - **Auth post-deploy check** ([owner standard](https://github.com/SylphxAI/owner/blob/main/standards/auth.md#how-a-product-proves-it)):
   after each deploy, with a test account on `https://puzzled.gg`, sign in and
   out, confirm the response cookies are named `puzzled_session` (no `sylphx`
