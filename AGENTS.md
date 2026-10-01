@@ -45,6 +45,12 @@ Run the narrowest affected check first; the full workspace is for the end.
 
 ## Gotchas the code will not teach you
 
+- **No manual catalogue writes:** `config/commercial/catalogue.json` is applied
+  to Sylphx Money only by `.github/workflows/money-catalogue.yml` (preview, then
+  production, with a 15-minute key from GitHub OIDC, no stored secret; the path
+  must match its Access declaration, do not rename it); change prices, features
+  and seats by PR to that file.
+
 - **Day key is `Asia/Hong_Kong`, computed on the server.** Never derive "today"
   from a client clock or UTC; the shared daily puzzle and the finish rule depend on it.
 - **One finish per `(user, game, day_key)`.** Keep the already-played guard even

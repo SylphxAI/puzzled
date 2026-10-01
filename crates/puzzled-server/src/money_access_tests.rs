@@ -66,7 +66,7 @@ async fn catalog() -> Json<Value> {
 async fn spawn_money(fake: Fake) -> Money {
     let app = Router::new()
         .route("/env/entitlement_grants:check", post(check))
-        .route("/env/catalogs/default", get(catalog))
+        .route("/env/price_catalogs/default", get(catalog))
         .with_state(fake);
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
