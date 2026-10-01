@@ -25,6 +25,7 @@ import {
 } from '@/gen/connect/puzzled/v1/gamification_pb'
 import { getConnectTransport } from '@/lib/connect/transport'
 import { type AppConfig, DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type IdentityUser } from './dest'
+import { MIN_PASSWORD_LENGTH } from './password-policy'
 
 type AuthState = {
 	user: IdentityUser | null
@@ -284,7 +285,7 @@ export function useSignUpForm(
 	const [step, setStep] = useState<number | 'verify-email'>(1)
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
-	const minLength = opts.minPasswordLength ?? 8
+	const minLength = opts.minPasswordLength ?? MIN_PASSWORD_LENGTH
 	return {
 		form: { email, password, name },
 		setEmail,
@@ -306,8 +307,10 @@ export function useSignUpForm(
 					credentials: 'same-origin',
 					body: JSON.stringify({ email, password, name }),
 				})
-				if (!response.ok) throw new Error('sign-up failed')
 				const result = await readJson(response)
+				if (!response.ok) {
+					throw new Error(typeof result.error === 'string' ? result.error : 'sign-up failed')
+				}
 				if (result.signedIn === true) {
 					window.location.assign('/')
 					return
@@ -370,7 +373,7 @@ export function useResetPasswordForm(opts?: {
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [success, setSuccess] = useState(false)
-	const minLength = opts?.minPasswordLength ?? 8
+	const minLength = opts?.minPasswordLength ?? MIN_PASSWORD_LENGTH
 	const passwordsMatch = password === confirmPassword
 	return {
 		form: { password, confirmPassword, email: '' },

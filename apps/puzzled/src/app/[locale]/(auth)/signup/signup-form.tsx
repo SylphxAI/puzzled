@@ -11,6 +11,7 @@ import {
 	AuthSubmit,
 	emailProblem,
 	FormAlert,
+	MIN_PASSWORD_LENGTH,
 	OAuthButtons,
 	PasswordField,
 	passwordProblem,
@@ -52,7 +53,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 	} = useSignUpForm({
 		providers,
 		afterSignUpUrl: '/',
-		minPasswordLength: 8,
+		minPasswordLength: MIN_PASSWORD_LENGTH,
 		oauthHandler: async (provider: string) => {
 			await signInWithOAuth?.({ provider: provider as OAuthSignInProvider, redirectUrl: '/' })
 		},
@@ -83,6 +84,16 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 			</div>
 		)
 	}
+
+	// The server's own refusal of a short password shows under the field too,
+	// not as a generic failure banner.
+	const serverSaysTooShort = error?.message === 'password_too_short'
+	const passwordError =
+		(attempted || touched.password) && passwordIssue
+			? t(passwordIssue, { min: MIN_PASSWORD_LENGTH })
+			: serverSaysTooShort
+				? t('passwordTooShort', { min: MIN_PASSWORD_LENGTH })
+				: undefined
 
 	function onSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault()
@@ -145,14 +156,14 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 					onBlur={() => setTouched((state) => ({ ...state, password: true }))}
 					autoComplete="new-password"
 					disabled={isLoading}
-					hint={t('passwordHint')}
-					error={(attempted || touched.password) && passwordIssue ? t(passwordIssue) : undefined}
+					hint={t('passwordHint', { min: MIN_PASSWORD_LENGTH })}
+					error={passwordError}
 					showStrength
 					required
 					enterKeyHint="done"
 				/>
 
-				<FormAlert message={error ? t('signUpError') : null} />
+				<FormAlert message={error && !serverSaysTooShort ? t('signUpError') : null} />
 
 				<AuthSubmit
 					pending={isLoading}
