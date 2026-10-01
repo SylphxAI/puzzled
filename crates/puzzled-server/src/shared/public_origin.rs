@@ -26,7 +26,8 @@ pub fn admits_browser(headers: &axum::http::HeaderMap, origin: &str) -> bool {
     if value != origin || value.bytes().any(|b| !(33..=126).contains(&b)) || value.contains(',') {
         return false;
     }
-    if headers.get("sec-fetch-site").is_some_and(|v| v.as_bytes() != b"same-origin") {
+    let fetch_sites: Vec<_> = headers.get_all("sec-fetch-site").iter().collect();
+    if fetch_sites.len() > 1 || fetch_sites.first().is_some_and(|v| v.as_bytes() != b"same-origin") {
         return false;
     }
     headers.get(axum::http::header::CONTENT_TYPE).and_then(|v| v.to_str().ok())

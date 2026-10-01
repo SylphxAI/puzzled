@@ -90,3 +90,100 @@ async fn issued_cookie_is_fresh_host_only_and_progress_adopts_without_deleting_c
     assert_eq!(request(&app, "/puzzled.v1.StatsService/GetHistory", Some(pair), None, None).await.0, StatusCode::UNAUTHORIZED);
     pool.close().await;
 }
+
+#[tokio::test]
+async fn freeze_failure_rolls_back_adoption_and_keeps_credential_live() {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    let Some(pool) = fresh_database().await else { return; };
+    let cookie = guest_credentials::issue(&pool).await.unwrap();
+    let pair = cookie.split(';').next().unwrap();
+    let hash = guest_credentials::token_hash(pair.split_once('=').unwrap().1).unwrap();
+    let guest = guest_credentials::lookup_hash(&pool, &hash).await.unwrap().unwrap();
+    let account = Uuid::now_v7();
+    sqlx::query("INSERT INTO auth_subjects(subject,user_id) VALUES ($1,$2)")
+        .bind(format!("principal-{account}")).bind(account).execute(&pool).await.unwrap();
+    sqlx::query("INSERT INTO game_sessions(user_id,game_slug,status,attempts,mode) VALUES ($1,'word-guess','won',1,'daily')")
+        .bind(guest).execute(&pool).await.unwrap();
+    sqlx::query("INSERT INTO user_freeze_data(user_id,freezes_available) VALUES($1,1)")
+        .bind(guest).execute(&pool).await.unwrap();
+    sqlx::raw_sql("CREATE FUNCTION fail_freeze_insert() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'test rollback'; END $$; CREATE TRIGGER fail_freeze_insert BEFORE INSERT ON user_freeze_data FOR EACH ROW EXECUTE FUNCTION fail_freeze_insert();")
+        .execute(&pool).await.unwrap();
+    let app = router(AppState::new(Some(pool.clone())));
+    let signed = token(&account.to_string());
+    assert_eq!(request(&app, "/puzzled.v1.StatsService/GetHistory", Some(pair), Some(&signed), None).await.0, StatusCode::INTERNAL_SERVER_ERROR);
+    let owners: Vec<Uuid> = sqlx::query_scalar("SELECT user_id FROM game_sessions").fetch_all(&pool).await.unwrap();
+    assert_eq!(owners, [guest]);
+    assert_eq!(guest_credentials::lookup_hash(&pool, &hash).await.unwrap(), Some(guest));
+    let freeze_owner: Uuid = sqlx::query_scalar("SELECT user_id FROM user_freeze_data").fetch_one(&pool).await.unwrap();
+    assert_eq!(freeze_owner, guest);
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn private_access_lease_serializes_adoption_and_revocation() {
+    use crate::bootstrap::identity::admitted_request_identities;
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    let Some(pool) = fresh_database().await else { return; };
+    let cookie = guest_credentials::issue(&pool).await.unwrap();
+    let pair = cookie.split(';').next().unwrap().to_string();
+    let hash = guest_credentials::token_hash(pair.split_once('=').unwrap().1).unwrap();
+    let guest = guest_credentials::lookup_hash(&pool, &hash).await.unwrap().unwrap();
+    let account = Uuid::now_v7();
+    sqlx::query("INSERT INTO auth_subjects(subject,user_id) VALUES($1,$2)")
+        .bind(format!("principal-{account}")).bind(account).execute(&pool).await.unwrap();
+    let mut headers = axum::http::HeaderMap::new();
+    headers.insert(guest_credentials::VERIFIED_GUEST_HEADER, hash.parse().unwrap());
+    let context = connectrpc::RequestContext::new(headers);
+    let mut access = admitted_request_identities(&context, Some(&pool)).await.unwrap();
+    let app = router(AppState::new(Some(pool.clone())));
+    let signed = token(&account.to_string());
+    let account_app = app.clone();
+    let account_cookie = pair.clone();
+    let adoption = tokio::spawn(async move {
+        request(&account_app, "/puzzled.v1.StatsService/GetHistory", Some(&account_cookie), Some(&signed), None).await.0
+    });
+    // Wait for an observed database lock waiter, not a guessed wall-clock delay.
+    tokio::time::timeout(std::time::Duration::from_secs(5), async {
+        loop {
+            let waiting: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype='advisory' AND NOT granted AND database=(SELECT oid FROM pg_database WHERE datname=current_database()))")
+                .fetch_one(&pool).await.unwrap();
+            if waiting { break; }
+            tokio::task::yield_now().await;
+        }
+    }).await.unwrap();
+    assert!(!adoption.is_finished());
+    sqlx::query("INSERT INTO game_sessions(user_id,game_slug,status,attempts,mode) VALUES($1,'word-guess','won',1,'daily')")
+        .bind(guest).execute(access.connection().unwrap()).await.unwrap();
+    access.commit().await.unwrap();
+    assert_eq!(adoption.await.unwrap(), StatusCode::OK);
+    let owners: Vec<Uuid> = sqlx::query_scalar("SELECT user_id FROM game_sessions").fetch_all(&pool).await.unwrap();
+    assert_eq!(owners, [account]);
+    assert_eq!(request(&app, "/puzzled.v1.StatsService/GetHistory", Some(&pair), None, None).await.0, StatusCode::UNAUTHORIZED);
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn issuance_rejects_origin_ambiguity_without_database_effects() {
+    let Some(pool) = fresh_database().await else { return; };
+    let app = router(AppState::new(Some(pool.clone())));
+    for origin in [None, Some("null"), Some("https://elsewhere.invalid"), Some("https://puzzled.gg:8443"), Some("https://puzzled.gg, https://puzzled.gg")] {
+        let mut req = Request::builder().method("POST").uri("/v1/guest/session")
+            .header("content-type", "application/json").header("host", "internal.invalid")
+            .header("x-forwarded-host", "puzzled.gg");
+        if let Some(origin) = origin { req = req.header("origin", origin); }
+        let response = app.clone().oneshot(req.body(Body::from("{}")).unwrap()).await.unwrap();
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert!(response.headers().get("set-cookie").is_none());
+    }
+    for (duplicate, mime, fetch_site) in [(true, "application/json", "same-origin"), (false,"text/plain","same-origin"), (false,"application/json","cross-site")] {
+        let mut req = Request::builder().method("POST").uri("/v1/guest/session")
+            .header("origin", "https://puzzled.gg").header("content-type",mime).header("sec-fetch-site",fetch_site);
+        if duplicate { req = req.header("origin", "https://puzzled.gg"); }
+        let response = app.clone().oneshot(req.body(Body::from("{}")).unwrap()).await.unwrap();
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert!(response.headers().get("set-cookie").is_none());
+    }
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials").fetch_one(&pool).await.unwrap();
+    assert_eq!(count,0);
+    pool.close().await;
+}

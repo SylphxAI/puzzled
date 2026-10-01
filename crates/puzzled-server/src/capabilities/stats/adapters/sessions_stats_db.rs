@@ -26,6 +26,13 @@ type HistoryRow = (
 
 /// Per-game aggregates for a user.
 pub async fn user_stats(pool: &PgPool, user_id: &str) -> Result<(Vec<Value>, u32, u32), String> {
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+    let value = user_stats_on_connection(&mut tx, user_id).await?;
+    tx.commit().await.map_err(|e| e.to_string())?;
+    Ok(value)
+}
+
+pub async fn user_stats_on_connection(connection: &mut sqlx::PgConnection, user_id: &str) -> Result<(Vec<Value>, u32, u32), String> {
     let uid = parse_user_id(user_id)?;
     let rows: Vec<(String, i64, i64, Option<i32>)> = sqlx::query_as(
         r#"
@@ -40,7 +47,7 @@ pub async fn user_stats(pool: &PgPool, user_id: &str) -> Result<(Vec<Value>, u32
         "#,
     )
     .bind(uid)
-    .fetch_all(pool)
+    .fetch_all(&mut *connection)
     .await
     .map_err(|e| format!("user stats failed: {e}"))?;
     let mut total_played: i64 = 0;
@@ -68,6 +75,18 @@ pub async fn user_history(
     game_slug: Option<&str>,
     limit: u32,
 ) -> Result<Vec<Value>, String> {
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+    let value = user_history_on_connection(&mut tx, user_id, game_slug, limit).await?;
+    tx.commit().await.map_err(|e| e.to_string())?;
+    Ok(value)
+}
+
+pub async fn user_history_on_connection(
+    connection: &mut sqlx::PgConnection,
+    user_id: &str,
+    game_slug: Option<&str>,
+    limit: u32,
+) -> Result<Vec<Value>, String> {
     let uid = parse_user_id(user_id)?;
     let limit = limit.clamp(1, 100) as i64;
     let rows: Vec<HistoryRow> = match game_slug {
@@ -82,7 +101,7 @@ pub async fn user_history(
         .bind(uid)
         .bind(slug)
         .bind(limit)
-        .fetch_all(pool)
+        .fetch_all(&mut *connection)
         .await
         .map_err(|e| format!("history query failed: {e}"))?,
         None => sqlx::query_as(
@@ -95,7 +114,7 @@ pub async fn user_history(
         )
         .bind(uid)
         .bind(limit)
-        .fetch_all(pool)
+        .fetch_all(&mut *connection)
         .await
         .map_err(|e| format!("history query failed: {e}"))?,
     };

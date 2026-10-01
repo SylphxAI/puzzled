@@ -4,9 +4,9 @@ use chrono::NaiveDate;
 use puzzled_core::gamification::personal_streak::{compute_personal_streak, PersonalStreak};
 use sqlx::PgPool;
 
-use super::freezes_db::{settle_player_freezes, FreezeRow};
-use super::streak_sessions_db::load_accepted_ritual_days;
-use crate::capabilities::puzzle_play::adapters::game_sessions_db::count_sessions;
+use super::freezes_db::{settle_player_freezes_on_connection, FreezeRow};
+use super::streak_sessions_db::load_accepted_ritual_days_on_connection;
+use crate::capabilities::puzzle_play::adapters::game_sessions_db::count_sessions_on_connection;
 
 /// A player's streak as of `today`, plus their total finished games and freeze
 /// counters. Reading settles freezes first (milestones earned since the last
@@ -17,8 +17,19 @@ pub async fn load_settled_streak(
     user_id: &str,
     today: NaiveDate,
 ) -> Result<(PersonalStreak, u32, FreezeRow), String> {
-    let days = load_accepted_ritual_days(pool, user_id).await?;
-    let total = count_sessions(pool, user_id).await?;
-    let (row, frozen) = settle_player_freezes(pool, user_id, today, &days).await?;
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+    let value = load_settled_streak_on_connection(&mut tx, user_id, today).await?;
+    tx.commit().await.map_err(|e| e.to_string())?;
+    Ok(value)
+}
+
+pub async fn load_settled_streak_on_connection(
+    connection: &mut sqlx::PgConnection,
+    user_id: &str,
+    today: NaiveDate,
+) -> Result<(PersonalStreak, u32, FreezeRow), String> {
+    let days = load_accepted_ritual_days_on_connection(connection, user_id).await?;
+    let total = count_sessions_on_connection(connection, user_id).await?;
+    let (row, frozen) = settle_player_freezes_on_connection(connection, user_id, today, &days).await?;
     Ok((compute_personal_streak(today, &days, &frozen), total, row))
 }

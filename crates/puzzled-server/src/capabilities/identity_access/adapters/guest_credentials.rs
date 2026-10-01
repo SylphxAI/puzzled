@@ -90,6 +90,24 @@ pub async fn attach_guest(
 ) -> axum::response::Response {
     use axum::response::IntoResponse;
     request.headers_mut().remove(VERIFIED_GUEST_HEADER);
+    // A signed subject that aliases a registered guest is not an account.
+    if let (Some(pool), Ok(identity)) = (&pool, crate::bootstrap::identity::verify(request.headers())) {
+        if let Ok(player) = Uuid::parse_str(&identity.user_id) {
+            let result = async {
+                let mut tx = pool.begin().await?;
+                lock_players(&mut tx, vec![player]).await?;
+                let collision: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)")
+                    .bind(player).fetch_one(&mut *tx).await?;
+                tx.commit().await?;
+                Ok::<_, sqlx::Error>(collision)
+            }.await;
+            match result {
+                Ok(true) => return (axum::http::StatusCode::UNAUTHORIZED, axum::Json(serde_json::json!({"code":"unauthenticated", "message":"identity_required"}))).into_response(),
+                Ok(false) => {},
+                Err(_) => return (axum::http::StatusCode::INTERNAL_SERVER_ERROR, axum::Json(serde_json::json!({"code":"internal", "message":"identity_store_failed"}))).into_response(),
+            }
+        }
+    }
     if let (Some(pool), Some(hash)) = (&pool, cookie_token(request.headers()).and_then(token_hash)) {
         match lookup_hash(pool, &hash).await {
             Ok(Some(_player)) => {

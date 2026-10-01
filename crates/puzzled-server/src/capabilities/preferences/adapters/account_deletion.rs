@@ -145,6 +145,8 @@ pub async fn delete_account_data(pool: &PgPool, user_id: &str) -> Result<u64, St
         .begin()
         .await
         .map_err(|e| format!("account deletion begin failed: {e}"))?;
+    crate::capabilities::identity_access::adapters::guest_credentials::lock_players(&mut tx, vec![uid])
+        .await.map_err(|e| e.to_string())?;
     let mut deleted = 0u64;
     for (table, column, statement) in USER_KEYED_COLUMNS {
         let result = sqlx::query(*statement)

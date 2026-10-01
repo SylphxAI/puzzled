@@ -31,13 +31,20 @@ impl Default for FreezeRow {
 
 /// Load a player's freeze counters (defaults when there is no row).
 pub async fn load_freeze_row(pool: &PgPool, user_id: &str) -> Result<FreezeRow, String> {
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+    let value = load_freeze_row_on_connection(&mut tx, user_id).await?;
+    tx.commit().await.map_err(|e| e.to_string())?;
+    Ok(value)
+}
+
+pub async fn load_freeze_row_on_connection(connection: &mut sqlx::PgConnection, user_id: &str) -> Result<FreezeRow, String> {
     let uid = parse_user_id(user_id)?;
     let row: Option<(i32, i32, bool)> = sqlx::query_as(
         "SELECT freezes_available, freezes_used, auto_freeze_enabled \
          FROM user_freeze_data WHERE user_id = $1 LIMIT 1",
     )
     .bind(uid)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *connection)
     .await
     .map_err(|e| e.to_string())?;
     Ok(row
@@ -49,10 +56,10 @@ pub async fn load_freeze_row(pool: &PgPool, user_id: &str) -> Result<FreezeRow, 
         .unwrap_or_default())
 }
 
-async fn day_column(pool: &PgPool, sql: &'static str, uid: Uuid) -> Result<Vec<NaiveDate>, String> {
+async fn day_column_on_connection(connection: &mut sqlx::PgConnection, sql: &'static str, uid: Uuid) -> Result<Vec<NaiveDate>, String> {
     let rows: Vec<(NaiveDate,)> = sqlx::query_as(sql)
         .bind(uid)
-        .fetch_all(pool)
+        .fetch_all(&mut *connection)
         .await
         .map_err(|e| format!("streak freeze read failed: {e}"))?;
     Ok(rows.into_iter().map(|(day,)| day).collect())
@@ -74,10 +81,22 @@ pub async fn settle_player_freezes(
     today: NaiveDate,
     played: &[NaiveDate],
 ) -> Result<(FreezeRow, Vec<NaiveDate>), String> {
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+    let value = settle_player_freezes_on_connection(&mut tx, user_id, today, played).await?;
+    tx.commit().await.map_err(|e| e.to_string())?;
+    Ok(value)
+}
+
+pub async fn settle_player_freezes_on_connection(
+    connection: &mut sqlx::PgConnection,
+    user_id: &str,
+    today: NaiveDate,
+    played: &[NaiveDate],
+) -> Result<(FreezeRow, Vec<NaiveDate>), String> {
     let uid = parse_user_id(user_id)?;
-    let row = load_freeze_row(pool, user_id).await?;
-    let mut frozen = day_column(pool, FROZEN_DAYS_SQL, uid).await?;
-    let awarded = day_column(pool, AWARDED_DAYS_SQL, uid).await?;
+    let row = load_freeze_row_on_connection(connection, user_id).await?;
+    let mut frozen = day_column_on_connection(connection, FROZEN_DAYS_SQL, uid).await?;
+    let awarded = day_column_on_connection(connection, AWARDED_DAYS_SQL, uid).await?;
     let available = u32::try_from(row.available.max(0)).unwrap_or(0);
     let plan = settle_freezes(
         today,
@@ -91,12 +110,11 @@ pub async fn settle_player_freezes(
         return Ok((row, frozen));
     }
 
-    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
     sqlx::query(
         "INSERT INTO user_freeze_data (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING",
     )
     .bind(uid)
-    .execute(&mut *tx)
+    .execute(&mut *connection)
     .await
     .map_err(|e| format!("freeze row create failed: {e}"))?;
     let locked: (i32, i32, bool) = sqlx::query_as(
@@ -104,7 +122,7 @@ pub async fn settle_player_freezes(
          FROM user_freeze_data WHERE user_id = $1 FOR UPDATE",
     )
     .bind(uid)
-    .fetch_one(&mut *tx)
+    .fetch_one(&mut *connection)
     .await
     .map_err(|e| format!("freeze row lock failed: {e}"))?;
     let locked = FreezeRow {
@@ -114,7 +132,7 @@ pub async fn settle_player_freezes(
     };
     let awarded: Vec<NaiveDate> = sqlx::query_as::<_, (NaiveDate,)>(AWARDED_DAYS_SQL)
         .bind(uid)
-        .fetch_all(&mut *tx)
+        .fetch_all(&mut *connection)
         .await
         .map_err(|e| e.to_string())?
         .into_iter()
@@ -122,7 +140,7 @@ pub async fn settle_player_freezes(
         .collect();
     frozen = sqlx::query_as::<_, (NaiveDate,)>(FROZEN_DAYS_SQL)
         .bind(uid)
-        .fetch_all(&mut *tx)
+        .fetch_all(&mut *connection)
         .await
         .map_err(|e| e.to_string())?
         .into_iter()
@@ -131,11 +149,9 @@ pub async fn settle_player_freezes(
     let held = u32::try_from(locked.available.max(0)).unwrap_or(0);
     let plan = settle_freezes(today, played, &frozen, &awarded, held, locked.auto_enabled);
     if plan.is_empty() {
-        tx.commit().await.map_err(|e| e.to_string())?;
         return Ok((locked, frozen));
     }
-    persist(&mut tx, uid, &plan, held).await?;
-    tx.commit().await.map_err(|e| e.to_string())?;
+    persist(connection, uid, &plan, held).await?;
 
     let used = i32::try_from(plan.cover_days.len()).unwrap_or(i32::MAX);
     frozen.extend(plan.cover_days.iter().copied());
@@ -150,7 +166,7 @@ pub async fn settle_player_freezes(
 }
 
 async fn persist(
-    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    connection: &mut sqlx::PgConnection,
     uid: Uuid,
     plan: &Settlement,
     held: u32,
@@ -167,7 +183,7 @@ async fn persist(
         .bind(uid)
         .bind(day)
         .bind(grant)
-        .execute(&mut **tx)
+        .execute(&mut *connection)
         .await
         .map_err(|e| format!("freeze award failed: {e}"))?
         .rows_affected();
@@ -183,7 +199,7 @@ async fn persist(
         )
         .bind(uid)
         .bind(day)
-        .execute(&mut **tx)
+        .execute(&mut *connection)
         .await
         .map_err(|e| format!("freeze use failed: {e}"))?;
     }
@@ -197,7 +213,7 @@ async fn persist(
     .bind(uid)
     .bind(i32::try_from(granted).unwrap_or(i32::MAX))
     .bind(covered)
-    .execute(&mut **tx)
+    .execute(&mut *connection)
     .await
     .map_err(|e| format!("freeze counters failed: {e}"))?;
     Ok(())
