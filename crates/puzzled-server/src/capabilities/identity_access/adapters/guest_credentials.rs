@@ -7,7 +7,7 @@ use uuid::Uuid;
 pub const COOKIE: &str = "__Host-puzzled_guest";
 pub const VERIFIED_GUEST_HEADER: &str = "x-puzzled-verified-guest";
 
-pub const ACCOUNT_BACKED_SQL: &str = "SELECT EXISTS (SELECT 1 FROM auth_subjects WHERE user_id = $1) OR EXISTS (SELECT 1 FROM user_preferences WHERE user_id = $1) OR EXISTS (SELECT 1 FROM user_display_cache WHERE user_id = $1) OR EXISTS (SELECT 1 FROM notification_preferences WHERE user_id = $1) OR EXISTS (SELECT 1 FROM billing_customers WHERE user_id = $1) OR EXISTS (SELECT 1 FROM billing_subscriptions WHERE user_id = $1) OR EXISTS (SELECT 1 FROM family_groups WHERE owner_user_id = $1) OR EXISTS (SELECT 1 FROM family_members WHERE owner_user_id = $1 OR member_user_id = $1) OR EXISTS (SELECT 1 FROM account_attribution WHERE user_id = $1) OR EXISTS (SELECT 1 FROM checkout_consents WHERE user_id = $1) OR EXISTS (SELECT 1 FROM win_back_emails WHERE user_id = $1) OR EXISTS (SELECT 1 FROM push_subscriptions WHERE user_id = $1) OR EXISTS (SELECT 1 FROM guest_credentials WHERE adopted_user_id = $1)";
+pub const ACCOUNT_BACKED_SQL: &str = "SELECT EXISTS (SELECT 1 FROM auth_subjects WHERE user_id = $1) OR EXISTS (SELECT 1 FROM user_preferences WHERE user_id = $1) OR EXISTS (SELECT 1 FROM user_display_cache WHERE user_id = $1) OR EXISTS (SELECT 1 FROM notification_preferences WHERE user_id = $1) OR EXISTS (SELECT 1 FROM billing_customers WHERE user_id = $1) OR EXISTS (SELECT 1 FROM billing_subscriptions WHERE user_id = $1) OR EXISTS (SELECT 1 FROM billing_ledger WHERE user_id = $1) OR EXISTS (SELECT 1 FROM family_groups WHERE owner_user_id = $1) OR EXISTS (SELECT 1 FROM family_members WHERE owner_user_id = $1 OR member_user_id = $1) OR EXISTS (SELECT 1 FROM account_attribution WHERE user_id = $1) OR EXISTS (SELECT 1 FROM checkout_consents WHERE user_id = $1) OR EXISTS (SELECT 1 FROM win_back_emails WHERE user_id = $1) OR EXISTS (SELECT 1 FROM push_subscriptions WHERE user_id = $1) OR EXISTS (SELECT 1 FROM guest_credentials WHERE adopted_user_id = $1)";
 
 pub async fn account_backed(connection: &mut PgConnection, player: Uuid) -> Result<bool, sqlx::Error> {
     sqlx::query_scalar(ACCOUNT_BACKED_SQL).bind(player).fetch_one(connection).await
@@ -43,13 +43,17 @@ pub async fn lookup_hash(pool: &PgPool, hash: &str) -> Result<Option<Uuid>, sqlx
 }
 
 pub async fn validate_locked(connection: &mut PgConnection, player: Uuid, hash: &str) -> Result<bool, sqlx::Error> {
-    let live: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1 AND token_hash = $2 AND adopted_user_id IS NULL AND revoked_at IS NULL)")
-        .bind(player).bind(hash).fetch_one(&mut *connection).await?;
-    Ok(live && !account_backed(connection, player).await?)
+    let live: Option<Uuid> = sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE user_id = $1 AND token_hash = $2 AND adopted_user_id IS NULL AND revoked_at IS NULL FOR SHARE")
+        .bind(player).bind(hash).fetch_optional(&mut *connection).await?;
+    Ok(live == Some(player) && !account_backed(connection, player).await?)
 }
 
 /// No client player id is accepted: every issuance allocates a fresh UUIDv7.
 pub async fn issue(pool: &PgPool) -> Result<String, sqlx::Error> {
+    issue_with_first_candidate(pool, Uuid::now_v7()).await
+}
+
+pub(crate) async fn issue_with_first_candidate(pool: &PgPool, mut player: Uuid) -> Result<String, sqlx::Error> {
     use std::io::Read;
     let mut raw = [0_u8; 32];
     std::fs::File::open("/dev/urandom")
@@ -58,17 +62,16 @@ pub async fn issue(pool: &PgPool) -> Result<String, sqlx::Error> {
     let token = URL_SAFE_NO_PAD.encode(raw);
     let hash = URL_SAFE_NO_PAD.encode(Sha256::digest(raw));
     loop {
-        let player = Uuid::now_v7();
         let mut tx = pool.begin().await?;
         lock_players(&mut tx, vec![player]).await?;
-        let mut unused = true;
+        let mut unused = !account_backed(&mut tx, player).await?;
         for (table, column, _) in crate::capabilities::preferences::adapters::account_deletion::USER_KEYED_COLUMNS {
             let statement = format!("SELECT EXISTS (SELECT 1 FROM \"{table}\" WHERE \"{column}\" = $1)");
             let exists: bool = sqlx::query_scalar(sqlx::AssertSqlSafe(statement))
                 .bind(player).fetch_one(&mut *tx).await?;
             if exists { unused = false; break; }
         }
-        if !unused { tx.rollback().await?; continue; }
+        if !unused { tx.rollback().await?; player = Uuid::now_v7(); continue; }
         sqlx::query("INSERT INTO guest_credentials (token_hash, user_id, provenance) VALUES ($1, $2, 'server_issued')")
             .bind(&hash).bind(player).execute(&mut *tx).await?;
         tx.commit().await?;
@@ -90,6 +93,7 @@ pub async fn attach_guest(
 ) -> axum::response::Response {
     use axum::response::IntoResponse;
     request.headers_mut().remove(VERIFIED_GUEST_HEADER);
+    if request.uri().path() == "/v1/guest/session" { return next.run(request).await; }
     // A signed subject that aliases a registered guest is not an account.
     if let (Some(pool), Ok(identity)) = (&pool, crate::bootstrap::identity::verify(request.headers())) {
         if let Ok(player) = Uuid::parse_str(&identity.user_id) {
@@ -168,4 +172,29 @@ pub async fn session(
         },
         Err(_) => axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     }
+}
+
+/// Issuance origin and JSON admission precede Auth verification and database
+/// access, even when an invalid browser request supplies cookies or a bearer.
+pub async fn bootstrap_guard(
+    mut request: axum::http::Request<axum::body::Body>,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    use axum::response::IntoResponse;
+    if request.uri().path() != "/v1/guest/session" { return next.run(request).await; }
+    let Ok(origin) = crate::shared::public_origin::public_origin() else {
+        return axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
+    };
+    if !crate::shared::public_origin::admits_browser(request.headers(), &origin) {
+        return axum::http::StatusCode::FORBIDDEN.into_response();
+    }
+    let body = std::mem::replace(request.body_mut(), axum::body::Body::empty());
+    let Ok(bytes) = axum::body::to_bytes(body, 4096).await else {
+        return axum::http::StatusCode::FORBIDDEN.into_response();
+    };
+    if serde_json::from_slice::<serde_json::Value>(&bytes).is_err() {
+        return axum::http::StatusCode::FORBIDDEN.into_response();
+    }
+    *request.body_mut() = axum::body::Body::from(bytes);
+    next.run(request).await
 }

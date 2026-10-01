@@ -60,6 +60,9 @@ pub fn router(state: AppState) -> Router {
             attach_auth_session,
         ))
         .layer(axum::middleware::from_fn(
+            crate::capabilities::identity_access::adapters::guest_credentials::bootstrap_guard,
+        ))
+        .layer(axum::middleware::from_fn(
             crate::observability::capture_server_errors,
         ))
 }

@@ -333,7 +333,10 @@ pub async fn adopt_guest_sessions_on_connection(
     let account = parse_user_id(&verified_account.user_id)?;
     let guest = parse_user_id(guest_user_id)?;
     if account == guest { return Err(refused()); }
-    guest_credentials::lock_players(&mut *connection, vec![account, guest]).await.map_err(|_| refused())?;
+    guest_credentials::lock_players(&mut *connection, vec![account, guest]).await.map_err(|e| e.to_string())?;
+    let destination_is_guest: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)")
+        .bind(account).fetch_one(&mut *connection).await.map_err(|e| e.to_string())?;
+    if destination_is_guest { return Err(refused()); }
     let credential: Option<uuid::Uuid> = sqlx::query_scalar(
         "SELECT user_id FROM guest_credentials WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL AND adopted_user_id IS NULL FOR UPDATE",
     ).bind(guest).bind(credential_hash).fetch_optional(&mut *connection).await.map_err(|e| e.to_string())?;
@@ -341,13 +344,13 @@ pub async fn adopt_guest_sessions_on_connection(
         return Err(refused());
     }
     let updated = sqlx::query(ADOPT_GUEST_REASSIGN_SQL)
-        .bind(guest).bind(account).execute(&mut *connection).await.map_err(|_| refused())?;
+        .bind(guest).bind(account).execute(&mut *connection).await.map_err(|e| e.to_string())?;
     super::result_shares_db::adopt_guest_shares(&mut *connection, account, guest).await?;
     crate::capabilities::gamification::adapters::freezes_db::adopt_guest_freezes(
         &mut *connection, account, guest,
     ).await?;
     sqlx::query("UPDATE guest_credentials SET adopted_user_id = $2, revoked_at = now(), revocation_reason = 'adopted' WHERE user_id = $1 AND adopted_user_id IS NULL")
-        .bind(guest).bind(account).execute(&mut *connection).await.map_err(|_| refused())?;
+        .bind(guest).bind(account).execute(&mut *connection).await.map_err(|e| e.to_string())?;
     Ok(updated.rows_affected())
 }
 

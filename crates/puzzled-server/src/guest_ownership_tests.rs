@@ -187,3 +187,71 @@ async fn issuance_rejects_origin_ambiguity_without_database_effects() {
     assert_eq!(count,0);
     pool.close().await;
 }
+
+#[tokio::test]
+async fn allocation_collision_never_aliases_existing_account_or_guest() {
+    use crate::capabilities::identity_access::adapters::{auth_subjects, guest_credentials};
+    let Some(pool) = fresh_database().await else { return; };
+    let account = Uuid::now_v7();
+    sqlx::query("INSERT INTO auth_subjects(subject,user_id) VALUES($1,$2)")
+        .bind(format!("principal-{account}")).bind(account).execute(&pool).await.unwrap();
+    let cookie = guest_credentials::issue_with_first_candidate(&pool, account).await.unwrap();
+    let hash = guest_credentials::token_hash(cookie.split(';').next().unwrap().split_once('=').unwrap().1).unwrap();
+    let guest = guest_credentials::lookup_hash(&pool, &hash).await.unwrap().unwrap();
+    assert_ne!(guest,account);
+    assert_eq!(guest.get_version_num(),7);
+    let remapped = auth_subjects::player_for(&pool,&format!("principal-{guest}"),None).await.unwrap();
+    assert_ne!(remapped,guest);
+    assert_eq!(remapped.get_version_num(),7);
+    assert_eq!(guest_credentials::lookup_hash(&pool,&hash).await.unwrap(),Some(guest));
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn issuance_header_refusal_precedes_unavailable_database_and_supplied_credentials() {
+    let pool = sqlx::postgres::PgPoolOptions::new().connect_lazy("postgres://test@127.0.0.1:59987/test").unwrap();
+    let app = router(AppState::new(Some(pool)));
+    let req = Request::builder().method("POST").uri("/v1/guest/session")
+        .header("content-type","application/json").header("origin","https://foreign.invalid")
+        .header("authorization",format!("Bearer {}",token(&Uuid::now_v7().to_string())))
+        .header("cookie","__Host-puzzled_guest=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        .body(Body::from("{}")).unwrap();
+    let response = app.oneshot(req).await.unwrap();
+    assert_eq!(response.status(),StatusCode::FORBIDDEN);
+    assert!(response.headers().get("set-cookie").is_none());
+}
+
+#[tokio::test]
+async fn second_guest_cookie_never_reads_or_adopts_a_public_player_id() {
+    use crate::capabilities::identity_access::adapters::guest_credentials;
+    let Some(pool) = fresh_database().await else { return; };
+    let app = router(AppState::new(Some(pool.clone())));
+    let a_cookie = guest_credentials::issue(&pool).await.unwrap();
+    let b_cookie = guest_credentials::issue(&pool).await.unwrap();
+    let a_pair = a_cookie.split(';').next().unwrap();
+    let b_pair = b_cookie.split(';').next().unwrap();
+    let a_hash = guest_credentials::token_hash(a_pair.split_once('=').unwrap().1).unwrap();
+    let b_hash = guest_credentials::token_hash(b_pair.split_once('=').unwrap().1).unwrap();
+    let a = guest_credentials::lookup_hash(&pool,&a_hash).await.unwrap().unwrap();
+    let b = guest_credentials::lookup_hash(&pool,&b_hash).await.unwrap().unwrap();
+    for (player, attempts) in [(a,7),(b,2)] {
+        sqlx::query("INSERT INTO game_sessions(user_id,game_slug,status,attempts,mode) VALUES($1,'word-guess','won',$2,'daily')")
+            .bind(player).bind(attempts).execute(&pool).await.unwrap();
+    }
+    let (status, body, _) = request(&app,"/puzzled.v1.StatsService/GetHistory",Some(b_pair),None,Some(&a.to_string())).await;
+    assert_eq!(status,StatusCode::OK);
+    let sessions = body["sessions"].as_array().unwrap();
+    assert_eq!(sessions.len(),1);
+    assert_eq!(sessions[0]["attempts"],2);
+    let account = Uuid::now_v7();
+    sqlx::query("INSERT INTO auth_subjects(subject,user_id) VALUES($1,$2)")
+        .bind(format!("principal-{account}")).bind(account).execute(&pool).await.unwrap();
+    assert_eq!(request(&app,"/puzzled.v1.StatsService/GetHistory",Some(b_pair),Some(&token(&account.to_string())),Some(&a.to_string())).await.0,StatusCode::OK);
+    let a_owner: Uuid = sqlx::query_scalar("SELECT user_id FROM game_sessions WHERE attempts=7").fetch_one(&pool).await.unwrap();
+    let b_owner: Uuid = sqlx::query_scalar("SELECT user_id FROM game_sessions WHERE attempts=2").fetch_one(&pool).await.unwrap();
+    assert_eq!(a_owner,a);
+    assert_eq!(b_owner,account);
+    assert_eq!(guest_credentials::lookup_hash(&pool,&a_hash).await.unwrap(),Some(a));
+    assert_eq!(guest_credentials::lookup_hash(&pool,&b_hash).await.unwrap(),None);
+    pool.close().await;
+}
