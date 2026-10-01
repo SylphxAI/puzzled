@@ -643,3 +643,24 @@ async fn money_calls_carry_the_money_key() {
     );
     assert!(is_premium(&money, USER).await);
 }
+
+#[test]
+fn env_url_uses_full_resource_names_once() {
+    let url = super::client::env_url(
+        "https://m.example",
+        &json!({"org":"orgs/o1","project":"orgs/o1/projects/p1","env":"orgs/o1/projects/p1/envs/e1"}),
+    )
+    .unwrap();
+    assert_eq!(url, "https://m.example/v1/orgs/o1/projects/p1/envs/e1");
+}
+
+#[test]
+fn env_url_keeps_the_bare_id_format() {
+    let url = super::client::env_url(
+        "https://m.example",
+        &json!({"org":"o1","project":"p1","env":"e1"}),
+    )
+    .unwrap();
+    assert_eq!(url, "https://m.example/v1/orgs/o1/projects/p1/envs/e1");
+    assert!(super::client::env_url("https://m.example", &json!({"org":"o1"})).is_err());
+}
