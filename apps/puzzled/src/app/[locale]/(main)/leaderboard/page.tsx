@@ -11,7 +11,7 @@ import { type BoardEntry, LeaderboardBoard } from '@/features/console/components
 import { LeaderboardControls } from '@/features/console/components/leaderboard-controls'
 import { toLeaderboardPeriod } from '@/features/console/lib/leaderboard-period'
 import { getAllGameMetadata } from '@/games/registry'
-import { admitLeaderboardViaConnect } from '@/lib/connect/stats-admission'
+import { getServerLeaderboard } from '@/lib/api/server'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
 import { auth } from '@/lib/identity/server'
@@ -78,16 +78,16 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 	let boardReadable = false
 
 	if (moduleSlug) {
-		const admit = await admitLeaderboardViaConnect({
+		const board = await getServerLeaderboard({
 			gameSlug: moduleSlug,
 			type: 'score',
 			period,
 			limit: BOARD_LIMIT,
 		}).catch(() => null)
 
-		if (admit?.ok) {
+		if (board) {
 			boardReadable = true
-			entries = admit.response.entries.map((entry) => ({
+			entries = board.entries.map((entry) => ({
 				rank: entry.rank,
 				name: entry.userName.trim() || t('anonymous'),
 				score: entry.value,
