@@ -88,8 +88,8 @@ export function isValidPlacement(
 
 /**
  * True when every cell holds 1-9 and every row, column and box holds each
- * digit once. The daily puzzle has one solution, so a grid that keeps the
- * rules is that solution; the server still checks the finish on submit. The
+ * digit once. Multiple completions can satisfy a served puzzle; the server
+ * verifies the frozen clues and these same rules on submit. The
  * browser never receives the solution.
  */
 export function isGridSolved(userGrid: SudokuCell[][]): boolean {
@@ -98,7 +98,8 @@ export function isGridSolved(userGrid: SudokuCell[][]): boolean {
 	for (let row = 0; row < GRID_SIZE; row++) {
 		for (let col = 0; col < GRID_SIZE; col++) {
 			const value = values[row]?.[col]
-			if (typeof value !== 'number' || value < 1 || value > 9) return false
+			if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 9)
+				return false
 			if (!isValidPlacement(values, row, col, value)) return false
 		}
 	}

@@ -339,31 +339,14 @@ fn crossword(
 // sudoku: solution {grid: number[][]}; submission {finalGrid: (number|null)[][]}
 // ---------------------------------------------------------------------------
 
-fn sudoku(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn sudoku(puzzle_data: &Value, _solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
     use crate::capabilities::puzzle_play::domain::sudoku_scoring::{
         validate_and_score_sudoku, GameSubmission, ScoringResult, SubmissionStatus as Ss,
     };
-    use crate::capabilities::puzzle_play::sudoku::SudokuSolution;
-    if !env.data.is_object() {
-        return SubmissionVerdict::invalid("Missing final grid data");
-    }
-    let Some(grid) = solution.get("grid").and_then(Value::as_array) else {
-        return SubmissionVerdict::invalid("Missing sudoku solution grid");
+    use crate::capabilities::puzzle_play::sudoku::SudokuPuzzleData;
+    let Ok(puzzle) = serde_json::from_value::<SudokuPuzzleData>(puzzle_data.clone()) else {
+        return SubmissionVerdict::invalid("Invalid sudoku given clues");
     };
-    let mut solution_grid: Vec<Vec<u8>> = Vec::new();
-    for row in grid {
-        let row: Vec<u8> = row
-            .as_array()
-            .map(|cells| {
-                cells
-                    .iter()
-                    .filter_map(Value::as_u64)
-                    .map(|v| v as u8)
-                    .collect()
-            })
-            .unwrap_or_default();
-        solution_grid.push(row);
-    }
     let game_submission = GameSubmission {
         status: match env.status {
             SubmissionStatus::Won => Ss::Won,
@@ -373,12 +356,7 @@ fn sudoku(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> S
         time_spent_ms: env.time_spent_ms,
         data: Some(env.data.clone()),
     };
-    match validate_and_score_sudoku(
-        &SudokuSolution {
-            grid: solution_grid,
-        },
-        &game_submission,
-    ) {
+    match validate_and_score_sudoku(&puzzle, &game_submission) {
         ScoringResult::Valid {
             valid,
             status,
@@ -1289,6 +1267,153 @@ mod tests {
         // 2x2 is not a valid sudoku size; expect a validation error, not a panic.
         let v = validate_submission("sudoku", &json!({}), &solution, &data);
         assert!(!v.valid);
+    }
+
+    fn ambiguous_sudoku() -> (Value, Value, Vec<Vec<u8>>) {
+        let generated = crate::capabilities::puzzle_play::sudoku::generate_sudoku_puzzle(
+            42,
+            crate::capabilities::puzzle_play::sudoku::SudokuDifficulty::Easy,
+        );
+        let canonical = generated.solution.grid;
+        // Removing both digits admits their global swap, preserving every clue.
+        let clues: Vec<Vec<Option<u8>>> = canonical
+            .iter()
+            .map(|row| {
+                row.iter()
+                    .map(|v| if *v <= 2 { None } else { Some(*v) })
+                    .collect()
+            })
+            .collect();
+        let alternate = canonical
+            .iter()
+            .map(|row| {
+                row.iter()
+                    .map(|v| match v {
+                        1 => 2,
+                        2 => 1,
+                        _ => *v,
+                    })
+                    .collect()
+            })
+            .collect();
+        (
+            json!({"grid": clues, "difficulty": "easy"}),
+            json!({"grid": canonical}),
+            alternate,
+        )
+    }
+
+    #[test]
+    fn sudoku_accepts_alternate_completion_against_frozen_clues() {
+        let (puzzle, solution, alternate) = ambiguous_sudoku();
+        assert_ne!(json!(alternate), solution["grid"]);
+        let verdict = validate_submission(
+            "sudoku",
+            &puzzle,
+            &solution,
+            &env(json!({"finalGrid": alternate})),
+        );
+        assert!(verdict.valid, "{verdict:?}");
+        assert_eq!(verdict.status, Some(SubmissionStatus::Won));
+        assert_eq!(verdict.score, Some(999));
+        let mut loss = env(json!({"finalGrid": alternate}));
+        loss.status = SubmissionStatus::Lost;
+        assert!(!validate_submission("sudoku", &puzzle, &solution, &loss).valid);
+    }
+
+    #[test]
+    fn sudoku_rejects_valid_grid_that_changes_a_given() {
+        let (mut puzzle, solution, alternate) = ambiguous_sudoku();
+        // Alternate remains a fully valid Sudoku, but this new clue forbids it.
+        let canonical: Vec<Vec<u8>> = serde_json::from_value(solution["grid"].clone()).unwrap();
+        let (r, c) = canonical
+            .iter()
+            .enumerate()
+            .find_map(|(r, row)| row.iter().position(|v| *v <= 2).map(|c| (r, c)))
+            .unwrap();
+        puzzle["grid"][r][c] = json!(canonical[r][c]);
+        assert!(
+            !validate_submission(
+                "sudoku",
+                &puzzle,
+                &solution,
+                &env(json!({"finalGrid": alternate}))
+            )
+            .valid
+        );
+    }
+
+    #[test]
+    fn sudoku_rejects_invalid_grids_and_malformed_clues_without_panicking() {
+        let (puzzle, solution, alternate) = ambiguous_sudoku();
+        for value in [
+            json!(null),
+            json!(0),
+            json!(10),
+            json!(-1),
+            json!(1.5),
+            json!("1"),
+            json!(true),
+        ] {
+            let mut grid = json!(alternate);
+            grid[8][8] = value;
+            assert!(
+                !validate_submission(
+                    "sudoku",
+                    &puzzle,
+                    &solution,
+                    &env(json!({"finalGrid": grid}))
+                )
+                .valid
+            );
+        }
+        let mut grid = alternate.clone();
+        grid[8][8] = grid[8][7];
+        assert!(
+            !validate_submission(
+                "sudoku",
+                &puzzle,
+                &solution,
+                &env(json!({"finalGrid": grid}))
+            )
+            .valid
+        );
+        // A Latin square satisfies row/column uniqueness, but violates 3x3 boxes.
+        let latin: Vec<Vec<u8>> = (0..9)
+            .map(|r| (0..9).map(|c| ((r + c) % 9 + 1) as u8).collect())
+            .collect();
+        let empty = json!({"grid": vec![vec![None::<u8>;9];9], "difficulty": "easy"});
+        assert!(
+            !validate_submission(
+                "sudoku",
+                &empty,
+                &solution,
+                &env(json!({"finalGrid": latin}))
+            )
+            .valid
+        );
+        let mut short = json!(alternate);
+        short[8] = json!([1]);
+        assert!(
+            !validate_submission(
+                "sudoku",
+                &puzzle,
+                &solution,
+                &env(json!({"finalGrid": short}))
+            )
+            .valid
+        );
+        for clues in [json!({}), json!({"grid": [[null]], "difficulty": "easy"})] {
+            assert!(
+                !validate_submission(
+                    "sudoku",
+                    &clues,
+                    &solution,
+                    &env(json!({"finalGrid": alternate}))
+                )
+                .valid
+            );
+        }
     }
 
     #[test]

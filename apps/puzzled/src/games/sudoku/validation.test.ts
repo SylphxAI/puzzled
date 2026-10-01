@@ -223,3 +223,48 @@ describe('sudoku validateAndScore', () => {
 		})
 	})
 })
+
+describe('frozen Sudoku clues, not a canonical answer', () => {
+	const clues = {
+		...puzzleData,
+		grid: correctGrid.map((row) => row.map((v) => (v <= 2 ? null : v))),
+	}
+	const alternate = correctGrid.map((row) => row.map((v) => (v === 1 ? 2 : v === 2 ? 1 : v)))
+
+	test('accepts an alternate valid completion with identical scoring', () => {
+		expect(alternate).not.toEqual(correctGrid)
+		expect(
+			sudokuConfig.validateAndScore(solution, clues, createSubmission('won', alternate, 3, 200000)),
+		).toEqual({ valid: true, status: 'won', score: 650 })
+	})
+
+	test('rejects a valid Sudoku that violates a given clue', () => {
+		const forbidden = { ...clues, grid: clues.grid.map((row) => [...row]) }
+		const r = correctGrid.findIndex((row) => row.includes(1))
+		const c = correctGrid[r].indexOf(1)
+		forbidden.grid[r][c] = 1
+		expect(
+			sudokuConfig.validateAndScore(solution, forbidden, createSubmission('won', alternate, 0, 0))
+				.valid,
+		).toBe(false)
+	})
+
+	test('rejects fractional cells and row/column-valid grids with invalid boxes', () => {
+		const fractional = alternate.map((row) => [...row])
+		fractional[8][8] = 1.5
+		expect(
+			sudokuConfig.validateAndScore(solution, clues, createSubmission('won', fractional, 0, 0))
+				.valid,
+		).toBe(false)
+		const latin = Array.from({ length: 9 }, (_, r) =>
+			Array.from({ length: 9 }, (_, c) => ((r + c) % 9) + 1),
+		)
+		const empty = {
+			...clues,
+			grid: Array.from({ length: 9 }, () => Array<number | null>(9).fill(null)),
+		}
+		expect(
+			sudokuConfig.validateAndScore(solution, empty, createSubmission('won', latin, 0, 0)).valid,
+		).toBe(false)
+	})
+})
