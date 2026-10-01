@@ -1,6 +1,6 @@
 //! Thin REST client for the Money calls Puzzled uses, shaped from
 //! `contracts/generated/openapi.json` (cloud#10272): `entitlement_grants:check`,
-//! `checkout_sessions` and `catalogs/default`. Nothing else is called.
+//! `checkout_sessions` and `price_catalogs/default`. Nothing else is called.
 //!
 //! Entitlement answers are cached at most 60 seconds and never past the
 //! answer's `expire_time`; a Money call that fails answers "not entitled"
@@ -106,7 +106,7 @@ fn segment(id: &str) -> String {
         .collect()
 }
 
-/// A catalogue price as `GET catalogs/default` publishes it.
+/// A catalogue price as `GET price_catalogs/default` publishes it.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CatalogPrice {
     pub key: String,
@@ -404,7 +404,7 @@ impl Money {
         let body = self
             .call(
                 self.http
-                    .get(format!("{}/catalogs/default", self.env_url().await?)),
+                    .get(format!("{}/price_catalogs/default", self.env_url().await?)),
             )
             .await?;
         let catalog: Arc<Catalog> = Arc::new(

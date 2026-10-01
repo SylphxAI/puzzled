@@ -3,12 +3,14 @@
 # workflow is the ONLY writer of the catalogue: no manual catalogue writes.
 # Change the catalogue by PR to that file.
 #
-# No stored secret and no configuration: each job trades a GitHub OIDC token
+# No stored secret: after supported Access admission, each job trades a GitHub OIDC token
 # (audience sylphx-access) for a 15-minute billing:write key bound to this
 # repository, this file's path and refs/heads/main
 # (kernel/access/tenant-manifest.toml, cloud#10444). The key's own name gives
 # the org, project and env it belongs to, so none is written here. The path of
-# this file is pinned in the manifest: do not rename it.
+# this file must match the registered manifest declaration: do not rename it.
+# cloud#10444 must first register billing:write and support this ordinary
+# workflow's workflow_ref claim; no runtime/desk-key fallback is allowed.
 name: Money catalogue
 
 on:
@@ -17,6 +19,7 @@ on:
     paths:
       - 'config/commercial/catalogue.json'
       - 'scripts/money-catalogue-spec.ts'
+      - 'scripts/money-catalogue-apply.sh'
       - '.github/workflows/money-catalogue.yml'
   workflow_dispatch:
 
@@ -31,7 +34,7 @@ concurrency:
 
 jobs:
   preview:
-    name: Apply to preview (Stripe test mode)
+    name: Apply to preview
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10

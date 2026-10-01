@@ -3,11 +3,13 @@
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use axum::body::Body;
 use axum::extract::State;
-use axum::http::StatusCode;
+use axum::http::{Request, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{json, Value};
+use tower::ServiceExt;
 
 use super::access::{family_active, is_premium, seats, FEATURE_PLUS, FEATURE_SEATS};
 use super::checkout::{create_session, session_body, CheckoutError, Consent};
@@ -80,14 +82,7 @@ async fn fake_money(status: u16, answer: Value) -> (Money, Fake) {
         catalog: catalog_fixture(&[]),
         ..Default::default()
     }));
-    let app = Router::new()
-        .route("/env/entitlement_grants:check", post(check))
-        .route("/env/checkout_sessions", post(session))
-        .route("/env/catalogs/default", get(catalog))
-        .route("/env/customer_subscriptions", get(subscriptions))
-        .route("/env/customer_subscriptions/{*rest}", post(action))
-        .route("/env/portal_sessions", post(portal))
-        .with_state(fake.clone());
+    let app = fake_money_router(fake.clone());
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
     tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
@@ -99,6 +94,38 @@ async fn fake_money(status: u16, answer: Value) -> (Money, Fake) {
         ),
         fake,
     )
+}
+
+fn fake_money_router(fake: Fake) -> Router {
+    Router::new()
+        .route("/env/entitlement_grants:check", post(check))
+        .route("/env/checkout_sessions", post(session))
+        .route("/env/price_catalogs/default", get(catalog))
+        .route("/env/customer_subscriptions", get(subscriptions))
+        .route("/env/customer_subscriptions/{*rest}", post(action))
+        .route("/env/portal_sessions", post(portal))
+        .with_state(fake)
+}
+
+#[tokio::test]
+async fn catalogue_reader_and_fixture_use_price_catalogs_and_refuse_old_route() {
+    let (money, fake) = fake_money(200, granted()).await;
+    assert!(
+        money.catalog().await.is_ok(),
+        "reader must reach the real collection"
+    );
+    let app = fake_money_router(fake);
+    for (path, expected) in [
+        ("/env/price_catalogs/default", StatusCode::OK),
+        ("/env/catalogs/default", StatusCode::NOT_FOUND),
+    ] {
+        let response = app
+            .clone()
+            .oneshot(Request::builder().uri(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), expected, "{path}");
+    }
 }
 
 /// Money's catalogue: keys and amounts are arbitrary on purpose, so nothing in
