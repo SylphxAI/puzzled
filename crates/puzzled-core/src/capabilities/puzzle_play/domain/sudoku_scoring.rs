@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::capabilities::puzzle_play::sudoku::SudokuSolution;
+use crate::capabilities::puzzle_play::sudoku::SudokuPuzzleData;
 
 const GRID_SIZE: usize = 9;
 
@@ -58,17 +58,10 @@ impl ScoringResult {
     }
 }
 
-fn cell_matches(submitted: Option<u64>, expected: u8) -> bool {
-    match submitted {
-        Some(value) => value == u64::from(expected),
-        None => false,
-    }
-}
-
 /// Validate a Sudoku submission and compute the server-authoritative score.
 #[must_use]
 pub fn validate_and_score_sudoku(
-    solution: &SudokuSolution,
+    puzzle: &SudokuPuzzleData,
     submission: &GameSubmission,
 ) -> ScoringResult {
     let data = match &submission.data {
@@ -86,33 +79,58 @@ pub fn validate_and_score_sudoku(
         _ => return ScoringResult::invalid("Invalid grid dimensions"),
     };
 
+    // Validate the frozen clues, not a canonical answer: generated and stored
+    // puzzles can have multiple legitimate completions. Never regenerate here.
+    if puzzle.grid.len() != GRID_SIZE
+        || puzzle.grid.iter().any(|row| row.len() != GRID_SIZE)
+        || puzzle
+            .grid
+            .iter()
+            .flatten()
+            .flatten()
+            .any(|v| !(1..=9).contains(v))
+    {
+        return ScoringResult::invalid("Invalid sudoku given clues");
+    }
+
     let mut all_correct = true;
+    let mut row_masks = [0_u16; GRID_SIZE];
+    let mut col_masks = [0_u16; GRID_SIZE];
+    let mut box_masks = [0_u16; GRID_SIZE];
     for (row_index, row_value) in rows.iter().enumerate() {
         let cols = match row_value.as_array() {
             Some(cols) if cols.len() == GRID_SIZE => cols,
-            _ => {
-                return ScoringResult::invalid(format!("Invalid row {row_index} dimensions"));
-            }
+            _ => return ScoringResult::invalid(format!("Invalid row {row_index} dimensions")),
         };
-
         for (col_index, cell_value) in cols.iter().enumerate() {
-            let submitted = cell_value.as_u64();
-            let expected = solution.grid[row_index][col_index];
-            if !cell_matches(submitted, expected) {
+            let Some(value) = cell_value.as_u64().filter(|v| (1..=9).contains(v)) else {
                 all_correct = false;
-                break;
+                continue;
+            };
+            if puzzle.grid[row_index][col_index].is_some_and(|given| u64::from(given) != value) {
+                all_correct = false;
             }
-        }
-        if !all_correct {
-            break;
+            let bit = 1_u16 << value;
+            let box_index = (row_index / 3) * 3 + col_index / 3;
+            if row_masks[row_index] & bit != 0
+                || col_masks[col_index] & bit != 0
+                || box_masks[box_index] & bit != 0
+            {
+                all_correct = false;
+            }
+            row_masks[row_index] |= bit;
+            col_masks[col_index] |= bit;
+            box_masks[box_index] |= bit;
         }
     }
 
     if submission.status == SubmissionStatus::Won && !all_correct {
-        return ScoringResult::invalid("Invalid win claim - grid does not match solution");
+        return ScoringResult::invalid(
+            "Invalid win claim - grid violates Sudoku rules or given clues",
+        );
     }
     if submission.status == SubmissionStatus::Lost && all_correct {
-        return ScoringResult::invalid("Invalid loss claim - grid matches solution");
+        return ScoringResult::invalid("Invalid loss claim - grid solves puzzle");
     }
 
     if !all_correct {
@@ -136,8 +154,8 @@ mod tests {
     use super::*;
     use crate::capabilities::puzzle_play::sudoku::{generate_sudoku_puzzle, SudokuDifficulty};
 
-    fn puzzle(seed: i64) -> SudokuSolution {
-        generate_sudoku_puzzle(seed, SudokuDifficulty::Medium).solution
+    fn puzzle(seed: i64) -> crate::capabilities::puzzle_play::sudoku::SudokuPuzzleResult {
+        generate_sudoku_puzzle(seed, SudokuDifficulty::Medium)
     }
 
     fn grid_to_json(grid: &[Vec<u8>]) -> Value {
@@ -154,7 +172,9 @@ mod tests {
         )
     }
 
-    fn incorrect_grid(solution: &SudokuSolution) -> Value {
+    fn incorrect_grid(
+        solution: &crate::capabilities::puzzle_play::sudoku::SudokuSolution,
+    ) -> Value {
         let mut grid = solution.grid.clone();
         grid[0][0] = (grid[0][0] % 9) + 1;
         grid_to_json(&grid)
@@ -168,11 +188,11 @@ mod tests {
             attempts: 1,
             time_spent_ms: 0,
             data: Some(serde_json::json!({
-                "finalGrid": grid_to_json(&solution.grid),
+                "finalGrid": grid_to_json(&solution.solution.grid),
                 "mistakes": 0
             })),
         };
-        let result = validate_and_score_sudoku(&solution, &submission);
+        let result = validate_and_score_sudoku(&solution.puzzle_data, &submission);
         assert_eq!(result, ScoringResult::valid(SubmissionStatus::Won, 1000));
     }
 
@@ -184,11 +204,11 @@ mod tests {
             attempts: 1,
             time_spent_ms: 60_000,
             data: Some(serde_json::json!({
-                "finalGrid": incorrect_grid(&solution),
+                "finalGrid": incorrect_grid(&solution.solution),
                 "mistakes": 0
             })),
         };
-        let result = validate_and_score_sudoku(&solution, &submission);
+        let result = validate_and_score_sudoku(&solution.puzzle_data, &submission);
         assert_eq!(result, ScoringResult::valid(SubmissionStatus::Lost, 0));
     }
 }

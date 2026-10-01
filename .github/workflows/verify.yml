@@ -399,6 +399,12 @@ jobs:
           BASE_URL: http://localhost:3015
         run: bun run test:a11y
 
+      - name: Sudoku authoritative terminal regression
+        working-directory: apps/puzzled
+        env:
+          BASE_URL: http://localhost:3015
+        run: bun run test:e2e e2e-tests/sudoku-terminal.e2e.ts --workers=1 --retries=0
+
       - name: Upload the Playwright report
         if: always()
         uses: actions/upload-artifact@v4
