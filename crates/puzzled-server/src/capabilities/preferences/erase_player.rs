@@ -11,7 +11,8 @@
 //!
 //! Run in the api's own environment (`[[jobs]] erase-player` in
 //! `sylphx.toml`), so it uses the api's database, Money and Auth bindings.
-//! Output: one JSON line of counts. No subject, player id or email is printed.
+//! Output: one JSON line of counts. No subject, player id, request id or
+//! email is printed or logged by this command or the erase path it runs.
 //!
 //! Platform note: Auth's `auth.user.deletion_requested` delivery to a
 //! registered `[privacy]` erasure handler (cloud `docs/specs/one-platform/
@@ -25,7 +26,7 @@ use std::io::Write;
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::capabilities::identity_access::adapters::auth_erasure::AuthErasure;
+use crate::capabilities::identity_access::adapters::auth_erasure::{AuthErasure, AuthError};
 use crate::capabilities::identity_access::adapters::auth_subjects;
 use crate::capabilities::money::Money;
 use crate::capabilities::preferences::adapters::account_deletion::{
@@ -41,7 +42,8 @@ pub mod exit {
     pub const DATABASE: i32 = 4;
     /// A required binding (database URL, Auth key) is missing.
     pub const CONFIG: i32 = 5;
-    /// Auth refused or could not be reached; nothing was erased.
+    /// Auth refused or did not confirm; no row was erased (the sign-in may be
+    /// deleted when the outcome says `sign_in_unconfirmed`; run it again).
     pub const AUTH: i32 = 6;
 }
 
@@ -168,12 +170,17 @@ async fn run_inner(
                 } else {
                     report.subjects_absent = 1;
                 }
-                report.outcome = "erased";
+                report.outcome = "sign_in_only";
                 exit::OK
             }
-            Err(error) => {
-                tracing::error!(%error, "erase-player: Auth deletion failed");
+            Err(AuthError::Refused(error)) => {
+                tracing::error!(%error, "erase-player: Auth refused the deletion");
                 report.outcome = "auth_refused";
+                exit::AUTH
+            }
+            Err(AuthError::Ambiguous(error)) => {
+                tracing::error!(%error, "erase-player: Auth did not confirm the deletion");
+                report.outcome = "sign_in_unconfirmed";
                 exit::AUTH
             }
         };
@@ -181,22 +188,26 @@ async fn run_inner(
     match erase_player(pool, player, Some(auth), Some(&command.subject)).await {
         Ok(erased) => {
             report.rows_deleted = erased.rows_deleted;
-            report.subjects_filed = erased.subjects_filed;
-            report.subjects_absent = erased.subjects_absent;
+            report.subjects_filed = erased.filed.len();
+            report.subjects_absent = erased.absent.len();
             report.attempts = erased.attempts;
             report.outcome = "erased";
             exit::OK
         }
-        Err(EraseError::SignIn(error)) => {
-            tracing::error!(%error, "erase-player: Auth deletion failed; nothing erased");
+        // `EraseError`'s Display carries no subject; its `subjects()` is not
+        // read here.
+        Err(EraseError::SignInRefused(error)) => {
+            tracing::error!(%error, "erase-player: Auth refused; nothing erased");
             report.outcome = "auth_refused";
             exit::AUTH
         }
-        Err(EraseError::Database {
-            error,
-            sign_in_deleted,
-        }) => {
-            tracing::error!(%error, sign_in_deleted, "erase-player: database failed; nothing erased");
+        Err(error @ EraseError::SignInMaybeDeleted { .. }) => {
+            tracing::error!(%error, "erase-player: Auth did not confirm; no row erased");
+            report.outcome = "sign_in_unconfirmed";
+            exit::AUTH
+        }
+        Err(error @ EraseError::Database { .. }) => {
+            tracing::error!(%error, "erase-player: database failed; no row erased");
             report.outcome = "database_unavailable";
             exit::DATABASE
         }

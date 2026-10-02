@@ -2,9 +2,10 @@
 //! delete the player's Sylphx Auth sign-in.
 //!
 //! The product's rows and the Auth subject are two halves of one person, so
-//! `DeleteAccountData` files Auth's privacy delete for every subject that
-//! names the player before it deletes the rows, and refuses to report success
-//! when Auth refuses. Needs `PUZZLED_TEST_DATABASE_URL` (a server where a
+//! `DeleteAccountData` deletes the rows and files Auth's privacy delete for
+//! every subject that names the player inside one transaction, and commits
+//! only after Auth accepted: a refusal or a failure rolls the rows back and
+//! the request never reports a success it did not have. Needs `PUZZLED_TEST_DATABASE_URL` (a server where a
 //! throwaway database can be created); CI sets it and
 //! `PUZZLED_REQUIRE_DB_TESTS=1`, so a missing database fails there instead of
 //! skipping.
@@ -34,6 +35,9 @@ struct StubAuth {
     seen: Arc<Mutex<Vec<Value>>>,
     status: u16,
     answer: Value,
+    /// Answers for the first requests, in order (status, body, delay before
+    /// answering); then `status` and `answer`.
+    script: Arc<Mutex<std::collections::VecDeque<(u16, Value, u64)>>>,
 }
 
 impl StubAuth {
@@ -43,6 +47,7 @@ impl StubAuth {
             status: 202,
             answer: json!({"privacy_request": {"request_id": "privacy-request-1",
                                                 "state": "accepted"}}),
+            script: Arc::default(),
         }
     }
 
@@ -51,7 +56,14 @@ impl StubAuth {
             seen: Arc::default(),
             status,
             answer,
+            script: Arc::default(),
         }
+    }
+
+    /// Answer the first requests from `script` (status, body, delay in ms).
+    fn scripted(self, script: Vec<(u16, Value, u64)>) -> Self {
+        *self.script.lock().unwrap() = script.into();
+        self
     }
 
     /// The subjects Auth was asked to delete, in request order.
@@ -88,10 +100,11 @@ async fn spawn_auth(stub: StubAuth) -> String {
                         .unwrap_or_default(),
                     "body": serde_json::from_str::<Value>(&body).unwrap_or(Value::Null),
                 }));
-                (
-                    StatusCode::from_u16(stub.status).unwrap(),
-                    Json(stub.answer.clone()),
-                )
+                let next = stub.script.lock().unwrap().pop_front();
+                let (status, answer, delay) =
+                    next.unwrap_or_else(|| (stub.status, stub.answer.clone(), 0));
+                tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
+                (StatusCode::from_u16(status).unwrap(), Json(answer))
             }
         }),
     );
@@ -103,9 +116,10 @@ async fn spawn_auth(stub: StubAuth) -> String {
 
 /// The api as production serves it. `auth_url` None is Enable Auth unbound.
 fn app(pool: &PgPool, auth_url: Option<String>) -> Router {
-    let state = AppState::new(Some(pool.clone())).with_erasure(
-        auth_url.map(|url| AuthErasure::new(url, ORGANIZATION_ID.into(), SECRET_KEY.into())),
-    );
+    let state = AppState::new(Some(pool.clone())).with_erasure(auth_url.map(|url| {
+        AuthErasure::new(url, ORGANIZATION_ID.into(), SECRET_KEY.into())
+            .with_timeout(std::time::Duration::from_millis(300))
+    }));
     router(state)
 }
 
@@ -264,7 +278,8 @@ async fn a_refused_auth_deletion_leaves_every_row_in_place() {
     let Some(pool) = fresh_database().await else {
         return;
     };
-    let stub = StubAuth::answering(502, json!({"error": "identity_unavailable"}));
+    // A definite refusal (a 4xx Auth decided on): the sign-in is intact.
+    let stub = StubAuth::answering(403, json!({"error": "privacy_request_forbidden"}));
     let base = spawn_auth(stub.clone()).await;
 
     let player = Uuid::now_v7();
@@ -556,7 +571,7 @@ async fn a_second_erasure_is_a_no_op() {
     assert_eq!(code, 0, "{report}");
     assert_eq!(report["player_found"], false);
     assert_eq!(report["rows_deleted"], 0);
-    assert_eq!(report["outcome"], "erased");
+    assert_eq!(report["outcome"], "sign_in_only");
 }
 
 #[tokio::test]
@@ -597,7 +612,7 @@ async fn erase_player_refuses_while_auth_refuses_and_erases_nothing() {
     let Some(pool) = fresh_database().await else {
         return;
     };
-    let stub = StubAuth::answering(503, json!({"error": "identity_unavailable"}));
+    let stub = StubAuth::answering(403, json!({"error": "privacy_request_forbidden"}));
     let base = spawn_auth(stub.clone()).await;
     let player = Uuid::now_v7();
     let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
@@ -606,6 +621,123 @@ async fn erase_player_refuses_while_auth_refuses_and_erases_nothing() {
     let (code, report) = erase_player_command(&pool, &base, &["--subject", subject]).await;
     assert_eq!(code, 6, "{report}");
     assert_eq!(report["outcome"], "auth_refused");
+    assert_eq!(preference_rows(&pool, player).await, 1);
+    assert_eq!(subject_rows(&pool, player).await, 1);
+}
+
+// --- Ambiguous Auth answers: Auth may have deleted the sign-in ---
+
+fn accepted(id: &str) -> Value {
+    json!({"privacy_request": {"request_id": id, "state": "accepted"}})
+}
+
+#[tokio::test]
+async fn an_auth_timeout_is_retried_with_the_same_request_and_the_erasure_completes() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    // Auth records the request, then answers too late (past the 300 ms
+    // timeout): it may have accepted it. The second answer is in time.
+    let stub = StubAuth::accepting().scripted(vec![(202, accepted("privacy-request-1"), 2_000)]);
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, &[subject]).await;
+
+    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    // Asked twice, with one fixed idempotency key: one request at Auth.
+    assert_eq!(stub.subjects(), vec![subject.to_string(); 2]);
+    let keys: Vec<Value> = stub
+        .seen
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|r| r["body"]["idempotency_key"].clone())
+        .collect();
+    assert_eq!(keys[0], keys[1]);
+    assert_eq!(preference_rows(&pool, player).await, 0);
+    assert_eq!(subject_rows(&pool, player).await, 0);
+}
+
+#[tokio::test]
+async fn auth_that_keeps_answering_503_leaves_the_rows_whole_and_says_run_erase_player() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    // Auth records every request and answers 503: it may have suspended the
+    // person anyway, so this is not a clean, retryable refusal.
+    let stub = StubAuth::answering(503, json!({"error": "identity_unavailable"}));
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, &[subject]).await;
+
+    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR, "{body}");
+    assert!(message(&body).contains("account_deletion_failed"));
+    // Bounded: four attempts, the same subject each time.
+    assert_eq!(stub.subjects(), vec![subject.to_string(); 4]);
+    assert_eq!(preference_rows(&pool, player).await, 1);
+    assert_eq!(subject_rows(&pool, player).await, 1);
+
+    // Auth recovers; the operator finishes it by subject.
+    let healthy = StubAuth::accepting();
+    let base = spawn_auth(healthy.clone()).await;
+    let (code, report) = erase_player_command(&pool, &base, &["--subject", subject]).await;
+    assert_eq!(code, 0, "{report}");
+    assert_eq!(report["outcome"], "erased");
+    assert_eq!(preference_rows(&pool, player).await, 0);
+    assert_eq!(subject_rows(&pool, player).await, 0);
+}
+
+#[tokio::test]
+async fn a_refusal_after_another_subject_was_accepted_is_not_a_clean_refusal() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    // Two subjects: Auth accepts the first, then refuses the second.
+    let stub = StubAuth::answering(403, json!({"error": "privacy_request_forbidden"}))
+        .scripted(vec![(202, accepted("privacy-request-1"), 0)]);
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    let legacy = format!("principal-{player}");
+    seed(&pool, player, &["usr_01kmp4wyhhfgxsyrjvh8e0tkkf", &legacy]).await;
+
+    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR, "{body}");
+    assert!(message(&body).contains("account_deletion_failed"));
+    assert_eq!(stub.subjects().len(), 2);
+    assert_eq!(preference_rows(&pool, player).await, 1);
+    assert_eq!(subject_rows(&pool, player).await, 2);
+}
+
+#[tokio::test]
+async fn erase_player_reports_an_unconfirmed_sign_in_and_erases_no_row() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let stub = StubAuth::answering(502, json!({"error": "bad_gateway"}));
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, &[subject]).await;
+
+    let (code, report) = erase_player_command(&pool, &base, &["--subject", subject]).await;
+    assert_eq!(code, 6, "{report}");
+    assert_eq!(report["outcome"], "sign_in_unconfirmed");
     assert_eq!(preference_rows(&pool, player).await, 1);
     assert_eq!(subject_rows(&pool, player).await, 1);
 }

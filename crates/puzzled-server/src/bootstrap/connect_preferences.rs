@@ -519,11 +519,12 @@ impl PreferencesService for PreferencesConnectService {
         // leave a live sign-in behind a purged account (an erasure that is not
         // an erasure). `erase_player` deletes the rows and files Auth's
         // deletion inside one transaction and commits only after Auth
-        // accepted: a database failure before that, or an Auth refusal, rolls
-        // back and leaves the person whole and signed in to retry; transient
-        // database errors are retried in place. Only a commit that keeps
-        // failing after Auth accepted leaves rows behind a deleted sign-in,
-        // and the subject map survives it for `erase-player --subject`.
+        // accepted. A database failure before Auth, or a definite Auth
+        // refusal, rolls back and leaves the person whole and signed in to
+        // retry (503). Transient database errors and ambiguous Auth answers
+        // are retried in place. What still fails after Auth may have deleted
+        // the sign-in keeps every row and the subject map, and is logged with
+        // the subjects for `erase-player --subject` (500).
         let erasure = self.state.erasure.as_ref().ok_or_else(|| {
             tracing::error!("account erasure refused: Enable Auth is not configured");
             ConnectError::new(ErrorCode::Unavailable, "identity_credential_unconfigured")
@@ -534,6 +535,16 @@ impl PreferencesService for PreferencesConnectService {
         })?;
         match erase_player(pool, player, Some(erasure), None).await {
             Ok(erased) => {
+                for (subject, request_id) in &erased.filed {
+                    tracing::info!(
+                        subject,
+                        privacy_request_id = %request_id,
+                        "sylphx auth account deletion requested"
+                    );
+                }
+                for subject in &erased.absent {
+                    tracing::info!(subject, "sylphx auth holds no account to delete");
+                }
                 tracing::info!(
                     rows_deleted = erased.rows_deleted,
                     attempts = erased.attempts,
@@ -544,33 +555,30 @@ impl PreferencesService for PreferencesConnectService {
                     ..Default::default()
                 })
             }
-            Err(EraseError::SignIn(_)) => Err(ConnectError::new(
-                ErrorCode::Unavailable,
-                "identity_account_deletion_failed",
-            )),
+            Err(EraseError::SignInRefused(error)) => {
+                tracing::error!(%error, "sylphx auth account deletion refused; nothing erased");
+                Err(ConnectError::new(
+                    ErrorCode::Unavailable,
+                    "identity_account_deletion_failed",
+                ))
+            }
             // Rolled back before Auth was asked: the account and its sign-in
             // are whole, and the person can repeat the request.
-            Err(EraseError::Database {
-                error,
-                sign_in_deleted: false,
-            }) => {
+            Err(error) if !error.sign_in_may_be_deleted() => {
                 tracing::warn!(%error, "account deletion failed; nothing erased");
                 Err(ConnectError::new(
                     ErrorCode::Unavailable,
                     "account_deletion_unavailable",
                 ))
             }
-            // Auth accepted but the rows could not be committed: the person
-            // cannot sign in to retry. The subject map is intact, so the
-            // operator finishes it with `erase-player --subject` (the subject
-            // is in the "sylphx auth account deletion requested" line above).
-            Err(EraseError::Database {
-                error,
-                sign_in_deleted: true,
-            }) => {
+            // Auth may have deleted the sign-in but the rows were not
+            // committed: the person may not be able to sign in to retry. The
+            // subject map is intact; the operator finishes it by subject.
+            Err(error) => {
                 tracing::error!(
                     %error,
-                    "account erasure incomplete: sign-in deleted, rows remain; run erase-player"
+                    subjects = ?error.subjects(),
+                    "account erasure incomplete: sign-in may be deleted, rows remain; run erase-player --subject"
                 );
                 Err(ConnectError::new(
                     ErrorCode::Internal,
