@@ -10,12 +10,14 @@
 import 'server-only'
 
 import { create } from '@bufbuild/protobuf'
-import { createClient } from '@connectrpc/connect'
+import { Code, ConnectError, createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
 import { createActiveAnnouncementsCache } from '@/features/announcements/lib/active-cache'
 import { type SharedResult, toSharedResult } from '@/features/daily/lib/challenge'
+import { offerAccess } from '@/features/plus-offer/lib/plus-offer'
+import { AdminService, GetSettingsRequestSchema } from '@/gen/connect/puzzled/v1/admin_pb'
 import {
 	AnnouncementService,
 	ListActiveAnnouncementsRequestSchema,
@@ -122,6 +124,27 @@ export async function hasServerProgressIdentity(): Promise<boolean> {
 				Boolean(cookie.value),
 		)
 }
+
+/**
+ * Whether the signed-in player is a Puzzled admin, as the api decides it
+ * (`is_admin` on the verified identity, enforced by `require_admin` on every
+ * admin RPC). The web keeps no admin check of its own: it asks the api through
+ * the cheapest admin read, so the page gate and the data gate share one source.
+ * Any failure reads as not admin (fail closed).
+ */
+export const getServerIsAdmin = cache(async (): Promise<boolean> => {
+	try {
+		const transport = await getServerTransport()
+		await createClient(AdminService, transport).getSettings(create(GetSettingsRequestSchema, {}))
+		return true
+	} catch (error) {
+		const denied =
+			ConnectError.from(error).code === Code.PermissionDenied ||
+			ConnectError.from(error).code === Code.Unauthenticated
+		if (!denied) logger.warn('admin.gate-check-failed')
+		return false
+	}
+})
 
 // ==========================================
 // Server data accessors (sole Connect)
@@ -384,6 +407,31 @@ export const getServerSubscription = cache(async (refresh = false) => {
 	return createClient(BillingService, transport).getSubscription(
 		create(GetSubscriptionRequestSchema, { refresh }),
 	)
+})
+
+/**
+ * Access for offers only (result card, milestone prompt). A failed read hides
+ * the offer instead of selling to a member Money could not confirm; it reuses
+ * the cached reads above, so it adds no calls.
+ */
+export const getServerPlusOfferAccess = cache(async (signedIn: boolean): Promise<PlusAccess> => {
+	let subscription: PlusAccess | 'failed' = 'failed'
+	let plansSalesOpen: boolean | 'failed' = 'failed'
+	if (signedIn) {
+		try {
+			const res = await getServerSubscription()
+			subscription = { salesOpen: res.salesOpen, entitled: res.entitled }
+		} catch (error) {
+			logger.warn('plus.offer-subscription-read-failed', { error })
+		}
+	} else {
+		try {
+			plansSalesOpen = (await getServerPlans()).salesOpen
+		} catch (error) {
+			logger.warn('plus.offer-plans-read-failed', { error })
+		}
+	}
+	return offerAccess(signedIn, subscription, plansSalesOpen)
 })
 
 /**
