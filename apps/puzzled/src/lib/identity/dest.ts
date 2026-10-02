@@ -193,7 +193,10 @@ function authErrorCode(text: string, status: number): string {
 	try {
 		const body = JSON.parse(text) as { code?: unknown; error?: unknown }
 		if (typeof body.code === 'string' && body.code) return body.code
-		if (typeof body.error === 'string' && body.error) return body.error
+		// Only a code-shaped `error` (a proxy without `code`); never free text.
+		if (typeof body.error === 'string' && /^[a-z0-9_.-]{1,64}$/.test(body.error)) {
+			return body.error
+		}
 	} catch {
 		// Not JSON: fall through to the status.
 	}
