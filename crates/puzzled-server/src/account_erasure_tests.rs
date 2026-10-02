@@ -362,3 +362,250 @@ async fn an_identity_that_is_not_a_player_id_erases_nothing() {
     assert!(message(&body).contains("account_deletion_failed"));
     assert!(stub.seen.lock().unwrap().is_empty());
 }
+
+// --- Robustness: a database that fails mid-erasure (2026-10-02 incident) ---
+//
+// Faults are real server-side failures, not mocks: a trigger on
+// `notification_preferences` terminates its own backend, so the api sees the
+// connection die exactly as it did in production. `deferred` fires the
+// trigger at COMMIT (after Auth accepted); otherwise it fires on the DELETE
+// (before Auth is asked). The first `times` firings fail; a sequence counts
+// them because it survives the rollback.
+
+async fn inject_fault(pool: &PgPool, deferred: bool, times: i64) {
+    sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
+        "CREATE SEQUENCE erasure_fault;
+         CREATE FUNCTION erasure_fault() RETURNS trigger LANGUAGE plpgsql AS $$
+         BEGIN
+           IF nextval('erasure_fault') <= {times} THEN
+             PERFORM pg_terminate_backend(pg_backend_pid());
+           END IF;
+           RETURN OLD;
+         END $$;
+         {trigger}",
+        trigger = if deferred {
+            "CREATE CONSTRAINT TRIGGER erasure_fault AFTER DELETE ON notification_preferences
+             DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION erasure_fault();"
+        } else {
+            "CREATE TRIGGER erasure_fault BEFORE DELETE ON notification_preferences
+             FOR EACH ROW EXECUTE FUNCTION erasure_fault();"
+        }
+    )))
+    .execute(pool)
+    .await
+    .unwrap();
+}
+
+async fn clear_fault(pool: &PgPool) {
+    sqlx::raw_sql("DROP TRIGGER erasure_fault ON notification_preferences")
+        .execute(pool)
+        .await
+        .unwrap();
+}
+
+async fn fault_firings(pool: &PgPool) -> i64 {
+    sqlx::query_scalar("SELECT last_value FROM erasure_fault")
+        .fetch_one(pool)
+        .await
+        .unwrap()
+}
+
+async fn erase_player_command(pool: &PgPool, base: &str, args: &[&str]) -> (i32, Value) {
+    use crate::capabilities::preferences::erase_player::{parse, run};
+    let args: Vec<String> = args.iter().map(|s| (*s).to_string()).collect();
+    let command = parse(&args).unwrap();
+    let auth = AuthErasure::new(base.to_string(), ORGANIZATION_ID.into(), SECRET_KEY.into());
+    let mut out = Vec::new();
+    let code = run(&command, pool, None, Some(&auth), &mut out).await;
+    let text = String::from_utf8(out).unwrap();
+    for arg in &args {
+        if arg.starts_with("usr_") || arg.starts_with("principal-") {
+            assert!(
+                !text.contains(arg.as_str()),
+                "the report names a subject: {text}"
+            );
+        }
+    }
+    (code, serde_json::from_str(text.trim()).unwrap())
+}
+
+#[tokio::test]
+async fn a_connection_reset_at_commit_is_retried_and_the_erasure_completes() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let stub = StubAuth::accepting();
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, &[subject]).await;
+    // The first commit dies after Auth accepted: the incident's window.
+    inject_fault(&pool, true, 1).await;
+
+    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    assert_eq!(
+        fault_firings(&pool).await,
+        2,
+        "one failed commit, one retried"
+    );
+    // Auth was asked once: the retry does not file a second request.
+    assert_eq!(stub.subjects(), vec![subject.to_string()]);
+    assert_eq!(preference_rows(&pool, player).await, 0);
+    assert_eq!(subject_rows(&pool, player).await, 0);
+}
+
+#[tokio::test]
+async fn a_database_that_keeps_failing_before_auth_erases_nothing_and_keeps_the_sign_in() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let stub = StubAuth::accepting();
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, &[subject]).await;
+    inject_fault(&pool, false, 1_000).await;
+
+    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE, "{body}");
+    assert!(message(&body).contains("account_deletion_unavailable"));
+    // Bounded: four attempts, then a retryable refusal.
+    assert_eq!(fault_firings(&pool).await, 4);
+    // No partial state, and Auth was never asked: the person can still sign
+    // in and repeat the request.
+    assert!(stub.subjects().is_empty());
+    assert_eq!(preference_rows(&pool, player).await, 1);
+    assert_eq!(subject_rows(&pool, player).await, 1);
+}
+
+#[tokio::test]
+async fn a_commit_that_keeps_failing_after_auth_leaves_the_rows_whole_for_erase_player() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let stub = StubAuth::accepting();
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, &[subject]).await;
+    inject_fault(&pool, true, 1_000).await;
+
+    let (status, body) =
+        delete_account(&app(&pool, Some(base.clone())), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR, "{body}");
+    assert!(message(&body).contains("account_deletion_failed"));
+    assert_eq!(fault_firings(&pool).await, 4);
+    // All or nothing: every row and the subject map survive, so the subject
+    // still names the player for the operator's recovery.
+    assert_eq!(stub.subjects(), vec![subject.to_string()]);
+    assert_eq!(preference_rows(&pool, player).await, 1);
+    assert_eq!(subject_rows(&pool, player).await, 1);
+
+    // The database recovers; the operator finishes the erasure by subject.
+    clear_fault(&pool).await;
+    let (code, report) = erase_player_command(&pool, &base, &["--subject", subject]).await;
+    assert_eq!(code, 0, "{report}");
+    assert_eq!(report["outcome"], "erased");
+    assert_eq!(report["player_found"], true);
+    assert_eq!(report["rows_deleted"], 2, "{report}");
+    assert_eq!(preference_rows(&pool, player).await, 0);
+    assert_eq!(subject_rows(&pool, player).await, 0);
+    // Auth was named the same subject again (same idempotency key).
+    assert_eq!(stub.subjects(), vec![subject.to_string(); 2]);
+}
+
+#[tokio::test]
+async fn a_second_erasure_is_a_no_op() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let stub = StubAuth::accepting();
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, &[subject]).await;
+
+    let (status, body) =
+        delete_account(&app(&pool, Some(base.clone())), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    assert_eq!(body["rowsDeleted"], "2", "{body}");
+
+    // Rows-only erasure again: nothing left.
+    let again = crate::capabilities::preferences::adapters::account_deletion::delete_account_data(
+        &pool,
+        &player.to_string(),
+    )
+    .await;
+    assert_eq!(again, Ok(0));
+    // The operator command again: the subject no longer names a player, so
+    // only Auth is asked (it answers the same request), and nothing is deleted.
+    let (code, report) = erase_player_command(&pool, &base, &["--subject", subject]).await;
+    assert_eq!(code, 0, "{report}");
+    assert_eq!(report["player_found"], false);
+    assert_eq!(report["rows_deleted"], 0);
+    assert_eq!(report["outcome"], "erased");
+}
+
+#[tokio::test]
+async fn erase_player_dry_run_counts_and_changes_nothing() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let stub = StubAuth::accepting();
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    seed(&pool, player, &[]).await;
+
+    // An old-form subject with no map row still names its player.
+    let subject = format!("principal-{player}");
+    let (code, report) =
+        erase_player_command(&pool, &base, &["--dry-run", "--subject", &subject]).await;
+    assert_eq!(code, 0, "{report}");
+    assert_eq!(report["outcome"], "dry_run");
+    assert_eq!(report["rows_found"], 1);
+    assert!(stub.subjects().is_empty());
+    assert_eq!(preference_rows(&pool, player).await, 1);
+
+    let (code, report) = erase_player_command(&pool, &base, &["--subject", &subject]).await;
+    assert_eq!(code, 0, "{report}");
+    assert_eq!(report["rows_deleted"], 1);
+    assert_eq!(stub.subjects(), vec![subject.clone()]);
+    assert_eq!(preference_rows(&pool, player).await, 0);
+}
+
+#[tokio::test]
+async fn erase_player_refuses_while_auth_refuses_and_erases_nothing() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let stub = StubAuth::answering(503, json!({"error": "identity_unavailable"}));
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, &[subject]).await;
+
+    let (code, report) = erase_player_command(&pool, &base, &["--subject", subject]).await;
+    assert_eq!(code, 6, "{report}");
+    assert_eq!(report["outcome"], "auth_refused");
+    assert_eq!(preference_rows(&pool, player).await, 1);
+    assert_eq!(subject_rows(&pool, player).await, 1);
+}

@@ -19,7 +19,7 @@
 //! Players whose subject changes while they are away are linked from the
 //! platform's id map export with [`LINK_FROM_ID_MAP`].
 
-use sqlx::PgPool;
+use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
 /// The player a Sylphx Auth subject signs in as, linking it on first use.
@@ -75,24 +75,27 @@ pub async fn player_for(
     }
 }
 
-/// Every subject recorded for one player — the new form, the legacy form, or
-/// both during Auth's migration (cloud#10026) — so an erasure can name each
-/// one to Auth. A player with no row has never signed in through this table
-/// and was derived from the old form, which is then the only handle Auth
-/// knows.
-pub async fn subjects_naming_player(
-    pool: &PgPool,
+/// Every subject recorded for one player: the new form, the legacy form, or
+/// both during Auth's migration (cloud#10026), so an erasure can name each
+/// one to Auth. Read inside the erasure's transaction, under its lock. A
+/// player with no row signed in before this table existed and was derived
+/// from the old form; the erasure then names `principal-<player>`.
+pub async fn recorded_subjects(
+    connection: &mut PgConnection,
     player: Uuid,
 ) -> Result<Vec<String>, sqlx::Error> {
-    let subjects: Vec<String> =
-        sqlx::query_scalar("SELECT subject FROM auth_subjects WHERE user_id = $1 ORDER BY subject")
-            .bind(player)
-            .fetch_all(pool)
-            .await?;
-    if subjects.is_empty() {
-        return Ok(vec![format!("principal-{player}")]);
-    }
-    Ok(subjects)
+    sqlx::query_scalar("SELECT subject FROM auth_subjects WHERE user_id = $1 ORDER BY subject")
+        .bind(player)
+        .fetch_all(connection)
+        .await
+}
+
+/// The player an Auth subject names, without linking a new one: its map row,
+/// else the old-form uuid. `None` for an unknown new-form subject.
+pub async fn known_player(pool: &PgPool, subject: &str) -> Result<Option<Uuid>, sqlx::Error> {
+    Ok(lookup(pool, subject)
+        .await?
+        .or_else(|| legacy_player_id(subject)))
 }
 
 async fn lookup(pool: &PgPool, subject: &str) -> Result<Option<Uuid>, sqlx::Error> {

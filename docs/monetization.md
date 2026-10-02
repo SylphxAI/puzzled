@@ -96,9 +96,17 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   is cancelled. Money retains legally required financial records under its own retention
   policy; Puzzled has no subscription or payment-ledger rows to retain.
 - Erasure also deletes the player's Sylphx Auth sign-in, through Auth's
-  privacy-request API, for every subject that names the player. A refused
-  Auth deletion erases nothing: the account stays whole and the request can
-  be repeated.
+  privacy-request API, for every subject that names the player. The rows and
+  Auth's deletion run in one transaction that commits only after Auth
+  accepted (`account_deletion::erase_player`), and transient database errors
+  are retried in place. A refused Auth deletion or a database failure before
+  Auth erases nothing: the account stays whole and the request can be
+  repeated. If the commit keeps failing after Auth accepted, the rows stay
+  whole but the person can no longer sign in; the operator finishes it with
+  `sylphx jobs run erase-player -- --subject <auth subject>` (the subject is
+  in the api's "sylphx auth account deletion requested" log line). When Auth
+  serves its erasure delivery (`[privacy]` handler, platform spec), that
+  delivery replaces the manual step.
 - Terms, Privacy and checkout name Sylphx Limited, state VAT-inclusive prices,
   automatic renewal, the 14-day right, and UK GDPR with the ICO.
 

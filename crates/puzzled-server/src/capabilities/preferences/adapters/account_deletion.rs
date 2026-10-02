@@ -5,8 +5,14 @@
 //! player-id column that is not listed here, so a new table cannot be left out
 //! of erasure silently.
 
+use std::collections::BTreeSet;
+use std::time::Duration;
+
 use sqlx::PgPool;
 use uuid::Uuid;
+
+use crate::capabilities::identity_access::adapters::auth_erasure::AuthErasure;
+use crate::capabilities::identity_access::adapters::{auth_subjects, guest_credentials};
 
 /// Every (table, column) that stores a player id, with the statement that
 /// erases it. Rows matching the player are deleted, including audit rows where
@@ -138,61 +144,299 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     ),
 ];
 
-/// Erase an account and its adopted source guests, retaining the complete
-/// linked identity set until all player-keyed rows have been removed. Trail
-/// columns name the SOURCE guest UUID, not the destination account UUID.
-pub async fn delete_account_data(pool: &PgPool, user_id: &str) -> Result<u64, String> {
-    let uid = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
-    for _ in 0..3 {
-        let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
-        let linked: Vec<Uuid> = sqlx::query_scalar(
-            "SELECT user_id FROM guest_credentials WHERE adopted_user_id = $1 ORDER BY user_id",
-        )
-        .bind(uid)
-        .fetch_all(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-        let mut players = vec![uid];
-        players.extend(linked.iter().copied());
-        crate::capabilities::identity_access::adapters::guest_credentials::lock_players(
-            &mut tx,
-            players.clone(),
-        )
-        .await
-        .map_err(|e| e.to_string())?;
-        let locked_linked: Vec<Uuid> = sqlx::query_scalar(
-            "SELECT user_id FROM guest_credentials WHERE adopted_user_id = $1 ORDER BY user_id",
-        )
-        .bind(uid)
-        .fetch_all(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-        if linked != locked_linked {
-            tx.rollback().await.map_err(|e| e.to_string())?;
-            continue;
+/// How many times one erasure runs its transaction before it reports a
+/// database failure, and the pause before each retry. Bounded and short: the
+/// person is waiting on the request.
+const ATTEMPTS: usize = 4;
+const BACKOFF: [Duration; ATTEMPTS - 1] = [
+    Duration::from_millis(100),
+    Duration::from_millis(400),
+    Duration::from_millis(1600),
+];
+
+/// A finished erasure: rows deleted (by the attempt that committed), and the
+/// Auth subjects whose deletion Auth accepted or no longer held.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct Erased {
+    pub rows_deleted: u64,
+    pub subjects_filed: usize,
+    pub subjects_absent: usize,
+    pub attempts: usize,
+}
+
+/// Why an erasure did not finish. Every variant leaves the player's rows
+/// whole: the deletes and the subject map run in one transaction that never
+/// committed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EraseError {
+    /// Auth refused the deletion or could not be reached. The transaction was
+    /// rolled back before commit, so the account and its sign-in stay whole
+    /// and the request can be repeated.
+    SignIn(String),
+    /// The database failed every attempt (or a non-transient error). When
+    /// `sign_in_deleted` is true Auth had already accepted the deletion, so
+    /// the person can no longer sign in to retry: `puzzled-server
+    /// erase-player --subject <subject>` finishes it.
+    Database {
+        error: String,
+        sign_in_deleted: bool,
+    },
+}
+
+impl std::fmt::Display for EraseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::SignIn(error) => write!(f, "sign-in deletion failed: {error}"),
+            Self::Database {
+                error,
+                sign_in_deleted,
+            } => write!(
+                f,
+                "account deletion failed (sign-in deleted: {sign_in_deleted}): {error}"
+            ),
         }
-        let mut deleted = 0u64;
-        // Registry rows are last: never erase the only source-guest linkage
-        // before visiting its collision rows, freezes, and adoption trails.
-        for credentials in [false, true] {
-            for player in &players {
-                for (table, column, statement) in USER_KEYED_COLUMNS {
-                    if (*table == "guest_credentials") != credentials {
-                        continue;
-                    }
-                    let result = sqlx::query(*statement)
-                        .bind(player)
-                        .execute(&mut *tx)
-                        .await
-                        .map_err(|e| format!("account deletion failed on {table}.{column}: {e}"))?;
-                    deleted += result.rows_affected();
+    }
+}
+
+/// A database failure worth repeating the whole transaction for: the
+/// connection dropped (the 2026-10-02 `Connection reset by peer`), the pool
+/// timed out, the server restarted or failed over, or Postgres asked for a
+/// retry (serialization failure, deadlock). Anything else is a real refusal.
+#[must_use]
+pub fn is_transient(error: &sqlx::Error) -> bool {
+    match error {
+        sqlx::Error::Io(_) | sqlx::Error::PoolTimedOut | sqlx::Error::WorkerCrashed => true,
+        sqlx::Error::Database(db) => db.code().is_some_and(|code| {
+            matches!(
+                code.as_ref(),
+                "40001" | "40P01" | "57P01" | "57P02" | "57P03"
+            ) || code.starts_with("08")
+        }),
+        _ => false,
+    }
+}
+
+/// One attempt's failure, before the retry policy reads it.
+enum Failure {
+    Database(sqlx::Error, &'static str),
+    IdentitySetChanged,
+    SignIn(String),
+}
+
+impl Failure {
+    fn at(table: &'static str) -> impl FnOnce(sqlx::Error) -> Self {
+        move |error| Self::Database(error, table)
+    }
+}
+
+/// Erase an account and its adopted source guests, and (when `sign_in` is
+/// given) the person's Sylphx Auth sign-in, as one unit.
+///
+/// Order, inside ONE transaction: lock the identity set, read the Auth
+/// subjects that name the player, delete every player-keyed row (the subject
+/// map included), then file Auth's deletion for each subject, then commit.
+/// So:
+/// - a database failure before Auth is called rolls everything back and the
+///   person can still sign in and retry;
+/// - an Auth refusal rolls the deletes back, so no live sign-in is left on an
+///   empty account;
+/// - only a failure of the commit itself, after Auth accepted, can leave
+///   rows behind a deleted sign-in. That window is the commit alone, and
+///   transient failures there are retried here (Auth is not asked again for
+///   a subject it already accepted); the subject map survives every failed
+///   attempt, so `erase-player --subject` can always finish it.
+///
+/// `named_subject` adds a subject the caller knows (an operator's
+/// `--subject`) to those the map records. Transient database errors are
+/// retried with a short bounded backoff ([`is_transient`]).
+pub async fn erase_player(
+    pool: &PgPool,
+    player: Uuid,
+    sign_in: Option<&AuthErasure>,
+    named_subject: Option<&str>,
+) -> Result<Erased, EraseError> {
+    let mut filed = BTreeSet::new();
+    let mut absent = BTreeSet::new();
+    let mut last = String::from("account deletion identity set changed");
+    for attempt in 1..=ATTEMPTS {
+        let outcome = erase_once(
+            pool,
+            player,
+            sign_in,
+            named_subject,
+            &mut filed,
+            &mut absent,
+        )
+        .await;
+        let retry = match outcome {
+            Ok(rows_deleted) => {
+                return Ok(Erased {
+                    rows_deleted,
+                    subjects_filed: filed.len(),
+                    subjects_absent: absent.len(),
+                    attempts: attempt,
+                })
+            }
+            Err(Failure::SignIn(error)) => return Err(EraseError::SignIn(error)),
+            Err(Failure::IdentitySetChanged) => {
+                last = "account deletion identity set changed".into();
+                true
+            }
+            Err(Failure::Database(error, table)) => {
+                let retry = is_transient(&error);
+                last = format!("account deletion failed on {table}: {error}");
+                if retry {
+                    tracing::warn!(attempt, error = %last, "account erasure attempt failed; retrying");
+                }
+                retry
+            }
+        };
+        if !retry {
+            break;
+        }
+        if let Some(pause) = BACKOFF.get(attempt - 1) {
+            tokio::time::sleep(*pause).await;
+        }
+    }
+    Err(EraseError::Database {
+        error: last,
+        sign_in_deleted: !filed.is_empty() || !absent.is_empty(),
+    })
+}
+
+async fn erase_once(
+    pool: &PgPool,
+    uid: Uuid,
+    sign_in: Option<&AuthErasure>,
+    named_subject: Option<&str>,
+    filed: &mut BTreeSet<String>,
+    absent: &mut BTreeSet<String>,
+) -> Result<u64, Failure> {
+    let mut tx = pool.begin().await.map_err(Failure::at("begin"))?;
+    let linked: Vec<Uuid> = sqlx::query_scalar(
+        "SELECT user_id FROM guest_credentials WHERE adopted_user_id = $1 ORDER BY user_id",
+    )
+    .bind(uid)
+    .fetch_all(&mut *tx)
+    .await
+    .map_err(Failure::at("guest_credentials"))?;
+    let mut players = vec![uid];
+    players.extend(linked.iter().copied());
+    guest_credentials::lock_players(&mut tx, players.clone())
+        .await
+        .map_err(Failure::at("lock"))?;
+    let locked_linked: Vec<Uuid> = sqlx::query_scalar(
+        "SELECT user_id FROM guest_credentials WHERE adopted_user_id = $1 ORDER BY user_id",
+    )
+    .bind(uid)
+    .fetch_all(&mut *tx)
+    .await
+    .map_err(Failure::at("guest_credentials"))?;
+    if linked != locked_linked {
+        let _ = tx.rollback().await;
+        return Err(Failure::IdentitySetChanged);
+    }
+    // Read under the lock and before the map rows are deleted below.
+    let mut subjects = auth_subjects::recorded_subjects(&mut tx, uid)
+        .await
+        .map_err(Failure::at("auth_subjects"))?;
+    // No row and nothing filed yet: the player predates the map, and the old
+    // form is the only handle Auth knows. (Once a subject was filed, an empty
+    // map means an earlier attempt's commit landed after all.)
+    if subjects.is_empty() && filed.is_empty() && absent.is_empty() {
+        subjects.push(format!("principal-{uid}"));
+    }
+    if let Some(named) = named_subject {
+        if !subjects.iter().any(|s| s == named) {
+            subjects.push(named.to_string());
+        }
+    }
+    let mut deleted = 0u64;
+    // Registry rows are last: never erase the only source-guest linkage
+    // before visiting its collision rows, freezes, and adoption trails.
+    for credentials in [false, true] {
+        for player in &players {
+            for (table, _column, statement) in USER_KEYED_COLUMNS {
+                if (*table == "guest_credentials") != credentials {
+                    continue;
+                }
+                let result = sqlx::query(*statement)
+                    .bind(player)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(Failure::at(table))?;
+                deleted += result.rows_affected();
+            }
+        }
+    }
+    if let Some(auth) = sign_in {
+        for subject in subjects {
+            if filed.contains(&subject) || absent.contains(&subject) {
+                continue;
+            }
+            match auth.delete_principal(&subject).await {
+                Ok(Some(request_id)) => {
+                    tracing::info!(
+                        subject,
+                        privacy_request_id = %request_id,
+                        "sylphx auth account deletion requested"
+                    );
+                    filed.insert(subject);
+                }
+                // Auth holds no such account (already deleted, or never
+                // created): the person has nothing left to sign in with.
+                Ok(None) => {
+                    tracing::info!(subject, "sylphx auth holds no account to delete");
+                    absent.insert(subject);
+                }
+                Err(error) => {
+                    tracing::error!(%error, subject, "sylphx auth account deletion failed");
+                    let _ = tx.rollback().await;
+                    return Err(Failure::SignIn(error));
                 }
             }
         }
-        tx.commit().await.map_err(|e| e.to_string())?;
-        return Ok(deleted);
     }
-    Err("account deletion identity set changed".into())
+    tx.commit().await.map_err(Failure::at("commit"))?;
+    Ok(deleted)
+}
+
+/// Erase an account's rows only (no Auth call). The platform's erasure
+/// delivery starts at Auth, so its handler needs only this half.
+pub async fn delete_account_data(pool: &PgPool, user_id: &str) -> Result<u64, String> {
+    let uid = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    erase_player(pool, uid, None, None)
+        .await
+        .map(|erased| erased.rows_deleted)
+        .map_err(|error| error.to_string())
+}
+
+/// What an erasure of this player would delete, by count, without deleting
+/// anything (the operator's dry run). An upper bound: a row that names the
+/// player in two columns counts twice.
+pub async fn count_account_data(pool: &PgPool, player: Uuid) -> Result<u64, sqlx::Error> {
+    let mut connection = pool.acquire().await?;
+    let mut players = vec![player];
+    players.extend(
+        sqlx::query_scalar::<_, Uuid>(
+            "SELECT user_id FROM guest_credentials WHERE adopted_user_id = $1",
+        )
+        .bind(player)
+        .fetch_all(&mut *connection)
+        .await?,
+    );
+    let mut total = 0u64;
+    for player in &players {
+        for (_, _, statement) in USER_KEYED_COLUMNS {
+            let count = statement.replacen("DELETE FROM", "SELECT count(*) FROM", 1);
+            let rows: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(count))
+                .bind(player)
+                .fetch_one(&mut *connection)
+                .await?;
+            total += u64::try_from(rows).unwrap_or_default();
+        }
+    }
+    Ok(total)
 }
 
 #[cfg(test)]
@@ -277,6 +521,16 @@ mod tests {
             }
         }
         found
+    }
+
+    #[test]
+    fn a_dropped_connection_is_transient_and_a_refusal_is_not() {
+        use super::is_transient;
+        let reset = std::io::Error::new(std::io::ErrorKind::ConnectionReset, "reset by peer");
+        assert!(is_transient(&sqlx::Error::Io(reset)));
+        assert!(is_transient(&sqlx::Error::PoolTimedOut));
+        assert!(!is_transient(&sqlx::Error::RowNotFound));
+        assert!(!is_transient(&sqlx::Error::Protocol("bad".into())));
     }
 
     #[test]
