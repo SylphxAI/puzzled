@@ -281,10 +281,16 @@ pub fn require_purchase_allowed(identity: &VerifiedIdentity) -> Result<(), Conne
     Ok(())
 }
 
-/// Require identity with an exact admin scope claim.
+/// An admin acting in person: a delegated session (an agent acting for the
+/// user) never inherits admin, whatever the user holds.
+fn acts_as_admin(identity: &VerifiedIdentity) -> bool {
+    identity.is_admin && !identity.is_delegated()
+}
+
+/// Require identity with an exact admin scope claim, in person.
 pub fn require_admin(ctx: &RequestContext) -> Result<VerifiedIdentity, ConnectError> {
     let identity = require_identity(ctx)?;
-    if !identity.is_admin {
+    if !acts_as_admin(&identity) {
         return Err(ConnectError::new(
             ErrorCode::PermissionDenied,
             "admin_scope_required",
@@ -296,6 +302,28 @@ pub fn require_admin(ctx: &RequestContext) -> Result<VerifiedIdentity, ConnectEr
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_delegated_session_never_acts_as_admin() {
+        let admin = VerifiedIdentity {
+            user_id: "u".into(),
+            display_name: None,
+            email: None,
+            is_admin: true,
+            actor: None,
+        };
+        assert!(acts_as_admin(&admin));
+        let delegated = VerifiedIdentity {
+            actor: Some("agent".into()),
+            ..admin.clone()
+        };
+        assert!(!acts_as_admin(&delegated));
+        let player = VerifiedIdentity {
+            is_admin: false,
+            ..admin
+        };
+        assert!(!acts_as_admin(&player));
+    }
     use axum::http::header::{AUTHORIZATION, COOKIE};
     use axum::http::HeaderMap;
 

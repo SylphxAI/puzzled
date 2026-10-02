@@ -366,6 +366,10 @@
 		"boardsCta": "開啟排行榜"
 	},
 	"account": {
+		"accountId": "帳戶 ID",
+		"accountIdHint": "你自己的帳戶識別碼，並非機密。如客戶支援要求，可提供此 ID。",
+		"copyAccountId": "複製 ID",
+		"accountIdCopied": "已複製",
 		"title": "帳戶",
 		"description": "管理你已連結的帳戶與登入方式",
 		"connectedAccounts": "已連結的帳戶",

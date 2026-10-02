@@ -264,3 +264,67 @@ async fn both_auth_subject_forms_reach_the_same_player() {
         split_player
     );
 }
+
+/// The subject the fake Auth reports for the good session.
+const SUBJECT: &str = "principal-0199aa10-7b2c-7d3e-8f00-1234567890ab";
+
+async fn admin_rpc_status(base: &str, allow_list: Option<&str>) -> StatusCode {
+    let mut auth = AuthSessions::new(base.to_string(), ORG.into(), KEY.into());
+    if let Some(raw) = allow_list {
+        auth = auth.with_admin_principals(raw);
+    }
+    let app = router(AppState::new(None).with_auth(auth));
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method(Method::POST)
+                .uri("/puzzled.v1.AdminService/GetSettings")
+                .header("content-type", "application/json")
+                .header("user-agent", "Browser/1.0")
+                .header("authorization", format!("Bearer {GOOD}"))
+                .body(Body::from("{}"))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    response.status()
+}
+
+// WORKAROUND (PUZZLED_ADMIN_PRINCIPALS): the allow-list decides is_admin, and
+// the admin RPCs' require_admin passes or fails accordingly. Admin passing
+// require_admin shows as "not 403" (there is no database here, so the call
+// then fails for another reason).
+#[tokio::test]
+async fn admin_allow_list_grants_admin_and_require_admin_follows() {
+    let base = spawn_fake_auth(Arc::new(AtomicUsize::new(0))).await;
+    let forbidden = StatusCode::FORBIDDEN;
+
+    // Unset, empty, blank or only separators: nobody (fail closed).
+    for list in [None, Some(""), Some("   "), Some(" , ,")] {
+        assert_eq!(admin_rpc_status(&base, list).await, forbidden, "{list:?}");
+    }
+    // A list without this subject, including a near miss.
+    for list in [
+        "usr_other,principal-someone-else",
+        &SUBJECT.to_uppercase(),
+        &SUBJECT[..SUBJECT.len() - 1],
+    ] {
+        assert_eq!(
+            admin_rpc_status(&base, Some(list)).await,
+            forbidden,
+            "{list}"
+        );
+    }
+    // The subject in the list, alone, among others, and with surrounding whitespace.
+    for list in [
+        SUBJECT.to_string(),
+        format!("usr_other,{SUBJECT}"),
+        format!("  usr_other ,\t{SUBJECT} \n, ,"),
+    ] {
+        assert_ne!(
+            admin_rpc_status(&base, Some(&list)).await,
+            forbidden,
+            "{list}"
+        );
+    }
+}

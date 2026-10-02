@@ -44,6 +44,13 @@ watch_paths = [
 [env.PUZZLED_PUBLIC_URL]
 value = "https://puzzled.gg"
 
+# Admin allow-list (workaround, docs/capabilities.md PUZ-AUTH-ADMIN): comma-separated
+# exact Sylphx Auth subjects (principal.subject) that are Puzzled admins. Empty means
+# nobody. Remove when cloud#11587 serves an organization{roles} claim and admin becomes
+# the "admin" role on Puzzled's Auth organization. Never log this value.
+[env.PUZZLED_ADMIN_PRINCIPALS]
+value = ""
+
 [[services]]
 name = "web"
 port = 3000
