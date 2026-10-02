@@ -48,4 +48,19 @@ describe('dismissed announcements cookie', () => {
 		expect(visibleAnnouncements([], A)).toEqual([])
 		expect(visibleAnnouncements([item(A)], null)).toHaveLength(1)
 	})
+
+	test('a cached item whose end has passed is never shown, dismissed or not', () => {
+		const now = Date.parse('2026-10-31T00:00:00Z')
+		const ended = { ...item(A), endsAt: '2026-10-30T23:59:59Z' }
+		const edge = { ...item(B), endsAt: '2026-10-31T00:00:00Z' }
+		const open = { ...item('0197a000-0000-7000-8000-000000000003'), endsAt: '' }
+		const live = { ...item('0197a000-0000-7000-8000-000000000004'), endsAt: '2026-11-01T00:00:00Z' }
+		expect(visibleAnnouncements([ended, edge, open, live], null, now).map((i) => i.id)).toEqual([
+			open.id,
+			live.id,
+		])
+		expect(visibleAnnouncements([{ ...item(A, false), endsAt: ended.endsAt }], null, now)).toEqual(
+			[],
+		)
+	})
 })

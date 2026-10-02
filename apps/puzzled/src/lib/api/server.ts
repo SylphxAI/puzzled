@@ -361,6 +361,7 @@ const activeAnnouncements = createActiveAnnouncementsCache({
 			body: a.body,
 			type: a.type,
 			dismissible: a.dismissible,
+			endsAt: a.endsAt,
 		}))
 	},
 })

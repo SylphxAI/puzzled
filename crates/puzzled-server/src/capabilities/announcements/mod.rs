@@ -16,6 +16,7 @@ pub struct ActiveAnnouncement {
     pub body: String,
     pub kind: String,
     pub dismissible: bool,
+    pub ends_at: Option<NaiveDateTime>,
 }
 
 /// Rows that are switched on, inside their start/end window at `now` (UTC wall
@@ -25,9 +26,9 @@ pub async fn list_active(
     pool: &PgPool,
     now: NaiveDateTime,
 ) -> Result<Vec<ActiveAnnouncement>, sqlx::Error> {
-    let rows: Vec<(Uuid, String, String, String, bool)> = sqlx::query_as(
+    let rows: Vec<(Uuid, String, String, String, bool, Option<NaiveDateTime>)> = sqlx::query_as(
         r#"
-        SELECT id, title, content, type::text, dismissible
+        SELECT id, title, content, type::text, dismissible, ends_at
         FROM announcements
         WHERE is_active
           AND target_all_users
@@ -44,12 +45,15 @@ pub async fn list_active(
     .await?;
     Ok(rows
         .into_iter()
-        .map(|(id, title, body, kind, dismissible)| ActiveAnnouncement {
-            id,
-            title,
-            body,
-            kind,
-            dismissible,
-        })
+        .map(
+            |(id, title, body, kind, dismissible, ends_at)| ActiveAnnouncement {
+                id,
+                title,
+                body,
+                kind,
+                dismissible,
+                ends_at,
+            },
+        )
         .collect())
 }

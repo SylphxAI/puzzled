@@ -69,6 +69,15 @@ async fn only_active_in_window_public_rows_are_returned() {
         .collect();
     titles.sort();
     assert_eq!(titles, ["in-window", "open-ended"]);
+    let rows = list_active(&pool, now).await.unwrap();
+    let window = rows.iter().find(|a| a.title == "in-window").unwrap();
+    assert!(window.ends_at.is_some());
+    assert!(rows
+        .iter()
+        .find(|a| a.title == "open-ended")
+        .unwrap()
+        .ends_at
+        .is_none());
 
     // The window is half-open: it is live at its start, over at its end.
     let later = now + hour + Duration::minutes(1);

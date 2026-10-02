@@ -67,8 +67,8 @@ describe('active announcements cache', () => {
 		expect(await h.cache.get()).toEqual([n('b')])
 	})
 
-	test('a failed refresh keeps the last good list and retries soon', async () => {
-		const h = harness()
+	test('a failed refresh keeps serving the last good list, but only while it is young', async () => {
+		const h = harness({ coldWaitMs: 20 })
 		await h.cache.get()
 		h.set(async () => {
 			throw new Error('down')
@@ -79,8 +79,19 @@ describe('active announcements cache', () => {
 		expect(await h.cache.get()).toEqual([n('a')])
 		expect(h.calls()).toBe(2)
 		h.advance(6_000)
-		await h.cache.get()
+		expect(await h.cache.get()).toEqual([n('a')])
 		expect(h.calls()).toBe(3)
+		// Past the age limit the old list is no longer served, even during an outage.
+		h.advance(5 * 60_000)
+		expect(await h.cache.get()).toEqual([])
+	})
+
+	test('a stale list past the age limit is not served while the refresh hangs', async () => {
+		const h = harness({ coldWaitMs: 20 })
+		await h.cache.get()
+		h.set(() => new Promise(() => {}))
+		h.advance(5 * 60_000 + 1)
+		expect(await h.cache.get()).toEqual([])
 	})
 
 	test('a cold read that fails or hangs shows nothing, within the cold wait', async () => {

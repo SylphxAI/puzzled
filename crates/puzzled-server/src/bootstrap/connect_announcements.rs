@@ -53,6 +53,10 @@ impl AnnouncementService for AnnouncementConnectService {
                     body: row.body,
                     r#type: row.kind,
                     dismissible: row.dismissible,
+                    ends_at: row
+                        .ends_at
+                        .map(|t| t.and_utc().to_rfc3339())
+                        .unwrap_or_default(),
                     ..Default::default()
                 })
                 .collect(),

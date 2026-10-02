@@ -19,7 +19,7 @@ import { file_google_protobuf_cpp_features } from '@bufbuild/protobuf/wkt'
 export const file_puzzled_v1_announcements: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		'Ch5wdXp6bGVkL3YxL2Fubm91bmNlbWVudHMucHJvdG8SCnB1enpsZWQudjEiYAoSQWN0aXZlQW5ub3VuY2VtZW50EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEgwKBGJvZHkYAyABKAkSDAoEdHlwZRgEIAEoCRITCgtkaXNtaXNzaWJsZRgFIAEoCCIgCh5MaXN0QWN0aXZlQW5ub3VuY2VtZW50c1JlcXVlc3QiWAofTGlzdEFjdGl2ZUFubm91bmNlbWVudHNSZXNwb25zZRI1Cg1hbm5vdW5jZW1lbnRzGAEgAygLMh4ucHV6emxlZC52MS5BY3RpdmVBbm5vdW5jZW1lbnQyiQEKE0Fubm91bmNlbWVudFNlcnZpY2UScgoXTGlzdEFjdGl2ZUFubm91bmNlbWVudHMSKi5wdXp6bGVkLnYxLkxpc3RBY3RpdmVBbm5vdW5jZW1lbnRzUmVxdWVzdBorLnB1enpsZWQudjEuTGlzdEFjdGl2ZUFubm91bmNlbWVudHNSZXNwb25zZUIUkgMRCAIQARgBIAIoATABwj4CEANiCGVkaXRpb25zcOkH',
+		'Ch5wdXp6bGVkL3YxL2Fubm91bmNlbWVudHMucHJvdG8SCnB1enpsZWQudjEicQoSQWN0aXZlQW5ub3VuY2VtZW50EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEgwKBGJvZHkYAyABKAkSDAoEdHlwZRgEIAEoCRITCgtkaXNtaXNzaWJsZRgFIAEoCBIPCgdlbmRzX2F0GAYgASgJIiAKHkxpc3RBY3RpdmVBbm5vdW5jZW1lbnRzUmVxdWVzdCJYCh9MaXN0QWN0aXZlQW5ub3VuY2VtZW50c1Jlc3BvbnNlEjUKDWFubm91bmNlbWVudHMYASADKAsyHi5wdXp6bGVkLnYxLkFjdGl2ZUFubm91bmNlbWVudDKJAQoTQW5ub3VuY2VtZW50U2VydmljZRJyChdMaXN0QWN0aXZlQW5ub3VuY2VtZW50cxIqLnB1enpsZWQudjEuTGlzdEFjdGl2ZUFubm91bmNlbWVudHNSZXF1ZXN0GisucHV6emxlZC52MS5MaXN0QWN0aXZlQW5ub3VuY2VtZW50c1Jlc3BvbnNlQhSSAxEIAhABGAEgAigBMAHCPgIQA2IIZWRpdGlvbnNw6Qc',
 		[file_google_protobuf_cpp_features],
 	)
 
@@ -53,6 +53,13 @@ export type ActiveAnnouncement = Message<'puzzled.v1.ActiveAnnouncement'> & {
 	 * @generated from field: bool dismissible = 5;
 	 */
 	dismissible: boolean
+
+	/**
+	 * RFC 3339 UTC; empty = open-ended. Lets a cached copy drop an expired notice.
+	 *
+	 * @generated from field: string ends_at = 6;
+	 */
+	endsAt: string
 }
 
 /**
