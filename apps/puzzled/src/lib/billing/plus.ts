@@ -15,6 +15,8 @@ export type PlusAccess = {
 	salesOpen: boolean
 	/** The viewer may play every game and the archive. */
 	entitled: boolean
+	/** The free reverse trial runs until this time (epoch ms); null when none runs. */
+	trialEndsMs?: number | null
 }
 
 export const OPEN_ACCESS: PlusAccess = { salesOpen: false, entitled: false }
@@ -48,6 +50,8 @@ export type PlanCard = {
 	currency: string
 	/** Minor units, tax included. */
 	amountMinor: number
+	/** Free trial days before the first charge; 0 when none. */
+	trialDays: number
 }
 
 /** Plan cards in one currency; a plan without a price in it is left out. */
@@ -64,6 +68,7 @@ export function planCards(plans: ListPlansResponse['plans'], currency: string): 
 			interval: plan.interval === 'year' ? 'year' : 'month',
 			currency: price.currency,
 			amountMinor: Number(price.unitAmountMinor),
+			trialDays: plan.trialDays,
 		})
 	}
 	return cards
@@ -88,7 +93,8 @@ export function yearlySavingPercent(monthlyMinor: number, yearlyMinor: number): 
 export type SubscriptionView = {
 	salesOpen: boolean
 	entitled: boolean
-	source: 'none' | 'plus' | 'family'
+	source: 'none' | 'plus' | 'family' | 'trial'
+	trialEndsMs: number | null
 	planId: PlanId | null
 	status: string | null
 	periodEndMs: number | null
@@ -102,11 +108,13 @@ export type SubscriptionView = {
 }
 
 export function subscriptionView(res: GetSubscriptionResponse): SubscriptionView {
-	const source = res.source === 'plus' || res.source === 'family' ? res.source : 'none'
+	const source =
+		res.source === 'plus' || res.source === 'family' || res.source === 'trial' ? res.source : 'none'
 	return {
 		salesOpen: res.salesOpen,
 		entitled: res.entitled,
 		source,
+		trialEndsMs: Number(res.trialEndsMs) || null,
 		// Unset optional fields read as their zero value.
 		planId: (res.planId || null) as PlanId | null,
 		status: res.status || null,
@@ -125,4 +133,28 @@ export function subscriptionView(res: GetSubscriptionResponse): SubscriptionView
 				}
 			: null,
 	}
+}
+
+/**
+ * The day a trial ends and the first charge happens: `trialDays` whole days
+ * after `now`, formatted for the viewer in `timeZone` (the viewer's own; the
+ * client passes none). Null when the plan has no trial.
+ */
+export function trialEndDate(
+	now: Date,
+	trialDays: number,
+	locale: string,
+	timeZone?: string,
+): string | null {
+	if (trialDays <= 0) return null
+	const end = new Date(now.getTime() + trialDays * 86_400_000)
+	return new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone }).format(end)
+}
+
+/**
+ * Does the buy button give way to "Current plan"? Only for a paid
+ * subscription; a reverse-trial viewer is entitled but can still buy.
+ */
+export function showsCurrentPlan(access: PlusAccess | null | undefined): boolean {
+	return Boolean(access?.entitled) && !access?.trialEndsMs
 }

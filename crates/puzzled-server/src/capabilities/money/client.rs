@@ -193,6 +193,9 @@ pub struct CatalogPrice {
     pub tax_behavior: Option<String>,
     #[serde(default)]
     pub archived: bool,
+    /// Free trial days before the first charge; 0 or absent: no trial.
+    #[serde(default)]
+    pub trial_days: u32,
     /// Upper-case ISO 4217 code to minor units, as a decimal string.
     #[serde(default)]
     pub unit_amounts: std::collections::BTreeMap<String, String>,

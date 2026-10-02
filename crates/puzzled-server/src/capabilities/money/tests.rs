@@ -136,6 +136,7 @@ fn catalog_fixture(archived: &[&str]) -> Value {
         json!({
             "key": key, "recurring_interval": interval, "tax_behavior": "inclusive",
             "archived": archived.contains(&key),
+            "trial_days": if key == "k_solo_y" { 7 } else { 0 },
             "unit_amounts": {"USD": usd.to_string(), "GBP": (usd - 100).to_string()},
         })
     };
@@ -467,6 +468,10 @@ async fn pricing_is_derived_from_the_catalogue_fixture() {
     );
     let first = &shown[0];
     assert_eq!(first.price_key, "k_solo_m");
+    // Only the price Money publishes a trial for carries one.
+    assert_eq!(first.trial_days, 0);
+    assert_eq!(shown[1].trial_days, 7);
+    assert_eq!(shown[3].trial_days, 0);
     assert_eq!(first.interval, "month");
     assert!(!first.family && shown[2].family && shown[2].seats == 4);
     assert_eq!(

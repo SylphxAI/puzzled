@@ -25,6 +25,8 @@
 		"includesArchive": "往日题库中的每一天",
 		"includesStats": "每款游戏的统计和连续记录",
 		"includesFamily": "最多与 {count} 人共享",
+		"trialLine": "免费试用 {days} 天，之后每年 {price}，首次扣款日为 {date}。可随时在“设置”中一步取消。",
+		"startTrial": "开始 {days} 天免费试用",
 		"subscribe": "订阅",
 		"subscribing": "正在打开付款页面……",
 		"signInToSubscribe": "登录以订阅",
@@ -35,6 +37,9 @@
 		"alreadySubscribed": "你已订阅 Puzzled Plus。",
 		"immediateSupplyConsent": "我要立即使用，并明白我会失去 14 天取消权。",
 		"consentRequired": "请勾选方框以继续。"
+	},
+	"trial": {
+		"endsOn": "你的 Puzzled Plus 免费一周将于 {date} 结束。不会收取任何费用，你已完成的内容会继续保留在统计中。"
 	},
 	"unlock": {
 		"title": "这款游戏属于 Puzzled Plus",
