@@ -68,6 +68,12 @@ describe('CookieBanner (mobile compact)', () => {
 		expect(html).toContain('data-consent-banner')
 	})
 
+	test('the privacy link has a 44px hit area as plain inline padding, never a positioned or inline-block box', () => {
+		const link = html.match(/<a[^>]*href="\/privacy"[^>]*class="([^"]*)"/)?.[1] ?? ''
+		expect(link.split(' ')).toContain('py-4')
+		expect(link).not.toMatch(/\b(inline-block|inline-flex|block|relative|absolute|fixed)\b/)
+	})
+
 	test('sits above the bottom bar and stays slim on mobile', () => {
 		expect(html).toContain('bottom-[calc(var(--spacing-bottom-nav-height)')
 		expect(html).toContain('text-xs')
