@@ -135,6 +135,27 @@ pub struct CatalogProduct {
 pub struct Catalog {
     #[serde(default)]
     pub spec: CatalogSpec,
+    /// Money's observed state; absent reads as not synced.
+    #[serde(default)]
+    pub status: CatalogStatus,
+}
+
+/// `CatalogStatus` (cloud `contracts/sylphx/money/v1/resources.proto`).
+#[derive(Debug, Clone, PartialEq, Eq, Default, Deserialize)]
+pub struct CatalogStatus {
+    #[serde(default)]
+    pub conditions: Vec<CatalogCondition>,
+    /// The processor (Stripe) price behind each price, by catalogue key.
+    #[serde(default)]
+    pub processor_price_ids: std::collections::BTreeMap<String, String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct CatalogCondition {
+    #[serde(rename = "type", default)]
+    pub kind: String,
+    #[serde(default)]
+    pub status: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Deserialize)]
@@ -144,6 +165,24 @@ pub struct CatalogSpec {
 }
 
 impl Catalog {
+    /// Money reports the spec matched the processor (`Synced` is true).
+    #[must_use]
+    pub fn synced(&self) -> bool {
+        self.status
+            .conditions
+            .iter()
+            .any(|c| c.kind == "Synced" && c.status.eq_ignore_ascii_case("true"))
+    }
+
+    /// The price has a processor (Stripe) price behind it.
+    #[must_use]
+    pub fn has_processor_price(&self, key: &str) -> bool {
+        self.status
+            .processor_price_ids
+            .get(key)
+            .is_some_and(|id| !id.trim().is_empty())
+    }
+
     /// Every price of every product.
     pub fn prices(&self) -> impl Iterator<Item = &CatalogPrice> {
         self.spec.products.iter().flat_map(|p| p.prices.iter())
