@@ -245,8 +245,9 @@ run counts at least one eligible account.
   `classify` the job uses); `PUZZLED_PLUS_GRACE_EXCLUDE_SUBJECTS`
   (comma-separated Auth subjects) excludes QA accounts like `--exclude-subject`.
 - **Off by default:** unset or invalid values, before the open instant, and
-  from the end instant on, it grants nothing. Ops sets the values in the api
-  service's `[services.env]` in `sylphx.toml` (or the environment). Guests are
+  from the end instant on, it grants nothing. The values are top-level
+  `[env.NAME] value = ...` tables in `sylphx.toml`; a per-service
+  `[services.env]` table of values is not delivered to the runtime. Guests are
   unaffected: the gate passes only signed-in accounts.
 - **Where:** one marked block, `WORKAROUND(plus-grace-window)`, in
   `PuzzleConnectService::enforce_play_access`; module

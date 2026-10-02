@@ -38,6 +38,21 @@ watch_paths = [
   "sylphx.toml",
 ]
 
+# Runtime values for every service in the environment. Only top-level [env]
+# literals reach the runtime; a per-service table of values is not delivered.
+# Browser origin verified against the live production web/api route binding.
+[env.PUZZLED_PUBLIC_URL]
+value = "https://puzzled.gg"
+
+# Plus grace window (workaround, docs/monetization.md; cloud#11628): players with
+# history before the sales-open instant keep full Plus play for 30 days. Remove
+# both once Money serves create-grant and `plus-grace --apply` has run.
+[env.PUZZLED_PLUS_GRACE_OPEN_AT]
+value = "2026-10-02T16:15:00Z"
+
+[env.PUZZLED_PLUS_GRACE_DAYS]
+value = "30"
+
 [[services]]
 name = "web"
 port = 3000
@@ -83,16 +98,6 @@ watch_paths = [
   "Cargo.lock",
   "sylphx.toml",
 ]
-
-# Browser origin verified against the live production web/api route binding.
-# This table belongs only to the api service declared above.
-[services.env]
-PUZZLED_PUBLIC_URL = "https://puzzled.gg"
-# Plus grace window (workaround, docs/monetization.md; cloud#11628): players with
-# history before the sales-open instant keep full Plus play for 30 days. Remove
-# both once Money serves create-grant and `plus-grace --apply` has run.
-PUZZLED_PLUS_GRACE_OPEN_AT = "2026-10-02T16:15:00Z"
-PUZZLED_PLUS_GRACE_DAYS = "30"
 
 # Dedicated email-link verification key; the web route needs only API_INTERNAL_URL.
 [services.env.EMAIL_UNSUBSCRIBE_SECRET]
