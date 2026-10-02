@@ -221,7 +221,7 @@ type CatalogSlot = Option<(Instant, Arc<Catalog>)>;
 
 #[derive(Clone)]
 pub struct Money {
-    pub(super) http: reqwest::Client,
+    http: reqwest::Client,
     /// `https://api.sylphx.com`.
     origin: String,
     /// The environment's resource URL,
@@ -349,7 +349,7 @@ impl Money {
     }
 
     /// The environment resource URL, discovered once and kept.
-    pub(super) async fn env_url(&self) -> Result<&str, MoneyError> {
+    async fn env_url(&self) -> Result<&str, MoneyError> {
         self.base
             .get_or_try_init(|| resolve_env_url(&self.http, &self.origin, &self.secret_key))
             .await
@@ -367,7 +367,7 @@ impl Money {
         &self.public_url
     }
 
-    pub(super) async fn call(&self, request: reqwest::RequestBuilder) -> Result<Value, MoneyError> {
+    async fn call(&self, request: reqwest::RequestBuilder) -> Result<Value, MoneyError> {
         let response = request
             .bearer_auth(&self.secret_key)
             .send()

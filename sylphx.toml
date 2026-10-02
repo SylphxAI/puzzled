@@ -44,15 +44,6 @@ watch_paths = [
 [env.PUZZLED_PUBLIC_URL]
 value = "https://puzzled.gg"
 
-# Plus grace window (workaround, docs/monetization.md; cloud#11628): players with
-# history before the sales-open instant keep full Plus play for 30 days. Remove
-# both once Money serves create-grant and `plus-grace --apply` has run.
-[env.PUZZLED_PLUS_GRACE_OPEN_AT]
-value = "2026-10-02T16:15:00Z"
-
-[env.PUZZLED_PLUS_GRACE_DAYS]
-value = "30"
-
 [[services]]
 name = "web"
 port = 3000
@@ -174,20 +165,3 @@ catch_up = "last_only"
 target = { kind = "http", method = "POST", signed = true }
 retry = { max_attempts = 3 }
 pause = false
-
-# Operator job (Workflows WFL-JOB): Plus grace grants. Runs the api's live
-# Release image with the api's own env and secret bindings (its database URL
-# and SYLPHX_MONEY_API_KEY); nothing else holds them. No schedule: it runs
-# only when an operator starts it. The default args are the dry run, which
-# prints aggregate counts only; `--apply` records one Money grant per eligible
-# account and is safe to repeat (docs/monetization.md#launch-grace-grants).
-#   sylphx jobs run plus-grace                         # dry run, counts now
-#   sylphx jobs run plus-grace -- --apply --cutoff <sales-open RFC 3339> --approver "CEO 2026-10-02"
-[[jobs]]
-name = "plus-grace"
-service = "api"
-command = ["puzzled-server", "plus-grace"]
-args = ["--dry-run"]
-timeout = "30m"
-retries = 0
-concurrency = "forbid"
