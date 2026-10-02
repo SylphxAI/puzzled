@@ -35,6 +35,8 @@ type HomeDayProps = {
 	isMember: boolean
 	currentStreak: number
 	hasPlayedToday: boolean
+	/** The server proved today's free module is finished for this viewer. */
+	freeGameDone: boolean
 	completedCount: number
 	availableCount: number
 	/** null = the social read has not landed: no count is claimed. */
@@ -69,22 +71,27 @@ export async function HomeDay({
 	isMember,
 	currentStreak,
 	hasPlayedToday,
+	freeGameDone,
 	completedCount,
 	availableCount,
 	playerCount,
 	progressUnverified,
 }: HomeDayProps) {
 	const t = await getTranslations('home')
+	const tResult = await getTranslations('gameResult')
 	const allDone = availableCount > 0 && completedCount >= availableCount
 	const showsProgress = isMember && availableCount > 0
 
-	const headline = isMember
-		? allDone
+	const headline =
+		isMember && allDone
 			? t('day.titleMemberDone')
-			: currentStreak > 0 && !hasPlayedToday
-				? t('day.titleMemberStreak', { days: currentStreak })
-				: t('day.titleMemberReady', { game: freeGame.name })
-		: t('day.guestTitle', { game: freeGame.name })
+			: freeGameDone
+				? t('day.titleDone', { game: freeGame.name })
+				: isMember
+					? currentStreak > 0 && !hasPlayedToday
+						? t('day.titleMemberStreak', { days: currentStreak })
+						: t('day.titleMemberReady', { game: freeGame.name })
+					: t('day.guestTitle', { game: freeGame.name })
 
 	return (
 		<section className="day-surface relative">
@@ -139,8 +146,14 @@ export async function HomeDay({
 							game={freeGame}
 							numberLabel={t('day.puzzleNumber', { number: puzzleNumber })}
 							label={t('day.freeToday')}
-							cta={allDone ? t('day.playAgain') : t('day.playToday', { game: freeGame.name })}
-							note={isMember ? undefined : t('day.guestNote')}
+							cta={
+								freeGameDone
+									? tResult('seeResult')
+									: allDone
+										? t('day.playAgain')
+										: t('day.playToday', { game: freeGame.name })
+							}
+							note={isMember || freeGameDone ? undefined : t('day.guestNote')}
 						/>
 						<div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground lg:hidden">
 							<DayFacts
@@ -281,6 +294,7 @@ export function HomeDayFallback(props: HomeDayStaticProps) {
 			isMember={false}
 			currentStreak={0}
 			hasPlayedToday={false}
+			freeGameDone={false}
 			completedCount={0}
 			availableCount={0}
 			playerCount={null}

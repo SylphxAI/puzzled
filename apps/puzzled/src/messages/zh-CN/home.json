@@ -65,7 +65,7 @@
 		},
 		"share": {
 			"question": "分享成绩会剧透吗？",
-			"answer": "不会。成绩卡只显示解题图案、游戏和日期，不显示答案；朋友打开后玩同一天的谜题。"
+			"answer": "可以。成绩卡会显示你的成绩（用时、次数或解题图案）、游戏和日期，不显示答案；朋友打开后玩同一天的谜题。"
 		},
 		"catalog": {
 			"question": "有哪些谜题可以玩？",
@@ -81,6 +81,7 @@
 		"titleMemberReady": "今天的{game}已准备好",
 		"titleMemberStreak": "你的 {days} 天连胜在等你",
 		"titleMemberDone": "今天已完成 — 玩得漂亮",
+		"titleDone": "今天的{game}已完成",
 		"bodyGuest": "Puzzled 每天提供一组文字、逻辑和数字谜题。每天一个免费，几分钟就能玩完，无需注册。",
 		"bodyMember": "你的连胜、统计和今日阵容，一点即到。",
 		"playToday": "玩今天的{game}",

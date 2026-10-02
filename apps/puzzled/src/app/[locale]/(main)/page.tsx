@@ -2,7 +2,11 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { cache, Suspense } from 'react'
 import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from '@/features/daily/lib/home-exposure'
-import { deriveHomePlayState, scopeHomePlayState } from '@/features/daily/lib/home-play-state'
+import {
+	deriveHomePlayState,
+	isFreeGameDone,
+	scopeHomePlayState,
+} from '@/features/daily/lib/home-play-state'
 import { getPuzzleNumber } from '@/features/daily/lib/puzzle-utils'
 import { todayPlayPath } from '@/features/daily/lib/today-play-path'
 import {
@@ -175,7 +179,7 @@ function buildLineup(input: {
 		const metadata = input.metadataBySlug.get(game.slug)
 		if (!metadata) return []
 		const camel = slugToCamelCase(game.slug)
-		const status = game.isFreeToday ? 'free' : game.completed ? 'solved' : 'play'
+		const status = game.completed ? 'solved' : game.isFreeToday ? 'free' : 'play'
 		return [
 			{
 				slug: game.slug,
@@ -220,6 +224,7 @@ async function HomeDayIsland({
 			isMember={Boolean(facts.user)}
 			currentStreak={facts.streakInfo?.currentStreak ?? 0}
 			hasPlayedToday={facts.streakInfo?.hasPlayedToday ?? false}
+			freeGameDone={isFreeGameDone(facts.personalResults, freeGame.slug)}
 			completedCount={view.progress.completedCount}
 			availableCount={view.progress.availableCount}
 			playerCount={facts.todayPlayerCount}
