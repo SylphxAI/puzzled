@@ -9,6 +9,8 @@ import { resolveGameDayRequest } from '@/features/daily/lib/day-request'
 import { gameSupportsDifficulty, getAllGameMetadata, getGameSlugs } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
+import { getServerPlusAccess } from '@/lib/api/server'
+import { isPlayLocked } from '@/lib/billing/plus'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
 import { canonicalizeGameSlug, playerTitle, slugToCamelCase } from '@/lib/game-slug'
 import { difficultyLabelKey } from '@/lib/i18n/difficulty'
@@ -152,6 +154,12 @@ export default async function GamePage({ params, searchParams }: Props) {
 	})
 
 	const todaysFreeGame = canonicalizeGameSlug(getTodaysFreeGame())
+	// Same cached read the play area makes: one lock decision for hero and panel.
+	const locked = isPlayLocked(await getServerPlusAccess(Boolean(user)), {
+		slug: canonicalSlug,
+		freeSlug: todaysFreeGame,
+		archive: mode === 'archive' && Boolean(puzzleDate),
+	})
 
 	return (
 		<main className="flex-1">
@@ -167,6 +175,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 				category={moduleMetadata.category}
 				freeToday={canonicalSlug === todaysFreeGame}
 				isGuest={!user}
+				locked={locked}
 			/>
 
 			{/*
