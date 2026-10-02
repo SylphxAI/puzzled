@@ -2497,7 +2497,7 @@
 			},
 			{
 				"value": "再玩一次",
-				"keys": ["gameResult.playAgain", "home.day.playAgain", "home.lineup.playAgain"]
+				"keys": ["gameResult.playAgain", "home.day.playAgain"]
 			},
 			{
 				"value": "分享",
@@ -3597,7 +3597,7 @@
 			},
 			{
 				"value": "再玩一次",
-				"keys": ["gameResult.playAgain", "home.day.playAgain", "home.lineup.playAgain"]
+				"keys": ["gameResult.playAgain", "home.day.playAgain"]
 			},
 			{
 				"value": "分享",
@@ -4691,7 +4691,7 @@
 			},
 			{
 				"value": "再玩一次",
-				"keys": ["gameResult.playAgain", "home.day.playAgain", "home.lineup.playAgain"]
+				"keys": ["gameResult.playAgain", "home.day.playAgain"]
 			},
 			{
 				"value": "减少动态效果",

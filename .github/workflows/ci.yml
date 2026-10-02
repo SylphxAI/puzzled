@@ -450,7 +450,7 @@ jobs:
         run: |
           set -euo pipefail
           LOG="${RUNNER_TEMP}/puzzled-migration-backed-tests.log"
-          CARGO_TERM_COLOR=never cargo test -p puzzled-server --lib -- billing_flow_tests result_shares_tests account_erasure_tests account_deletion retention_push_tests guest_ownership_tests | tee "$LOG"
+          CARGO_TERM_COLOR=never cargo test -p puzzled-server --lib -- billing_flow_tests result_shares_tests account_erasure_tests account_deletion retention_push_tests guest_ownership_tests today_progress_tests | tee "$LOG"
           # Fail closed if a renamed filter selects nothing, or if the actual
           # two-user HTTP ownership regression was not exercised.
           grep -Eq '^test guest_ownership_tests::unsigned_ids_and_forged_internal_headers_cannot_read_or_adopt \.\.\. ok$' "$LOG"

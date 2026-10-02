@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
@@ -44,6 +45,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'crowns',
 		mode,
@@ -200,6 +202,12 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 						}),
 					)}
 				</div>
+
+				<SeeResultButton
+					finished={resultReady}
+					modalOpen={showResultModal}
+					onOpen={() => setShowResultModal(true)}
+				/>
 
 				{/* Actions */}
 				<div className="flex gap-2">

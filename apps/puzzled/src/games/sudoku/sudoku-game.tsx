@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
@@ -44,6 +45,7 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'sudoku',
 		mode,
@@ -145,6 +147,12 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 					selectedCell={game.state.selectedCell}
 					conflictingCells={conflictingCells}
 					onCellClick={game.selectCell}
+				/>
+
+				<SeeResultButton
+					finished={resultReady}
+					modalOpen={showResultModal}
+					onOpen={() => setShowResultModal(true)}
 				/>
 
 				{/* Number pad */}

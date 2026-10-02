@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
@@ -43,6 +44,7 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'word-ladder',
 		mode,
@@ -221,6 +223,12 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 					minSteps={game.state.puzzle.minSteps}
 				/>
 			)}
+
+			<SeeResultButton
+				finished={resultReady}
+				modalOpen={showResultModal}
+				onOpen={() => setShowResultModal(true)}
+			/>
 
 			{/* Input */}
 			{!game.state.isComplete && (

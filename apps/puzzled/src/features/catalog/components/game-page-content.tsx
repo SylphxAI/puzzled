@@ -40,6 +40,7 @@ export async function GamePageContent({
 }: GamePageContentProps) {
 	const t = await getTranslations('catalog')
 	const tGames = await getTranslations('games')
+	const tResult = await getTranslations('gameResult')
 
 	const faqStructuredData = {
 		'@context': 'https://schema.org',
@@ -185,7 +186,7 @@ export async function GamePageContent({
 										index={index}
 										labels={{
 											play: t('open'),
-											playAgain: t('open'),
+											seeResult: tResult('seeResult'),
 											freeToday: t('freeToday'),
 										}}
 									/>

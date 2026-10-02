@@ -50,6 +50,8 @@ message DailyCompletion {
   uint32 score = 2 [features.field_presence = EXPLICIT];
   uint32 attempts = 3 [features.field_presence = EXPLICIT];
   int64 completed_at_ms = 4 [features.field_presence = EXPLICIT];
+  // The level the one accepted finish was played at; absent for games without levels.
+  string difficulty = 5 [features.field_presence = EXPLICIT];
 }
 
 message GetDailyResponse {

@@ -43,6 +43,7 @@ function fixture(): GetDailyResponse {
 			score: 42,
 			attempts: 6,
 			completedAtMs: BigInt(COMPLETED_AT_MS),
+			difficulty: 'medium',
 		}),
 	})
 }
@@ -54,6 +55,7 @@ const EXPECTED_DAILY = {
 		score: 42,
 		attempts: 6,
 		completedAt: new Date(COMPLETED_AT_MS),
+		difficulty: 'medium',
 	},
 	puzzle: {
 		id: PUZZLE_ID,

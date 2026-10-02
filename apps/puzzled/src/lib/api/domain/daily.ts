@@ -23,6 +23,8 @@ export type DailyStatus = {
 		score: number | null
 		attempts: number | null
 		completedAt: Date | null
+		/** The level the one accepted finish was played at; null for games without levels. */
+		difficulty: string | null
 	} | null
 	puzzle: {
 		id: string
@@ -66,6 +68,7 @@ function parseCompletedSession(
 		score: completion.score ?? null,
 		attempts: completion.attempts ?? null,
 		completedAt: completedAt && !Number.isNaN(completedAt.getTime()) ? completedAt : null,
+		difficulty: completion.difficulty || null,
 	}
 }
 

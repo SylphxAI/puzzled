@@ -109,7 +109,7 @@ SELECT EXISTS (
 "#;
 
 const COMPLETED_SESSION_BY_PID_AND_DATE_SQL: &str = r#"
-SELECT status::text, score, attempts, completed_at
+SELECT status::text, score, attempts, completed_at, difficulty::text
 FROM game_sessions
 WHERE user_id = $1
   AND status IN ('won','lost')
@@ -122,7 +122,7 @@ LIMIT 1
 "#;
 
 const COMPLETED_SESSION_BY_PID_SQL: &str = r#"
-SELECT status::text, score, attempts, completed_at
+SELECT status::text, score, attempts, completed_at, difficulty::text
 FROM game_sessions
 WHERE user_id = $1
   AND puzzle_id = $2
@@ -132,7 +132,7 @@ LIMIT 1
 "#;
 
 const COMPLETED_SESSION_BY_DATE_SQL: &str = r#"
-SELECT status::text, score, attempts, completed_at
+SELECT status::text, score, attempts, completed_at, difficulty::text
 FROM game_sessions
 WHERE user_id = $1
   AND game_slug = $2
@@ -224,12 +224,22 @@ pub async fn has_completed_session_on_connection(
     Ok(exists)
 }
 
+type CompletedRow = (
+    String,
+    Option<i32>,
+    i32,
+    Option<chrono::NaiveDateTime>,
+    Option<String>,
+);
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CompletedSession {
     pub status: String,
     pub score: Option<i32>,
     pub attempts: i32,
     pub completed_at: Option<chrono::NaiveDateTime>,
+    /// The level the accepted finish was played at; `None` for games without levels.
+    pub difficulty: Option<String>,
 }
 
 /// Load the accepted result for a served daily puzzle.
@@ -270,7 +280,7 @@ pub async fn load_completed_session_on_connection(
         None => None,
     };
 
-    let row: Option<(String, Option<i32>, i32, Option<chrono::NaiveDateTime>)> = match (pid, date) {
+    let row: Option<CompletedRow> = match (pid, date) {
         (Some(pid), Some(date)) => sqlx::query_as(COMPLETED_SESSION_BY_PID_AND_DATE_SQL)
             .bind(uid)
             .bind(pid)
@@ -295,14 +305,15 @@ pub async fn load_completed_session_on_connection(
         (None, None) => None,
     };
 
-    Ok(
-        row.map(|(status, score, attempts, completed_at)| CompletedSession {
+    Ok(row.map(
+        |(status, score, attempts, completed_at, difficulty)| CompletedSession {
             status,
             score,
             attempts,
             completed_at,
-        }),
-    )
+            difficulty,
+        },
+    ))
 }
 
 type TodayProgressRow = (
@@ -311,10 +322,12 @@ type TodayProgressRow = (
     Option<i32>,
     i32,
     Option<chrono::NaiveDateTime>,
+    Option<String>,
 );
 
 const TODAY_PROGRESS_SQL: &str = r#"
-SELECT DISTINCT ON (game_slug) game_slug, status::text, score, attempts, completed_at
+SELECT DISTINCT ON (game_slug) game_slug, status::text, score, attempts, completed_at,
+       difficulty::text
 FROM game_sessions
 WHERE user_id = $1
   AND game_slug = ANY($2)
@@ -356,17 +369,20 @@ pub async fn load_today_progress_on_connection(
         .map_err(|e| format!("today progress query failed: {e}"))?;
     Ok(rows
         .into_iter()
-        .map(|(slug, status, score, attempts, completed_at)| {
-            (
-                slug,
-                CompletedSession {
-                    status,
-                    score,
-                    attempts,
-                    completed_at,
-                },
-            )
-        })
+        .map(
+            |(slug, status, score, attempts, completed_at, difficulty)| {
+                (
+                    slug,
+                    CompletedSession {
+                        status,
+                        score,
+                        attempts,
+                        completed_at,
+                        difficulty,
+                    },
+                )
+            },
+        )
         .collect())
 }
 
