@@ -18,6 +18,7 @@
 		"monthly": "Monthly",
 		"yearly": "Yearly",
 		"perMonth": "per month",
+		"currencyLabel": "Currency",
 		"perYear": "per year",
 		"saving": "Save {percent}%",
 		"includesAllGames": "All {count} games, every day",

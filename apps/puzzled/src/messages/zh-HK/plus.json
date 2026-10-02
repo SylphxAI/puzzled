@@ -18,6 +18,7 @@
 		"monthly": "按月",
 		"yearly": "按年",
 		"perMonth": "每月",
+		"currencyLabel": "貨幣",
 		"perYear": "每年",
 		"saving": "節省 {percent}%",
 		"includesAllGames": "每天可玩全部 {count} 款遊戲",
