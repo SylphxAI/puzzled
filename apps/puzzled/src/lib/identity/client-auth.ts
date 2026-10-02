@@ -49,6 +49,7 @@ export class AuthCallError extends Error {
 	constructor(
 		readonly status: number,
 		readonly code: string,
+		readonly retryAfter: string | null = null,
 	) {
 		super(`auth ${status} ${code}`)
 	}
@@ -85,8 +86,9 @@ async function call<T>(
 		body = {}
 	}
 	if (!response.ok) {
-		const code = typeof body.error === 'string' ? body.error : `http_${response.status}`
-		throw new AuthCallError(response.status, code)
+		// Auth answers `{ code, error: <message> }`: the code is the contract, the message is not.
+		const code = typeof body.code === 'string' ? body.code : `http_${response.status}`
+		throw new AuthCallError(response.status, code, response.headers.get('retry-after'))
 	}
 	return body as T
 }

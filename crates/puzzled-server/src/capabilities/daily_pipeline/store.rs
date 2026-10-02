@@ -13,7 +13,7 @@ use uuid::Uuid;
 use puzzled_core::puzzle_play::game_slugs::all_game_slugs;
 use puzzled_core::puzzle_play::generate::{difficulties_for, Generated};
 
-use super::{Resolved, GENERATOR_VERSION};
+use super::Resolved;
 
 fn midnight(date: NaiveDate) -> NaiveDateTime {
     date.and_hms_opt(0, 0, 0).unwrap_or_default()
@@ -73,7 +73,7 @@ pub async fn insert(
     .bind(&generated.solution)
     .bind(difficulty)
     .bind(i32::try_from(generated.seed).ok())
-    .bind(GENERATOR_VERSION)
+    .bind(generated.generator_version)
     .execute(pool)
     .await
     .map_err(|e| format!("daily_puzzles insert failed for {game_slug} {date}: {e}"))?;

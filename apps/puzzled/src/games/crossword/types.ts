@@ -81,6 +81,22 @@ export type CrosswordState = {
 export const GRID_SIZE = 5
 
 /**
+ * Boards stored before the column-clue generator carry no usable down clues
+ * (`clues.down` is served empty); they play across-only.
+ */
+export function hasDownClues(clues: { down: CrosswordClue[] }): boolean {
+	return clues.down.length > 0
+}
+
+/** The direction a request resolves to: always across on an across-only board. */
+export function resolveDirection(
+	requested: CrosswordDirection,
+	clues: { down: CrosswordClue[] },
+): CrosswordDirection {
+	return hasDownClues(clues) ? requested : 'across'
+}
+
+/**
  * Check if a clue is fully filled (all cells have letters).
  * Does not consult a solution — fill is not correctness.
  */

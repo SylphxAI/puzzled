@@ -18,7 +18,9 @@ import {
 export function ResetPasswordForm() {
 	const t = useTranslations('auth')
 	const searchParams = useSearchParams()
+	// The mailed link carries both: `challenge_id` and the secret `token`.
 	const token = searchParams.get('token') ?? ''
+	const challengeId = searchParams.get('challenge_id') ?? ''
 	const [touched, setTouched] = useState(false)
 	const [attempted, setAttempted] = useState(false)
 	// Submission guard that survives two clicks in the same tick: `isLoading`
@@ -38,12 +40,13 @@ export function ResetPasswordForm() {
 		handleSubmit,
 	} = useResetPasswordForm({
 		token,
+		challengeId,
 		minPasswordLength: MIN_PASSWORD_LENGTH,
 		afterResetUrl: '/login',
 	})
 
-	// No token at all: the link that brought the visitor here is incomplete.
-	if (!token) {
+	// An incomplete link, or one Auth refused (expired, used, forged): ask for a new one.
+	if (!token || !challengeId || error === 'reset_link_invalid') {
 		return (
 			<div className="surface-card p-6 text-center sm:p-8">
 				<span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">

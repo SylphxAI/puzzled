@@ -203,14 +203,34 @@ export function useUser() {
 	return useSafeUser()
 }
 
+/** Confirm an email with the mailed `challenge_id` and secret (the link's `token`). */
+async function verifyEmail(input: { challengeId: string; secret: string }): Promise<void> {
+	const response = await fetch('/api/identity/verify-email', {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		credentials: 'same-origin',
+		body: JSON.stringify(input),
+	})
+	if (!response.ok) throw new Error(await identityErrorCode(response, 'verification_failed'))
+}
+
+/** Mail the signed-in player a new verification link; the address is the session's own. */
+async function resendVerificationEmail(): Promise<void> {
+	const response = await fetch('/api/identity/verify-email/resend', {
+		method: 'POST',
+		credentials: 'same-origin',
+	})
+	if (!response.ok) throw new Error(await identityErrorCode(response, 'resend_failed'))
+}
+
 export function useSafeAuth() {
 	const ctx = useContext(AuthContext)
 	return {
 		signOut: ctx.signOut,
 		signInWithOAuth: ctx.signInWithOAuth,
 		oauthError: null as { message?: string } | null,
-		verifyEmail: async (_arg?: unknown) => undefined,
-		resendVerificationEmail: async (_arg?: unknown) => undefined,
+		verifyEmail,
+		resendVerificationEmail,
 	}
 }
 
@@ -351,10 +371,10 @@ export function useForgotPasswordForm(_opts?: unknown) {
 					credentials: 'same-origin',
 					body: JSON.stringify({ email }),
 				})
-				if (!response.ok) throw new Error('recovery failed')
+				if (!response.ok) throw new Error(await identityErrorCode(response, 'recovery_failed'))
 				setSuccess(true)
 			} catch (err) {
-				setError(err instanceof Error ? err.message : 'recovery failed')
+				setError(err instanceof Error ? err.message : 'recovery_failed')
 			} finally {
 				setIsLoading(false)
 			}
@@ -362,8 +382,16 @@ export function useForgotPasswordForm(_opts?: unknown) {
 	}
 }
 
+/** The `error` code of a failed identity route, else a fallback. */
+async function identityErrorCode(response: Response, fallback: string): Promise<string> {
+	const body = (await response.json().catch(() => null)) as { error?: unknown } | null
+	return typeof body?.error === 'string' && body.error ? body.error : fallback
+}
+
 export function useResetPasswordForm(opts?: {
 	token?: string
+	/** The mailed link's `challenge_id`; the reset needs it and the token together. */
+	challengeId?: string
 	minPasswordLength?: number
 	afterResetUrl?: string
 }) {
@@ -396,15 +424,15 @@ export function useResetPasswordForm(opts?: {
 					headers: { 'content-type': 'application/json' },
 					credentials: 'same-origin',
 					body: JSON.stringify({
-						token: opts?.token,
+						challengeId: opts?.challengeId,
 						secret: opts?.token,
 						password,
 					}),
 				})
-				if (!response.ok) throw new Error('reset failed')
+				if (!response.ok) throw new Error(await identityErrorCode(response, 'reset_failed'))
 				setSuccess(true)
 			} catch (err) {
-				setError(err instanceof Error ? err.message : 'reset failed')
+				setError(err instanceof Error ? err.message : 'reset_failed')
 			} finally {
 				setIsLoading(false)
 			}
