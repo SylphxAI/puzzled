@@ -720,3 +720,24 @@ fn env_url_keeps_the_bare_id_format() {
     assert_eq!(url, "https://m.example/v1/orgs/o1/projects/p1/envs/e1");
     assert!(super::client::env_url("https://m.example", &json!({"org":"o1"})).is_err());
 }
+
+#[tokio::test]
+async fn a_refusal_logs_the_problem_reason_and_processor_code() {
+    let (money, _) = fake_money(
+        400,
+        json!({
+            "code": "INVALID_STATE",
+            "status": 400,
+            "detail": "Stripe refused the request (resource_missing). key sk_live_abc123",
+            "details": [{"reason": "processor_refused", "processor_code": "resource_missing"}]
+        }),
+    )
+    .await;
+    let error = money.check_uncached(USER, "premium").await.unwrap_err();
+    let text = error.to_string();
+    assert!(text.contains("INVALID_STATE"), "{text}");
+    assert!(text.contains("reason=processor_refused"), "{text}");
+    assert!(text.contains("processor_code=resource_missing"), "{text}");
+    assert!(text.contains("Stripe refused the request"), "{text}");
+    assert!(!text.contains("sk_live_abc123"), "{text}");
+}
