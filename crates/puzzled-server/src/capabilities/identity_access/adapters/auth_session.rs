@@ -354,6 +354,9 @@ pub async fn attach_auth_session(
     next: Next,
 ) -> Response {
     request.headers_mut().remove(VERIFIED_IDENTITY_HEADER);
+    if request.uri().path() == "/v1/guest/session" {
+        return next.run(request).await;
+    }
     if let Some(token) = session_token(request.headers()) {
         let user_agent = request
             .headers()

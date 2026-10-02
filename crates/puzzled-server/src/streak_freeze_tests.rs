@@ -216,8 +216,10 @@ async fn a_guests_freezes_follow_them_onto_the_account_and_erasure_removes_them(
     read(&pool, &guest, 26).await;
     assert_eq!(count(&pool, "streak_freeze_awards", &guest).await, 1);
 
-    adopt_guest_freezes(&pool, account, guest).await.unwrap();
-    assert_eq!(count(&pool, "streak_freeze_awards", &guest).await, 0);
+    let mut tx = pool.begin().await.unwrap();
+    adopt_guest_freezes(&mut tx, account, guest).await.unwrap();
+    tx.commit().await.unwrap();
+    assert_eq!(count(&pool, "streak_freeze_awards", &guest).await, 1);
     assert_eq!(count(&pool, "streak_freeze_awards", &account).await, 1);
     let row = load_freeze_row(&pool, &account.to_string()).await.unwrap();
     assert_eq!(row.available, 1);

@@ -9,15 +9,13 @@ use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
 
-use super::identity::{require_identity_or_guest, resolve_request_identities};
 use super::state::AppState;
 use crate::capabilities::leaderboard::adapters::leaderboard_db::{
     fetch_score_leaderboard, LeaderboardPeriod as DbPeriod, LeaderboardQuery,
     LeaderboardType as DbType,
 };
-use crate::capabilities::puzzle_play::adapters::game_sessions_db::adopt_guest_sessions;
 use crate::capabilities::stats::adapters::sessions_stats_db::{
-    today_overview, user_history, user_stats,
+    today_overview, user_history_on_connection, user_stats_on_connection,
 };
 use crate::proto::puzzled::v1::{
     GetHistoryRequest, GetHistoryResponse, GetLeaderboardRequest, GetLeaderboardResponse,
@@ -41,21 +39,13 @@ impl StatsConnectService {
     async fn adopt_guest_progress_if_needed(
         &self,
         ctx: &RequestContext,
-    ) -> Result<(), ConnectError> {
-        let Some(pool) = &self.state.pool else {
-            return Ok(());
-        };
-        let identities = resolve_request_identities(ctx);
-        let Some((account_user_id, guest_user_id)) = identities.adoption_pair() else {
-            return Ok(());
-        };
-        adopt_guest_sessions(pool, account_user_id, guest_user_id)
-            .await
-            .map_err(|error| {
-                tracing::warn!(%error, "guest progress adoption failed");
-                ConnectError::new(ErrorCode::Internal, "guest_progress_adopt_failed")
-            })?;
-        Ok(())
+    ) -> Result<crate::bootstrap::identity::RequestAccess, ConnectError> {
+        crate::bootstrap::identity::admitted_request_identities(
+            ctx,
+            self.state.pool.as_ref(),
+            false,
+        )
+        .await
     }
 }
 
@@ -128,9 +118,6 @@ impl StatsService for StatsConnectService {
             ));
         }
 
-        let viewer = require_identity_or_guest(&ctx).ok();
-        let viewer_id = viewer.as_ref().map(|identity| identity.user_id.as_str());
-
         let query = LeaderboardQuery {
             game_slug: game_slug.to_string(),
             leaderboard_type: map_type(req.r#type),
@@ -141,12 +128,19 @@ impl StatsService for StatsConnectService {
         if let Some(pool) = &self.state.pool {
             match fetch_score_leaderboard(pool, &query).await {
                 Ok(entries) => {
-                    return leaderboard_response(
-                        entries
-                            .into_iter()
-                            .map(|entry| to_proto_entry(entry, viewer_id))
-                            .collect(),
-                    );
+                    let access = crate::bootstrap::identity::admitted_request_identities(
+                        &ctx,
+                        self.state.pool.as_ref(),
+                        false,
+                    )
+                    .await?;
+                    let viewer_id = access.primary().map(|identity| identity.user_id.as_str());
+                    let entries = entries
+                        .into_iter()
+                        .map(|entry| to_proto_entry(entry, viewer_id))
+                        .collect();
+                    access.commit().await?;
+                    return leaderboard_response(entries);
                 }
                 Err(error) => {
                     tracing::warn!(
@@ -267,14 +261,18 @@ impl StatsService for StatsConnectService {
         ctx: RequestContext,
         request: ServiceRequest<'_, GetUserStatsRequest>,
     ) -> ServiceResult<GetUserStatsResponse> {
-        self.adopt_guest_progress_if_needed(&ctx).await?;
-        let identity = require_identity_or_guest(&ctx)?;
+        let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
+        let identity = access.primary().cloned().ok_or_else(|| {
+            ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
+        })?;
         let req = request.to_owned_message();
-        let (games, total_played, total_won) = match &self.state.pool {
-            Some(pool) => user_stats(pool, &identity.user_id).await.map_err(|e| {
-                tracing::warn!(%e, "user stats read failed");
-                ConnectError::new(ErrorCode::Internal, "user_stats_read_failed")
-            })?,
+        let (games, total_played, total_won) = match access.connection() {
+            Some(connection) => user_stats_on_connection(connection, &identity.user_id)
+                .await
+                .map_err(|e| {
+                    tracing::warn!(%e, "user stats read failed");
+                    ConnectError::new(ErrorCode::Internal, "user_stats_read_failed")
+                })?,
             None => (Vec::new(), 0, 0),
         };
         let games_proto: Vec<UserGameStats> = games
@@ -292,6 +290,7 @@ impl StatsService for StatsConnectService {
             })
             .collect();
         let _ = req;
+        access.commit().await?;
         Response::ok(GetUserStatsResponse {
             games: games_proto,
             total_played,
@@ -305,17 +304,24 @@ impl StatsService for StatsConnectService {
         ctx: RequestContext,
         request: ServiceRequest<'_, GetHistoryRequest>,
     ) -> ServiceResult<GetHistoryResponse> {
-        self.adopt_guest_progress_if_needed(&ctx).await?;
-        let identity = require_identity_or_guest(&ctx)?;
+        let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
+        let identity = access.primary().cloned().ok_or_else(|| {
+            ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
+        })?;
         let req = request.to_owned_message();
         let slug = (!req.game_slug.trim().is_empty()).then(|| req.game_slug.trim().to_string());
-        let rows = match &self.state.pool {
-            Some(pool) => user_history(pool, &identity.user_id, slug.as_deref(), req.limit)
-                .await
-                .map_err(|e| {
-                    tracing::warn!(%e, "history read failed");
-                    ConnectError::new(ErrorCode::Internal, "history_read_failed")
-                })?,
+        let rows = match access.connection() {
+            Some(connection) => user_history_on_connection(
+                connection,
+                &identity.user_id,
+                slug.as_deref(),
+                req.limit,
+            )
+            .await
+            .map_err(|e| {
+                tracing::warn!(%e, "history read failed");
+                ConnectError::new(ErrorCode::Internal, "history_read_failed")
+            })?,
             None => Vec::new(),
         };
         let sessions: Vec<SessionEntry> = rows
@@ -352,6 +358,7 @@ impl StatsService for StatsConnectService {
                 ..Default::default()
             })
             .collect();
+        access.commit().await?;
         Response::ok(GetHistoryResponse {
             sessions,
             ..Default::default()

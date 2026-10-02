@@ -27,8 +27,8 @@ test('SSR boards forward each request cookie and User-Agent without cross-reques
 	expect(result.again).toEqual([true, false])
 	expect(result.received).toHaveLength(4)
 	for (const [cookie, userAgent] of [
-		['test-session=A', 'Browser-A'],
-		['test-session=B', 'Browser-B'],
+		['puzzled_session=A', 'Browser-A'],
+		['puzzled_session=B', 'Browser-B'],
 		['', 'Browser-anonymous'],
 	]) {
 		expect(

@@ -8,13 +8,13 @@
  * - Server (SSR/node): API_INTERNAL_URL (platform-injected private web -> api).
  * - Local dev: http://127.0.0.1:3001 (puzzled-server).
  *
- * Guest free-ritual: interceptor attaches X-Puzzled-Guest-Id when a browser
- * guest-day UUID exists (platform session cookie still preferred server-side).
+ * Guest identity is a server-issued HttpOnly cookie, never a browser player id.
  */
 
 import type { Interceptor, Transport } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
-import { GUEST_ID_HEADER, getOrCreateGuestDayId } from '@/lib/guest-day-id'
+import { getOrCreateGuestDayId } from '@/lib/guest-day-id'
+import { GUEST_DAY_ID_KEY } from '@/lib/storage-keys'
 
 const DEV_DEFAULT_BASE = 'http://127.0.0.1:3001'
 
@@ -79,12 +79,54 @@ export function resolveServerConnectBaseUrl(
 	return normalizeConnectBaseUrl(internal)
 }
 
-const guestDayIdInterceptor: Interceptor = (next) => async (req) => {
-	const guestId = getOrCreateGuestDayId()
-	if (guestId) {
-		req.header.set(GUEST_ID_HEADER, guestId)
+export type GuestSessionResult = { issued: boolean }
+let guestSession: Promise<GuestSessionResult> | null = null
+
+/** One cookie bootstrap at a time; a refusal is surfaced and can be retried later. */
+export function ensureGuestSession(base = resolveConnectBaseUrl()): Promise<GuestSessionResult> {
+	if (typeof window === 'undefined') return Promise.resolve({ issued: false })
+	if (guestSession) return guestSession
+	const url = `${normalizeConnectBaseUrl(base)}/v1/guest/session`
+	const bootstrap = async (): Promise<GuestSessionResult> => {
+		// Old progress lives under a raw id; the server claims it once into the new namespace.
+		const legacy = getOrCreateGuestDayId()
+		const response = await fetch(url, {
+			method: 'POST',
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(legacy ? { legacyGuestId: legacy } : {}),
+		})
+		if (!response.ok) throw new Error('guest_session_unavailable')
+		const result: unknown = await response.json()
+		if (
+			!result ||
+			typeof result !== 'object' ||
+			!('issued' in result) ||
+			typeof result.issued !== 'boolean'
+		) {
+			throw new Error('guest_session_invalid_response')
+		}
+		// A 200 is final: a refused claim is never retried, so the key goes either way. It goes
+		// before the lock is released, so the next tab never offers it again.
+		if (legacy) {
+			try {
+				localStorage.removeItem(GUEST_DAY_ID_KEY)
+			} catch {
+				// Storage may be unavailable; the server refuses a second claim anyway.
+			}
+		}
+		return { issued: result.issued }
 	}
-	return next(req)
+	// Tabs bootstrap one at a time so a later Set-Cookie cannot overwrite the cookie that
+	// owns the claimed legacy progress.
+	const locks = typeof navigator === 'undefined' ? undefined : navigator.locks
+	const pending = (async (): Promise<GuestSessionResult> =>
+		locks ? await locks.request('puzzled-guest-session', bootstrap) : await bootstrap())()
+	guestSession = pending
+	void pending.catch(() => {
+		if (guestSession === pending) guestSession = null
+	})
+	return pending
 }
 
 let cachedBase: string | null = null
@@ -97,14 +139,20 @@ export function getConnectTransport(baseUrl?: string): Transport {
 	cachedTransport = createConnectTransport({
 		baseUrl: base,
 		useBinaryFormat: false, // browserDefaultEncoding: protojson
-		interceptors: [guestDayIdInterceptor],
-		// Cookie-auth fetch credentials (cast: connect-web option surface varies by minor).
-		...({ credentials: 'include' } as Record<string, string>),
+		interceptors: [
+			((next) => async (req) => {
+				await ensureGuestSession(base).catch(() => undefined)
+				return next(req)
+			}) satisfies Interceptor,
+		],
+		fetch: ((input: RequestInfo | URL, init?: RequestInit) =>
+			fetch(input, { ...init, credentials: 'include' })) as typeof fetch,
 	})
 	return cachedTransport
 }
 
 export function resetConnectTransportCache(): void {
+	guestSession = null
 	cachedBase = null
 	cachedTransport = null
 }

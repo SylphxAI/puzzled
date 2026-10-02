@@ -10,7 +10,7 @@ mod connect_preferences;
 mod connect_puzzle;
 mod connect_stats;
 mod health;
-mod identity;
+pub(crate) mod identity;
 mod lifecycle;
 mod observability_test;
 mod router;

@@ -29,7 +29,7 @@
 		"title": "How a Puzzled day works",
 		"body": "One puzzle day, one shared set, the same for every player.",
 		"step1Title": "Pick today's puzzle",
-		"step1Body": "Today's pick leads, and all {count} puzzles are open on the same daily set.",
+		"step1Body": "Today's pick leads, and all {count} puzzles share the same daily set. Today's pick is free for everyone; the other games are open with Puzzled Plus.",
 		"step2Title": "Solve at your own pace",
 		"step2Body": "Most puzzles take two to ten minutes, and the ones with difficulty levels let you warm up or push harder.",
 		"step3Title": "Keep the habit",
@@ -40,7 +40,7 @@
 		"body": "The short version of how this catalog works.",
 		"start": {
 			"question": "Where should I start?",
-			"answer": "Open today's pick — it needs no account and no payment. Every other puzzle in the suite is open too."
+			"answer": "Open today's pick. It needs no account and no payment. The other puzzles are open with Puzzled Plus."
 		},
 		"rotation": {
 			"question": "How does today's pick rotate?",
@@ -48,7 +48,7 @@
 		},
 		"account": {
 			"question": "Do I need an account?",
-			"answer": "No. Every puzzle is playable as a guest; an account keeps your streak, results and stats across devices."
+			"answer": "No. Today's pick is playable as a guest; an account keeps your streak, results and stats across devices."
 		},
 		"share": {
 			"question": "Can I share a result without spoiling it?",

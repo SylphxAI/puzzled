@@ -2,13 +2,16 @@
 	"pricing": {
 		"metaDescription": "今天精選謎題免費。Puzzled Plus 開放全部遊戲、所有過往題目，並提供家庭方案。",
 		"lead": "今天精選謎題人人免費。Puzzled Plus 開放全部 {count} 款遊戲、過往題庫，以及每款遊戲的統計。",
-		"freeBody": "每天一題今天精選謎題，不需註冊帳號。",
-		"playFree": "玩今天的免費謎題：{game}"
+		"freeBody": "每天一款精選謎題，不需註冊帳號。",
+		"playFree": "玩今天的免費謎題：{game}",
+		"legal": "價格已包含增值稅。由 Sylphx Limited（於英格蘭及威爾斯註冊）出售。訂閱會自動續訂，直至你在「設定」中取消。"
 	},
 	"unlock": {
 		"body": "今天的免費謎題是 {game}。Puzzled Plus 開放全部 {count} 款遊戲和所有過往題目。"
 	},
 	"subscription": {
-		"free": "你正在使用免費方案：每天一題今天精選謎題。"
+		"free": "你正在使用免費方案：每天一款精選謎題。",
+		"renews": "將於 {date} 續訂",
+		"resumed": "你的訂閱會如常續訂。"
 	}
 }
