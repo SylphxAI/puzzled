@@ -16,7 +16,8 @@
 	"lineup": {
 		"title": "今天的陣容",
 		"subtitle": "每日輪換，天天新鮮。完整目錄請到遊戲頁。",
-		"seeAll": "看全部遊戲"
+		"seeAll": "看全部遊戲",
+		"freeToday": "今天精選"
 	},
 	"value": {
 		"dailyTitle": "每天全新題目",
@@ -65,10 +66,11 @@
 		"titleMemberStreak": "你的 {days} 天連續紀錄等著你",
 		"titleMemberDone": "今天已完成 — 玩得漂亮",
 		"bodyGuest": "Puzzled 每天提供一組文字、邏輯與數字謎題。每天一個免費，幾分鐘就能玩完，不必註冊。",
-		"bodyMember": "你的連續紀錄、統計與今日陣容，一按即到。",
+		"bodyMember": "你的連續紀錄、統計與今天的陣容，一鍵即達。",
 		"playToday": "玩今天的{game}",
 		"finishersToday": "今天已有 {count} 人完成",
 		"freeToday": "今天免費",
 		"guestNote": "不必註冊、不必信用卡，幾分鐘玩完。"
-	}
+	},
+	"todaysPuzzles": "今天的謎題"
 }

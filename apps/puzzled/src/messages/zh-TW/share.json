@@ -8,6 +8,18 @@
 		"altLinkTemplate": " 一起玩：{link}"
 	},
 	"landing": {
-		"metaTitle": "分享的謎題成績"
+		"metaTitle": "分享的謎題成績",
+		"ogTitle": "{game}：一個等你挑戰的成績",
+		"metaDescription": "看看朋友的成績，然後免費玩今天的 Puzzled 謎題。",
+		"eyebrow": "朋友分享了一個成績",
+		"titleSame": "你能贏過對方嗎？",
+		"titleOther": "看看對方的成績，再玩今天的謎題",
+		"bodySame": "同一題、同一天。免費玩，不用註冊，完成後並排比較兩個成績。",
+		"bodyOther": "這題是另一天的謎題。今天的免費謎題已經準備好，不用註冊。",
+		"note": "分享的成績不會包含答案。"
+	},
+	"challenge": {
+		"theirs": "對方的成績",
+		"yours": "你的成績"
 	}
 }
