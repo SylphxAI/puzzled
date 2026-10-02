@@ -103,7 +103,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				hintsUsed: game.state.hintsUsed,
 			},
 		}).then((finish) => {
-			if (!finish.success) setFinishRejected(true)
+			if (!finish.success && !finish.stale) setFinishRejected(true)
 		})
 	}
 

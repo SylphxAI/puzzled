@@ -7,6 +7,7 @@ let accept = true
 mock.module('@/features/gamification', () => ({
 	useSaveGameResult: () => ({
 		isLoggedIn: false,
+		reset: () => {},
 		saveResult: async () =>
 			accept ? { success: true, score: 90 } : { success: false, error: 'not_solved' },
 	}),

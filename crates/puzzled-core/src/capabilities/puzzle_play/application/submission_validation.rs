@@ -1821,6 +1821,33 @@ mod tests {
     }
 
     #[test]
+    fn cryptogram_without_puzzle_text_requires_every_solution_letter() {
+        let (_, solution) = cryptogram_partial_alphabet();
+        // No encryptedText: fall back to all 26 keys, so a 3-letter decode is not a win.
+        let v = validate_submission(
+            "cryptogram",
+            &json!({}),
+            &solution,
+            &env(json!({ "guesses": { "A": "Z", "B": "Y", "C": "X" }, "hintsUsed": 0 })),
+        );
+        assert!(!v.valid, "{v:?}");
+    }
+
+    #[test]
+    fn cryptogram_reads_puzzle_text_nested_under_puzzle_data() {
+        let (puzzle, solution) = cryptogram_partial_alphabet();
+        let nested = json!({ "puzzleData": puzzle });
+        let v = validate_submission(
+            "cryptogram",
+            &nested,
+            &solution,
+            &env(json!({ "guesses": { "A": "Z", "B": "Y", "C": "X" }, "hintsUsed": 0 })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Won));
+    }
+
+    #[test]
     fn pattern_match_accepts_an_honest_loss() {
         let solution = json!({ "validSets": [[0, 1, 2]], "totalSets": 1 });
         let v = validate_submission(
