@@ -12,11 +12,11 @@ mod connect_puzzle;
 mod connect_stats;
 mod health;
 pub(crate) mod identity;
-mod lifecycle;
+pub(crate) mod lifecycle;
 mod observability_test;
 mod router;
 mod state;
 
-pub use lifecycle::{http_port, request_shutdown, shutdown_signal};
+pub use lifecycle::{drain_tasks, http_port, request_shutdown, shutdown_signal};
 pub use router::router;
 pub use state::AppState;

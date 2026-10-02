@@ -226,7 +226,7 @@ fn alert_if_low(report: &FillReport) {
 /// Run [`fill`] once at start-up, off the request path.
 pub fn spawn_startup_fill(pool: Option<PgPool>) -> Option<tokio::task::JoinHandle<()>> {
     let pool = pool?;
-    Some(tokio::spawn(async move {
+    Some(crate::bootstrap::lifecycle::spawn_durable(async move {
         let today = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
         if let Err(error) = fill(&pool, today).await {
             warn!(%error, "daily puzzle fill at start-up failed");
