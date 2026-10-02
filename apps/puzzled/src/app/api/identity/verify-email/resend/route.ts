@@ -1,3 +1,4 @@
+import { uuidv7 } from '@sylphx/sdk/runtime'
 import { NextResponse } from 'next/server'
 import {
 	admitSameOrigin,
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
 			credential: token,
 			headers: { 'user-agent': requestUserAgent(request) },
 			body: {
-				idempotency_key: crypto.randomUUID(),
+				idempotency_key: uuidv7(),
 				redirect_url: `${await getRequestSiteOrigin()}/verify-email`,
 			},
 		})
