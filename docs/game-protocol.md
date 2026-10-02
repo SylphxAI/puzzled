@@ -103,7 +103,7 @@ specific games; never let a client invent a daily solution. Content for a day
 should exist before that day's traffic.
 
 A generator is frozen once it has stored rows. To improve a game's content, add a
-new generator version for new days (`generate::current_generator_version`), keep
+new generator version for new days (the generator module's current version for that game), keep
 the old one reproducing its stored rows, and record the version on each row
 (`daily_puzzles.generator_version`); never rewrite a served or finished puzzle.
 The Mini Grid did this with `rust-crossword-v2`.
