@@ -60,7 +60,7 @@ async fn check(State(fake): State<Fake>, Json(body): Json<Value>) -> (StatusCode
 /// One product with `plus` so sales are open.
 async fn catalog(State(fake): State<Fake>) -> Json<Value> {
     let fake = fake.lock().unwrap();
-    let synced = if fake.unsynced { "False" } else { "True" };
+    let synced = if fake.unsynced { "false" } else { "true" };
     let ids = if fake.no_price_id {
         json!({})
     } else {

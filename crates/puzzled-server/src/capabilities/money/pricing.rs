@@ -59,18 +59,20 @@ pub fn plans(catalog: &Catalog) -> Vec<PlanPrices> {
     if !catalog.synced() {
         return Vec::new();
     }
-    spec_plans(catalog)
-        .into_iter()
-        .filter(|plan| catalog.has_processor_price(&plan.price_key))
-        .collect()
+    ranked(catalog, |price| catalog.has_processor_price(&price.key))
 }
 
-/// The plans the catalogue spec lists, synced or not: individual before
-/// family, month before year. Where two products share a kind and interval,
-/// the smaller seats limit wins. Only for labelling an existing subscription;
-/// never for offering a plan.
+/// The plans the catalogue spec lists, synced or not. Only for labelling an
+/// existing subscription; never for offering a plan.
 #[must_use]
 pub fn spec_plans(catalog: &Catalog) -> Vec<PlanPrices> {
+    ranked(catalog, |_| true)
+}
+
+/// Individual before family, month before year. Where two products share a
+/// kind and interval, the smaller seats limit among the `sellable` prices
+/// wins: a price that cannot be sold never shadows one that can.
+fn ranked(catalog: &Catalog, sellable: impl Fn(&CatalogPrice) -> bool) -> Vec<PlanPrices> {
     let mut found: Vec<PlanPrices> = Vec::new();
     for product in catalog
         .spec
@@ -82,6 +84,9 @@ pub fn spec_plans(catalog: &Catalog) -> Vec<PlanPrices> {
         let family = seats > 1;
         for price in &product.prices {
             let Some(word) = sold(price) else { continue };
+            if !sellable(price) {
+                continue;
+            }
             let kind = if family { "family" } else { "individual" };
             found.push(PlanPrices {
                 plan_id: format!("{kind}_{word}"),

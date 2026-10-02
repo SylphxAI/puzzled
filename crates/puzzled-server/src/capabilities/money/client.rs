@@ -152,7 +152,7 @@ pub struct CatalogStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CatalogCondition {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", default)]
     pub kind: String,
     #[serde(default)]
     pub status: String,
