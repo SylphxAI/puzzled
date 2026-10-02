@@ -37,6 +37,7 @@ answer() { # body code
 case "$url" in
   *audience=sylphx-access*) answer '{"value":"jwt-fixture"}' 200 ;;
   */v1/access/github/token) answer "$FAKE_EXCHANGE_BODY" "$FAKE_EXCHANGE_CODE" ;;
+  *price_catalogs/default:sync*) answer "\${FAKE_SYNC_BODY:-{\}}" "\${FAKE_SYNC_CODE:-\${FAKE_MONEY_CODE:-200}}" ;;
   */price_catalogs/default*) answer '{}' "\${FAKE_MONEY_CODE:-200}" ;;
   *) answer '{"unexpected":true}' 404 ;;
 esac
@@ -132,6 +133,57 @@ describe('money catalogue apply script', () => {
 	})
 })
 
+describe('preview sync that is not connected to Stripe', () => {
+	const NOT_CONNECTED = '{"error":{"code":"merchant_not_connected"}}'
+	const base = { FAKE_EXCHANGE_BODY: GRANTED, FAKE_EXCHANGE_CODE: '200' }
+
+	test('with SYNC_FAILURE_NONFATAL a 400 merchant_not_connected is a warning and exits 0', () => {
+		const result = run({
+			...base,
+			SYNC_FAILURE_NONFATAL: '1',
+			FAKE_SYNC_CODE: '400',
+			FAKE_SYNC_BODY: NOT_CONNECTED,
+		})
+		expect(result.status).toBe(0)
+		expect(result.stdout).toContain('::warning::')
+		expect(result.calls.filter((c) => c.startsWith('PATCH'))).toHaveLength(1)
+	})
+
+	test('without the flag the same answer fails', () => {
+		const result = run({ ...base, FAKE_SYNC_CODE: '400', FAKE_SYNC_BODY: NOT_CONNECTED })
+		expect(result.status).not.toBe(0)
+	})
+
+	test('with the flag any other sync error still fails', () => {
+		for (const [code, body] of [
+			['400', '{"error":{"code":"invalid_argument"}}'],
+			['500', NOT_CONNECTED],
+			['403', '{"error":"denied"}'],
+		]) {
+			const result = run({
+				...base,
+				SYNC_FAILURE_NONFATAL: '1',
+				FAKE_SYNC_CODE: code,
+				FAKE_SYNC_BODY: body,
+			})
+			expect(result.status).not.toBe(0)
+		}
+	})
+
+	test('with the flag a failed PATCH or refused exchange still fails', () => {
+		expect(
+			run({ ...base, SYNC_FAILURE_NONFATAL: '1', FAKE_MONEY_CODE: '400' }).status,
+		).not.toBe(0)
+		expect(
+			run({
+				SYNC_FAILURE_NONFATAL: '1',
+				FAKE_EXCHANGE_BODY: '{}',
+				FAKE_EXCHANGE_CODE: '403',
+			}).status,
+		).not.toBe(0)
+	})
+})
+
 describe('money catalogue workflow and reader', () => {
 	const workflow = Bun.YAML.parse(
 		readFileSync(join(root, '.github/workflows/money-catalogue.yml'), 'utf8'),
@@ -143,6 +195,7 @@ describe('money catalogue workflow and reader', () => {
 				needs?: string
 				if: string
 				'continue-on-error'?: boolean
+				env?: { SYNC_FAILURE_NONFATAL?: string }
 				steps: { run?: string; 'continue-on-error'?: boolean }[]
 			}
 		>
@@ -151,6 +204,11 @@ describe('money catalogue workflow and reader', () => {
 	test('a change to the apply script triggers the workflow', () => {
 		expect(workflow.on.push.paths).toContain('scripts/money-catalogue-apply.sh')
 		expect(workflow.on.push.branches).toEqual(['main'])
+	})
+
+	test('only preview tolerates a not-connected sync; production has no flag', () => {
+		expect(workflow.jobs.preview.env?.SYNC_FAILURE_NONFATAL).toBe('1')
+		expect(workflow.jobs.production.env?.SYNC_FAILURE_NONFATAL).toBeUndefined()
 	})
 
 	test('preview failure blocks production without an always or continue-on-error bypass', () => {
