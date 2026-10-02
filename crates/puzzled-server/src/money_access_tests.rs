@@ -29,6 +29,10 @@ struct FakeMoney {
     down: bool,
     /// Answer only the `seats` check with a 503.
     seats_down: bool,
+    /// The catalogue spec lists Plus but Money has not synced it to Stripe.
+    unsynced: bool,
+    /// Synced, but the price has no Stripe price id.
+    no_price_id: bool,
 }
 
 type Fake = Arc<Mutex<FakeMoney>>;
@@ -54,13 +58,24 @@ async fn check(State(fake): State<Fake>, Json(body): Json<Value>) -> (StatusCode
 }
 
 /// One product with `plus` so sales are open.
-async fn catalog() -> Json<Value> {
-    Json(json!({"spec": {"products": [{
-        "key": "solo", "display_name": "Plus",
-        "features": {"plus": "true", "seats": "1"},
-        "prices": [{"key": "k_m", "recurring_interval": "month", "tax_behavior": "inclusive",
-                    "unit_amounts": {"USD": "1100"}}]
-    }]}}))
+async fn catalog(State(fake): State<Fake>) -> Json<Value> {
+    let fake = fake.lock().unwrap();
+    let synced = if fake.unsynced { "False" } else { "True" };
+    let ids = if fake.no_price_id {
+        json!({})
+    } else {
+        json!({"k_m": "price_k_m"})
+    };
+    Json(
+        json!({"status": {"conditions": [{"type": "Synced", "status": synced}],
+                               "processor_price_ids": ids},
+        "spec": {"products": [{
+            "key": "solo", "display_name": "Plus",
+            "features": {"plus": "true", "seats": "1"},
+            "prices": [{"key": "k_m", "recurring_interval": "month", "tax_behavior": "inclusive",
+                        "unit_amounts": {"USD": "1100"}}]
+        }]}}),
+    )
 }
 
 async fn spawn_money(fake: Fake) -> Money {
@@ -160,6 +175,43 @@ async fn money_alone_decides_who_plays_paid_games_and_the_archive() {
     assert_eq!(status, StatusCode::OK, "{body}");
     let (status, _) = get_daily(&app, json!({"gameSlug": free_game()}), &outage_token).await;
     assert_eq!(status, StatusCode::OK);
+}
+
+/// A stored spec that never reached Stripe is not a sale: sales stay closed
+/// and nothing is locked, so no player is shut out of a game they cannot buy.
+#[tokio::test]
+async fn an_unsynced_or_unpriced_catalogue_keeps_sales_closed_and_games_open() {
+    let _key = crate::capabilities::identity_access::adapters::platform_jwt::test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let fake: Fake = Arc::default();
+    let money = spawn_money(fake.clone()).await;
+    let state = AppState::new(Some(pool)).with_money(Some(money));
+    let app = router(state.clone());
+
+    // Synced with a price id: sales open, a non-free game is locked.
+    assert!(state.sales_open().await);
+    let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &token(UNPAID)).await;
+    assert_eq!(status, StatusCode::FORBIDDEN, "{body}");
+
+    for (unsynced, no_price_id) in [(true, false), (false, true)] {
+        {
+            let mut f = fake.lock().unwrap();
+            f.unsynced = unsynced;
+            f.no_price_id = no_price_id;
+        }
+        // The catalogue is cached five minutes: read through a fresh client.
+        let money = spawn_money(fake.clone()).await;
+        let state = AppState::new(state.pool.clone()).with_money(Some(money));
+        let app = router(state.clone());
+        assert!(!state.sales_open().await, "{unsynced} {no_price_id}");
+        let (status, body) =
+            get_daily(&app, json!({"gameSlug": paid_game()}), &token(UNPAID)).await;
+        assert_eq!(status, StatusCode::OK, "{body}");
+    }
 }
 
 #[tokio::test]

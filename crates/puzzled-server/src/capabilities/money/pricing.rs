@@ -50,11 +50,27 @@ fn amounts(price: &CatalogPrice) -> Vec<(String, i64)> {
         .collect()
 }
 
-/// The plans Money currently sells: individual before family, month before
-/// year. Where two products share a kind and interval, the smaller seats
-/// limit wins.
+/// The plans a buyer can check out: the catalogue is synced to the processor
+/// and the plan's price has a processor price id. This is the one list sales
+/// state, the pricing page and checkout all read; a stored spec Money has not
+/// synced sells nothing.
 #[must_use]
 pub fn plans(catalog: &Catalog) -> Vec<PlanPrices> {
+    if !catalog.synced() {
+        return Vec::new();
+    }
+    spec_plans(catalog)
+        .into_iter()
+        .filter(|plan| catalog.has_processor_price(&plan.price_key))
+        .collect()
+}
+
+/// The plans the catalogue spec lists, synced or not: individual before
+/// family, month before year. Where two products share a kind and interval,
+/// the smaller seats limit wins. Only for labelling an existing subscription;
+/// never for offering a plan.
+#[must_use]
+pub fn spec_plans(catalog: &Catalog) -> Vec<PlanPrices> {
     let mut found: Vec<PlanPrices> = Vec::new();
     for product in catalog
         .spec

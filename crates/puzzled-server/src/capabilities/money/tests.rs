@@ -14,7 +14,7 @@ use tower::ServiceExt;
 use super::access::{family_active, is_premium, seats, FEATURE_PLUS, FEATURE_SEATS};
 use super::checkout::{create_session, session_body, CheckoutError, Consent};
 use super::client::{Catalog, Money};
-use super::pricing::{plan, plans};
+use super::pricing::{plan, plans, spec_plans};
 
 const USER: &str = "0190a0a0-0000-7000-8000-000000000001";
 
@@ -138,7 +138,14 @@ fn catalog_fixture(archived: &[&str]) -> Value {
             "unit_amounts": {"USD": usd.to_string(), "GBP": (usd - 100).to_string()},
         })
     };
-    json!({"spec": {"products": [
+    let ids: serde_json::Map<String, Value> =
+        ["k_fam_y", "k_fam_m", "k_solo_m", "k_solo_y", "k_other_m"]
+            .iter()
+            .map(|key| ((*key).to_string(), json!(format!("price_{key}"))))
+            .collect();
+    json!({"status": {"conditions": [{"type": "Synced", "status": "True"}],
+                      "processor_price_ids": ids},
+    "spec": {"products": [
         {"key": "fam", "display_name": "Family",
          "features": {"plus": "true", "family": "true", "seats": "4"},
          "prices": [price("k_fam_y", "year", 6100), price("k_fam_m", "month", 1200)]},
@@ -458,6 +465,35 @@ fn an_archived_or_unpriced_price_is_not_sold() {
     weekly["spec"]["products"][1]["prices"][0]["recurring_interval"] = json!("week");
     assert!(plan(&parsed(weekly), "individual_monthly").is_none());
     assert!(plans(&Catalog::default()).is_empty());
+}
+
+#[test]
+fn an_unsynced_catalogue_sells_nothing() {
+    let mut value = catalog_fixture(&[]);
+    value["status"]["conditions"] = json!([{"type": "Synced", "status": "False"}]);
+    let catalog = parsed(value);
+    assert!(plans(&catalog).is_empty());
+    assert!(plan(&catalog, "individual_monthly").is_none());
+    // The spec alone still labels an existing subscription.
+    assert_eq!(spec_plans(&catalog).len(), 4);
+    let mut none = catalog_fixture(&[]);
+    none.as_object_mut().unwrap().remove("status");
+    assert!(plans(&parsed(none)).is_empty());
+}
+
+#[test]
+fn a_synced_price_without_a_processor_id_is_not_offered() {
+    let mut value = catalog_fixture(&[]);
+    value["status"]["processor_price_ids"]
+        .as_object_mut()
+        .unwrap()
+        .remove("k_fam_y");
+    value["status"]["processor_price_ids"]["k_fam_m"] = json!("");
+    let catalog = parsed(value);
+    assert!(plan(&catalog, "family_yearly").is_none());
+    assert!(plan(&catalog, "family_monthly").is_none());
+    assert!(plan(&catalog, "individual_monthly").is_some());
+    assert_eq!(plans(&catalog).len(), 2);
 }
 
 // ---- consent row ------------------------------------------------------------
