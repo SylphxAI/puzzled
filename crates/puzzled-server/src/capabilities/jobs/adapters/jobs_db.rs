@@ -28,10 +28,6 @@ pub struct DailyReminderBatch {
 
 /// Claim due players without recording delivery. Expired leases are reclaimed
 /// by the existing Jobs/Compute tick, including after a worker restart.
-/// Privacy admission uses the erasure owner's fresh-snapshot try-lock helper:
-/// a busy/fenced player is skipped, never poisoning another player's batch.
-/// Both materialized pages bound helper calls and retain admission locks through
-/// the UPDATE; the ordinary write-fence trigger remains authoritative.
 /// A crash after delivery but before acknowledgement can duplicate delivery:
 /// this is at-least-once, not exactly-once. Rollback must drain this executor
 /// or forward-fix it; old executors ignore leases. Additive fields stay put.
@@ -47,8 +43,8 @@ pub async fn claim_due_daily_reminders(
     )
 }
 
-/// Advance over every candidate, even one refused by privacy admission, so
-/// released failures and busy identities cannot starve later pages this tick.
+/// Advance over every candidate so released failures cannot starve later
+/// pages this tick.
 pub async fn claim_due_daily_reminders_after(
     pool: &PgPool,
     now: DateTime<Utc>,
@@ -67,10 +63,6 @@ pub async fn claim_due_daily_reminders_after(
             ) local
             WHERE np.push_enabled AND np.push_daily_reminder
               AND ($7::uuid IS NULL OR np.user_id > $7)
-              AND NOT EXISTS (
-                  SELECT 1 FROM erasure_requests e
-                  WHERE e.suppression_hash = puzzled_erasure_player_hash(np.user_id)
-              )
               AND np.daily_reminder_time ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'
               AND floor(extract(epoch FROM local.local_now::time) / 60)
                   BETWEEN extract(epoch FROM np.daily_reminder_time::time) / 60
@@ -85,17 +77,14 @@ pub async fn claim_due_daily_reminders_after(
             ORDER BY np.user_id
             LIMIT $4
             FOR UPDATE OF np SKIP LOCKED
-        ), due AS MATERIALIZED (
-            SELECT user_id, local_date FROM candidates
-            WHERE puzzled_erasure_try_admit(user_id)
         ), claimed AS (
         UPDATE notification_preferences np
         SET daily_reminder_claim_token = $5,
-            daily_reminder_claim_on = due.local_date,
+            daily_reminder_claim_on = candidates.local_date,
             daily_reminder_lease_until = $1 + make_interval(secs => $6)
-        FROM due
-        WHERE np.user_id = due.user_id
-        RETURNING np.user_id, due.local_date
+        FROM candidates
+        WHERE np.user_id = candidates.user_id
+        RETURNING np.user_id, candidates.local_date
         )
         SELECT claimed.user_id, claimed.local_date, page.last_user_id
         FROM (SELECT user_id AS last_user_id FROM candidates ORDER BY user_id DESC LIMIT 1) page

@@ -229,7 +229,7 @@ async fn delivery_before_ack_crash_explicitly_allows_at_least_once_retry() {
     use crate::capabilities::jobs::adapters::jobs_db::{
         acknowledge_daily_reminder, claim_due_daily_reminders, REMINDER_LEASE_SECONDS,
     };
-    let Some(pool) = crate::daily_reminder_tests::reminder_database().await else {
+    let Some(pool) = crate::test_support::fresh_database().await else {
         return;
     };
     sqlx::query("INSERT INTO notification_preferences (user_id, push_enabled, push_daily_reminder, daily_reminder_time, timezone) VALUES ($1, true, true, '08:00', 'UTC')")
