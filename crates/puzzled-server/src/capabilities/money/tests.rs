@@ -13,6 +13,7 @@ use tower::ServiceExt;
 
 use super::access::{family_active, is_premium, seats, FEATURE_PLUS, FEATURE_SEATS};
 use super::checkout::{create_session, session_body, CheckoutError, Consent};
+use super::client::Subscription;
 use super::client::{Catalog, Money};
 use super::pricing::{plan, plans};
 
@@ -536,6 +537,59 @@ async fn erasure_guard_ignores_ended_cancelled_and_other_peoples_subscriptions()
     assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
     let (money, _) = fake_money(200, json!({})).await;
     assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
+}
+
+#[tokio::test]
+async fn erasure_guard_fails_closed_on_every_status_not_known_to_be_over() {
+    for status in [
+        "past_due",
+        "incomplete",
+        "unpaid",
+        "paused",
+        "some_future_status",
+        "",
+    ] {
+        let (money, _) = fake_money(
+            200,
+            json!({"customer_subscriptions": [sub(USER, status, false)]}),
+        )
+        .await;
+        assert_eq!(
+            money.has_renewing_subscription(USER).await,
+            Ok(true),
+            "status {status:?}"
+        );
+    }
+    for status in ["canceled", "incomplete_expired", "expired"] {
+        let (money, _) = fake_money(
+            200,
+            json!({"customer_subscriptions": [sub(USER, status, false)]}),
+        )
+        .await;
+        assert_eq!(
+            money.has_renewing_subscription(USER).await,
+            Ok(false),
+            "status {status:?}"
+        );
+    }
+    let (money, _) = fake_money(
+        200,
+        json!({"customer_subscriptions": [sub(USER, "some_future_status", true)]}),
+    )
+    .await;
+    assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
+}
+
+#[test]
+fn entitlement_live_is_unchanged_by_the_erasure_rule() {
+    let s = Subscription {
+        id: "x".into(),
+        status: "some_future_status".into(),
+        cancel_at_period_end: false,
+        current_period_end: None,
+        price_keys: vec![],
+    };
+    assert!(!s.live() && !s.renews() && s.renews_for_erasure());
 }
 
 #[tokio::test]
