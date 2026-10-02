@@ -231,3 +231,28 @@ one. The play gate has no exemption: the grant is a Money entitlement grant
 - **Blocked on Money:** Money documents `EntitlementGrant` as a manual or
   promotional grant but serves only get, list and check (no create) as of
   2026-10-02, so `--apply` stops on its first call until it does.
+
+### Workaround: grace window in the play gate
+
+Registered workaround `plus-grace-window` (CEO ruling 2026-10-02), active only
+while Money cannot record the grants above and only when the production dry
+run counts at least one eligible account.
+
+- **Rule:** an account with real play history before
+  `PUZZLED_PLUS_GRACE_OPEN_AT` (RFC 3339, the instant sales opened) plays as
+  Plus until that instant plus `PUZZLED_PLUS_GRACE_DAYS` (1 to 366, ruling: 30).
+  History uses the job's own definition (`plus_grace::standing_of`, the same
+  `classify` the job uses); `PUZZLED_PLUS_GRACE_EXCLUDE_SUBJECTS`
+  (comma-separated Auth subjects) excludes QA accounts like `--exclude-subject`.
+- **Off by default:** unset or invalid values, before the open instant, and
+  from the end instant on, it grants nothing. Ops sets the values in the api
+  service's `[services.env]` in `sylphx.toml` (or the environment). Guests are
+  unaffected: the gate passes only signed-in accounts.
+- **Where:** one marked block, `WORKAROUND(plus-grace-window)`, in
+  `PuzzleConnectService::enforce_play_access`; module
+  `capabilities/plus_grace/window.rs`. One indexed read per account, then
+  cached (a "yes" for the process, a "no" for 10 minutes); each admission of a
+  new account logs `event = "plus_grace_window_admitted"` without an id.
+- **Removal trigger:** Money serves entitlement grant creation and
+  `plus-grace --apply --cutoff <the same open instant>` has run. Then unset the
+  variables and delete the module and the gate block in one change.
