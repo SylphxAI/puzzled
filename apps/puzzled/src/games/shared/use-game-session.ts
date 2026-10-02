@@ -126,6 +126,8 @@ export type GameEndResult = {
 	alreadyPlayed?: boolean
 	/** The answer, returned by the server only with an accepted finish. */
 	reveal?: unknown
+	/** The session was reset while this finish was in flight; nothing was applied. */
+	stale?: boolean
 }
 
 export interface UseGameSessionReturn {
@@ -179,7 +181,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	const storageKey = getGameSessionKey(gameSlug)
 
 	// Hooks
-	const { saveResult, isLoggedIn } = useSaveGameResult(gameSlug)
+	const { saveResult, reset: resetSave, isLoggedIn } = useSaveGameResult(gameSlug)
 	const { saveCompletion: saveGuestCompletion } = useGuestGameState(gameSlug)
 
 	// State
@@ -198,6 +200,8 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 
 	// Ref to prevent duplicate saves
 	const savedRef = useRef(false)
+	// Bumped by resetSession so a finish still in flight cannot touch the fresh board.
+	const generationRef = useRef(0)
 
 	// Derived state
 	const isReady = gamePhase === 'ready'
@@ -270,6 +274,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			if (savedRef.current) return { success: false, error: 'already_saving' }
 
 			savedRef.current = true
+			const generation = generationRef.current
 			const finalTimeSpentMs = startTime ? Date.now() - startTime : 0
 			const { status } = endData
 
@@ -299,7 +304,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 						difficulty,
 						data: endData.data,
 					})
-					if (result?.score !== undefined) {
+					if (result?.score !== undefined && generation === generationRef.current) {
 						setServerScore(result.score)
 					}
 					const alreadyPlayed = result.error === 'already_played'
@@ -316,6 +321,10 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 						success: false,
 						error: error instanceof Error ? error.message : 'save_failed',
 					}
+				}
+
+				if (generation !== generationRef.current) {
+					return { success: false, error: 'stale', stale: true }
 				}
 
 				if (requireServerAccept && !finish.success) {
@@ -379,6 +388,10 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	 */
 	const resetSession = useCallback(() => {
 		savedRef.current = false
+		generationRef.current += 1
+		// Release the save lock too, so the server's already_played guard decides
+		// a re-solve instead of a client-side 'Already saved'.
+		resetSave()
 		if (resultTimerRef.current) clearTimeout(resultTimerRef.current)
 		resultTimerRef.current = null
 		setResultReady(false)
@@ -387,7 +400,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		setShowResultModal(false)
 		setServerScore(null)
 		setStartTime(Date.now())
-	}, [])
+	}, [resetSave])
 
 	return {
 		// Phase management

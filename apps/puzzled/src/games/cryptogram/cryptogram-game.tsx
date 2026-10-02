@@ -16,6 +16,7 @@ import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { useStartOver } from '@/games/shared/use-start-over'
 import { checkGuess } from '@/lib/connect/puzzle-client'
 import { cn } from '@/lib/utils'
 import { triggerHaptic } from '@/shared/hooks'
@@ -46,12 +47,15 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		showResultModal,
 		setShowResultModal,
 		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'cryptogram',
 		mode,
 		puzzleId,
 		puzzleDate,
 		enableStarBurst: true,
+		// Congratulations only after the server accepts the finish.
+		requireServerAccept: true,
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
@@ -86,6 +90,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	const game = useCryptogram(puzzle.puzzleData, grader, handleGradeFailed)
 	const progress = game.getProgress()
 	const gameEndedRef = useRef(false)
+	const [finishRejected, setFinishRejected] = useState(false)
 
 	// Handle game end - delegate to useGameSession
 	if (game.state.gameStatus !== 'playing' && !gameEndedRef.current) {
@@ -97,6 +102,8 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				guesses: game.state.guesses,
 				hintsUsed: game.state.hintsUsed,
 			},
+		}).then((finish) => {
+			if (!finish.success && !finish.stale) setFinishRejected(true)
 		})
 	}
 
@@ -126,6 +133,13 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	}, [game, game.state.selectedLetter, game.state.gameStatus])
 
 	const shareResult = useResultShare()
+	const resetBoard = useCallback(() => {
+		setFinishRejected(false)
+		gameEndedRef.current = false
+		game.reset()
+	}, [game])
+	const startOver = useStartOver(resetSession, resetBoard)
+
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
@@ -188,6 +202,9 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 								Not solved yet: some letters are wrong.
 							</output>
 						) : null}
+						{finishRejected ? (
+							<output className="text-xs text-destructive">{tCommon('error')}</output>
+						) : null}
 						{gradeFailed ? (
 							<output className="text-xs text-destructive">{tCommon('error')}</output>
 						) : null}
@@ -203,7 +220,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 							<Lightbulb className="h-4 w-4" />
 							<span className="text-xs">{MAX_HINTS - game.state.hintsUsed}</span>
 						</Button>
-						<Button variant="ghost" size="sm" onClick={game.reset}>
+						<Button variant="ghost" size="sm" onClick={startOver}>
 							<RotateCcw className="h-4 w-4" />
 						</Button>
 						<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
