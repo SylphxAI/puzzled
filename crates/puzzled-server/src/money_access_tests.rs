@@ -244,12 +244,10 @@ async fn a_family_join_is_refused_and_retryable_when_money_cannot_answer_seats()
     assert_eq!(status, StatusCode::OK, "{body}");
 }
 
-/// WORKAROUND(plus-grace-window): with the window open, an account that
-/// finished a puzzle before the open instant plays a Plus game through the
-/// real gate; an account without history is still refused; past the end the
-/// history account is refused too.
+/// No existing-player exemption: an account with old finished sessions but no
+/// Plus is refused a Plus game exactly like a new account.
 #[tokio::test]
-async fn the_grace_window_opens_plus_play_only_for_accounts_with_history() {
+async fn an_account_with_old_play_history_is_still_locked_without_plus() {
     let _key = crate::capabilities::identity_access::adapters::platform_jwt::test_key_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -257,60 +255,25 @@ async fn the_grace_window_opens_plus_play_only_for_accounts_with_history() {
         return;
     };
     const HISTORY: &str = "0b6f7d3e-1111-4a4a-9c9c-0000000000c1";
-    const FRESH: &str = "0b6f7d3e-1111-4a4a-9c9c-0000000000c2";
-    let open = chrono::Utc::now() - chrono::Duration::days(1);
-    let ended_open = chrono::Utc::now() - chrono::Duration::days(31);
-    // Both are signed-in accounts (an Auth sign-in writes this row).
-    for account in [HISTORY, FRESH] {
-        sqlx::query("INSERT INTO auth_subjects (subject, user_id) VALUES ($1, $1::uuid)")
-            .bind(account)
-            .execute(&pool)
-            .await
-            .unwrap();
-    }
-    // History before both windows' open instants.
-    for finished in [
-        open - chrono::Duration::days(2),
-        ended_open - chrono::Duration::days(9),
-    ] {
-        sqlx::query(
-            "INSERT INTO game_sessions (user_id, game_slug, status, started_at, completed_at) \
-             VALUES ($1::uuid, 'sudoku', 'won', $2, $2)",
-        )
+    sqlx::query("INSERT INTO auth_subjects (subject, user_id) VALUES ($1, $1::uuid)")
         .bind(HISTORY)
-        .bind(finished.naive_utc())
         .execute(&pool)
         .await
         .unwrap();
-    }
-    let fake: Fake = Arc::default();
-    let money = spawn_money(fake).await;
-    let window = |open: chrono::DateTime<chrono::Utc>| {
-        Some(crate::capabilities::plus_grace::window::GraceWindow::new(
-            open,
-            30,
-            vec![],
-        ))
-    };
-    let app = router(
-        AppState::new(Some(pool.clone()))
-            .with_money(Some(money.clone()))
-            .with_plus_grace(window(open)),
-    );
-    let paid = json!({"gameSlug": paid_game()});
+    let finished = chrono::Utc::now() - chrono::Duration::days(400);
+    sqlx::query(
+        "INSERT INTO game_sessions (user_id, game_slug, status, started_at, completed_at) \
+         VALUES ($1::uuid, 'sudoku', 'won', $2, $2)",
+    )
+    .bind(HISTORY)
+    .bind(finished.naive_utc())
+    .execute(&pool)
+    .await
+    .unwrap();
+    let money = spawn_money(Arc::default()).await;
+    let app = router(AppState::new(Some(pool)).with_money(Some(money)));
 
-    let (status, body) = get_daily(&app, paid.clone(), &token(HISTORY)).await;
-    assert_eq!(status, StatusCode::OK, "{body}");
-    let (status, body) = get_daily(&app, paid.clone(), &token(FRESH)).await;
+    let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &token(HISTORY)).await;
     assert_eq!(status, StatusCode::FORBIDDEN, "{body}");
     assert!(refused(&body, "plus_required"), "{body}");
-
-    // A window that ended: the history account is refused again.
-    let ended = router(
-        AppState::new(Some(pool))
-            .with_money(Some(money))
-            .with_plus_grace(window(ended_open)),
-    );
-    let (status, body) = get_daily(&ended, paid, &token(HISTORY)).await;
-    assert_eq!(status, StatusCode::FORBIDDEN, "{body}");
 }

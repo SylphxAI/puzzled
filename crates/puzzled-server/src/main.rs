@@ -16,12 +16,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
         )
         .init();
-    // Operator commands run in the api's own environment (sylphx.toml
-    // `[[jobs]]`), with its bindings, and exit instead of serving.
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    if args.first().map(String::as_str) == Some("plus-grace") {
-        std::process::exit(puzzled_server::capabilities::plus_grace::main(&args[1..]).await);
-    }
     puzzled_server::observability::init();
     if let Err(message) = puzzled_server::shared::public_origin::public_origin() {
         tracing::error!(message, "public origin configuration refused");
