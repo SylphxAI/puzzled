@@ -204,56 +204,15 @@ This is the intended behaviour, a business choice of player experience over a sm
 - If the Money catalogue can't be read, Plus counts as not on sale. Nothing is locked, and the pricing page says "Purchases open shortly".
 - If Money can't answer a Plus entitlement check, play is allowed. Each such allowance logs `event = "money_entitlement_unanswerable_allowed"` at warn level, so a free ride lasting a whole outage shows up in logs and alerts.
 
-## Launch grace grants
+## Who pays
 
-Ruling (CEO 2026-10-02): when Plus sales open, accounts that already played get
-30 days of Plus, recorded in Sylphx Money; new players see the paywall from day
-one. The play gate has no exemption: the grant is a Money entitlement grant
-(account, feature `plus`, expiry, approver), and the gate reads it through
-`entitlement_grants:check` like any purchase.
+There is no launch grace and no existing-player exemption. Puzzled was never
+promoted or launched before Plus sales opened, so no account has earlier
+standing. The paywall applies to everyone:
 
-- **Command:** `puzzled-server plus-grace`, run as the `plus-grace` job in
-  `sylphx.toml` with the api's own bindings. `--dry-run` (the default) prints
-  one line of aggregate counts; `--apply --cutoff <sales-open instant>
-  --approver "CEO 2026-10-02"` records one grant per eligible account, id
-  `plus-grace-<cutoff date>-<account>`, ending at cutoff + 30 days. A re-run
-  writes nothing already held; the first Money error stops the run (exit 3)
-  and a re-run resumes.
-- **Eligible:** an account-backed player with a finished session (`won` or
-  `lost`) before the cutoff. Excluded: a cached `qa-inbox+` or `+synthetic`
-  email, and any Auth subject or player passed with `--exclude-subject` /
-  `--exclude-player` (Puzzled stores no other QA mark).
-- **Guests** are counted, not granted: Money's subject is an account. A guest
-  with a server-issued credential who signs up carries their sessions to the
-  account, and the next `--apply` with the same cutoff grants it with the same
-  expiry. Guests without a credential wait for Auth to serve guests as
-  accounts.
-- **Blocked on Money:** Money documents `EntitlementGrant` as a manual or
-  promotional grant but serves only get, list and check (no create) as of
-  2026-10-02, so `--apply` stops on its first call until it does.
-
-### Workaround: grace window in the play gate
-
-Registered workaround `plus-grace-window` (CEO ruling 2026-10-02), active only
-while Money cannot record the grants above and only when the production dry
-run counts at least one eligible account.
-
-- **Rule:** an account with real play history before
-  `PUZZLED_PLUS_GRACE_OPEN_AT` (RFC 3339, the instant sales opened) plays as
-  Plus until that instant plus `PUZZLED_PLUS_GRACE_DAYS` (1 to 366, ruling: 30).
-  History uses the job's own definition (`plus_grace::standing_of`, the same
-  `classify` the job uses); `PUZZLED_PLUS_GRACE_EXCLUDE_SUBJECTS`
-  (comma-separated Auth subjects) excludes QA accounts like `--exclude-subject`.
-- **Off by default:** unset or invalid values, before the open instant, and
-  from the end instant on, it grants nothing. The values are top-level
-  `[env.NAME] value = ...` tables in `sylphx.toml`; a per-service
-  `[services.env]` table of values is not delivered to the runtime. Guests are
-  unaffected: the gate passes only signed-in accounts.
-- **Where:** one marked block, `WORKAROUND(plus-grace-window)`, in
-  `PuzzleConnectService::enforce_play_access`; module
-  `capabilities/plus_grace/window.rs`. One indexed read per account, then
-  cached (a "yes" for the process, a "no" for 10 minutes); each admission of a
-  new account logs `event = "plus_grace_window_admitted"` without an id.
-- **Removal trigger:** Money serves entitlement grant creation and
-  `plus-grace --apply --cutoff <the same open instant>` has run. Then unset the
-  variables and delete the module and the gate block in one change.
+- Today's featured puzzle is free for everyone, guests included.
+- Every other game and the archive need a Plus entitlement (Money's
+  `entitlement_grants:check`) while sales are open. Guests and new accounts are
+  locked out of them, and so is an account with old play history.
+- Any later free or discounted access is a Money entitlement grant (account,
+  feature, expiry, approver), never a rule in the play gate.

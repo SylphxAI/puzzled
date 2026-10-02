@@ -1,6 +1,5 @@
 //! Application state composition root piece.
 
-use std::sync::Arc;
 use std::time::Instant;
 
 use sqlx::PgPool;
@@ -8,7 +7,6 @@ use sqlx::PgPool;
 use crate::capabilities::identity_access::adapters::auth_erasure::AuthErasure;
 use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
 use crate::capabilities::money::{pricing, Money};
-use crate::capabilities::plus_grace::window::GraceWindow;
 use crate::capabilities::preferences::unsubscribe::UnsubscribeTokens;
 use crate::capabilities::tryit_conversions::TryitReporter;
 use crate::shared::tick_receipt::TickVerifier;
@@ -32,9 +30,6 @@ pub struct AppState {
     /// Reports Tryit-referred sign-ups and purchases back to Tryit. None
     /// without `SYLPHX_API_KEY`: conversions are then queued and wait.
     pub tryit: Option<TryitReporter>,
-    /// WORKAROUND(plus-grace-window): launch grace as a play-gate rule until
-    /// Money serves grant creation. None (off) unless configured.
-    pub plus_grace: Option<Arc<GraceWindow>>,
 }
 
 impl AppState {
@@ -49,7 +44,6 @@ impl AppState {
             money: None,
             ticks: TickVerifier::from_env(),
             tryit: TryitReporter::from_env(),
-            plus_grace: GraceWindow::from_env().map(Arc::new),
         }
     }
 
@@ -74,12 +68,6 @@ impl AppState {
     #[must_use]
     pub fn with_erasure(mut self, erasure: Option<AuthErasure>) -> Self {
         self.erasure = erasure;
-        self
-    }
-
-    #[must_use]
-    pub fn with_plus_grace(mut self, window: Option<GraceWindow>) -> Self {
-        self.plus_grace = window.map(Arc::new);
         self
     }
 

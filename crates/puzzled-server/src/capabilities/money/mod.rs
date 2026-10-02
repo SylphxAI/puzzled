@@ -8,7 +8,6 @@ pub mod access;
 pub mod checkout;
 pub mod client;
 pub mod consent_db;
-pub mod grants;
 pub mod pricing;
 
 #[cfg(test)]
