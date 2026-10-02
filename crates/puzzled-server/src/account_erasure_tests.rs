@@ -258,7 +258,12 @@ async fn an_account_auth_does_not_hold_is_still_erased() {
         return;
     };
     // Auth holds no such account (already deleted, or never created).
-    let stub = StubAuth::answering(404, json!({"error": "principal_not_found"}));
+    // Auth's own answer (identity-api `map_error` of NotFound("user not
+    // found")); a bare 404 is ambiguous, not absence.
+    let stub = StubAuth::answering(
+        404,
+        json!({"code": "not_found", "error": "user not found", "authority": "identity"}),
+    );
     let base = spawn_auth(stub.clone()).await;
 
     let player = Uuid::now_v7();
@@ -740,4 +745,115 @@ async fn erase_player_reports_an_unconfirmed_sign_in_and_erases_no_row() {
     assert_eq!(report["outcome"], "sign_in_unconfirmed");
     assert_eq!(preference_rows(&pool, player).await, 1);
     assert_eq!(subject_rows(&pool, player).await, 1);
+}
+
+#[tokio::test]
+async fn a_404_that_is_not_auths_own_keeps_the_rows_and_says_run_erase_player() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    // A misrouted SYLPHX_AUTH_URL answers 404 at a proxy: nothing says the
+    // sign-in is gone, so the rows must not go either.
+    let stub = StubAuth::answering(404, json!({"error": "not_found"}));
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, &[subject]).await;
+
+    let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
+    assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR, "{body}");
+    assert!(message(&body).contains("account_deletion_failed"));
+    assert_eq!(stub.subjects(), vec![subject.to_string(); 4]);
+    assert_eq!(preference_rows(&pool, player).await, 1);
+    assert_eq!(subject_rows(&pool, player).await, 1);
+}
+
+/// Log lines written while a guard from [`capture_logs`] is held, on this
+/// thread (a current-thread test runtime runs spawned tasks here too).
+#[derive(Clone, Default)]
+struct Logs(Arc<Mutex<Vec<u8>>>);
+
+impl std::io::Write for Logs {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        self.0.lock().unwrap().extend_from_slice(bytes);
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+impl Logs {
+    fn text(&self) -> String {
+        String::from_utf8_lossy(&self.0.lock().unwrap()).into_owned()
+    }
+}
+
+fn capture_logs(logs: &Logs) -> tracing::subscriber::DefaultGuard {
+    let logs = logs.clone();
+    tracing::subscriber::set_default(
+        tracing_subscriber::fmt()
+            .with_ansi(false)
+            .with_max_level(tracing::Level::INFO)
+            .with_writer(move || logs.clone())
+            .finish(),
+    )
+}
+
+#[tokio::test]
+async fn a_client_that_hangs_up_mid_erase_does_not_cancel_the_erasure() {
+    let _key = test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let logs = Logs::default();
+    let _logs = capture_logs(&logs);
+    // Auth accepts, but slowly (within the 300 ms timeout).
+    let stub = StubAuth::accepting().scripted(vec![(202, accepted("privacy-request-1"), 250)]);
+    let base = spawn_auth(stub.clone()).await;
+    let player = Uuid::now_v7();
+    let subject = "usr_01kmp4wyhhfgxsyrjvh8e0tkkf";
+    seed(&pool, player, &[subject]).await;
+
+    // The client gives up while Auth is still deciding: the handler future
+    // is dropped with the transaction open and Auth's answer unread.
+    let app = app(&pool, Some(base));
+    let bearer = token(&player.to_string());
+    let request = delete_account(&app, &bearer);
+    tokio::pin!(request);
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
+    while stub.subjects().is_empty() {
+        tokio::select! {
+            answer = &mut request => panic!("answered before Auth was asked: {answer:?}"),
+            () = tokio::time::sleep(std::time::Duration::from_millis(5)) => {}
+        }
+        assert!(
+            tokio::time::Instant::now() < deadline,
+            "Auth was never asked"
+        );
+    }
+    drop(request);
+    assert_eq!(preference_rows(&pool, player).await, 1, "not committed yet");
+
+    // The erase still runs to its commit and logs it.
+    while !logs.text().contains("account data erased") {
+        assert!(
+            tokio::time::Instant::now() < deadline,
+            "the erase did not finish: {}",
+            logs.text()
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+    assert!(logs
+        .text()
+        .contains("sylphx auth account deletion requested"));
+    assert_eq!(stub.subjects(), vec![subject.to_string()]);
+    assert_eq!(preference_rows(&pool, player).await, 0);
+    assert_eq!(subject_rows(&pool, player).await, 0);
 }

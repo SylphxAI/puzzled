@@ -5,10 +5,12 @@ use std::sync::Arc;
 use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
+use tracing::Instrument;
 use uuid::Uuid;
 
 use super::identity::require_identity;
 use super::state::AppState;
+use crate::capabilities::identity_access::adapters::auth_erasure::AuthErasure;
 use crate::capabilities::preferences::adapters::account_deletion::{erase_player, EraseError};
 use crate::capabilities::preferences::adapters::preferences_db::{
     fetch_notification_preferences, fetch_user_preferences, is_reminder_time, timezone_is_known,
@@ -533,59 +535,24 @@ impl PreferencesService for PreferencesConnectService {
             tracing::warn!(%error, "account erasure: identity is not a player id");
             ConnectError::new(ErrorCode::Internal, "account_deletion_failed")
         })?;
-        match erase_player(pool, player, Some(erasure), None).await {
-            Ok(erased) => {
-                for (subject, request_id) in &erased.filed {
-                    tracing::info!(
-                        subject,
-                        privacy_request_id = %request_id,
-                        "sylphx auth account deletion requested"
-                    );
-                }
-                for subject in &erased.absent {
-                    tracing::info!(subject, "sylphx auth holds no account to delete");
-                }
-                tracing::info!(
-                    rows_deleted = erased.rows_deleted,
-                    attempts = erased.attempts,
-                    "account data erased"
-                );
-                Response::ok(DeleteAccountDataResponse {
-                    rows_deleted: erased.rows_deleted,
-                    ..Default::default()
-                })
-            }
-            Err(EraseError::SignInRefused(error)) => {
-                tracing::error!(%error, "sylphx auth account deletion refused; nothing erased");
-                Err(ConnectError::new(
-                    ErrorCode::Unavailable,
-                    "identity_account_deletion_failed",
-                ))
-            }
-            // Rolled back before Auth was asked: the account and its sign-in
-            // are whole, and the person can repeat the request.
-            Err(error) if !error.sign_in_may_be_deleted() => {
-                tracing::warn!(%error, "account deletion failed; nothing erased");
-                Err(ConnectError::new(
-                    ErrorCode::Unavailable,
-                    "account_deletion_unavailable",
-                ))
-            }
-            // Auth may have deleted the sign-in but the rows were not
-            // committed: the person may not be able to sign in to retry. The
-            // subject map is intact; the operator finishes it by subject.
-            Err(error) => {
-                tracing::error!(
-                    %error,
-                    subjects = ?error.subjects(),
-                    "account erasure incomplete: sign-in may be deleted, rows remain; run erase-player --subject"
-                );
-                Err(ConnectError::new(
-                    ErrorCode::Internal,
-                    "account_deletion_failed",
-                ))
-            }
-        }
+        // The erase runs in its own task, which the handler only awaits. An
+        // in-app erase can take tens of seconds (Auth retries with backoff);
+        // a client or gateway that gives up drops this future, and an erase
+        // running inside it would be cancelled mid-transaction — rolled back
+        // after Auth may have accepted, with no "run erase-player" line. The
+        // task owns everything it touches (a pool handle, the Auth handle,
+        // the player id), so it runs to its commit or its logged failure
+        // whatever the client does. The request's span goes with it, so its
+        // log lines stay attributed to the request.
+        let erase =
+            tokio::spawn(erase_account(pool.clone(), player, erasure.clone()).in_current_span());
+        erase.await.unwrap_or_else(|error| {
+            tracing::error!(%error, "account erasure task failed; run erase-player --subject");
+            Err(ConnectError::new(
+                ErrorCode::Internal,
+                "account_deletion_failed",
+            ))
+        })
     }
 
     async fn record_signup_attribution(
@@ -651,4 +618,66 @@ impl PreferencesService for PreferencesConnectService {
 
 pub fn preferences_connect_service(state: AppState) -> Arc<PreferencesConnectService> {
     Arc::new(PreferencesConnectService::new(state))
+}
+
+/// Erase one account and its sign-in, and log the outcome. Owns its inputs so
+/// it can run in a task that outlives the request.
+async fn erase_account(
+    pool: sqlx::PgPool,
+    player: Uuid,
+    erasure: AuthErasure,
+) -> ServiceResult<DeleteAccountDataResponse> {
+    match erase_player(&pool, player, Some(&erasure), None).await {
+        Ok(erased) => {
+            for (subject, request_id) in &erased.filed {
+                tracing::info!(
+                    subject,
+                    privacy_request_id = %request_id,
+                    "sylphx auth account deletion requested"
+                );
+            }
+            for subject in &erased.absent {
+                tracing::info!(subject, "sylphx auth holds no account to delete");
+            }
+            tracing::info!(
+                rows_deleted = erased.rows_deleted,
+                attempts = erased.attempts,
+                "account data erased"
+            );
+            Response::ok(DeleteAccountDataResponse {
+                rows_deleted: erased.rows_deleted,
+                ..Default::default()
+            })
+        }
+        Err(EraseError::SignInRefused(error)) => {
+            tracing::error!(%error, "sylphx auth account deletion refused; nothing erased");
+            Err(ConnectError::new(
+                ErrorCode::Unavailable,
+                "identity_account_deletion_failed",
+            ))
+        }
+        // Rolled back before Auth was asked: the account and its sign-in
+        // are whole, and the person can repeat the request.
+        Err(error) if !error.sign_in_may_be_deleted() => {
+            tracing::warn!(%error, "account deletion failed; nothing erased");
+            Err(ConnectError::new(
+                ErrorCode::Unavailable,
+                "account_deletion_unavailable",
+            ))
+        }
+        // Auth may have deleted the sign-in but the rows were not
+        // committed: the person may not be able to sign in to retry. The
+        // subject map is intact; the operator finishes it by subject.
+        Err(error) => {
+            tracing::error!(
+                %error,
+                subjects = ?error.subjects(),
+                "account erasure incomplete: sign-in may be deleted, rows remain; run erase-player --subject"
+            );
+            Err(ConnectError::new(
+                ErrorCode::Internal,
+                "account_deletion_failed",
+            ))
+        }
+    }
 }
