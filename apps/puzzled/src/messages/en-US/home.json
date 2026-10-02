@@ -65,7 +65,7 @@
 		},
 		"share": {
 			"question": "Can I share my result without spoiling it?",
-			"answer": "Yes. The result card shows your solving pattern, the puzzle and the day — never the solution. Anyone who opens it plays the same day's puzzle."
+			"answer": "Yes. The result card shows your result (time, tries or solving pattern), the puzzle and the day — never the solution. Anyone who opens it plays the same day's puzzle."
 		},
 		"catalog": {
 			"question": "Which puzzles are included?",
@@ -81,6 +81,7 @@
 		"titleMemberReady": "Today's {game} is ready",
 		"titleMemberStreak": "Your {days}-day streak is waiting",
 		"titleMemberDone": "All done for today — nicely played",
+		"titleDone": "Today's {game} is done",
 		"bodyGuest": "Puzzled is a daily set of word, logic and number puzzles. One is free every day, takes a few minutes, and needs no signup.",
 		"bodyMember": "Your streak, your stats and today's lineup are one tap away.",
 		"playToday": "Play today's {game}",

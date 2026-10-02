@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
@@ -165,6 +166,12 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				highlightedCells={highlightedCells}
 				solvedClues={game.state.solvedClues}
 				onCellClick={game.selectCell}
+			/>
+
+			<SeeResultButton
+				finished={game.state.isComplete}
+				modalOpen={showResultModal}
+				onOpen={() => setShowResultModal(true)}
 			/>
 
 			<CrosswordKeyboard
