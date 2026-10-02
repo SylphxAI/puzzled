@@ -544,8 +544,9 @@ impl PreferencesService for PreferencesConnectService {
         // the player id), so it runs to its commit or its logged failure
         // whatever the client does. The request's span goes with it, so its
         // log lines stay attributed to the request.
-        let erase =
-            tokio::spawn(erase_account(pool.clone(), player, erasure.clone()).in_current_span());
+        let erase = crate::bootstrap::lifecycle::spawn_durable(
+            erase_account(pool.clone(), player, erasure.clone()).in_current_span(),
+        );
         erase.await.unwrap_or_else(|error| {
             tracing::error!(%error, "account erasure task failed; run erase-player --subject");
             Err(ConnectError::new(
