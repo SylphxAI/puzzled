@@ -340,7 +340,7 @@ impl BillingService for BillingConnectService {
                     }
                     let catalog = money.catalog().await.ok();
                     let plan = catalog.as_deref().and_then(|c| {
-                        pricing::spec_plans(c)
+                        pricing::plans(c)
                             .into_iter()
                             .find(|p| sub.price_keys.contains(&p.price_key))
                     });
