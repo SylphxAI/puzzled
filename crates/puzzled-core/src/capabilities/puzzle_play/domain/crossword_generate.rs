@@ -1,8 +1,16 @@
-//! Deterministic mini-crossword generator (free-floor fallback).
+//! Deterministic mini-crossword generator, V1 (`rust-v1`): the frozen legacy
+//! pool.
 //!
-//! Mirrors `apps/puzzled/src/games/crossword/generator.ts` + `config.ts#generatePuzzle`.
-//! Used when the content store has no row for the day — same pattern as sudoku
-//! on-server generation (RITUAL-AND-MODULE-PROTOCOL allowed deterministic fallback).
+//! Ported from the TypeScript generator (`apps/puzzled/src/games/crossword/`,
+//! which stays only as the reference). Pipeline days from 2026-09-28 use
+//! [`super::crossword_v2`]; this pool still serves the days before the
+//! pipeline (their original seeds, see `daily_pipeline::generate_for`) and
+//! reproduces every stored V1 row. Do not change it: `v1_output_is_frozen`
+//! pins its output.
+//!
+//! Its "down" clues are the row words' second clues, so they are wrong for every
+//! square whose columns spell other words (all but HEART); `served_payload`
+//! hides them for stored V1 rows.
 //!
 //! Skips the one malformed 6-letter "ERMINE" entry from the TS pool (34 of 35).
 
@@ -597,6 +605,12 @@ pub fn client_safe_puzzle_data(data: Value) -> Value {
 mod tests {
     use super::*;
 
+    fn fnv1a(text: &str) -> u64 {
+        text.bytes().fold(0xcbf2_9ce4_8422_2325_u64, |h, b| {
+            (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01b3)
+        })
+    }
+
     #[test]
     fn seed_is_deterministic() {
         let (a, sa) = generate_crossword_puzzle(956);
@@ -661,5 +675,34 @@ mod tests {
         assert!(!dumped.contains("solution"));
         assert_eq!(safe["clues"]["across"][0]["clue"], "Hot mist");
         assert_eq!(safe["clues"]["across"][0].get("answer"), None);
+    }
+
+    /// Fingerprints of the V1 generator taken before V2 existed (dates
+    /// 2026-09-27 (legacy puzzle-number seed 1001), 09-28, 10-02, 10-16 (new seed;
+    /// its legacy puzzle-number seed is 1020), and three
+    /// plain seeds). Stored V1 rows are never replaced, so V1 must reproduce
+    /// these forever, including for dates issued in the future.
+    const V1_GOLDEN: [(i64, u64); 8] = [
+        (1020, 0xc770_3375_7b6a_fff2),
+        (1001, 0x465a_e8e5_e3f7_959c),
+        (20_260_928, 0x9e32_b41c_84db_5613),
+        (20_261_002, 0x643e_9593_9dde_aba4),
+        (20_261_016, 0xc4f0_9eb8_305c_cd58),
+        (0, 0xc770_3375_7b6a_fff2),
+        (956, 0x2b75_7b80_a0f2_0d7e),
+        (-7, 0xb4d9_4345_1a22_0103),
+    ];
+
+    #[test]
+    fn v1_output_is_frozen() {
+        for (seed, expected) in V1_GOLDEN {
+            let (pd, sol) = generate_crossword_puzzle(seed);
+            assert_eq!(
+                fnv1a(&format!("{pd}|{sol}")),
+                expected,
+                "V1 crossword output changed for seed {seed}"
+            );
+            assert!(pd.get("clueSet").is_none(), "V1 carries no clueSet marker");
+        }
     }
 }

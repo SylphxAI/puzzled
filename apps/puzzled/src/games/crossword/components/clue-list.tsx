@@ -6,6 +6,7 @@
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import type { CrosswordClue, CrosswordDirection } from '../types'
+import { hasDownClues } from '../types'
 
 type ClueListProps = {
 	clues: {
@@ -47,23 +48,27 @@ export function ClueList({
 				</ul>
 			</div>
 
-			{/* Down clues */}
-			<div className="flex-1">
-				<h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-					{t('down')}
-				</h3>
-				<ul className="space-y-1">
-					{clues.down.map((clue) => (
-						<ClueItem
-							key={`down-${clue.number}`}
-							clue={clue}
-							isActive={currentClue?.number === clue.number && direction === 'down'}
-							isSolved={solvedClues.down.includes(clue.number)}
-							onClick={() => onClueClick(clue, 'down')}
-						/>
-					))}
-				</ul>
-			</div>
+			{/* Down clues: boards stored before column clues play across-only. */}
+			{hasDownClues(clues) ? (
+				<div className="flex-1">
+					<h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+						{t('down')}
+					</h3>
+					<ul className="space-y-1">
+						{clues.down.map((clue) => (
+							<ClueItem
+								key={`down-${clue.number}`}
+								clue={clue}
+								isActive={currentClue?.number === clue.number && direction === 'down'}
+								isSolved={solvedClues.down.includes(clue.number)}
+								onClick={() => onClueClick(clue, 'down')}
+							/>
+						))}
+					</ul>
+				</div>
+			) : (
+				<p className="text-sm text-muted-foreground sm:flex-1 sm:self-end">{t('acrossOnly')}</p>
+			)}
 		</div>
 	)
 }
