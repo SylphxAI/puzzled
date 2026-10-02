@@ -12,6 +12,7 @@ type Messages = Record<string, unknown>
 /** Namespaces client components use on any page. */
 export const CLIENT_NAMESPACES = [
 	'achievements',
+	'announcements',
 	'auth',
 	'common',
 	'consent',

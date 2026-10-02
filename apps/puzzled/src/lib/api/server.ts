@@ -14,7 +14,14 @@ import { Code, ConnectError, createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
+import { createActiveAnnouncementsCache } from '@/features/announcements/lib/active-cache'
 import { type SharedResult, toSharedResult } from '@/features/daily/lib/challenge'
+import { offerAccess } from '@/features/plus-offer/lib/plus-offer'
+import { AdminService, GetSettingsRequestSchema } from '@/gen/connect/puzzled/v1/admin_pb'
+import {
+	AnnouncementService,
+	ListActiveAnnouncementsRequestSchema,
+} from '@/gen/connect/puzzled/v1/announcements_pb'
 import {
 	BillingService,
 	GetSubscriptionRequestSchema,
@@ -44,10 +51,12 @@ import {
 	mapTodaysPuzzle,
 	type TodaysPuzzle,
 } from '@/lib/api/domain/daily'
+import { isNoIdentityError } from '@/lib/api/no-identity'
 import { OPEN_ACCESS, type PlusAccess } from '@/lib/billing/plus'
 import { getLeaderboard } from '@/lib/connect/stats-client'
 import type { GetLeaderboardInput } from '@/lib/connect/stats-domain'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
+import { SESSION_COOKIE_NAMES } from '@/lib/identity/session-cookie'
 import { logger } from '@/lib/logger'
 import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
 
@@ -77,7 +86,16 @@ export type UserStats = {
 
 async function getServerTransport() {
 	const cookieStore = await cookies()
-	const cookie = cookieStore.toString()
+	const cookie = cookieStore
+		.getAll()
+		.filter(
+			(cookie) =>
+				cookie.name === '__Host-puzzled_guest' ||
+				SESSION_COOKIE_NAMES.some((name) => name === cookie.name) ||
+				(cookie.name.startsWith('__sylphx_') && cookie.name.endsWith('_session')),
+		)
+		.map((cookie) => `${cookie.name}=${cookie.value}`)
+		.join('; ')
 	// The api checks the Sylphx Auth session with Auth, which binds it to the
 	// browser's User-Agent.
 	const userAgent = (await headers()).get('user-agent')
@@ -96,16 +114,37 @@ async function getServerTransport() {
 /** True when SSR can attach a guest or Platform identity to Connect reads. */
 export async function hasServerProgressIdentity(): Promise<boolean> {
 	const cookieStore = await cookies()
-	if (cookieStore.get('puzzled_guest_id')?.value) return true
+	if (cookieStore.get('__Host-puzzled_guest')?.value) return true
 	return cookieStore
 		.getAll()
 		.some(
 			(cookie) =>
-				cookie.name.startsWith('__sylphx_') &&
-				cookie.name.endsWith('_session') &&
+				(SESSION_COOKIE_NAMES.some((name) => name === cookie.name) ||
+					(cookie.name.startsWith('__sylphx_') && cookie.name.endsWith('_session'))) &&
 				Boolean(cookie.value),
 		)
 }
+
+/**
+ * Whether the signed-in player is a Puzzled admin, as the api decides it
+ * (`is_admin` on the verified identity, enforced by `require_admin` on every
+ * admin RPC). The web keeps no admin check of its own: it asks the api through
+ * the cheapest admin read, so the page gate and the data gate share one source.
+ * Any failure reads as not admin (fail closed).
+ */
+export const getServerIsAdmin = cache(async (): Promise<boolean> => {
+	try {
+		const transport = await getServerTransport()
+		await createClient(AdminService, transport).getSettings(create(GetSettingsRequestSchema, {}))
+		return true
+	} catch (error) {
+		const denied =
+			ConnectError.from(error).code === Code.PermissionDenied ||
+			ConnectError.from(error).code === Code.Unauthenticated
+		if (!denied) logger.warn('admin.gate-check-failed')
+		return false
+	}
+})
 
 // ==========================================
 // Server data accessors (sole Connect)
@@ -177,12 +216,6 @@ export type PersonalDailyResult = {
 	completedSession: DailyStatus['completedSession']
 	/** False means the server could not prove this status; callers must not render Play. */
 	statusAvailable: boolean
-}
-
-/** The api answered that this viewer has no identity yet: nothing to read. */
-function isNoIdentityError(error: unknown): boolean {
-	const code = ConnectError.from(error).code
-	return code === Code.Unauthenticated || code === Code.NotFound
 }
 
 async function fetchTodayProgress(gameSlugs: readonly string[]) {
@@ -326,6 +359,39 @@ export const getServerTodayOverview = cache(
 )
 
 // ==========================================
+// Announcements (AnnouncementService)
+// ==========================================
+
+/**
+ * The notices an admin has switched on right now, shared across requests (see
+ * `active-cache`). The endpoint ignores identity, so this uses a bare
+ * transport: no session or guest cookie and no user agent leave the web tier.
+ */
+const activeAnnouncements = createActiveAnnouncementsCache({
+	fetch: async () => {
+		const transport = createConnectTransport({
+			baseUrl: resolveServerConnectBaseUrl(),
+			useBinaryFormat: false,
+			fetch: ((input: RequestInfo | URL, init?: RequestInit) =>
+				fetch(input, mergeServerConnectInit(init, '', SERVER_CONNECT_TIMEOUT_MS))) as typeof fetch,
+		})
+		const res = await createClient(AnnouncementService, transport).listActiveAnnouncements(
+			create(ListActiveAnnouncementsRequestSchema, {}),
+		)
+		return res.announcements.map((a) => ({
+			id: a.id,
+			title: a.title,
+			body: a.body,
+			type: a.type,
+			dismissible: a.dismissible,
+			endsAt: a.endsAt,
+		}))
+	},
+})
+
+export const getServerActiveAnnouncements = () => activeAnnouncements.get()
+
+// ==========================================
 // Puzzled Plus (BillingService)
 // ==========================================
 
@@ -341,6 +407,31 @@ export const getServerSubscription = cache(async (refresh = false) => {
 	return createClient(BillingService, transport).getSubscription(
 		create(GetSubscriptionRequestSchema, { refresh }),
 	)
+})
+
+/**
+ * Access for offers only (result card, milestone prompt). A failed read hides
+ * the offer instead of selling to a member Money could not confirm; it reuses
+ * the cached reads above, so it adds no calls.
+ */
+export const getServerPlusOfferAccess = cache(async (signedIn: boolean): Promise<PlusAccess> => {
+	let subscription: PlusAccess | 'failed' = 'failed'
+	let plansSalesOpen: boolean | 'failed' = 'failed'
+	if (signedIn) {
+		try {
+			const res = await getServerSubscription()
+			subscription = { salesOpen: res.salesOpen, entitled: res.entitled }
+		} catch (error) {
+			logger.warn('plus.offer-subscription-read-failed', { error })
+		}
+	} else {
+		try {
+			plansSalesOpen = (await getServerPlans()).salesOpen
+		} catch (error) {
+			logger.warn('plus.offer-plans-read-failed', { error })
+		}
+	}
+	return offerAccess(signedIn, subscription, plansSalesOpen)
 })
 
 /**

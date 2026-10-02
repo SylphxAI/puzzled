@@ -125,7 +125,7 @@ Everything here charges, discounts or unlocks paid access, so it waits for Sylph
 product-side unlock on top of Money's plans, entitlements and coupons. Effects are estimates from
 industry benchmarks; the product has no payers yet, so none is measured.
 
-- [~] **Plus on sale, yearly first** (S). Source done (yearly card and button first); on sale when Money applies the catalogue. Plans `individual_yearly` US$39.99 and `individual_monthly`
+- [ ] **Plus on sale, yearly first** (S). Plans `individual_yearly` US$39.99 and `individual_monthly`
       US$4.99 (about 33% off); pricing toggle defaults to yearly; label the saving from the live prices
       with `yearlySavingPercent` (today's prices are 4 months free, so say that, never a rounder claim).
       Family US$7.99 up to 4 seats stays; test 6 seats later.
@@ -148,6 +148,11 @@ industry benchmarks; the product has no payers yet, so none is measured.
       grant, so it needs Money's grant API.
 - [ ] **Paid streak freeze and Plus freezes** (S). Sell one freeze as a small one-off in Money; Plus
       gets 2 per month. Earned freezes already count toward the streak (backlog row 1, shipped); a bought freeze adds to the same bank, still capped by `FREEZE_CAP`.
+- [x] **In-app Plus nudges** (S). Shipped: one Plus card on the result screen after today's free game
+      (links to `/pricing`), and a dismissible day-3 and day-7 prompt on home for a signed-in player who is
+      not on Plus, counting distinct played days from `StreakInfo.played_days`; each milestone shows once
+      per account on a browser, nothing shows when sales are closed or the viewer is entitled
+      (`features/plus-offer`). The lock card on a non-featured game already links to Plus and stays as is.
 - [ ] **Plus-nudge emails** (S). Day 3 and day 7 of a streak, consent-gated, with the yearly price and
       no false urgency.
 - [ ] **Price localisation** (M). Money price tiers for HKD, EUR, JPY, INR, BRL and MXN alongside

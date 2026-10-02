@@ -29,7 +29,7 @@
 		"title": "Puzzled 的每日流程",
 		"body": "每个谜题日,一套共同题目,每位玩家都一样。",
 		"step1Title": "选出今日游戏",
-		"step1Body": "今日精选人人免费,Plus 开放其余游戏;全部 {count} 款谜题都用同一套每日题目。",
+		"step1Body": "从今日精选开始,全部 {count} 款谜题都用同一套每日题目;今日精选人人免费,其余游戏由 Puzzled Plus 开放。",
 		"step2Title": "按自己的节奏解题",
 		"step2Body": "大部分游戏需要两到十分钟；设有难度选择的游戏可以让你热身，或挑战更难的题目。",
 		"step3Title": "养成每日习惯",
@@ -40,7 +40,7 @@
 		"body": "关于游戏目录的简短说明。",
 		"start": {
 			"question": "应该从哪里开始？",
-			"answer": "打开今日精选即可,无需账户,无需付款。Plus 开放其他所有游戏和往日题库。"
+			"answer": "打开今日精选即可,无需账户,无需付款。其他谜题由 Puzzled Plus 开放。"
 		},
 		"rotation": {
 			"question": "今日精选如何轮换?",
@@ -48,7 +48,7 @@
 		},
 		"account": {
 			"question": "需要账户吗？",
-			"answer": "不需要。今日精选谜题可以用访客身份玩;有账户就能在不同设备上保留连胜、成绩和统计。"
+			"answer": "不需要。今日精选可以用访客身份游玩;有账户就能在不同设备上保留连胜、成绩和统计。"
 		},
 		"share": {
 			"question": "分享成绩会剧透吗？",
@@ -64,7 +64,15 @@
 		"tipsTitle": "{game} 技巧与策略",
 		"faqTitle": "关于 {game} 的常见问题",
 		"relatedTitle": "更多游戏",
-		"relatedAll": "查看所有游戏"
+		"relatedAll": "查看所有游戏",
+		"metaTitle": "{game}：每日{genre}谜题",
+		"metaDescription": "{game}是每日{genre}谜题。{rule}每天一道新题，当日精选谜题免费，无需账户。",
+		"genre": {
+			"word": "文字",
+			"logic": "逻辑",
+			"math": "数字",
+			"spatial": "空间"
+		}
 	},
 	"game": {
 		"word-guess": {

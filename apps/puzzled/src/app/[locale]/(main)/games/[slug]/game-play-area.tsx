@@ -3,10 +3,13 @@ import { AdsProvider } from '@/features/ads/components/ad-context'
 import { GameUnlockPanel } from '@/features/catalog/components/game-unlock-panel'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import {
+	completedViewLevel,
 	deriveDifficultyCompletionStatus,
-	finishedLevelToShow,
+	finishedDailyLevel,
 } from '@/features/daily/lib/difficulty-completion'
 import { PlusTrialProvider } from '@/features/plus/components/trial-ends-line'
+import { PlusOfferProvider } from '@/features/plus-offer/components/plus-offer-context'
+import { plusOfferFor } from '@/features/plus-offer/lib/plus-offer'
 import type { GameSlug } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { adsConfig, adsFor } from '@/lib/ads'
@@ -14,11 +17,12 @@ import {
 	type DailyStatus,
 	getServerDailyStatus,
 	getServerPlusAccess,
+	getServerPlusOfferAccess,
 	getServerStreakInfo,
 	hasServerProgressIdentity,
 	type StreakInfo,
 } from '@/lib/api/server'
-import { isPlayLocked } from '@/lib/billing/plus'
+import { isPlayLocked, type PlusAccess } from '@/lib/billing/plus'
 import type { GameMode } from '@/lib/db/schema'
 import { env } from '@/lib/env'
 import { Link } from '@/lib/i18n/routing'
@@ -62,22 +66,36 @@ type GamePlayAreaProps = {
  * registry guard runs in the page before this boundary, a 404 can never be
  * masked by a loading state.
  */
-export async function GamePlayArea({
-	slug,
-	locale,
-	gameName,
-	mode,
-	difficulty,
-	supportsDifficulty,
-	hasUser,
-	freeGameSlug,
-	freeGameName,
-	gameCount,
-	dateParam,
-}: GamePlayAreaProps) {
+export async function GamePlayArea(props: GamePlayAreaProps) {
+	const access = await getServerPlusAccess(props.hasUser)
+	// One Plus card on the result screen. It uses the offer-only read, which
+	// hides the offer when Money cannot confirm (the lock rule above fails open).
+	const offerAccessFacts = await getServerPlusOfferAccess(props.hasUser)
+	const offer = plusOfferFor(offerAccessFacts, {
+		gameCount: props.gameCount,
+		freeSlug: props.freeGameSlug,
+	})
+	return <PlusOfferProvider offer={offer}>{await renderPlayArea(props, access)}</PlusOfferProvider>
+}
+
+async function renderPlayArea(
+	{
+		slug,
+		locale,
+		gameName,
+		mode,
+		difficulty,
+		supportsDifficulty,
+		hasUser,
+		freeGameSlug,
+		freeGameName,
+		gameCount,
+		dateParam,
+	}: GamePlayAreaProps,
+	access: PlusAccess,
+) {
 	const tDaily = await getTranslations('daily')
 
-	const access = await getServerPlusAccess(hasUser)
 	// Result screens show one ad to free viewers; a puzzle in play never does.
 	const ads = adsFor(adsConfig(env), access.entitled)
 	const archive = mode === 'archive' && Boolean(dateParam)
@@ -119,7 +137,8 @@ export async function GamePlayArea({
 			hard: hardStatus.status === 'fulfilled' ? hardStatus.value : null,
 		})
 
-		// Every level finished: show the result, with Share, not a 3/3 checklist.
+		// One finish per game and day, whatever the level: any read that proves it
+		// shows the real result (at its true level), not the level chooser.
 		const levelRead = (result: typeof easyStatus) =>
 			result.status === 'fulfilled'
 				? {
@@ -127,7 +146,7 @@ export async function GamePlayArea({
 						puzzleDate: result.value.puzzle.puzzleDate,
 					}
 				: null
-		const finished = finishedLevelToShow({
+		const finished = finishedDailyLevel({
 			easy: levelRead(easyStatus),
 			medium: levelRead(mediumStatus),
 			hard: levelRead(hardStatus),
@@ -147,7 +166,6 @@ export async function GamePlayArea({
 						}}
 						locale={locale}
 						difficulty={finished.difficulty}
-						allLevelsFinished
 					/>
 				</AdsProvider>
 			)
@@ -184,6 +202,7 @@ export async function GamePlayArea({
 			const archivePuzzle = await getServerDailyStatus({
 				gameSlug: slug,
 				puzzleDate: archiveDate,
+				difficulty,
 			})
 			puzzle = {
 				puzzleId: archivePuzzle.puzzle.id,
@@ -277,8 +296,7 @@ export async function GamePlayArea({
 						}}
 						currentStreak={currentStreak}
 						locale={locale}
-						difficulty={difficulty}
-						supportsDifficulty={supportsDifficulty}
+						difficulty={completedViewLevel(supportsDifficulty, completedSession.difficulty)}
 					/>
 				</AdsProvider>
 			</PlusTrialProvider>

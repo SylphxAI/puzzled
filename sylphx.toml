@@ -13,7 +13,7 @@ context = "."
 # labels, and capacity gates still apply on the platform side.
 preview_deploys = true
 merge = "optimistic"
-on_red = "notify"
+on_red = "revert"
 
 # Project-level schema gate (ADR-089 / DEPLOY-GUIDE). Ephemeral Job runs once
 # per push BEFORE writer services roll. Supersedes web-only release_command:
@@ -38,6 +38,19 @@ watch_paths = [
   "sylphx.toml",
 ]
 
+# Runtime values for every service in the environment. Only top-level [env]
+# literals reach the runtime; a per-service table of values is not delivered.
+# Browser origin verified against the live production web/api route binding.
+[env.PUZZLED_PUBLIC_URL]
+value = "https://puzzled.gg"
+
+# Admin allow-list (workaround, docs/capabilities.md PUZ-AUTH-ADMIN): comma-separated
+# exact Sylphx Auth subjects (principal.subject) that are Puzzled admins. Empty means
+# nobody. Remove when cloud#11587 serves an organization{roles} claim and admin becomes
+# the "admin" role on Puzzled's Auth organization. Never log this value.
+[env.PUZZLED_ADMIN_PRINCIPALS]
+value = ""
+
 [[services]]
 name = "web"
 port = 3000
@@ -58,6 +71,7 @@ name = "api"
 port = 8080
 # Complete public API namespace routes to Rust; no dual backend remains.
 path_prefixes = [
+  "/v1/guest/session",
   "/puzzled.v1.AdminService",
   "/puzzled.v1.BillingService",
   "/puzzled.v1.GamificationService",
@@ -158,3 +172,21 @@ catch_up = "last_only"
 target = { kind = "http", method = "POST", signed = true }
 retry = { max_attempts = 3 }
 pause = false
+
+# Operator job (Workflows WFL-JOB): erase one person by their Sylphx Auth
+# subject. Runs the api's live Release image with the api's own env and secret
+# bindings (database URL, Money and Auth keys); nothing else holds them. No
+# schedule and no default args: an operator starts it and names a subject.
+# Same erase path as the in-app deletion (Money rule, then the rows and Auth's
+# deletion in one transaction). The supported recovery when an in-app erasure
+# may have deleted the sign-in but its rows did not commit (the person cannot
+# sign in to retry); safe to repeat. Prints counts only.
+#   sylphx jobs run erase-player -- --dry-run --subject <auth subject>
+#   sylphx jobs run erase-player -- --subject <auth subject>
+[[jobs]]
+name = "erase-player"
+service = "api"
+command = ["puzzled-server", "erase-player"]
+timeout = "10m"
+retries = 0
+concurrency = "forbid"

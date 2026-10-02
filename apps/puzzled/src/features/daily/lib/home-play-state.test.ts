@@ -6,6 +6,7 @@ import {
 	deriveHomePlayState,
 	type HomePersonalResult,
 	type HomePlayState,
+	isFreeGameDone,
 	scopeHomePlayState,
 } from './home-play-state'
 
@@ -240,5 +241,29 @@ describe('home play scopes (bounded grid, full progress)', () => {
 		expect(exposure.slugs).not.toContain('word-search')
 		expect(renderedGames.map((entry) => entry.slug)).not.toContain('word-search')
 		expect(playState.hasUnverifiedStatus).toBe(true)
+	})
+})
+
+describe('free game done', () => {
+	const won: HomePersonalResult = {
+		hasCompleted: true,
+		completedSession: { score: 497 },
+		statusAvailable: true,
+	}
+	test('a proved guest finish is done and the lineup tile is solved', () => {
+		expect(isFreeGameDone({ crossword: won }, 'crossword')).toBe(true)
+		const state = deriveHomePlayState({
+			gameSlugs: slugs,
+			personalResults: { crossword: won },
+			freeGameSlug: 'crossword',
+		})
+		expect(game(state, 'crossword').completed).toBe(true)
+	})
+	test('unknown, missing or unfinished is never done', () => {
+		expect(isFreeGameDone({ crossword: { ...won, statusAvailable: false } }, 'crossword')).toBe(
+			false,
+		)
+		expect(isFreeGameDone({}, 'crossword')).toBe(false)
+		expect(isFreeGameDone({ crossword: notRead }, 'crossword')).toBe(false)
 	})
 })

@@ -12,9 +12,11 @@ import { useCallback, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { useStartOver } from '@/games/shared/use-start-over'
 import { cn } from '@/lib/utils'
 import { triggerHaptic } from '@/shared/hooks'
 import { parseWordSearchClientPayload } from './parse-client'
@@ -43,6 +45,8 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'word-search',
 		mode,
@@ -128,6 +132,8 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	}, [game])
 
 	const shareResult = useResultShare()
+	const startOver = useStartOver(resetSession, game.reset)
+
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
@@ -249,7 +255,7 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 								{progress.found}/{progress.total}
 							</span>
 						</div>
-						<Button variant="ghost" size="sm" onClick={game.reset}>
+						<Button variant="ghost" size="sm" onClick={startOver}>
 							<RotateCcw className="h-4 w-4" />
 						</Button>
 						<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
@@ -295,6 +301,12 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 						}),
 					)}
 				</div>
+
+				<SeeResultButton
+					finished={resultReady}
+					modalOpen={showResultModal}
+					onOpen={() => setShowResultModal(true)}
+				/>
 
 				{/* Word list */}
 				<div className="w-full max-w-sm px-2">

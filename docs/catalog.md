@@ -63,7 +63,7 @@ is the player-facing names.
 | word-groups | Threads | Sixteen words, four hidden groups |
 | word-hive | Hive | Seven letters, centre letter required |
 | word-box | Frame | Letters on a square's edges |
-| crossword | Mini Grid | 5x5 and 7x7 crossword |
+| crossword | Mini Grid | 5x5 word-square crossword; across and down clues from `rust-crossword-v2` (older boards play across-only) |
 | word-ladder | Rungs | Change one letter per step |
 | cryptogram | Cipher | Substitution cipher |
 | word-search | Hunt | Find a list of words in a grid |

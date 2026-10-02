@@ -35,19 +35,53 @@ export function deriveDifficultyCompletionStatus(read: {
 	}
 }
 
-export type FinishedLevel<S> = { difficulty: PuzzleDifficulty; session: S; puzzleDate: string }
+/**
+ * The level a completed view may name. A game without levels never shows one,
+ * whatever the stored value: the web client's SubmitGuess call defaults an
+ * absent level to 'medium' (`lib/connect/puzzle-client.ts`) and the server
+ * stores what it is given, so the column is a real level only for games that
+ * have levels.
+ */
+export function completedViewLevel(
+	supportsDifficulty: boolean,
+	stored: string | null | undefined,
+): PuzzleDifficulty | undefined {
+	return supportsDifficulty ? asDifficulty(stored) : undefined
+}
+
+export type FinishedLevel<S> = {
+	/** The level the finish was played at, when the server reported a valid one. */
+	difficulty: PuzzleDifficulty | undefined
+	session: S
+	puzzleDate: string
+}
+
+type LevelRead<S> = { completedSession: S | null; puzzleDate: string } | null
+
+/** The server's level string as a known level, else undefined. */
+export function asDifficulty(value: string | null | undefined): PuzzleDifficulty | undefined {
+	return value === 'easy' || value === 'medium' || value === 'hard' ? value : undefined
+}
 
 /**
- * When every level of today's daily is finished, the result to show instead of
- * the level checklist: the hardest level's finish. Null while any level is
- * open or unverified, or a finish carries no result.
+ * The day's one finish, read from whichever level read proves it. A finish
+ * counts for the game and day whatever the level (one finish per user, game
+ * and day), so every level read returns the same session and its own
+ * difficulty is the true level. Null when no read shows a finish.
  */
-export function finishedLevelToShow<S>(read: {
-	easy: { completedSession: S | null; puzzleDate: string } | null
-	medium: { completedSession: S | null; puzzleDate: string } | null
-	hard: { completedSession: S | null; puzzleDate: string } | null
+export function finishedDailyLevel<S extends { difficulty: string | null }>(read: {
+	easy: LevelRead<S>
+	medium: LevelRead<S>
+	hard: LevelRead<S>
 }): FinishedLevel<S> | null {
-	const { easy, medium, hard } = read
-	if (!easy?.completedSession || !medium?.completedSession || !hard?.completedSession) return null
-	return { difficulty: 'hard', session: hard.completedSession, puzzleDate: hard.puzzleDate }
+	for (const level of [read.easy, read.medium, read.hard]) {
+		if (level?.completedSession) {
+			return {
+				difficulty: asDifficulty(level.completedSession.difficulty),
+				session: level.completedSession,
+				puzzleDate: level.puzzleDate,
+			}
+		}
+	}
+	return null
 }

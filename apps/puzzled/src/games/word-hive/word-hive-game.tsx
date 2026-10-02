@@ -7,6 +7,7 @@ import { useCallback, useRef, useState } from 'react'
 import { Celebration, StarBurst } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { checkGuess } from '@/lib/connect/puzzle-client'
@@ -58,6 +59,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 		showStarBurst,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'word-hive',
 		mode,
@@ -249,6 +251,12 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 				outerLetters={game.outerLetters}
 				onLetterClick={game.addLetter}
 				disabled={game.gameStatus !== 'playing'}
+			/>
+
+			<SeeResultButton
+				finished={resultReady}
+				modalOpen={showResultModal}
+				onOpen={() => setShowResultModal(true)}
 			/>
 
 			{/* Action Buttons */}

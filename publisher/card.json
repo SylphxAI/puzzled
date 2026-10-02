@@ -1,0 +1,27 @@
+{
+	"slug": "puzzled",
+	"kind": "app",
+	"name": {
+		"en": "Puzzled",
+		"zh-Hant": "Puzzled"
+	},
+	"tagline": {
+		"en": "Nineteen daily word, logic and number puzzles; today's featured puzzle is free with no sign-up.",
+		"zh-Hant": "每日十九款文字、邏輯及數字謎題；今日精選謎題免費，毋須註冊。"
+	},
+	"category": {
+		"en": "Games and fun",
+		"zh-Hant": "遊戲及娛樂"
+	},
+	"url": "https://puzzled.gg",
+	"status": "available",
+	"image": {
+		"src": "card.webp",
+		"alt": {
+			"en": "Puzzled home page: today's free Mini Grid puzzle card with a Play button.",
+			"zh-Hant": "Puzzled 首頁：今日免費的 Mini Grid 謎題卡片及開始按鈕。"
+		}
+	},
+	"icon": "icon.svg",
+	"services": ["Hosting", "Data", "Auth"]
+}

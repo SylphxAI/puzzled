@@ -16,6 +16,7 @@ import enGBSettings from '@/messages/en-GB/settings.json'
 import enGBSupport from '@/messages/en-GB/support.json'
 import enUSAchievements from '@/messages/en-US/achievements.json'
 import enUSAdmin from '@/messages/en-US/admin.json'
+import enUSAnnouncements from '@/messages/en-US/announcements.json'
 import enUSArchive from '@/messages/en-US/archive.json'
 import enUSAuth from '@/messages/en-US/auth.json'
 import enUSCalendar from '@/messages/en-US/calendar.json'
@@ -43,6 +44,7 @@ import enUSStreak from '@/messages/en-US/streak.json'
 import enUSSupport from '@/messages/en-US/support.json'
 import zhCNAchievements from '@/messages/zh-CN/achievements.json'
 import zhCNAdmin from '@/messages/zh-CN/admin.json'
+import zhCNAnnouncements from '@/messages/zh-CN/announcements.json'
 import zhCNArchive from '@/messages/zh-CN/archive.json'
 import zhCNAuth from '@/messages/zh-CN/auth.json'
 import zhCNCalendar from '@/messages/zh-CN/calendar.json'
@@ -70,6 +72,7 @@ import zhCNStreak from '@/messages/zh-CN/streak.json'
 import zhCNSupport from '@/messages/zh-CN/support.json'
 import zhHKAchievements from '@/messages/zh-HK/achievements.json'
 import zhHKAdmin from '@/messages/zh-HK/admin.json'
+import zhHKAnnouncements from '@/messages/zh-HK/announcements.json'
 import zhHKArchive from '@/messages/zh-HK/archive.json'
 import zhHKAuth from '@/messages/zh-HK/auth.json'
 import zhHKCalendar from '@/messages/zh-HK/calendar.json'
@@ -103,14 +106,18 @@ import zhTWCommon from '@/messages/zh-TW/common.json'
 import zhTWConsent from '@/messages/zh-TW/consent.json'
 import zhTWDaily from '@/messages/zh-TW/daily.json'
 import zhTWFooter from '@/messages/zh-TW/footer.json'
+import zhTWGameResult from '@/messages/zh-TW/game-result.json'
 import zhTWHome from '@/messages/zh-TW/home.json'
 import zhTWLeaderboard from '@/messages/zh-TW/leaderboard.json'
 import zhTWLegal from '@/messages/zh-TW/legal.json'
+import zhTWModes from '@/messages/zh-TW/modes.json'
 import zhTWNav from '@/messages/zh-TW/nav.json'
 import zhTWOnboarding from '@/messages/zh-TW/onboarding.json'
+import zhTWPlus from '@/messages/zh-TW/plus.json'
 import zhTWSettings from '@/messages/zh-TW/settings.json'
 import zhTWShare from '@/messages/zh-TW/share.json'
 import zhTWStats from '@/messages/zh-TW/stats.json'
+import zhTWStreak from '@/messages/zh-TW/streak.json'
 import zhTWSupport from '@/messages/zh-TW/support.json'
 
 // ==========================================
@@ -131,6 +138,7 @@ interface LocaleMessages {
 	pagination: Messages
 	plus: Messages
 	achievements: Messages
+	announcements: Messages
 	calendar: Messages
 	catalog: Messages
 	consent: Messages
@@ -167,6 +175,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		pagination: enUSPagination,
 		plus: enUSPlus,
 		achievements: enUSAchievements,
+		announcements: enUSAnnouncements,
 		calendar: enUSCalendar,
 		catalog: enUSCatalog,
 		consent: enUSConsent,
@@ -203,6 +212,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		pagination: zhHKPagination,
 		plus: zhHKPlus,
 		achievements: zhHKAchievements,
+		announcements: zhHKAnnouncements,
 		calendar: zhHKCalendar,
 		catalog: zhHKCatalog,
 		consent: zhHKConsent,
@@ -235,7 +245,11 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		legal: zhTWLegal,
 		share: zhTWShare,
 		stats: zhTWStats,
+		streak: zhTWStreak,
 		support: zhTWSupport,
+		plus: zhTWPlus,
+		modes: zhTWModes,
+		gameResult: zhTWGameResult,
 	},
 	'zh-CN': {
 		common: zhCNCommon,
@@ -249,6 +263,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		pagination: zhCNPagination,
 		plus: zhCNPlus,
 		achievements: zhCNAchievements,
+		announcements: zhCNAnnouncements,
 		calendar: zhCNCalendar,
 		catalog: zhCNCatalog,
 		consent: zhCNConsent,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { getAllGameMetadata } from '@/games/registry'
-import { todayPlayPath } from './today-play-path'
+import { todayPlayPath, todayResultPath } from './today-play-path'
 
 describe('todayPlayPath', () => {
 	it('opens the default level for a game with levels', () => {
@@ -15,5 +15,17 @@ describe('todayPlayPath', () => {
 		const without = getAllGameMetadata().find((game) => !game.supportsDifficulty)
 		expect(without).toBeDefined()
 		expect(todayPlayPath(without?.slug ?? '')).toBe(`/games/${without?.slug}?start=1#play`)
+	})
+})
+
+describe('todayResultPath', () => {
+	it('opens a game with levels at its page, without a level or start', () => {
+		const withLevels = getAllGameMetadata().find((game) => game.slug === 'sudoku')
+		expect(withLevels?.supportsDifficulty).toBe(true)
+		expect(todayResultPath('sudoku')).toBe('/games/sudoku')
+		expect(todayResultPath('crowns')).not.toContain('difficulty')
+	})
+	it('keeps the play path for a game without levels', () => {
+		expect(todayResultPath('crossword')).toBe(todayPlayPath('crossword'))
 	})
 })

@@ -25,11 +25,15 @@ pub use capabilities::identity_access::contract::{
 #[cfg(test)]
 mod account_erasure_tests;
 #[cfg(test)]
+mod announcements_tests;
+#[cfg(test)]
 mod auth_session_tests;
 #[cfg(test)]
 mod daily_pipeline_tests;
 #[cfg(test)]
 mod daily_reminder_tests;
+#[cfg(test)]
+mod guest_ownership_tests;
 #[cfg(test)]
 mod money_access_tests;
 #[cfg(test)]
@@ -343,7 +347,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_get_streak_info_guest_fails_closed_without_store() {
+    async fn connect_get_streak_info_refuses_legacy_guest_header() {
         let app = router(AppState::new(None));
         let request = match Request::builder()
             .method(Method::POST)
@@ -353,19 +357,13 @@ mod tests {
             .body(Body::from("{}"))
         {
             Ok(request) => request,
-            Err(error) => panic!("build guest GetStreakInfo: {error}"),
+            Err(error) => panic!("build GetStreakInfo: {error}"),
         };
         let response = match app.oneshot(request).await {
             Ok(response) => response,
-            Err(error) => panic!("connect GetStreakInfo guest: {error}"),
+            Err(error) => panic!("connect GetStreakInfo: {error}"),
         };
-        assert_ne!(response.status(), StatusCode::UNAUTHORIZED);
-        assert_ne!(
-            response.status(),
-            StatusCode::OK,
-            "guest missing store must not fabricate current_streak=0"
-        );
-        assert!(response.status().is_server_error());
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
 
     #[tokio::test]
@@ -540,7 +538,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_submit_guess_accepts_guest_day_id_for_free_game() {
+    async fn connect_submit_guess_refuses_unsigned_guest_id() {
         // Guest free-ritual path: X-Puzzled-Guest-Id → past identity gate.
         // Empty submission is still invalid (server-authoritative validation).
         let app = router(AppState::new(None));
@@ -562,24 +560,7 @@ mod tests {
             Ok(response) => response,
             Err(error) => panic!("connect SubmitGuess guest: {error}"),
         };
-        // Must not be identity 401 — guest day id is accepted.
-        assert_ne!(
-            response.status(),
-            StatusCode::UNAUTHORIZED,
-            "guest free path must not 401 identity_required"
-        );
-        if densifies_without_store(&free_slug) {
-            // No DB: deterministic generators validate (empty → invalid verdict).
-            assert_eq!(response.status(), StatusCode::OK);
-            let json = body_json(response).await;
-            assert!(
-                json.get("valid")
-                    .map_or(true, |v| v == false || v.is_null()),
-                "expected invalid verdict for empty guest submit: {:?}",
-                json.get("valid")
-            );
-        }
-        // Other free-day modules without content: 404 unserved is fine; not 401.
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
 
     #[tokio::test]
@@ -655,7 +636,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_crossword_free_floor_guest_can_finish_win() {
+    async fn connect_crossword_free_floor_can_finish_win() {
         // Product free floor: crossword must be finishable without content store.
         let app = router(AppState::new(None));
         let (_pd, sol) = served_today("crossword").await;
@@ -674,7 +655,10 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("x-puzzled-guest-id", "f1e2d3c4-b5a6-7890-abcd-ef1234567890")
+            .header(
+                "authorization",
+                format!("Bearer {}", mint_test_token("user_test_01")),
+            )
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -760,7 +744,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_word_groups_free_floor_guest_can_finish_win() {
+    async fn connect_word_groups_free_floor_can_finish_win() {
         let app = router(AppState::new(None));
         let (_pd, sol) = served_today("word-groups").await;
         let body = word_groups_win_submission(&sol);
@@ -768,7 +752,10 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("x-puzzled-guest-id", "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+            .header(
+                "authorization",
+                format!("Bearer {}", mint_test_token("user_test_01")),
+            )
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -789,7 +776,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_word_groups_free_floor_guest_can_finish_loss() {
+    async fn connect_word_groups_free_floor_can_finish_loss() {
         let app = router(AppState::new(None));
         let (_pd, sol) = served_today("word-groups").await;
         let first = sol["categories"][0]["words"].clone();
@@ -809,7 +796,10 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("x-puzzled-guest-id", "b2c3d4e5-f6a7-8901-bcde-f12345678901")
+            .header(
+                "authorization",
+                format!("Bearer {}", mint_test_token("user_test_01")),
+            )
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -848,7 +838,10 @@ mod tests {
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("x-puzzled-guest-id", "c3d4e5f6-a7b8-9012-cdef-123456789012")
+            .header(
+                "authorization",
+                format!("Bearer {}", mint_test_token("user_test_01")),
+            )
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -892,12 +885,15 @@ mod tests {
         ));
     }
 
-    fn guest_submit(body: String, guest: &str) -> Request<Body> {
+    fn player_submit(body: String) -> Request<Body> {
         match Request::builder()
             .method(Method::POST)
             .uri("/puzzled.v1.PuzzleService/SubmitGuess")
             .header(axum::http::header::CONTENT_TYPE, "application/json")
-            .header("x-puzzled-guest-id", guest)
+            .header(
+                "authorization",
+                format!("Bearer {}", mint_test_token("user_test_01")),
+            )
             .body(Body::from(body))
         {
             Ok(r) => r,
@@ -976,7 +972,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_word_guess_free_floor_guest_can_finish_win() {
+    async fn connect_word_guess_free_floor_can_finish_win() {
         let app = router(AppState::new(None));
         let (_pd, sol) = served_today("word-guess").await;
         let word = sol["word"].as_str().expect("word");
@@ -989,10 +985,7 @@ mod tests {
             "submissionJson": submission.to_string(),
         })
         .to_string();
-        let response = match app
-            .oneshot(guest_submit(body, "d4e5f6a7-b8c9-0123-def0-123456789012"))
-            .await
-        {
+        let response = match app.oneshot(player_submit(body)).await {
             Ok(r) => r,
             Err(error) => panic!("submit: {error}"),
         };
@@ -1007,7 +1000,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_crowns_free_floor_guest_can_finish_win() {
+    async fn connect_crowns_free_floor_can_finish_win() {
         let app = router(AppState::new(None));
         let (pd, sol) = served_today("crowns").await;
         let size = pd["size"].as_u64().unwrap_or(0) as usize;
@@ -1037,10 +1030,7 @@ mod tests {
             "submissionJson": submission.to_string(),
         })
         .to_string();
-        let response = match app
-            .oneshot(guest_submit(body, "e5f6a7b8-c9d0-1234-ef01-234567890123"))
-            .await
-        {
+        let response = match app.oneshot(player_submit(body)).await {
             Ok(r) => r,
             Err(error) => panic!("submit: {error}"),
         };
@@ -1052,7 +1042,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_crowns_free_floor_guest_can_finish_loss() {
+    async fn connect_crowns_free_floor_can_finish_loss() {
         let app = router(AppState::new(None));
         let empty = vec![vec![false; 6]; 6];
         let submission = serde_json::json!({ "finalGrid": empty });
@@ -1064,10 +1054,7 @@ mod tests {
             "submissionJson": submission.to_string(),
         })
         .to_string();
-        let response = match app
-            .oneshot(guest_submit(body, "f6a7b8c9-d0e1-2345-f012-345678901234"))
-            .await
-        {
+        let response = match app.oneshot(player_submit(body)).await {
             Ok(r) => r,
             Err(error) => panic!("submit: {error}"),
         };

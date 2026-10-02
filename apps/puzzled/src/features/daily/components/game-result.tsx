@@ -20,6 +20,7 @@ import {
 import { resolveModuleDisplayName } from '@/features/daily/lib/result-share'
 import { shareRitualResultCard } from '@/features/daily/lib/share-result-card'
 import { TrialEndsLine } from '@/features/plus/components/trial-ends-line'
+import { PlusResultCard } from '@/features/plus-offer/components/plus-result-card'
 import { seasonGreeting } from '@/features/seasons/lib/seasons'
 import { type GameSlug, getHowToPlayConfig, HOW_TO_PLAY_SLUGS } from '@/games/how-to-play-registry'
 import { useTodayPercentile } from '@/lib/api'
@@ -365,6 +366,9 @@ export function GameResultCard({
 						<TomorrowGameLine className="mt-1.5" />
 					</div>
 				)}
+
+				{/* Plus card: free players on today's free game only, never a member. */}
+				<PlusResultCard gameSlug={gameType} mode={mode} />
 
 				{/* After the finish only; renders nothing for Plus or while ads are off. */}
 				<div className="mt-4">

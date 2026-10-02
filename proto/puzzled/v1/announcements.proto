@@ -1,0 +1,41 @@
+edition = "2024";
+
+package puzzled.v1;
+
+// Proto3 -> Edition 2024 carries identical wire semantics: pin every proto3
+// default that moved between representations so the migration is a pure
+// edition cutover with no breaking findings and no consumer impact.
+option features.field_presence = IMPLICIT;
+option features.enum_type = OPEN;
+option features.repeated_field_encoding = PACKED;
+option features.utf8_validation = VERIFY;
+option features.message_encoding = LENGTH_PREFIXED;
+option features.json_format = ALLOW;
+option features.(pb.cpp).string_type = STRING;
+
+import "google/protobuf/cpp_features.proto";
+
+// AnnouncementService: the player-facing read of notices an admin wrote
+// (AdminService owns the writes). Public: no identity needed, and only fields
+// meant for the banner leave the server.
+
+message ActiveAnnouncement {
+  string id = 1;
+  string title = 2;
+  string body = 3;
+  // info | warning | success | maintenance
+  string type = 4;
+  bool dismissible = 5;
+  // RFC 3339 UTC; empty = open-ended. Lets a cached copy drop an expired notice.
+  string ends_at = 6;
+}
+
+message ListActiveAnnouncementsRequest {}
+message ListActiveAnnouncementsResponse {
+  // Newest first.
+  repeated ActiveAnnouncement announcements = 1;
+}
+
+service AnnouncementService {
+  rpc ListActiveAnnouncements(ListActiveAnnouncementsRequest) returns (ListActiveAnnouncementsResponse);
+}

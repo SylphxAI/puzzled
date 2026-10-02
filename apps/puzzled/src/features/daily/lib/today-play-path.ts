@@ -16,3 +16,12 @@ export function todayPlayPath(gameSlug: string): string {
 		: `?${START_PARAM}=1`
 	return `/games/${gameSlug}${query}#play`
 }
+
+/**
+ * Where a finished day's result is read. A finish counts at any level, so a
+ * game with levels opens its page without a level: the chooser then marks the
+ * completed ones, rather than dropping the player on an unplayed default board.
+ */
+export function todayResultPath(gameSlug: string): string {
+	return gameSupportsDifficulty(gameSlug) ? `/games/${gameSlug}` : todayPlayPath(gameSlug)
+}

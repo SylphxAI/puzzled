@@ -10,6 +10,7 @@ import {
 	initialDailyLoadState,
 	loadDailySnapshot,
 } from '@/features/daily/lib/daily-fallback'
+import { completedViewLevel } from '@/features/daily/lib/difficulty-completion'
 import type { GameSlug } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import type { GameMode } from '@/lib/db/schema'
@@ -98,8 +99,7 @@ export function GameDailyFallback({
 				session={snapshot.session}
 				currentStreak={0}
 				locale={locale}
-				difficulty={difficulty}
-				supportsDifficulty={supportsDifficulty}
+				difficulty={completedViewLevel(supportsDifficulty, snapshot.session.difficulty)}
 			/>
 		)
 	}

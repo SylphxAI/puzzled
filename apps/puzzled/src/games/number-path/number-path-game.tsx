@@ -12,9 +12,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { useStartOver } from '@/games/shared/use-start-over'
 import { cn } from '@/lib/utils'
 import { parseNumberPathClientPayload } from './parse-client'
 import type { Cell } from './types'
@@ -42,6 +44,8 @@ export function NumberPathGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'number-path',
 		mode,
@@ -114,6 +118,8 @@ export function NumberPathGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	}, [])
 
 	const shareResult = useResultShare()
+	const startOver = useStartOver(resetSession, game.reset)
+
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 		void shareResult({
@@ -176,7 +182,7 @@ export function NumberPathGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 						<Button
 							variant="ghost"
 							size="sm"
-							onClick={game.reset}
+							onClick={startOver}
 							disabled={!playing}
 							aria-label="Reset"
 						>
@@ -264,6 +270,12 @@ export function NumberPathGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 						))}
 					</svg>
 				</div>
+
+				<SeeResultButton
+					finished={resultReady}
+					modalOpen={showResultModal}
+					onOpen={() => setShowResultModal(true)}
+				/>
 			</div>
 
 			<HowToPlayModal

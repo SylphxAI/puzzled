@@ -4,7 +4,8 @@
 //! - **Generate:** `puzzled_core::puzzle_play::generate` (pure, seeded,
 //!   self-checked against each game's own validator).
 //! - **Store:** `daily_puzzles`, one row per (game, day, difficulty); a row is
-//!   never overwritten, so a served puzzle never changes.
+//!   never overwritten, so a served puzzle never changes. Each row records the
+//!   generator version that made it (`Generated::generator_version`).
 //! - **Schedule:** [`fill`] stores [`DAYS_AHEAD`] days ahead and backfills the
 //!   archive window. It runs at start-up and on a Compute schedule tick.
 //! - **Serve:** [`resolve`] reads the stored row and, on a miss, generates and
@@ -34,9 +35,6 @@ pub const DAYS_AHEAD: i64 = 14;
 pub const ARCHIVE_DAYS: i64 = 30;
 /// Alert when fewer days than this are stored ahead for any game.
 pub const ALERT_BELOW_DAYS: i64 = 3;
-/// Generator version recorded on each row.
-pub const GENERATOR_VERSION: &str = "rust-v1";
-
 /// First product day generated with the pipeline seed for the five games the
 /// server already generated before it.
 pub const PIPELINE_START: (i32, u32, u32) = (2026, 9, 28);
@@ -76,6 +74,7 @@ pub fn generate_for(
             puzzle_data,
             solution,
             seed,
+            generator_version: generate::GENERATOR_V1,
         });
     }
     generate::generate(slug, date, difficulty)
@@ -245,6 +244,24 @@ mod tests {
         assert_eq!(stored_difficulty("sudoku", Some("hard")), Some("hard"));
         assert_eq!(stored_difficulty("sudoku", Some("insane")), Some("medium"));
         assert_eq!(stored_difficulty("word-hive", Some("hard")), None);
+    }
+
+    #[test]
+    fn crossword_versions_follow_the_day() {
+        // Before the pipeline: the original seed and the V1 generator.
+        let before = NaiveDate::from_ymd_opt(2026, 9, 27).unwrap_or_default();
+        let legacy = generate_for("crossword", before, None).unwrap();
+        assert_eq!(legacy.generator_version, generate::GENERATOR_V1);
+        assert_eq!(legacy.seed, i64::from(get_puzzle_number(before, None)));
+        assert!(legacy.puzzle_data.get("clueSet").is_none());
+        // From the pipeline on: V2, and the row says so.
+        let after = NaiveDate::from_ymd_opt(2026, 10, 16).unwrap_or_default();
+        let current = generate_for("crossword", after, None).unwrap();
+        assert_eq!(current.generator_version, generate::GENERATOR_CROSSWORD_V2);
+        assert_eq!(current.puzzle_data["clueSet"], "rows-columns");
+        // Other games stay on V1.
+        let other = generate_for("word-guess", after, None).unwrap();
+        assert_eq!(other.generator_version, generate::GENERATOR_V1);
     }
 
     #[test]

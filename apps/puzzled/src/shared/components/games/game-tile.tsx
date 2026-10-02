@@ -9,8 +9,19 @@ export type GameTileStatus = 'free' | 'play' | 'solved'
 
 type GameTileLabels = {
 	play: string
-	playAgain: string
+	/** Solved tiles open the finished result, so they say so. */
+	seeResult: string
 	freeToday: string
+}
+
+/** What a tile says about where it leads: the proved score, else the result. */
+export function solvedChipLabel(score: string | null | undefined, labels: GameTileLabels): string {
+	return score ? score : labels.seeResult
+}
+
+/** Hidden link text: a solved tile leads to its result, any other to play. */
+export function tileLinkHint(status: GameTileStatus, labels: GameTileLabels): string {
+	return status === 'solved' ? labels.seeResult : labels.play
 }
 
 type GameTileProps = {
@@ -79,7 +90,7 @@ export function GameTile({
 				{solved && (
 					<span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-[#1a1712]">
 						<Check className="h-3 w-3" strokeWidth={3} aria-hidden="true" />
-						{score ? score : labels.playAgain}
+						{solvedChipLabel(score, labels)}
 					</span>
 				)}
 			</div>
@@ -95,7 +106,7 @@ export function GameTile({
 				</p>
 				<p className="mt-2.5 truncate text-xs text-muted-foreground">
 					{meta}
-					<span className="sr-only"> — {solved ? labels.playAgain : labels.play}</span>
+					<span className="sr-only"> — {tileLinkHint(status, labels)}</span>
 				</p>
 			</div>
 		</div>

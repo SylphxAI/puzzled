@@ -43,29 +43,33 @@ function installBrowser(options: { localId?: string | null; cookie?: string } = 
 	}
 }
 
-describe('guest day id cookie mirror', () => {
+describe('legacy guest progress metadata', () => {
 	afterEach(() => {
 		Reflect.deleteProperty(globalThis, 'window')
 		Reflect.deleteProperty(globalThis, 'localStorage')
 		Reflect.deleteProperty(globalThis, 'document')
 	})
 
-	test('mirrors an existing localStorage id onto puzzled_guest_id', () => {
-		installBrowser({ localId: EXISTING })
+	test('reads existing local data without writing an identity cookie', () => {
+		const browser = installBrowser({ localId: EXISTING })
 
 		expect(getOrCreateGuestDayId()).toBe(EXISTING)
-		expect(readGuestIdCookie()).toBe(EXISTING)
+		expect(readGuestIdCookie()).toBeNull()
+		expect(browser.readCookie()).toBe('')
 	})
 
-	test('mints and mirrors when localStorage has no id', () => {
+	test('does not mint a new local id or cookie', () => {
 		const browser = installBrowser()
+		expect(getOrCreateGuestDayId()).toBeNull()
+		expect(browser.store.has(GUEST_DAY_ID_KEY)).toBe(false)
+		expect(browser.readCookie()).toBe('')
+	})
 
-		const id = getOrCreateGuestDayId()
-		expect(id).toBeTruthy()
-		if (!id) return
-		expect(id).toMatch(/^[0-9a-f-]{36}$/i)
-		expect(browser.store.get(GUEST_DAY_ID_KEY)).toBe(id)
-		expect(readGuestIdCookie()).toBe(id)
+	test('retains legacy cookie as data without changing it', () => {
+		const browser = installBrowser({ cookie: `puzzled_guest_id=${EXISTING}` })
+		expect(readGuestIdCookie()).toBe(EXISTING)
+		expect(getOrCreateGuestDayId()).toBe(EXISTING)
+		expect(browser.readCookie()).toBe(`puzzled_guest_id=${EXISTING}`)
 	})
 
 	test('returns null during SSR', () => {

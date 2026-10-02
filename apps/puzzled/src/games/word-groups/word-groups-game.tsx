@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration, StarBurst } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { checkGuess } from '@/lib/connect/puzzle-client'
@@ -55,6 +56,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		showStarBurst,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'word-groups',
 		mode,
@@ -255,6 +257,12 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 					isShuffling={isShuffling}
 				/>
 			)}
+
+			<SeeResultButton
+				finished={resultReady}
+				modalOpen={showResultModal}
+				onOpen={() => setShowResultModal(true)}
+			/>
 
 			{/* Mistakes */}
 			{gameStatus === 'playing' && <MistakeDots mistakes={mistakes} />}

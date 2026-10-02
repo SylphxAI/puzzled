@@ -14,7 +14,7 @@
 //! 128-bit value they carry ([`auth_id_value`]), so `organization-<uuid>` and
 //! the TypeID of the same uuid are the same instance.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -60,6 +60,27 @@ pub struct AuthSessions {
     cache: Arc<Mutex<Cache>>,
     /// Where the Auth subject to player map lives ([`super::auth_subjects`]).
     pool: Option<PgPool>,
+    /// WORKAROUND, see [`parse_admin_principals`]. Empty means nobody is admin.
+    admin_principals: Arc<HashSet<String>>,
+}
+
+/// The Auth subjects allowed to be Puzzled admins from `PUZZLED_ADMIN_PRINCIPALS`
+/// (comma-separated, exact `principal.subject` values; whitespace trimmed, empty
+/// items ignored). Unset or empty yields an empty set: nobody is admin.
+///
+/// WORKAROUND (CEO-ruled, audited): Sylphx Auth end-user sessions carry no admin
+/// signal, so a session is admin only when its subject is on this list.
+/// Removal trigger: cloud#11587 serves an `organization{roles}` claim; admin then
+/// becomes the "admin" role on Puzzled's Auth organization and this list, its env
+/// declaration in sylphx.toml and this code are deleted. Never log the list or a
+/// subject.
+#[must_use]
+pub fn parse_admin_principals(raw: &str) -> HashSet<String> {
+    raw.split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+        .collect()
 }
 
 impl AuthSessions {
@@ -75,7 +96,15 @@ impl AuthSessions {
             caller_key: caller_key.trim().to_string(),
             cache: Arc::new(Mutex::new(HashMap::new())),
             pool: None,
+            admin_principals: Arc::new(HashSet::new()),
         }
+    }
+
+    /// Admin allow-list (WORKAROUND, see [`parse_admin_principals`]).
+    #[must_use]
+    pub fn with_admin_principals(mut self, raw: &str) -> Self {
+        self.admin_principals = Arc::new(parse_admin_principals(raw));
+        self
     }
 
     /// Resolve players through the database's subject map.
@@ -106,7 +135,9 @@ impl AuthSessions {
             tracing::warn!("SYLPHX_PUBLISHABLE_KEY is unset: no Auth session is accepted");
             String::new()
         });
-        Self::new(url, organization_id, caller_key)
+        // Read once at startup; never logged (WORKAROUND, see `parse_admin_principals`).
+        let admin_principals = std::env::var("PUZZLED_ADMIN_PRINCIPALS").unwrap_or_default();
+        Self::new(url, organization_id, caller_key).with_admin_principals(&admin_principals)
     }
 
     /// The end user behind a session bearer; None when Auth refuses it or is
@@ -171,11 +202,13 @@ impl AuthSessions {
             // No database: nothing is stored, so only the old form maps.
             None => auth_subjects::legacy_player_id(&principal.subject)?,
         };
+        // WORKAROUND: admin only for an allow-listed exact Auth subject.
+        let is_admin = self.admin_principals.contains(&principal.subject);
         Some(VerifiedIdentity {
             user_id: user_id.to_string(),
             display_name: principal.display_name,
             email: principal.email,
-            is_admin: false,
+            is_admin,
             actor: principal.actor,
         })
     }
@@ -354,6 +387,9 @@ pub async fn attach_auth_session(
     next: Next,
 ) -> Response {
     request.headers_mut().remove(VERIFIED_IDENTITY_HEADER);
+    if request.uri().path() == "/v1/guest/session" {
+        return next.run(request).await;
+    }
     if let Some(token) = session_token(request.headers()) {
         let user_agent = request
             .headers()

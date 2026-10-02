@@ -19,7 +19,7 @@ export type PlusAccess = {
 	trialEndsMs?: number | null
 }
 
-export const OPEN_ACCESS: PlusAccess = { salesOpen: false, entitled: false, trialEndsMs: null }
+export const OPEN_ACCESS: PlusAccess = { salesOpen: false, entitled: false }
 
 /** Is this game or day locked for the viewer? Mirrors `billing_access::policy::play_access`. */
 export function isPlayLocked(

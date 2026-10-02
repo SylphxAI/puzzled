@@ -93,3 +93,36 @@ describe('catalog messages', () => {
 		}
 	})
 })
+
+describe('featured-free claims', () => {
+	// Only today's featured puzzle is free; every other game is Puzzled Plus.
+	// These claims must never say "every puzzle" is open, free or playable as a guest.
+	const falseClaims = [
+		/Every other puzzle in the suite is open/,
+		/Every puzzle is playable as a guest/,
+		/其他謎題亦全部開放/,
+		/全部開放/,
+		/所有謎題都可以用訪客/,
+		/所有谜题都可以用访客/,
+		/其他谜题也全部开放/,
+		/全部开放/,
+		/其他謎題同樣全部開放/,
+		/所有謎題都能以訪客/,
+	]
+	for (const locale of LOCALES) {
+		test(`${locale} ritual and FAQ keep Plus games out of the free claim`, () => {
+			const catalog = readCatalog(locale) as {
+				ritual: { step1Body: string }
+				faq: { start: { answer: string }; account: { answer: string } }
+			}
+			const texts = [catalog.ritual.step1Body, catalog.faq.start.answer, catalog.faq.account.answer]
+			for (const text of texts) {
+				for (const claim of falseClaims) expect(text).not.toMatch(claim)
+			}
+			if (locale !== 'en-GB') {
+				expect(catalog.ritual.step1Body).toMatch(/Puzzled Plus/)
+				expect(catalog.faq.start.answer).toMatch(/Puzzled Plus/)
+			}
+		})
+	}
+})

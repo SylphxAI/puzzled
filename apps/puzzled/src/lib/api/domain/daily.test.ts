@@ -49,6 +49,7 @@ describe('mapDailyStatus', () => {
 				score: 42,
 				attempts: 6,
 				completedAt: new Date(COMPLETED_AT_MS),
+				difficulty: null,
 			},
 			puzzle: {
 				id: PUZZLE_ID,
@@ -60,6 +61,19 @@ describe('mapDailyStatus', () => {
 			canPlay: false,
 			mode: 'daily',
 		})
+	})
+
+	test('the completed session carries the level it was played at, else null', () => {
+		const res = fixture()
+		res.completedSession = create(DailyCompletionSchema, {
+			status: 'won',
+			score: 5,
+			attempts: 1,
+			difficulty: 'medium',
+		})
+		expect(mapDailyStatus(res, 'hard').completedSession?.difficulty).toBe('medium')
+		res.completedSession = create(DailyCompletionSchema, { status: 'won' })
+		expect(mapDailyStatus(res).completedSession?.difficulty).toBeNull()
 	})
 
 	test('a completion that is not won/lost fails closed to null', () => {

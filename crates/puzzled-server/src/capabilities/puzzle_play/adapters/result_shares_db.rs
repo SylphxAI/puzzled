@@ -55,6 +55,19 @@ pub async fn record_share(
     day_key: &str,
     tap: bool,
 ) -> Result<Option<Uuid>, String> {
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+    let value = record_share_on_connection(&mut tx, user_id, game_slug, day_key, tap).await?;
+    tx.commit().await.map_err(|e| e.to_string())?;
+    Ok(value)
+}
+
+pub async fn record_share_on_connection(
+    connection: &mut sqlx::PgConnection,
+    user_id: &str,
+    game_slug: &str,
+    day_key: &str,
+    tap: bool,
+) -> Result<Option<Uuid>, String> {
     let uid =
         user_id_to_storage_uuid(user_id).ok_or_else(|| format!("invalid user id: {user_id}"))?;
     let id = sqlx::query_scalar::<_, Uuid>(ENSURE_SHARE_SQL)
@@ -62,7 +75,7 @@ pub async fn record_share(
         .bind(game_slug)
         .bind(day_key)
         .bind(Uuid::now_v7())
-        .fetch_optional(pool)
+        .fetch_optional(&mut *connection)
         .await
         .map_err(|e| format!("result share write failed: {e}"))?;
     if let (true, Some(id)) = (tap, id) {
@@ -71,7 +84,7 @@ pub async fn record_share(
                SET share_count = share_count + 1, last_shared_at = now() WHERE id = $1"#,
         )
         .bind(id)
-        .execute(pool)
+        .execute(&mut *connection)
         .await
         .map_err(|e| format!("result share count failed: {e}"))?;
     }
@@ -81,10 +94,21 @@ pub async fn record_share(
 /// Keep the sharer's streak on their share of today, once: it is what the
 /// shared card shows, and a later share tap must not rewrite it.
 pub async fn set_share_streak(pool: &PgPool, id: Uuid, streak: i32) -> Result<(), String> {
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+    set_share_streak_on_connection(&mut tx, id, streak).await?;
+    tx.commit().await.map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub async fn set_share_streak_on_connection(
+    connection: &mut sqlx::PgConnection,
+    id: Uuid,
+    streak: i32,
+) -> Result<(), String> {
     sqlx::query("UPDATE result_shares SET streak = $2 WHERE id = $1 AND streak IS NULL")
         .bind(id)
         .bind(streak)
-        .execute(pool)
+        .execute(&mut *connection)
         .await
         .map_err(|e| format!("result share streak write failed: {e}"))?;
     Ok(())
@@ -118,9 +142,13 @@ pub async fn load_shared_result(pool: &PgPool, id: Uuid) -> Result<Option<Shared
 
 /// Move a guest's shares onto the account when the guest signs in, keeping any
 /// share the account already has for the same module and day.
-pub async fn adopt_guest_shares(pool: &PgPool, account: Uuid, guest: Uuid) -> Result<u64, String> {
+pub async fn adopt_guest_shares(
+    connection: &mut sqlx::PgConnection,
+    account: Uuid,
+    guest: Uuid,
+) -> Result<u64, String> {
     sqlx::query(
-        r#"UPDATE result_shares g SET user_id = $2
+        r#"UPDATE result_shares g SET user_id = $2, adopted_from_guest = $1
            WHERE g.user_id = $1
              AND NOT EXISTS (
                SELECT 1 FROM result_shares a
@@ -128,7 +156,7 @@ pub async fn adopt_guest_shares(pool: &PgPool, account: Uuid, guest: Uuid) -> Re
     )
     .bind(guest)
     .bind(account)
-    .execute(pool)
+    .execute(connection)
     .await
     .map(|r| r.rows_affected())
     .map_err(|e| format!("guest share adoption failed: {e}"))

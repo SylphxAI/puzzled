@@ -31,6 +31,9 @@ pub struct PersonalStreak {
     pub days_until_next_freeze: u32,
     /// Yesterday was missed and a freeze kept the run alive.
     pub freeze_used_yesterday: bool,
+    /// Distinct product days with an accepted finish (several modules on one
+    /// day count once).
+    pub played_days: u32,
 }
 
 /// Unparseable ritual `day_key` - fail closed, do not skip.
@@ -106,6 +109,7 @@ pub fn compute_personal_streak(
         has_played_today,
         days_until_next_freeze: FREEZE_EVERY_DAYS - current_streak % FREEZE_EVERY_DAYS,
         freeze_used_yesterday,
+        played_days: u32::try_from(played.len()).unwrap_or(u32::MAX),
     }
 }
 
@@ -274,6 +278,7 @@ mod tests {
                 has_played_today: false,
                 days_until_next_freeze: 7,
                 freeze_used_yesterday: false,
+                played_days: 0,
             }
         );
     }
@@ -292,6 +297,20 @@ mod tests {
         assert_eq!(streak.current_streak, 3);
         assert_eq!(streak.max_streak, 3);
         assert!(streak.has_played_today);
+        assert_eq!(streak.played_days, 3);
+    }
+
+    #[test]
+    fn played_days_counts_gaps_and_ignores_frozen_days() {
+        let today = d(2026, 8, 22);
+        let days = [
+            d(2026, 8, 10),
+            d(2026, 8, 10),
+            d(2026, 8, 20),
+            d(2026, 8, 22),
+        ];
+        let streak = compute_personal_streak(today, &days, &[d(2026, 8, 21)]);
+        assert_eq!(streak.played_days, 3);
     }
 
     #[test]

@@ -18,6 +18,7 @@ function infoWith(autoFreezeEnabled: boolean) {
 		autoFreezeEnabled,
 		daysUntilNextFreeze: 4,
 		freezeUsedYesterday: false,
+		playedDays: 9,
 	})
 }
 

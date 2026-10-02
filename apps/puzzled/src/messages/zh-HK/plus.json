@@ -6,7 +6,8 @@
 		"title": "每一款遊戲，每一天",
 		"lead": "今日精選謎題人人免費。Puzzled Plus 開放全部 {count} 款遊戲、往日題庫，以及每款遊戲的統計。",
 		"closedTitle": "現時全部免費",
-		"closedBody": "現時每款遊戲和每一個往日謎題都向所有人開放，盡情暢玩。",
+		"closedBody": "Puzzled Plus 尚未開售，所以每款遊戲和每一天的題目都向所有人開放。",
+		"purchasesSoon": "即將開放購買。",
 		"checkoutFailed": "未能開啟付款頁面，請再試一次。",
 		"freeTitle": "免費",
 		"freeBody": "每天一題今日精選謎題，毋須登記帳戶。",
@@ -17,6 +18,7 @@
 		"monthly": "按月",
 		"yearly": "按年",
 		"perMonth": "每月",
+		"currencyLabel": "貨幣",
 		"perYear": "每年",
 		"saving": "節省 {percent}%",
 		"includesAllGames": "每天可玩全部 {count} 款遊戲",
@@ -47,6 +49,13 @@
 		"signIn": "登入",
 		"playFree": "免費玩 {game}",
 		"keep": "你已完成的題目會一直保留在統計中。"
+	},
+	"offer": {
+		"resultTitle": "暢玩全部 {count} 款遊戲和往日題庫",
+		"resultBody": "今日精選謎題永遠免費。Puzzled Plus 開放每款遊戲、往日題庫，以及每款遊戲的統計。",
+		"day3Title": "你已玩了 {days} 日，開局不錯！",
+		"day7Title": "你已玩了 {days} 日，是常客了！",
+		"milestoneBody": "Puzzled Plus 開放全部 {count} 款遊戲、往日題庫以及每款遊戲的統計。今日精選謎題繼續免費。"
 	},
 	"subscription": {
 		"title": "訂閱",

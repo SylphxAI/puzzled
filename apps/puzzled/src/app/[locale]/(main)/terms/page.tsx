@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { MarketingCta, MarketingHero } from '@/features/marketing/components'
 import { LegalDocument, type LegalSection } from '@/features/marketing/components/legal-document'
-import { LEGAL_EMAIL } from '@/lib/config/app'
+import { COMPANY_PHONE, LEGAL_EMAIL } from '@/lib/config/app'
 import { Link } from '@/lib/i18n/routing'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
 
@@ -136,6 +136,7 @@ export default async function TermsPage({ params }: Props) {
 			title: t('sections.contact.title'),
 			paragraphs: [t('sections.contact.content')],
 			contactEmail: LEGAL_EMAIL,
+			contactPhone: COMPANY_PHONE,
 		},
 	]
 

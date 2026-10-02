@@ -1,11 +1,17 @@
 import { Check, Play } from 'lucide-react'
+import { cookies, headers } from 'next/headers'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { MarketingHero, MarketingSection } from '@/features/marketing/components'
 import { TrialChargeLine } from '@/features/plus/components/trial-charge-line'
 import { getAllGameMetadata } from '@/games/registry'
 import { getServerPlans, getServerPlusAccess } from '@/lib/api/server'
 import {
-	currencyForLocale,
+	availableCurrencies,
+	COUNTRY_HEADER,
+	CURRENCY_COOKIE,
+	chooseCurrency,
+} from '@/lib/billing/currency'
+import {
 	formatPrice,
 	type PlanCard,
 	planCards,
@@ -19,6 +25,7 @@ import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
 import { cn } from '@/lib/utils'
+import { CurrencySwitcher } from './currency-switcher'
 import { SubscribeButton } from './subscribe-button'
 
 type Props = {
@@ -65,28 +72,30 @@ export default async function PricingPage({ params, searchParams }: Props) {
 	const gameCount = getAllGameMetadata().length
 	const freeSlug = getTodaysFreeGame()
 	const freeName = tGames(`${slugToCamelCase(freeSlug)}.name`)
-	const currency = currencyForLocale(locale)
+	const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()])
+	const currencies = plans?.salesOpen ? availableCurrencies(plans.plans) : []
+	const currency = chooseCurrency({
+		cookie: cookieStore.get(CURRENCY_COOKIE)?.value,
+		country: requestHeaders.get(COUNTRY_HEADER),
+		locale,
+		available: currencies,
+	})
 	const cards = plans?.salesOpen ? planCards(plans.plans, currency) : []
 	const monthly = (family: boolean) =>
 		cards.find((c) => c.family === family && c.interval === 'month')
 	const yearly = (family: boolean) =>
 		cards.find((c) => c.family === family && c.interval === 'year')
-	// The seat count belongs to the catalogue: no family plan sold means 0, never a guess.
-	const familyMax = plans?.familyMaxMembers || null
+	const familyMax = plans?.familyMaxMembers ?? 4
 
 	const groups = [
-		{ family: false, title: tPlus('name'), body: t('individualBody') as string | null },
-		{
-			family: true,
-			title: t('family'),
-			body: familyMax ? t('familyBody', { count: familyMax }) : null,
-		},
+		{ family: false, title: tPlus('name'), body: t('individualBody') },
+		{ family: true, title: t('family'), body: t('familyBody', { count: familyMax }) },
 	]
 	const includes = (family: boolean) => [
 		t('includesAllGames', { count: gameCount }),
 		t('includesArchive'),
 		t('includesStats'),
-		...(family && familyMax ? [t('includesFamily', { count: familyMax })] : []),
+		...(family ? [t('includesFamily', { count: familyMax })] : []),
 	]
 
 	const priceLine = (card: PlanCard | undefined) =>
@@ -127,6 +136,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 						</p>
 						<h2 className="mt-2 font-display text-2xl">{t('closedTitle')}</h2>
 						<p className="mt-2 text-[15px] text-muted-foreground">{t('closedBody')}</p>
+						<p className="mt-1 text-[15px] font-semibold">{t('purchasesSoon')}</p>
 						<ul className="mt-5 space-y-2.5 border-t border-border pt-5">
 							{includes(true).map((line) => (
 								<li key={line} className="flex items-start gap-2.5 text-[15px]">
@@ -138,6 +148,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 					</div>
 				) : (
 					<>
+						<CurrencySwitcher currencies={currencies} current={currency} />
 						<ul className="grid gap-4 lg:grid-cols-3">
 							<li className="flex flex-col rounded-2xl border border-border p-5 sm:p-6">
 								<h2 className="font-display text-xl">{t('freeTitle')}</h2>
@@ -177,9 +188,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 											) : null}
 											{group.title}
 										</h2>
-										{group.body ? (
-											<p className="mt-1 text-sm text-muted-foreground">{group.body}</p>
-										) : null}
+										<p className="mt-1 text-sm text-muted-foreground">{group.body}</p>
 										<dl className="mt-5 space-y-1">
 											{month ? (
 												<div className="flex flex-wrap items-baseline gap-1.5">

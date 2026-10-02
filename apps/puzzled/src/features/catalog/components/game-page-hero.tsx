@@ -1,4 +1,4 @@
-import { Clock, Play } from 'lucide-react'
+import { Clock } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import type { GameCategory } from '@/games/types'
@@ -7,6 +7,7 @@ import { localizedPath } from '@/lib/seo/metadata'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 import { cn } from '@/lib/utils'
 import { GameIcon } from '@/shared/components/ui/game-icons'
+import { HeroPlayAction } from './hero-play-action'
 
 type GamePageHeroProps = {
 	slug: string
@@ -26,6 +27,8 @@ type GamePageHeroProps = {
 	freeToday: boolean
 	/** No account on this request; sign-in keeps the streak. */
 	isGuest: boolean
+	/** Behind Puzzled Plus for this viewer: the unlock panel owns the action. */
+	locked: boolean
 }
 
 /**
@@ -45,6 +48,7 @@ export async function GamePageHero({
 	category,
 	freeToday,
 	isGuest,
+	locked,
 }: GamePageHeroProps) {
 	const t = await getTranslations('catalog')
 	const tNav = await getTranslations('nav')
@@ -150,22 +154,14 @@ export async function GamePageHero({
 							) : null}
 						</ul>
 
-						<div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
-							<a
-								href="#play"
-								className="pressable inline-flex h-12 items-center gap-2 rounded-full bg-[#1a1712] px-7 text-[16px] font-semibold text-[#fbf9f4] transition-opacity hover:opacity-90"
-							>
-								<Play className="h-4 w-4" fill="currentColor" aria-hidden="true" />
-								{t('gamePage.playCta')}
-							</a>
-						</div>
+						<HeroPlayAction locked={locked} label={t('gamePage.playCta')} />
 
 						{isGuest && (
 							<p className="mt-3 text-sm text-[#1a1712]/75">
 								{t('gamePage.guestNote')}{' '}
 								<Link
 									href={{ pathname: '/signup', query: { callbackUrl: `/games/${slug}` } }}
-									className="font-semibold text-[#1a1712] underline underline-offset-4"
+									className="inline-flex min-h-11 items-center font-semibold text-[#1a1712] underline underline-offset-4"
 								>
 									{t('gamePage.guestSignIn')}
 								</Link>

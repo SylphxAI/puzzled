@@ -45,6 +45,23 @@ impl Consent {
     }
 }
 
+/// The hosted checkout's language for a Puzzled locale. Stripe accepts only its
+/// own list (it refuses `en-US` and `zh-Hant` with `invalid_request_error`), so
+/// each Puzzled locale maps onto that list and anything else asks Stripe for
+/// `auto` (the buyer's browser language).
+#[must_use]
+pub fn checkout_locale(locale: &str) -> Option<&'static str> {
+    match locale.trim() {
+        "" => None,
+        "en-US" | "en" => Some("en"),
+        "en-GB" => Some("en-GB"),
+        "zh-HK" => Some("zh-HK"),
+        "zh-TW" | "zh-Hant" => Some("zh-TW"),
+        "zh-CN" | "zh-Hans" | "zh" => Some("zh"),
+        _ => Some("auto"),
+    }
+}
+
 /// The `checkout_sessions` request body for one plan (pure).
 #[must_use]
 pub fn session_body(
@@ -76,8 +93,8 @@ pub fn session_body(
         "cancel_url": format!("{base}/pricing?checkout=cancelled"),
         "metadata": metadata,
     });
-    if !locale.is_empty() {
-        body["locale"] = json!(locale);
+    if let Some(code) = checkout_locale(locale) {
+        body["locale"] = json!(code);
     }
     if let Some(code) = currency {
         body["currency_code"] = json!(code.to_ascii_uppercase());

@@ -22,7 +22,6 @@
 		"subtitle": "One rotation, refreshed every day. The full catalog lives on the games page.",
 		"seeAll": "See all games",
 		"play": "Play",
-		"playAgain": "Play again",
 		"freeToday": "Today's pick"
 	},
 	"value": {
@@ -49,7 +48,7 @@
 		"subtitle": "The short version of how Puzzled works.",
 		"free": {
 			"question": "Is Puzzled free?",
-			"answer": "Today's featured puzzle is free every day and never needs payment or an account; Plus opens every other game and the archive."
+			"answer": "Yes. Every puzzle is free every day and never requires payment or an account."
 		},
 		"account": {
 			"question": "Do I need an account to play?",
@@ -65,7 +64,7 @@
 		},
 		"share": {
 			"question": "Can I share my result without spoiling it?",
-			"answer": "Yes. The result card shows your solving pattern, the puzzle and the day — never the solution. Anyone who opens it plays the same day's puzzle."
+			"answer": "Yes. The result card shows your result (time, tries or solving pattern), the puzzle and the day — never the solution. Anyone who opens it plays the same day's puzzle."
 		},
 		"catalog": {
 			"question": "Which puzzles are included?",
@@ -81,6 +80,7 @@
 		"titleMemberReady": "Today's {game} is ready",
 		"titleMemberStreak": "Your {days}-day streak is waiting",
 		"titleMemberDone": "All done for today — nicely played",
+		"titleDone": "Today's {game} is done",
 		"bodyGuest": "Puzzled is a daily set of word, logic and number puzzles. One is free every day, takes a few minutes, and needs no signup.",
 		"bodyMember": "Your streak, your stats and today's lineup are one tap away.",
 		"playToday": "Play today's {game}",

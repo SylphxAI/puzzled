@@ -29,6 +29,8 @@ message StreakInfo {
   uint32 days_until_next_freeze = 7;
   // Yesterday was missed and a freeze kept the streak alive.
   bool freeze_used_yesterday = 8;
+  // Distinct product days with an accepted finish, any game, ever.
+  uint32 played_days = 9;
 }
 
 message GetStreakInfoRequest {}

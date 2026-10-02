@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { signUpCookieHeader } from '@/lib/identity/after-sign-up'
 import { AuthCallError, authConfig, passwordTicket, signUp } from '@/lib/identity/client-auth'
+import { admitJsonPost } from '@/lib/identity/http'
 import { MIN_PASSWORD_LENGTH } from '@/lib/identity/password-policy'
 import { authFail, completeSignIn, userAgentOf } from '@/lib/identity/sign-in'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
@@ -11,6 +12,8 @@ import { getRequestSiteOrigin } from '@/lib/site-origin.server'
  * holder, so an existing address gets the neutral "check your email" answer.
  */
 export async function POST(request: Request) {
+	const refused = await admitJsonPost(request)
+	if (refused) return refused
 	const config = authConfig()
 	if (!config) return authFail(503, 'identity_unconfigured')
 	const body = (await request.json().catch(() => null)) as {
@@ -29,7 +32,7 @@ export async function POST(request: Request) {
 			email,
 			password,
 			name: (body?.displayName ?? body?.name ?? '').trim(),
-			verifyUrl: `${await getRequestSiteOrigin()}/`,
+			verifyUrl: `${await getRequestSiteOrigin()}/verify-email`,
 			userAgent,
 		})
 	} catch (error) {

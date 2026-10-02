@@ -43,6 +43,7 @@ function fixture(): GetDailyResponse {
 			score: 42,
 			attempts: 6,
 			completedAtMs: BigInt(COMPLETED_AT_MS),
+			difficulty: 'medium',
 		}),
 	})
 }
@@ -54,6 +55,7 @@ const EXPECTED_DAILY = {
 		score: 42,
 		attempts: 6,
 		completedAt: new Date(COMPLETED_AT_MS),
+		difficulty: 'medium',
 	},
 	puzzle: {
 		id: PUZZLE_ID,
@@ -76,9 +78,10 @@ mock.module('next/headers', () => ({
 	// The server transport forwards the browser's User-Agent (Auth sessions).
 	headers: async () => new Headers({ 'user-agent': pageUserAgent }),
 	cookies: async () => ({
-		toString: () => 'puzzled_guest_id=guest-1',
-		get: (name: string) => (name === 'puzzled_guest_id' ? { name, value: 'guest-1' } : undefined),
-		getAll: () => [{ name: 'puzzled_guest_id', value: 'guest-1' }],
+		toString: () => '__Host-puzzled_guest=test-issued-guest-session',
+		get: (name: string) =>
+			name === '__Host-puzzled_guest' ? { name, value: 'test-issued-guest-session' } : undefined,
+		getAll: () => [{ name: '__Host-puzzled_guest', value: 'test-issued-guest-session' }],
 	}),
 }))
 
@@ -189,7 +192,7 @@ describe('getServerDailyStatus against a Connect fixture', () => {
 			gameSlug: 'word-guess',
 			difficulty: 'easy',
 		})
-		expect(requests[0].cookie).toBe('puzzled_guest_id=guest-1')
+		expect(requests[0].cookie).toBe('__Host-puzzled_guest=test-issued-guest-session')
 	})
 
 	test('difficulty empty on the wire falls back to the request difficulty', async () => {

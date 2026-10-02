@@ -24,6 +24,7 @@ type TodayLineupProps = {
  */
 export async function TodayLineup({ games }: TodayLineupProps) {
 	const t = await getTranslations('home')
+	const tResult = await getTranslations('gameResult')
 
 	return (
 		<section className="pb-10 md:pb-14">
@@ -58,7 +59,7 @@ export async function TodayLineup({ games }: TodayLineupProps) {
 								index={index}
 								labels={{
 									play: t('lineup.play'),
-									playAgain: t('lineup.playAgain'),
+									seeResult: tResult('seeResult'),
 									freeToday: t('lineup.freeToday'),
 								}}
 							/>

@@ -73,6 +73,8 @@
 		"emailChangeNote": "前往帳號設定更改你的電子郵件"
 	},
 	"account": {
+		"accountId": "帳號 ID",
+		"accountIdHint": "你自己的帳號識別碼，並非機密。如客服要求，可提供此 ID。",
 		"title": "帳號",
 		"description": "管理你已連結的帳號與登入方式",
 		"connectedAccounts": "已連結的帳號",

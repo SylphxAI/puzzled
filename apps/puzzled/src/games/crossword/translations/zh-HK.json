@@ -12,6 +12,7 @@
 	"startGame": "開始遊戲",
 	"across": "橫向",
 	"down": "縱向",
+	"acrossOnly": "今日只有橫向提示",
 	"selectCell": "點選方格開始",
 	"complete": "謎題完成！",
 	"messages": {

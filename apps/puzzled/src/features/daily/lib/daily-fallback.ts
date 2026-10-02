@@ -11,6 +11,7 @@
  * board is rendered only when the server served puzzle data.
  */
 
+import { asDifficulty } from '@/features/daily/lib/difficulty-completion'
 import type { PuzzleDifficulty } from '@/games/types'
 import type { GetDailyResponse } from '@/gen/connect/puzzled/v1/puzzle_pb'
 import { getDaily, type PuzzleServiceClient } from '@/lib/connect/puzzle-client'
@@ -21,6 +22,8 @@ export type DailySessionSnapshot = {
 	score: number | null
 	attempts: number
 	completedAt: Date | null
+	/** The level the finish was played at, when the server reported one. */
+	difficulty?: PuzzleDifficulty
 }
 
 export type DailySnapshot =
@@ -52,6 +55,7 @@ function readCompletedSession(res: GetDailyResponse): DailySessionSnapshot | nul
 		score: session.score ?? null,
 		attempts: session.attempts ?? 0,
 		completedAt: completedAt && !Number.isNaN(completedAt.getTime()) ? completedAt : null,
+		difficulty: asDifficulty(session.difficulty),
 	}
 }
 

@@ -444,10 +444,39 @@ jobs:
           s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
 
       # The tests that apply apps/puzzled/atlas/migrations to a throwaway
-      # database (billing flow, result shares, account erasure) and the one
-      # that parses every table for player-id columns.
+      # database (billing flow, result shares, account erasure, push ownership)
+      # and the one that parses every table for player-id columns.
       - name: Migration-backed tests
-        run: cargo test -p puzzled-server --lib -- billing_flow_tests result_shares_tests account_erasure_tests account_deletion
+        run: |
+          set -euo pipefail
+          LOG="${RUNNER_TEMP}/puzzled-migration-backed-tests.log"
+          CARGO_TERM_COLOR=never cargo test -p puzzled-server --lib -- billing_flow_tests result_shares_tests account_erasure_tests account_deletion retention_push_tests guest_ownership_tests today_progress_tests | tee "$LOG"
+          # Fail closed if a renamed filter selects nothing, or if the actual
+          # two-user HTTP ownership regression was not exercised.
+          grep -Eq '^test guest_ownership_tests::unsigned_ids_and_forged_internal_headers_cannot_read_or_adopt \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::issued_cookie_is_fresh_host_only_and_progress_adopts_without_deleting_collisions \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::freeze_failure_rolls_back_adoption_and_keeps_credential_live \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::private_access_lease_serializes_adoption_and_revocation \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::issuance_rejects_origin_ambiguity_without_database_effects \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::allocation_collision_never_aliases_existing_account_or_guest \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::second_guest_cookie_never_reads_or_adopts_a_public_player_id \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::existing_cookie_parallel_bootstrap_keeps_one_registry_player \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::legacy_guest_write_and_completion_paths_have_no_player_effects \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::bootstrap_is_zero_database_and_unknown_read_does_not_allocate \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::four_concurrent_submits_with_two_connections_do_not_hold_pool_during_content_lookup \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::fifty_parallel_first_write_pairs_keep_one_winning_namespace_each \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::account_erasure_includes_retained_adopted_guest_collisions_and_provenance \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::raced_adoption_and_erasure_preserve_only_unclaimed_guest_or_erase_linked_sources \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::unregistered_guess_budget_uses_hash_without_allocating_player \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::invalid_submit_rolls_back_allocation_and_adoption_until_valid_finish \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::legacy_claim_keeps_streak_and_history_and_leaves_nothing_under_legacy \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::replaying_the_legacy_id_with_another_token_claims_nothing \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::account_backed_or_registered_legacy_id_is_refused \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::two_concurrent_legacy_claims_have_exactly_one_winner \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::wrong_origin_legacy_claim_is_forbidden_without_database_effect \.\.\. ok$' "$LOG"
+          grep -Eq '^test guest_ownership_tests::signed_in_player_with_legacy_id_ends_with_history_on_the_account \.\.\. ok$' "$LOG"
+          grep -Eq '^test result: ok\. [1-9][0-9]* passed;' "$LOG"
+          grep -Eq '^test retention_push_tests::connect_push_foreign_endpoint_returns_404_without_any_writes \.\.\. ok$' "$LOG"
 
   # The full suite on a ready pull request; never in a merge group or a draft.
   suite:

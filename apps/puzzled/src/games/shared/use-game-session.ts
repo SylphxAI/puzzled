@@ -126,6 +126,8 @@ export type GameEndResult = {
 	alreadyPlayed?: boolean
 	/** The answer, returned by the server only with an accepted finish. */
 	reveal?: unknown
+	/** The session was reset while this finish was in flight; nothing was applied. */
+	stale?: boolean
 }
 
 export interface UseGameSessionReturn {
@@ -151,6 +153,11 @@ export interface UseGameSessionReturn {
 	showStarBurst: boolean
 	showResultModal: boolean
 	setShowResultModal: (show: boolean) => void
+	/**
+	 * True once the finish is accepted and the result modal has been opened
+	 * (after the celebration delay), so a closed modal can be reopened.
+	 */
+	resultReady: boolean
 
 	// Utilities
 	resetSession: () => void
@@ -174,7 +181,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	const storageKey = getGameSessionKey(gameSlug)
 
 	// Hooks
-	const { saveResult, isLoggedIn } = useSaveGameResult(gameSlug)
+	const { saveResult, reset: resetSave, isLoggedIn } = useSaveGameResult(gameSlug)
 	const { saveCompletion: saveGuestCompletion } = useGuestGameState(gameSlug)
 
 	// State
@@ -188,9 +195,13 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	const [showStarBurst, setShowStarBurst] = useState(false)
 	const [showResultModal, setShowResultModal] = useState(false)
 	const [serverScore, setServerScore] = useState<number | null>(null)
+	const [resultReady, setResultReady] = useState(false)
+	const resultTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
 	// Ref to prevent duplicate saves
 	const savedRef = useRef(false)
+	// Bumped by resetSession so a finish still in flight cannot touch the fresh board.
+	const generationRef = useRef(0)
 
 	// Derived state
 	const isReady = gamePhase === 'ready'
@@ -246,10 +257,13 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 				triggerHaptic(celebrationHaptic || 'lose')
 			}
 			const delay = resultModalDelay ?? (status === 'won' ? 1500 : 1000)
-			setTimeout(() => {
+			if (resultTimerRef.current) clearTimeout(resultTimerRef.current)
+			resultTimerRef.current = setTimeout(() => {
+				resultTimerRef.current = null
 				setShowCelebration(false)
 				setShowStarBurst(false)
 				setShowResultModal(true)
+				setResultReady(true)
 			}, delay)
 		},
 		[enableStarBurst, isPerfectWin, celebrationSound, celebrationHaptic, resultModalDelay],
@@ -260,6 +274,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			if (savedRef.current) return { success: false, error: 'already_saving' }
 
 			savedRef.current = true
+			const generation = generationRef.current
 			const finalTimeSpentMs = startTime ? Date.now() - startTime : 0
 			const { status } = endData
 
@@ -289,7 +304,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 						difficulty,
 						data: endData.data,
 					})
-					if (result?.score !== undefined) {
+					if (result?.score !== undefined && generation === generationRef.current) {
 						setServerScore(result.score)
 					}
 					const alreadyPlayed = result.error === 'already_played'
@@ -306,6 +321,10 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 						success: false,
 						error: error instanceof Error ? error.message : 'save_failed',
 					}
+				}
+
+				if (generation !== generationRef.current) {
+					return { success: false, error: 'stale', stale: true }
 				}
 
 				if (requireServerAccept && !finish.success) {
@@ -356,17 +375,32 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		}
 	}, [gamePhase, startTime])
 
+	// A finished session must not open a modal on an unmounted board.
+	useEffect(
+		() => () => {
+			if (resultTimerRef.current) clearTimeout(resultTimerRef.current)
+		},
+		[],
+	)
+
 	/**
 	 * Reset session state (for new game)
 	 */
 	const resetSession = useCallback(() => {
 		savedRef.current = false
+		generationRef.current += 1
+		// Release the save lock too, so the server's already_played guard decides
+		// a re-solve instead of a client-side 'Already saved'.
+		resetSave()
+		if (resultTimerRef.current) clearTimeout(resultTimerRef.current)
+		resultTimerRef.current = null
+		setResultReady(false)
 		setShowCelebration(false)
 		setShowStarBurst(false)
 		setShowResultModal(false)
 		setServerScore(null)
 		setStartTime(Date.now())
-	}, [])
+	}, [resetSave])
 
 	return {
 		// Phase management
@@ -391,6 +425,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		showStarBurst,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
 
 		// Utilities
 		resetSession,

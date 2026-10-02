@@ -99,24 +99,43 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 
 - Cancel at any time in Settings > Subscription. Access runs to the end of the
   paid period and nothing more is charged.
-- Immediate supply: checkout starts only after the buyer asks for access now
-  and acknowledges that they lose the 14-day cancellation right
-  (Consumer Contracts Regulations 2013, regulation 37). The consent is recorded
-  per checkout. No 14-day refund is promised and the api does not refund on
-  cancellation; the buyer's statutory rights (for example for a faulty or
-  misdescribed service, and any refund the law requires) are unaffected, and
-  Terms say so.
+- Immediate supply: checkout records the player's express request for access
+  to start at once and their acknowledgement that the 14-day cancellation
+  right is lost (`immediate_supply_consent`). The consent is stored before
+  checkout starts.
+- No money-back guarantee. Cancellation ends renewal at the end of the paid
+  period (`cancel_at_period_end`) and the api refunds nothing on cancel.
+  Payments are non-refundable and part-used periods are not refunded, except
+  where the terms or the law say otherwise. The terms promise a pro-rata
+  refund of the unused part of the paid period in exactly three cases: we
+  materially reduce what Plus gives (the subscriber cancels after our advance
+  notice), a change to the terms materially affects the subscriber (they cancel
+  before it applies), or we close the account without a serious reason while a
+  paid period is left (`legal.json` terms sections at lines 146, 198 and 182).
+  Any other refund request is handled case by case by support. Every refund is
+  a new Money ledger entry (commercial standard).
 - Sylphx Money's hosted portal handles payment methods, invoices and plan
-  changes; cancellation stays in Settings, one step, and access runs to the end of the paid period.
+  changes; cancellation stays in Settings so it is one flow.
 - An account with a subscription that still renews cannot be erased until it
   is cancelled. Money retains legally required financial records under its own retention
   policy; Puzzled has no subscription or payment-ledger rows to retain.
 - Erasure also deletes the player's Sylphx Auth sign-in, through Auth's
-  privacy-request API, for every subject that names the player. A refused
-  Auth deletion erases nothing: the account stays whole and the request can
-  be repeated.
+  privacy-request API, for every subject that names the player. The rows and
+  Auth's deletion run in one transaction that commits only after Auth
+  accepted (`account_deletion::erase_player`). Transient database errors and
+  ambiguous Auth answers (no answer, timeout, 5xx, 408, 429) repeat the whole
+  transaction a few times; Auth's idempotency key is fixed per subject, so
+  asking again is safe. A database failure before Auth, or a definite Auth
+  refusal (another 4xx) before any subject was accepted, erases nothing: the
+  account and its sign-in stay whole and the person can repeat the request.
+  What still fails after Auth may have deleted the sign-in keeps every row
+  and the subject map, answers 500, and is logged ("run erase-player
+  --subject") with the subjects; the operator finishes it with
+  `sylphx jobs run erase-player -- --subject <auth subject>`, which prints
+  counts only. When Auth serves its erasure delivery (`[privacy]` handler,
+  platform spec), that delivery replaces the manual step.
 - Terms, Privacy and checkout name Sylphx Limited, state VAT-inclusive prices,
-  automatic renewal, the immediate-supply waiver of the 14-day right, the statutory rights that remain, and UK GDPR with the ICO.
+  automatic renewal, the immediate-supply consent, and UK GDPR with the ICO.
 
 ## 5. Money and entitlement (commercial standard)
 
@@ -125,8 +144,9 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   `entitlement_grants:check` for Plus access. It holds no Stripe keys,
   processor webhooks, billing subscriptions or payment ledger.
 - Checkout return reads Money's subscription status; a browser redirect
-  cannot assert a paid entitlement. Cancellation is a request to Money; Money owns invoice, refund and tax
-  records. Puzzled stores only checkout consent evidence, family membership and the reverse-trial grants (below).
+  cannot assert a paid entitlement. Cancellation at period end is a
+  request to Money; Money owns invoice, refund and tax
+  records. Puzzled stores only checkout consent evidence and family membership.
 - Family: the family-plan subscriber gets an invite link; up to 3 others join
   with their own accounts. The subscriber can remove members and reset the
   link. Membership is not an entitlement: access still requires the owner's
@@ -216,5 +236,18 @@ daily puzzle completers or paid conversion justifies that.
 
 This is the intended behaviour, a business choice of player experience over a small leak:
 
-- If the Money catalogue can't be read, Plus counts as not on sale. Nothing is locked, and the pricing page says every game and every past day is open to everyone today.
+- If the Money catalogue can't be read, Plus counts as not on sale. Nothing is locked, and the pricing page says "Purchases open shortly".
 - If Money can't answer a Plus entitlement check, play is allowed. Each such allowance logs `event = "money_entitlement_unanswerable_allowed"` at warn level, so a free ride lasting a whole outage shows up in logs and alerts.
+
+## Who pays
+
+There is no launch grace and no existing-player exemption. Puzzled was never
+promoted or launched before Plus sales opened, so no account has earlier
+standing. The paywall applies to everyone:
+
+- Today's featured puzzle is free for everyone, guests included.
+- Every other game and the archive need a Plus entitlement (Money's
+  `entitlement_grants:check`) while sales are open. Guests and new accounts are
+  locked out of them, and so is an account with old play history.
+- Any later free or discounted access is a Money entitlement grant (account,
+  feature, expiry, approver), never a rule in the play gate.

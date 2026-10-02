@@ -7,7 +7,7 @@ import { ChangeCookieChoice } from '@/features/analytics/components/change-cooki
 import { googleTagIds } from '@/features/analytics/lib/google-tag'
 import { MarketingCta, MarketingHero } from '@/features/marketing/components'
 import { LegalDocument, type LegalSection } from '@/features/marketing/components/legal-document'
-import { PRIVACY_EMAIL } from '@/lib/config/app'
+import { COMPANY_PHONE, PRIVACY_EMAIL } from '@/lib/config/app'
 import { env } from '@/lib/env'
 import { Link } from '@/lib/i18n/routing'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
@@ -122,7 +122,11 @@ export default async function PrivacyPage({ params }: Props) {
 		{
 			id: 'cookies',
 			title: t('sections.cookies.title'),
-			paragraphs: [t('sections.cookies.content'), t('sections.cookies.google')],
+			paragraphs: [
+				t('sections.cookies.content'),
+				t('sections.cookies.notices'),
+				t('sections.cookies.google'),
+			],
 			after: [<ChangeCookieChoice key="change-cookie-choice" tagIds={tagIds} />],
 		},
 		{
@@ -161,6 +165,7 @@ export default async function PrivacyPage({ params }: Props) {
 			title: t('sections.contact.title'),
 			paragraphs: [t('sections.contact.content')],
 			contactEmail: PRIVACY_EMAIL,
+			contactPhone: COMPANY_PHONE,
 		},
 	]
 

@@ -29,10 +29,20 @@ pub async fn load_accepted_ritual_days(
     pool: &PgPool,
     user_id: &str,
 ) -> Result<Vec<chrono::NaiveDate>, String> {
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+    let value = load_accepted_ritual_days_on_connection(&mut tx, user_id).await?;
+    tx.commit().await.map_err(|e| e.to_string())?;
+    Ok(value)
+}
+
+pub async fn load_accepted_ritual_days_on_connection(
+    connection: &mut sqlx::PgConnection,
+    user_id: &str,
+) -> Result<Vec<chrono::NaiveDate>, String> {
     let uid = parse_user_id(user_id)?;
     let rows: Vec<(String,)> = sqlx::query_as(ACCEPTED_RITUAL_DAYS_SQL)
         .bind(uid)
-        .fetch_all(pool)
+        .fetch_all(&mut *connection)
         .await
         .map_err(|e| format!("accepted ritual days query failed: {e}"))?;
     parse_accepted_day_keys(rows.into_iter().map(|(day_key,)| day_key))

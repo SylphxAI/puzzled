@@ -1,10 +1,16 @@
+import { cookies } from 'next/headers'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { cache, Suspense } from 'react'
+import { DISMISSED_COOKIE } from '@/features/announcements/lib/dismissed'
 import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from '@/features/daily/lib/home-exposure'
-import { deriveHomePlayState, scopeHomePlayState } from '@/features/daily/lib/home-play-state'
+import {
+	deriveHomePlayState,
+	isFreeGameDone,
+	scopeHomePlayState,
+} from '@/features/daily/lib/home-play-state'
 import { getPuzzleNumber } from '@/features/daily/lib/puzzle-utils'
-import { todayPlayPath } from '@/features/daily/lib/today-play-path'
+import { todayPlayPath, todayResultPath } from '@/features/daily/lib/today-play-path'
 import {
 	HomeDay,
 	HomeDayFallback,
@@ -17,12 +23,21 @@ import {
 	TodayLineup,
 	TodayLineupSkeleton,
 } from '@/features/home/components/today-lineup'
+import { lineupStatus } from '@/features/home/lib/home-day-copy'
 import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from '@/features/home/lib/home-faq'
 import { MarketingFaq } from '@/features/marketing/components'
+import { PlusMilestonePrompt } from '@/features/plus-offer/components/plus-milestone-prompt'
+import {
+	dueMilestone,
+	type PlusOffer,
+	plusOfferFor,
+	seenMilestones,
+} from '@/features/plus-offer/lib/plus-offer'
 import { SeasonalBanner } from '@/features/seasons/components/seasonal-banner'
 import { getAllGameMetadata } from '@/games/registry'
 import {
 	getServerPersonalDailyResults,
+	getServerPlusOfferAccess,
 	getServerStreakInfo,
 	getServerTodayOverview,
 	hasServerProgressIdentity,
@@ -175,7 +190,7 @@ function buildLineup(input: {
 		const metadata = input.metadataBySlug.get(game.slug)
 		if (!metadata) return []
 		const camel = slugToCamelCase(game.slug)
-		const status = game.isFreeToday ? 'free' : game.completed ? 'solved' : 'play'
+		const status = lineupStatus(game)
 		return [
 			{
 				slug: game.slug,
@@ -211,22 +226,42 @@ async function HomeDayIsland({
 		freeGameSlug: freeGame.slug,
 	})
 
+	// A returning member who is not on Plus and has played on 3 or 7 distinct
+	// days is offered Plus once per milestone (a cookie remembers, so the server leaves a seen prompt out).
+	const playedDays = facts.streakInfo?.playedDays ?? 0
+	let milestoneOffer: PlusOffer | null = null
+	const seen = seenMilestones((await cookies()).get(DISMISSED_COOKIE)?.value)
+	const milestone = facts.user ? dueMilestone(playedDays, seen) : null
+	if (milestone !== null) {
+		const access = await getServerPlusOfferAccess(true)
+		milestoneOffer = plusOfferFor(access, {
+			gameCount: getAllGameMetadata().length,
+			freeSlug: freeGame.slug,
+		})
+	}
+
 	return (
-		<HomeDay
-			locale={locale}
-			dateLabel={dateLabel}
-			puzzleNumber={puzzleNumber}
-			freeGame={freeGame}
-			isMember={Boolean(facts.user)}
-			currentStreak={facts.streakInfo?.currentStreak ?? 0}
-			hasPlayedToday={facts.streakInfo?.hasPlayedToday ?? false}
-			completedCount={view.progress.completedCount}
-			availableCount={view.progress.availableCount}
-			playerCount={facts.todayPlayerCount}
-			// Only warn about unread progress when this viewer has progress to
-			// read: a brand-new guest has none, and a warning would be noise.
-			progressUnverified={view.progressUnverified && facts.hasIdentity}
-		/>
+		<>
+			<HomeDay
+				locale={locale}
+				dateLabel={dateLabel}
+				puzzleNumber={puzzleNumber}
+				freeGame={freeGame}
+				isMember={Boolean(facts.user)}
+				currentStreak={facts.streakInfo?.currentStreak ?? 0}
+				hasPlayedToday={facts.streakInfo?.hasPlayedToday ?? false}
+				freeGameDone={isFreeGameDone(facts.personalResults, freeGame.slug)}
+				completedCount={view.progress.completedCount}
+				availableCount={view.progress.availableCount}
+				playerCount={facts.todayPlayerCount}
+				// Only warn about unread progress when this viewer has progress to
+				// read: a brand-new guest has none, and a warning would be noise.
+				progressUnverified={view.progressUnverified && facts.hasIdentity}
+			/>
+			{milestone !== null && milestoneOffer ? (
+				<PlusMilestonePrompt milestone={milestone} playedDays={playedDays} offer={milestoneOffer} />
+			) : null}
+		</>
 	)
 }
 
@@ -297,6 +332,7 @@ export default async function HomePage({ params }: Props) {
 		tagline: freeGameMeta ? t(`games.${slugToCamelCase(todaysFreeGame)}.tagline`) : undefined,
 		duration: freeGameMeta?.display.duration,
 		playHref: todayPlayPath(todaysFreeGame),
+		resultHref: todayResultPath(todaysFreeGame),
 	}
 	// The day has an identity: this is the puzzle number `getPuzzleNumber`
 	// already computes for the module and the product day.

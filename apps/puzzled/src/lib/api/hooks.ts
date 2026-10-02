@@ -783,6 +783,9 @@ export function useCreateAnnouncement() {
 					body: String(input.body ?? ''),
 					type: typeof input.type === 'string' ? input.type : 'info',
 					active: typeof input.active === 'boolean' ? input.active : true,
+					dismissible: typeof input.dismissible === 'boolean' ? input.dismissible : undefined,
+					startsAt: typeof input.startsAt === 'string' ? input.startsAt : undefined,
+					endsAt: typeof input.endsAt === 'string' ? input.endsAt : undefined,
 				})
 			} catch (e) {
 				throw toApiError(e, 'ANNOUNCEMENT_CREATE_FAILED')
@@ -805,6 +808,11 @@ export function useUpdateAnnouncement() {
 					body: typeof input.body === 'string' ? input.body : undefined,
 					type: typeof input.type === 'string' ? input.type : undefined,
 					active: typeof input.active === 'boolean' ? input.active : undefined,
+					dismissible: typeof input.dismissible === 'boolean' ? input.dismissible : undefined,
+					// The editor always sends both fields, undefined when emptied: that clears the
+					// bound ('' on the wire). A caller that omits the key leaves it alone.
+					startsAt: 'startsAt' in input ? (input.startsAt as string | undefined) || '' : undefined,
+					endsAt: 'endsAt' in input ? (input.endsAt as string | undefined) || '' : undefined,
 				})
 			} catch (e) {
 				throw toApiError(e, 'ANNOUNCEMENT_UPDATE_FAILED')
