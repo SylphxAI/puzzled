@@ -55,6 +55,7 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 	const t = await getTranslations('catalog')
 	// Catalog entry keys are root-qualified (`games.wordGuess.name`).
 	const tRoot = await getTranslations()
+	const tResult = await getTranslations('gameResult')
 
 	const entries = buildCatalogEntries({
 		modules: getAllGameMetadata(),
@@ -123,7 +124,7 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 										index={index}
 										labels={{
 											play: t('play'),
-											playAgain: t('play'),
+											seeResult: tResult('seeResult'),
 											freeToday: t('freeToday'),
 										}}
 									/>

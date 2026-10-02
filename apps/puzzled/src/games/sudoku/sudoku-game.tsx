@@ -11,10 +11,11 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import type { PuzzleDifficulty } from '@/games/types'
 import { SudokuIcon } from '@/shared/components/ui/game-icons'
 import { SudokuGrid, SudokuNumberPad } from './components'
 import { parseSudokuClientPayload } from './parse-client'
@@ -25,9 +26,17 @@ type Props = {
 	puzzleId?: string
 	puzzleData?: unknown
 	puzzleDate?: string
+	/** The level being played; recorded with the finish. */
+	difficulty?: PuzzleDifficulty
 }
 
-export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function SudokuGame({
+	mode = 'daily',
+	puzzleId,
+	puzzleData,
+	puzzleDate,
+	difficulty,
+}: Props) {
 	const t = useTranslations('games.sudoku')
 	const tCommon = useTranslations('common')
 
@@ -45,13 +54,13 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'sudoku',
 		mode,
 		puzzleId,
 		puzzleDate,
+		difficulty,
 		requireServerAccept: true,
 	})
 
@@ -150,6 +159,12 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 					onCellClick={game.selectCell}
 				/>
 
+				<SeeResultButton
+					finished={resultReady}
+					modalOpen={showResultModal}
+					onOpen={() => setShowResultModal(true)}
+				/>
+
 				{/* Number pad */}
 				<SudokuNumberPad
 					onNumberPress={game.inputNumber}
@@ -184,9 +199,6 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 				mode={mode}
 				onShare={handleShare}
 			/>
-
-			{/* Guest signup prompt */}
-			<GuestSignupPrompt open={showGuestSignupPrompt} onClose={handleCloseGuestPrompt} />
 		</div>
 	)
 }

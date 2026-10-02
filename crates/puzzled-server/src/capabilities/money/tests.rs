@@ -3,14 +3,17 @@
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use axum::body::Body;
 use axum::extract::State;
-use axum::http::StatusCode;
+use axum::http::{Request, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{json, Value};
+use tower::ServiceExt;
 
 use super::access::{family_active, is_premium, seats, FEATURE_PLUS, FEATURE_SEATS};
 use super::checkout::{create_session, session_body, CheckoutError, Consent};
+use super::client::Subscription;
 use super::client::{Catalog, Money};
 use super::pricing::{plan, plans};
 
@@ -80,14 +83,7 @@ async fn fake_money(status: u16, answer: Value) -> (Money, Fake) {
         catalog: catalog_fixture(&[]),
         ..Default::default()
     }));
-    let app = Router::new()
-        .route("/env/entitlement_grants:check", post(check))
-        .route("/env/checkout_sessions", post(session))
-        .route("/env/catalogs/default", get(catalog))
-        .route("/env/customer_subscriptions", get(subscriptions))
-        .route("/env/customer_subscriptions/{*rest}", post(action))
-        .route("/env/portal_sessions", post(portal))
-        .with_state(fake.clone());
+    let app = fake_money_router(fake.clone());
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
     tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
@@ -99,6 +95,38 @@ async fn fake_money(status: u16, answer: Value) -> (Money, Fake) {
         ),
         fake,
     )
+}
+
+fn fake_money_router(fake: Fake) -> Router {
+    Router::new()
+        .route("/env/entitlement_grants:check", post(check))
+        .route("/env/checkout_sessions", post(session))
+        .route("/env/price_catalogs/default", get(catalog))
+        .route("/env/customer_subscriptions", get(subscriptions))
+        .route("/env/customer_subscriptions/{*rest}", post(action))
+        .route("/env/portal_sessions", post(portal))
+        .with_state(fake)
+}
+
+#[tokio::test]
+async fn catalogue_reader_and_fixture_use_price_catalogs_and_refuse_old_route() {
+    let (money, fake) = fake_money(200, granted()).await;
+    assert!(
+        money.catalog().await.is_ok(),
+        "reader must reach the real collection"
+    );
+    let app = fake_money_router(fake);
+    for (path, expected) in [
+        ("/env/price_catalogs/default", StatusCode::OK),
+        ("/env/catalogs/default", StatusCode::NOT_FOUND),
+    ] {
+        let response = app
+            .clone()
+            .oneshot(Request::builder().uri(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), expected, "{path}");
+    }
 }
 
 /// Money's catalogue: keys and amounts are arbitrary on purpose, so nothing in
@@ -338,6 +366,62 @@ async fn checkout_refuses_unknown_archived_and_already_subscribed() {
 }
 
 #[test]
+fn session_body_carries_the_click_id_in_metadata() {
+    let money = Money::new("http://x/env", "k", "https://puzzled.test/");
+    let tags = puzzled_core::attribution::Attribution {
+        gclid: Some("Cj0KCQ_abc-1".into()),
+        ..Default::default()
+    };
+    let body = session_body(
+        &money,
+        USER,
+        "individual_monthly",
+        "k_solo_m",
+        "",
+        None,
+        Some(&tags),
+    );
+    assert_eq!(body["metadata"]["gclid"], "Cj0KCQ_abc-1");
+    assert!(body.get("client_reference_id").is_none());
+    let none = session_body(
+        &money,
+        USER,
+        "individual_monthly",
+        "k_solo_m",
+        "",
+        None,
+        None,
+    );
+    assert!(none["metadata"].get("gclid").is_none());
+}
+
+#[test]
+fn session_body_sends_only_locales_stripe_accepts() {
+    let money = Money::new("http://x/env", "k", "https://puzzled.test/");
+    let locale_of = |locale: &str| {
+        session_body(
+            &money,
+            USER,
+            "individual_monthly",
+            "k_solo_m",
+            locale,
+            None,
+            None,
+        )
+        .get("locale")
+        .and_then(|v| v.as_str().map(str::to_string))
+    };
+    // Every locale Puzzled ships maps onto Stripe's list; en-US was refused.
+    assert_eq!(locale_of("en-US").as_deref(), Some("en"));
+    assert_eq!(locale_of("en-GB").as_deref(), Some("en-GB"));
+    assert_eq!(locale_of("zh-HK").as_deref(), Some("zh-HK"));
+    assert_eq!(locale_of("zh-TW").as_deref(), Some("zh-TW"));
+    assert_eq!(locale_of("zh-CN").as_deref(), Some("zh"));
+    assert_eq!(locale_of("xx-YY").as_deref(), Some("auto"));
+    assert_eq!(locale_of(""), None);
+}
+
+#[test]
 fn session_body_carries_attribution() {
     let money = Money::new("http://x/env", "k", "https://puzzled.test/");
     let tags = puzzled_core::attribution::Attribution {
@@ -453,6 +537,59 @@ async fn erasure_guard_ignores_ended_cancelled_and_other_peoples_subscriptions()
     assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
     let (money, _) = fake_money(200, json!({})).await;
     assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
+}
+
+#[tokio::test]
+async fn erasure_guard_fails_closed_on_every_status_not_known_to_be_over() {
+    for status in [
+        "past_due",
+        "incomplete",
+        "unpaid",
+        "paused",
+        "some_future_status",
+        "",
+    ] {
+        let (money, _) = fake_money(
+            200,
+            json!({"customer_subscriptions": [sub(USER, status, false)]}),
+        )
+        .await;
+        assert_eq!(
+            money.has_renewing_subscription(USER).await,
+            Ok(true),
+            "status {status:?}"
+        );
+    }
+    for status in ["canceled", "incomplete_expired", "expired"] {
+        let (money, _) = fake_money(
+            200,
+            json!({"customer_subscriptions": [sub(USER, status, false)]}),
+        )
+        .await;
+        assert_eq!(
+            money.has_renewing_subscription(USER).await,
+            Ok(false),
+            "status {status:?}"
+        );
+    }
+    let (money, _) = fake_money(
+        200,
+        json!({"customer_subscriptions": [sub(USER, "some_future_status", true)]}),
+    )
+    .await;
+    assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
+}
+
+#[test]
+fn entitlement_live_is_unchanged_by_the_erasure_rule() {
+    let s = Subscription {
+        id: "x".into(),
+        status: "some_future_status".into(),
+        cancel_at_period_end: false,
+        current_period_end: None,
+        price_keys: vec![],
+    };
+    assert!(!s.live() && !s.renews() && s.renews_for_erasure());
 }
 
 #[tokio::test]
@@ -615,4 +752,72 @@ async fn money_calls_carry_the_money_key() {
         "https://puzzled.test",
     );
     assert!(is_premium(&money, USER).await);
+}
+
+#[test]
+fn env_url_uses_full_resource_names_once() {
+    let url = super::client::env_url(
+        "https://m.example",
+        &json!({"org":"orgs/o1","project":"orgs/o1/projects/p1","env":"orgs/o1/projects/p1/envs/e1"}),
+    )
+    .unwrap();
+    assert_eq!(url, "https://m.example/v1/orgs/o1/projects/p1/envs/e1");
+}
+
+#[test]
+fn env_url_keeps_the_bare_id_format() {
+    let url = super::client::env_url(
+        "https://m.example",
+        &json!({"org":"o1","project":"p1","env":"e1"}),
+    )
+    .unwrap();
+    assert_eq!(url, "https://m.example/v1/orgs/o1/projects/p1/envs/e1");
+    assert!(super::client::env_url("https://m.example", &json!({"org":"o1"})).is_err());
+}
+
+#[tokio::test]
+async fn a_refusal_logs_the_problem_reason_and_processor_code() {
+    let (money, _) = fake_money(
+        400,
+        json!({
+            "code": "INVALID_STATE",
+            "status": 400,
+            "detail": "Stripe refused the request (resource_missing). key sk_live_abc123",
+            "details": [{"reason": "processor_refused", "processor_code": "resource_missing"}]
+        }),
+    )
+    .await;
+    let error = money.check_uncached(USER, "premium").await.unwrap_err();
+    let text = error.to_string();
+    assert!(text.contains("INVALID_STATE"), "{text}");
+    assert!(text.contains("reason=processor_refused"), "{text}");
+    assert!(text.contains("processor_code=resource_missing"), "{text}");
+    assert!(text.contains("Stripe refused the request"), "{text}");
+    assert!(!text.contains("sk_live_abc123"), "{text}");
+}
+
+// ---- Money's wire form: omitted falses, `{}` ---------------------------------
+
+#[tokio::test]
+async fn an_empty_check_answer_is_not_entitled_and_not_an_error() {
+    // Money omits a false boolean: a 2xx `{}` is `entitled: false`.
+    let (money, _) = fake_money(200, json!({})).await;
+    let grant = money
+        .try_check(USER, "plus")
+        .await
+        .expect("a 2xx `{}` answered");
+    assert!(!grant.entitled);
+    assert_eq!(super::access::seats(&money, USER).await, Ok(None));
+}
+
+#[tokio::test]
+async fn a_subscription_row_with_omitted_fields_is_read_not_dropped() {
+    let row = json!({"name": "orgs/o/projects/p/envs/e/customer_subscriptions/csb_1",
+                     "subject": {"end_user": USER}});
+    let (money, _) = fake_money(200, json!({"customer_subscriptions": [row]})).await;
+    let subs = money.subscriptions(USER).await.unwrap();
+    assert_eq!(subs.len(), 1);
+    assert!(!subs[0].cancel_at_period_end, "an omitted false is false");
+    assert!(!subs[0].live());
+    assert_eq!(money.has_renewing_subscription(USER).await, Ok(true));
 }

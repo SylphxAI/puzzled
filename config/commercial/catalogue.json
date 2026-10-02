@@ -1,0 +1,222 @@
+{
+	"product": "puzzled",
+	"format": "sylphx-money.catalogue/1",
+	"updated": "2026-09-28",
+	"readme": "The single source for Puzzled's commercial facts; CI applies it to Sylphx Money (PATCH price_catalogs/default?allow_missing=true, then :sync); change it only by PR. Products, price keys, amounts, features (entitlements) and family seats are declared here; scripts/money-catalogue-spec.ts turns them into Money's catalogue spec. Amounts are integer minor units, tax inclusive. The app holds no price: it reads Money's price_catalogs/default and entitlement_grants:check.",
+	"seller": {
+		"legal_name": "Sylphx Limited",
+		"company_number": "16438428",
+		"vat_number": "GB 502 7862 95",
+		"country": "GB",
+		"source": "apps/puzzled/src/messages/en-US/legal.json (terms) and the pricing page's VAT line, read 2026-09-28"
+	},
+	"locales": {
+		"shipped": ["en-US", "zh-HK", "zh-CN"],
+		"note": "The locales whose display names ship for these products. A name missing for the viewer's locale falls back to en-US. Marketing copy (benefit lines, legal wording) stays in the i18n messages; only the commercial names live here.",
+		"source": "apps/puzzled/src/messages/{en-US,zh-HK,zh-CN}/plus.json, read 2026-09-28"
+	},
+	"base_currency": "usd",
+	"currency_display": {
+		"by_locale": {
+			"en-GB": "gbp"
+		},
+		"default": "usd",
+		"rule": "the pricing page shows the locale's currency when the price publishes one, and the default currency otherwise",
+		"source": "the pricing page shows the locale's currency when Money's price carries it"
+	},
+	"free": {
+		"id": "free",
+		"name": {
+			"en-US": "Free",
+			"zh-HK": "免費",
+			"zh-CN": "免费"
+		},
+		"purchasable": false,
+		"price_minor": 0,
+		"unlocks": [
+			"Today's featured game, every day, signed in or not",
+			"An account keeps progress, streaks and stats for the free daily"
+		],
+		"source": "plus.name / plus.pricing.freeTitle / plus.pricing.freeBody / plus.pricing.closedBody and docs/north-star/MONETIZATION.md free floor, read 2026-09-28"
+	},
+	"products": [
+		{
+			"id": "puzzled_plus",
+			"name": {
+				"en-US": "Puzzled Plus",
+				"zh-HK": "Puzzled Plus",
+				"zh-CN": "Puzzled Plus"
+			}
+		},
+		{
+			"id": "puzzled_plus_family",
+			"name": {
+				"en-US": "Puzzled Plus Family",
+				"zh-HK": "Puzzled Plus 家庭方案",
+				"zh-CN": "Puzzled Plus 家庭方案"
+			}
+		}
+	],
+	"features": {
+		"plus": {
+			"kind": "boolean",
+			"name": {
+				"en-US": "Puzzled Plus",
+				"zh-HK": "Puzzled Plus",
+				"zh-CN": "Puzzled Plus"
+			},
+			"unlocks": [
+				"Play every game, not only today's featured one",
+				"Play any past day (the full archive)",
+				"Stats and streaks for every game"
+			],
+			"source": "read from the code and copy on main 55c6e43c, 2026-09-28"
+		},
+		"family": {
+			"kind": "boolean",
+			"name": {
+				"en-US": "Puzzled Plus Family",
+				"zh-HK": "Puzzled Plus 家庭方案",
+				"zh-CN": "Puzzled Plus 家庭方案"
+			},
+			"unlocks": [
+				"A seat on an active family plan, invited by its owner",
+				"Everything plus unlocks, while the plan grants access",
+				"See who is on the plan and leave it (Settings, Subscription)"
+			],
+			"implies": ["plus"],
+			"granted_by": [
+				"an invite code from the plan owner, while the owner's family plan grants access"
+			],
+			"source": "read from the code and copy on main 55c6e43c, 2026-09-28"
+		},
+		"seats": {
+			"kind": "limit",
+			"name": {
+				"en-US": "Family seats",
+				"zh-HK": "家庭席位",
+				"zh-CN": "家庭席位"
+			},
+			"unlocks": ["How many people one price covers, the plan owner included"],
+			"value": "a decimal string: \"1\" or \"4\"",
+			"source": "crates/puzzled-core/src/capabilities/billing_access/policy.rs FAMILY_MAX_MEMBERS on main 55c6e43c (= 4), read 2026-09-28"
+		}
+	},
+	"plans": [
+		{
+			"price_key": "plus_individual_monthly",
+			"plan_id": "individual_monthly",
+			"product": "puzzled_plus",
+			"name": {
+				"en-US": "Puzzled Plus, monthly",
+				"zh-HK": "Puzzled Plus（按月）",
+				"zh-CN": "Puzzled Plus（按月）"
+			},
+			"interval": "month",
+			"unit_amounts": {
+				"usd": 499,
+				"gbp": 399
+			},
+			"tax_behavior": "inclusive",
+			"grants": {
+				"plus": "true",
+				"seats": "1"
+			},
+			"trial_days": 0,
+			"source": "the Money declaration of 2026-09-28; amounts as first declared in the 2026-09-26 Money migration plan"
+		},
+		{
+			"price_key": "plus_individual_yearly",
+			"plan_id": "individual_yearly",
+			"product": "puzzled_plus",
+			"name": {
+				"en-US": "Puzzled Plus, yearly",
+				"zh-HK": "Puzzled Plus（按年）",
+				"zh-CN": "Puzzled Plus（按年）"
+			},
+			"interval": "year",
+			"unit_amounts": {
+				"usd": 3999,
+				"gbp": 3299
+			},
+			"tax_behavior": "inclusive",
+			"grants": {
+				"plus": "true",
+				"seats": "1"
+			},
+			"trial_days": 0,
+			"source": "the Money declaration of 2026-09-28; amounts as first declared in the 2026-09-26 Money migration plan"
+		},
+		{
+			"price_key": "plus_family_monthly",
+			"plan_id": "family_monthly",
+			"product": "puzzled_plus_family",
+			"name": {
+				"en-US": "Puzzled Plus Family, monthly",
+				"zh-HK": "Puzzled Plus 家庭方案（按月）",
+				"zh-CN": "Puzzled Plus 家庭方案（按月）"
+			},
+			"interval": "month",
+			"unit_amounts": {
+				"usd": 799,
+				"gbp": 649
+			},
+			"tax_behavior": "inclusive",
+			"grants": {
+				"family": "true",
+				"plus": "true",
+				"seats": "4"
+			},
+			"trial_days": 0,
+			"source": "the Money declaration of 2026-09-28; amounts as first declared in the 2026-09-26 Money migration plan"
+		},
+		{
+			"price_key": "plus_family_yearly",
+			"plan_id": "family_yearly",
+			"product": "puzzled_plus_family",
+			"name": {
+				"en-US": "Puzzled Plus Family, yearly",
+				"zh-HK": "Puzzled Plus 家庭方案（按年）",
+				"zh-CN": "Puzzled Plus 家庭方案（按年）"
+			},
+			"interval": "year",
+			"unit_amounts": {
+				"usd": 6499,
+				"gbp": 5299
+			},
+			"tax_behavior": "inclusive",
+			"grants": {
+				"family": "true",
+				"plus": "true",
+				"seats": "4"
+			},
+			"trial_days": 0,
+			"source": "the Money declaration of 2026-09-28; amounts as first declared in the 2026-09-26 Money migration plan"
+		}
+	],
+	"policy": {
+		"terms_url": "https://puzzled.gg/terms#subscriptions",
+		"cancellation": {
+			"days": 14,
+			"applies_to": "the first subscription on an account only",
+			"refund": "cancel inside the window and it ends at once with a full refund of everything paid for it"
+		},
+		"after_window": {
+			"cancel": "access runs to the end of the paid period, then stops",
+			"resume": "a cancellation can be resumed until the period ends"
+		},
+		"renewal": "subscriptions renew automatically until cancelled",
+		"vat": {
+			"display": "inclusive",
+			"note": "the amounts above are what the customer pays, VAT included; the processor computes the tax split"
+		},
+		"source": "read 2026-09-28 from apps/puzzled/src/messages/en-US/legal.json and plus.json on main 55c6e43c"
+	},
+	"notes": [
+		"Applied to Sylphx Money by .github/workflows/money-catalogue.yml on every push to main that changes this file. That workflow is the only writer: no manual catalogue writes.",
+		"No plan offers a trial or an introductory price: trial_days is 0 everywhere. The free daily puzzle is the product's only free taste.",
+		"Every price is per plan, per interval, and covers one product (individual or family). grants is the shape Money's entitlement_grants:check answers in: a boolean feature is \"true\", and the `seats` limit is a decimal string (\"1\", \"4\") for how many people the price covers, the plan owner included. A plan is a product with the `plus` feature, ranked by its `seats` limit.",
+		"Fields the Money catalogue spec has no place for (seller, locales, localised names beyond en-US, unlocks, implies, policy, free, currency_display, plan_id) stay here as the record of what was declared and are not sent.",
+		"The checkout consent line and the no-voluntary-refund rule (owner#779) are the app's, not the catalogue's: the app records the immediate-supply consent before it creates a checkout session."
+	]
+}

@@ -2,6 +2,7 @@
 
 mod compute_ticks;
 mod connect_admin;
+mod connect_announcements;
 mod connect_billing;
 mod connect_gamification;
 mod connect_health;
@@ -10,7 +11,7 @@ mod connect_preferences;
 mod connect_puzzle;
 mod connect_stats;
 mod health;
-mod identity;
+pub(crate) mod identity;
 mod lifecycle;
 mod observability_test;
 mod router;

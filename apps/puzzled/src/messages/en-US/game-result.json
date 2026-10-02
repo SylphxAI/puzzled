@@ -1,4 +1,5 @@
 {
+	"seeResult": "See your result",
 	"congratulations": "Congratulations!",
 	"gameOver": "Game Over",
 	"theWordWas": "The word was {word}",
@@ -20,7 +21,7 @@
 	"topPercent": "Top {percent}% today!",
 	"perfectGame": "Perfect game! 🎯",
 	"playersToday": "{count} players today",
-	"moreOnTryit": "More daily puzzles on Tryit",
+	"playNext": "Play next: {game}",
 	"backToHome": "Back to Home",
 	"missedCategories": "You missed:"
 }

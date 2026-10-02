@@ -11,8 +11,8 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { checkGuess } from '@/lib/connect/puzzle-client'
@@ -58,8 +58,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'arithmo',
 		mode,
@@ -221,6 +220,12 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 				currentRow={game.state.currentRow}
 			/>
 
+			<SeeResultButton
+				finished={resultReady}
+				modalOpen={showResultModal}
+				onOpen={() => setShowResultModal(true)}
+			/>
+
 			{/* Error message */}
 			{game.state.error && (
 				<div className="text-sm text-destructive animate-in fade-in">{getErrorMessage()}</div>
@@ -257,13 +262,6 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 				}}
 				mode={mode}
 				onShare={handleShare}
-			/>
-
-			{/* Guest signup prompt */}
-			<GuestSignupPrompt
-				open={showGuestSignupPrompt}
-				onClose={handleCloseGuestPrompt}
-				streakCount={1}
 			/>
 		</div>
 	)

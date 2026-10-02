@@ -6,6 +6,7 @@ import {
 	deriveHomePlayState,
 	type HomePersonalResult,
 	type HomePlayState,
+	isFreeGameDone,
 	scopeHomePlayState,
 } from './home-play-state'
 
@@ -209,10 +210,24 @@ describe('home play scopes (bounded grid, full progress)', () => {
 		expect(progress.allCompleted).toBe(false)
 	})
 
-	test('a non-exposed unverified module still lifts the unverified banner', () => {
+	test('only the free module being unknown lifts the banner', () => {
+		const withFreeKnown = deriveHomePlayState({
+			gameSlugs: ['sudoku', 'crossword'],
+			personalResults: {
+				sudoku: { hasCompleted: false, completedSession: null, statusAvailable: true },
+				crossword: unverified,
+			},
+			freeGameSlug: 'sudoku',
+		})
+		expect(game(withFreeKnown, 'crossword').statusUnknown).toBe(true)
+		expect(withFreeKnown.hasUnverifiedStatus).toBe(false)
+	})
+
+	test('a non-exposed unverified free module still lifts the unverified banner', () => {
 		const personalResults: Record<string, HomePersonalResult> = {
 			...provedResults(provedSlugs),
 			'word-search': unverified,
+			sudoku: unverified,
 		}
 		const exposure = exposureFor('2026-09-11', personalResults)
 		const playState = deriveHomePlayState({
@@ -226,5 +241,29 @@ describe('home play scopes (bounded grid, full progress)', () => {
 		expect(exposure.slugs).not.toContain('word-search')
 		expect(renderedGames.map((entry) => entry.slug)).not.toContain('word-search')
 		expect(playState.hasUnverifiedStatus).toBe(true)
+	})
+})
+
+describe('free game done', () => {
+	const won: HomePersonalResult = {
+		hasCompleted: true,
+		completedSession: { score: 497 },
+		statusAvailable: true,
+	}
+	test('a proved guest finish is done and the lineup tile is solved', () => {
+		expect(isFreeGameDone({ crossword: won }, 'crossword')).toBe(true)
+		const state = deriveHomePlayState({
+			gameSlugs: slugs,
+			personalResults: { crossword: won },
+			freeGameSlug: 'crossword',
+		})
+		expect(game(state, 'crossword').completed).toBe(true)
+	})
+	test('unknown, missing or unfinished is never done', () => {
+		expect(isFreeGameDone({ crossword: { ...won, statusAvailable: false } }, 'crossword')).toBe(
+			false,
+		)
+		expect(isFreeGameDone({}, 'crossword')).toBe(false)
+		expect(isFreeGameDone({ crossword: notRead }, 'crossword')).toBe(false)
 	})
 })

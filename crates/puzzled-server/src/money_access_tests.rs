@@ -66,7 +66,7 @@ async fn catalog() -> Json<Value> {
 async fn spawn_money(fake: Fake) -> Money {
     let app = Router::new()
         .route("/env/entitlement_grants:check", post(check))
-        .route("/env/catalogs/default", get(catalog))
+        .route("/env/price_catalogs/default", get(catalog))
         .with_state(fake);
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
@@ -242,4 +242,38 @@ async fn a_family_join_is_refused_and_retryable_when_money_cannot_answer_seats()
     assert_eq!(status, StatusCode::OK, "{body}");
     let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &member).await;
     assert_eq!(status, StatusCode::OK, "{body}");
+}
+
+/// No existing-player exemption: an account with old finished sessions but no
+/// Plus is refused a Plus game exactly like a new account.
+#[tokio::test]
+async fn an_account_with_old_play_history_is_still_locked_without_plus() {
+    let _key = crate::capabilities::identity_access::adapters::platform_jwt::test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    const HISTORY: &str = "0b6f7d3e-1111-4a4a-9c9c-0000000000c1";
+    sqlx::query("INSERT INTO auth_subjects (subject, user_id) VALUES ($1, $1::uuid)")
+        .bind(HISTORY)
+        .execute(&pool)
+        .await
+        .unwrap();
+    let finished = chrono::Utc::now() - chrono::Duration::days(400);
+    sqlx::query(
+        "INSERT INTO game_sessions (user_id, game_slug, status, started_at, completed_at) \
+         VALUES ($1::uuid, 'sudoku', 'won', $2, $2)",
+    )
+    .bind(HISTORY)
+    .bind(finished.naive_utc())
+    .execute(&pool)
+    .await
+    .unwrap();
+    let money = spawn_money(Arc::default()).await;
+    let app = router(AppState::new(Some(pool)).with_money(Some(money)));
+
+    let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &token(HISTORY)).await;
+    assert_eq!(status, StatusCode::FORBIDDEN, "{body}");
+    assert!(refused(&body, "plus_required"), "{body}");
 }

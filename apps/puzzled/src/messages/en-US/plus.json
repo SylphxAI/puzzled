@@ -18,6 +18,7 @@
 		"monthly": "Monthly",
 		"yearly": "Yearly",
 		"perMonth": "per month",
+		"currencyLabel": "Currency",
 		"perYear": "per year",
 		"saving": "Save {percent}%",
 		"includesAllGames": "All {count} games, every day",
@@ -43,6 +44,13 @@
 		"signIn": "Sign in",
 		"playFree": "Play {game} free",
 		"keep": "Everything you have already finished stays in your stats."
+	},
+	"offer": {
+		"resultTitle": "Play all {count} games and the archive",
+		"resultBody": "Today's featured puzzle is always free. Puzzled Plus opens every game, the archive of past days and your stats for each.",
+		"day3Title": "{days} days played. Nice start.",
+		"day7Title": "{days} days played. You are a regular.",
+		"milestoneBody": "Puzzled Plus opens all {count} games, the archive of past days and stats for each. Today's featured puzzle stays free."
 	},
 	"subscription": {
 		"title": "Subscription",

@@ -366,6 +366,10 @@
 		"boardsCta": "Open the leaderboard"
 	},
 	"account": {
+		"accountId": "Account ID",
+		"accountIdHint": "Your own account identifier, not a secret. Quote it if support asks for it.",
+		"copyAccountId": "Copy ID",
+		"accountIdCopied": "Copied",
 		"title": "Account",
 		"description": "Manage your connected accounts and sign-in methods",
 		"connectedAccounts": "Connected Accounts",
@@ -672,6 +676,11 @@
 			"reduceMotionDescription": "Minimize animations and transitions",
 			"compactMode": "Compact Mode",
 			"compactModeDescription": "Use a denser layout with smaller spacing"
+		},
+		"streakFreeze": {
+			"description": "Choose whether a freeze is used automatically to protect your streak",
+			"unavailable": "Auto-freeze could not be loaded. Refresh to try again.",
+			"saveFailed": "Your change was not saved. Try again."
 		},
 		"language": {
 			"title": "Language & Region",

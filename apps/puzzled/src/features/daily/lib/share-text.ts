@@ -25,6 +25,8 @@ export type RitualShareInput = {
 	currentStreak?: number
 	/** Server-issued share id; when present the link is the share landing carrying it as `ref`. */
 	shareId?: string
+	/** Seasonal greeting; set by the caller only on a seasonal day. */
+	greeting?: string
 }
 
 /** Strip scheme; keep host[:port] for compact share footers. */
@@ -92,6 +94,7 @@ export function formatRitualShareText(input: RitualShareInput): string {
 		difficultyLabel,
 		currentStreak = 0,
 		shareId,
+		greeting,
 	} = input
 
 	const emoji = status === 'won' ? '🏆' : '❌'
@@ -105,7 +108,9 @@ export function formatRitualShareText(input: RitualShareInput): string {
 	const streakText = currentStreak > 0 ? `🔥 ${currentStreak} day streak\n` : ''
 	const deepLink = ritualShareDeepLink(origin, gameSlug, puzzleDate, shareId)
 
-	return `${emoji} ${gameName}${difficultyText}${dateText}\n${resultLine}\n${streakText}\n${deepLink}`
+	const greetingText = greeting?.trim() ? `${greeting.trim()}\n` : ''
+
+	return `${greetingText}${emoji} ${gameName}${difficultyText}${dateText}\n${resultLine}\n${streakText}\n${deepLink}`
 }
 
 /** True if text looks free of solution spoilers (oracle guard for tests). */

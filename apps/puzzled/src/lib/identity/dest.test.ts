@@ -81,6 +81,12 @@ describe('Identity dest HTTP', () => {
 		// TypeID spec v0.3 vectors.
 		expect(authIdValue('org_00000000000000000000000000')).toBe('0'.repeat(32))
 		expect(authIdValue('org_01h455vb4pex5vsknk084sn02q')).toBe('01890a5dac96774bbcceb302099a8057')
+		expect(authIdValue('aorg_01h455vb4pex5vsknk084sn02q')).toBe(
+			authIdValue('organization-01890a5d-ac96-774b-bcce-b302099a8057'),
+		)
+		expect(authIdValue('organization-01890a5d-ac96-774b-bcce-b302099a8057')).toBe(
+			'01890a5dac96774bbcceb302099a8057',
+		)
 		expect(authIdValue('organization-01890A5D-AC96-774B-BCCE-B302099A8057')).toBe(
 			'01890a5dac96774bbcceb302099a8057',
 		)

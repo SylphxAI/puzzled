@@ -11,11 +11,12 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import type { PuzzleDifficulty } from '@/games/types'
 import { cn } from '@/lib/utils'
 import { parseQueensClientPayload } from './parse-client'
 import { REGION_COLORS } from './types'
@@ -26,9 +27,17 @@ type Props = {
 	puzzleId?: string
 	puzzleData?: unknown
 	puzzleDate?: string
+	/** The level being played; recorded with the finish. */
+	difficulty?: PuzzleDifficulty
 }
 
-export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function QueensGame({
+	mode = 'daily',
+	puzzleId,
+	puzzleData,
+	puzzleDate,
+	difficulty,
+}: Props) {
 	const t = useTranslations('games.queens')
 	const tCommon = useTranslations('common')
 
@@ -45,13 +54,14 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
+		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'crowns',
 		mode,
 		puzzleId,
 		puzzleDate,
+		difficulty,
 		requireServerAccept: true,
 	})
 
@@ -100,10 +110,10 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 
 	// Reset game
 	const handleReset = useCallback(() => {
+		resetSession()
 		game.reset()
 		gameEndedRef.current = false
-		setShowResultModal(false)
-	}, [game, setShowResultModal])
+	}, [game, resetSession])
 
 	// Ready screen
 	if (isReady) {
@@ -204,6 +214,12 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 					)}
 				</div>
 
+				<SeeResultButton
+					finished={resultReady}
+					modalOpen={showResultModal}
+					onOpen={() => setShowResultModal(true)}
+				/>
+
 				{/* Actions */}
 				<div className="flex gap-2">
 					<Button
@@ -254,9 +270,6 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 				mode={mode}
 				onShare={handleShare}
 			/>
-
-			{/* Guest signup prompt */}
-			<GuestSignupPrompt open={showGuestSignupPrompt} onClose={handleCloseGuestPrompt} />
 		</div>
 	)
 }

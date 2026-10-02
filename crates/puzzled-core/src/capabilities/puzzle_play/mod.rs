@@ -9,6 +9,7 @@ pub use domain::arithmo;
 pub use domain::block_slide;
 pub use domain::crossword_generate;
 pub use domain::crossword_grid;
+pub use domain::crossword_v2;
 pub use domain::cryptogram;
 pub use domain::daily_time;
 pub use domain::game_format;

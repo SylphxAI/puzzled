@@ -2,7 +2,7 @@
 
 use std::time::Duration;
 
-use puzzled_server::shared::db_config::select_database_url;
+use puzzled_server::shared::db_config::{select_database_url, writer_pool_options};
 use puzzled_server::{http_port, router, shutdown_signal, AppState};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
@@ -16,26 +16,42 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
         )
         .init();
+    // Operator commands run in the api's own environment (sylphx.toml
+    // `[[jobs]]`), with its bindings, and exit instead of serving.
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().map(String::as_str) == Some("erase-player") {
+        std::process::exit(
+            puzzled_server::capabilities::preferences::erase_player::main(&args[1..]).await,
+        );
+    }
     puzzled_server::observability::init();
+    if let Err(message) = puzzled_server::shared::public_origin::public_origin() {
+        tracing::error!(message, "public origin configuration refused");
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, message).into());
+    }
 
     // Cold-start + managed DNS: allow longer first connect so free-floor ritual
     // persist is not permanently demoted to S0 on a transient 3s timeout.
     let pool = match select_database_url() {
-        Some(url) => match PgPoolOptions::new()
-            .max_connections(5)
-            .acquire_timeout(Duration::from_secs(15))
-            .test_before_acquire(true)
-            .max_lifetime(Some(Duration::from_secs(600)))
-            .connect(&url)
-            .await
+        Some(url) => match writer_pool_options(
+            PgPoolOptions::new()
+                .max_connections(5)
+                .acquire_timeout(Duration::from_secs(15))
+                .max_lifetime(Some(Duration::from_secs(600))),
+        )
+        .connect(&url)
+        .await
         {
             Ok(pool) => {
                 info!("postgres pool connected (ADR-168 S1)");
                 Some(pool)
             }
             Err(error) => {
-                tracing::warn!(%error, "postgres connect failed — running S0 stub leaderboard");
-                None
+                // A configured store that cannot be reached must not leave a
+                // stub pod in rotation for the life of the process: exit so the
+                // platform restarts it until the database is back.
+                tracing::error!(%error, "postgres connect failed; exiting");
+                std::process::exit(1);
             }
         },
         None => {

@@ -50,6 +50,8 @@ message DailyCompletion {
   uint32 score = 2 [features.field_presence = EXPLICIT];
   uint32 attempts = 3 [features.field_presence = EXPLICIT];
   int64 completed_at_ms = 4 [features.field_presence = EXPLICIT];
+  // The level the one accepted finish was played at; absent for games without levels.
+  string difficulty = 5 [features.field_presence = EXPLICIT];
 }
 
 message GetDailyResponse {
@@ -68,6 +70,28 @@ message GetDailyResponse {
   // Details are read from the same Rust-owned game_sessions row as the
   // completion guard; the client never reconstructs a result.
   DailyCompletion completed_session = 12;
+}
+
+// One batched read of which games the caller has already finished today.
+// The product day (Asia/Hong_Kong) is computed by the server, never sent.
+message GetTodayProgressRequest {
+  // Game slugs to report on (at most 64). Unknown slugs are rejected.
+  repeated string game_slugs = 1;
+}
+
+message GameProgress {
+  string game_slug = 1;
+  bool has_completed = 2;
+  // Present only with an accepted finish: the same game_sessions row GetDaily
+  // reads. Never carries a puzzle or an answer.
+  DailyCompletion completed_session = 3;
+}
+
+message GetTodayProgressResponse {
+  // Product day (YYYY-MM-DD, Asia/Hong_Kong) the flags describe.
+  string day_key = 1;
+  // One entry per requested slug, in request order.
+  repeated GameProgress games = 2;
 }
 
 message SubmitGuessRequest {
@@ -153,6 +177,7 @@ message GetSharedResultResponse {
 service PuzzleService {
   rpc GetPuzzle(GetPuzzleRequest) returns (GetPuzzleResponse);
   rpc GetDaily(GetDailyRequest) returns (GetDailyResponse);
+  rpc GetTodayProgress(GetTodayProgressRequest) returns (GetTodayProgressResponse);
   rpc SubmitGuess(SubmitGuessRequest) returns (SubmitGuessResponse);
   rpc CheckGuess(CheckGuessRequest) returns (CheckGuessResponse);
   rpc ShareResult(ShareResultRequest) returns (ShareResultResponse);

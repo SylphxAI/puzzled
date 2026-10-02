@@ -91,19 +91,27 @@ should move.
 
 | # | Capability | Job it serves | Where it appears | Metric | Effort | Depends on |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Earned streak freezes (streak freeze) | Keep a streak alive through a missed day without guilt; free players earn one per 7 played days | Stats streak card, streak calculation | D7 retention | M | none; today the streak calculation ignores freezes |
-| 2 | Save-your-streak account ask (try before signup, saved progress) | Guests keep streak and stats across devices | Result screen, raised as the streak grows; never before the first finish | Guest to account rate, D7 retention | S | none |
+| 1 | Earned streak freezes (streak freeze) | Keep a streak alive through a missed day without guilt; free players earn one per 7 played days, hold at most 2, and a held freeze covers one missed day automatically (auto-cover is on by default; the `ToggleAutoFreeze` RPC turns it off, no settings control yet) | Stats streak card (freezes held, days to the next one), streak calculation | D7 retention | M | shipped (#299): rules in `puzzled-core` `personal_streak`, ledgers `streak_freeze_awards` and `streak_freeze_uses`; guests and signed-in players alike |
+| 2 | Save-your-streak account ask (try before signup, saved progress) | Guests keep streak and stats across devices | Result screen: an inline card at the first finish (streak of 1 or more), plus a modal once the streak reaches 2; the button goes to `/signup?callbackUrl=/games/<game>` so the player returns to the game; the game-page link says "Save your streak"; never before the first finish | Guest to account rate, D7 retention | S | none |
 | 3 | Daily reminder at each player's own time and time zone (personalised notification timing) | Gentle return without guilt | The player's saved reminder time is stored but does not schedule the send today: the daily-reminder job sends on its own schedule. Email (opt-in) at the player's time in their zone; browser Web Push through the existing reminder job (VAPID configuration required) | D7 retention | S | none for Puzzled's own email; cloud#9826 for caps across our products |
 | 4 | Streak on the shared card (share cards) | Show the sharer's run on the card and landing, so a friend has something to beat | Share landing, share image, challenge comparison | Landing rate, conversion | S | none |
 | 5 | How-to-play structured data on game pages (programmatic pages) | Rank for "how to play X" from the rules the pages already show | Per-game page markup | Search landings | S | none |
 | 6 | Friends' results for today (friends leaderboard) | Compare with people you know, no public shame board | Result screen, opt-in | Share and return rates | M | cloud#9830 |
-| 7 | Seasonal themes and holiday puzzles | Fresh reasons to share on festival days | Home and result card on the day | Share rate | S | cloud#9828 (calendar); a hand-set list works until then |
+| 7 | Seasonal themes (shipped; holiday puzzles are not built) | Fresh reasons to share on festival days | Home banner, result card and share caption on the day | Share rate | S | none; the hand-set list in `apps/puzzled/src/features/seasons/lib/seasons.ts` stands in for cloud#9828 (calendar) and is replaced when it exists |
 | 8 | Own-product promotion at session end (cross-promotion) | Point finished players to our other products | Already-played view, at most one card a day | Cross-product signups | S | cloud#9826 |
+
+Seasonal themes: one typed list of days keyed to the product day (Asia/Hong_Kong), each with an id,
+inclusive day ranges for 2026-2027, an accent from the game colour themes and a glyph; the greeting
+is `home.seasons.<id>` in every locale. Adding a season is one list entry plus its greeting. On a
+seasonal day only presentation changes: a banner on home, and a greeting pill on the result card and
+a greeting line in the share caption. Puzzles, answers, scoring and streaks are untouched; there is
+no countdown, no motion and nothing on other days.
 
 Design notes for the open items:
 
-- **Save-your-streak ask:** after a guest finishes a daily with at least two streak days, the client
-  reads the authoritative streak and offers a free account. Sign-in adopts accepted
+- **Save-your-streak ask:** after a guest finishes a daily, the client reads the authoritative streak
+  and shows an inline card (streak of 1 or more) and, from 2, the modal, each offering a free account.
+  There is one prompt path (`SaveStreakPrompt`); the per-game local-count prompt was removed. Sign-in adopts accepted
   guest sessions through the existing claim path (`gamification`, `identity`).
 - **Reminder time:** invitation copy only, one-tap unsubscribe (`jobs_policy`, `jobs_db`); using the
   player's own setting rather than inferring a median finish hour is enough to start.
@@ -139,7 +147,12 @@ industry benchmarks; the product has no payers yet, so none is measured.
       days", using the existing `result_shares` id and `ref` attribution; the reward is an entitlement
       grant, so it needs Money's grant API.
 - [ ] **Paid streak freeze and Plus freezes** (S). Sell one freeze as a small one-off in Money; Plus
-      gets 2 per month. Needs freezes to count toward the streak first (backlog: earned streak freezes).
+      gets 2 per month. Earned freezes already count toward the streak (backlog row 1, shipped); a bought freeze adds to the same bank, still capped by `FREEZE_CAP`.
+- [x] **In-app Plus nudges** (S). Shipped: one Plus card on the result screen after today's free game
+      (links to `/pricing`), and a dismissible day-3 and day-7 prompt on home for a signed-in player who is
+      not on Plus, counting distinct played days from `StreakInfo.played_days`; each milestone shows once
+      per account on a browser, nothing shows when sales are closed or the viewer is entitled
+      (`features/plus-offer`). The lock card on a non-featured game already links to Plus and stays as is.
 - [ ] **Plus-nudge emails** (S). Day 3 and day 7 of a streak, consent-gated, with the yearly price and
       no false urgency.
 - [ ] **Price localisation** (M). Money price tiers for HKD, EUR, JPY, INR, BRL and MXN alongside

@@ -49,6 +49,7 @@ export class AuthCallError extends Error {
 	constructor(
 		readonly status: number,
 		readonly code: string,
+		readonly retryAfter: string | null = null,
 	) {
 		super(`auth ${status} ${code}`)
 	}
@@ -57,13 +58,20 @@ export class AuthCallError extends Error {
 async function call<T>(
 	config: AuthConfig,
 	path: string,
-	init: { method?: string; bearer: string; userAgent: string; body?: unknown },
+	init: {
+		method?: string
+		bearer: string
+		userAgent: string
+		body?: unknown
+		callerKey?: string
+	},
 ): Promise<T> {
 	const response = await fetch(`${config.url}${path}`, {
 		method: init.method ?? 'POST',
 		headers: {
 			authorization: `Bearer ${init.bearer}`,
 			'user-agent': init.userAgent,
+			...(init.callerKey ? { 'x-sylphx-caller-key': init.callerKey } : {}),
 			...(init.body === undefined ? {} : { 'content-type': 'application/json' }),
 		},
 		body: init.body === undefined ? undefined : JSON.stringify(init.body),
@@ -78,8 +86,9 @@ async function call<T>(
 		body = {}
 	}
 	if (!response.ok) {
-		const code = typeof body.error === 'string' ? body.error : `http_${response.status}`
-		throw new AuthCallError(response.status, code)
+		// Auth answers `{ code, error: <message> }`: the code is the contract, the message is not.
+		const code = typeof body.code === 'string' ? body.code : `http_${response.status}`
+		throw new AuthCallError(response.status, code, response.headers.get('retry-after'))
 	}
 	return body as T
 }
@@ -177,7 +186,13 @@ export async function sessionTimes(
 				projectId?: string
 			}
 		}
-	}>(config, '/v1/sessions/current', { method: 'GET', bearer: token, userAgent })
+	}>(config, '/v1/sessions/current', {
+		method: 'GET',
+		bearer: token,
+		userAgent,
+		// TODO: switch to the identity SDK's `callerKey` option once cloud#11034 publishes.
+		callerKey: config.publishableKey,
+	})
 	const principal = body.session?.principal
 	const expected = authIdValue(expectedProjectId)
 	if (!expected || authIdValue(principal?.project_id ?? principal?.projectId) !== expected) {

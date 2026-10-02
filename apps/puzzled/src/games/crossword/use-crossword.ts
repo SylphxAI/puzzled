@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useReducer } from 'react'
 import type { CrosswordPuzzleClientData } from './config'
 import type { CrosswordClue, CrosswordDirection, CrosswordState } from './types'
-import { GRID_SIZE, isClueFilled, isGridFilled } from './types'
+import { GRID_SIZE, hasDownClues, isClueFilled, isGridFilled, resolveDirection } from './types'
 
 // Actions for the reducer
 type CrosswordAction =
@@ -57,7 +57,7 @@ function createInitialState(puzzleData: CrosswordPuzzleClientData): CrosswordSta
 	}
 }
 
-function crosswordReducer(
+export function crosswordReducer(
 	state: CrosswordState,
 	action: CrosswordAction,
 	puzzleData: CrosswordPuzzleClientData,
@@ -72,7 +72,10 @@ function crosswordReducer(
 			if (state.selectedCell?.row === row && state.selectedCell?.col === col) {
 				return {
 					...state,
-					direction: state.direction === 'across' ? 'down' : 'across',
+					direction: resolveDirection(
+						state.direction === 'across' ? 'down' : 'across',
+						puzzleData.clues,
+					),
 				}
 			}
 
@@ -86,14 +89,17 @@ function crosswordReducer(
 		case 'TOGGLE_DIRECTION': {
 			return {
 				...state,
-				direction: state.direction === 'across' ? 'down' : 'across',
+				direction: resolveDirection(
+					state.direction === 'across' ? 'down' : 'across',
+					puzzleData.clues,
+				),
 			}
 		}
 
 		case 'SET_DIRECTION': {
 			return {
 				...state,
-				direction: action.direction,
+				direction: resolveDirection(action.direction, puzzleData.clues),
 			}
 		}
 
@@ -308,6 +314,8 @@ export function useCrossword(puzzleData: CrosswordPuzzleClientData): UseCrosswor
 		createInitialState,
 	)
 
+	const acrossOnly = !hasDownClues(puzzleData.clues)
+
 	// Keyboard handler
 	useEffect(() => {
 		function handleKeyDown(e: KeyboardEvent) {
@@ -329,12 +337,17 @@ export function useCrossword(puzzleData: CrosswordPuzzleClientData): UseCrosswor
 				dispatch({ type: 'MOVE_PREV' })
 			} else if (e.key === 'ArrowDown') {
 				e.preventDefault()
-				dispatch({ type: 'SET_DIRECTION', direction: 'down' })
-				dispatch({ type: 'MOVE_NEXT' })
+				// An across-only board has no down words to walk.
+				if (!acrossOnly) {
+					dispatch({ type: 'SET_DIRECTION', direction: 'down' })
+					dispatch({ type: 'MOVE_NEXT' })
+				}
 			} else if (e.key === 'ArrowUp') {
 				e.preventDefault()
-				dispatch({ type: 'SET_DIRECTION', direction: 'down' })
-				dispatch({ type: 'MOVE_PREV' })
+				if (!acrossOnly) {
+					dispatch({ type: 'SET_DIRECTION', direction: 'down' })
+					dispatch({ type: 'MOVE_PREV' })
+				}
 			} else if (e.key === 'Tab') {
 				e.preventDefault()
 				dispatch({ type: 'TOGGLE_DIRECTION' })
@@ -346,7 +359,7 @@ export function useCrossword(puzzleData: CrosswordPuzzleClientData): UseCrosswor
 
 		window.addEventListener('keydown', handleKeyDown)
 		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [])
+	}, [acrossOnly])
 
 	// Recheck fill progress when the user grid changes (no solution compare).
 	// biome-ignore lint/correctness/useExhaustiveDependencies: userGrid is trigger, not used in callback

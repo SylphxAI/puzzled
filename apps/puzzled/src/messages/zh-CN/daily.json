@@ -5,7 +5,7 @@
 	"seconds": "秒",
 	"todaysProgress": "今日进度",
 	"completed": "已完成",
-	"allCompleteMessage": "太棒了！你已完成今日所有游戏！",
+	"allCompleteMessage": "今天这一题的所有难度你都完成了。",
 	"puzzleNumber": "谜题 #{number}",
 	"superStreak": "超级连胜",
 	"superStreakDesc": "每日完成所有游戏",

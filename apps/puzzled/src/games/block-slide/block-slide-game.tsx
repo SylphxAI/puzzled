@@ -11,11 +11,12 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import type { PuzzleDifficulty } from '@/games/types'
 import { BlockSlideIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { Board } from './components/board'
@@ -27,9 +28,17 @@ type Props = {
 	puzzleId?: string
 	puzzleData?: unknown
 	puzzleDate?: string
+	/** The level being played; recorded with the finish. */
+	difficulty?: PuzzleDifficulty
 }
 
-export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function BlockSlideGame({
+	mode = 'daily',
+	puzzleId,
+	puzzleData,
+	puzzleDate,
+	difficulty,
+}: Props) {
 	const t = useTranslations('games.blockSlide')
 
 	// Get puzzle from server data
@@ -44,13 +53,14 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
+		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'block-slide',
 		mode,
 		puzzleId,
 		puzzleDate,
+		difficulty,
 		enableStarBurst: false,
 	})
 
@@ -111,8 +121,9 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 
 	// Reset game
 	const handleReset = useCallback(() => {
+		resetSession()
 		game.reset()
-	}, [game])
+	}, [game, resetSession])
 
 	const isComplete = game.status === 'won' || game.status === 'gave_up'
 
@@ -186,6 +197,12 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				onMove={game.move}
 			/>
 
+			<SeeResultButton
+				finished={resultReady}
+				modalOpen={showResultModal}
+				onOpen={() => setShowResultModal(true)}
+			/>
+
 			{/* Controls */}
 			{!isComplete && (
 				<div className="flex w-full max-w-sm gap-2">
@@ -223,12 +240,6 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				}}
 				mode={mode}
 				onShare={handleShare}
-			/>
-
-			<GuestSignupPrompt
-				open={showGuestSignupPrompt}
-				onClose={handleCloseGuestPrompt}
-				streakCount={1}
 			/>
 		</div>
 	)

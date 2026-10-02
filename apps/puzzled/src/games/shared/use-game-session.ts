@@ -17,11 +17,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGuestGameState } from '@/features/daily/hooks/use-guest-game-state'
+import { START_PARAM } from '@/features/daily/lib/start-param'
 import { useSaveGameResult } from '@/features/gamification'
 import type { PuzzleDifficulty } from '@/games/types'
 import { logger } from '@/lib/logger'
+import { productDayKey } from '@/lib/product-day'
 import { getGameSessionKey } from '@/lib/storage-keys'
-import { triggerHaptic, triggerSound, useGuestOnboarding } from '@/shared/hooks'
+import { recordFirstFinishDay } from '@/shared/components/pwa-install-policy'
+import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { finishRecordingFor } from './finish-recording'
 
 /** Final game outcome - what gets saved to database */
@@ -103,12 +106,6 @@ export interface UseGameSessionOptions {
 	resultModalDelay?: number
 
 	/**
-	 * Delay before showing guest signup prompt (ms)
-	 * @default 2000
-	 */
-	guestPromptDelay?: number
-
-	/**
 	 * Product day key (YYYY-MM-DD) the board was served for. A daily finish
 	 * forwards it only while it is still the product day; an archive finish
 	 * records it as the dated finish it is (see `finishRecordingFor`).
@@ -129,6 +126,8 @@ export type GameEndResult = {
 	alreadyPlayed?: boolean
 	/** The answer, returned by the server only with an accepted finish. */
 	reveal?: unknown
+	/** The session was reset while this finish was in flight; nothing was applied. */
+	stale?: boolean
 }
 
 export interface UseGameSessionReturn {
@@ -153,12 +152,12 @@ export interface UseGameSessionReturn {
 	showCelebration: boolean
 	showStarBurst: boolean
 	showResultModal: boolean
-	showGuestSignupPrompt: boolean
 	setShowResultModal: (show: boolean) => void
-	setShowGuestSignupPrompt: (show: boolean) => void
-
-	// Guest signup
-	handleCloseGuestPrompt: () => void
+	/**
+	 * True once the finish is accepted and the result modal has been opened
+	 * (after the celebration delay), so a closed modal can be reopened.
+	 */
+	resultReady: boolean
 
 	// Utilities
 	resetSession: () => void
@@ -175,7 +174,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		enableStarBurst = false,
 		isPerfectWin,
 		resultModalDelay,
-		guestPromptDelay = 2000,
 		puzzleDate,
 		requireServerAccept = false,
 	} = options
@@ -183,9 +181,8 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	const storageKey = getGameSessionKey(gameSlug)
 
 	// Hooks
-	const { saveResult, isLoggedIn } = useSaveGameResult(gameSlug)
+	const { saveResult, reset: resetSave, isLoggedIn } = useSaveGameResult(gameSlug)
 	const { saveCompletion: saveGuestCompletion } = useGuestGameState(gameSlug)
-	const { incrementGuestGames, shouldShowSignupPrompt, dismissSignupPrompt } = useGuestOnboarding()
 
 	// State
 	const [gamePhase, setGamePhase] = useState<GamePhase>(() => {
@@ -197,11 +194,14 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	const [showCelebration, setShowCelebration] = useState(false)
 	const [showStarBurst, setShowStarBurst] = useState(false)
 	const [showResultModal, setShowResultModal] = useState(false)
-	const [showGuestSignupPrompt, setShowGuestSignupPrompt] = useState(false)
 	const [serverScore, setServerScore] = useState<number | null>(null)
+	const [resultReady, setResultReady] = useState(false)
+	const resultTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
 	// Ref to prevent duplicate saves
 	const savedRef = useRef(false)
+	// Bumped by resetSession so a finish still in flight cannot touch the fresh board.
+	const generationRef = useRef(0)
 
 	// Derived state
 	const isReady = gamePhase === 'ready'
@@ -219,7 +219,19 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		}
 		setStartTime(Date.now())
 		setGamePhase('playing')
+		// Bring the board under the sticky headers (the #play anchor reserves
+		// their height with scroll-margin).
+		requestAnimationFrame(() => {
+			document.getElementById('play')?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+		})
 	}, [storageKey])
+
+	// A link that says "start" (the home play button) opens straight onto the
+	// board; the start card stays for everyone who browses to the game.
+	useEffect(() => {
+		if (gamePhase !== 'ready') return
+		if (new URLSearchParams(window.location.search).get(START_PARAM) === '1') startGame()
+	}, [gamePhase, startGame])
 
 	/**
 	 * End game - save result (server calculates score), show celebration, show modal
@@ -245,10 +257,13 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 				triggerHaptic(celebrationHaptic || 'lose')
 			}
 			const delay = resultModalDelay ?? (status === 'won' ? 1500 : 1000)
-			setTimeout(() => {
+			if (resultTimerRef.current) clearTimeout(resultTimerRef.current)
+			resultTimerRef.current = setTimeout(() => {
+				resultTimerRef.current = null
 				setShowCelebration(false)
 				setShowStarBurst(false)
 				setShowResultModal(true)
+				setResultReady(true)
 			}, delay)
 		},
 		[enableStarBurst, isPerfectWin, celebrationSound, celebrationHaptic, resultModalDelay],
@@ -259,6 +274,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			if (savedRef.current) return { success: false, error: 'already_saving' }
 
 			savedRef.current = true
+			const generation = generationRef.current
 			const finalTimeSpentMs = startTime ? Date.now() - startTime : 0
 			const { status } = endData
 
@@ -288,7 +304,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 						difficulty,
 						data: endData.data,
 					})
-					if (result?.score !== undefined) {
+					if (result?.score !== undefined && generation === generationRef.current) {
 						setServerScore(result.score)
 					}
 					const alreadyPlayed = result.error === 'already_played'
@@ -305,6 +321,10 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 						success: false,
 						error: error instanceof Error ? error.message : 'save_failed',
 					}
+				}
+
+				if (generation !== generationRef.current) {
+					return { success: false, error: 'stale', stale: true }
 				}
 
 				if (requireServerAccept && !finish.success) {
@@ -324,13 +344,10 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 					status,
 					attempts: endData.attempts ?? 1,
 				})
-				incrementGuestGames()
-				if (shouldShowSignupPrompt) {
-					setTimeout(() => {
-						setShowGuestSignupPrompt(true)
-					}, guestPromptDelay)
-				}
 			}
+
+			// The install offer waits for a player who has finished a day.
+			if (finish.success) recordFirstFinishDay(productDayKey())
 
 			return finish
 		},
@@ -344,9 +361,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			isLoggedIn,
 			saveResult,
 			saveGuestCompletion,
-			incrementGuestGames,
-			shouldShowSignupPrompt,
-			guestPromptDelay,
 			requireServerAccept,
 			celebrate,
 		],
@@ -361,26 +375,32 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		}
 	}, [gamePhase, startTime])
 
-	/**
-	 * Handle closing guest signup prompt
-	 */
-	const handleCloseGuestPrompt = useCallback(() => {
-		setShowGuestSignupPrompt(false)
-		dismissSignupPrompt()
-	}, [dismissSignupPrompt])
+	// A finished session must not open a modal on an unmounted board.
+	useEffect(
+		() => () => {
+			if (resultTimerRef.current) clearTimeout(resultTimerRef.current)
+		},
+		[],
+	)
 
 	/**
 	 * Reset session state (for new game)
 	 */
 	const resetSession = useCallback(() => {
 		savedRef.current = false
+		generationRef.current += 1
+		// Release the save lock too, so the server's already_played guard decides
+		// a re-solve instead of a client-side 'Already saved'.
+		resetSave()
+		if (resultTimerRef.current) clearTimeout(resultTimerRef.current)
+		resultTimerRef.current = null
+		setResultReady(false)
 		setShowCelebration(false)
 		setShowStarBurst(false)
 		setShowResultModal(false)
-		setShowGuestSignupPrompt(false)
 		setServerScore(null)
 		setStartTime(Date.now())
-	}, [])
+	}, [resetSave])
 
 	return {
 		// Phase management
@@ -404,12 +424,8 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		showCelebration,
 		showStarBurst,
 		showResultModal,
-		showGuestSignupPrompt,
 		setShowResultModal,
-		setShowGuestSignupPrompt,
-
-		// Guest signup
-		handleCloseGuestPrompt,
+		resultReady,
 
 		// Utilities
 		resetSession,

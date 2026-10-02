@@ -7,7 +7,7 @@ Decided in [#235](https://github.com/SylphxAI/puzzled/issues/235): sell a paid t
 - **Model:** consumer subscription in the NYT Games class. Today's featured puzzle is free; Puzzled Plus opens everything else.
 - **Seller:** Sylphx Limited, England and Wales, company 16438428, registered office 128 City Road, London EC1V 2NX. VAT GB 502 7862 95.
 - **Billing system:** Sylphx Money, the platform's payments service: catalogue, hosted checkout, subscription state, entitlements API, portal, Stripe Tax and ledger. Puzzled builds no billing of its own.
-- **State:** the earlier direct-Stripe code (its details are in sections 3 to 5) is deployed but closed: no Stripe keys are set, nothing is sold, nothing is locked and there are no payers. It is replaced by Money in one migration, not switched on; the prices and rules here carry over.
+- **State:** the earlier direct-Stripe code was removed in [#292](https://github.com/SylphxAI/puzzled/pull/292) (Money cutover part 3), including the `/webhooks/stripe` handler. Billing is Sylphx Money only, and Puzzled polls Money for subscription state. Sections 3 to 5 describe the retired design; the prices and rules carry over to Money.
 
 ## 1. Objective
 
@@ -86,21 +86,43 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 
 - Cancel at any time in Settings > Subscription. Access runs to the end of the
   paid period and nothing more is charged.
-- Cancellation right: an account's first subscription can be cancelled within
-  14 days of starting it for a full refund, however much was played
-  (Consumer Contracts Regulations 2013). The api refunds every paid invoice of
-  that subscription through Sylphx Money, which owns the refund records and ends access at once. A later subscription has no refund window.
+- Immediate supply: checkout records the player's express request for access
+  to start at once and their acknowledgement that the 14-day cancellation
+  right is lost (`immediate_supply_consent`). The consent is stored before
+  checkout starts.
+- No money-back guarantee. Cancellation ends renewal at the end of the paid
+  period (`cancel_at_period_end`) and the api refunds nothing on cancel.
+  Payments are non-refundable and part-used periods are not refunded, except
+  where the terms or the law say otherwise. The terms promise a pro-rata
+  refund of the unused part of the paid period in exactly three cases: we
+  materially reduce what Plus gives (the subscriber cancels after our advance
+  notice), a change to the terms materially affects the subscriber (they cancel
+  before it applies), or we close the account without a serious reason while a
+  paid period is left (`legal.json` terms sections at lines 146, 198 and 182).
+  Any other refund request is handled case by case by support. Every refund is
+  a new Money ledger entry (commercial standard).
 - Sylphx Money's hosted portal handles payment methods, invoices and plan
-  changes; cancellation stays in Settings so the refund rule applies.
+  changes; cancellation stays in Settings so it is one flow.
 - An account with a subscription that still renews cannot be erased until it
   is cancelled. Money retains legally required financial records under its own retention
   policy; Puzzled has no subscription or payment-ledger rows to retain.
 - Erasure also deletes the player's Sylphx Auth sign-in, through Auth's
-  privacy-request API, for every subject that names the player. A refused
-  Auth deletion erases nothing: the account stays whole and the request can
-  be repeated.
+  privacy-request API, for every subject that names the player. The rows and
+  Auth's deletion run in one transaction that commits only after Auth
+  accepted (`account_deletion::erase_player`). Transient database errors and
+  ambiguous Auth answers (no answer, timeout, 5xx, 408, 429) repeat the whole
+  transaction a few times; Auth's idempotency key is fixed per subject, so
+  asking again is safe. A database failure before Auth, or a definite Auth
+  refusal (another 4xx) before any subject was accepted, erases nothing: the
+  account and its sign-in stay whole and the person can repeat the request.
+  What still fails after Auth may have deleted the sign-in keeps every row
+  and the subject map, answers 500, and is logged ("run erase-player
+  --subject") with the subjects; the operator finishes it with
+  `sylphx jobs run erase-player -- --subject <auth subject>`, which prints
+  counts only. When Auth serves its erasure delivery (`[privacy]` handler,
+  platform spec), that delivery replaces the manual step.
 - Terms, Privacy and checkout name Sylphx Limited, state VAT-inclusive prices,
-  automatic renewal, the 14-day right, and UK GDPR with the ICO.
+  automatic renewal, the immediate-supply consent, and UK GDPR with the ICO.
 
 ## 5. Money and entitlement (commercial standard)
 
@@ -109,8 +131,8 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   `entitlement_grants:check` for Plus access. It holds no Stripe keys,
   processor webhooks, billing subscriptions or payment ledger.
 - Checkout return reads Money's subscription status; a browser redirect
-  cannot assert a paid entitlement. Cancellation and the first-subscription
-  14-day refund are requests to Money; Money owns invoice, refund and tax
+  cannot assert a paid entitlement. Cancellation at period end is a
+  request to Money; Money owns invoice, refund and tax
   records. Puzzled stores only checkout consent evidence and family membership.
 - Family: the family-plan subscriber gets an invite link; up to 3 others join
   with their own accounts. The subscriber can remove members and reset the
@@ -127,7 +149,15 @@ A landing with campaign tags (`utm_*`, `ref`; Tryit links use
 first-touch for 30 days in the `puzzled_attr` first-party cookie, only after
 analytics consent (declining clears it). Sign-up stores it once in
 `account_attribution`. Checkout passes the account's tags (or, without them,
-the cookie) to Money's checkout-session attribution. No Stripe subscription
+the cookie) to Money's checkout-session attribution. A Google Ads click id
+(`gclid`, `gbraid`, `wbraid`) on a landing is kept in the same cookie for 90
+days, only after *marketing* consent (the SDK `marketing` preference, mirrored
+to `puzzled:consent:marketing`; the banner grants analytics only today, so the
+click id is not stored until a marketing choice is offered). Withdrawing
+marketing consent removes it; declining everything clears the cookie. Checkout
+sends it from the live cookie, never from the account row, as
+`metadata.gclid` (or `gbraid` / `wbraid`) after a `[A-Za-z0-9_-]{1,100}`
+check; Money has no `client_reference_id`. No Stripe subscription
 metadata or local billing table is written. `/daily` redirects to today's
 free game and keeps the query string.
 
@@ -149,6 +179,25 @@ view). Never on a puzzle in play, never on the pricing or account pages, and
 never for a Puzzled Plus subscriber ("no ads" is a Plus perk). The ad loads only
 after the visitor accepts cookies. The site's Content Security Policy allows the
 ad network's hosts only while ads are configured.
+
+### Google Analytics and Ads conversions
+
+Off until `GA_MEASUREMENT_ID` (GA4, `G-...`) or `GOOGLE_ADS_ID` (`AW-...`) is set in
+the web environment; with neither, no Google script, request or CSP host exists.
+The cookie banner has three equal choices: Decline, Settings (separate Analytics and
+Advertising switches, both off) and Accept (analytics only, never advertising). gtag.js is
+injected, and `config` sent, only after a stored choice grants something: GA4 needs
+Analytics, Ads needs Advertising (`ad_storage`, `ad_user_data`); `ad_personalization`
+is always denied and Google signals are off. Basic consent mode: unanswered or declined
+loads nothing. There is no geo signal, so the denied defaults apply everywhere.
+Google sees only the site origin plus public paths (`/`, `/pricing`, `/privacy`, `/terms`,
+`/support`, `/login`, `/signup`), a fixed title and no referrer; game, share and account
+addresses never reach it. Turn **enhanced measurement** and **Google signals** off in the
+GA4 property. Events: `sign_up` (new account only, from Auth's new-account answer),
+`trial_start` (value = the plan's post-trial price in the checkout currency, plan as item id)
+and `purchase` on the checkout return, each once per Money checkout session (`s`); mark them as
+Ads conversions. "Change cookie choice" on the privacy page withdraws consent, deletes
+`_ga*` and `_gcl_*`, and reopens the banner.
 
 ## 7. Metrics (supporting, not the North Star)
 
@@ -176,3 +225,16 @@ This is the intended behaviour, a business choice of player experience over a sm
 
 - If the Money catalogue can't be read, Plus counts as not on sale. Nothing is locked, and the pricing page says "Purchases open shortly".
 - If Money can't answer a Plus entitlement check, play is allowed. Each such allowance logs `event = "money_entitlement_unanswerable_allowed"` at warn level, so a free ride lasting a whole outage shows up in logs and alerts.
+
+## Who pays
+
+There is no launch grace and no existing-player exemption. Puzzled was never
+promoted or launched before Plus sales opened, so no account has earlier
+standing. The paywall applies to everyone:
+
+- Today's featured puzzle is free for everyone, guests included.
+- Every other game and the archive need a Plus entitlement (Money's
+  `entitlement_grants:check`) while sales are open. Guests and new accounts are
+  locked out of them, and so is an account with old play history.
+- Any later free or discounted access is a Money entitlement grant (account,
+  feature, expiry, approver), never a rule in the play gate.

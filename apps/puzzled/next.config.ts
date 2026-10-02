@@ -30,6 +30,13 @@ const nextConfig: NextConfig = {
 			{ source: '/zh-Hant/:path*', destination: '/zh-HK/:path*', permanent: true },
 			{ source: '/en', destination: '/', permanent: true },
 			{ source: '/en/:path*', destination: '/:path*', permanent: true },
+			// The cookie policy is one section of the privacy policy, not a page of its own.
+			{ source: '/cookies', destination: '/privacy#cookies', permanent: true },
+			{
+				source: '/:locale(en-GB|zh-HK|zh-TW|zh-CN)/cookies',
+				destination: '/:locale/privacy#cookies',
+				permanent: true,
+			},
 			// Renamed games
 			{
 				source: '/games/wordle',

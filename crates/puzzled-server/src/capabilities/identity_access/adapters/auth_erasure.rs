@@ -48,6 +48,17 @@ impl AuthErasure {
         }
     }
 
+    /// The same handle with another per-request timeout (tests use a short
+    /// one to reach Auth's "no answer" case quickly).
+    #[must_use]
+    pub fn with_timeout(mut self, timeout: Duration) -> Self {
+        self.http = reqwest::Client::builder()
+            .timeout(timeout)
+            .build()
+            .unwrap_or_default();
+        self
+    }
+
     /// The credential Enable Auth binds, when every part is set.
     #[must_use]
     pub fn from_env() -> Option<Self> {
@@ -65,9 +76,10 @@ impl AuthErasure {
 
     /// File the deletion of one Auth subject. `Ok(Some(request id))` when Auth
     /// accepted it, `Ok(None)` when Auth holds no such account (already gone,
-    /// or never created); `Err` when Auth refused or was unreachable, which
-    /// the caller surfaces instead of reporting a success.
-    pub async fn delete_principal(&self, principal_id: &str) -> Result<Option<String>, String> {
+    /// or never created). An error says whether Auth definitely did not
+    /// delete the sign-in ([`AuthError::Refused`]) or may have
+    /// ([`AuthError::Ambiguous`]); the caller never reports a success.
+    pub async fn delete_principal(&self, principal_id: &str) -> Result<Option<String>, AuthError> {
         let response = self
             .http
             .post(format!("{}/v1/privacy-requests", self.auth_url))
@@ -80,29 +92,67 @@ impl AuthErasure {
             }))
             .send()
             .await
-            .map_err(|error| format!("auth privacy request failed: {error}"))?;
+            // Not sent, or sent and unanswered (timeout, reset): Auth may
+            // have accepted it.
+            .map_err(|error| {
+                AuthError::Ambiguous(format!("auth privacy request failed: {error}"))
+            })?;
         let status = response.status();
-        let payload = response.json::<Value>().await.unwrap_or_else(|_| json!({}));
+        let payload = response.json::<Value>().await.ok();
         if status.is_success() {
             return payload
-                .pointer("/privacy_request/request_id")
+                .as_ref()
+                .and_then(|payload| payload.pointer("/privacy_request/request_id"))
                 .and_then(Value::as_str)
                 .map(|id| Some(id.to_string()))
-                .ok_or_else(|| "auth answered without a privacy request id".to_string());
+                .ok_or_else(|| {
+                    AuthError::Ambiguous("auth answered without a privacy request id".to_string())
+                });
         }
         // No such account of this instance: nothing left to delete.
         if status == reqwest::StatusCode::NOT_FOUND {
             return Ok(None);
         }
         let detail = payload
-            .get("error")
+            .as_ref()
+            .and_then(|payload| payload.get("error"))
             .and_then(Value::as_str)
             .unwrap_or_default();
-        Err(format!(
+        let error = format!(
             "auth privacy request refused ({}) {}",
             status.as_u16(),
             detail.chars().take(DETAIL_LIMIT).collect::<String>()
-        ))
+        );
+        // A client error Auth decided on is a refusal; a timeout, rate limit
+        // or server error may have accepted the request first.
+        let definite = status.is_client_error()
+            && status != reqwest::StatusCode::REQUEST_TIMEOUT
+            && status != reqwest::StatusCode::TOO_MANY_REQUESTS;
+        Err(if definite {
+            AuthError::Refused(error)
+        } else {
+            AuthError::Ambiguous(error)
+        })
+    }
+}
+
+/// Why Auth's deletion did not answer with an accepted request.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AuthError {
+    /// Auth decided and refused (a 4xx other than 404, 408 and 429): the
+    /// sign-in was not deleted.
+    Refused(String),
+    /// No answer, a timeout, a rate limit, a server error, or an unreadable
+    /// acceptance: Auth may have deleted the sign-in. Safe to repeat, because
+    /// the idempotency key is fixed per subject.
+    Ambiguous(String),
+}
+
+impl std::fmt::Display for AuthError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Refused(error) | Self::Ambiguous(error) => f.write_str(error),
+        }
     }
 }
 
@@ -199,9 +249,8 @@ mod tests {
             spawn_auth(403, json!({"error": "privacy_request_forbidden"}), seen).await;
         let refused = erasure(&base).delete_principal("usr_a").await;
         assert!(
-            refused.as_ref().is_err_and(
-                |error| error.contains("403") && error.contains("privacy_request_forbidden")
-            ),
+            matches!(&refused, Err(AuthError::Refused(error))
+                if error.contains("403") && error.contains("privacy_request_forbidden")),
             "{refused:?}"
         );
 
@@ -209,10 +258,36 @@ mod tests {
         let (base, _server) = spawn_auth(202, json!({}), seen).await;
         let accepted = erasure(&base).delete_principal("usr_a").await;
         assert!(
-            accepted
-                .as_ref()
-                .is_err_and(|error| error.contains("without a privacy request id")),
+            matches!(&accepted, Err(AuthError::Ambiguous(error))
+                if error.contains("without a privacy request id")),
             "{accepted:?}"
         );
+    }
+
+    #[tokio::test]
+    async fn a_server_error_timeout_or_rate_limit_is_ambiguous() {
+        for status in [500, 502, 503, 408, 429] {
+            let seen: Seen = Arc::default();
+            let (base, _server) = spawn_auth(status, json!({"error": "busy"}), seen).await;
+            let answer = erasure(&base).delete_principal("usr_a").await;
+            assert!(
+                matches!(answer, Err(AuthError::Ambiguous(_))),
+                "{status}: {answer:?}"
+            );
+        }
+        for status in [400, 401, 403, 409, 422] {
+            let seen: Seen = Arc::default();
+            let (base, _server) = spawn_auth(status, json!({"error": "no"}), seen).await;
+            let answer = erasure(&base).delete_principal("usr_a").await;
+            assert!(
+                matches!(answer, Err(AuthError::Refused(_))),
+                "{status}: {answer:?}"
+            );
+        }
+        // Nothing listening: never sent or never answered.
+        let answer = erasure("http://127.0.0.1:9")
+            .delete_principal("usr_a")
+            .await;
+        assert!(matches!(answer, Err(AuthError::Ambiguous(_))), "{answer:?}");
     }
 }

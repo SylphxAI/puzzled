@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
+import { signUpCookieHeader } from '@/lib/identity/after-sign-up'
 import { AuthCallError, authConfig, passwordTicket, signUp } from '@/lib/identity/client-auth'
+import { admitJsonPost } from '@/lib/identity/http'
+import { MIN_PASSWORD_LENGTH } from '@/lib/identity/password-policy'
 import { authFail, completeSignIn, userAgentOf } from '@/lib/identity/sign-in'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 
@@ -9,6 +12,8 @@ import { getRequestSiteOrigin } from '@/lib/site-origin.server'
  * holder, so an existing address gets the neutral "check your email" answer.
  */
 export async function POST(request: Request) {
+	const refused = await admitJsonPost(request)
+	if (refused) return refused
 	const config = authConfig()
 	if (!config) return authFail(503, 'identity_unconfigured')
 	const body = (await request.json().catch(() => null)) as {
@@ -20,14 +25,14 @@ export async function POST(request: Request) {
 	const email = body?.email?.trim()
 	const password = body?.password ?? ''
 	if (!email || !password) return authFail(400, 'invalid_signup')
-	if (password.length < 12) return authFail(400, 'password_too_short')
+	if (password.length < MIN_PASSWORD_LENGTH) return authFail(400, 'password_too_short')
 	const userAgent = userAgentOf(request)
 	try {
 		await signUp(config, {
 			email,
 			password,
 			name: (body?.displayName ?? body?.name ?? '').trim(),
-			verifyUrl: `${await getRequestSiteOrigin()}/`,
+			verifyUrl: `${await getRequestSiteOrigin()}/verify-email`,
 			userAgent,
 		})
 	} catch (error) {
@@ -36,8 +41,10 @@ export async function POST(request: Request) {
 	}
 	try {
 		const ticket = await passwordTicket(config, { email, password, userAgent })
-		await completeSignIn(config, request, ticket)
-		return NextResponse.json({ signedIn: true })
+		const { newAccount } = await completeSignIn(config, request, ticket)
+		const response = NextResponse.json({ signedIn: true })
+		if (newAccount) response.headers.append('set-cookie', signUpCookieHeader('email'))
+		return response
 	} catch {
 		return NextResponse.json({ signedIn: false })
 	}

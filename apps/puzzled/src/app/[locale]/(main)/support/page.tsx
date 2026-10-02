@@ -3,7 +3,6 @@ import {
 	Check,
 	Clock,
 	KeyRound,
-	Lock,
 	type LucideIcon,
 	Mail,
 	ScrollText,
@@ -17,30 +16,14 @@ import {
 	MarketingHero,
 	MarketingSection,
 } from '@/features/marketing/components'
-import { APP_NAME, LEGAL_EMAIL, PRIVACY_EMAIL, SUPPORT_EMAIL } from '@/lib/config/app'
+import { APP_NAME, SUPPORT_EMAIL } from '@/lib/config/app'
 import { Link } from '@/lib/i18n/routing'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
+import { FAQ_KEYS } from './faq-keys'
 
 type Props = {
 	params: Promise<{ locale: string }>
 }
-
-/**
- * Support questions arrive in this order: getting back in, money, the daily
- * habit, access, then data. Every answer is checked against the code that
- * implements it; anything a person must decide points back at the inbox.
- */
-const FAQ_KEYS = [
-	'signIn',
-	'guest',
-	'cancel',
-	'afterCancel',
-	'refunds',
-	'dayStart',
-	'streak',
-	'accessibility',
-	'data',
-] as const
 
 /** Fields a support message needs before a person can act on it. */
 const INCLUDE_KEYS = ['account', 'game', 'detail', 'screenshot'] as const
@@ -91,15 +74,10 @@ export default async function SupportPage({ params }: Props) {
 	// One prefilled subject keeps every mailto on this page in the same thread.
 	const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`${APP_NAME} Support Request`)}`
 
-	// Two answers quote an address, so the reader never has to leave the page to
-	// find it; both are the same addresses the contact cards above offer.
+	// Two answers quote the one public address, so the reader never has to leave
+	// the page to find it.
 	const faqItems: MarketingFaqItem[] = FAQ_KEYS.map((key) => {
-		const values =
-			key === 'refunds'
-				? { email: SUPPORT_EMAIL }
-				: key === 'data'
-					? { email: PRIVACY_EMAIL }
-					: undefined
+		const values = key === 'refunds' || key === 'data' ? { email: SUPPORT_EMAIL } : undefined
 		return {
 			question: t(`faq.${key}.question`),
 			answer: t(`faq.${key}.answer`, values),
@@ -149,7 +127,7 @@ export default async function SupportPage({ params }: Props) {
 				subtitle={t('contact.subtitle')}
 				flush
 			>
-				<ul className="grid gap-3 md:grid-cols-2">
+				<ul className="grid gap-3">
 					<li className="surface-card p-5 md:p-6">
 						<span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
 							<Mail className="h-5 w-5" aria-hidden="true" />
@@ -166,25 +144,6 @@ export default async function SupportPage({ params }: Props) {
 							<Clock className="h-4 w-4 shrink-0" aria-hidden="true" />
 							{t('email.responseTime')}
 						</p>
-					</li>
-					<li className="surface-card p-5 md:p-6">
-						<span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-							<Lock className="h-5 w-5" aria-hidden="true" />
-						</span>
-						<h3 className="mt-3 font-display text-base">{t('contact.data.title')}</h3>
-						<p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-							{t('contact.data.body', { privacy: PRIVACY_EMAIL, legal: LEGAL_EMAIL })}
-						</p>
-						<div className="mt-3 flex flex-col items-start">
-							<a href={`mailto:${PRIVACY_EMAIL}`} className={INLINE_LINK}>
-								<Mail className="h-4 w-4" aria-hidden="true" />
-								{PRIVACY_EMAIL}
-							</a>
-							<a href={`mailto:${LEGAL_EMAIL}`} className={INLINE_LINK}>
-								<Mail className="h-4 w-4" aria-hidden="true" />
-								{LEGAL_EMAIL}
-							</a>
-						</div>
 					</li>
 				</ul>
 				<p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">

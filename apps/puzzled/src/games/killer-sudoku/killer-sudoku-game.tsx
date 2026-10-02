@@ -11,11 +11,13 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { useStartOver } from '@/games/shared/use-start-over'
+import type { PuzzleDifficulty } from '@/games/types'
 import { cn } from '@/lib/utils'
 import { parseKillerSudokuClientPayload } from './parse-client'
 import { useKillerSudoku } from './use-killer-sudoku'
@@ -25,9 +27,17 @@ type Props = {
 	puzzleId?: string
 	puzzleData?: unknown
 	puzzleDate?: string
+	/** The level being played; recorded with the finish. */
+	difficulty?: PuzzleDifficulty
 }
 
-export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function KillerSudokuGame({
+	mode = 'daily',
+	puzzleId,
+	puzzleData,
+	puzzleDate,
+	difficulty,
+}: Props) {
 	const t = useTranslations('games.killerSudoku')
 	const tCommon = useTranslations('common')
 
@@ -44,13 +54,14 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
+		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'killer-sudoku',
 		mode,
 		puzzleId,
 		puzzleDate,
+		difficulty,
 	})
 
 	// Game-specific state
@@ -108,6 +119,8 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 	}, [isReady, game])
 
 	const shareResult = useResultShare()
+	const startOver = useStartOver(resetSession, game.reset)
+
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
@@ -219,7 +232,7 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 						>
 							<Pencil className="h-4 w-4" />
 						</Button>
-						<Button variant="ghost" size="sm" onClick={game.reset}>
+						<Button variant="ghost" size="sm" onClick={startOver}>
 							<RotateCcw className="h-4 w-4" />
 						</Button>
 						<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
@@ -298,6 +311,12 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 					))}
 				</div>
 
+				<SeeResultButton
+					finished={resultReady}
+					modalOpen={showResultModal}
+					onOpen={() => setShowResultModal(true)}
+				/>
+
 				{/* Number pad */}
 				<div className="grid grid-cols-5 gap-2">
 					{[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
@@ -347,8 +366,6 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 				mode={mode}
 				onShare={handleShare}
 			/>
-
-			<GuestSignupPrompt open={showGuestSignupPrompt} onClose={handleCloseGuestPrompt} />
 		</div>
 	)
 }

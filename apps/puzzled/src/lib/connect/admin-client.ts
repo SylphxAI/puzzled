@@ -43,7 +43,16 @@ export async function listAnnouncements(client?: AdminServiceClient): Promise<An
 }
 
 export async function createAnnouncement(
-	input: { title: string; body: string; type?: string; active?: boolean },
+	input: {
+		title: string
+		body: string
+		type?: string
+		active?: boolean
+		dismissible?: boolean
+		/** RFC 3339; absent = no bound. */
+		startsAt?: string
+		endsAt?: string
+	},
 	client?: AdminServiceClient,
 ): Promise<Announcement> {
 	const c = client ?? createAdminServiceClient()
@@ -53,6 +62,9 @@ export async function createAnnouncement(
 			body: input.body,
 			type: input.type ?? 'info',
 			active: input.active ?? true,
+			dismissible: input.dismissible,
+			startsAt: input.startsAt ?? '',
+			endsAt: input.endsAt ?? '',
 		}),
 	)
 	if (!res.announcement) throw new Error('announcement_unavailable')
@@ -60,7 +72,17 @@ export async function createAnnouncement(
 }
 
 export async function updateAnnouncement(
-	input: { id: string; title?: string; body?: string; type?: string; active?: boolean },
+	input: {
+		id: string
+		title?: string
+		body?: string
+		type?: string
+		active?: boolean
+		dismissible?: boolean
+		/** RFC 3339; '' clears the bound, absent leaves it. */
+		startsAt?: string
+		endsAt?: string
+	},
 	client?: AdminServiceClient,
 ): Promise<Announcement> {
 	const c = client ?? createAdminServiceClient()
@@ -71,6 +93,9 @@ export async function updateAnnouncement(
 			body: input.body ?? undefined,
 			type: input.type ?? undefined,
 			active: input.active ?? undefined,
+			dismissible: input.dismissible,
+			startsAt: input.startsAt,
+			endsAt: input.endsAt,
 		}),
 	)
 	if (!res.announcement) throw new Error('announcement_unavailable')

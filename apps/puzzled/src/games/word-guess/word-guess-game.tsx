@@ -6,8 +6,8 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration, StarBurst } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import type { ResultCardTile } from '@/features/daily/lib/result-card'
 import { useGameSession } from '@/games/shared/use-game-session'
@@ -42,8 +42,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 		showStarBurst,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'word-guess',
 		mode,
@@ -275,11 +274,6 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 	return (
 		<div className="flex w-full flex-col items-center gap-4 sm:gap-6">
 			{/* Guest Signup Prompt */}
-			<GuestSignupPrompt
-				open={showGuestSignupPrompt}
-				onClose={handleCloseGuestPrompt}
-				streakCount={1}
-			/>
 
 			{/* Celebrations */}
 			<Celebration show={showCelebration} />
@@ -292,6 +286,12 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 				currentGuess={currentGuess}
 				currentRow={currentRow}
 				shake={shakeRow}
+			/>
+
+			<SeeResultButton
+				finished={resultReady}
+				modalOpen={showResultModal}
+				onOpen={() => setShowResultModal(true)}
 			/>
 
 			{/* Game Result Modal */}

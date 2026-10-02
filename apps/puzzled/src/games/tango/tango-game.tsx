@@ -11,11 +11,12 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { useStartOver } from '@/games/shared/use-start-over'
 import { cn } from '@/lib/utils'
 import { parseTangoClientPayload } from './parse-client'
 import { useTango } from './use-tango'
@@ -43,8 +44,8 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
+		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'duo',
 		mode,
@@ -75,6 +76,8 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 	}, [game.state.gameStatus, game.state.grid, endGame])
 
 	const shareResult = useResultShare()
+	const startOver = useStartOver(resetSession, game.reset)
+
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
@@ -126,7 +129,7 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 				<div className="flex w-full items-center justify-between px-2">
 					<div className="text-sm text-muted-foreground">{t('name')}</div>
 					<div className="flex gap-2">
-						<Button variant="ghost" size="sm" onClick={game.reset}>
+						<Button variant="ghost" size="sm" onClick={startOver}>
 							<RotateCcw className="h-4 w-4" />
 						</Button>
 						<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
@@ -167,6 +170,12 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 					)}
 				</div>
 
+				<SeeResultButton
+					finished={resultReady}
+					modalOpen={showResultModal}
+					onOpen={() => setShowResultModal(true)}
+				/>
+
 				{/* Instructions */}
 				{conflicts.length > 0 && <p className="text-sm text-red-500">{t('hasConflicts')}</p>}
 			</div>
@@ -184,12 +193,6 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 				}}
 				mode={mode}
 				onShare={handleShare}
-			/>
-
-			<GuestSignupPrompt
-				open={showGuestSignupPrompt}
-				onClose={handleCloseGuestPrompt}
-				streakCount={1}
 			/>
 		</div>
 	)

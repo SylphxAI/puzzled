@@ -1,13 +1,14 @@
 'use client'
 
 import { Button, Card, CardContent } from '@sylphx/ui'
-import { Check, ChevronRight, Clock, Flame, Gauge, Share2, Target, Trophy, X } from 'lucide-react'
+import { Check, Clock, Flame, Share2, Target, Trophy, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { AdSlot } from '@/features/ads/components/ad-slot'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useWarmShareId } from '@/features/daily/hooks/use-share-id'
 import { buildResultCard, resultCardStringsFrom } from '@/features/daily/lib/result-card'
+import { seasonGreeting } from '@/features/seasons/lib/seasons'
 import { getHowToPlayConfig } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
@@ -48,8 +49,6 @@ type AlreadyCompletedViewProps = {
 	className?: string
 	/** Difficulty level for games that support it */
 	difficulty?: PuzzleDifficulty
-	/** Whether the game supports multiple difficulty levels */
-	supportsDifficulty?: boolean
 }
 
 /**
@@ -73,12 +72,12 @@ export function AlreadyCompletedView({
 	locale = 'en',
 	className,
 	difficulty,
-	supportsDifficulty = false,
 }: AlreadyCompletedViewProps) {
 	const t = useTranslations('daily')
 	const tCommon = useTranslations('common')
 	const tResult = useTranslations('gameResult')
 	const tShareCard = useTranslations('share.card')
+	const tHome = useTranslations('home')
 	const tDifficulty = useTranslations('common.difficulty')
 	const [showToast, setShowToast] = useState(false)
 	const [animate, setAnimate] = useState(false)
@@ -116,7 +115,7 @@ export function AlreadyCompletedView({
 
 	return (
 		<div className={cn('flex w-full max-w-md flex-col items-center gap-5', className)}>
-			<SaveStreakPrompt daily={puzzleDate === productDayKey()} />
+			<SaveStreakPrompt daily={puzzleDate === productDayKey()} gameSlug={gameSlug} />
 			{/* Victory/Result Header */}
 			<div
 				className={cn('flex flex-col items-center text-center', animate && 'animate-slide-up-fade')}
@@ -234,7 +233,10 @@ export function AlreadyCompletedView({
 					attempts: session.attempts > 0 ? session.attempts : null,
 					score: session.score,
 				})}
-				strings={resultCardStringsFrom((key) => tShareCard.raw(key) as string)}
+				strings={resultCardStringsFrom(
+					(key) => tShareCard.raw(key) as string,
+					seasonGreeting(tHome, puzzleDate),
+				)}
 				gameName={gameName}
 			/>
 
@@ -248,26 +250,8 @@ export function AlreadyCompletedView({
 				)}
 			>
 				<Share2 className="h-5 w-5" />
-				{tCommon('share')} Your Result
+				{tCommon('share')}
 			</Button>
-
-			{/* Play Other Difficulties - For games with difficulty support */}
-			{supportsDifficulty && (
-				<Link href={`/games/${gameSlug}`} className="w-full">
-					<Button
-						variant="outline"
-						size="lg"
-						className={cn(
-							'w-full gap-2 text-base',
-							animate && 'animate-slide-up-fade opacity-0 stagger-3',
-						)}
-					>
-						<Gauge className="h-5 w-5" />
-						{tDifficulty('playOtherDifficulties')}
-						<ChevronRight className="ml-auto h-4 w-4" />
-					</Button>
-				</Link>
-			)}
 
 			{/* Countdown Card */}
 			<Card className={cn('w-full', animate && 'animate-slide-up-fade opacity-0 stagger-4')}>

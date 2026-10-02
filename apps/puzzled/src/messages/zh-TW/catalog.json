@@ -85,5 +85,28 @@
 				}
 			]
 		}
+	},
+	"gamePage": {
+		"metaDescription": "{game}是每日{genre}謎題。{rule}每日更新一道新題，當日精選謎題免費，無須帳號。",
+		"playCta": "開始今天的謎題"
+	},
+	"metaDescription": "瀏覽 Puzzled 所有每日謎題 — 今天的免費遊戲，以及文字、邏輯與數字遊戲的完整系列。",
+	"freeToday": "今天精選",
+	"featuredNote": "今天開放給所有人，無需帳號。明天會輪到另一款遊戲。",
+	"ritual": {
+		"step1Title": "選出今天的遊戲",
+		"step1Body": "從今天精選開始，全部 {count} 款謎題都使用同一套每日題目；今天精選人人免費，其餘遊戲由 Puzzled Plus 開放。"
+	},
+	"faq": {
+		"start": {
+			"answer": "打開今天精選就可以，不用帳號，也不用付款。其他謎題由 Puzzled Plus 開放。"
+		},
+		"rotation": {
+			"question": "今天精選如何輪替？",
+			"answer": "每天精選一款謎題，於香港時間午夜輪替。同一天每個人看到的都是同一款精選。"
+		},
+		"account": {
+			"answer": "不需要。今天精選可以用訪客身分遊玩；有帳號的話，就能在不同裝置上保留連勝、成績與統計。"
+		}
 	}
 }

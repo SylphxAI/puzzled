@@ -366,6 +366,10 @@
 		"boardsCta": "打开排行榜"
 	},
 	"account": {
+		"accountId": "账户 ID",
+		"accountIdHint": "你自己的账户标识符，并非机密。如客服要求，可提供此 ID。",
+		"copyAccountId": "复制 ID",
+		"accountIdCopied": "已复制",
 		"title": "账户",
 		"description": "管理你已关联的账户和登录方式",
 		"connectedAccounts": "已关联的账户",
@@ -672,6 +676,11 @@
 			"reduceMotionDescription": "减少动画和过渡效果",
 			"compactMode": "紧凑模式",
 			"compactModeDescription": "使用更紧凑的排版和更小的间距"
+		},
+		"streakFreeze": {
+			"description": "选择是否自动使用冻结来保护你的连胜",
+			"unavailable": "暂时无法加载自动冻结设置，请刷新后重试。",
+			"saveFailed": "未能保存你的更改，请重试。"
 		},
 		"language": {
 			"title": "语言与地区",

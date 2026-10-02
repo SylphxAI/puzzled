@@ -1,6 +1,6 @@
 //! Thin REST client for the Money calls Puzzled uses, shaped from
 //! `contracts/generated/openapi.json` (cloud#10272): `entitlement_grants:check`,
-//! `checkout_sessions` and `catalogs/default`. Nothing else is called.
+//! `checkout_sessions` and `price_catalogs/default`. Nothing else is called.
 //!
 //! Entitlement answers are cached at most 60 seconds and never past the
 //! answer's `expire_time`; a Money call that fails answers "not entitled"
@@ -25,8 +25,62 @@ pub const FAILED_CACHE_TTL: Duration = Duration::from_secs(5);
 /// How long a read catalogue is reused.
 pub const CATALOG_CACHE_TTL: Duration = Duration::from_secs(300);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(8);
-const DEFAULT_PUBLIC_URL: &str = "https://puzzled.gg";
+use crate::shared::public_origin::{parse_public_origin, DEFAULT_PUBLIC_URL};
 const DEFAULT_API_URL: &str = "https://api.sylphx.com";
+
+/// Log-only text from a Money problem body (`message` = its `detail` string,
+/// plus `reason` and `processor_code` from `details[]`). Only these fields are
+/// read, ids are limited to a safe alphabet, and anything shaped like a key is
+/// redacted, so no secret can reach the log through it.
+fn problem_note(body: &Value) -> String {
+    let safe_id = |v: &Value| {
+        v.as_str()
+            .filter(|s| !s.is_empty() && s.len() <= 64)
+            .filter(|s| {
+                s.chars()
+                    .all(|c| c.is_ascii_alphanumeric() || "_-.:".contains(c))
+            })
+            .map(str::to_string)
+    };
+    let detail = |key: &str| {
+        let list = body.get("details").and_then(Value::as_array);
+        list.into_iter()
+            .flatten()
+            .chain(body.get("detail").filter(|d| d.is_object()))
+            .find_map(|d| d.get(key).and_then(safe_id))
+    };
+    let mut parts = Vec::new();
+    if let Some(reason) = detail("reason") {
+        parts.push(format!("reason={reason}"));
+    }
+    if let Some(code) = detail("processor_code") {
+        parts.push(format!("processor_code={code}"));
+    }
+    if let Some(message) = body.get("detail").and_then(Value::as_str) {
+        let clean: String = message
+            .split_whitespace()
+            .map(|w| {
+                let w = w.trim_matches(|c: char| !c.is_ascii_alphanumeric() && c != '_');
+                if ["sk_", "rk_", "pk_", "whsec_", "Bearer"]
+                    .iter()
+                    .any(|p| w.starts_with(p))
+                {
+                    "[redacted]"
+                } else {
+                    w
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+        if !clean.is_empty() {
+            parts.push(format!(
+                "message={}",
+                clean.chars().take(200).collect::<String>()
+            ));
+        }
+    }
+    parts.join(" ")
+}
 
 /// Why a Money call did not answer.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -34,14 +88,25 @@ pub enum MoneyError {
     /// Money could not be reached or answered 5xx / unreadable.
     Unavailable(String),
     /// Money answered with a refusal (4xx); `code` is its problem code.
-    Refused { status: u16, code: String },
+    /// `note` is the log-only extra (message, reason, processor code); it is
+    /// never matched on and never shown to a player.
+    Refused {
+        status: u16,
+        code: String,
+        note: String,
+    },
 }
 
 impl std::fmt::Display for MoneyError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Unavailable(why) => write!(f, "money unavailable: {why}"),
-            Self::Refused { status, code } => write!(f, "money refused ({status}): {code}"),
+            Self::Refused { status, code, note } if note.is_empty() => {
+                write!(f, "money refused ({status}): {code}")
+            }
+            Self::Refused { status, code, note } => {
+                write!(f, "money refused ({status}): {code} [{note}]")
+            }
         }
     }
 }
@@ -97,6 +162,18 @@ impl Subscription {
     pub fn renews(&self) -> bool {
         self.live() && !self.cancel_at_period_end
     }
+
+    /// Erasure guard: may this subscription still bill? Fail closed: every
+    /// status except the ones known to be over counts, so a status Money adds
+    /// later blocks erasure. Not an entitlement or display rule; those use
+    /// [`live`](Self::live) and [`renews`](Self::renews).
+    #[must_use]
+    pub fn renews_for_erasure(&self) -> bool {
+        !matches!(
+            self.status.as_str(),
+            "canceled" | "incomplete_expired" | "expired"
+        ) && !self.cancel_at_period_end
+    }
 }
 
 /// A path segment that cannot escape its place in the URL.
@@ -106,7 +183,7 @@ fn segment(id: &str) -> String {
         .collect()
 }
 
-/// A catalogue price as `GET catalogs/default` publishes it.
+/// A catalogue price as `GET price_catalogs/default` publishes it.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CatalogPrice {
     pub key: String,
@@ -177,6 +254,30 @@ fn env_value(name: &str) -> Option<String> {
         .filter(|value| !value.is_empty())
 }
 
+/// The environment URL from a `whoami` body. `env` is the environment's full
+/// resource name (`orgs/{o}/projects/{p}/envs/{e}`), used as-is under
+/// `{origin}/v1/`; bare `org`/`project`/`env` ids build the same path.
+pub(super) fn env_url(origin: &str, whoami: &Value) -> Result<String, MoneyError> {
+    let part = |name: &str| {
+        whoami
+            .get(name)
+            .and_then(Value::as_str)
+            .map(|v| v.trim_matches('/'))
+            .filter(|v| !v.is_empty())
+    };
+    if let Some(env) = part("env").filter(|e| e.starts_with("orgs/")) {
+        return Ok(format!("{origin}/v1/{env}"));
+    }
+    match (part("org"), part("project"), part("env")) {
+        (Some(org), Some(project), Some(env)) => Ok(format!(
+            "{origin}/v1/orgs/{org}/projects/{project}/envs/{env}"
+        )),
+        _ => Err(MoneyError::Unavailable(
+            "the API key is not scoped to an environment".into(),
+        )),
+    }
+}
+
 /// The environment resource URL a key belongs to, from its `whoami`:
 /// `{origin}/v1/orgs/{org}/projects/{project}/envs/{env}`. The key must be
 /// scoped to an environment.
@@ -201,19 +302,7 @@ pub async fn resolve_env_url(
         .json()
         .await
         .map_err(|e| MoneyError::Unavailable(format!("whoami unreadable: {e}")))?;
-    let part = |name: &str| {
-        body.get(name)
-            .and_then(Value::as_str)
-            .filter(|v| !v.is_empty())
-    };
-    match (part("org"), part("project"), part("env")) {
-        (Some(org), Some(project), Some(env)) => Ok(format!(
-            "{origin}/v1/orgs/{org}/projects/{project}/envs/{env}"
-        )),
-        _ => Err(MoneyError::Unavailable(
-            "the API key is not scoped to an environment".into(),
-        )),
-    }
+    env_url(origin, &body)
 }
 
 impl Money {
@@ -231,7 +320,11 @@ impl Money {
         Some(Self::discovering(
             &get("SYLPHX_API_URL").unwrap_or_else(|| DEFAULT_API_URL.into()),
             &get("SYLPHX_MONEY_API_KEY")?,
-            &get("PUZZLED_PUBLIC_URL").unwrap_or_else(|| DEFAULT_PUBLIC_URL.into()),
+            &parse_public_origin(
+                &get("PUZZLED_PUBLIC_URL").unwrap_or_else(|| DEFAULT_PUBLIC_URL.into()),
+                !cfg!(debug_assertions),
+            )
+            .ok()?,
         ))
     }
 
@@ -308,6 +401,7 @@ impl Money {
         Err(MoneyError::Refused {
             status: status.as_u16(),
             code,
+            note: problem_note(&body),
         })
     }
 
@@ -404,7 +498,7 @@ impl Money {
         let body = self
             .call(
                 self.http
-                    .get(format!("{}/catalogs/default", self.env_url().await?)),
+                    .get(format!("{}/price_catalogs/default", self.env_url().await?)),
             )
             .await?;
         let catalog: Arc<Catalog> = Arc::new(
@@ -495,7 +589,7 @@ impl Money {
             .subscriptions(user_id)
             .await?
             .iter()
-            .any(Subscription::renews))
+            .any(Subscription::renews_for_erasure))
     }
 
     /// A hosted billing-portal page for `user_id` (payment method, invoices).

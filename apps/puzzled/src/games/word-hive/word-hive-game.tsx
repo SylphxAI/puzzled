@@ -6,8 +6,8 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useRef, useState } from 'react'
 import { Celebration, StarBurst } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { checkGuess } from '@/lib/connect/puzzle-client'
@@ -59,8 +59,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 		showStarBurst,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'word-hive',
 		mode,
@@ -233,11 +232,6 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	return (
 		<div className="flex w-full max-w-lg flex-col items-center gap-4 px-2 sm:gap-6 sm:px-0">
 			{/* Guest Signup Prompt */}
-			<GuestSignupPrompt
-				open={showGuestSignupPrompt}
-				onClose={handleCloseGuestPrompt}
-				streakCount={1}
-			/>
 
 			{/* Celebrations */}
 			<Celebration show={showCelebration} />
@@ -257,6 +251,12 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 				outerLetters={game.outerLetters}
 				onLetterClick={game.addLetter}
 				disabled={game.gameStatus !== 'playing'}
+			/>
+
+			<SeeResultButton
+				finished={resultReady}
+				modalOpen={showResultModal}
+				onOpen={() => setShowResultModal(true)}
 			/>
 
 			{/* Action Buttons */}

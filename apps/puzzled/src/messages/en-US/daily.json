@@ -5,7 +5,7 @@
 	"seconds": "secs",
 	"todaysProgress": "Today's Progress",
 	"completed": "completed",
-	"allCompleteMessage": "Amazing! You've completed all games today!",
+	"allCompleteMessage": "You finished every level of today's puzzle.",
 	"puzzleNumber": "Puzzle #{number}",
 	"superStreak": "Super Streak",
 	"superStreakDesc": "Complete all games daily",

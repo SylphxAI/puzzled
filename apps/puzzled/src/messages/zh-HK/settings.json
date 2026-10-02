@@ -366,6 +366,10 @@
 		"boardsCta": "開啟排行榜"
 	},
 	"account": {
+		"accountId": "帳戶 ID",
+		"accountIdHint": "你自己的帳戶識別碼，並非機密。如客戶支援要求，可提供此 ID。",
+		"copyAccountId": "複製 ID",
+		"accountIdCopied": "已複製",
 		"title": "帳戶",
 		"description": "管理你已連結的帳戶與登入方式",
 		"connectedAccounts": "已連結的帳戶",
@@ -672,6 +676,11 @@
 			"reduceMotionDescription": "減少動畫與過場效果",
 			"compactMode": "精簡模式",
 			"compactModeDescription": "使用更緊密的排版與更小的間距"
+		},
+		"streakFreeze": {
+			"description": "選擇是否自動使用凍結來保護你的連勝",
+			"unavailable": "暫時未能載入自動凍結設定，請重新整理再試。",
+			"saveFailed": "未能儲存你的更改，請再試一次。"
 		},
 		"language": {
 			"title": "語言與地區",

@@ -8,8 +8,8 @@
  * - No local users table - platform is source of truth
  */
 
+import { getServerIsAdmin } from '@/lib/api/server'
 import { auth } from '@/lib/identity/server'
-import { isAdminRole } from '@/lib/roles'
 
 /** Admin error codes */
 export type AdminErrorCode = 'NOT_LOGGED_IN' | 'NOT_ADMIN' | 'FORBIDDEN'
@@ -33,13 +33,6 @@ async function getSession() {
 }
 
 /**
- * Check if a role has admin privileges
- */
-function hasAdminRole(role: string | null | undefined): boolean {
-	return isAdminRole(role)
-}
-
-/**
  * Require admin access - throws AdminError if not admin
  */
 export async function requireAdmin() {
@@ -49,7 +42,8 @@ export async function requireAdmin() {
 		throw new AdminError('NOT_LOGGED_IN', 'You must be logged in to access this page.')
 	}
 
-	if (!hasAdminRole(user.role)) {
+	// The api decides admin (its is_admin), the same source as every admin RPC.
+	if (!(await getServerIsAdmin())) {
 		throw new AdminError('NOT_ADMIN', 'You do not have admin privileges.')
 	}
 

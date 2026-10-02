@@ -1,6 +1,6 @@
 import { cookies, headers } from 'next/headers'
 import { env } from '../env'
-import { destIdentityCredential, destIdentityProjectId } from './credentials'
+import { destIdentityCredential, destIdentityProjectId, destProductCredential } from './credentials'
 import {
 	type AppConfig,
 	destIdentityJson,
@@ -36,10 +36,14 @@ export async function browserUserAgent(): Promise<string> {
 export async function currentUser(): Promise<IdentityUser | null> {
 	const token = await sessionToken()
 	if (!token) return null
+	// Auth requires the product's publishable key on every session read; without it there is no session.
+	// TODO: switch to the identity SDK's `callerKey` option once cloud#11034 publishes.
+	const callerKey = destProductCredential(['SYLPHX_PUBLISHABLE_KEY'])
+	if (!callerKey) return null
 	try {
 		const current = await destIdentityJson(identityOrigin(), '/v1/sessions/current', {
 			credential: token,
-			headers: { 'user-agent': await browserUserAgent() },
+			headers: { 'user-agent': await browserUserAgent(), 'x-sylphx-caller-key': callerKey },
 		})
 		return destIdentityUser(current, destIdentityProjectId())
 	} catch {
@@ -69,21 +73,26 @@ export async function clearSessionCookie(): Promise<void> {
 	for (const name of SESSION_COOKIE_NAMES) jar.delete(name)
 }
 
-export async function revokeCurrentSessions(): Promise<void> {
+/**
+ * Sign out: end this one session at Auth (`/v1/client/sign-out`, the player's
+ * own bearer and User-Agent; it works for an unverified account too), then
+ * clear both cookie names. Ending the session at Auth is best-effort; the
+ * cookie clear is the local effect.
+ */
+export async function revokeCurrentSessions(userAgent?: string): Promise<void> {
 	const token = await sessionToken()
 	if (!token) {
 		await clearSessionCookie()
 		return
 	}
 	try {
-		await destIdentityJson(identityOrigin(), '/v1/sessions/revoke-all', {
+		await destIdentityJson(identityOrigin(), '/v1/client/sign-out', {
 			method: 'POST',
 			credential: token,
-			headers: { 'user-agent': await browserUserAgent() },
-			body: { idempotency_key: crypto.randomUUID(), reason: 'sign-out' },
+			headers: { 'user-agent': userAgent ?? (await browserUserAgent()) },
 		})
 	} catch {
-		// Cookie clear is the local effect; Identity revoke is best-effort.
+		// Cookie clear is the local effect; the Auth-side end is best-effort.
 	}
 	await clearSessionCookie()
 }

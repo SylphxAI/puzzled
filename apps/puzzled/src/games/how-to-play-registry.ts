@@ -270,3 +270,6 @@ export function getHowToPlayConfig(slug: string): HowToPlayConfig | undefined {
  * Derived type for all valid game slugs
  */
 export type GameSlug = keyof typeof HOW_TO_PLAY_CONFIGS
+
+/** Every game, in catalogue order. */
+export const HOW_TO_PLAY_SLUGS = Object.keys(HOW_TO_PLAY_CONFIGS) as GameSlug[]

@@ -1,6 +1,9 @@
 import { getTranslations } from 'next-intl/server'
+import { ChangeCookieChoice } from '@/features/analytics/components/change-cookie-choice'
+import { googleTagIds } from '@/features/analytics/lib/google-tag'
 import { getAllGameMetadata } from '@/games/registry'
-import { SUPPORT_EMAIL } from '@/lib/config/app'
+import { COMPANY_PHONE, SUPPORT_EMAIL } from '@/lib/config/app'
+import { env } from '@/lib/env'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
 import { LanguageSwitcher } from './language-switcher'
@@ -21,6 +24,8 @@ export async function Footer() {
 	const tNav = await getTranslations('nav')
 	const tGame = await getTranslations()
 	const games = getAllGameMetadata().slice(0, FOOTER_GAME_LIMIT)
+	const googleIds = googleTagIds(env)
+	const tagIds = [googleIds?.ga, googleIds?.ads].filter((id): id is string => Boolean(id))
 	const currentYear = new Date().getFullYear()
 
 	return (
@@ -100,6 +105,18 @@ export async function Footer() {
 								</Link>
 							</li>
 							<li>
+								<Link href="/privacy#cookies" className={linkClass}>
+									{t('cookies')}
+								</Link>
+							</li>
+							<li>
+								<ChangeCookieChoice
+									tagIds={tagIds}
+									className={linkClass}
+									label={t('cookieSettings')}
+								/>
+							</li>
+							<li>
 								<a href={`mailto:${SUPPORT_EMAIL}`} className={linkClass}>
 									{t('contact')}
 								</a>
@@ -109,7 +126,15 @@ export async function Footer() {
 				</div>
 
 				<div className="mt-10 flex flex-col gap-2 border-t border-border pt-6 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
-					<p>{t('copyright', { year: currentYear })}</p>
+					<p>
+						{t('copyright', { year: currentYear })}{' '}
+						<a
+							href={`tel:${COMPANY_PHONE.replace(/\s/g, '')}`}
+							className="inline-flex min-h-11 items-center whitespace-nowrap hover:text-foreground"
+						>
+							{COMPANY_PHONE}
+						</a>
+					</p>
 					<p>{t('resetNote')}</p>
 				</div>
 			</div>

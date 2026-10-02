@@ -11,11 +11,12 @@ import { useTranslations } from 'next-intl'
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { useStartOver } from '@/games/shared/use-start-over'
 import { cn } from '@/lib/utils'
 import { PipPlaceIcon } from './icon'
 import { parsePipPlaceClientPayload } from './parse-client'
@@ -131,6 +132,11 @@ function tileSpanStyle(tile: PipPlaceTile): CSSProperties {
 	}
 }
 
+/** Explicit position: overlays in the same grid must not push auto-placed cells. */
+export function cellGridStyle(cell: Cell): CSSProperties {
+	return { gridRow: cell.row + 1, gridColumn: cell.col + 1 }
+}
+
 function pipAt(placed: PipPlaceTile[], cell: Cell): number | null {
 	for (const tile of placed) {
 		if (cellsEqual(tile.a, cell)) return tile.pa
@@ -153,8 +159,8 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
-		showGuestSignupPrompt,
-		handleCloseGuestPrompt,
+		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'pip-place',
 		mode,
@@ -202,6 +208,8 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	}, [regionOf, rows, cols])
 
 	const shareResult = useResultShare()
+	const startOver = useStartOver(resetSession, game.reset)
+
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 		void shareResult({
@@ -276,7 +284,7 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 						<Button
 							variant="ghost"
 							size="sm"
-							onClick={game.reset}
+							onClick={startOver}
 							disabled={!playing}
 							aria-label="Reset"
 						>
@@ -328,6 +336,7 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 										disabled={!playing}
 										onClick={() => game.touchCell(cell)}
 										aria-label={`cell ${row + 1},${col + 1}`}
+										style={cellGridStyle(cell)}
 										className={cn(
 											'relative flex items-center justify-center rounded-sm border border-border/70',
 											REGION_COLORS[regionId % REGION_COLORS.length],
@@ -355,6 +364,12 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 						))}
 					</div>
 				</div>
+
+				<SeeResultButton
+					finished={resultReady}
+					modalOpen={showResultModal}
+					onOpen={() => setShowResultModal(true)}
+				/>
 
 				<div className="flex w-full flex-wrap justify-center gap-2 px-2">
 					{game.state.tray.map((face, index) => {
@@ -399,12 +414,6 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 				}}
 				mode={mode}
 				onShare={handleShare}
-			/>
-
-			<GuestSignupPrompt
-				open={showGuestSignupPrompt}
-				onClose={handleCloseGuestPrompt}
-				streakCount={1}
 			/>
 		</div>
 	)

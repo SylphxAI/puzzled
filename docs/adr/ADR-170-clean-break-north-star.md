@@ -65,11 +65,12 @@ clean-break end state that replaces all of it.
 | Service | Responsibility |
 | --- | --- |
 | HealthService | liveness/readiness |
-| PuzzleService | GetPuzzle (practice), GetDaily (daily/archive), SubmitGuess |
+| PuzzleService | GetPuzzle (practice), GetDaily (daily/archive), GetTodayProgress (one batched read of the caller's finishes for the server's product day, used by home), SubmitGuess |
 | StatsService | leaderboard, percentile, user stats, history, today overview |
 | PreferencesService | profile, username, push/email preferences |
 | GamificationService | streak info (reading it settles earned freezes: one per 7 played days, at most 2 held, a held freeze covers up to 3 missed days unless the player turns auto-freeze off; rules in `personal_streak.rs`), admin freeze grant |
 | AdminService | announcements, settings, audit logs, DLQ, games overview/analytics, system health (exact admin scope) |
+| AnnouncementService | public read of the active announcements behind the site banner (copy and window live in the admin-written row) |
 | JobsService | retention jobs (daily-reminder, win-back-emails) via Platform BaaS HTTP; `x-app-secret` auth. The daily reminder also runs as the `puzzled-daily-reminders` Compute schedule every 15 minutes: each player is sent it once per local day at their own `daily_reminder_time` in their own `timezone`, never after finishing the day's puzzle |
 
 ### 4. Content model

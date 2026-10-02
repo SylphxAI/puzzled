@@ -1,7 +1,12 @@
 {
 	"title": "分析同意",
-	"message": "Puzzled 使用注重隐私的分析工具，了解大家如何玩谜题。免费玩家可能会在存档和结果页面看到标明的广告，解谜过程中绝不会出现。我们不会出售数据，你也可以随时在设置中更改。",
+	"message": "我们使用 Google Analytics 了解大家如何玩谜题，广告 Cookie 默认关闭，需要在“设置”中自行开启。",
 	"accept": "同意",
 	"decline": "拒绝",
-	"learnMore": "隐私政策"
+	"learnMore": "隐私政策",
+	"analyticsLabel": "分析 Cookie",
+	"analyticsHint": "统计大家如何玩谜题。",
+	"marketingLabel": "广告 Cookie",
+	"marketingHint": "让我们了解 Google 广告是否带来注册。默认关闭。",
+	"change": "更改 Cookie 选择"
 }

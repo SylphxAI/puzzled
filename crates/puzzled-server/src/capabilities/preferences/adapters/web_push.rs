@@ -41,11 +41,16 @@ pub async fn save(
     auth: &str,
     locale: &str,
 ) -> Result<(), sqlx::Error> {
-    // An endpoint is owned by this browser. Registering under a new signed-in
-    // account moves it rather than notifying the previous account on a shared device.
+    // Endpoint knowledge and shaped keys are not proof of browser possession.
+    // Only its existing owner may rotate keys; account switches must obtain a
+    // fresh browser subscription after explicitly unsubscribing the old one.
     let mut transaction = pool.begin().await?;
-    sqlx::query("INSERT INTO push_subscriptions (id, user_id, endpoint, p256dh, auth) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (endpoint) DO UPDATE SET user_id = EXCLUDED.user_id, p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth")
+    let saved = sqlx::query("INSERT INTO push_subscriptions (id, user_id, endpoint, p256dh, auth) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (endpoint) DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth WHERE push_subscriptions.user_id = EXCLUDED.user_id")
         .bind(Uuid::now_v7()).bind(player).bind(endpoint).bind(p256dh).bind(auth).execute(&mut *transaction).await?;
+    if saved.rows_affected() == 0 {
+        transaction.rollback().await?;
+        return Err(sqlx::Error::RowNotFound);
+    }
     sqlx::query("INSERT INTO user_preferences (user_id, locale) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET locale = EXCLUDED.locale")
         .bind(player).bind(locale).execute(&mut *transaction).await?;
     transaction.commit().await?;
@@ -53,11 +58,15 @@ pub async fn save(
 }
 
 pub async fn remove(pool: &PgPool, player: Uuid, endpoint: &str) -> Result<(), sqlx::Error> {
-    sqlx::query("DELETE FROM push_subscriptions WHERE user_id = $1 AND endpoint = $2")
-        .bind(player)
-        .bind(endpoint)
-        .execute(pool)
-        .await?;
+    let removed =
+        sqlx::query("DELETE FROM push_subscriptions WHERE user_id = $1 AND endpoint = $2")
+            .bind(player)
+            .bind(endpoint)
+            .execute(pool)
+            .await?;
+    if removed.rows_affected() == 0 {
+        return Err(sqlx::Error::RowNotFound);
+    }
     Ok(())
 }
 

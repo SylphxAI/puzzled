@@ -14,6 +14,7 @@ use super::compute_ticks::{
     AUDIT_RETENTION_PATH, DAILY_PUZZLES_PATH, DAILY_REMINDERS_PATH, TRYIT_CONVERSIONS_PATH,
 };
 use super::connect_admin::admin_connect_service;
+use super::connect_announcements::announcement_connect_service;
 use super::connect_billing::billing_connect_service;
 use super::connect_gamification::gamification_connect_service;
 use super::connect_health::health_connect_service;
@@ -29,6 +30,7 @@ use crate::capabilities::identity_access::adapters::auth_session::attach_auth_se
 pub fn router(state: AppState) -> Router {
     let connect = connectrpc::Router::new()
         .add_service(admin_connect_service(state.clone()))
+        .add_service(announcement_connect_service(state.clone()))
         .add_service(billing_connect_service(state.clone()))
         .add_service(gamification_connect_service(state.clone()))
         .add_service(health_connect_service(state.clone()))
@@ -38,7 +40,12 @@ pub fn router(state: AppState) -> Router {
         .add_service(stats_connect_service(state.clone()));
 
     let auth = state.auth.clone();
+    let guest_pool = state.pool.clone();
     Router::new()
+        .route(
+            "/v1/guest/session",
+            post(crate::capabilities::identity_access::adapters::guest_credentials::session),
+        )
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route(DAILY_PUZZLES_PATH, post(daily_puzzles_tick))
@@ -48,10 +55,17 @@ pub fn router(state: AppState) -> Router {
         .route("/observability/test", post(observability_test))
         .with_state(state)
         .fallback_service(connect.into_axum_service())
+        .layer(axum::middleware::from_fn_with_state(
+            guest_pool,
+            crate::capabilities::identity_access::adapters::guest_credentials::attach_guest,
+        ))
         // Sylphx Auth end-user sessions are checked once, before any service.
         .layer(axum::middleware::from_fn_with_state(
             auth,
             attach_auth_session,
+        ))
+        .layer(axum::middleware::from_fn(
+            crate::capabilities::identity_access::adapters::guest_credentials::bootstrap_guard,
         ))
         .layer(axum::middleware::from_fn(
             crate::observability::capture_server_errors,

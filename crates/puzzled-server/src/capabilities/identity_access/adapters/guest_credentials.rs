@@ -1,0 +1,409 @@
+//! Server-issued browser identity; public player ids are not credentials.
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use sha2::{Digest, Sha256};
+use sqlx::{PgConnection, PgPool};
+use uuid::Uuid;
+
+pub const COOKIE: &str = "__Host-puzzled_guest";
+pub const VERIFIED_GUEST_HEADER: &str = "x-puzzled-verified-guest";
+
+pub const ACCOUNT_BACKED_SQL: &str = "SELECT EXISTS (SELECT 1 FROM auth_subjects WHERE user_id = $1) OR EXISTS (SELECT 1 FROM user_preferences WHERE user_id = $1) OR EXISTS (SELECT 1 FROM user_display_cache WHERE user_id = $1) OR EXISTS (SELECT 1 FROM notification_preferences WHERE user_id = $1) OR EXISTS (SELECT 1 FROM billing_customers WHERE user_id = $1) OR EXISTS (SELECT 1 FROM billing_subscriptions WHERE user_id = $1) OR EXISTS (SELECT 1 FROM billing_ledger WHERE user_id = $1) OR EXISTS (SELECT 1 FROM family_groups WHERE owner_user_id = $1) OR EXISTS (SELECT 1 FROM family_members WHERE owner_user_id = $1 OR member_user_id = $1) OR EXISTS (SELECT 1 FROM account_attribution WHERE user_id = $1) OR EXISTS (SELECT 1 FROM checkout_consents WHERE user_id = $1) OR EXISTS (SELECT 1 FROM win_back_emails WHERE user_id = $1) OR EXISTS (SELECT 1 FROM push_subscriptions WHERE user_id = $1) OR EXISTS (SELECT 1 FROM guest_credentials WHERE adopted_user_id = $1)";
+
+pub async fn account_backed(
+    connection: &mut PgConnection,
+    player: Uuid,
+) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar(ACCOUNT_BACKED_SQL)
+        .bind(player)
+        .fetch_one(connection)
+        .await
+}
+
+/// Account mapping, guest access, erasure, and adoption share this lock order.
+pub async fn lock_players(
+    connection: &mut PgConnection,
+    mut players: Vec<Uuid>,
+) -> Result<(), sqlx::Error> {
+    players.sort_unstable();
+    players.dedup();
+    let mut keys = Vec::new();
+    for player in players {
+        let key: i64 = sqlx::query_scalar("SELECT hashtextextended('puzzled:erasure:' || $1, 0)")
+            .bind(player.to_string())
+            .fetch_one(&mut *connection)
+            .await?;
+        keys.push(key);
+    }
+    keys.sort_unstable();
+    keys.dedup();
+    for key in keys {
+        sqlx::query("SELECT pg_advisory_xact_lock($1)")
+            .bind(key)
+            .execute(&mut *connection)
+            .await?;
+    }
+    Ok(())
+}
+
+pub fn token_hash(token: &str) -> Option<String> {
+    let raw = URL_SAFE_NO_PAD.decode(token).ok()?;
+    (raw.len() == 32).then(|| URL_SAFE_NO_PAD.encode(Sha256::digest(raw)))
+}
+
+pub async fn lookup_hash(pool: &PgPool, hash: &str) -> Result<Option<Uuid>, sqlx::Error> {
+    sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE token_hash = $1 AND adopted_user_id IS NULL AND revoked_at IS NULL")
+        .bind(hash).fetch_optional(pool).await
+}
+
+pub async fn validate_locked(
+    connection: &mut PgConnection,
+    player: Uuid,
+    hash: &str,
+) -> Result<bool, sqlx::Error> {
+    let live: Option<Uuid> = sqlx::query_scalar("SELECT user_id FROM guest_credentials WHERE user_id = $1 AND token_hash = $2 AND adopted_user_id IS NULL AND revoked_at IS NULL FOR SHARE")
+        .bind(player).bind(hash).fetch_optional(&mut *connection).await?;
+    Ok(live == Some(player) && !account_backed(connection, player).await?)
+}
+
+pub fn mint_cookie(existing: Option<&str>) -> Result<String, sqlx::Error> {
+    let token = match existing.filter(|token| token_hash(token).is_some()) {
+        Some(token) => token.to_string(),
+        None => {
+            let mut raw = [0_u8; 32];
+            getrandom::fill(&mut raw)
+                .map_err(|error| sqlx::Error::Io(std::io::Error::other(error.to_string())))?;
+            URL_SAFE_NO_PAD.encode(raw)
+        }
+    };
+    Ok(format!(
+        "{COOKIE}={token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=34560000"
+    ))
+}
+
+pub async fn unused_player(
+    connection: &mut PgConnection,
+    player: Uuid,
+) -> Result<bool, sqlx::Error> {
+    if account_backed(connection, player).await? {
+        return Ok(false);
+    }
+    for (table, column, _) in
+        crate::capabilities::preferences::adapters::account_deletion::USER_KEYED_COLUMNS
+    {
+        let statement =
+            format!("SELECT EXISTS (SELECT 1 FROM \"{table}\" WHERE \"{column}\" = $1)");
+        let exists: bool = sqlx::query_scalar(sqlx::AssertSqlSafe(statement))
+            .bind(player)
+            .fetch_one(&mut *connection)
+            .await?;
+        if exists {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+/// Test fixture that performs a first guest write's allocation. Production
+/// bootstrap only returns a cookie and never populates the registry.
+#[cfg(test)]
+pub async fn issue(pool: &PgPool) -> Result<String, sqlx::Error> {
+    issue_with_first_candidate(pool, Uuid::now_v7()).await
+}
+
+#[cfg(test)]
+pub(crate) async fn issue_with_first_candidate(
+    pool: &PgPool,
+    mut player: Uuid,
+) -> Result<String, sqlx::Error> {
+    let cookie = mint_cookie(None)?;
+    let token = cookie
+        .split(';')
+        .next()
+        .and_then(|pair| pair.split_once('=').map(|(_, token)| token))
+        .ok_or(sqlx::Error::RowNotFound)?;
+    let hash = token_hash(token).ok_or(sqlx::Error::RowNotFound)?;
+    loop {
+        let mut tx = pool.begin().await?;
+        lock_players(&mut tx, vec![player]).await?;
+        if !unused_player(&mut tx, player).await? {
+            tx.rollback().await?;
+            player = Uuid::now_v7();
+            continue;
+        }
+        sqlx::query("INSERT INTO guest_credentials (token_hash, user_id, provenance) VALUES ($1, $2, 'server_issued')")
+            .bind(&hash).bind(player).execute(&mut *tx).await?;
+        tx.commit().await?;
+        return Ok(cookie);
+    }
+}
+
+pub fn cookie_token(headers: &axum::http::HeaderMap) -> Option<&str> {
+    let mut token = None;
+    for value in headers.get_all(axum::http::header::COOKIE) {
+        for pair in value.to_str().ok()?.split(';') {
+            if let Some((name, value)) = pair.trim().split_once('=') {
+                if name == COOKIE {
+                    if token.is_some() {
+                        return None;
+                    }
+                    token = Some(value);
+                }
+            }
+        }
+    }
+    token
+}
+
+pub async fn attach_guest(
+    axum::extract::State(pool): axum::extract::State<Option<PgPool>>,
+    mut request: axum::http::Request<axum::body::Body>,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    use axum::response::IntoResponse;
+    request.headers_mut().remove(VERIFIED_GUEST_HEADER);
+    if request.uri().path() == "/v1/guest/session" {
+        return next.run(request).await;
+    }
+    // A signed subject that aliases a registered guest is not an account.
+    if let (Some(pool), Ok(identity)) =
+        (&pool, crate::bootstrap::identity::verify(request.headers()))
+    {
+        if let Ok(player) = Uuid::parse_str(&identity.user_id) {
+            let result = async {
+                let mut tx = pool.begin().await?;
+                lock_players(&mut tx, vec![player]).await?;
+                let collision: bool = sqlx::query_scalar(
+                    "SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1)",
+                )
+                .bind(player)
+                .fetch_one(&mut *tx)
+                .await?;
+                tx.commit().await?;
+                Ok::<_, sqlx::Error>(collision)
+            }
+            .await;
+            match result {
+                Ok(true) => return (axum::http::StatusCode::UNAUTHORIZED, axum::Json(serde_json::json!({"code":"unauthenticated", "message":"identity_required"}))).into_response(),
+                Ok(false) => {},
+                Err(_) => return (axum::http::StatusCode::INTERNAL_SERVER_ERROR, axum::Json(serde_json::json!({"code":"internal", "message":"identity_store_failed"}))).into_response(),
+            }
+        }
+    }
+    if let Some(hash) = cookie_token(request.headers()).and_then(token_hash) {
+        if let Ok(value) = hash.parse() {
+            request.headers_mut().insert(VERIFIED_GUEST_HEADER, value);
+        }
+    }
+    next.run(request).await
+}
+
+/// True when any user-keyed table still holds rows owned by the player
+/// (credential and adoption-provenance columns are not ownership).
+async fn has_player_rows(connection: &mut PgConnection, player: Uuid) -> Result<bool, sqlx::Error> {
+    for (table, column, _) in
+        crate::capabilities::preferences::adapters::account_deletion::USER_KEYED_COLUMNS
+    {
+        if *table == "guest_credentials" || *column == "adopted_from_guest" {
+            continue;
+        }
+        let statement =
+            format!("SELECT EXISTS (SELECT 1 FROM \"{table}\" WHERE \"{column}\" = $1)");
+        if sqlx::query_scalar(sqlx::AssertSqlSafe(statement))
+            .bind(player)
+            .fetch_one(&mut *connection)
+            .await?
+        {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+const LEGACY_COOKIE: &str = "puzzled_guest_id";
+
+/// A legacy raw player id: the body field, else exactly one cookie.
+fn legacy_guest_id(headers: &axum::http::HeaderMap, body: &[u8]) -> Option<Uuid> {
+    if let Some(id) = serde_json::from_slice::<serde_json::Value>(body)
+        .ok()
+        .and_then(|v| {
+            v.get("legacyGuestId")?
+                .as_str()
+                .and_then(|s| Uuid::parse_str(s).ok())
+        })
+    {
+        return Some(id);
+    }
+    let mut found = None;
+    for value in headers.get_all(axum::http::header::COOKIE) {
+        for pair in value.to_str().ok()?.split(';') {
+            if let Some((name, value)) = pair.trim().split_once('=') {
+                if name == LEGACY_COOKIE {
+                    if found.is_some() {
+                        return None;
+                    }
+                    found = Some(value.trim());
+                }
+            }
+        }
+    }
+    found
+        .filter(|v| v.len() == 36)
+        .and_then(|v| Uuid::parse_str(v).ok())
+}
+
+/// Move an unclaimed legacy player's rows into a fresh server-owned namespace
+/// bound to this token. Returns false when the legacy id has nothing to claim.
+async fn claim_legacy(pool: &PgPool, hash: &str, legacy: Uuid) -> Result<bool, String> {
+    let e = |e: sqlx::Error| e.to_string();
+    let fresh = Uuid::now_v7();
+    let mut tx = pool.begin().await.map_err(e)?;
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended('puzzled:guest-token:' || $1, 0))")
+        .bind(hash)
+        .execute(&mut *tx)
+        .await
+        .map_err(e)?;
+    lock_players(&mut tx, vec![legacy, fresh])
+        .await
+        .map_err(e)?;
+    let registered: bool = sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM guest_credentials WHERE user_id = $1 OR token_hash = $2)",
+    )
+    .bind(legacy)
+    .bind(hash)
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(e)?;
+    if registered
+        || account_backed(&mut tx, legacy).await.map_err(e)?
+        || !has_player_rows(&mut tx, legacy).await.map_err(e)?
+    {
+        tx.rollback().await.map_err(e)?;
+        return Ok(false);
+    }
+    sqlx::query("INSERT INTO guest_credentials (token_hash, user_id, provenance) VALUES ($1, $2, 'server_issued')")
+        .bind(hash)
+        .bind(fresh)
+        .execute(&mut *tx)
+        .await
+        .map_err(e)?;
+    crate::capabilities::puzzle_play::adapters::game_sessions_db::reassign_sessions(
+        &mut tx, legacy, fresh,
+    )
+    .await?;
+    crate::capabilities::puzzle_play::adapters::result_shares_db::adopt_guest_shares(
+        &mut tx, fresh, legacy,
+    )
+    .await?;
+    for (table, column, _) in
+        crate::capabilities::preferences::adapters::account_deletion::USER_KEYED_COLUMNS
+    {
+        // Sessions and shares moved above; credentials are not player data.
+        if matches!(
+            *table,
+            "guest_credentials" | "game_sessions" | "result_shares"
+        ) {
+            continue;
+        }
+        let statement = format!("UPDATE \"{table}\" SET \"{column}\" = $2 WHERE \"{column}\" = $1");
+        sqlx::query(sqlx::AssertSqlSafe(statement))
+            .bind(legacy)
+            .bind(fresh)
+            .execute(&mut *tx)
+            .await
+            .map_err(|err| format!("legacy claim failed on {table}.{column}: {err}"))?;
+    }
+    // Nothing may stay under the legacy id.
+    if has_player_rows(&mut tx, legacy).await.map_err(e)? {
+        return Err("legacy claim left rows behind".into());
+    }
+    tx.commit().await.map_err(e)?;
+    Ok(true)
+}
+
+pub async fn session(
+    axum::extract::State(state): axum::extract::State<crate::AppState>,
+    headers: axum::http::HeaderMap,
+    body: axum::body::Bytes,
+) -> axum::response::Response {
+    use axum::response::IntoResponse;
+    let Ok(expected) = crate::shared::public_origin::public_origin() else {
+        return axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
+    };
+    if !crate::shared::public_origin::admits_browser(&headers, &expected)
+        || serde_json::from_slice::<serde_json::Value>(&body).is_err()
+    {
+        return axum::http::StatusCode::FORBIDDEN.into_response();
+    }
+    let existing = cookie_token(&headers).filter(|token| token_hash(token).is_some());
+    let issued = existing.is_none();
+    let Ok(cookie) = mint_cookie(existing) else {
+        return axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    };
+    // Without a database the claim cannot run; a 200 would make the client forget its key.
+    if state.pool.is_none() && legacy_guest_id(&headers, &body).is_some() {
+        return axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
+    }
+    let mut claimed = false;
+    if let (Some(pool), Some(legacy)) = (&state.pool, legacy_guest_id(&headers, &body)) {
+        let hash = cookie
+            .split(';')
+            .next()
+            .and_then(|pair| pair.split_once('='))
+            .and_then(|(_, token)| token_hash(token));
+        let Some(hash) = hash else {
+            return axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        };
+        match claim_legacy(pool, &hash, legacy).await {
+            Ok(done) => claimed = done,
+            Err(_) => return axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        }
+    }
+    let (Ok(value), Ok(expire)) = (
+        cookie.parse::<axum::http::HeaderValue>(),
+        format!("{LEGACY_COOKIE}=; Path=/; Max-Age=0").parse::<axum::http::HeaderValue>(),
+    ) else {
+        return axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    };
+    let mut response = axum::Json(if claimed {
+        serde_json::json!({"issued": issued, "claimed": true})
+    } else {
+        serde_json::json!({"issued": issued})
+    })
+    .into_response();
+    response
+        .headers_mut()
+        .append(axum::http::header::SET_COOKIE, value);
+    if claimed {
+        response
+            .headers_mut()
+            .append(axum::http::header::SET_COOKIE, expire);
+    }
+    response
+}
+
+/// Issuance origin and JSON admission precede Auth verification and database
+/// access, even when an invalid browser request supplies cookies or a bearer.
+pub async fn bootstrap_guard(
+    mut request: axum::http::Request<axum::body::Body>,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    use axum::response::IntoResponse;
+    if request.uri().path() != "/v1/guest/session" {
+        return next.run(request).await;
+    }
+    let Ok(origin) = crate::shared::public_origin::public_origin() else {
+        return axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
+    };
+    if !crate::shared::public_origin::admits_browser(request.headers(), &origin) {
+        return axum::http::StatusCode::FORBIDDEN.into_response();
+    }
+    let body = std::mem::replace(request.body_mut(), axum::body::Body::empty());
+    let Ok(bytes) = axum::body::to_bytes(body, 4096).await else {
+        return axum::http::StatusCode::FORBIDDEN.into_response();
+    };
+    if serde_json::from_slice::<serde_json::Value>(&bytes).is_err() {
+        return axum::http::StatusCode::FORBIDDEN.into_response();
+    }
+    *request.body_mut() = axum::body::Body::from(bytes);
+    next.run(request).await
+}

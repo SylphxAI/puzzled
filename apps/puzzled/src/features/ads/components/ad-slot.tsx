@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
-import { canTrackAnalytics, onConsentChange } from '@/features/analytics/lib/consent'
+import { canStoreMarketing, onConsentChange } from '@/features/analytics/lib/consent'
 import { type AdsConfig, adScriptSrc } from '@/lib/ads'
 import { useAdsConfig } from './ad-context'
 
@@ -28,8 +28,9 @@ export function AdSlot({ config }: { config?: AdsConfig | null }) {
 	const pushed = useRef(false)
 
 	useEffect(() => {
-		setConsented(canTrackAnalytics())
-		return onConsentChange((status) => setConsented(status === 'accepted'))
+		// AdSense is advertising: it needs the advertising choice, not analytics.
+		setConsented(canStoreMarketing())
+		return onConsentChange(() => setConsented(canStoreMarketing()))
 	}, [])
 
 	useEffect(() => {
