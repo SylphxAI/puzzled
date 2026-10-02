@@ -45,6 +45,13 @@
 		"playFree": "免费玩 {game}",
 		"keep": "你已完成的题目会一直保留在统计中。"
 	},
+	"offer": {
+		"resultTitle": "畅玩全部 {count} 款游戏和往日题库",
+		"resultBody": "今日精选谜题永远免费。Puzzled Plus 开放每款游戏、往日题库，以及每款游戏的统计。",
+		"day3Title": "你已经玩了 {days} 天，开局不错！",
+		"day7Title": "你已经玩了 {days} 天，是常客了！",
+		"milestoneBody": "Puzzled Plus 开放全部 {count} 款游戏、往日题库以及每款游戏的统计。今日精选谜题继续免费。"
+	},
 	"subscription": {
 		"title": "订阅",
 		"description": "你的 Puzzled Plus 方案、付款和家庭成员。",

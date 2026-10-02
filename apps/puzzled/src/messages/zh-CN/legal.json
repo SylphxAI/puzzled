@@ -71,7 +71,7 @@
 			"cookies": {
 				"title": "Cookie",
 				"content": "我们使用登录、保障 Puzzled 安全和记住你的设置所必需的 Cookie。分析 Cookie 和推荐 Cookie 只会在你接受分析后使用；广告效果衡量只会在你另外于设置中开启广告后使用。所有选项默认不勾选，拒绝不影响你使用。",
-				"notices": "另有一个 Cookie 用来记住你已关闭了哪些站点公告：puzzled_dismissed_notices。它属于必要 Cookie，由我们自己设置（第一方），保存一年，只记录你已关闭公告的编号，不含任何个人信息，因此无需询问即会设置，也不会用于分析。另有一个必要的第一方 Cookie：puzzled_currency，用来记住你在价格页选择的货币（例如 GBP 或 USD），保存一年，只记录货币代码，不含任何个人信息，也不会用于分析。",
+				"notices": "另有一个 Cookie 用来记住你已关闭或已看过哪些站点公告：puzzled_dismissed_notices。它属于必要 Cookie，由我们自己设置（第一方），保存一年，只记录这些公告的编号，不含任何个人信息，因此无需询问即会设置，也不会用于分析。另有一个必要的第一方 Cookie：puzzled_currency，用来记住你在价格页选择的货币（例如 GBP 或 USD），保存一年，只记录货币代码，不含任何个人信息，也不会用于分析。",
 				"google": "如果本网站启用了 Google Analytics 或 Google Ads，它们只会在你同意后才加载：Google Analytics 用于分析，Google Ads 用于衡量广告是否带来注册或购买，只涉及方案和价格，不含姓名或邮箱。我们关闭广告个性化和 Google 信号，只向 Google 发送公开页面地址。你可以随时点击下方按钮撤回，同时会删除 Google Cookie。"
 			},
 			"rights": {

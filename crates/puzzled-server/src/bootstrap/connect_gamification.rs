@@ -88,6 +88,7 @@ impl GamificationConnectService {
             auto_freeze_enabled: freeze.auto_freeze_enabled,
             days_until_next_freeze: streak.days_until_next_freeze,
             freeze_used_yesterday: streak.freeze_used_yesterday,
+            played_days: streak.played_days,
             ..Default::default()
         }
     }

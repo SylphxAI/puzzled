@@ -162,6 +162,18 @@ impl Subscription {
     pub fn renews(&self) -> bool {
         self.live() && !self.cancel_at_period_end
     }
+
+    /// Erasure guard: may this subscription still bill? Fail closed: every
+    /// status except the ones known to be over counts, so a status Money adds
+    /// later blocks erasure. Not an entitlement or display rule; those use
+    /// [`live`](Self::live) and [`renews`](Self::renews).
+    #[must_use]
+    pub fn renews_for_erasure(&self) -> bool {
+        !matches!(
+            self.status.as_str(),
+            "canceled" | "incomplete_expired" | "expired"
+        ) && !self.cancel_at_period_end
+    }
 }
 
 /// A path segment that cannot escape its place in the URL.
@@ -577,7 +589,7 @@ impl Money {
             .subscriptions(user_id)
             .await?
             .iter()
-            .any(Subscription::renews))
+            .any(Subscription::renews_for_erasure))
     }
 
     /// A hosted billing-portal page for `user_id` (payment method, invoices).

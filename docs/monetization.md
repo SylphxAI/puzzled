@@ -86,12 +86,23 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 
 - Cancel at any time in Settings > Subscription. Access runs to the end of the
   paid period and nothing more is charged.
-- Cancellation right: an account's first subscription can be cancelled within
-  14 days of starting it for a full refund, however much was played
-  (Consumer Contracts Regulations 2013). The api refunds every paid invoice of
-  that subscription through Sylphx Money, which owns the refund records and ends access at once. A later subscription has no refund window.
+- Immediate supply: checkout records the player's express request for access
+  to start at once and their acknowledgement that the 14-day cancellation
+  right is lost (`immediate_supply_consent`). The consent is stored before
+  checkout starts.
+- No money-back guarantee. Cancellation ends renewal at the end of the paid
+  period (`cancel_at_period_end`) and the api refunds nothing on cancel.
+  Payments are non-refundable and part-used periods are not refunded, except
+  where the terms or the law say otherwise. The terms promise a pro-rata
+  refund of the unused part of the paid period in exactly three cases: we
+  materially reduce what Plus gives (the subscriber cancels after our advance
+  notice), a change to the terms materially affects the subscriber (they cancel
+  before it applies), or we close the account without a serious reason while a
+  paid period is left (`legal.json` terms sections at lines 146, 198 and 182).
+  Any other refund request is handled case by case by support. Every refund is
+  a new Money ledger entry (commercial standard).
 - Sylphx Money's hosted portal handles payment methods, invoices and plan
-  changes; cancellation stays in Settings so the refund rule applies.
+  changes; cancellation stays in Settings so it is one flow.
 - An account with a subscription that still renews cannot be erased until it
   is cancelled. Money retains legally required financial records under its own retention
   policy; Puzzled has no subscription or payment-ledger rows to retain.
@@ -111,7 +122,7 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   counts only. When Auth serves its erasure delivery (`[privacy]` handler,
   platform spec), that delivery replaces the manual step.
 - Terms, Privacy and checkout name Sylphx Limited, state VAT-inclusive prices,
-  automatic renewal, the 14-day right, and UK GDPR with the ICO.
+  automatic renewal, the immediate-supply consent, and UK GDPR with the ICO.
 
 ## 5. Money and entitlement (commercial standard)
 
@@ -120,8 +131,8 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   `entitlement_grants:check` for Plus access. It holds no Stripe keys,
   processor webhooks, billing subscriptions or payment ledger.
 - Checkout return reads Money's subscription status; a browser redirect
-  cannot assert a paid entitlement. Cancellation and the first-subscription
-  14-day refund are requests to Money; Money owns invoice, refund and tax
+  cannot assert a paid entitlement. Cancellation at period end is a
+  request to Money; Money owns invoice, refund and tax
   records. Puzzled stores only checkout consent evidence and family membership.
 - Family: the family-plan subscriber gets an invite link; up to 3 others join
   with their own accounts. The subscriber can remove members and reset the

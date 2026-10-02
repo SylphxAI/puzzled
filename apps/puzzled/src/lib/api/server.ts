@@ -16,6 +16,7 @@ import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
 import { createActiveAnnouncementsCache } from '@/features/announcements/lib/active-cache'
 import { type SharedResult, toSharedResult } from '@/features/daily/lib/challenge'
+import { offerAccess } from '@/features/plus-offer/lib/plus-offer'
 import { AdminService, GetSettingsRequestSchema } from '@/gen/connect/puzzled/v1/admin_pb'
 import {
 	AnnouncementService,
@@ -406,6 +407,31 @@ export const getServerSubscription = cache(async (refresh = false) => {
 	return createClient(BillingService, transport).getSubscription(
 		create(GetSubscriptionRequestSchema, { refresh }),
 	)
+})
+
+/**
+ * Access for offers only (result card, milestone prompt). A failed read hides
+ * the offer instead of selling to a member Money could not confirm; it reuses
+ * the cached reads above, so it adds no calls.
+ */
+export const getServerPlusOfferAccess = cache(async (signedIn: boolean): Promise<PlusAccess> => {
+	let subscription: PlusAccess | 'failed' = 'failed'
+	let plansSalesOpen: boolean | 'failed' = 'failed'
+	if (signedIn) {
+		try {
+			const res = await getServerSubscription()
+			subscription = { salesOpen: res.salesOpen, entitled: res.entitled }
+		} catch (error) {
+			logger.warn('plus.offer-subscription-read-failed', { error })
+		}
+	} else {
+		try {
+			plansSalesOpen = (await getServerPlans()).salesOpen
+		} catch (error) {
+			logger.warn('plus.offer-plans-read-failed', { error })
+		}
+	}
+	return offerAccess(signedIn, subscription, plansSalesOpen)
 })
 
 /**
