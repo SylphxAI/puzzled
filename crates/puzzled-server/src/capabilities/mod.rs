@@ -8,6 +8,7 @@ pub mod identity_access;
 pub mod jobs;
 pub mod leaderboard;
 pub mod money;
+pub mod plus_grace;
 pub mod preferences;
 pub mod puzzle_play;
 pub mod stats;
