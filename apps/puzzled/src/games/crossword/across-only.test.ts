@@ -67,9 +67,9 @@ describe('across-only boards (no down clues)', () => {
 		expect(
 			crosswordReducer(start(), { type: 'SET_DIRECTION', direction: 'down' }, both).direction,
 		).toBe('down')
-		expect(
-			crosswordReducer(start(), { type: 'SELECT_CELL', row: 0, col: 0 }, both).direction,
-		).toBe('down')
+		expect(crosswordReducer(start(), { type: 'SELECT_CELL', row: 0, col: 0 }, both).direction).toBe(
+			'down',
+		)
 	})
 
 	const props = {
