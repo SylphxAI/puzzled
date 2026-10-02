@@ -73,21 +73,26 @@ export async function clearSessionCookie(): Promise<void> {
 	for (const name of SESSION_COOKIE_NAMES) jar.delete(name)
 }
 
-export async function revokeCurrentSessions(): Promise<void> {
+/**
+ * Sign out: end this one session at Auth (`/v1/client/sign-out`, the player's
+ * own bearer and User-Agent; it works for an unverified account too), then
+ * clear both cookie names. Ending the session at Auth is best-effort; the
+ * cookie clear is the local effect.
+ */
+export async function revokeCurrentSessions(userAgent?: string): Promise<void> {
 	const token = await sessionToken()
 	if (!token) {
 		await clearSessionCookie()
 		return
 	}
 	try {
-		await destIdentityJson(identityOrigin(), '/v1/sessions/revoke-all', {
+		await destIdentityJson(identityOrigin(), '/v1/client/sign-out', {
 			method: 'POST',
 			credential: token,
-			headers: { 'user-agent': await browserUserAgent() },
-			body: { idempotency_key: crypto.randomUUID(), reason: 'sign-out' },
+			headers: { 'user-agent': userAgent ?? (await browserUserAgent()) },
 		})
 	} catch {
-		// Cookie clear is the local effect; Identity revoke is best-effort.
+		// Cookie clear is the local effect; the Auth-side end is best-effort.
 	}
 	await clearSessionCookie()
 }
