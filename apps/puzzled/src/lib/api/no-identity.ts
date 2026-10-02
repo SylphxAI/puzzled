@@ -14,3 +14,16 @@ export function isNoIdentityError(error: unknown): boolean {
 export function isNoIdentityRejection(result: PromiseSettledResult<unknown>): boolean {
 	return result.status === 'rejected' && isNoIdentityError(result.reason)
 }
+
+/**
+ * A no-identity answer is an empty record only for a guest. A member session
+ * (a user, or a session cookie even when the user lookup failed) that the api
+ * does not recognise is an auth fault: the record must read as unavailable,
+ * never as erased.
+ */
+export function isEmptyGuestRecord(
+	memberSession: boolean,
+	result: PromiseSettledResult<unknown>,
+): boolean {
+	return !memberSession && isNoIdentityRejection(result)
+}

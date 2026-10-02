@@ -18,7 +18,7 @@ import {
 } from '@/features/console/lib/finish-activity'
 import { getNextAchievements } from '@/features/gamification'
 import { getAllGameMetadata } from '@/games/registry'
-import { isNoIdentityRejection } from '@/lib/api/no-identity'
+import { isEmptyGuestRecord } from '@/lib/api/no-identity'
 import {
 	getServerHistory,
 	getServerPersonalDailyResults,
@@ -31,7 +31,7 @@ import {
 } from '@/lib/api/server'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
-import { currentUser } from '@/lib/identity/server'
+import { currentUser, sessionToken } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { productDayKey } from '@/lib/product-day'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
@@ -83,6 +83,8 @@ export default async function StatsPage({ params }: Props) {
 
 	const user = await withPresentationDeadline(currentUser(), null)
 	const hasProgressIdentity = Boolean(user) || (await hasServerProgressIdentity())
+	// A session cookie marks a member even when the user lookup failed (Auth outage).
+	const memberSession = Boolean(user) || Boolean(await sessionToken())
 
 	const modules = getAllGameMetadata().map((game) => ({
 		slug: game.slug,
@@ -101,16 +103,17 @@ export default async function StatsPage({ params }: Props) {
 
 	// A guest without a stored identity has written nothing yet (the api issues
 	// the player row on the first finished write), so the personal reads answer
-	// `unauthenticated`. That is an empty record, not a failed read.
+	// `unauthenticated`. For a guest only, that is an empty record; a member
+	// session the api does not recognise stays unreadable (retry), never erased.
 	const statsRead = statsResult.status === 'fulfilled' ? statsResult.value : null
 	const historyRead = historyResult.status === 'fulfilled' ? historyResult.value : null
 	const streakRead = streakResult.status === 'fulfilled' ? streakResult.value : null
 	const statsKnown =
-		statsRead !== null || !hasProgressIdentity || isNoIdentityRejection(statsResult)
+		statsRead !== null || !hasProgressIdentity || isEmptyGuestRecord(memberSession, statsResult)
 	const historyKnown =
-		historyRead !== null || !hasProgressIdentity || isNoIdentityRejection(historyResult)
+		historyRead !== null || !hasProgressIdentity || isEmptyGuestRecord(memberSession, historyResult)
 	const streakKnown =
-		streakRead !== null || !hasProgressIdentity || isNoIdentityRejection(streakResult)
+		streakRead !== null || !hasProgressIdentity || isEmptyGuestRecord(memberSession, streakResult)
 
 	const personalResults: Record<string, PersonalDailyResult> =
 		personalResult.status === 'fulfilled' ? personalResult.value : {}

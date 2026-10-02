@@ -14,7 +14,7 @@ mock.module('next/headers', () => ({
 }))
 const { getServerHistory, getServerStreakInfo, getServerUserStats, hasServerProgressIdentity } =
 	await import('./server')
-const { isNoIdentityRejection } = await import('./no-identity')
+const { isEmptyGuestRecord, isNoIdentityRejection } = await import('./no-identity')
 const originalFetch = globalThis.fetch
 const originalBase = process.env.API_INTERNAL_URL
 
@@ -60,5 +60,24 @@ describe('guest with an issued cookie and no finished game', () => {
 
 	test('a fulfilled read is never a no-identity rejection', () => {
 		expect(isNoIdentityRejection({ status: 'fulfilled', value: {} })).toBe(false)
+	})
+
+	test('guest only: a no-identity rejection is an empty record', async () => {
+		globalThis.fetch = respond(401, { code: 'unauthenticated', message: 'identity_required' })
+		const [result] = await Promise.allSettled([getServerUserStats()])
+		expect(isEmptyGuestRecord(false, result as PromiseSettledResult<unknown>)).toBe(true)
+	})
+
+	test('member session (cookie present, user lookup null) with a 401 stays unreadable', async () => {
+		globalThis.fetch = respond(401, { code: 'unauthenticated', message: 'identity_required' })
+		const [result] = await Promise.allSettled([getServerUserStats()])
+		expect(isEmptyGuestRecord(true, result as PromiseSettledResult<unknown>)).toBe(false)
+	})
+
+	test('a 500 is unreadable for guests and members alike', async () => {
+		globalThis.fetch = respond(500, { code: 'internal', message: 'user_stats_read_failed' })
+		const [result] = await Promise.allSettled([getServerUserStats()])
+		const r = result as PromiseSettledResult<unknown>
+		expect([isEmptyGuestRecord(false, r), isEmptyGuestRecord(true, r)]).toEqual([false, false])
 	})
 })
