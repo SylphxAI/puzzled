@@ -94,6 +94,7 @@ describe('daily snapshot classification', () => {
 				score: 500,
 				attempts: 3,
 				completedAtMs: BigInt(1757500000000),
+				difficulty: 'medium',
 			}),
 		})
 
@@ -105,6 +106,7 @@ describe('daily snapshot classification', () => {
 				score: 500,
 				attempts: 3,
 				completedAt: new Date(1757500000000),
+				difficulty: 'medium',
 			},
 		})
 	})

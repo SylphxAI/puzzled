@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, Card, CardContent } from '@sylphx/ui'
-import { Check, ChevronRight, Clock, Flame, Gauge, Share2, Target, Trophy, X } from 'lucide-react'
+import { Check, Clock, Flame, Share2, Target, Trophy, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { AdSlot } from '@/features/ads/components/ad-slot'
@@ -49,10 +49,6 @@ type AlreadyCompletedViewProps = {
 	className?: string
 	/** Difficulty level for games that support it */
 	difficulty?: PuzzleDifficulty
-	/** Whether the game supports multiple difficulty levels */
-	supportsDifficulty?: boolean
-	/** Every level of today's daily is finished: say so under the result. */
-	allLevelsFinished?: boolean
 }
 
 /**
@@ -76,8 +72,6 @@ export function AlreadyCompletedView({
 	locale = 'en',
 	className,
 	difficulty,
-	supportsDifficulty = false,
-	allLevelsFinished = false,
 }: AlreadyCompletedViewProps) {
 	const t = useTranslations('daily')
 	const tCommon = useTranslations('common')
@@ -258,28 +252,6 @@ export function AlreadyCompletedView({
 				<Share2 className="h-5 w-5" />
 				{tCommon('share')}
 			</Button>
-
-			{allLevelsFinished ? (
-				<p className="text-center text-sm text-muted-foreground">{t('allCompleteMessage')}</p>
-			) : null}
-
-			{/* Play Other Difficulties - For games with difficulty support */}
-			{supportsDifficulty && (
-				<Link href={`/games/${gameSlug}`} className="w-full">
-					<Button
-						variant="outline"
-						size="lg"
-						className={cn(
-							'w-full gap-2 text-base',
-							animate && 'animate-slide-up-fade opacity-0 stagger-3',
-						)}
-					>
-						<Gauge className="h-5 w-5" />
-						{tDifficulty('playOtherDifficulties')}
-						<ChevronRight className="ml-auto h-4 w-4" />
-					</Button>
-				</Link>
-			)}
 
 			{/* Countdown Card */}
 			<Card className={cn('w-full', animate && 'animate-slide-up-fade opacity-0 stagger-4')}>

@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { checkGuess } from '@/lib/connect/puzzle-client'
@@ -57,6 +58,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'arithmo',
 		mode,
@@ -216,6 +218,12 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 				results={game.state.results}
 				currentGuess={game.state.currentGuess}
 				currentRow={game.state.currentRow}
+			/>
+
+			<SeeResultButton
+				finished={resultReady}
+				modalOpen={showResultModal}
+				onOpen={() => setShowResultModal(true)}
 			/>
 
 			{/* Error message */}

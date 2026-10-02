@@ -42,6 +42,7 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'crossword',
 		mode,
@@ -169,7 +170,7 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 			/>
 
 			<SeeResultButton
-				finished={game.state.isComplete}
+				finished={resultReady}
 				modalOpen={showResultModal}
 				onOpen={() => setShowResultModal(true)}
 			/>

@@ -23,7 +23,6 @@ type GameDailyFallbackProps = {
 	locale: string
 	mode: GameMode
 	difficulty?: PuzzleDifficulty
-	supportsDifficulty: boolean
 	/** Archive day key; only passed when the server already admitted that read. */
 	puzzleDate?: string
 }
@@ -43,7 +42,6 @@ export function GameDailyFallback({
 	locale,
 	mode,
 	difficulty,
-	supportsDifficulty,
 	puzzleDate,
 }: GameDailyFallbackProps) {
 	const t = useTranslations('daily')
@@ -98,8 +96,7 @@ export function GameDailyFallback({
 				session={snapshot.session}
 				currentStreak={0}
 				locale={locale}
-				difficulty={difficulty}
-				supportsDifficulty={supportsDifficulty}
+				difficulty={snapshot.session.difficulty ?? difficulty}
 			/>
 		)
 	}

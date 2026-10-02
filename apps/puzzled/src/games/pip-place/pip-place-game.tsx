@@ -12,6 +12,7 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
@@ -152,6 +153,7 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
 	} = useGameSession({
 		gameSlug: 'pip-place',
 		mode,
@@ -352,6 +354,12 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 						))}
 					</div>
 				</div>
+
+				<SeeResultButton
+					finished={resultReady}
+					modalOpen={showResultModal}
+					onOpen={() => setShowResultModal(true)}
+				/>
 
 				<div className="flex w-full flex-wrap justify-center gap-2 px-2">
 					{game.state.tray.map((face, index) => {

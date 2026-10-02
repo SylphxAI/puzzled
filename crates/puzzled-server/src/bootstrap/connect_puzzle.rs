@@ -261,6 +261,7 @@ fn progress_entries(
                         completed_at_ms: session
                             .completed_at
                             .map(|completed_at| completed_at.and_utc().timestamp_millis()),
+                        difficulty: session.difficulty.clone(),
                         ..Default::default()
                     })
                     .into(),
@@ -447,6 +448,7 @@ impl PuzzleService for PuzzleConnectService {
                         completed_at_ms: session
                             .completed_at
                             .map(|completed_at| completed_at.and_utc().timestamp_millis()),
+                        difficulty: session.difficulty,
                         ..Default::default()
                     })
                     .into(),
@@ -934,6 +936,7 @@ mod today_progress_tests {
             score: Some(score),
             attempts: 2,
             completed_at: None,
+            difficulty: Some("medium".into()),
         }
     }
 
@@ -964,5 +967,9 @@ mod today_progress_tests {
         assert_eq!(out[1].game_slug, "queens");
         assert!(out[1].has_completed);
         assert_eq!(out[1].completed_session.score, Some(80));
+        assert_eq!(
+            out[1].completed_session.difficulty.as_deref(),
+            Some("medium")
+        );
     }
 }

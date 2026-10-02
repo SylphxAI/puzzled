@@ -3,8 +3,9 @@ import { AdsProvider } from '@/features/ads/components/ad-context'
 import { GameUnlockPanel } from '@/features/catalog/components/game-unlock-panel'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import {
+	asDifficulty,
 	deriveDifficultyCompletionStatus,
-	finishedLevelToShow,
+	finishedDailyLevel,
 } from '@/features/daily/lib/difficulty-completion'
 import type { GameSlug } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -118,7 +119,8 @@ export async function GamePlayArea({
 			hard: hardStatus.status === 'fulfilled' ? hardStatus.value : null,
 		})
 
-		// Every level finished: show the result, with Share, not a 3/3 checklist.
+		// One finish per game and day, whatever the level: any read that proves it
+		// shows the real result (at its true level), not the level chooser.
 		const levelRead = (result: typeof easyStatus) =>
 			result.status === 'fulfilled'
 				? {
@@ -126,7 +128,7 @@ export async function GamePlayArea({
 						puzzleDate: result.value.puzzle.puzzleDate,
 					}
 				: null
-		const finished = finishedLevelToShow({
+		const finished = finishedDailyLevel({
 			easy: levelRead(easyStatus),
 			medium: levelRead(mediumStatus),
 			hard: levelRead(hardStatus),
@@ -146,7 +148,6 @@ export async function GamePlayArea({
 						}}
 						locale={locale}
 						difficulty={finished.difficulty}
-						allLevelsFinished
 					/>
 				</AdsProvider>
 			)
@@ -228,7 +229,6 @@ export async function GamePlayArea({
 					locale={locale}
 					mode={mode}
 					difficulty={difficulty}
-					supportsDifficulty={supportsDifficulty}
 					puzzleDate={archiveDate}
 				/>
 			</AdsProvider>
@@ -273,8 +273,7 @@ export async function GamePlayArea({
 					}}
 					currentStreak={currentStreak}
 					locale={locale}
-					difficulty={difficulty}
-					supportsDifficulty={supportsDifficulty}
+					difficulty={asDifficulty(completedSession.difficulty) ?? difficulty}
 				/>
 			</AdsProvider>
 		)

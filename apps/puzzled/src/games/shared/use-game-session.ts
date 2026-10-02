@@ -151,6 +151,11 @@ export interface UseGameSessionReturn {
 	showStarBurst: boolean
 	showResultModal: boolean
 	setShowResultModal: (show: boolean) => void
+	/**
+	 * True once the finish is accepted and the result modal has been opened
+	 * (after the celebration delay), so a closed modal can be reopened.
+	 */
+	resultReady: boolean
 
 	// Utilities
 	resetSession: () => void
@@ -188,6 +193,8 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	const [showStarBurst, setShowStarBurst] = useState(false)
 	const [showResultModal, setShowResultModal] = useState(false)
 	const [serverScore, setServerScore] = useState<number | null>(null)
+	const [resultReady, setResultReady] = useState(false)
+	const resultTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
 	// Ref to prevent duplicate saves
 	const savedRef = useRef(false)
@@ -246,10 +253,13 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 				triggerHaptic(celebrationHaptic || 'lose')
 			}
 			const delay = resultModalDelay ?? (status === 'won' ? 1500 : 1000)
-			setTimeout(() => {
+			if (resultTimerRef.current) clearTimeout(resultTimerRef.current)
+			resultTimerRef.current = setTimeout(() => {
+				resultTimerRef.current = null
 				setShowCelebration(false)
 				setShowStarBurst(false)
 				setShowResultModal(true)
+				setResultReady(true)
 			}, delay)
 		},
 		[enableStarBurst, isPerfectWin, celebrationSound, celebrationHaptic, resultModalDelay],
@@ -356,11 +366,22 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		}
 	}, [gamePhase, startTime])
 
+	// A finished session must not open a modal on an unmounted board.
+	useEffect(
+		() => () => {
+			if (resultTimerRef.current) clearTimeout(resultTimerRef.current)
+		},
+		[],
+	)
+
 	/**
 	 * Reset session state (for new game)
 	 */
 	const resetSession = useCallback(() => {
 		savedRef.current = false
+		if (resultTimerRef.current) clearTimeout(resultTimerRef.current)
+		resultTimerRef.current = null
+		setResultReady(false)
 		setShowCelebration(false)
 		setShowStarBurst(false)
 		setShowResultModal(false)
@@ -391,6 +412,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		showStarBurst,
 		showResultModal,
 		setShowResultModal,
+		resultReady,
 
 		// Utilities
 		resetSession,
