@@ -148,6 +148,18 @@ impl PuzzleConnectService {
             }
             _ => false,
         };
+        // ---- WORKAROUND(plus-grace-window) -------------------------------
+        // CEO ruling 2026-10-02: accounts that played before Plus sales opened
+        // get Plus until open + N days. Belongs in Money as a grant record;
+        // Money serves no grant creation yet. Off unless PUZZLED_PLUS_GRACE_*
+        // is set; never past its end. Remove when Money serves create-grant
+        // and `plus-grace --apply` has run (docs/monetization.md).
+        let entitled = entitled
+            || match (user_id, &self.state.pool, &self.state.plus_grace) {
+                (Some(uid), Some(pool), Some(window)) => window.allows(pool, uid, Utc::now()).await,
+                _ => false,
+            };
+        // ---- end WORKAROUND(plus-grace-window) ---------------------------
         // Money unreachable: it cannot vouch for anyone, so nothing that is
         // free today is locked behind it.
         if !entitled {

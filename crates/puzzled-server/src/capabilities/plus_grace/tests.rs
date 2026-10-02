@@ -577,3 +577,130 @@ async fn apply_end_to_end_grants_eligible_accounts_once() {
     assert_eq!(line["apply"]["granted"], 0);
     assert_eq!(line["apply"]["not_attempted"], 1);
 }
+
+// ------------------------------------------------- WORKAROUND grace window
+
+mod window_rule {
+    use super::*;
+    use crate::capabilities::plus_grace::window::{GraceWindow, DAYS_VAR, OPEN_AT_VAR};
+
+    fn lookup(open: Option<&str>, days: Option<&str>) -> Option<GraceWindow> {
+        GraceWindow::from_lookup(|name| match name {
+            n if n == OPEN_AT_VAR => open.map(str::to_string),
+            n if n == DAYS_VAR => days.map(str::to_string),
+            _ => None,
+        })
+    }
+
+    #[test]
+    fn unset_or_invalid_configuration_is_off() {
+        assert!(lookup(None, None).is_none());
+        assert!(lookup(Some("2026-10-05T00:00:00Z"), None).is_none());
+        assert!(lookup(None, Some("30")).is_none());
+        assert!(lookup(Some("tomorrow"), Some("30")).is_none());
+        assert!(lookup(Some("2026-10-05T00:00:00Z"), Some("0")).is_none());
+        assert!(lookup(Some("2026-10-05T00:00:00Z"), Some("400")).is_none());
+        let on = lookup(Some("2026-10-05T00:00:00Z"), Some("30")).unwrap();
+        assert_eq!(on.ends_at(), at("2026-11-04T00:00:00Z"));
+    }
+
+    #[test]
+    fn the_window_runs_from_open_up_to_but_not_including_its_end() {
+        let w = GraceWindow::new(at("2026-10-05T00:00:00Z"), 30, vec![]);
+        assert!(!w.active_at(at("2026-10-04T23:59:59Z")));
+        assert!(w.active_at(at("2026-10-05T00:00:00Z")));
+        assert!(w.active_at(at("2026-11-03T23:59:59Z")));
+        assert!(!w.active_at(at("2026-11-04T00:00:00Z")));
+    }
+
+    #[tokio::test]
+    async fn only_accounts_with_history_before_open_play_and_only_inside_the_window() {
+        let Some(pool) = crate::test_support::fresh_database().await else {
+            return;
+        };
+        let id = |n: u128| Uuid::from_u128(0x0190_e0e0_0000_7000_8000_0000_0000_0000 + n);
+        let (history, none, late, qa, guest) = (id(1), id(2), id(3), id(4), id(5));
+        account(&pool, history, "usr_w_history").await;
+        finish(
+            &pool,
+            history,
+            "won",
+            Some("2026-10-01T09:00:00Z"),
+            "2026-10-01",
+        )
+        .await;
+        account(&pool, none, "usr_w_none").await;
+        account(&pool, late, "usr_w_late").await;
+        // Finished after the open instant: not history.
+        finish(
+            &pool,
+            late,
+            "won",
+            Some("2026-10-05T09:00:00Z"),
+            "2026-10-05",
+        )
+        .await;
+        account(&pool, qa, "usr_w_qa").await;
+        finish(&pool, qa, "won", Some("2026-10-01T09:00:00Z"), "2026-10-01").await;
+        sqlx::query("INSERT INTO guest_credentials (token_hash, user_id, provenance) VALUES ('hw', $1, 'server_issued')")
+            .bind(guest)
+            .execute(&pool)
+            .await
+            .unwrap();
+        finish(
+            &pool,
+            guest,
+            "won",
+            Some("2026-10-01T09:00:00Z"),
+            "2026-10-01",
+        )
+        .await;
+
+        let w = GraceWindow::new(at("2026-10-05T00:00:00Z"), 30, vec!["usr_w_qa".to_string()]);
+        let inside = at("2026-10-10T12:00:00Z");
+        let s = |u: Uuid| u.to_string();
+
+        // Before the window: nothing, and no database read.
+        assert!(
+            !w.allows(&pool, &s(history), at("2026-10-04T23:59:59Z"))
+                .await
+        );
+        assert_eq!(w.reads(), 0);
+
+        // Inside: history plays; no history, late play, QA and guests do not.
+        assert!(w.allows(&pool, &s(history), inside).await);
+        assert!(!w.allows(&pool, &s(none), inside).await);
+        assert!(!w.allows(&pool, &s(late), inside).await);
+        assert!(!w.allows(&pool, &s(qa), inside).await);
+        assert!(!w.allows(&pool, &s(guest), inside).await);
+        assert!(!w.allows(&pool, &format!("guest_{guest}"), inside).await);
+        let reads = w.reads();
+        assert_eq!(
+            reads, 5,
+            "one read per account; the guest_ id is never read"
+        );
+
+        // Cached: repeat plays read nothing, yes or no.
+        for _ in 0..3 {
+            assert!(w.allows(&pool, &s(history), inside).await);
+            assert!(!w.allows(&pool, &s(none), inside).await);
+        }
+        assert_eq!(w.reads(), reads);
+
+        // The end boundary: the last second plays, the end itself does not,
+        // even with a cached yes.
+        assert!(
+            w.allows(&pool, &s(history), at("2026-11-03T23:59:59Z"))
+                .await
+        );
+        assert!(
+            !w.allows(&pool, &s(history), at("2026-11-04T00:00:00Z"))
+                .await
+        );
+        assert!(
+            !w.allows(&pool, &s(history), at("2027-01-01T00:00:00Z"))
+                .await
+        );
+        assert_eq!(w.reads(), reads);
+    }
+}

@@ -27,15 +27,17 @@
 use std::collections::BTreeMap;
 use std::io::Write;
 
-use chrono::{DateTime, Duration, NaiveDateTime, SecondsFormat, Utc};
+use chrono::{DateTime, Duration, SecondsFormat, Utc};
 use serde::Serialize;
-use sqlx::PgPool;
+use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
 use crate::capabilities::identity_access::adapters::guest_credentials;
 use crate::capabilities::money::access::FEATURE_PLUS;
 use crate::capabilities::money::grants::{GrantOutcome, OperatorGrant};
 use crate::capabilities::money::{Money, MoneyError};
+
+pub mod window;
 
 #[cfg(test)]
 mod tests;
@@ -55,17 +57,39 @@ pub mod exit {
     pub const CONFIG: i32 = 5;
 }
 
-/// Players who finished something before the cutoff, with the number of
-/// distinct days they finished on.
-const HISTORY_SQL: &str = r"
-SELECT user_id,
-       COUNT(DISTINCT COALESCE(day_key, to_char(completed_at, 'YYYY-MM-DD')))::bigint AS days
-FROM game_sessions
-WHERE status IN ('won', 'lost')
-  AND completed_at IS NOT NULL
-  AND completed_at < $1
-GROUP BY user_id
-ORDER BY user_id";
+/// Real play history: a finished session (won or lost) completed before the
+/// cutoff (`$1`). The job and the play gate's grace window read history only
+/// through this predicate and [`classify`].
+macro_rules! finished_before_cutoff {
+    () => {
+        "status IN ('won', 'lost') AND completed_at IS NOT NULL AND completed_at < $1"
+    };
+}
+
+/// Distinct product days with a finish.
+macro_rules! finish_days {
+    () => {
+        "COUNT(DISTINCT COALESCE(day_key, to_char(completed_at, 'YYYY-MM-DD')))::bigint"
+    };
+}
+
+/// Every player with history before the cutoff, with their finish days.
+const HISTORY_SQL: &str = concat!(
+    "SELECT user_id, ",
+    finish_days!(),
+    " FROM game_sessions WHERE ",
+    finished_before_cutoff!(),
+    " GROUP BY user_id ORDER BY user_id"
+);
+
+/// One player's finish days before the cutoff (index: user_id).
+const PLAYER_HISTORY_SQL: &str = concat!(
+    "SELECT ",
+    finish_days!(),
+    " FROM game_sessions WHERE ",
+    finished_before_cutoff!(),
+    " AND user_id = $2"
+);
 
 /// (holds a live guest credential, is marked synthetic or excluded).
 const CLASSIFY_SQL: &str = r"
@@ -74,6 +98,86 @@ SELECT
   EXISTS (SELECT 1 FROM user_display_cache WHERE user_id = $1 AND lower(email) LIKE ANY($2))
     OR EXISTS (SELECT 1 FROM auth_subjects WHERE user_id = $1 AND subject = ANY($3))
     OR $1 = ANY($4)";
+
+/// Who qualifies: the one eligibility definition, shared by the `plus-grace`
+/// job and the play gate's grace window.
+#[derive(Debug, Clone, Copy)]
+pub struct Criteria<'a> {
+    /// Only play completed before this instant counts.
+    pub cutoff: DateTime<Utc>,
+    pub min_days: i64,
+    pub exclude_subjects: &'a [String],
+    pub exclude_players: &'a [Uuid],
+}
+
+/// Where a player with history stands.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Standing {
+    /// A synthetic or QA account, or one the operator excluded.
+    Synthetic,
+    BelowMinDays,
+    /// Eligible: an account with enough history.
+    Account,
+    /// A guest with a live server-issued credential.
+    GuestCredentialed,
+    /// A guest with no credential (legacy client-bound id).
+    GuestLegacy,
+}
+
+fn synthetic_patterns() -> Vec<String> {
+    SYNTHETIC_EMAIL_PATTERNS
+        .iter()
+        .map(|p| (*p).to_string())
+        .collect()
+}
+
+/// Classify a player who has `days` finish days before the cutoff.
+pub async fn classify(
+    connection: &mut PgConnection,
+    criteria: &Criteria<'_>,
+    player: Uuid,
+    days: i64,
+) -> Result<Standing, sqlx::Error> {
+    let (credentialed, synthetic): (bool, bool) = sqlx::query_as(CLASSIFY_SQL)
+        .bind(player)
+        .bind(synthetic_patterns())
+        .bind(criteria.exclude_subjects)
+        .bind(criteria.exclude_players)
+        .fetch_one(&mut *connection)
+        .await?;
+    if synthetic {
+        return Ok(Standing::Synthetic);
+    }
+    if days < criteria.min_days {
+        return Ok(Standing::BelowMinDays);
+    }
+    if guest_credentials::account_backed(&mut *connection, player).await? {
+        return Ok(Standing::Account);
+    }
+    Ok(if credentialed {
+        Standing::GuestCredentialed
+    } else {
+        Standing::GuestLegacy
+    })
+}
+
+/// One player's standing, or None when they have no history before the
+/// cutoff (the grace window's per-account read).
+pub async fn standing_of(
+    connection: &mut PgConnection,
+    criteria: &Criteria<'_>,
+    player: Uuid,
+) -> Result<Option<Standing>, sqlx::Error> {
+    let days: i64 = sqlx::query_scalar(PLAYER_HISTORY_SQL)
+        .bind(criteria.cutoff.naive_utc())
+        .bind(player)
+        .fetch_one(&mut *connection)
+        .await?;
+    if days == 0 {
+        return Ok(None);
+    }
+    classify(connection, criteria, player, days).await.map(Some)
+}
 
 /// One grant campaign, fully described by its arguments.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -90,6 +194,16 @@ pub struct Campaign {
 }
 
 impl Campaign {
+    #[must_use]
+    pub fn criteria(&self) -> Criteria<'_> {
+        Criteria {
+            cutoff: self.cutoff,
+            min_days: self.min_days,
+            exclude_subjects: &self.exclude_subjects,
+            exclude_players: &self.exclude_players,
+        }
+    }
+
     /// `plus-grace-YYYYMMDD` (the cutoff's UTC date): the same cutoff is the
     /// same campaign, so a re-run names the same grants.
     #[must_use]
@@ -148,45 +262,28 @@ pub async fn eligibility(pool: &PgPool, campaign: &Campaign) -> Result<Eligibili
     sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
         .execute(&mut *tx)
         .await?;
-    let cutoff: NaiveDateTime = campaign.cutoff.naive_utc();
+    let criteria = campaign.criteria();
     let history: Vec<(Uuid, i64)> = sqlx::query_as(HISTORY_SQL)
-        .bind(cutoff)
+        .bind(criteria.cutoff.naive_utc())
         .fetch_all(&mut *tx)
         .await?;
-    let patterns: Vec<String> = SYNTHETIC_EMAIL_PATTERNS
-        .iter()
-        .map(|p| (*p).to_string())
-        .collect();
     let mut counts = Counts::default();
     let mut accounts = Vec::new();
     for (player, days) in history {
         counts.players_with_history += 1;
-        let (credentialed, synthetic): (bool, bool) = sqlx::query_as(CLASSIFY_SQL)
-            .bind(player)
-            .bind(&patterns)
-            .bind(&campaign.exclude_subjects)
-            .bind(&campaign.exclude_players)
-            .fetch_one(&mut *tx)
-            .await?;
-        if synthetic {
-            counts.excluded_synthetic += 1;
-            continue;
-        }
-        if days < campaign.min_days {
-            counts.below_min_days += 1;
-            continue;
-        }
-        if guest_credentials::account_backed(&mut tx, player).await? {
-            counts.eligible_accounts += 1;
-            *counts
-                .eligible_accounts_by_days
-                .entry(bucket(days))
-                .or_default() += 1;
-            accounts.push(player);
-        } else if credentialed {
-            counts.eligible_guests_credentialed += 1;
-        } else {
-            counts.eligible_guests_legacy += 1;
+        match classify(&mut tx, &criteria, player, days).await? {
+            Standing::Synthetic => counts.excluded_synthetic += 1,
+            Standing::BelowMinDays => counts.below_min_days += 1,
+            Standing::Account => {
+                counts.eligible_accounts += 1;
+                *counts
+                    .eligible_accounts_by_days
+                    .entry(bucket(days))
+                    .or_default() += 1;
+                accounts.push(player);
+            }
+            Standing::GuestCredentialed => counts.eligible_guests_credentialed += 1,
+            Standing::GuestLegacy => counts.eligible_guests_legacy += 1,
         }
     }
     tx.commit().await?;
