@@ -15,8 +15,9 @@ static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
 static DURABLE_TASKS: std::sync::LazyLock<TaskTracker> = std::sync::LazyLock::new(TaskTracker::new);
 
 /// Longest the process waits for tracked tasks after SIGTERM. Kubernetes
-/// sends SIGKILL after `terminationGracePeriodSeconds` (default 30 s, and the
-/// HTTP drain runs before this wait), so the bound stays below it; an erasure
+/// sends SIGKILL after `terminationGracePeriodSeconds` (platform default 90 s grace
+/// minus a 30 s preStop sleep, about 60 s after SIGTERM; the HTTP drain runs
+/// before this wait), so the bound stays below it; an erasure
 /// still running after it is logged for `erase-player`.
 pub const SHUTDOWN_DRAIN_TIMEOUT: Duration = Duration::from_secs(25);
 
@@ -141,6 +142,21 @@ mod tests {
                 timed_out: false
             }
         );
+    }
+
+    #[tokio::test]
+    async fn a_task_spawned_after_close_is_still_awaited() {
+        let tracker = TaskTracker::new();
+        tracker.close();
+        let done = Arc::new(AtomicBool::new(false));
+        let flag = done.clone();
+        tracker.spawn(async move {
+            tokio::time::sleep(Duration::from_millis(100)).await;
+            flag.store(true, Ordering::SeqCst);
+        });
+        let report = drain(&tracker, Duration::from_secs(5)).await;
+        assert!(done.load(Ordering::SeqCst));
+        assert!(!report.timed_out);
     }
 
     #[tokio::test]
