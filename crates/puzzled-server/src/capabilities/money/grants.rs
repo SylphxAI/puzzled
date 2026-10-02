@@ -76,6 +76,7 @@ impl OperatorGrant {
             return Err(MoneyError::Refused {
                 status: 409,
                 code: "grant_id_names_another_grant".into(),
+                note: String::new(),
             });
         }
         Ok(())
@@ -107,6 +108,7 @@ impl Money {
             return Err(MoneyError::Refused {
                 status: 400,
                 code: "invalid_grant_id".into(),
+                note: String::new(),
             });
         }
         let base = self.env_url().await?.to_string();
@@ -138,9 +140,9 @@ impl Money {
                 grant.matches(&created)?;
                 Ok(GrantOutcome::Created)
             }
-            Err(MoneyError::Refused { status: 409, code }) if code == "RESOURCE_ALREADY_EXISTS" => {
-                Ok(GrantOutcome::AlreadyHeld)
-            }
+            Err(MoneyError::Refused {
+                status: 409, code, ..
+            }) if code == "RESOURCE_ALREADY_EXISTS" => Ok(GrantOutcome::AlreadyHeld),
             Err(error) => Err(grant.redact(error)),
         }
     }

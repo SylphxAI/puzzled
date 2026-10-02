@@ -395,6 +395,32 @@ fn session_body_carries_the_click_id_in_metadata() {
 }
 
 #[test]
+fn session_body_sends_only_locales_stripe_accepts() {
+    let money = Money::new("http://x/env", "k", "https://puzzled.test/");
+    let locale_of = |locale: &str| {
+        session_body(
+            &money,
+            USER,
+            "individual_monthly",
+            "k_solo_m",
+            locale,
+            None,
+            None,
+        )
+        .get("locale")
+        .and_then(|v| v.as_str().map(str::to_string))
+    };
+    // Every locale Puzzled ships maps onto Stripe's list; en-US was refused.
+    assert_eq!(locale_of("en-US").as_deref(), Some("en"));
+    assert_eq!(locale_of("en-GB").as_deref(), Some("en-GB"));
+    assert_eq!(locale_of("zh-HK").as_deref(), Some("zh-HK"));
+    assert_eq!(locale_of("zh-TW").as_deref(), Some("zh-TW"));
+    assert_eq!(locale_of("zh-CN").as_deref(), Some("zh"));
+    assert_eq!(locale_of("xx-YY").as_deref(), Some("auto"));
+    assert_eq!(locale_of(""), None);
+}
+
+#[test]
 fn session_body_carries_attribution() {
     let money = Money::new("http://x/env", "k", "https://puzzled.test/");
     let tags = puzzled_core::attribution::Attribution {
@@ -693,4 +719,25 @@ fn env_url_keeps_the_bare_id_format() {
     .unwrap();
     assert_eq!(url, "https://m.example/v1/orgs/o1/projects/p1/envs/e1");
     assert!(super::client::env_url("https://m.example", &json!({"org":"o1"})).is_err());
+}
+
+#[tokio::test]
+async fn a_refusal_logs_the_problem_reason_and_processor_code() {
+    let (money, _) = fake_money(
+        400,
+        json!({
+            "code": "INVALID_STATE",
+            "status": 400,
+            "detail": "Stripe refused the request (resource_missing). key sk_live_abc123",
+            "details": [{"reason": "processor_refused", "processor_code": "resource_missing"}]
+        }),
+    )
+    .await;
+    let error = money.check_uncached(USER, "premium").await.unwrap_err();
+    let text = error.to_string();
+    assert!(text.contains("INVALID_STATE"), "{text}");
+    assert!(text.contains("reason=processor_refused"), "{text}");
+    assert!(text.contains("processor_code=resource_missing"), "{text}");
+    assert!(text.contains("Stripe refused the request"), "{text}");
+    assert!(!text.contains("sk_live_abc123"), "{text}");
 }
