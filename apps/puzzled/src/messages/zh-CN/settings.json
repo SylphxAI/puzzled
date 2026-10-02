@@ -366,6 +366,10 @@
 		"boardsCta": "打开排行榜"
 	},
 	"account": {
+		"accountId": "账户 ID",
+		"accountIdHint": "你自己的账户标识符，并非机密。如客服要求，可提供此 ID。",
+		"copyAccountId": "复制 ID",
+		"accountIdCopied": "已复制",
 		"title": "账户",
 		"description": "管理你已关联的账户和登录方式",
 		"connectedAccounts": "已关联的账户",

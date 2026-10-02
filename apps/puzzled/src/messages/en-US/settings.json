@@ -366,6 +366,10 @@
 		"boardsCta": "Open the leaderboard"
 	},
 	"account": {
+		"accountId": "Account ID",
+		"accountIdHint": "Your own account identifier, not a secret. Quote it if support asks for it.",
+		"copyAccountId": "Copy ID",
+		"accountIdCopied": "Copied",
 		"title": "Account",
 		"description": "Manage your connected accounts and sign-in methods",
 		"connectedAccounts": "Connected Accounts",

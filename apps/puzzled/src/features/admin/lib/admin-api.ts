@@ -9,9 +9,9 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server'
+import { getServerIsAdmin } from '@/lib/api/server'
 import { auth } from '@/lib/identity/server'
 import { logger } from '@/lib/logger'
-import { isAdminRole } from '@/lib/roles'
 
 /**
  * Log admin access attempts for security auditing
@@ -49,7 +49,8 @@ export async function checkAdminWithMfa(request: NextRequest): Promise<AdminChec
 			return { allowed: false, reason: 'unauthorized' }
 		}
 
-		if (!isAdminRole(user.role)) {
+		// The api decides admin (its is_admin), the same source as every admin RPC.
+		if (!(await getServerIsAdmin())) {
 			return { allowed: false, reason: 'unauthorized' }
 		}
 
