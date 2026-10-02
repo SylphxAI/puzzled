@@ -39,6 +39,7 @@ export function destAdmissionResponse():
 			: message.includes('SYLPHX_AUTH_ORGANIZATION_ID')
 				? 'identity_project_unconfigured'
 				: 'identity_unconfigured'
+		console.warn('identity admission unconfigured', { error: errorCode })
 		return { ok: false, response: identityFail(503, errorCode) }
 	}
 }
@@ -50,6 +51,7 @@ export async function destIdentityCall<T>(
 		credential?: string
 		body?: unknown
 		headers?: Record<string, string>
+		signal?: AbortSignal
 	} = {},
 ): Promise<T> {
 	return destIdentityJson<T>(identityOrigin(), path, init)

@@ -77,10 +77,9 @@ impl AppState {
         self
     }
 
-    /// Puzzled Plus is on sale: Money is configured and its catalogue is
-    /// checkout-ready (synced to the processor) for at least one Puzzled plan.
-    /// A catalogue read that fails counts as not on sale: nothing is locked and
-    /// no purchase is offered until Money answers.
+    /// Puzzled Plus is on sale: Money is configured and its catalogue sells at
+    /// least one Puzzled plan. A catalogue read that fails counts as not on
+    /// sale: nothing is locked and no purchase is offered until Money answers.
     pub async fn sales_open(&self) -> bool {
         let (Some(_), Some(money)) = (&self.pool, &self.money) else {
             return false;

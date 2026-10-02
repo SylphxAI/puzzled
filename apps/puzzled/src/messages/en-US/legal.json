@@ -71,6 +71,7 @@
 			"cookies": {
 				"title": "Cookies",
 				"content": "We use cookies that are strictly necessary to sign you in, keep Puzzled secure and remember your settings. We use analytics and the referral cookie only if you accept analytics, and advertising measurement only if you separately turn on advertising in Settings; nothing is pre-selected and declining costs you nothing.",
+				"notices": "One more cookie remembers which site notices you have closed or already seen: puzzled_dismissed_notices. It is strictly necessary, set by us (first-party) and kept for one year; it holds only the ids of those notices, no personal data, so it is set without asking and is not used for analytics. Another strictly necessary first-party cookie, puzzled_currency, remembers the currency you pick on the pricing page (for example GBP or USD) for one year; it holds only that currency code, no personal data, and is not used for analytics.",
 				"google": "If Google Analytics or Google Ads is switched on for this site, it loads only after you have said yes: Google Analytics for analytics, and Google Ads to measure whether an ad led to a sign-up or a purchase, with the plan and price but no name or email. We turn off ad personalisation and Google signals, and send Google only public page addresses. You can withdraw at any time with the button below, which also deletes the Google cookies."
 			},
 			"rights": {

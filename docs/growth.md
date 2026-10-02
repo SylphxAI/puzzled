@@ -148,6 +148,11 @@ industry benchmarks; the product has no payers yet, so none is measured.
       grant, so it needs Money's grant API.
 - [ ] **Paid streak freeze and Plus freezes** (S). Sell one freeze as a small one-off in Money; Plus
       gets 2 per month. Earned freezes already count toward the streak (backlog row 1, shipped); a bought freeze adds to the same bank, still capped by `FREEZE_CAP`.
+- [x] **In-app Plus nudges** (S). Shipped: one Plus card on the result screen after today's free game
+      (links to `/pricing`), and a dismissible day-3 and day-7 prompt on home for a signed-in player who is
+      not on Plus, counting distinct played days from `StreakInfo.played_days`; each milestone shows once
+      per account on a browser, nothing shows when sales are closed or the viewer is entitled
+      (`features/plus-offer`). The lock card on a non-featured game already links to Plus and stays as is.
 - [ ] **Plus-nudge emails** (S). Day 3 and day 7 of a streak, consent-gated, with the yearly price and
       no false urgency.
 - [ ] **Price localisation** (M). Money price tiers for HKD, EUR, JPY, INR, BRL and MXN alongside

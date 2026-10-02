@@ -193,6 +193,10 @@ function authErrorCode(text: string, status: number): string {
 	try {
 		const body = JSON.parse(text) as { code?: unknown; error?: unknown }
 		if (typeof body.code === 'string' && body.code) return body.code
+		// Only a code-shaped `error` (a proxy without `code`); never free text.
+		if (typeof body.error === 'string' && /^[a-z0-9_.-]{1,64}$/.test(body.error)) {
+			return body.error
+		}
 	} catch {
 		// Not JSON: fall through to the status.
 	}
@@ -207,6 +211,7 @@ export async function destJson<T>(
 		credential?: string
 		body?: unknown
 		headers?: Record<string, string>
+		signal?: AbortSignal
 	} = {},
 ): Promise<T> {
 	const headers: Record<string, string> = { ...(init.headers ?? {}) }
@@ -224,6 +229,7 @@ export async function destJson<T>(
 		method: init.method ?? 'GET',
 		headers,
 		body: init.body === undefined ? undefined : JSON.stringify(init.body),
+		signal: init.signal,
 	})
 	const text = await response.text()
 	if (!response.ok) {
@@ -246,6 +252,7 @@ export async function destIdentityJson<T>(
 		credential?: string
 		body?: unknown
 		headers?: Record<string, string>
+		signal?: AbortSignal
 	} = {},
 ): Promise<T> {
 	return destJson<T>(origin, path, init)

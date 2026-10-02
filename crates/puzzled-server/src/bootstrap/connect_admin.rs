@@ -56,6 +56,20 @@ fn announcement_from_json(v: &Value) -> Announcement {
             .and_then(|x| x.as_str())
             .unwrap_or_default()
             .to_string(),
+        starts_at: v
+            .get("startsAt")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        ends_at: v
+            .get("endsAt")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        dismissible: v
+            .get("dismissible")
+            .and_then(|x| x.as_bool())
+            .unwrap_or(true),
         ..Default::default()
     }
 }
@@ -208,6 +222,12 @@ impl AdminService for AdminConnectService {
                 "title_and_body_required",
             ));
         }
+        let starts_at = admin_db::parse_announcement_bound(&req.starts_at)
+            .map_err(|e| ConnectError::new(ErrorCode::InvalidArgument, e))?;
+        let ends_at = admin_db::parse_announcement_bound(&req.ends_at)
+            .map_err(|e| ConnectError::new(ErrorCode::InvalidArgument, e))?;
+        admin_db::validate_announcement_window(starts_at, ends_at)
+            .map_err(|e| ConnectError::new(ErrorCode::InvalidArgument, e))?;
         let row = admin_db::create_announcement(
             pool,
             req.title.trim(),
@@ -218,6 +238,9 @@ impl AdminService for AdminConnectService {
                 req.r#type.trim()
             },
             req.active,
+            req.dismissible.unwrap_or(true),
+            starts_at,
+            ends_at,
             &identity.user_id,
         )
         .await
@@ -236,6 +259,14 @@ impl AdminService for AdminConnectService {
         require_admin(&ctx)?;
         let pool = self.pool()?;
         let req = request.to_owned_message();
+        let bound = |v: &Option<String>| match v {
+            None => Ok(None),
+            Some(v) => admin_db::parse_announcement_bound(v).map(Some),
+        };
+        let starts_at =
+            bound(&req.starts_at).map_err(|e| ConnectError::new(ErrorCode::InvalidArgument, e))?;
+        let ends_at =
+            bound(&req.ends_at).map_err(|e| ConnectError::new(ErrorCode::InvalidArgument, e))?;
         let row = admin_db::update_announcement(
             pool,
             req.id.trim(),
@@ -243,9 +274,19 @@ impl AdminService for AdminConnectService {
             req.body.as_deref(),
             req.r#type.as_deref(),
             req.active,
+            req.dismissible,
+            starts_at,
+            ends_at,
         )
         .await
-        .map_err(|e| ConnectError::new(ErrorCode::Internal, e))?;
+        .map_err(|e| {
+            let code = if e == "ends_before_start" {
+                ErrorCode::InvalidArgument
+            } else {
+                ErrorCode::Internal
+            };
+            ConnectError::new(code, e)
+        })?;
         Response::ok(UpdateAnnouncementResponse {
             announcement: announcement_from_json(&row).into(),
             ..Default::default()
@@ -541,4 +582,37 @@ impl AdminService for AdminConnectService {
 
 pub fn admin_connect_service(state: AppState) -> Arc<AdminConnectService> {
     Arc::new(AdminConnectService::new(state))
+}
+
+#[cfg(test)]
+mod announcement_mapping_tests {
+    use super::*;
+
+    #[test]
+    fn a_stored_row_maps_to_the_wire_message() {
+        let a = announcement_from_json(&serde_json::json!({
+            "id": "i", "title": "T", "body": "B", "type": "warning", "active": false,
+            "dismissible": false, "startsAt": "2026-10-01T00:00:00+00:00",
+            "endsAt": "", "createdAt": "c", "updatedAt": "u",
+        }));
+        assert_eq!(
+            (
+                a.id.as_str(),
+                a.title.as_str(),
+                a.body.as_str(),
+                a.r#type.as_str()
+            ),
+            ("i", "T", "B", "warning")
+        );
+        assert!(!a.active && !a.dismissible);
+        assert_eq!(a.starts_at, "2026-10-01T00:00:00+00:00");
+        assert_eq!(a.ends_at, "");
+    }
+
+    #[test]
+    fn a_row_missing_fields_defaults_to_an_open_dismissible_info_notice() {
+        let a = announcement_from_json(&serde_json::json!({}));
+        assert_eq!(a.r#type, "info");
+        assert!(a.active && a.dismissible);
+    }
 }

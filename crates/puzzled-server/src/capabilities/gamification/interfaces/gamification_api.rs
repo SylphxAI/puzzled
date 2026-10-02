@@ -132,6 +132,7 @@ pub struct StreakInfo {
     pub auto_freeze_enabled: bool,
     pub days_until_next_freeze: i32,
     pub freeze_used_yesterday: bool,
+    pub played_days: i32,
 }
 
 fn u32_to_i32(value: u32) -> i32 {
@@ -154,6 +155,7 @@ pub fn build_streak_info(
         auto_freeze_enabled: freeze.auto_freeze_enabled,
         days_until_next_freeze: u32_to_i32(streak.days_until_next_freeze),
         freeze_used_yesterday: streak.freeze_used_yesterday,
+        played_days: u32_to_i32(streak.played_days),
     }
 }
 
@@ -205,6 +207,7 @@ mod tests {
         assert!(info.auto_freeze_enabled);
         assert_eq!(info.days_until_next_freeze, 4);
         assert!(!info.freeze_used_yesterday);
+        assert_eq!(info.played_days, 3);
     }
 
     #[test]

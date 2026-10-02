@@ -29,10 +29,6 @@ struct FakeMoney {
     down: bool,
     /// Answer only the `seats` check with a 503.
     seats_down: bool,
-    /// The catalogue spec lists Plus but Money has not synced it to Stripe.
-    unsynced: bool,
-    /// Synced, but the price has no Stripe price id.
-    no_price_id: bool,
 }
 
 type Fake = Arc<Mutex<FakeMoney>>;
@@ -58,24 +54,13 @@ async fn check(State(fake): State<Fake>, Json(body): Json<Value>) -> (StatusCode
 }
 
 /// One product with `plus` so sales are open.
-async fn catalog(State(fake): State<Fake>) -> Json<Value> {
-    let fake = fake.lock().unwrap();
-    let synced = if fake.unsynced { "false" } else { "true" };
-    let ids = if fake.no_price_id {
-        json!({})
-    } else {
-        json!({"k_m": "price_k_m"})
-    };
-    Json(
-        json!({"status": {"conditions": [{"type": "Synced", "status": synced}],
-                               "processor_price_ids": ids},
-        "spec": {"products": [{
-            "key": "solo", "display_name": "Plus",
-            "features": {"plus": "true", "seats": "1"},
-            "prices": [{"key": "k_m", "recurring_interval": "month", "tax_behavior": "inclusive",
-                        "unit_amounts": {"USD": "1100"}}]
-        }]}}),
-    )
+async fn catalog() -> Json<Value> {
+    Json(json!({"spec": {"products": [{
+        "key": "solo", "display_name": "Plus",
+        "features": {"plus": "true", "seats": "1"},
+        "prices": [{"key": "k_m", "recurring_interval": "month", "tax_behavior": "inclusive",
+                    "unit_amounts": {"USD": "1100"}}]
+    }]}}))
 }
 
 async fn spawn_money(fake: Fake) -> Money {
@@ -177,43 +162,6 @@ async fn money_alone_decides_who_plays_paid_games_and_the_archive() {
     assert_eq!(status, StatusCode::OK);
 }
 
-/// A stored spec that never reached Stripe is not a sale: sales stay closed
-/// and nothing is locked, so no player is shut out of a game they cannot buy.
-#[tokio::test]
-async fn an_unsynced_or_unpriced_catalogue_keeps_sales_closed_and_games_open() {
-    let _key = crate::capabilities::identity_access::adapters::platform_jwt::test_key_lock()
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let Some(pool) = fresh_database().await else {
-        return;
-    };
-    let fake: Fake = Arc::default();
-    let money = spawn_money(fake.clone()).await;
-    let state = AppState::new(Some(pool)).with_money(Some(money));
-    let app = router(state.clone());
-
-    // Synced with a price id: sales open, a non-free game is locked.
-    assert!(state.sales_open().await);
-    let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &token(UNPAID)).await;
-    assert_eq!(status, StatusCode::FORBIDDEN, "{body}");
-
-    for (unsynced, no_price_id) in [(true, false), (false, true)] {
-        {
-            let mut f = fake.lock().unwrap();
-            f.unsynced = unsynced;
-            f.no_price_id = no_price_id;
-        }
-        // The catalogue is cached five minutes: read through a fresh client.
-        let money = spawn_money(fake.clone()).await;
-        let state = AppState::new(state.pool.clone()).with_money(Some(money));
-        let app = router(state.clone());
-        assert!(!state.sales_open().await, "{unsynced} {no_price_id}");
-        let (status, body) =
-            get_daily(&app, json!({"gameSlug": paid_game()}), &token(UNPAID)).await;
-        assert_eq!(status, StatusCode::OK, "{body}");
-    }
-}
-
 #[tokio::test]
 async fn without_money_nothing_is_sold_and_nothing_is_locked() {
     let _key = crate::capabilities::identity_access::adapters::platform_jwt::test_key_lock()
@@ -294,4 +242,38 @@ async fn a_family_join_is_refused_and_retryable_when_money_cannot_answer_seats()
     assert_eq!(status, StatusCode::OK, "{body}");
     let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &member).await;
     assert_eq!(status, StatusCode::OK, "{body}");
+}
+
+/// No existing-player exemption: an account with old finished sessions but no
+/// Plus is refused a Plus game exactly like a new account.
+#[tokio::test]
+async fn an_account_with_old_play_history_is_still_locked_without_plus() {
+    let _key = crate::capabilities::identity_access::adapters::platform_jwt::test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    const HISTORY: &str = "0b6f7d3e-1111-4a4a-9c9c-0000000000c1";
+    sqlx::query("INSERT INTO auth_subjects (subject, user_id) VALUES ($1, $1::uuid)")
+        .bind(HISTORY)
+        .execute(&pool)
+        .await
+        .unwrap();
+    let finished = chrono::Utc::now() - chrono::Duration::days(400);
+    sqlx::query(
+        "INSERT INTO game_sessions (user_id, game_slug, status, started_at, completed_at) \
+         VALUES ($1::uuid, 'sudoku', 'won', $2, $2)",
+    )
+    .bind(HISTORY)
+    .bind(finished.naive_utc())
+    .execute(&pool)
+    .await
+    .unwrap();
+    let money = spawn_money(Arc::default()).await;
+    let app = router(AppState::new(Some(pool)).with_money(Some(money)));
+
+    let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &token(HISTORY)).await;
+    assert_eq!(status, StatusCode::FORBIDDEN, "{body}");
+    assert!(refused(&body, "plus_required"), "{body}");
 }

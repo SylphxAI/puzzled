@@ -8,6 +8,7 @@ import { ConsoleCard, ConsoleHeader } from '@/features/console/components/consol
 import { deleteAccountData } from '@/lib/connect/preferences-client'
 import { accountPortalAnchor, accountPortalLink } from '@/lib/identity/account-portal'
 import { useSafeAuth, useSafeUser } from '@/lib/identity/react'
+import { AccountId } from './account-id'
 
 /** Auth's Account Portal on the app domain, or the in-app support page. */
 const ACCOUNT_PORTAL = accountPortalLink()
@@ -73,26 +74,35 @@ export function AccountSettingsContent() {
 				{isLoading ? (
 					<p className="text-sm text-muted-foreground">{t('account.loading')}</p>
 				) : user ? (
-					<div className="flex items-start gap-4">
-						<span
-							className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 font-display text-base text-primary"
-							aria-hidden="true"
-						>
-							{initials(displayName)}
-						</span>
-						<div className="min-w-0">
-							<p className="font-semibold">{displayName}</p>
-							{user.email ? (
-								<p className="mt-0.5 truncate text-sm text-muted-foreground">{user.email}</p>
-							) : null}
-							{user.emailVerified ? (
-								<span className="chip mt-2 bg-success/10 text-success">
-									<BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
-									{t('playerCard.verified')}
-								</span>
-							) : null}
+					<>
+						<div className="flex items-start gap-4">
+							<span
+								className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 font-display text-base text-primary"
+								aria-hidden="true"
+							>
+								{initials(displayName)}
+							</span>
+							<div className="min-w-0">
+								<p className="font-semibold">{displayName}</p>
+								{user.email ? (
+									<p className="mt-0.5 truncate text-sm text-muted-foreground">{user.email}</p>
+								) : null}
+								{user.emailVerified ? (
+									<span className="chip mt-2 bg-success/10 text-success">
+										<BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
+										{t('playerCard.verified')}
+									</span>
+								) : null}
+							</div>
 						</div>
-					</div>
+						<AccountId
+							id={user.id}
+							label={t('account.accountId')}
+							hint={t('account.accountIdHint')}
+							copyLabel={t('account.copyAccountId')}
+							copiedLabel={t('account.accountIdCopied')}
+						/>
+					</>
 				) : (
 					<p className="text-sm text-muted-foreground">{t('account.signedOut')}</p>
 				)}

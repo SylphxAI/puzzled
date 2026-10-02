@@ -13,8 +13,9 @@ use tower::ServiceExt;
 
 use super::access::{family_active, is_premium, seats, FEATURE_PLUS, FEATURE_SEATS};
 use super::checkout::{create_session, session_body, CheckoutError, Consent};
+use super::client::Subscription;
 use super::client::{Catalog, Money};
-use super::pricing::{plan, plans, spec_plans};
+use super::pricing::{plan, plans};
 
 const USER: &str = "0190a0a0-0000-7000-8000-000000000001";
 
@@ -138,14 +139,7 @@ fn catalog_fixture(archived: &[&str]) -> Value {
             "unit_amounts": {"USD": usd.to_string(), "GBP": (usd - 100).to_string()},
         })
     };
-    let ids: serde_json::Map<String, Value> =
-        ["k_fam_y", "k_fam_m", "k_solo_m", "k_solo_y", "k_other_m"]
-            .iter()
-            .map(|key| ((*key).to_string(), json!(format!("price_{key}"))))
-            .collect();
-    json!({"status": {"conditions": [{"type": "Synced", "status": "true"}],
-                      "processor_price_ids": ids},
-    "spec": {"products": [
+    json!({"spec": {"products": [
         {"key": "fam", "display_name": "Family",
          "features": {"plus": "true", "family": "true", "seats": "4"},
          "prices": [price("k_fam_y", "year", 6100), price("k_fam_m", "month", 1200)]},
@@ -402,6 +396,32 @@ fn session_body_carries_the_click_id_in_metadata() {
 }
 
 #[test]
+fn session_body_sends_only_locales_stripe_accepts() {
+    let money = Money::new("http://x/env", "k", "https://puzzled.test/");
+    let locale_of = |locale: &str| {
+        session_body(
+            &money,
+            USER,
+            "individual_monthly",
+            "k_solo_m",
+            locale,
+            None,
+            None,
+        )
+        .get("locale")
+        .and_then(|v| v.as_str().map(str::to_string))
+    };
+    // Every locale Puzzled ships maps onto Stripe's list; en-US was refused.
+    assert_eq!(locale_of("en-US").as_deref(), Some("en"));
+    assert_eq!(locale_of("en-GB").as_deref(), Some("en-GB"));
+    assert_eq!(locale_of("zh-HK").as_deref(), Some("zh-HK"));
+    assert_eq!(locale_of("zh-TW").as_deref(), Some("zh-TW"));
+    assert_eq!(locale_of("zh-CN").as_deref(), Some("zh"));
+    assert_eq!(locale_of("xx-YY").as_deref(), Some("auto"));
+    assert_eq!(locale_of(""), None);
+}
+
+#[test]
 fn session_body_carries_attribution() {
     let money = Money::new("http://x/env", "k", "https://puzzled.test/");
     let tags = puzzled_core::attribution::Attribution {
@@ -467,58 +487,6 @@ fn an_archived_or_unpriced_price_is_not_sold() {
     assert!(plans(&Catalog::default()).is_empty());
 }
 
-#[test]
-fn an_unsynced_catalogue_sells_nothing() {
-    let mut value = catalog_fixture(&[]);
-    value["status"]["conditions"] = json!([{"type": "Synced", "status": "false"}]);
-    let catalog = parsed(value);
-    assert!(plans(&catalog).is_empty());
-    assert!(plan(&catalog, "individual_monthly").is_none());
-    // The spec alone still labels an existing subscription.
-    assert_eq!(spec_plans(&catalog).len(), 4);
-    let mut none = catalog_fixture(&[]);
-    none.as_object_mut().unwrap().remove("status");
-    assert!(plans(&parsed(none)).is_empty());
-}
-
-#[test]
-fn a_synced_price_without_a_processor_id_is_not_offered() {
-    let mut value = catalog_fixture(&[]);
-    value["status"]["processor_price_ids"]
-        .as_object_mut()
-        .unwrap()
-        .remove("k_fam_y");
-    value["status"]["processor_price_ids"]["k_fam_m"] = json!("");
-    let catalog = parsed(value);
-    assert!(plan(&catalog, "family_yearly").is_none());
-    assert!(plan(&catalog, "family_monthly").is_none());
-    assert!(plan(&catalog, "individual_monthly").is_some());
-    assert_eq!(plans(&catalog).len(), 2);
-}
-
-#[test]
-fn an_unsellable_price_never_shadows_a_sellable_one() {
-    let price = |key: &str| {
-        json!({"key": key, "recurring_interval": "year", "tax_behavior": "inclusive",
-               "unit_amounts": {"USD": "6000"}})
-    };
-    let catalog = parsed(json!({
-        "status": {"conditions": [{"type": "Synced", "status": "true"}],
-                   "processor_price_ids": {"fam6_y": "price_fam6_y"}},
-        "spec": {"products": [
-            {"key": "fam4", "features": {"plus": "true", "seats": "4"},
-             "prices": [price("fam4_y")]},
-            {"key": "fam6", "features": {"plus": "true", "seats": "6"},
-             "prices": [price("fam6_y")]},
-        ]}
-    }));
-    let chosen = plan(&catalog, "family_yearly").unwrap();
-    assert_eq!(chosen.price_key, "fam6_y");
-    assert_eq!(chosen.seats, 6);
-    // The spec-only list still ranks the smaller family first.
-    assert_eq!(spec_plans(&catalog)[0].price_key, "fam4_y");
-}
-
 // ---- consent row ------------------------------------------------------------
 
 #[tokio::test]
@@ -569,6 +537,59 @@ async fn erasure_guard_ignores_ended_cancelled_and_other_peoples_subscriptions()
     assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
     let (money, _) = fake_money(200, json!({})).await;
     assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
+}
+
+#[tokio::test]
+async fn erasure_guard_fails_closed_on_every_status_not_known_to_be_over() {
+    for status in [
+        "past_due",
+        "incomplete",
+        "unpaid",
+        "paused",
+        "some_future_status",
+        "",
+    ] {
+        let (money, _) = fake_money(
+            200,
+            json!({"customer_subscriptions": [sub(USER, status, false)]}),
+        )
+        .await;
+        assert_eq!(
+            money.has_renewing_subscription(USER).await,
+            Ok(true),
+            "status {status:?}"
+        );
+    }
+    for status in ["canceled", "incomplete_expired", "expired"] {
+        let (money, _) = fake_money(
+            200,
+            json!({"customer_subscriptions": [sub(USER, status, false)]}),
+        )
+        .await;
+        assert_eq!(
+            money.has_renewing_subscription(USER).await,
+            Ok(false),
+            "status {status:?}"
+        );
+    }
+    let (money, _) = fake_money(
+        200,
+        json!({"customer_subscriptions": [sub(USER, "some_future_status", true)]}),
+    )
+    .await;
+    assert_eq!(money.has_renewing_subscription(USER).await, Ok(false));
+}
+
+#[test]
+fn entitlement_live_is_unchanged_by_the_erasure_rule() {
+    let s = Subscription {
+        id: "x".into(),
+        status: "some_future_status".into(),
+        cancel_at_period_end: false,
+        current_period_end: None,
+        price_keys: vec![],
+    };
+    assert!(!s.live() && !s.renews() && s.renews_for_erasure());
 }
 
 #[tokio::test]
@@ -752,4 +773,51 @@ fn env_url_keeps_the_bare_id_format() {
     .unwrap();
     assert_eq!(url, "https://m.example/v1/orgs/o1/projects/p1/envs/e1");
     assert!(super::client::env_url("https://m.example", &json!({"org":"o1"})).is_err());
+}
+
+#[tokio::test]
+async fn a_refusal_logs_the_problem_reason_and_processor_code() {
+    let (money, _) = fake_money(
+        400,
+        json!({
+            "code": "INVALID_STATE",
+            "status": 400,
+            "detail": "Stripe refused the request (resource_missing). key sk_live_abc123",
+            "details": [{"reason": "processor_refused", "processor_code": "resource_missing"}]
+        }),
+    )
+    .await;
+    let error = money.check_uncached(USER, "premium").await.unwrap_err();
+    let text = error.to_string();
+    assert!(text.contains("INVALID_STATE"), "{text}");
+    assert!(text.contains("reason=processor_refused"), "{text}");
+    assert!(text.contains("processor_code=resource_missing"), "{text}");
+    assert!(text.contains("Stripe refused the request"), "{text}");
+    assert!(!text.contains("sk_live_abc123"), "{text}");
+}
+
+// ---- Money's wire form: omitted falses, `{}` ---------------------------------
+
+#[tokio::test]
+async fn an_empty_check_answer_is_not_entitled_and_not_an_error() {
+    // Money omits a false boolean: a 2xx `{}` is `entitled: false`.
+    let (money, _) = fake_money(200, json!({})).await;
+    let grant = money
+        .try_check(USER, "plus")
+        .await
+        .expect("a 2xx `{}` answered");
+    assert!(!grant.entitled);
+    assert_eq!(super::access::seats(&money, USER).await, Ok(None));
+}
+
+#[tokio::test]
+async fn a_subscription_row_with_omitted_fields_is_read_not_dropped() {
+    let row = json!({"name": "orgs/o/projects/p/envs/e/customer_subscriptions/csb_1",
+                     "subject": {"end_user": USER}});
+    let (money, _) = fake_money(200, json!({"customer_subscriptions": [row]})).await;
+    let subs = money.subscriptions(USER).await.unwrap();
+    assert_eq!(subs.len(), 1);
+    assert!(!subs[0].cancel_at_period_end, "an omitted false is false");
+    assert!(!subs[0].live());
+    assert_eq!(money.has_renewing_subscription(USER).await, Ok(true));
 }

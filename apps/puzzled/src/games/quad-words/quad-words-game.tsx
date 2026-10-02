@@ -16,6 +16,7 @@ import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { useStartOver } from '@/games/shared/use-start-over'
 import { checkGuess } from '@/lib/connect/puzzle-client'
 import { cn } from '@/lib/utils'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
@@ -72,6 +73,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 		showResultModal,
 		setShowResultModal,
 		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'quad-words',
 		mode,
@@ -166,6 +168,8 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 	}, [isReady, game, handleSubmit])
 
 	const shareResult = useResultShare()
+	const startOver = useStartOver(resetSession, game.reset)
+
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 		void shareResult({
@@ -218,7 +222,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 						{game.getSolvedCount()}/4 • {game.getRemainingGuesses()} guesses left
 					</div>
 					<div className="flex gap-2">
-						<Button variant="ghost" size="sm" onClick={game.reset}>
+						<Button variant="ghost" size="sm" onClick={startOver}>
 							<RotateCcw className="h-4 w-4" />
 						</Button>
 						<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>

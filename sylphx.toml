@@ -38,6 +38,19 @@ watch_paths = [
   "sylphx.toml",
 ]
 
+# Runtime values for every service in the environment. Only top-level [env]
+# literals reach the runtime; a per-service table of values is not delivered.
+# Browser origin verified against the live production web/api route binding.
+[env.PUZZLED_PUBLIC_URL]
+value = "https://puzzled.gg"
+
+# Admin allow-list (workaround, docs/capabilities.md PUZ-AUTH-ADMIN): comma-separated
+# exact Sylphx Auth subjects (principal.subject) that are Puzzled admins. Empty means
+# nobody. Remove when cloud#11587 serves an organization{roles} claim and admin becomes
+# the "admin" role on Puzzled's Auth organization. Never log this value.
+[env.PUZZLED_ADMIN_PRINCIPALS]
+value = ""
+
 [[services]]
 name = "web"
 port = 3000
@@ -83,11 +96,6 @@ watch_paths = [
   "Cargo.lock",
   "sylphx.toml",
 ]
-
-# Browser origin verified against the live production web/api route binding.
-# This table belongs only to the api service declared above.
-[services.env]
-PUZZLED_PUBLIC_URL = "https://puzzled.gg"
 
 # Dedicated email-link verification key; the web route needs only API_INTERNAL_URL.
 [services.env.EMAIL_UNSUBSCRIBE_SECRET]
@@ -164,3 +172,21 @@ catch_up = "last_only"
 target = { kind = "http", method = "POST", signed = true }
 retry = { max_attempts = 3 }
 pause = false
+
+# Operator job (Workflows WFL-JOB): erase one person by their Sylphx Auth
+# subject. Runs the api's live Release image with the api's own env and secret
+# bindings (database URL, Money and Auth keys); nothing else holds them. No
+# schedule and no default args: an operator starts it and names a subject.
+# Same erase path as the in-app deletion (Money rule, then the rows and Auth's
+# deletion in one transaction). The supported recovery when an in-app erasure
+# may have deleted the sign-in but its rows did not commit (the person cannot
+# sign in to retry); safe to repeat. Prints counts only.
+#   sylphx jobs run erase-player -- --dry-run --subject <auth subject>
+#   sylphx jobs run erase-player -- --subject <auth subject>
+[[jobs]]
+name = "erase-player"
+service = "api"
+command = ["puzzled-server", "erase-player"]
+timeout = "10m"
+retries = 0
+concurrency = "forbid"

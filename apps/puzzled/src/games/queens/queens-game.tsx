@@ -16,6 +16,7 @@ import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import type { PuzzleDifficulty } from '@/games/types'
 import { cn } from '@/lib/utils'
 import { parseQueensClientPayload } from './parse-client'
 import { REGION_COLORS } from './types'
@@ -26,9 +27,17 @@ type Props = {
 	puzzleId?: string
 	puzzleData?: unknown
 	puzzleDate?: string
+	/** The level being played; recorded with the finish. */
+	difficulty?: PuzzleDifficulty
 }
 
-export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function QueensGame({
+	mode = 'daily',
+	puzzleId,
+	puzzleData,
+	puzzleDate,
+	difficulty,
+}: Props) {
 	const t = useTranslations('games.queens')
 	const tCommon = useTranslations('common')
 
@@ -46,11 +55,13 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		showResultModal,
 		setShowResultModal,
 		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'crowns',
 		mode,
 		puzzleId,
 		puzzleDate,
+		difficulty,
 		requireServerAccept: true,
 	})
 
@@ -99,10 +110,10 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 
 	// Reset game
 	const handleReset = useCallback(() => {
+		resetSession()
 		game.reset()
 		gameEndedRef.current = false
-		setShowResultModal(false)
-	}, [game, setShowResultModal])
+	}, [game, resetSession])
 
 	// Ready screen
 	if (isReady) {
