@@ -225,7 +225,7 @@ export default async function StatsPage({ params }: Props) {
 								hint={
 									statsKnown
 										? totalFinished > 0
-											? t('playedHint', { modules: moduleRows.length })
+											? t('playedHint', { modules: moduleRows.length, puzzles: moduleRows.length })
 											: t('playedHintEmpty')
 										: undefined
 								}
