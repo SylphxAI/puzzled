@@ -10,8 +10,8 @@
 		"zh-Hant": "每日十九款文字、邏輯及數字謎題；今日精選謎題免費，毋須註冊。"
 	},
 	"category": {
-		"en": "Games",
-		"zh-Hant": "遊戲"
+		"en": "Games and fun",
+		"zh-Hant": "遊戲及娛樂"
 	},
 	"url": "https://puzzled.gg",
 	"status": "available",
@@ -23,5 +23,5 @@
 		}
 	},
 	"icon": "icon.svg",
-	"services": ["Hosting", "Data"]
+	"services": ["Hosting", "Data", "Money"]
 }
