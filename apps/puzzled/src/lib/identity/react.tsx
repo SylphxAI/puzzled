@@ -24,6 +24,7 @@ import {
 	GetStreakInfoRequestSchema,
 } from '@/gen/connect/puzzled/v1/gamification_pb'
 import { getConnectTransport } from '@/lib/connect/transport'
+import { recordConsent } from './consent-client'
 import { type AppConfig, DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type IdentityUser } from './dest'
 import { MIN_PASSWORD_LENGTH } from './password-policy'
 
@@ -475,15 +476,7 @@ export function useSafeConsent() {
 			if (!user) return
 			await Promise.all(
 				DEST_CONSENT_PURPOSES.filter((purpose) => purpose !== 'necessary').map((purpose) =>
-					fetch('/api/identity/consent', {
-						method: 'POST',
-						headers: { 'content-type': 'application/json' },
-						credentials: 'same-origin',
-						body: JSON.stringify({
-							purpose,
-							state: next[purpose] ? 'granted' : 'denied',
-						}),
-					}).catch(() => undefined),
+					recordConsent(purpose, next[purpose] ? 'granted' : 'denied'),
 				),
 			)
 		},
