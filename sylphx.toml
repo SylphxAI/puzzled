@@ -172,3 +172,21 @@ catch_up = "last_only"
 target = { kind = "http", method = "POST", signed = true }
 retry = { max_attempts = 3 }
 pause = false
+
+# Operator job (Workflows WFL-JOB): erase one person by their Sylphx Auth
+# subject. Runs the api's live Release image with the api's own env and secret
+# bindings (database URL, Money and Auth keys); nothing else holds them. No
+# schedule and no default args: an operator starts it and names a subject.
+# Same erase path as the in-app deletion (Money rule, then the rows and Auth's
+# deletion in one transaction). The supported recovery when an in-app erasure
+# may have deleted the sign-in but its rows did not commit (the person cannot
+# sign in to retry); safe to repeat. Prints counts only.
+#   sylphx jobs run erase-player -- --dry-run --subject <auth subject>
+#   sylphx jobs run erase-player -- --subject <auth subject>
+[[jobs]]
+name = "erase-player"
+service = "api"
+command = ["puzzled-server", "erase-player"]
+timeout = "10m"
+retries = 0
+concurrency = "forbid"
