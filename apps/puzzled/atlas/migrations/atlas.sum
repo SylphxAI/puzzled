@@ -1,4 +1,4 @@
-h1:aBCz1Lh9cSvmRJcOMvrILIDINjQBA+cp1gL3uR7cES0=
+h1:fixMCjNHHY0r1068mIkYi8t1t7ESZZ44vIeRk2Vm94M=
 20260222000000_baseline.sql h1:s1JJixhhZWCRAJEmnXzCswTzY2VTuTEhVJvqun+xTXk=
 20260812000000_ritual_completion_drc.sql h1:Xhu5TcrCf1UV6Zbxsj1/PYLpoIjLbz8KTjCsFpPA+98=
 20260812010000_ritual_one_finish_per_day.sql h1:B8dS3cJud3fZs0VIFBSmWLuBf6poa/s9sJMtoNMfWGE=
@@ -14,3 +14,4 @@ h1:aBCz1Lh9cSvmRJcOMvrILIDINjQBA+cp1gL3uR7cES0=
 20261001010000_checkout_consent.sql h1:iCggHAN5tGplI0iSkhRxQGPhruxb2I/Jz8zDcuoo5dI=
 20261001020000_guest_credentials.sql h1:FTO1ZBZIkh/C6GUxE01mGNis7+YP1RdUi5IVxantFuw=
 20261002010000_daily_reminder_lease.sql h1:9I+EGXa7kQn5iCCUUW5ESTnrIL5MIUmaQnFsVp+wn/s=
+20261002020000_plus_trials.sql h1:2TrQeuV9JYKtpsPAGOWuFxGBxpOmvVfkFd6aFAk5HM0=

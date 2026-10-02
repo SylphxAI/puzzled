@@ -2,6 +2,7 @@ import { Check, Play } from 'lucide-react'
 import { cookies, headers } from 'next/headers'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { MarketingHero, MarketingSection } from '@/features/marketing/components'
+import { TrialChargeLine } from '@/features/plus/components/trial-charge-line'
 import { getAllGameMetadata } from '@/games/registry'
 import { getServerPlans, getServerPlusAccess } from '@/lib/api/server'
 import {
@@ -10,7 +11,13 @@ import {
 	CURRENCY_COOKIE,
 	chooseCurrency,
 } from '@/lib/billing/currency'
-import { formatPrice, type PlanCard, planCards, yearlySavingPercent } from '@/lib/billing/plus'
+import {
+	formatPrice,
+	type PlanCard,
+	planCards,
+	showsCurrentPlan,
+	yearlySavingPercent,
+} from '@/lib/billing/plus'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
@@ -202,6 +209,9 @@ export default async function PricingPage({ params, searchParams }: Props) {
 													) : null}
 												</div>
 											) : null}
+											{year && year.trialDays > 0 ? (
+												<TrialChargeLine days={year.trialDays} price={priceLine(year) ?? ''} />
+											) : null}
 										</dl>
 										<ul className="mt-5 flex-1 space-y-2.5">
 											{includes(group.family).map((line) => (
@@ -218,7 +228,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 											))}
 										</ul>
 										<div className="mt-5 grid gap-2">
-											{[month, year].map((card) =>
+											{[year, month].map((card) =>
 												card ? (
 													<SubscribeButton
 														key={card.id}
@@ -227,8 +237,12 @@ export default async function PricingPage({ params, searchParams }: Props) {
 														amountMinor={card.amountMinor}
 														locale={locale}
 														signedIn={Boolean(user)}
-														subscribed={Boolean(access?.entitled)}
-														label={`${t('subscribe')} · ${card.interval === 'year' ? t('yearly') : t('monthly')}`}
+														subscribed={showsCurrentPlan(access)}
+														label={
+															card.trialDays > 0
+																? t('startTrial', { days: card.trialDays })
+																: `${t('subscribe')} · ${card.interval === 'year' ? t('yearly') : t('monthly')}`
+														}
 													/>
 												) : null,
 											)}

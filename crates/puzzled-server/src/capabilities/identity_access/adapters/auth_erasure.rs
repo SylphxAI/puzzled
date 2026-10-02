@@ -75,8 +75,9 @@ impl AuthErasure {
     }
 
     /// File the deletion of one Auth subject. `Ok(Some(request id))` when Auth
-    /// accepted it, `Ok(None)` when Auth holds no such account (already gone,
-    /// or never created). An error says whether Auth definitely did not
+    /// accepted it, `Ok(None)` when Auth itself answered that it holds no such
+    /// account (already gone, or never created; see
+    /// `is_principal_not_found`). An error says whether Auth definitely did not
     /// delete the sign-in ([`AuthError::Refused`]) or may have
     /// ([`AuthError::Ambiguous`]); the caller never reports a success.
     pub async fn delete_principal(&self, principal_id: &str) -> Result<Option<String>, AuthError> {
@@ -109,8 +110,12 @@ impl AuthErasure {
                     AuthError::Ambiguous("auth answered without a privacy request id".to_string())
                 });
         }
-        // No such account of this instance: nothing left to delete.
-        if status == reqwest::StatusCode::NOT_FOUND {
+        // No such account of this instance: nothing left to delete. Only
+        // Auth's own structured answer says so; any other 404 (a misrouted
+        // `SYLPHX_AUTH_URL`, a proxy, an HTML page) says nothing about the
+        // sign-in, and trusting it would erase the rows of every player while
+        // their sign-ins stay live.
+        if status == reqwest::StatusCode::NOT_FOUND && is_principal_not_found(payload.as_ref()) {
             return Ok(None);
         }
         let detail = payload
@@ -124,8 +129,10 @@ impl AuthErasure {
             detail.chars().take(DETAIL_LIMIT).collect::<String>()
         );
         // A client error Auth decided on is a refusal; a timeout, rate limit
-        // or server error may have accepted the request first.
+        // or server error may have accepted the request first, and a 404
+        // that is not Auth's own may never have reached Auth at all.
         let definite = status.is_client_error()
+            && status != reqwest::StatusCode::NOT_FOUND
             && status != reqwest::StatusCode::REQUEST_TIMEOUT
             && status != reqwest::StatusCode::TOO_MANY_REQUESTS;
         Err(if definite {
@@ -136,14 +143,35 @@ impl AuthErasure {
     }
 }
 
+/// Is this 404 body Auth's own "no such user" for the named principal?
+///
+/// Auth (SylphxAI/cloud `services/auth/crates/identity-api`) answers a
+/// privacy request for a principal its instance does not hold with
+/// `StoreError::NotFound("user not found")` (`src/privacy.rs`,
+/// `dest_create_privacy_request`), which `map_error` (`src/lib.rs`) renders
+/// as 404 `{"code":"not_found","error":"user not found","authority":"identity"}`.
+/// `api.sylphx.com` forwards that body unchanged. Every field must match: a
+/// bare `not_found` can also mean the organization or the route is unknown.
+fn is_principal_not_found(payload: Option<&Value>) -> bool {
+    let field = |name: &str| {
+        payload
+            .and_then(|payload| payload.get(name))
+            .and_then(Value::as_str)
+    };
+    field("code") == Some("not_found")
+        && field("error") == Some("user not found")
+        && field("authority") == Some("identity")
+}
+
 /// Why Auth's deletion did not answer with an accepted request.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AuthError {
     /// Auth decided and refused (a 4xx other than 404, 408 and 429): the
     /// sign-in was not deleted.
     Refused(String),
-    /// No answer, a timeout, a rate limit, a server error, or an unreadable
-    /// acceptance: Auth may have deleted the sign-in. Safe to repeat, because
+    /// No answer, a timeout, a rate limit, a server error, a 404 that is not
+    /// Auth's structured "user not found", or an unreadable acceptance: Auth
+    /// may have deleted the sign-in. Safe to repeat, because
     /// the idempotency key is fixed per subject.
     Ambiguous(String),
 }
@@ -235,11 +263,76 @@ mod tests {
         );
     }
 
+    /// Auth's own answer for a principal its instance does not hold.
+    fn auth_user_not_found() -> Value {
+        json!({"code": "not_found", "error": "user not found", "authority": "identity"})
+    }
+
+    /// A stub that answers every request with a raw body (not Auth's JSON).
+    async fn spawn_raw(
+        status: u16,
+        content_type: &'static str,
+        body: &'static str,
+    ) -> (String, tokio::task::JoinHandle<()>) {
+        let app = axum::Router::new().fallback(move || async move {
+            (
+                axum::http::StatusCode::from_u16(status).unwrap(),
+                [(axum::http::header::CONTENT_TYPE, content_type)],
+                body,
+            )
+        });
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let handle = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        (format!("http://{addr}"), handle)
+    }
+
     #[tokio::test]
     async fn an_account_auth_does_not_hold_is_not_an_error() {
         let seen: Seen = Arc::default();
-        let (base, _server) = spawn_auth(404, json!({"error": "principal_not_found"}), seen).await;
+        let (base, _server) = spawn_auth(404, auth_user_not_found(), seen).await;
         assert_eq!(erasure(&base).delete_principal("usr_gone").await, Ok(None));
+    }
+
+    #[tokio::test]
+    async fn a_404_that_is_not_auths_user_not_found_is_ambiguous() {
+        // A misrouted SYLPHX_AUTH_URL or a proxy: never proof the sign-in is
+        // gone, or the rows would go while the sign-in stays live.
+        for (content_type, body) in [
+            (
+                "text/html",
+                "<html><body><h1>404 Not Found</h1></body></html>",
+            ),
+            ("text/plain", ""),
+            ("text/plain", "404 page not found"),
+            ("application/json", r#"{"error":"not_found"}"#),
+            ("application/json", r#"{"error":"principal_not_found"}"#),
+            // Auth's shape, but another missing thing (an organization, a
+            // route): not the principal.
+            (
+                "application/json",
+                r#"{"code":"not_found","error":"privacy request not found","authority":"identity"}"#,
+            ),
+            // Auth's words without Auth's authority: some other service.
+            (
+                "application/json",
+                r#"{"code":"not_found","error":"user not found","authority":"gateway"}"#,
+            ),
+        ] {
+            let (base, _server) = spawn_raw(404, content_type, body).await;
+            let answer = erasure(&base).delete_principal("usr_a").await;
+            assert!(
+                matches!(&answer, Err(AuthError::Ambiguous(error)) if error.contains("404")),
+                "{body}: {answer:?}"
+            );
+        }
+        // The real answer at a wrong status is not absence either.
+        let seen: Seen = Arc::default();
+        let (base, _server) = spawn_auth(410, auth_user_not_found(), seen).await;
+        assert!(matches!(
+            erasure(&base).delete_principal("usr_a").await,
+            Err(AuthError::Refused(_))
+        ));
     }
 
     #[tokio::test]

@@ -39,6 +39,18 @@ describe('money catalogue spec', () => {
 		for (const product of spec.products) expect(product.features.plus).toBe('true')
 	})
 
+	test('only the individual yearly price carries the 7-day trial', () => {
+		const trials = Object.fromEntries(
+			spec.products.flatMap((p) => p.prices).map((price) => [price.key, price.trial_days ?? 0]),
+		)
+		expect(trials).toEqual({
+			plus_individual_monthly: 0,
+			plus_individual_yearly: 7,
+			plus_family_monthly: 0,
+			plus_family_yearly: 0,
+		})
+	})
+
 	test('a price key Money would refuse is rejected', () => {
 		const bad = structuredClone(catalogue)
 		bad.plans[0].price_key = 'Plus-Monthly'

@@ -104,6 +104,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_graceful_shutdown(shutdown_signal())
         .await?;
 
+    // Let in-flight erasures and fills finish before the process exits.
+    puzzled_server::drain_tasks().await;
     tokio::time::sleep(Duration::from_millis(100)).await;
     Ok(())
 }

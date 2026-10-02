@@ -7,6 +7,7 @@ import {
 	deriveDifficultyCompletionStatus,
 	finishedDailyLevel,
 } from '@/features/daily/lib/difficulty-completion'
+import { PlusTrialProvider } from '@/features/plus/components/trial-ends-line'
 import { PlusOfferProvider } from '@/features/plus-offer/components/plus-offer-context'
 import { plusOfferFor } from '@/features/plus-offer/lib/plus-offer'
 import type { GameSlug } from '@/games/registry'
@@ -240,17 +241,19 @@ async function renderPlayArea(
 		// the api through the public edge, so hand over to a client-side GetDaily
 		// instead of a retry link that repeats the same failing SSR request.
 		return (
-			<AdsProvider config={ads}>
-				<GameDailyFallback
-					slug={slug}
-					gameName={gameName}
-					locale={locale}
-					mode={mode}
-					difficulty={difficulty}
-					supportsDifficulty={supportsDifficulty}
-					puzzleDate={archiveDate}
-				/>
-			</AdsProvider>
+			<PlusTrialProvider endsMs={access.trialEndsMs}>
+				<AdsProvider config={ads}>
+					<GameDailyFallback
+						slug={slug}
+						gameName={gameName}
+						locale={locale}
+						mode={mode}
+						difficulty={difficulty}
+						supportsDifficulty={supportsDifficulty}
+						puzzleDate={archiveDate}
+					/>
+				</AdsProvider>
+			</PlusTrialProvider>
 		)
 	}
 
@@ -279,39 +282,43 @@ async function renderPlayArea(
 	// Already completed view (server rendered, no game interaction needed)
 	if (hasCompletedToday && completedSession) {
 		return (
-			<AdsProvider config={ads}>
-				<AlreadyCompletedView
-					gameSlug={slug}
-					gameName={gameName}
-					puzzleDate={puzzleDate}
-					session={{
-						status: completedSession.status as 'won' | 'lost',
-						score: completedSession.score,
-						attempts: completedSession.attempts ?? 0,
-						completedAt: completedSession.completedAt,
-					}}
-					currentStreak={currentStreak}
-					locale={locale}
-					difficulty={completedViewLevel(supportsDifficulty, completedSession.difficulty)}
-				/>
-			</AdsProvider>
+			<PlusTrialProvider endsMs={access.trialEndsMs}>
+				<AdsProvider config={ads}>
+					<AlreadyCompletedView
+						gameSlug={slug}
+						gameName={gameName}
+						puzzleDate={puzzleDate}
+						session={{
+							status: completedSession.status as 'won' | 'lost',
+							score: completedSession.score,
+							attempts: completedSession.attempts ?? 0,
+							completedAt: completedSession.completedAt,
+						}}
+						currentStreak={currentStreak}
+						locale={locale}
+						difficulty={completedViewLevel(supportsDifficulty, completedSession.difficulty)}
+					/>
+				</AdsProvider>
+			</PlusTrialProvider>
 		)
 	}
 
 	// Active game view (client rendered with help modal support)
 	return (
-		<AdsProvider config={ads}>
-			<GamePageClient
-				slug={slug}
-				gameName={gameName}
-				puzzleDate={puzzleDate}
-				currentStreak={currentStreak}
-				mode={mode}
-				locale={locale}
-				puzzleId={puzzle.puzzleId}
-				puzzleData={puzzle.puzzleData}
-				difficulty={difficulty}
-			/>
-		</AdsProvider>
+		<PlusTrialProvider endsMs={access.trialEndsMs}>
+			<AdsProvider config={ads}>
+				<GamePageClient
+					slug={slug}
+					gameName={gameName}
+					puzzleDate={puzzleDate}
+					currentStreak={currentStreak}
+					mode={mode}
+					locale={locale}
+					puzzleId={puzzle.puzzleId}
+					puzzleData={puzzle.puzzleData}
+					difficulty={difficulty}
+				/>
+			</AdsProvider>
+		</PlusTrialProvider>
 	)
 }

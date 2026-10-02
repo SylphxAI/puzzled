@@ -185,3 +185,49 @@ pub async fn remove_family_member(
     .map_err(|e| format!("family remove failed: {e}"))?;
     Ok(result.rows_affected() > 0)
 }
+
+// ---- Reverse trial ---------------------------------------------------------
+
+/// When the account's one trial ends, if one was ever granted.
+pub async fn trial_ends_at_ms(pool: &PgPool, user_id: &str) -> Result<Option<i64>, String> {
+    sqlx::query_scalar::<_, NaiveDateTime>(
+        r#"SELECT "ends_at" FROM "plus_trials" WHERE "user_id" = $1"#,
+    )
+    .bind(uid(user_id)?)
+    .fetch_optional(pool)
+    .await
+    .map(|found| found.map(ms))
+    .map_err(|e| format!("trial read failed: {e}"))
+}
+
+/// Distinct product days the account has finished (a qualifying ritual finish).
+pub async fn finished_days(pool: &PgPool, user_id: &str) -> Result<i64, String> {
+    sqlx::query_scalar::<_, i64>(
+        r#"SELECT count(DISTINCT "day_key") FROM "game_sessions"
+           WHERE "user_id" = $1 AND "is_ritual" AND "day_key" IS NOT NULL"#,
+    )
+    .bind(uid(user_id)?)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("finished days read failed: {e}"))
+}
+
+/// Grant the trial ending at `ends_at_ms`. One row per account: a second call
+/// changes nothing. Returns the stored end.
+pub async fn grant_trial(pool: &PgPool, user_id: &str, ends_at_ms: i64) -> Result<i64, String> {
+    let ends = chrono::DateTime::from_timestamp_millis(ends_at_ms)
+        .ok_or("trial end out of range")?
+        .naive_utc();
+    sqlx::query(
+        r#"INSERT INTO "plus_trials" ("user_id", "ends_at") VALUES ($1, $2)
+           ON CONFLICT ("user_id") DO NOTHING"#,
+    )
+    .bind(uid(user_id)?)
+    .bind(ends)
+    .execute(pool)
+    .await
+    .map_err(|e| format!("trial write failed: {e}"))?;
+    trial_ends_at_ms(pool, user_id)
+        .await?
+        .ok_or_else(|| "trial row missing after grant".to_string())
+}

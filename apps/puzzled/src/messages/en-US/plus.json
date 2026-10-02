@@ -25,6 +25,8 @@
 		"includesArchive": "Every past day in the archive",
 		"includesStats": "Stats and streaks for every game",
 		"includesFamily": "Share with up to {count} people",
+		"trialLine": "Free for {days} days, then {price} a year, first charged on {date}. Cancel any time in Settings, in one step.",
+		"startTrial": "Start {days}-day free trial",
 		"subscribe": "Subscribe",
 		"subscribing": "Opening checkout...",
 		"signInToSubscribe": "Sign in to subscribe",
@@ -35,6 +37,9 @@
 		"alreadySubscribed": "You already have Puzzled Plus.",
 		"immediateSupplyConsent": "I want access now and understand I lose the 14-day cancellation right.",
 		"consentRequired": "Please tick the box to continue."
+	},
+	"trial": {
+		"endsOn": "Your free week of Puzzled Plus ends on {date}. Nothing is charged, and everything you finished stays in your stats."
 	},
 	"unlock": {
 		"title": "This game is part of Puzzled Plus",

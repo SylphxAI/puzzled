@@ -19,6 +19,8 @@ pub struct PlanPrices {
     pub interval: String,
     pub family: bool,
     pub seats: u32,
+    /// Free trial days before the first charge; 0 when none.
+    pub trial_days: u32,
     /// (lower-case currency, minor units); sorted by code.
     pub prices: Vec<(String, i64)>,
 }
@@ -73,6 +75,7 @@ pub fn plans(catalog: &Catalog) -> Vec<PlanPrices> {
                 interval: price.recurring_interval.clone().unwrap_or_default(),
                 family,
                 seats,
+                trial_days: price.trial_days,
                 prices: amounts(price),
             });
         }

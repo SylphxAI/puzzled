@@ -8,6 +8,7 @@ import { AdSlot } from '@/features/ads/components/ad-slot'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useWarmShareId } from '@/features/daily/hooks/use-share-id'
 import { buildResultCard, resultCardStringsFrom } from '@/features/daily/lib/result-card'
+import { TrialEndsLine } from '@/features/plus/components/trial-ends-line'
 import { seasonGreeting } from '@/features/seasons/lib/seasons'
 import { getHowToPlayConfig } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -267,6 +268,7 @@ export function AlreadyCompletedView({
 			</Card>
 
 			{/* Free viewers only; the server hands the slot no config for Plus or when ads are off. */}
+			<TrialEndsLine />
 			<AdSlot />
 
 			{/* Back to Home */}

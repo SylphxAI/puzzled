@@ -25,6 +25,8 @@
 		"includesArchive": "往日題庫中的每一天",
 		"includesStats": "每款遊戲的統計和連續紀錄",
 		"includesFamily": "最多與 {count} 人共用",
+		"trialLine": "免費試用 {days} 日，之後每年 {price}，首次收費日為 {date}。可隨時在「設定」一步取消。",
+		"startTrial": "開始 {days} 日免費試用",
 		"subscribe": "訂閱",
 		"subscribing": "正在開啟付款頁面⋯⋯",
 		"signInToSubscribe": "登入以訂閱",
@@ -33,8 +35,11 @@
 		"legal": "價格已包含增值稅。由 Sylphx Limited（於英格蘭及威爾斯註冊）出售。訂閱會自動續期，直至你在「設定」中取消。",
 		"checkoutCancelled": "已取消付款，你沒有被收費。",
 		"alreadySubscribed": "你已訂閱 Puzzled Plus。",
-		"immediateSupplyConsent": "我要即時使用，並明白我會失去 14 天取消權。",
+		"immediateSupplyConsent": "我要即時使用，並明白我會失去 14 日取消權。",
 		"consentRequired": "請剔選方格以繼續。"
+	},
+	"trial": {
+		"endsOn": "你的 Puzzled Plus 免費一星期會在 {date} 結束。不會收取任何費用，你已完成的內容會繼續保留在統計中。"
 	},
 	"unlock": {
 		"title": "這款遊戲屬於 Puzzled Plus",
