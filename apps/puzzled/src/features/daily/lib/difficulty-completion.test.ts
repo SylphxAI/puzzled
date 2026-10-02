@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'bun:test'
-import { deriveDifficultyCompletionStatus, finishedDailyLevel } from './difficulty-completion'
+import { gameSupportsDifficulty } from '@/games/registry'
+import {
+	completedViewLevel,
+	deriveDifficultyCompletionStatus,
+	finishedDailyLevel,
+} from './difficulty-completion'
 
 describe('difficulty completion status', () => {
 	test('projects server-verified completion marks', () => {
@@ -66,5 +71,19 @@ describe('finished daily level', () => {
 		expect(
 			finishedDailyLevel({ easy: done('bogus'), medium: open, hard: open })?.difficulty,
 		).toBeUndefined()
+	})
+})
+
+describe('completed view level', () => {
+	test('crossword (no levels) with a stored medium shows no level', () => {
+		expect(completedViewLevel(gameSupportsDifficulty('crossword'), 'medium')).toBeUndefined()
+	})
+	test('sudoku with a stored medium shows Medium; its real level is kept', () => {
+		expect(completedViewLevel(gameSupportsDifficulty('sudoku'), 'medium')).toBe('medium')
+		expect(completedViewLevel(gameSupportsDifficulty('sudoku'), 'hard')).toBe('hard')
+	})
+	test('a level game with an absent or unknown level shows none', () => {
+		expect(completedViewLevel(true, null)).toBeUndefined()
+		expect(completedViewLevel(true, 'bogus')).toBeUndefined()
 	})
 })

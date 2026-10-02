@@ -10,6 +10,7 @@ import {
 	initialDailyLoadState,
 	loadDailySnapshot,
 } from '@/features/daily/lib/daily-fallback'
+import { completedViewLevel } from '@/features/daily/lib/difficulty-completion'
 import type { GameSlug } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import type { GameMode } from '@/lib/db/schema'
@@ -23,6 +24,7 @@ type GameDailyFallbackProps = {
 	locale: string
 	mode: GameMode
 	difficulty?: PuzzleDifficulty
+	supportsDifficulty: boolean
 	/** Archive day key; only passed when the server already admitted that read. */
 	puzzleDate?: string
 }
@@ -42,6 +44,7 @@ export function GameDailyFallback({
 	locale,
 	mode,
 	difficulty,
+	supportsDifficulty,
 	puzzleDate,
 }: GameDailyFallbackProps) {
 	const t = useTranslations('daily')
@@ -96,7 +99,7 @@ export function GameDailyFallback({
 				session={snapshot.session}
 				currentStreak={0}
 				locale={locale}
-				difficulty={snapshot.session.difficulty}
+				difficulty={completedViewLevel(supportsDifficulty, snapshot.session.difficulty)}
 			/>
 		)
 	}

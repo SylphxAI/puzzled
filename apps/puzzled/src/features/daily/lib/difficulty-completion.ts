@@ -35,6 +35,20 @@ export function deriveDifficultyCompletionStatus(read: {
 	}
 }
 
+/**
+ * The level a completed view may name. A game without levels never shows one,
+ * whatever the stored value: the web client's SubmitGuess call defaults an
+ * absent level to 'medium' (`lib/connect/puzzle-client.ts`) and the server
+ * stores what it is given, so the column is a real level only for games that
+ * have levels.
+ */
+export function completedViewLevel(
+	supportsDifficulty: boolean,
+	stored: string | null | undefined,
+): PuzzleDifficulty | undefined {
+	return supportsDifficulty ? asDifficulty(stored) : undefined
+}
+
 export type FinishedLevel<S> = {
 	/** The level the finish was played at, when the server reported a valid one. */
 	difficulty: PuzzleDifficulty | undefined

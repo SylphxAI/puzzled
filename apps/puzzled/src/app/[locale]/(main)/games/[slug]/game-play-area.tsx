@@ -3,7 +3,7 @@ import { AdsProvider } from '@/features/ads/components/ad-context'
 import { GameUnlockPanel } from '@/features/catalog/components/game-unlock-panel'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import {
-	asDifficulty,
+	completedViewLevel,
 	deriveDifficultyCompletionStatus,
 	finishedDailyLevel,
 } from '@/features/daily/lib/difficulty-completion'
@@ -229,6 +229,7 @@ export async function GamePlayArea({
 					locale={locale}
 					mode={mode}
 					difficulty={difficulty}
+					supportsDifficulty={supportsDifficulty}
 					puzzleDate={archiveDate}
 				/>
 			</AdsProvider>
@@ -273,7 +274,7 @@ export async function GamePlayArea({
 					}}
 					currentStreak={currentStreak}
 					locale={locale}
-					difficulty={asDifficulty(completedSession.difficulty)}
+					difficulty={completedViewLevel(supportsDifficulty, completedSession.difficulty)}
 				/>
 			</AdsProvider>
 		)
