@@ -960,8 +960,36 @@ struct CryptogramSubmission {
     hints_used: Option<u32>,
 }
 
+/// Cipher letters the player must decode: those present in the served puzzle
+/// text. Older rows without the text fall back to every letter of the solution
+/// (strictest), never to fewer.
+fn cryptogram_required_letters(
+    puzzle_data: &Value,
+    cipher: &std::collections::BTreeMap<String, String>,
+) -> std::collections::BTreeSet<char> {
+    use crate::capabilities::puzzle_play::domain::cryptogram;
+    let text = puzzle_data
+        .get("encryptedText")
+        .or_else(|| {
+            puzzle_data
+                .get("puzzleData")
+                .and_then(|p| p.get("encryptedText"))
+        })
+        .and_then(Value::as_str);
+    match text {
+        Some(t) if !cryptogram::unique_encrypted_letters(t).is_empty() => {
+            cryptogram::unique_encrypted_letters(t)
+        }
+        _ => cipher
+            .keys()
+            .filter_map(|k| k.chars().next())
+            .map(|c| c.to_ascii_uppercase())
+            .collect(),
+    }
+}
+
 fn cryptogram(
-    _puzzle_data: &Value,
+    puzzle_data: &Value,
     solution: &Value,
     env: &SubmissionEnvelope,
 ) -> SubmissionVerdict {
@@ -978,9 +1006,11 @@ fn cryptogram(
             cipher.insert(k.clone(), v.to_string());
         }
     }
+    let required = cryptogram_required_letters(puzzle_data, &cipher);
     let result = cryptogram::validate_and_score(
         &cipher,
         Some(&sub.guesses),
+        &required,
         sub.hints_used,
         env.time_spent_ms,
         match env.status {
@@ -1744,6 +1774,50 @@ mod tests {
         );
         assert!(v.valid, "{v:?}");
         assert_eq!(v.status, Some(SubmissionStatus::Lost));
+    }
+
+    fn cryptogram_partial_alphabet() -> (Value, Value) {
+        // Solution maps all 26 letters; the puzzle only uses A, B and C.
+        let cipher: serde_json::Map<String, Value> = ('A'..='Z')
+            .map(|c| {
+                let plain = char::from(b'Z' - (c as u8 - b'A'));
+                (c.to_string(), Value::String(plain.to_string()))
+            })
+            .collect();
+        (
+            json!({ "encryptedText": "ABC CBA!" }),
+            json!({ "reverseCipher": cipher }),
+        )
+    }
+
+    #[test]
+    fn cryptogram_accepts_a_win_decoding_only_the_letters_in_the_puzzle() {
+        let (puzzle, solution) = cryptogram_partial_alphabet();
+        let v = validate_submission(
+            "cryptogram",
+            &puzzle,
+            &solution,
+            &env(json!({ "guesses": { "A": "Z", "B": "Y", "C": "X" }, "hintsUsed": 0 })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Won));
+    }
+
+    #[test]
+    fn cryptogram_rejects_a_win_with_a_wrong_or_missing_present_letter() {
+        let (puzzle, solution) = cryptogram_partial_alphabet();
+        for guesses in [
+            json!({ "A": "Z", "B": "Y", "C": "Q" }),
+            json!({ "A": "Z", "B": "Y" }),
+        ] {
+            let v = validate_submission(
+                "cryptogram",
+                &puzzle,
+                &solution,
+                &env(json!({ "guesses": guesses, "hintsUsed": 0 })),
+            );
+            assert!(!v.valid, "{v:?}");
+        }
     }
 
     #[test]

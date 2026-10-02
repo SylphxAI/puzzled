@@ -16,6 +16,7 @@ import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { useStartOver } from '@/games/shared/use-start-over'
 import { cn } from '@/lib/utils'
 import { PipPlaceIcon } from './icon'
 import { parsePipPlaceClientPayload } from './parse-client'
@@ -154,6 +155,7 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 		showResultModal,
 		setShowResultModal,
 		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'pip-place',
 		mode,
@@ -201,6 +203,8 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	}, [regionOf, rows, cols])
 
 	const shareResult = useResultShare()
+	const startOver = useStartOver(resetSession, game.reset)
+
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 		void shareResult({
@@ -275,7 +279,7 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 						<Button
 							variant="ghost"
 							size="sm"
-							onClick={game.reset}
+							onClick={startOver}
 							disabled={!playing}
 							aria-label="Reset"
 						>

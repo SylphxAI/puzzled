@@ -45,6 +45,7 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		showResultModal,
 		setShowResultModal,
 		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'block-slide',
 		mode,
@@ -110,8 +111,9 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 
 	// Reset game
 	const handleReset = useCallback(() => {
+		resetSession()
 		game.reset()
-	}, [game])
+	}, [game, resetSession])
 
 	const isComplete = game.status === 'won' || game.status === 'gave_up'
 

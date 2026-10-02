@@ -46,6 +46,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		showResultModal,
 		setShowResultModal,
 		resultReady,
+		resetSession,
 	} = useGameSession({
 		gameSlug: 'crowns',
 		mode,
@@ -99,10 +100,10 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 
 	// Reset game
 	const handleReset = useCallback(() => {
+		resetSession()
 		game.reset()
 		gameEndedRef.current = false
-		setShowResultModal(false)
-	}, [game, setShowResultModal])
+	}, [game, resetSession])
 
 	// Ready screen
 	if (isReady) {

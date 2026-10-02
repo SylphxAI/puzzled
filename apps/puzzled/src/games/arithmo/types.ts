@@ -122,23 +122,57 @@ function tokenize(expr: string): string[] | null {
 }
 
 /**
- * Safely evaluate a math expression
+ * Safely evaluate a math expression: non-negative integers joined by + - * /
+ * with the usual precedence and real (not integer) division. No parentheses and
+ * no unary minus, matching the characters the game accepts and the server
+ * validator (`domain/arithmo.rs`). Never uses `eval`/`new Function`: the CSP has
+ * no 'unsafe-eval'.
  */
-function evaluateExpression(expr: string): number | null {
+export function evaluateExpression(expr: string): number | null {
 	// Only allow valid characters
 	if (!/^[0-9+\-*/]+$/.test(expr)) return null
 
 	// Prevent division by zero (including /0, /00, /000, etc.)
 	if (/\/0+(?![0-9])/.test(expr) || expr.endsWith('/0')) return null
 
-	try {
-		// Use Function to evaluate (safe because we validated chars)
-		const result = new Function(`return ${expr}`)()
-		if (typeof result !== 'number' || !Number.isFinite(result)) return null
-		return result
-	} catch {
-		return null
+	let pos = 0
+
+	const number = (): number | null => {
+		const start = pos
+		while (pos < expr.length && expr[pos] >= '0' && expr[pos] <= '9') pos++
+		if (pos === start) return null
+		const digits = expr.slice(start, pos)
+		if (digits.length > 1 && digits[0] === '0') return null
+		return Number(digits)
 	}
+
+	const term = (): number | null => {
+		let value = number()
+		if (value === null) return null
+		while (pos < expr.length && (expr[pos] === '*' || expr[pos] === '/')) {
+			const op = expr[pos++]
+			const rhs = number()
+			if (rhs === null) return null
+			if (op === '*') {
+				value *= rhs
+			} else {
+				if (rhs === 0) return null
+				value /= rhs
+			}
+		}
+		return value
+	}
+
+	let result = term()
+	if (result === null) return null
+	while (pos < expr.length && (expr[pos] === '+' || expr[pos] === '-')) {
+		const op = expr[pos++]
+		const rhs = term()
+		if (rhs === null) return null
+		result = op === '+' ? result + rhs : result - rhs
+	}
+	if (pos !== expr.length || !Number.isFinite(result)) return null
+	return result
 }
 
 /**
