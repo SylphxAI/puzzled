@@ -14,6 +14,7 @@ use super::compute_ticks::{
     AUDIT_RETENTION_PATH, DAILY_PUZZLES_PATH, DAILY_REMINDERS_PATH, TRYIT_CONVERSIONS_PATH,
 };
 use super::connect_admin::admin_connect_service;
+use super::connect_announcements::announcement_connect_service;
 use super::connect_billing::billing_connect_service;
 use super::connect_gamification::gamification_connect_service;
 use super::connect_health::health_connect_service;
@@ -29,6 +30,7 @@ use crate::capabilities::identity_access::adapters::auth_session::attach_auth_se
 pub fn router(state: AppState) -> Router {
     let connect = connectrpc::Router::new()
         .add_service(admin_connect_service(state.clone()))
+        .add_service(announcement_connect_service(state.clone()))
         .add_service(billing_connect_service(state.clone()))
         .add_service(gamification_connect_service(state.clone()))
         .add_service(health_connect_service(state.clone()))

@@ -16,6 +16,10 @@ import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
 import { type SharedResult, toSharedResult } from '@/features/daily/lib/challenge'
 import {
+	AnnouncementService,
+	ListActiveAnnouncementsRequestSchema,
+} from '@/gen/connect/puzzled/v1/announcements_pb'
+import {
 	BillingService,
 	GetSubscriptionRequestSchema,
 	ListPlansRequestSchema,
@@ -329,6 +333,30 @@ export const getServerTodayOverview = cache(
 		}
 	},
 )
+
+// ==========================================
+// Announcements (AnnouncementService)
+// ==========================================
+
+/** The notices an admin has switched on right now; a failed read shows none. */
+export const getServerActiveAnnouncements = cache(async () => {
+	try {
+		const transport = await getServerTransport()
+		const res = await createClient(AnnouncementService, transport).listActiveAnnouncements(
+			create(ListActiveAnnouncementsRequestSchema, {}),
+		)
+		return res.announcements.map((a) => ({
+			id: a.id,
+			title: a.title,
+			body: a.body,
+			type: a.type,
+			dismissible: a.dismissible,
+		}))
+	} catch (error) {
+		logger.warn('announcements.read-failed', { error })
+		return []
+	}
+})
 
 // ==========================================
 // Puzzled Plus (BillingService)

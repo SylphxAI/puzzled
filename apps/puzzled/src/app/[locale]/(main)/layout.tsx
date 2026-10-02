@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { cache, Suspense } from 'react'
 import { AttributionCapture } from '@/features/analytics/components/attribution-capture'
+import { AnnouncementBannerChrome } from '@/features/announcements/components/announcement-banner-chrome'
 import { GuestIdentityBootstrap } from '@/features/daily/components/guest-identity-bootstrap'
 import { getServerStreakInfo, hasServerProgressIdentity } from '@/lib/api/server'
 import { currentUser } from '@/lib/identity/server'
@@ -121,6 +122,8 @@ export default function MainLayout({ children }: Props) {
 			{/* Main scrollable content */}
 			{/* pb-nav on mobile only (bottom nav), md:pb-0 on desktop */}
 			<div id="main-content" className="flex flex-1 flex-col pb-nav md:pb-0" tabIndex={-1}>
+				{/* Server-rendered in flow; renders nothing (no space) when there is no notice. */}
+				<AnnouncementBannerChrome />
 				<AccountSavedNote />
 				{children}
 				<Footer />

@@ -114,8 +114,13 @@ function AnnouncementEditorModal({
 		(e: React.FormEvent) => {
 			e.preventDefault()
 
+			// The Connect contract's names: `body` and `active`, not the table's.
 			const data = {
-				...formData,
+				title: formData.title,
+				body: formData.content,
+				type: formData.type,
+				active: formData.isActive,
+				dismissible: formData.dismissible,
 				startsAt: formData.startsAt ? new Date(formData.startsAt).toISOString() : undefined,
 				endsAt: formData.endsAt ? new Date(formData.endsAt).toISOString() : undefined,
 			}

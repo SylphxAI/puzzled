@@ -56,6 +56,20 @@ fn announcement_from_json(v: &Value) -> Announcement {
             .and_then(|x| x.as_str())
             .unwrap_or_default()
             .to_string(),
+        starts_at: v
+            .get("startsAt")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        ends_at: v
+            .get("endsAt")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        dismissible: v
+            .get("dismissible")
+            .and_then(|x| x.as_bool())
+            .unwrap_or(true),
         ..Default::default()
     }
 }
@@ -208,6 +222,18 @@ impl AdminService for AdminConnectService {
                 "title_and_body_required",
             ));
         }
+        let starts_at = admin_db::parse_announcement_bound(&req.starts_at)
+            .map_err(|e| ConnectError::new(ErrorCode::InvalidArgument, e))?;
+        let ends_at = admin_db::parse_announcement_bound(&req.ends_at)
+            .map_err(|e| ConnectError::new(ErrorCode::InvalidArgument, e))?;
+        if let (Some(start), Some(end)) = (starts_at, ends_at) {
+            if end <= start {
+                return Err(ConnectError::new(
+                    ErrorCode::InvalidArgument,
+                    "ends_before_start",
+                ));
+            }
+        }
         let row = admin_db::create_announcement(
             pool,
             req.title.trim(),
@@ -218,6 +244,9 @@ impl AdminService for AdminConnectService {
                 req.r#type.trim()
             },
             req.active,
+            req.dismissible.unwrap_or(true),
+            starts_at,
+            ends_at,
             &identity.user_id,
         )
         .await
@@ -236,6 +265,14 @@ impl AdminService for AdminConnectService {
         require_admin(&ctx)?;
         let pool = self.pool()?;
         let req = request.to_owned_message();
+        let bound = |v: &Option<String>| match v {
+            None => Ok(None),
+            Some(v) => admin_db::parse_announcement_bound(v).map(Some),
+        };
+        let starts_at =
+            bound(&req.starts_at).map_err(|e| ConnectError::new(ErrorCode::InvalidArgument, e))?;
+        let ends_at =
+            bound(&req.ends_at).map_err(|e| ConnectError::new(ErrorCode::InvalidArgument, e))?;
         let row = admin_db::update_announcement(
             pool,
             req.id.trim(),
@@ -243,6 +280,9 @@ impl AdminService for AdminConnectService {
             req.body.as_deref(),
             req.r#type.as_deref(),
             req.active,
+            req.dismissible,
+            starts_at,
+            ends_at,
         )
         .await
         .map_err(|e| ConnectError::new(ErrorCode::Internal, e))?;
