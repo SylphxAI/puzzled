@@ -8,7 +8,7 @@ import {
 	scopeHomePlayState,
 } from '@/features/daily/lib/home-play-state'
 import { getPuzzleNumber } from '@/features/daily/lib/puzzle-utils'
-import { todayPlayPath } from '@/features/daily/lib/today-play-path'
+import { todayPlayPath, todayResultPath } from '@/features/daily/lib/today-play-path'
 import {
 	HomeDay,
 	HomeDayFallback,
@@ -21,6 +21,7 @@ import {
 	TodayLineup,
 	TodayLineupSkeleton,
 } from '@/features/home/components/today-lineup'
+import { lineupStatus } from '@/features/home/lib/home-day-copy'
 import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from '@/features/home/lib/home-faq'
 import { MarketingFaq } from '@/features/marketing/components'
 import { SeasonalBanner } from '@/features/seasons/components/seasonal-banner'
@@ -179,7 +180,7 @@ function buildLineup(input: {
 		const metadata = input.metadataBySlug.get(game.slug)
 		if (!metadata) return []
 		const camel = slugToCamelCase(game.slug)
-		const status = game.completed ? 'solved' : game.isFreeToday ? 'free' : 'play'
+		const status = lineupStatus(game)
 		return [
 			{
 				slug: game.slug,
@@ -302,6 +303,7 @@ export default async function HomePage({ params }: Props) {
 		tagline: freeGameMeta ? t(`games.${slugToCamelCase(todaysFreeGame)}.tagline`) : undefined,
 		duration: freeGameMeta?.display.duration,
 		playHref: todayPlayPath(todaysFreeGame),
+		resultHref: todayResultPath(todaysFreeGame),
 	}
 	// The day has an identity: this is the puzzle number `getPuzzleNumber`
 	// already computes for the module and the product day.

@@ -1,6 +1,7 @@
 import { ArrowRight, Flame, Users } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { DayCountdown } from '@/features/home/components/day-countdown'
+import { homeDayCopy } from '@/features/home/lib/home-day-copy'
 import { type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import { Link } from '@/lib/i18n/routing'
 import { cn, formatNumber } from '@/lib/utils'
@@ -17,6 +18,8 @@ export type HomeDayGame = {
 	duration?: string
 	/** Straight to today's board (`todayPlayPath`), not the game page's start card. */
 	playHref: string
+	/** Where the finished result is read (`todayResultPath`). */
+	resultHref: string
 }
 
 /**
@@ -82,16 +85,11 @@ export async function HomeDay({
 	const allDone = availableCount > 0 && completedCount >= availableCount
 	const showsProgress = isMember && availableCount > 0
 
-	const headline =
-		isMember && allDone
-			? t('day.titleMemberDone')
-			: freeGameDone
-				? t('day.titleDone', { game: freeGame.name })
-				: isMember
-					? currentStreak > 0 && !hasPlayedToday
-						? t('day.titleMemberStreak', { days: currentStreak })
-						: t('day.titleMemberReady', { game: freeGame.name })
-					: t('day.guestTitle', { game: freeGame.name })
+	const copy = homeDayCopy({ isMember, allDone, freeGameDone, currentStreak, hasPlayedToday })
+	const headline = t(`day.${copy.headlineKey}`, {
+		game: freeGame.name,
+		days: currentStreak,
+	})
 
 	return (
 		<section className="day-surface relative">
@@ -147,13 +145,12 @@ export async function HomeDay({
 							numberLabel={t('day.puzzleNumber', { number: puzzleNumber })}
 							label={t('day.freeToday')}
 							cta={
-								freeGameDone
+								copy.cta === 'result'
 									? tResult('seeResult')
-									: allDone
-										? t('day.playAgain')
-										: t('day.playToday', { game: freeGame.name })
+									: t('day.playToday', { game: freeGame.name })
 							}
-							note={isMember || freeGameDone ? undefined : t('day.guestNote')}
+							href={copy.cta === 'result' ? freeGame.resultHref : freeGame.playHref}
+							note={copy.showsNote ? t('day.guestNote') : undefined}
 						/>
 						<div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground lg:hidden">
 							<DayFacts
@@ -231,12 +228,14 @@ function FeaturedCard({
 	numberLabel,
 	label,
 	cta,
+	href,
 	note,
 }: {
 	game: HomeDayGame
 	numberLabel: string
 	label: string
 	cta: string
+	href: string
 	/** Reassurance under the action, shown to first-time visitors only. */
 	note?: string
 }) {
@@ -272,7 +271,7 @@ function FeaturedCard({
 					</p>
 				) : null}
 				<Link
-					href={game.playHref}
+					href={href}
 					className="pressable mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary px-6 text-[16px] font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
 				>
 					{cta}
