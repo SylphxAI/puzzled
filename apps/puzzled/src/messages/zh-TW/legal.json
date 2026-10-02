@@ -15,7 +15,7 @@
 			},
 			"cookies": {
 				"content": "我們使用登入、保障 Puzzled 安全與記住你的設定所必需的 Cookie。分析 Cookie 與推薦 Cookie 只會在你接受分析後使用；廣告成效衡量只會在你另外於設定中開啟廣告後使用。所有選項預設不勾選，拒絕不影響你使用。",
-				"notices": "另有一個 Cookie 用來記住你已關閉哪些網站通知：puzzled_dismissed_notices。它屬必要 Cookie，由我們自己設定（第一方），保存一年，只記錄你已關閉公告的編號，不含任何個人資料，因此不需詢問就會設定，也不會用於分析。",
+				"notices": "另有一個 Cookie 用來記住你已關閉哪些網站通知：puzzled_dismissed_notices。它屬必要 Cookie，由我們自己設定（第一方），保存一年，只記錄你已關閉通知的編號，不含任何個人資料，因此不需詢問就會設定，也不會用於分析。",
 				"google": "如果本網站啟用了 Google Analytics 或 Google Ads，它們只會在你同意後才載入：Google Analytics 用於分析，Google Ads 用於衡量廣告是否帶來註冊或購買，只涉及方案與價格，不含姓名或電子郵件。我們關閉廣告個人化與 Google 訊號，只向 Google 傳送公開頁面網址。你可以隨時按下方按鈕撤回，同時會刪除 Google Cookie。"
 			},
 			"thirdParty": {
