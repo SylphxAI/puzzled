@@ -24,8 +24,8 @@ on:
 
 # The job's own token. With the builder App key (repositories in the org that
 # holds it) the handler writes through the App and uses none of these writes.
-# Without it (token mode) the handler notifies on this token: it reruns the
-# failed jobs, files the flake issue and comments on the affected pull
+# Without it (token mode) the handler notifies on this token: it never
+# reruns; it files the issue and comments on the affected pull
 # request; it never opens a pull request with it.
 permissions:
   actions: write
@@ -42,7 +42,7 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch'
       || (github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.head_branch == 'main')
-    uses: SylphxAI/.github/.github/workflows/red-main.yml@7ffef9a95f35d959a98d82169103a3f6ba575cca # main 7ffef9a (SylphxAI/.github#131, self-heal rules)
+    uses: SylphxAI/.github/.github/workflows/red-main.yml@e545f01eca2b1e7d8888d8cd0135c13bc56af294 # main e545f01 (SylphxAI/.github#149, never rerun a red main)
     # One secret, passed by name. The handler needs exactly the builder App's
     # private key, and `secrets: inherit` would hand it every secret this
     # repository holds. The handler reads it as
