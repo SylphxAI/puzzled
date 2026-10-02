@@ -17,6 +17,7 @@ import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { useStartOver } from '@/games/shared/use-start-over'
+import type { PuzzleDifficulty } from '@/games/types'
 import { cn } from '@/lib/utils'
 import { parseKillerSudokuClientPayload } from './parse-client'
 import { useKillerSudoku } from './use-killer-sudoku'
@@ -26,9 +27,17 @@ type Props = {
 	puzzleId?: string
 	puzzleData?: unknown
 	puzzleDate?: string
+	/** The level being played; recorded with the finish. */
+	difficulty?: PuzzleDifficulty
 }
 
-export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function KillerSudokuGame({
+	mode = 'daily',
+	puzzleId,
+	puzzleData,
+	puzzleDate,
+	difficulty,
+}: Props) {
 	const t = useTranslations('games.killerSudoku')
 	const tCommon = useTranslations('common')
 
@@ -52,6 +61,7 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 		mode,
 		puzzleId,
 		puzzleDate,
+		difficulty,
 	})
 
 	// Game-specific state

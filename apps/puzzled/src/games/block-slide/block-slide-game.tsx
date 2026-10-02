@@ -16,6 +16,7 @@ import { SeeResultButton } from '@/features/daily/components/see-result-button'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import type { PuzzleDifficulty } from '@/games/types'
 import { BlockSlideIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { Board } from './components/board'
@@ -27,9 +28,17 @@ type Props = {
 	puzzleId?: string
 	puzzleData?: unknown
 	puzzleDate?: string
+	/** The level being played; recorded with the finish. */
+	difficulty?: PuzzleDifficulty
 }
 
-export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function BlockSlideGame({
+	mode = 'daily',
+	puzzleId,
+	puzzleData,
+	puzzleDate,
+	difficulty,
+}: Props) {
 	const t = useTranslations('games.blockSlide')
 
 	// Get puzzle from server data
@@ -51,6 +60,7 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		mode,
 		puzzleId,
 		puzzleDate,
+		difficulty,
 		enableStarBurst: false,
 	})
 

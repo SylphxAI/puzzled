@@ -132,6 +132,11 @@ function tileSpanStyle(tile: PipPlaceTile): CSSProperties {
 	}
 }
 
+/** Explicit position: overlays in the same grid must not push auto-placed cells. */
+export function cellGridStyle(cell: Cell): CSSProperties {
+	return { gridRow: cell.row + 1, gridColumn: cell.col + 1 }
+}
+
 function pipAt(placed: PipPlaceTile[], cell: Cell): number | null {
 	for (const tile of placed) {
 		if (cellsEqual(tile.a, cell)) return tile.pa
@@ -331,6 +336,7 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 										disabled={!playing}
 										onClick={() => game.touchCell(cell)}
 										aria-label={`cell ${row + 1},${col + 1}`}
+										style={cellGridStyle(cell)}
 										className={cn(
 											'relative flex items-center justify-center rounded-sm border border-border/70',
 											REGION_COLORS[regionId % REGION_COLORS.length],
