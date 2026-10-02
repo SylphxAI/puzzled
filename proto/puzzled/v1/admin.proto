@@ -27,6 +27,11 @@ message Announcement {
   bool active = 5;
   string created_at = 6;
   string updated_at = 7;
+  // RFC 3339 UTC; empty = no bound. The player-facing banner shows a row only
+  // inside this window (AnnouncementService.ListActiveAnnouncements).
+  string starts_at = 8;
+  string ends_at = 9;
+  bool dismissible = 10;
 }
 
 message ListAnnouncementsRequest {}
@@ -39,6 +44,10 @@ message CreateAnnouncementRequest {
   string body = 2;
   string type = 3;
   bool active = 4;
+  string starts_at = 5;
+  string ends_at = 6;
+  // Absent = dismissible.
+  bool dismissible = 7 [features.field_presence = EXPLICIT];
 }
 message CreateAnnouncementResponse {
   Announcement announcement = 1;
@@ -50,6 +59,10 @@ message UpdateAnnouncementRequest {
   string body = 3 [features.field_presence = EXPLICIT];
   string type = 4 [features.field_presence = EXPLICIT];
   bool active = 5 [features.field_presence = EXPLICIT];
+  // Absent = unchanged; empty string = clear the bound.
+  string starts_at = 6 [features.field_presence = EXPLICIT];
+  string ends_at = 7 [features.field_presence = EXPLICIT];
+  bool dismissible = 8 [features.field_presence = EXPLICIT];
 }
 message UpdateAnnouncementResponse {
   Announcement announcement = 1;

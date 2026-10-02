@@ -1,6 +1,7 @@
 //! Imperative-shell capability modules (ADR-169).
 
 pub mod admin;
+pub mod announcements;
 pub mod billing;
 pub mod daily_pipeline;
 pub mod gamification;

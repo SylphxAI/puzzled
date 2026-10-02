@@ -25,6 +25,8 @@ pub use capabilities::identity_access::contract::{
 #[cfg(test)]
 mod account_erasure_tests;
 #[cfg(test)]
+mod announcements_tests;
+#[cfg(test)]
 mod auth_session_tests;
 #[cfg(test)]
 mod daily_pipeline_tests;

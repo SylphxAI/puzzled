@@ -2,6 +2,7 @@
 
 mod compute_ticks;
 mod connect_admin;
+mod connect_announcements;
 mod connect_billing;
 mod connect_gamification;
 mod connect_health;

@@ -14,7 +14,12 @@ import { createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
+import { createActiveAnnouncementsCache } from '@/features/announcements/lib/active-cache'
 import { type SharedResult, toSharedResult } from '@/features/daily/lib/challenge'
+import {
+	AnnouncementService,
+	ListActiveAnnouncementsRequestSchema,
+} from '@/gen/connect/puzzled/v1/announcements_pb'
 import {
 	BillingService,
 	GetSubscriptionRequestSchema,
@@ -329,6 +334,39 @@ export const getServerTodayOverview = cache(
 		}
 	},
 )
+
+// ==========================================
+// Announcements (AnnouncementService)
+// ==========================================
+
+/**
+ * The notices an admin has switched on right now, shared across requests (see
+ * `active-cache`). The endpoint ignores identity, so this uses a bare
+ * transport: no session or guest cookie and no user agent leave the web tier.
+ */
+const activeAnnouncements = createActiveAnnouncementsCache({
+	fetch: async () => {
+		const transport = createConnectTransport({
+			baseUrl: resolveServerConnectBaseUrl(),
+			useBinaryFormat: false,
+			fetch: ((input: RequestInfo | URL, init?: RequestInit) =>
+				fetch(input, mergeServerConnectInit(init, '', SERVER_CONNECT_TIMEOUT_MS))) as typeof fetch,
+		})
+		const res = await createClient(AnnouncementService, transport).listActiveAnnouncements(
+			create(ListActiveAnnouncementsRequestSchema, {}),
+		)
+		return res.announcements.map((a) => ({
+			id: a.id,
+			title: a.title,
+			body: a.body,
+			type: a.type,
+			dismissible: a.dismissible,
+			endsAt: a.endsAt,
+		}))
+	},
+})
+
+export const getServerActiveAnnouncements = () => activeAnnouncements.get()
 
 // ==========================================
 // Puzzled Plus (BillingService)
