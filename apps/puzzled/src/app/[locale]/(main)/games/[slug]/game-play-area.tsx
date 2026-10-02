@@ -184,6 +184,7 @@ export async function GamePlayArea({
 			const archivePuzzle = await getServerDailyStatus({
 				gameSlug: slug,
 				puzzleDate: archiveDate,
+				difficulty,
 			})
 			puzzle = {
 				puzzleId: archivePuzzle.puzzle.id,

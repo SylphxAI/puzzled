@@ -7,6 +7,16 @@ import { join } from 'node:path'
 // `supportsDifficulty: true` must hand its level to the session.
 const dirs = readdirSync(import.meta.dir, { withFileTypes: true }).filter((e) => e.isDirectory())
 
+/** The game's source, or null when the folder has no game component (ENOENT only). */
+function readGameSource(slug: string): string | null {
+	try {
+		return readFileSync(join(import.meta.dir, slug, `${slug}-game.tsx`), 'utf8')
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
+		throw error
+	}
+}
+
 describe('level games record the level they were played at', () => {
 	const levelGames = dirs
 		.map((e) => e.name)
@@ -41,12 +51,11 @@ describe('level games record the level they were played at', () => {
 	test('non-level games send no level', () => {
 		for (const e of dirs) {
 			if (levelGames.includes(e.name)) continue
-			try {
-				const source = readFileSync(join(import.meta.dir, e.name, `${e.name}-game.tsx`), 'utf8')
-				const start = source.indexOf('useGameSession({')
-				if (start < 0) continue
-				expect(source.slice(start, source.indexOf('})', start))).not.toMatch(/\bdifficulty/)
-			} catch {}
+			const source = readGameSource(e.name)
+			if (source === null) continue
+			const start = source.indexOf('useGameSession({')
+			if (start < 0) continue
+			expect(source.slice(start, source.indexOf('})', start))).not.toMatch(/\bdifficulty/)
 		}
 	})
 })
