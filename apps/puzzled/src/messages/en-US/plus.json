@@ -45,6 +45,13 @@
 		"playFree": "Play {game} free",
 		"keep": "Everything you have already finished stays in your stats."
 	},
+	"offer": {
+		"resultTitle": "Play all {count} games and the archive",
+		"resultBody": "Today's featured puzzle is always free. Puzzled Plus opens every game, every past day and your stats for each.",
+		"day3Title": "3 days played. Nice start.",
+		"day7Title": "7 days played. You are a regular.",
+		"milestoneBody": "Puzzled Plus opens all {count} games, every past day and stats for each. Today's featured puzzle stays free."
+	},
 	"subscription": {
 		"title": "Subscription",
 		"description": "Your Puzzled Plus plan, payments and family.",

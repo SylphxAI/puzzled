@@ -24,10 +24,13 @@ import {
 import { lineupStatus } from '@/features/home/lib/home-day-copy'
 import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from '@/features/home/lib/home-faq'
 import { MarketingFaq } from '@/features/marketing/components'
+import { PlusMilestonePrompt } from '@/features/plus-offer/components/plus-milestone-prompt'
+import { dueMilestone, type PlusOffer, plusOfferFor } from '@/features/plus-offer/lib/plus-offer'
 import { SeasonalBanner } from '@/features/seasons/components/seasonal-banner'
 import { getAllGameMetadata } from '@/games/registry'
 import {
 	getServerPersonalDailyResults,
+	getServerPlusAccess,
 	getServerStreakInfo,
 	getServerTodayOverview,
 	hasServerProgressIdentity,
@@ -216,23 +219,44 @@ async function HomeDayIsland({
 		freeGameSlug: freeGame.slug,
 	})
 
+	// A returning member who is not on Plus and has played on 3 or 7 distinct
+	// days is offered Plus once per milestone (client remembers; see the prompt).
+	const playedDays = facts.streakInfo?.playedDays ?? 0
+	let milestoneOffer: PlusOffer | null = null
+	if (facts.user && dueMilestone(playedDays, []) !== null) {
+		const access = await getServerPlusAccess(true)
+		milestoneOffer = plusOfferFor(access, {
+			gameCount: getAllGameMetadata().length,
+			freeSlug: freeGame.slug,
+		})
+	}
+
 	return (
-		<HomeDay
-			locale={locale}
-			dateLabel={dateLabel}
-			puzzleNumber={puzzleNumber}
-			freeGame={freeGame}
-			isMember={Boolean(facts.user)}
-			currentStreak={facts.streakInfo?.currentStreak ?? 0}
-			hasPlayedToday={facts.streakInfo?.hasPlayedToday ?? false}
-			freeGameDone={isFreeGameDone(facts.personalResults, freeGame.slug)}
-			completedCount={view.progress.completedCount}
-			availableCount={view.progress.availableCount}
-			playerCount={facts.todayPlayerCount}
-			// Only warn about unread progress when this viewer has progress to
-			// read: a brand-new guest has none, and a warning would be noise.
-			progressUnverified={view.progressUnverified && facts.hasIdentity}
-		/>
+		<>
+			<HomeDay
+				locale={locale}
+				dateLabel={dateLabel}
+				puzzleNumber={puzzleNumber}
+				freeGame={freeGame}
+				isMember={Boolean(facts.user)}
+				currentStreak={facts.streakInfo?.currentStreak ?? 0}
+				hasPlayedToday={facts.streakInfo?.hasPlayedToday ?? false}
+				freeGameDone={isFreeGameDone(facts.personalResults, freeGame.slug)}
+				completedCount={view.progress.completedCount}
+				availableCount={view.progress.availableCount}
+				playerCount={facts.todayPlayerCount}
+				// Only warn about unread progress when this viewer has progress to
+				// read: a brand-new guest has none, and a warning would be noise.
+				progressUnverified={view.progressUnverified && facts.hasIdentity}
+			/>
+			{facts.user && milestoneOffer ? (
+				<PlusMilestonePrompt
+					userId={facts.user.id}
+					playedDays={playedDays}
+					offer={milestoneOffer}
+				/>
+			) : null}
+		</>
 	)
 }
 

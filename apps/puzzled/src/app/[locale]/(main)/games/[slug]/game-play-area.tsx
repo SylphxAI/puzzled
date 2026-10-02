@@ -7,6 +7,8 @@ import {
 	deriveDifficultyCompletionStatus,
 	finishedDailyLevel,
 } from '@/features/daily/lib/difficulty-completion'
+import { PlusOfferProvider } from '@/features/plus-offer/components/plus-offer-context'
+import { plusOfferFor } from '@/features/plus-offer/lib/plus-offer'
 import type { GameSlug } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { adsConfig, adsFor } from '@/lib/ads'
@@ -18,7 +20,7 @@ import {
 	hasServerProgressIdentity,
 	type StreakInfo,
 } from '@/lib/api/server'
-import { isPlayLocked } from '@/lib/billing/plus'
+import { isPlayLocked, type PlusAccess } from '@/lib/billing/plus'
 import type { GameMode } from '@/lib/db/schema'
 import { env } from '@/lib/env'
 import { Link } from '@/lib/i18n/routing'
@@ -62,22 +64,32 @@ type GamePlayAreaProps = {
  * registry guard runs in the page before this boundary, a 404 can never be
  * masked by a loading state.
  */
-export async function GamePlayArea({
-	slug,
-	locale,
-	gameName,
-	mode,
-	difficulty,
-	supportsDifficulty,
-	hasUser,
-	freeGameSlug,
-	freeGameName,
-	gameCount,
-	dateParam,
-}: GamePlayAreaProps) {
+export async function GamePlayArea(props: GamePlayAreaProps) {
+	const access = await getServerPlusAccess(props.hasUser)
+	// One Plus card on the result screen, only while sales are open and the
+	// viewer is not a member (the lock rule's own facts).
+	const offer = plusOfferFor(access, { gameCount: props.gameCount, freeSlug: props.freeGameSlug })
+	return <PlusOfferProvider offer={offer}>{await renderPlayArea(props, access)}</PlusOfferProvider>
+}
+
+async function renderPlayArea(
+	{
+		slug,
+		locale,
+		gameName,
+		mode,
+		difficulty,
+		supportsDifficulty,
+		hasUser,
+		freeGameSlug,
+		freeGameName,
+		gameCount,
+		dateParam,
+	}: GamePlayAreaProps,
+	access: PlusAccess,
+) {
 	const tDaily = await getTranslations('daily')
 
-	const access = await getServerPlusAccess(hasUser)
 	// Result screens show one ad to free viewers; a puzzle in play never does.
 	const ads = adsFor(adsConfig(env), access.entitled)
 	const archive = mode === 'archive' && Boolean(dateParam)
