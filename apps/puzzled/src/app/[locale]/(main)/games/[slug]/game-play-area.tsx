@@ -16,6 +16,7 @@ import {
 	type DailyStatus,
 	getServerDailyStatus,
 	getServerPlusAccess,
+	getServerPlusOfferAccess,
 	getServerStreakInfo,
 	hasServerProgressIdentity,
 	type StreakInfo,
@@ -68,7 +69,11 @@ export async function GamePlayArea(props: GamePlayAreaProps) {
 	const access = await getServerPlusAccess(props.hasUser)
 	// One Plus card on the result screen, only while sales are open and the
 	// viewer is not a member (the lock rule's own facts).
-	const offer = plusOfferFor(access, { gameCount: props.gameCount, freeSlug: props.freeGameSlug })
+	const offerAccessFacts = await getServerPlusOfferAccess(props.hasUser)
+	const offer = plusOfferFor(offerAccessFacts, {
+		gameCount: props.gameCount,
+		freeSlug: props.freeGameSlug,
+	})
 	return <PlusOfferProvider offer={offer}>{await renderPlayArea(props, access)}</PlusOfferProvider>
 }
 

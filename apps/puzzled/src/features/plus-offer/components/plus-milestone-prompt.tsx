@@ -3,63 +3,56 @@
 import { Crown, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
-import { Link } from '@/lib/i18n/routing'
 import {
-	dueMilestone,
-	markSeen,
-	type PlusOffer,
-	parseSeen,
-	seenStorageKey,
-} from '../lib/plus-offer'
+	addDismissed,
+	DISMISSED_COOKIE,
+	parseDismissed,
+	serializeDismissedCookie,
+} from '@/features/announcements/lib/dismissed'
+import { Link } from '@/lib/i18n/routing'
+import { idsToRecord, type PlusOffer } from '../lib/plus-offer'
 
-function readSeen(key: string): number[] {
+function recordSeen(milestone: number) {
 	try {
-		return parseSeen(window.localStorage.getItem(key))
+		const match = document.cookie
+			.split('; ')
+			.find((part) => part.startsWith(`${DISMISSED_COOKIE}=`))
+		let ids = parseDismissed(match ? match.slice(match.indexOf('=') + 1) : null)
+		for (const id of idsToRecord(milestone)) ids = addDismissed(ids, id)
+		// biome-ignore lint/suspicious/noDocumentCookie: strictly necessary UI state, the announcements cookie
+		document.cookie = serializeDismissedCookie(ids, window.location.protocol === 'https:')
 	} catch {
-		return []
-	}
-}
-
-function writeSeen(key: string, seen: number[]) {
-	try {
-		window.localStorage.setItem(key, JSON.stringify(seen))
-	} catch {
-		// Storage can be blocked; the prompt then simply shows again next visit.
+		// Cookies blocked: the prompt may show again next visit.
 	}
 }
 
 /**
  * Day-3 and day-7 prompt for a returning, signed-in player who is not a
- * member. The server mounts it only when sales are open, the viewer is not
- * entitled and `playedDays` (distinct product days with a finish) reached a
- * milestone. It is fixed to the viewport, so showing or dismissing it moves no
- * content, and it is remembered per account on this browser.
+ * member. The server mounts it only when sales are confirmed open, the viewer
+ * is confirmed not entitled, a milestone is reached and its id is not already
+ * in the dismissed-notices cookie, so a seen prompt is never rendered. It is
+ * fixed to the viewport (no layout shift) and is recorded as seen once on
+ * screen; dismissing only hides it.
  */
 export function PlusMilestonePrompt({
-	userId,
+	milestone,
 	playedDays,
 	offer,
 }: {
-	userId: string
+	milestone: number
 	playedDays: number
 	offer: PlusOffer
 }) {
 	const t = useTranslations('plus.offer')
 	const tUnlock = useTranslations('plus.unlock')
 	const tCommon = useTranslations('common')
-	const key = seenStorageKey(userId)
-	const [milestone, setMilestone] = useState<number | null>(null)
+	const [open, setOpen] = useState(true)
 
 	useEffect(() => {
-		const due = dueMilestone(playedDays, readSeen(key))
-		if (due !== null) {
-			setMilestone(due)
-			// Shown once: retire it as soon as it is on screen.
-			writeSeen(key, markSeen(readSeen(key), due))
-		}
-	}, [playedDays, key])
+		recordSeen(milestone)
+	}, [milestone])
 
-	if (milestone === null) return null
+	if (!open) return null
 	return (
 		<aside
 			aria-labelledby="plus-milestone-title"
@@ -67,7 +60,10 @@ export function PlusMilestonePrompt({
 		>
 			<button
 				type="button"
-				onClick={() => setMilestone(null)}
+				onClick={() => {
+					recordSeen(milestone)
+					setOpen(false)
+				}}
 				aria-label={tCommon('dismiss')}
 				className="absolute right-1 top-1 inline-flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
 			>
@@ -78,14 +74,14 @@ export function PlusMilestonePrompt({
 				className="flex items-center gap-2 pr-10 font-display text-base"
 			>
 				<Crown className="h-4 w-4 text-primary" aria-hidden="true" />
-				{t(milestone >= 7 ? 'day7Title' : 'day3Title')}
+				{t(milestone >= 7 ? 'day7Title' : 'day3Title', { days: playedDays })}
 			</h2>
 			<p className="mt-1 text-sm text-muted-foreground">
 				{t('milestoneBody', { count: offer.gameCount })}
 			</p>
 			<Link
 				href="/pricing"
-				onClick={() => setMilestone(null)}
+				onClick={() => setOpen(false)}
 				className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-primary px-5 font-semibold text-primary-foreground"
 			>
 				{tUnlock('cta')}

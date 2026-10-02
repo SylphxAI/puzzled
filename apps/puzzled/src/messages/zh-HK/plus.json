@@ -47,10 +47,10 @@
 	},
 	"offer": {
 		"resultTitle": "暢玩全部 {count} 款遊戲和往日題庫",
-		"resultBody": "今日精選謎題永遠免費。Puzzled Plus 開放每款遊戲、所有往日題目，以及每款遊戲的統計。",
-		"day3Title": "你已玩了 3 日，開局不錯！",
-		"day7Title": "你已玩了 7 日，是常客了！",
-		"milestoneBody": "Puzzled Plus 開放全部 {count} 款遊戲、所有往日題目以及每款遊戲的統計。今日精選謎題繼續免費。"
+		"resultBody": "今日精選謎題永遠免費。Puzzled Plus 開放每款遊戲、往日題庫，以及每款遊戲的統計。",
+		"day3Title": "你已玩了 {days} 日，開局不錯！",
+		"day7Title": "你已玩了 {days} 日，是常客了！",
+		"milestoneBody": "Puzzled Plus 開放全部 {count} 款遊戲、往日題庫以及每款遊戲的統計。今日精選謎題繼續免費。"
 	},
 	"subscription": {
 		"title": "訂閱",

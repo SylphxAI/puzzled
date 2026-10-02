@@ -1,5 +1,7 @@
+import { cookies } from 'next/headers'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { cache, Suspense } from 'react'
+import { DISMISSED_COOKIE } from '@/features/announcements/lib/dismissed'
 import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from '@/features/daily/lib/home-exposure'
 import {
@@ -25,12 +27,17 @@ import { lineupStatus } from '@/features/home/lib/home-day-copy'
 import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from '@/features/home/lib/home-faq'
 import { MarketingFaq } from '@/features/marketing/components'
 import { PlusMilestonePrompt } from '@/features/plus-offer/components/plus-milestone-prompt'
-import { dueMilestone, type PlusOffer, plusOfferFor } from '@/features/plus-offer/lib/plus-offer'
+import {
+	dueMilestone,
+	type PlusOffer,
+	plusOfferFor,
+	seenMilestones,
+} from '@/features/plus-offer/lib/plus-offer'
 import { SeasonalBanner } from '@/features/seasons/components/seasonal-banner'
 import { getAllGameMetadata } from '@/games/registry'
 import {
 	getServerPersonalDailyResults,
-	getServerPlusAccess,
+	getServerPlusOfferAccess,
 	getServerStreakInfo,
 	getServerTodayOverview,
 	hasServerProgressIdentity,
@@ -220,11 +227,13 @@ async function HomeDayIsland({
 	})
 
 	// A returning member who is not on Plus and has played on 3 or 7 distinct
-	// days is offered Plus once per milestone (client remembers; see the prompt).
+	// days is offered Plus once per milestone (a cookie remembers, so the server leaves a seen prompt out).
 	const playedDays = facts.streakInfo?.playedDays ?? 0
 	let milestoneOffer: PlusOffer | null = null
-	if (facts.user && dueMilestone(playedDays, []) !== null) {
-		const access = await getServerPlusAccess(true)
+	const seen = seenMilestones((await cookies()).get(DISMISSED_COOKIE)?.value)
+	const milestone = facts.user ? dueMilestone(playedDays, seen) : null
+	if (milestone !== null) {
+		const access = await getServerPlusOfferAccess(true)
 		milestoneOffer = plusOfferFor(access, {
 			gameCount: getAllGameMetadata().length,
 			freeSlug: freeGame.slug,
@@ -249,12 +258,8 @@ async function HomeDayIsland({
 				// read: a brand-new guest has none, and a warning would be noise.
 				progressUnverified={view.progressUnverified && facts.hasIdentity}
 			/>
-			{facts.user && milestoneOffer ? (
-				<PlusMilestonePrompt
-					userId={facts.user.id}
-					playedDays={playedDays}
-					offer={milestoneOffer}
-				/>
+			{milestone !== null && milestoneOffer ? (
+				<PlusMilestonePrompt milestone={milestone} playedDays={playedDays} offer={milestoneOffer} />
 			) : null}
 		</>
 	)

@@ -3,11 +3,12 @@ import { locales } from '@/lib/i18n/config'
 import { resolveLocale } from '../../../../scripts/i18n-resolved-catalogue'
 import {
 	dueMilestone,
-	markSeen,
-	parseSeen,
+	idsToRecord,
+	MILESTONE_IDS,
+	offerAccess,
 	plusOfferFor,
 	plusOfferOpen,
-	seenStorageKey,
+	seenMilestones,
 	showResultPlusCard,
 } from './plus-offer'
 
@@ -49,19 +50,35 @@ describe('day-3 and day-7 milestones', () => {
 		expect(dueMilestone(7, [3])).toBe(7)
 		expect(dueMilestone(30, [3, 7])).toBeNull()
 	})
-	test('jumping past day 3 shows one prompt, and dismissing retires both', () => {
+	test('jumping past day 3 shows one prompt, and recording it retires both', () => {
 		expect(dueMilestone(8, [])).toBe(7)
-		expect(markSeen([], 7)).toEqual([3, 7])
-		expect(dueMilestone(8, markSeen([], 7))).toBeNull()
-		expect(markSeen([3], 3)).toEqual([3])
+		expect(idsToRecord(7)).toEqual([MILESTONE_IDS[3], MILESTONE_IDS[7]])
+		expect(idsToRecord(3)).toEqual([MILESTONE_IDS[3]])
 	})
-	test('stored state is parsed defensively and keyed per account', () => {
-		expect(parseSeen(null)).toEqual([])
-		expect(parseSeen('not json')).toEqual([])
-		expect(parseSeen('{"a":1}')).toEqual([])
-		expect(parseSeen('[3,"x",7.5,7]')).toEqual([3, 7])
-		expect(seenStorageKey('u1')).not.toBe(seenStorageKey('u2'))
-		expect(seenStorageKey(null)).toBe('puzzled:plus-prompt:v1:browser')
+	test('seen state is read from the dismissed-notices cookie, with no account id', () => {
+		expect(seenMilestones(undefined)).toEqual([])
+		expect(seenMilestones('garbage.not-a-uuid')).toEqual([])
+		expect(seenMilestones(idsToRecord(3).join('.'))).toEqual([3])
+		expect(dueMilestone(8, seenMilestones(idsToRecord(7).join('.')))).toBeNull()
+		expect(dueMilestone(8, seenMilestones(idsToRecord(3).join('.')))).toBe(7)
+	})
+})
+
+describe('offers fail closed when Money cannot confirm', () => {
+	const open = { salesOpen: true, entitled: false }
+	test('a failed signed-in subscription read gives no offer', () => {
+		const access = offerAccess(true, 'failed', true)
+		expect(access).toEqual({ salesOpen: false, entitled: false })
+		expect(plusOfferOpen(access)).toBe(false)
+	})
+	test('a failed plans read gives a guest no offer', () => {
+		expect(plusOfferOpen(offerAccess(false, 'failed', 'failed'))).toBe(false)
+	})
+	test('confirmed reads decide as before', () => {
+		expect(plusOfferOpen(offerAccess(true, open, 'failed'))).toBe(true)
+		expect(plusOfferOpen(offerAccess(true, { salesOpen: true, entitled: true }, true))).toBe(false)
+		expect(plusOfferOpen(offerAccess(false, 'failed', true))).toBe(true)
+		expect(plusOfferOpen(offerAccess(false, 'failed', false))).toBe(false)
 	})
 })
 

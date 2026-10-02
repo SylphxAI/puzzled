@@ -91,10 +91,16 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   right is lost (`immediate_supply_consent`). The consent is stored before
   checkout starts.
 - No money-back guarantee. Cancellation ends renewal at the end of the paid
-  period (`cancel_at_period_end`) and the api refunds nothing. Payments are
-  non-refundable except where the law requires, as the public terms say.
-  A refund request is handled case by case by support, and any refund is a
-  new Money ledger entry (commercial standard).
+  period (`cancel_at_period_end`) and the api refunds nothing on cancel.
+  Payments are non-refundable and part-used periods are not refunded, except
+  where the terms or the law say otherwise. The terms promise a pro-rata
+  refund of the unused part of the paid period in exactly three cases: we
+  materially reduce what Plus gives (the subscriber cancels after our advance
+  notice), a change to the terms materially affects the subscriber (they cancel
+  before it applies), or we close the account without a serious reason while a
+  paid period is left (`legal.json` terms sections at lines 146, 198 and 182).
+  Any other refund request is handled case by case by support. Every refund is
+  a new Money ledger entry (commercial standard).
 - Sylphx Money's hosted portal handles payment methods, invoices and plan
   changes; cancellation stays in Settings so it is one flow.
 - An account with a subscription that still renews cannot be erased until it

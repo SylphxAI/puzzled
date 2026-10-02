@@ -4,7 +4,8 @@
  * `PlusAccess` facts as the lock card.
  */
 
-import type { PlusAccess } from '@/lib/billing/plus'
+import { parseDismissed } from '@/features/announcements/lib/dismissed'
+import { OPEN_ACCESS, type PlusAccess } from '@/lib/billing/plus'
 
 /** Distinct play days at which a returning member is offered Plus, once each. */
 export const PLUS_PROMPT_MILESTONES = [3, 7] as const
@@ -46,26 +47,39 @@ export function dueMilestone(playedDays: number, seen: readonly number[]): numbe
 	return due
 }
 
+/**
+ * Fixed ids, one per milestone, kept in the existing `puzzled_dismissed_notices`
+ * cookie (features/announcements/lib/dismissed.ts). No account id is stored, and
+ * the server can leave a seen prompt out of the page.
+ */
+export const MILESTONE_IDS: Record<number, string> = {
+	3: '7c1f3a52-5d0e-4b8a-9a3c-2f6e1d4b8c03',
+	7: '7c1f3a52-5d0e-4b8a-9a3c-2f6e1d4b8c07',
+}
+
+/** Milestones already shown or dismissed on this browser, from the cookie value. */
+export function seenMilestones(dismissedCookie: string | null | undefined): number[] {
+	const ids = new Set(parseDismissed(dismissedCookie))
+	return PLUS_PROMPT_MILESTONES.filter((m) => ids.has(MILESTONE_IDS[m] as string))
+}
+
 /** Showing (or dismissing) a milestone also retires every lower one. */
-export function markSeen(seen: readonly number[], milestone: number): number[] {
-	const next = new Set(seen)
-	for (const m of PLUS_PROMPT_MILESTONES) if (m <= milestone) next.add(m)
-	return [...next].sort((a, b) => a - b)
+export function idsToRecord(milestone: number): string[] {
+	return PLUS_PROMPT_MILESTONES.filter((m) => m <= milestone).map((m) => MILESTONE_IDS[m] as string)
 }
 
-/** Parse the stored list; anything malformed reads as "nothing seen". */
-export function parseSeen(raw: string | null): number[] {
-	if (!raw) return []
-	try {
-		const value: unknown = JSON.parse(raw)
-		if (!Array.isArray(value)) return []
-		return value.filter((v): v is number => typeof v === 'number' && Number.isInteger(v))
-	} catch {
-		return []
-	}
-}
-
-/** One key per account on this browser; signed-out browsers share one. */
-export function seenStorageKey(userId: string | null): string {
-	return `puzzled:plus-prompt:v1:${userId ?? 'browser'}`
+/**
+ * What an offer may rely on. Unlike the lock rule (which fails open so a
+ * member is never locked out), an offer fails closed: when Money cannot confirm
+ * the viewer is not a member, nothing is sold. `'failed'` marks a read that
+ * errored.
+ */
+export function offerAccess(
+	signedIn: boolean,
+	subscription: PlusAccess | 'failed',
+	plansSalesOpen: boolean | 'failed',
+): PlusAccess {
+	if (signedIn) return subscription === 'failed' ? OPEN_ACCESS : subscription
+	if (plansSalesOpen === 'failed') return OPEN_ACCESS
+	return { salesOpen: plansSalesOpen, entitled: false }
 }

@@ -47,10 +47,10 @@
 	},
 	"offer": {
 		"resultTitle": "Play all {count} games and the archive",
-		"resultBody": "Today's featured puzzle is always free. Puzzled Plus opens every game, every past day and your stats for each.",
-		"day3Title": "3 days played. Nice start.",
-		"day7Title": "7 days played. You are a regular.",
-		"milestoneBody": "Puzzled Plus opens all {count} games, every past day and stats for each. Today's featured puzzle stays free."
+		"resultBody": "Today's featured puzzle is always free. Puzzled Plus opens every game, the archive of past days and your stats for each.",
+		"day3Title": "{days} days played. Nice start.",
+		"day7Title": "{days} days played. You are a regular.",
+		"milestoneBody": "Puzzled Plus opens all {count} games, the archive of past days and stats for each. Today's featured puzzle stays free."
 	},
 	"subscription": {
 		"title": "Subscription",
