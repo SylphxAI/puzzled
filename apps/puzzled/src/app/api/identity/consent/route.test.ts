@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from 'bun:
 
 mock.module('@/lib/identity/server', () => ({
 	currentUser: async () => ({ id: 'user-secret-id', email: 'secret@example.com' }),
+	sessionToken: async () => 'session-token',
+	setSessionCookie: async () => undefined,
 	identityDestAdmission: () => ({
 		origin: 'https://identity.test',
 		credential: 'sk_secret',
