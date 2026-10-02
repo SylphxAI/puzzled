@@ -10,7 +10,7 @@
 import 'server-only'
 
 import { create } from '@bufbuild/protobuf'
-import { Code, ConnectError, createClient } from '@connectrpc/connect'
+import { createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
@@ -44,6 +44,7 @@ import {
 	mapTodaysPuzzle,
 	type TodaysPuzzle,
 } from '@/lib/api/domain/daily'
+import { isNoIdentityError } from '@/lib/api/no-identity'
 import { OPEN_ACCESS, type PlusAccess } from '@/lib/billing/plus'
 import { getLeaderboard } from '@/lib/connect/stats-client'
 import type { GetLeaderboardInput } from '@/lib/connect/stats-domain'
@@ -187,12 +188,6 @@ export type PersonalDailyResult = {
 	completedSession: DailyStatus['completedSession']
 	/** False means the server could not prove this status; callers must not render Play. */
 	statusAvailable: boolean
-}
-
-/** The api answered that this viewer has no identity yet: nothing to read. */
-function isNoIdentityError(error: unknown): boolean {
-	const code = ConnectError.from(error).code
-	return code === Code.Unauthenticated || code === Code.NotFound
 }
 
 async function fetchTodayProgress(gameSlugs: readonly string[]) {

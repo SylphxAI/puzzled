@@ -18,6 +18,7 @@ import {
 } from '@/features/console/lib/finish-activity'
 import { getNextAchievements } from '@/features/gamification'
 import { getAllGameMetadata } from '@/games/registry'
+import { isNoIdentityRejection } from '@/lib/api/no-identity'
 import {
 	getServerHistory,
 	getServerPersonalDailyResults,
@@ -98,14 +99,18 @@ export default async function StatsPage({ params }: Props) {
 		}),
 	])
 
-	// A guest without a progress identity has written nothing yet: that is an
-	// empty record, not a failed read.
+	// A guest without a stored identity has written nothing yet (the api issues
+	// the player row on the first finished write), so the personal reads answer
+	// `unauthenticated`. That is an empty record, not a failed read.
 	const statsRead = statsResult.status === 'fulfilled' ? statsResult.value : null
 	const historyRead = historyResult.status === 'fulfilled' ? historyResult.value : null
 	const streakRead = streakResult.status === 'fulfilled' ? streakResult.value : null
-	const statsKnown = statsRead !== null || !hasProgressIdentity
-	const historyKnown = historyRead !== null || !hasProgressIdentity
-	const streakKnown = streakRead !== null || !hasProgressIdentity
+	const statsKnown =
+		statsRead !== null || !hasProgressIdentity || isNoIdentityRejection(statsResult)
+	const historyKnown =
+		historyRead !== null || !hasProgressIdentity || isNoIdentityRejection(historyResult)
+	const streakKnown =
+		streakRead !== null || !hasProgressIdentity || isNoIdentityRejection(streakResult)
 
 	const personalResults: Record<string, PersonalDailyResult> =
 		personalResult.status === 'fulfilled' ? personalResult.value : {}
