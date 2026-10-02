@@ -53,7 +53,7 @@
 		},
 		"share": {
 			"question": "分享成績會劇透嗎？",
-			"answer": "不會。成績卡只顯示解題圖案、遊戲和日期，不會顯示答案；朋友打開後玩同一天的謎題。"
+			"answer": "不會。成績卡會顯示你的成績（用時、次數或解題圖案）、遊戲和日期，不會顯示答案；朋友打開後玩同一天的謎題。"
 		},
 		"catalog": {
 			"question": "有哪些謎題可以玩？",
@@ -65,6 +65,7 @@
 		"titleMemberReady": "今天的{game}已準備好",
 		"titleMemberStreak": "你的 {days} 天連續紀錄等著你",
 		"titleMemberDone": "今天已完成 — 玩得漂亮",
+		"titleDone": "今天的{game}已完成",
 		"bodyGuest": "Puzzled 每天提供一組文字、邏輯與數字謎題。每天一個免費，幾分鐘就能玩完，不必註冊。",
 		"bodyMember": "你的連續紀錄、統計與今天的陣容，一鍵即達。",
 		"playToday": "玩今天的{game}",

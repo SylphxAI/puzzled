@@ -100,3 +100,15 @@ export function scopeHomePlayState(
 		progressGames: playState.games,
 	}
 }
+
+/**
+ * True only for a server-proved finish of today's free module. An unverified
+ * read (`statusAvailable: false`) or a missing entry is never "done".
+ */
+export function isFreeGameDone(
+	personalResults: Readonly<Record<string, HomePersonalResult | undefined>>,
+	freeGameSlug: string,
+): boolean {
+	const result = personalResults[freeGameSlug]
+	return Boolean(result) && result?.statusAvailable !== false && result?.hasCompleted === true
+}
