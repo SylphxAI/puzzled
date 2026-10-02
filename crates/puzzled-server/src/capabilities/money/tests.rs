@@ -395,6 +395,32 @@ fn session_body_carries_the_click_id_in_metadata() {
 }
 
 #[test]
+fn session_body_sends_only_locales_stripe_accepts() {
+    let money = Money::new("http://x/env", "k", "https://puzzled.test/");
+    let locale_of = |locale: &str| {
+        session_body(
+            &money,
+            USER,
+            "individual_monthly",
+            "k_solo_m",
+            locale,
+            None,
+            None,
+        )
+        .get("locale")
+        .and_then(|v| v.as_str().map(str::to_string))
+    };
+    // Every locale Puzzled ships maps onto Stripe's list; en-US was refused.
+    assert_eq!(locale_of("en-US").as_deref(), Some("en"));
+    assert_eq!(locale_of("en-GB").as_deref(), Some("en-GB"));
+    assert_eq!(locale_of("zh-HK").as_deref(), Some("zh-HK"));
+    assert_eq!(locale_of("zh-TW").as_deref(), Some("zh-TW"));
+    assert_eq!(locale_of("zh-CN").as_deref(), Some("zh"));
+    assert_eq!(locale_of("xx-YY").as_deref(), Some("auto"));
+    assert_eq!(locale_of(""), None);
+}
+
+#[test]
 fn session_body_carries_attribution() {
     let money = Money::new("http://x/env", "k", "https://puzzled.test/");
     let tags = puzzled_core::attribution::Attribution {
