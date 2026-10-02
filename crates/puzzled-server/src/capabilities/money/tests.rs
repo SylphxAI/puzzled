@@ -795,3 +795,29 @@ async fn a_refusal_logs_the_problem_reason_and_processor_code() {
     assert!(text.contains("Stripe refused the request"), "{text}");
     assert!(!text.contains("sk_live_abc123"), "{text}");
 }
+
+// ---- Money's wire form: omitted falses, `{}` ---------------------------------
+
+#[tokio::test]
+async fn an_empty_check_answer_is_not_entitled_and_not_an_error() {
+    // Money omits a false boolean: a 2xx `{}` is `entitled: false`.
+    let (money, _) = fake_money(200, json!({})).await;
+    let grant = money
+        .try_check(USER, "plus")
+        .await
+        .expect("a 2xx `{}` answered");
+    assert!(!grant.entitled);
+    assert_eq!(super::access::seats(&money, USER).await, Ok(None));
+}
+
+#[tokio::test]
+async fn a_subscription_row_with_omitted_fields_is_read_not_dropped() {
+    let row = json!({"name": "orgs/o/projects/p/envs/e/customer_subscriptions/csb_1",
+                     "subject": {"end_user": USER}});
+    let (money, _) = fake_money(200, json!({"customer_subscriptions": [row]})).await;
+    let subs = money.subscriptions(USER).await.unwrap();
+    assert_eq!(subs.len(), 1);
+    assert!(!subs[0].cancel_at_period_end, "an omitted false is false");
+    assert!(!subs[0].live());
+    assert_eq!(money.has_renewing_subscription(USER).await, Ok(true));
+}
