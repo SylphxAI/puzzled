@@ -9,7 +9,8 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::capabilities::jobs::adapters::jobs_db::{
-    claim_due_daily_reminders, release_daily_reminder,
+    acknowledge_daily_reminder, claim_due_daily_reminders, release_daily_reminder,
+    REMINDER_CLAIM_BATCH, REMINDER_LEASE_SECONDS,
 };
 use crate::capabilities::preferences::adapters::preferences_db::is_reminder_time;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::persist_validated_session;
@@ -41,12 +42,15 @@ async fn player(pool: &PgPool, time: &str, zone: Option<&str>, reminder_on: bool
 }
 
 async fn due(pool: &PgPool, at: DateTime<Utc>) -> Vec<String> {
-    claim_due_daily_reminders(pool, at, PRODUCT_DAY)
+    let claims = claim_due_daily_reminders(pool, at, PRODUCT_DAY)
         .await
-        .unwrap()
-        .into_iter()
-        .map(|(user, _)| user)
-        .collect()
+        .unwrap();
+    let mut users = Vec::new();
+    for claim in claims {
+        assert!(acknowledge_daily_reminder(pool, &claim, at).await.unwrap());
+        users.push(claim.user_id);
+    }
+    users
 }
 
 #[tokio::test]
@@ -75,7 +79,7 @@ async fn each_player_is_reminded_at_their_own_local_time() {
         assert!(!sent.contains(&not_due.to_string()));
     }
 
-    // New York's 09:00 comes eight hours later.
+    // New York's 09:00 comes twelve hours later.
     let later = due(&pool, now() + Duration::hours(12)).await;
     assert_eq!(later, vec![new_york.to_string()]);
 }
@@ -122,8 +126,12 @@ async fn a_failed_send_is_released_for_the_next_tick() {
         return;
     };
     let user = player(&pool, "09:00", Some("Asia/Hong_Kong"), true).await;
-    assert_eq!(due(&pool, now()).await, vec![user.to_string()]);
-    release_daily_reminder(&pool, &user.to_string())
+    let claims = claim_due_daily_reminders(&pool, now(), PRODUCT_DAY)
+        .await
+        .unwrap();
+    assert_eq!(claims.len(), 1);
+    assert_eq!(claims[0].user_id, user.to_string());
+    release_daily_reminder(&pool, &claims[0], now())
         .await
         .unwrap();
     assert_eq!(
@@ -170,4 +178,121 @@ fn a_reminder_time_is_a_24_hour_clock_time() {
     ] {
         assert!(!is_reminder_time(bad), "{bad}");
     }
+}
+
+#[tokio::test]
+async fn expired_claim_is_recovered_and_old_token_or_day_cannot_finish_it() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let user = player(&pool, "09:00", Some("Asia/Hong_Kong"), true).await;
+    let old = claim_due_daily_reminders(&pool, now(), PRODUCT_DAY)
+        .await
+        .unwrap()
+        .remove(0);
+    assert_eq!(old.user_id, user.to_string());
+    let delivered: Option<NaiveDate> = sqlx::query_scalar(
+        "SELECT last_daily_reminder_on FROM notification_preferences WHERE user_id = $1",
+    )
+    .bind(user)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(delivered, None);
+    let expiry = now() + Duration::seconds(REMINDER_LEASE_SECONDS);
+    assert!(
+        claim_due_daily_reminders(&pool, expiry - Duration::seconds(1), PRODUCT_DAY)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    assert!(!acknowledge_daily_reminder(&pool, &old, expiry)
+        .await
+        .unwrap());
+    let current = claim_due_daily_reminders(&pool, expiry, PRODUCT_DAY)
+        .await
+        .unwrap()
+        .remove(0);
+    assert_ne!(old.token, current.token);
+    assert!(!acknowledge_daily_reminder(&pool, &old, expiry)
+        .await
+        .unwrap());
+    assert!(!release_daily_reminder(&pool, &old, expiry).await.unwrap());
+    let mut wrong_day = current.clone();
+    wrong_day.local_day -= Duration::days(1);
+    assert!(!acknowledge_daily_reminder(&pool, &wrong_day, expiry)
+        .await
+        .unwrap());
+    assert!(!release_daily_reminder(&pool, &wrong_day, expiry)
+        .await
+        .unwrap());
+    assert!(acknowledge_daily_reminder(&pool, &current, expiry)
+        .await
+        .unwrap());
+    assert!(claim_due_daily_reminders(&pool, expiry, PRODUCT_DAY)
+        .await
+        .unwrap()
+        .is_empty());
+    let next_day = claim_due_daily_reminders(&pool, now() + Duration::days(1), PRODUCT_DAY)
+        .await
+        .unwrap()
+        .remove(0);
+    assert_ne!(current.local_day, next_day.local_day);
+    assert!(
+        !release_daily_reminder(&pool, &current, now() + Duration::days(1))
+            .await
+            .unwrap()
+    );
+}
+
+#[tokio::test]
+async fn overlapping_workers_claim_disjoint_bounded_batches() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    for _ in 0..(REMINDER_CLAIM_BATCH * 2 + 1) {
+        player(&pool, "09:00", Some("Asia/Hong_Kong"), true).await;
+    }
+    let (a, b) = tokio::join!(
+        claim_due_daily_reminders(&pool, now(), PRODUCT_DAY),
+        claim_due_daily_reminders(&pool, now(), PRODUCT_DAY),
+    );
+    let a = a.unwrap();
+    let b = b.unwrap();
+    assert_eq!(a.len(), REMINDER_CLAIM_BATCH as usize);
+    assert_eq!(b.len(), REMINDER_CLAIM_BATCH as usize);
+    assert!(a
+        .iter()
+        .all(|claim| b.iter().all(|other| claim.user_id != other.user_id)));
+    assert_eq!(
+        claim_due_daily_reminders(&pool, now(), PRODUCT_DAY)
+            .await
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[tokio::test]
+async fn acknowledgement_records_the_claimed_local_day_not_the_product_day() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let user = player(&pool, "21:00", Some("America/New_York"), true).await;
+    let claim = claim_due_daily_reminders(&pool, now(), PRODUCT_DAY)
+        .await
+        .unwrap()
+        .remove(0);
+    assert_eq!(claim.local_day.to_string(), "2026-09-29");
+    assert!(acknowledge_daily_reminder(&pool, &claim, now())
+        .await
+        .unwrap());
+    let delivered: NaiveDate = sqlx::query_scalar(
+        "SELECT last_daily_reminder_on FROM notification_preferences WHERE user_id = $1",
+    )
+    .bind(user)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(delivered, claim.local_day);
 }

@@ -103,23 +103,34 @@ pub fn reminder_payload(locale: &str) -> serde_json::Value {
 
 /// Send to every active browser. Expired endpoints are removed; transient
 /// failures release the daily claim only if no browser received the reminder.
-pub async fn send_daily(pool: &PgPool, player: &str) -> Result<(), String> {
+pub async fn send_daily(
+    pool: &PgPool,
+    player: &str,
+    deadline: tokio::time::Instant,
+) -> Result<(), String> {
     let player = Uuid::parse_str(player).map_err(|_| "invalid player".to_string())?;
-    let rows: Vec<(String, String, String)> =
+    let rows: Vec<(String, String, String)> = tokio::time::timeout_at(
+        deadline,
         sqlx::query_as("SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = $1")
             .bind(player)
-            .fetch_all(pool)
-            .await
-            .map_err(|_| "push subscription read failed".to_string())?;
+            .fetch_all(pool),
+    )
+    .await
+    .map_err(|_| "push delivery deadline reached".to_string())?
+    .map_err(|_| "push subscription read failed".to_string())?;
     if rows.is_empty() {
         return Ok(());
     }
-    let locale: Option<String> = sqlx::query_scalar(
-        "SELECT COALESCE(locale, 'en-US') FROM user_preferences WHERE user_id = $1",
+    let locale: Option<String> = tokio::time::timeout_at(
+        deadline,
+        sqlx::query_scalar(
+            "SELECT COALESCE(locale, 'en-US') FROM user_preferences WHERE user_id = $1",
+        )
+        .bind(player)
+        .fetch_optional(pool),
     )
-    .bind(player)
-    .fetch_optional(pool)
     .await
+    .map_err(|_| "push delivery deadline reached".to_string())?
     .map_err(|_| "push locale read failed".to_string())?;
     let payload = reminder_payload(locale.as_deref().unwrap_or("en-US")).to_string();
     let sender = DirectVapidSender::from_env()?;
@@ -127,7 +138,15 @@ pub async fn send_daily(pool: &PgPool, player: &str) -> Result<(), String> {
         .into_iter()
         .map(|(endpoint, p256dh, auth)| SubscriptionInfo::new(endpoint, p256dh, auth))
         .collect();
-    deliver_subscriptions(pool, player, subscriptions, &payload, &sender).await
+    deliver_subscriptions_until(
+        pool,
+        player,
+        subscriptions,
+        &payload,
+        &sender,
+        Some(deadline),
+    )
+    .await
 }
 
 /// Subscription lifecycle stays above the transport adapter. A future Notify
@@ -139,15 +158,71 @@ pub async fn deliver_subscriptions(
     payload: &str,
     sender: &impl PushSender,
 ) -> Result<(), String> {
+    deliver_subscriptions_until(pool, player, subscriptions, payload, sender, None).await
+}
+
+/// Deadline lives inside the accumulator: cancelling a stalled endpoint must
+/// not discard successes already observed on other browsers. The job reserves
+/// acknowledgement time before supplying this lease-relative deadline.
+pub async fn deliver_subscriptions_until(
+    pool: &PgPool,
+    player: Uuid,
+    subscriptions: Vec<SubscriptionInfo>,
+    payload: &str,
+    sender: &impl PushSender,
+    deadline: Option<tokio::time::Instant>,
+) -> Result<(), String> {
+    deliver_subscriptions_with_clock(
+        pool,
+        player,
+        subscriptions,
+        payload,
+        sender,
+        deadline,
+        tokio::time::Instant::now,
+    )
+    .await
+}
+
+async fn deliver_subscriptions_with_clock(
+    pool: &PgPool,
+    player: Uuid,
+    subscriptions: Vec<SubscriptionInfo>,
+    payload: &str,
+    sender: &impl PushSender,
+    deadline: Option<tokio::time::Instant>,
+    mut now: impl FnMut() -> tokio::time::Instant,
+) -> Result<(), String> {
     let mut failed = false;
     let mut delivered = false;
     for subscription in subscriptions {
-        match sender.send(&subscription, payload).await {
+        if deadline.is_some_and(|deadline| now() >= deadline) {
+            failed = true;
+            break;
+        }
+        let outcome = match deadline {
+            Some(deadline) => {
+                tokio::time::timeout_at(deadline, sender.send(&subscription, payload))
+                    .await
+                    .unwrap_or_else(|_| Err("push delivery deadline reached".to_string()))
+            }
+            None => sender.send(&subscription, payload).await,
+        };
+        match outcome {
             Ok(PushDelivery::Delivered) => delivered = true,
             Ok(PushDelivery::Expired) => {
                 // Continue after pruning errors: a later browser may receive the
                 // reminder, in which case the player-level claim must stay held.
-                if remove(pool, player, &subscription.endpoint).await.is_err() {
+                let removed = match deadline {
+                    Some(deadline) => tokio::time::timeout_at(
+                        deadline,
+                        remove(pool, player, &subscription.endpoint),
+                    )
+                    .await
+                    .is_ok_and(|result| result.is_ok()),
+                    None => remove(pool, player, &subscription.endpoint).await.is_ok(),
+                };
+                if !removed {
                     failed = true;
                 }
             }
@@ -192,5 +267,121 @@ mod tests {
             let payload = reminder_payload(locale);
             assert!(!payload["body"].as_str().unwrap().is_empty());
         }
+    }
+    async fn slow_endpoint_budget(any_success: bool) {
+        use std::sync::{
+            atomic::{AtomicU64, AtomicUsize, Ordering},
+            Arc,
+        };
+        struct SlowSender {
+            elapsed: Arc<AtomicU64>,
+            attempts: AtomicUsize,
+            any_success: bool,
+        }
+        impl PushSender for SlowSender {
+            async fn send<'a>(
+                &'a self,
+                _subscription: &'a SubscriptionInfo,
+                _payload: &'a str,
+            ) -> Result<PushDelivery, String> {
+                let attempt = self.attempts.fetch_add(1, Ordering::SeqCst);
+                // Deterministically model the existing ten-second endpoint limit.
+                self.elapsed.fetch_add(10, Ordering::SeqCst);
+                if self.any_success && attempt == 0 {
+                    Ok(PushDelivery::Delivered)
+                } else {
+                    Err("slow endpoint failed".to_string())
+                }
+            }
+        }
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .connect_lazy("postgres://test@127.0.0.1:59473/test")
+            .unwrap();
+        let elapsed = Arc::new(AtomicU64::new(0));
+        let sender = SlowSender {
+            elapsed: elapsed.clone(),
+            attempts: AtomicUsize::new(0),
+            any_success,
+        };
+        let base = tokio::time::Instant::now();
+        let deadline = base + std::time::Duration::from_secs(290);
+        let subscriptions = (0..100)
+            .map(|i| {
+                SubscriptionInfo::new(
+                    format!("https://fcm.googleapis.com/fcm/send/{i}"),
+                    "public-key".to_string(),
+                    "auth-key".to_string(),
+                )
+            })
+            .collect();
+        let result = deliver_subscriptions_with_clock(
+            &pool,
+            Uuid::now_v7(),
+            subscriptions,
+            "{}",
+            &sender,
+            Some(deadline),
+            || base + std::time::Duration::from_secs(elapsed.load(Ordering::SeqCst)),
+        )
+        .await;
+        assert_eq!(sender.attempts.load(Ordering::SeqCst), 29);
+        assert_eq!(elapsed.load(Ordering::SeqCst), 290);
+        assert_eq!(result.is_ok(), any_success);
+        // Ten seconds remain for the fenced database acknowledgement. No 30th
+        // endpoint starts; any success before exhaustion stays accumulated.
+    }
+
+    #[tokio::test]
+    async fn slow_endpoints_stop_with_ack_budget_and_keep_partial_success() {
+        slow_endpoint_budget(true).await;
+    }
+
+    #[tokio::test]
+    async fn slow_endpoints_with_no_success_release_instead_of_marking_delivery() {
+        slow_endpoint_budget(false).await;
+    }
+
+    #[tokio::test]
+    async fn stalled_endpoint_deadline_does_not_cancel_previous_success() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        struct StalledSender(AtomicUsize);
+        impl PushSender for StalledSender {
+            async fn send<'a>(
+                &'a self,
+                _subscription: &'a SubscriptionInfo,
+                _payload: &'a str,
+            ) -> Result<PushDelivery, String> {
+                if self.0.fetch_add(1, Ordering::SeqCst) == 0 {
+                    Ok(PushDelivery::Delivered)
+                } else {
+                    std::future::pending().await
+                }
+            }
+        }
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .connect_lazy("postgres://test@127.0.0.1:59473/test")
+            .unwrap();
+        let sender = StalledSender(AtomicUsize::new(0));
+        let subscriptions = (0..3)
+            .map(|i| {
+                SubscriptionInfo::new(
+                    format!("https://fcm.googleapis.com/fcm/send/{i}"),
+                    "public-key".to_string(),
+                    "auth-key".to_string(),
+                )
+            })
+            .collect();
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_millis(20);
+        assert!(deliver_subscriptions_until(
+            &pool,
+            Uuid::now_v7(),
+            subscriptions,
+            "{}",
+            &sender,
+            Some(deadline)
+        )
+        .await
+        .is_ok());
+        assert_eq!(sender.0.load(Ordering::SeqCst), 2);
     }
 }
