@@ -57,42 +57,83 @@ async fn reports_only_this_players_finishes_for_the_requested_day() {
     assert!(empty.is_empty());
 }
 
-/// One finish per (user, game, day), whatever the level: the completed read
-/// never takes a level, so every level's GetDaily lookup lands on the same row
-/// and must report the level that row was actually played at.
+/// One finish per (user, game, day), whatever the level. GetDaily asks for the
+/// served puzzle of the requested level, so the easy and hard reads arrive with
+/// puzzle ids the player never finished: they must still land on the day's one
+/// finish through the (game, day) arm and report the level it was played at.
 #[tokio::test]
 async fn the_one_finish_reports_the_level_it_was_played_at() {
     let Some(pool) = fresh_database().await else {
         return;
     };
     let me = Uuid::now_v7().to_string();
-    for (game, level) in [("sudoku", Some("medium")), ("wordle", None)] {
-        persist_validated_session(
-            &pool,
-            &me,
-            game,
-            level,
-            "daily",
-            "won",
-            Some(80),
-            1,
-            61_000,
-            None,
-            Some(day(10)),
-            Some(day(10)),
-            0,
+    let mut ids = Vec::new();
+    for level in ["easy", "medium", "hard"] {
+        let id = Uuid::now_v7();
+        sqlx::query(
+            "INSERT INTO daily_puzzles (id, game_slug, puzzle_date, puzzle_data, solution, difficulty)
+             VALUES ($1, 'sudoku', $2, '{}'::jsonb, '{}'::jsonb, $3::puzzle_difficulty)",
         )
+        .bind(id)
+        .bind(day(10).and_hms_opt(0, 0, 0).unwrap())
+        .bind(level)
+        .execute(&pool)
         .await
-        .expect("finish stored");
+        .unwrap();
+        ids.push(id.to_string());
     }
-    // The easy, medium and hard reads all resolve through this date lookup.
-    for _level in ["easy", "medium", "hard"] {
-        let done = load_completed_session(&pool, &me, "sudoku", Some(day(10)), None)
+    let (easy_id, medium_id, hard_id) = (&ids[0], &ids[1], &ids[2]);
+    persist_validated_session(
+        &pool,
+        &me,
+        "sudoku",
+        Some("medium"),
+        "daily",
+        "won",
+        Some(80),
+        1,
+        61_000,
+        Some(medium_id),
+        Some(day(10)),
+        Some(day(10)),
+        0,
+    )
+    .await
+    .expect("finish stored");
+    persist_validated_session(
+        &pool,
+        &me,
+        "wordle",
+        None,
+        "daily",
+        "won",
+        Some(80),
+        1,
+        61_000,
+        None,
+        Some(day(10)),
+        Some(day(10)),
+        0,
+    )
+    .await
+    .expect("finish stored");
+
+    for served in [easy_id, medium_id, hard_id] {
+        let done = load_completed_session(&pool, &me, "sudoku", Some(day(10)), Some(served))
             .await
             .unwrap()
             .expect("the day's finish is found at every level");
-        assert_eq!(done.difficulty.as_deref(), Some("medium"));
+        assert_eq!(
+            done.difficulty.as_deref(),
+            Some("medium"),
+            "served {served}"
+        );
     }
+    let by_date = load_completed_session(&pool, &me, "sudoku", Some(day(10)), None)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(by_date.difficulty.as_deref(), Some("medium"));
     let slugs: Vec<String> = ["sudoku", "wordle"].map(String::from).to_vec();
     let progress = load_today_progress(&pool, &me, &slugs, day(10))
         .await
