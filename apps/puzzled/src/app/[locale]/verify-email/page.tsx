@@ -4,11 +4,11 @@ import { Button, GamepadIcon } from '@sylphx/ui'
 import { CheckCircle, Loader2, Mail, XCircle } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
-import { useSafeAuth } from '@/lib/identity/react'
+import { useSafeAuth, useSafeUser } from '@/lib/identity/react'
 
-type VerificationState = 'verifying' | 'success' | 'error' | 'pending'
+type VerificationState = 'ready' | 'verifying' | 'success' | 'error' | 'pending'
 
 export default function VerifyEmailPage() {
 	return (
@@ -30,37 +30,36 @@ function VerifyEmailContent() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
 	const { verifyEmail, resendVerificationEmail } = useSafeAuth()
+	const { isSignedIn } = useSafeUser()
+	// The mailed link carries both ids: `challenge_id` and the secret `token`.
+	const challengeId = searchParams.get('challenge_id')
 	const token = searchParams.get('token')
 	const email = searchParams.get('email')
 
-	const [state, setState] = useState<VerificationState>(token ? 'verifying' : 'pending')
+	// Opening the link changes nothing: a mail scanner that fetches it spends no
+	// secret. Verification runs only from the button below.
+	const [state, setState] = useState<VerificationState>(challengeId && token ? 'ready' : 'pending')
 	const [error, setError] = useState('')
 	const [resending, setResending] = useState(false)
 	const [resent, setResent] = useState(false)
 
-	useEffect(() => {
-		if (!token || !verifyEmail) return
-
-		const verify = async () => {
-			try {
-				await verifyEmail({ token })
-				setState('success')
-				setTimeout(() => router.push('/'), 2000)
-			} catch (err) {
-				setState('error')
-				setError(err instanceof Error ? err.message : t('verificationFailed'))
-			}
+	const handleConfirm = async () => {
+		if (!challengeId || !token) return
+		setState('verifying')
+		try {
+			await verifyEmail({ challengeId, secret: token })
+			setState('success')
+			setTimeout(() => router.push('/'), 2000)
+		} catch {
+			setState('error')
+			setError(t('verificationLinkInvalid'))
 		}
-
-		verify()
-	}, [token, verifyEmail, t, router])
+	}
 
 	const handleResend = async () => {
-		if (!email || !resendVerificationEmail) return
-
 		setResending(true)
 		try {
-			await resendVerificationEmail({ email })
+			await resendVerificationEmail()
 			setResent(true)
 		} catch {
 			setError(t('resendFailed'))
@@ -79,6 +78,19 @@ function VerifyEmailContent() {
 						Puzzled
 					</h1>
 				</div>
+
+				{/* Ready State: the explicit confirm click */}
+				{state === 'ready' && (
+					<div className="space-y-4">
+						<Mail className="mx-auto h-12 w-12 text-primary" />
+						<div>
+							<h2 className="text-xl font-semibold">{t('confirmEmailTitle')}</h2>
+						</div>
+						<Button onClick={handleConfirm} className="min-h-11 w-full">
+							{t('confirmEmail')}
+						</Button>
+					</div>
+				)}
 
 				{/* Verifying State */}
 				{state === 'verifying' && (
@@ -108,7 +120,7 @@ function VerifyEmailContent() {
 							<p className="text-muted-foreground">{error}</p>
 						</div>
 						<div className="space-y-2">
-							{email && (
+							{isSignedIn && (
 								<Button onClick={handleResend} disabled={resending || resent} className="w-full">
 									{resending ? (
 										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -141,7 +153,7 @@ function VerifyEmailContent() {
 							</div>
 						)}
 						<div className="space-y-2">
-							{email && !resent && (
+							{isSignedIn && !resent && (
 								<Button
 									onClick={handleResend}
 									variant="outline"

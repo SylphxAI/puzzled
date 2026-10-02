@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server'
 import { AuthCallError, authConfig, passwordTicket } from '@/lib/identity/client-auth'
+import { admitJsonPost } from '@/lib/identity/http'
 import { authFail, completeSignIn, userAgentOf } from '@/lib/identity/sign-in'
 
 /** Email + password sign-in through the Auth client API (server mode). */
 export async function POST(request: Request) {
+	const refused = await admitJsonPost(request)
+	if (refused) return refused
 	const config = authConfig()
 	if (!config) return authFail(503, 'identity_unconfigured')
 	const body = (await request.json().catch(() => null)) as {

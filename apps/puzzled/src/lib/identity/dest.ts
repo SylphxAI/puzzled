@@ -175,6 +175,30 @@ export function destSessionChallengeId(raw: unknown): string | undefined {
 	return readText(challenge, ['challenge_id', 'challengeId'])
 }
 
+/** A refused Auth call: the HTTP status, Auth's `code` field (never its message) and Retry-After. */
+export class DestHttpError extends Error {
+	constructor(
+		readonly path: string,
+		readonly status: number,
+		readonly code: string,
+		readonly retryAfter: string | null,
+		detail: string,
+	) {
+		super(`dest ${path} ${status}: ${detail}`)
+		this.name = 'DestHttpError'
+	}
+}
+
+function authErrorCode(text: string, status: number): string {
+	try {
+		const body = JSON.parse(text) as { code?: unknown; error?: unknown }
+		if (typeof body.code === 'string' && body.code) return body.code
+	} catch {
+		// Not JSON: fall through to the status.
+	}
+	return `http_${status}`
+}
+
 export async function destJson<T>(
 	origin: string,
 	path: string,
@@ -203,7 +227,13 @@ export async function destJson<T>(
 	})
 	const text = await response.text()
 	if (!response.ok) {
-		throw new Error(`dest ${path} ${response.status}: ${text.slice(0, 300)}`)
+		throw new DestHttpError(
+			path,
+			response.status,
+			authErrorCode(text, response.status),
+			response.headers?.get('retry-after') ?? null,
+			text.slice(0, 300),
+		)
 	}
 	return (text ? JSON.parse(text) : {}) as T
 }
