@@ -122,7 +122,11 @@ export default async function PrivacyPage({ params }: Props) {
 		{
 			id: 'cookies',
 			title: t('sections.cookies.title'),
-			paragraphs: [t('sections.cookies.content'), t('sections.cookies.google')],
+			paragraphs: [
+				t('sections.cookies.content'),
+				t('sections.cookies.notices'),
+				t('sections.cookies.google'),
+			],
 			after: [<ChangeCookieChoice key="change-cookie-choice" tagIds={tagIds} />],
 		},
 		{
