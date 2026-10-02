@@ -666,7 +666,11 @@ export function CookieBanner(props: {
 							{props.privacyPolicyUrl ? (
 								<a
 									href={props.privacyPolicyUrl}
-									className="-my-4 inline-block py-4 font-medium text-primary underline underline-offset-4"
+									// Plain inline with vertical padding: the 44px hit area costs no layout.
+									// The banner text is the LCP element of pages whose board renders late,
+									// and a positioned or inline-block link drops its own text from that
+									// element's painted size, so a late card then outranks it.
+									className="py-4 font-medium text-primary underline underline-offset-4"
 								>
 									{t('learnMore')}
 								</a>
