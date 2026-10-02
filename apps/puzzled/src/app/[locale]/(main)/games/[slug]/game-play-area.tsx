@@ -67,8 +67,8 @@ type GamePlayAreaProps = {
  */
 export async function GamePlayArea(props: GamePlayAreaProps) {
 	const access = await getServerPlusAccess(props.hasUser)
-	// One Plus card on the result screen, only while sales are open and the
-	// viewer is not a member (the lock rule's own facts).
+	// One Plus card on the result screen. It uses the offer-only read, which
+	// hides the offer when Money cannot confirm (the lock rule above fails open).
 	const offerAccessFacts = await getServerPlusOfferAccess(props.hasUser)
 	const offer = plusOfferFor(offerAccessFacts, {
 		gameCount: props.gameCount,

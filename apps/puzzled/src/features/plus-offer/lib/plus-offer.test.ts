@@ -94,10 +94,14 @@ describe('copy ships in every locale', () => {
 			expect(plus.offer.milestoneBody).toContain('{count}')
 		}
 	})
-	test('the offer promises nothing but what Plus sells, with no urgency or refund claim', () => {
-		const offerCopy = JSON.stringify(
-			resolveLocale('en-US').plus && (resolveLocale('en-US').plus as { offer: unknown }).offer,
-		)
-		expect(offerCopy).not.toMatch(/refund|money-back|limited time|only today|hurry/i)
+	test('no locale carries urgency or a refund claim, and the titles take the real day count', () => {
+		const banned =
+			/refund|money-back|limited time|only today|hurry|退款|退錢|退还|限時|限时|立即|马上|馬上/i
+		for (const locale of locales) {
+			const plus = resolveLocale(locale).plus as { offer: Record<string, string> }
+			expect(JSON.stringify(plus.offer), locale).not.toMatch(banned)
+			expect(plus.offer.day3Title, locale).toContain('{days}')
+			expect(plus.offer.day7Title, locale).toContain('{days}')
+		}
 	})
 })
