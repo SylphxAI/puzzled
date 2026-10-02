@@ -23,5 +23,5 @@
 		}
 	},
 	"icon": "icon.svg",
-	"services": ["Hosting", "Data", "Money"]
+	"services": ["Hosting", "Data", "Auth"]
 }
