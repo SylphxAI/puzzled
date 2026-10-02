@@ -96,7 +96,7 @@ export function GameDailyFallback({
 				session={snapshot.session}
 				currentStreak={0}
 				locale={locale}
-				difficulty={snapshot.session.difficulty ?? difficulty}
+				difficulty={snapshot.session.difficulty}
 			/>
 		)
 	}

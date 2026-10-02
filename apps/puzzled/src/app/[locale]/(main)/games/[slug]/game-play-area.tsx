@@ -273,7 +273,7 @@ export async function GamePlayArea({
 					}}
 					currentStreak={currentStreak}
 					locale={locale}
-					difficulty={asDifficulty(completedSession.difficulty) ?? difficulty}
+					difficulty={asDifficulty(completedSession.difficulty)}
 				/>
 			</AdsProvider>
 		)
