@@ -13,6 +13,7 @@
 	"startGame": "Start Game",
 	"across": "Across",
 	"down": "Down",
+	"acrossOnly": "Across clues today",
 	"selectCell": "Tap a cell to start",
 	"complete": "Puzzle Complete!",
 	"messages": {

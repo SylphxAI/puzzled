@@ -67,3 +67,20 @@ describe('parseCrosswordClientPayload', () => {
 		expect(() => parsePuzzleDataClient(LIVE_GETDAILY)).toThrow('Invalid puzzle data format')
 	})
 })
+
+describe('parseCrosswordClientPayload on an across-only board', () => {
+	test('accepts an empty down list and keeps the across clues', () => {
+		const parsed = parseCrosswordClientPayload({
+			grid: LIVE_GETDAILY.grid,
+			clues: { across: LIVE_GETDAILY.clues.across, down: [] },
+		})
+		expect(parsed.clues.down).toEqual([])
+		expect(parsed.clues.across).toHaveLength(5)
+	})
+
+	test('accepts the column-clue marker without exposing answers', () => {
+		const parsed = parseCrosswordClientPayload({ ...LIVE_GETDAILY, clueSet: 'rows-columns' })
+		expect(parsed.clues.down).toHaveLength(5)
+		expect(JSON.stringify(parsed)).not.toContain('clueSet')
+	})
+})

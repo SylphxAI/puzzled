@@ -25,6 +25,12 @@ pub fn solution_word_count() -> usize {
     SOLUTION_WORDS.len()
 }
 
+/// Whether `word` (any case) is in the curated common-word list.
+#[cfg(test)]
+pub(crate) fn is_solution_word(word: &str) -> bool {
+    SOLUTION_WORDS.iter().any(|w| w.eq_ignore_ascii_case(word))
+}
+
 fn word_from_seed(seed: i64) -> String {
     let words = SOLUTION_WORDS.as_slice();
     if words.is_empty() {
