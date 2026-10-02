@@ -14,29 +14,14 @@ import {
 	AdminDialogHeader,
 	AdminDialogTitle,
 } from './admin-dialog'
-
-type AnnouncementFormData = {
-	title: string
-	content: string
-	type: AnnouncementType
-	isActive: boolean
-	targetAllUsers: boolean
-	targetPremiumOnly: boolean
-	dismissible: boolean
-	showOnce: boolean
-	startsAt: string
-	endsAt: string
-}
+import { type AnnouncementFormData, toAnnouncementRequest, toLocalInput } from './announcement-form'
 
 const emptyAnnouncement: AnnouncementFormData = {
 	title: '',
 	content: '',
 	type: 'info',
 	isActive: true,
-	targetAllUsers: true,
-	targetPremiumOnly: false,
 	dismissible: true,
-	showOnce: false,
 	startsAt: '',
 	endsAt: '',
 }
@@ -91,12 +76,9 @@ function AnnouncementEditorModal({
 				content: announcement.content,
 				type: announcement.type,
 				isActive: announcement.isActive,
-				targetAllUsers: announcement.targetAllUsers,
-				targetPremiumOnly: announcement.targetPremiumOnly,
 				dismissible: announcement.dismissible,
-				showOnce: announcement.showOnce,
-				startsAt: announcement.startsAt?.toISOString().slice(0, 16) || '',
-				endsAt: announcement.endsAt?.toISOString().slice(0, 16) || '',
+				startsAt: toLocalInput(announcement.startsAt),
+				endsAt: toLocalInput(announcement.endsAt),
 			}
 		}
 		return emptyAnnouncement
@@ -114,16 +96,7 @@ function AnnouncementEditorModal({
 		(e: React.FormEvent) => {
 			e.preventDefault()
 
-			// The Connect contract's names: `body` and `active`, not the table's.
-			const data = {
-				title: formData.title,
-				body: formData.content,
-				type: formData.type,
-				active: formData.isActive,
-				dismissible: formData.dismissible,
-				startsAt: formData.startsAt ? new Date(formData.startsAt).toISOString() : undefined,
-				endsAt: formData.endsAt ? new Date(formData.endsAt).toISOString() : undefined,
-			}
+			const data = toAnnouncementRequest(formData)
 
 			const onSuccess = () => {
 				router.refresh()
@@ -240,32 +213,6 @@ function AnnouncementEditorModal({
 							/>
 							<label htmlFor="dismissible" className="admin-label mb-0">
 								{t('dismissible')}
-							</label>
-						</div>
-
-						<div className="flex items-center gap-3">
-							<input
-								id="showOnce"
-								type="checkbox"
-								checked={formData.showOnce}
-								onChange={(e) => updateField('showOnce', e.target.checked)}
-								className="admin-checkbox"
-							/>
-							<label htmlFor="showOnce" className="admin-label mb-0">
-								{t('showOnce')}
-							</label>
-						</div>
-
-						<div className="flex items-center gap-3">
-							<input
-								id="targetPremiumOnly"
-								type="checkbox"
-								checked={formData.targetPremiumOnly}
-								onChange={(e) => updateField('targetPremiumOnly', e.target.checked)}
-								className="admin-checkbox"
-							/>
-							<label htmlFor="targetPremiumOnly" className="admin-label mb-0">
-								{t('premiumOnly')}
 							</label>
 						</div>
 					</div>

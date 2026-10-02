@@ -94,6 +94,17 @@ pub fn parse_announcement_bound(value: &str) -> Result<Option<NaiveDateTime>, St
         .map_err(|e| format!("invalid announcement time: {e}"))
 }
 
+/// A window must end after it starts (either bound may be open).
+pub fn validate_announcement_window(
+    starts_at: Option<NaiveDateTime>,
+    ends_at: Option<NaiveDateTime>,
+) -> Result<(), &'static str> {
+    match (starts_at, ends_at) {
+        (Some(start), Some(end)) if end <= start => Err("ends_before_start"),
+        _ => Ok(()),
+    }
+}
+
 pub async fn list_announcements(pool: &PgPool) -> Result<Vec<Value>, String> {
     let rows: Vec<AnnouncementRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "SELECT {ANNOUNCEMENT_COLUMNS} FROM announcements ORDER BY created_at DESC"
@@ -151,6 +162,18 @@ pub async fn update_announcement(
     ends_at: Option<Option<NaiveDateTime>>,
 ) -> Result<Value, String> {
     let id = Uuid::parse_str(id).map_err(|e| format!("invalid announcement id: {e}"))?;
+    if starts_at.is_some() || ends_at.is_some() {
+        // The window that results is checked, not just the bound that was sent.
+        let stored: Option<(Option<NaiveDateTime>, Option<NaiveDateTime>)> =
+            sqlx::query_as("SELECT starts_at, ends_at FROM announcements WHERE id = $1")
+                .bind(id)
+                .fetch_optional(pool)
+                .await
+                .map_err(|e| format!("announcement update failed: {e}"))?;
+        let (old_start, old_end) = stored.ok_or_else(|| "announcement not found".to_string())?;
+        validate_announcement_window(starts_at.unwrap_or(old_start), ends_at.unwrap_or(old_end))
+            .map_err(str::to_string)?;
+    }
     let row: Option<AnnouncementRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "UPDATE announcements SET \
             title = COALESCE($2, title), \

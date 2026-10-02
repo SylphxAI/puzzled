@@ -1,4 +1,4 @@
 {
 	"region": "Site notices",
-	"dismiss": "Dismiss announcement"
+	"dismiss": "Dismiss: {title}"
 }

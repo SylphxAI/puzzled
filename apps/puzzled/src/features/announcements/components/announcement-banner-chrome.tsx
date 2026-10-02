@@ -6,9 +6,11 @@ import { visibleAnnouncements } from '../lib/visible'
 import { AnnouncementBanner } from './announcement-banner'
 
 /**
- * Server half of the banner. It is awaited, not streamed, so the notice is in
- * the first HTML and never pushes the page when it arrives; the read is capped
- * by the presentation deadline and a failed read shows nothing.
+ * Server half of the banner. The list is a process-wide memo (never a per-view
+ * read), so it resolves in the first flush on every request but the first of a
+ * process; the layout wraps this in Suspense so even that one cannot hold back
+ * the first byte. The read is capped by the presentation deadline and a failed
+ * read shows nothing. The dismissed-cookie filter stays per request.
  */
 export async function AnnouncementBannerChrome() {
 	const active = await withPresentationDeadline(getServerActiveAnnouncements(), [])

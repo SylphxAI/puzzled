@@ -2,7 +2,7 @@
 
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
 	addDismissed,
 	DISMISSED_COOKIE,
@@ -28,7 +28,18 @@ const TONE: Record<string, string> = {
 export function AnnouncementBanner({ items }: { items: BannerAnnouncement[] }) {
 	const t = useTranslations('announcements')
 	const [hidden, setHidden] = useState<readonly string[]>([])
+	const [focusId, setFocusId] = useState<string | null>(null)
 	const shown = items.filter((item) => !hidden.includes(item.id))
+
+	// The dismissed notice's button is gone: focus the next notice's button if
+	// one is left, otherwise the page.
+	useEffect(() => {
+		if (focusId === null) return
+		const next = document.querySelector<HTMLElement>(`[data-announcement="${focusId}"] button`)
+		;(next ?? document.getElementById('main-content'))?.focus()
+		setFocusId(null)
+	}, [focusId])
+
 	if (shown.length === 0) return null
 
 	function dismiss(id: string) {
@@ -37,9 +48,14 @@ export function AnnouncementBanner({ items }: { items: BannerAnnouncement[] }) {
 			addDismissed(parseDismissed(readCookie()), id),
 			window.location.protocol === 'https:',
 		)
+		const index = shown.findIndex((item) => item.id === id)
+		const remaining = shown.filter((item) => item.id !== id)
+		const next = remaining
+			.slice(index)
+			.concat(remaining.slice(0, index))
+			.find((i) => i.dismissible)
 		setHidden((current) => [...current, id])
-		// The button that had focus is gone; hand focus to the page.
-		document.getElementById('main-content')?.focus()
+		setFocusId(next?.id ?? '')
 	}
 
 	return (
@@ -60,7 +76,7 @@ export function AnnouncementBanner({ items }: { items: BannerAnnouncement[] }) {
 						<button
 							type="button"
 							onClick={() => dismiss(item.id)}
-							aria-label={t('dismiss')}
+							aria-label={t('dismiss', { title: item.title })}
 							className="-m-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-foreground/70 hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 						>
 							<X aria-hidden="true" className="h-4 w-4" />

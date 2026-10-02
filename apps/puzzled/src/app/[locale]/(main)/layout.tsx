@@ -123,7 +123,9 @@ export default function MainLayout({ children }: Props) {
 			{/* pb-nav on mobile only (bottom nav), md:pb-0 on desktop */}
 			<div id="main-content" className="flex flex-1 flex-col pb-nav md:pb-0" tabIndex={-1}>
 				{/* Server-rendered in flow; renders nothing (no space) when there is no notice. */}
-				<AnnouncementBannerChrome />
+				<Suspense fallback={null}>
+					<AnnouncementBannerChrome />
+				</Suspense>
 				<AccountSavedNote />
 				{children}
 				<Footer />

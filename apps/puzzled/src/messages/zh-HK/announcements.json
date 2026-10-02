@@ -1,4 +1,4 @@
 {
-	"region": "網站公告",
-	"dismiss": "關閉公告"
+	"region": "網站通知",
+	"dismiss": "關閉通知：{title}"
 }
