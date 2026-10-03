@@ -90,7 +90,6 @@ describe('getAllGames', () => {
 			expect(game.name).toBeDefined()
 			expect(game.description).toBeDefined()
 			expect(game.IconComponent).toBeDefined()
-			expect(typeof game.generatePuzzle).toBe('function')
 			expect(typeof game.validateAndScore).toBe('function')
 		}
 	})

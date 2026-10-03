@@ -14,11 +14,12 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { blockSlideConfig } from './config'
 
-// Generate a puzzle for testing
-const { puzzleData, solution } = blockSlideConfig.generatePuzzle(12345)
+// A frozen puzzle from the Rust goldens
+const { puzzleData, solution } = frozenPuzzle(blockSlideConfig)
 
 // Helper to create submission
 function createSubmission(

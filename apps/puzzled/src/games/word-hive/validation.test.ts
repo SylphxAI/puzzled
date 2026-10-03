@@ -13,11 +13,12 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { wordHiveConfig } from './config'
 
-// Generate a puzzle for testing
-const { puzzleData, solution } = wordHiveConfig.generatePuzzle(12345)
+// A frozen puzzle from the Rust goldens
+const { puzzleData, solution } = frozenPuzzle(wordHiveConfig)
 
 // Valid words from solution
 const validWords = solution.validWords

@@ -15,11 +15,12 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { wordBoxConfig } from './config'
 
-// Generate a puzzle for testing
-const { puzzleData, solution } = wordBoxConfig.generatePuzzle(12345)
+// A frozen puzzle from the Rust goldens
+const { puzzleData, solution } = frozenPuzzle(wordBoxConfig)
 
 // Helper to create submission
 function createSubmission(

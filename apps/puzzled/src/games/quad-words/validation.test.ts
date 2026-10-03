@@ -16,12 +16,13 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { quadWordsConfig } from './config'
 import { MAX_GUESSES } from './types'
 
-// Generate a puzzle for testing
-const { puzzleData, solution } = quadWordsConfig.generatePuzzle(12345)
+// A frozen puzzle from the Rust goldens
+const { puzzleData, solution } = frozenPuzzle(quadWordsConfig)
 
 // Helper to create submission
 function createSubmission(
