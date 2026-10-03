@@ -1,0 +1,25 @@
+{
+	"title": "Confirme sua identidade",
+	"description": "Para sua segurança, confirme sua identidade para continuar.",
+	"selectMethod": "Escolha o método de verificação",
+	"usePassword": "Senha",
+	"useEmailCode": "Código por e-mail",
+	"password": "Senha",
+	"enterCode": "Código de verificação",
+	"sendCode": "Enviar código de verificação",
+	"resendCode": "Reenviar código",
+	"resendIn": "Reenviar em {seconds}s",
+	"sending": "Enviando...",
+	"verifying": "Verificando...",
+	"verify": "Verificar",
+	"verified": "Identidade confirmada!",
+	"codeSent": "Código de verificação enviado para o seu e-mail",
+	"codeExpiry": "O código expira em 10 minutos",
+	"codeExpiresIn": "O código expira em {minutes}:{seconds, number, ::00}",
+	"codeExpired": "O código expirou. Solicite um novo.",
+	"emailCodeDescription": "Vamos enviar um código de verificação de 6 dígitos para o seu e-mail.",
+	"errors": {
+		"passwordRequired": "Digite sua senha",
+		"codeInvalid": "Digite um código válido de 6 dígitos"
+	}
+}

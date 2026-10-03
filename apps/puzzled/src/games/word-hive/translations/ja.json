@@ -1,0 +1,39 @@
+{
+	"name": "Hive",
+	"tagline": "7文字 • 無限の単語",
+	"highlight": "単語を探そう",
+	"description": "7つの文字でいくつ単語を作れますか？",
+	"howToPlay": "遊び方",
+	"rules": {
+		"title": "遊び方",
+		"rule1": "表示された7つの文字を使って単語を作ります",
+		"rule2": "すべての単語に中央の文字を含める必要があります",
+		"rule3": "単語は4文字以上にしてください",
+		"rule4": "同じ文字は何度でも使えます"
+	},
+	"messages": {
+		"tooShort": "単語は4文字以上にしてください",
+		"missingCenter": "中央の文字が含まれていません",
+		"invalidLetter": "使えない文字が含まれています",
+		"notInList": "単語リストにありません",
+		"alreadyFound": "すでに見つけた単語です！"
+	},
+	"shuffle": "シャッフル",
+	"delete": "削除",
+	"enter": "決定",
+	"foundWords": "見つけた単語",
+	"pangram": "パングラム",
+	"pangramBonus": "+7ボーナス",
+	"ranks": {
+		"beginner": "スタート",
+		"goodStart": "ウォームアップ",
+		"movingUp": "着実",
+		"good": "冴えてる",
+		"solid": "輝き",
+		"nice": "見事",
+		"great": "まばゆい",
+		"amazing": "エース",
+		"genius": "マスター",
+		"queenBee": "完璧なハイブ 👑"
+	}
+}

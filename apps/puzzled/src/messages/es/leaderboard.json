@@ -1,0 +1,51 @@
+{
+	"period": {
+		"today": "Hoy",
+		"week": "Esta semana",
+		"all": "Histórico"
+	},
+	"title": "Clasificación",
+	"metaDescription": "Clasificaciones de puzzles de hoy, de esta semana y de todos los tiempos: quién completó qué y dónde se sitúa tu puntuación.",
+	"eyebrow": "Clasificaciones de Puzzled",
+	"description": "Un puzzle y un período a la vez, tal como se cuentan las puntuaciones. Solo aparecen los jugadores que eligieron mostrarse públicamente.",
+	"chip": "Clasificación: {module}",
+	"anonymous": "Jugador anónimo",
+	"scopeLabel": "Período de la clasificación",
+	"moduleLabel": "Puzzle",
+	"loadingBoard": "Cargando clasificación…",
+	"boardTitle": "Clasificación de {module}",
+	"boardDescription": "Ámbito: {period}. Cada fila es el total aceptado de un jugador en este período.",
+	"columns": {
+		"rank": "Puesto",
+		"player": "Jugador",
+		"score": "Puntuación"
+	},
+	"tableCaption": "Clasificación de {module} para {period}: puesto, jugador y puntuación",
+	"you": "Tú",
+	"empty": {
+		"title": "Esta clasificación aún se está calentando",
+		"body": "Todavía no hay puntuaciones de {module} en este período: el reloj corre y la clasificación es tuya para estrenar.",
+		"play": "Jugar {module}"
+	},
+	"notes": {
+		"top": "Mostrando los {count} primeros de {module}.",
+		"policy": "Solo aparecen los jugadores que eligieron mostrarse públicamente.",
+		"viewerAway": "Todavía no estás entre los {count} primeros de este período.",
+		"guest": "El juego como invitado cuenta para tu propio registro, pero no aparece en las clasificaciones.",
+		"signIn": "Inicia sesión para ocupar un puesto"
+	},
+	"unavailable": {
+		"title": "No se cargó esta clasificación",
+		"body": "No llegó la lectura de la clasificación, así que no se muestran filas en lugar de una tabla vacía.",
+		"footnote": "Inténtalo de nuevo en un momento.",
+		"retry": "Reintentar esta clasificación"
+	},
+	"how": {
+		"title": "Cómo funcionan las clasificaciones",
+		"description": "Las reglas detrás de estas cifras.",
+		"scores": "Una clasificación suma todas las puntuaciones aceptadas que consigas en ese puzzle durante el período seleccionado.",
+		"visibility": "Tu nombre y tu puntuación aparecen solo mientras tu ajuste de visibilidad pública esté activado.",
+		"boards": "Hay clasificaciones de puntuación para cada puzzle: hoy, esta semana y de todos los tiempos.",
+		"visibilityCta": "Revisar tu visibilidad"
+	}
+}

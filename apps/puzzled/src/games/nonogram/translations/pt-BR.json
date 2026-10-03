@@ -1,0 +1,31 @@
+{
+	"name": "Paint",
+	"tagline": "Grade 10×10 • Pixel art",
+	"highlight": "Desafio de imagem",
+	"description": "Preencha as células para revelar uma imagem escondida",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Use as dicas numéricas para preencher as células",
+		"rule2": "Os números mostram quantas células preenchidas seguidas há",
+		"rule3": "Complete a grade para revelar a imagem"
+	},
+	"startGame": "Começar jogo",
+	"fillMode": "Preencher",
+	"markMode": "Marcar",
+	"errors": "{count} erros",
+	"complete": "Imagem completa!",
+	"messages": {
+		"incorrect": "Essa célula não deveria ser preenchida"
+	},
+	"difficulty": {
+		"easy": "Fácil",
+		"medium": "Médio",
+		"hard": "Difícil"
+	},
+	"difficultyDescriptions": {
+		"easy": "Uma grade 5x5 pequena com uma imagem simples",
+		"medium": "10x10, com mais linhas e colunas para ler",
+		"hard": "15x15 com detalhes finos"
+	}
+}

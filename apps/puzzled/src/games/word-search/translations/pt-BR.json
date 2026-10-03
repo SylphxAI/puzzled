@@ -1,0 +1,15 @@
+{
+	"name": "Hunt",
+	"tagline": "Encontre palavras • Desafios temáticos",
+	"highlight": "Palavras escondidas",
+	"description": "Encontre palavras escondidas na grade de letras",
+	"howToPlay": "Como jogar Word Hunt",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Encontre todas as palavras escondidas na grade de letras",
+		"rule2": "As palavras podem estar na horizontal, na vertical ou na diagonal",
+		"rule3": "Arraste da primeira à última letra para selecionar"
+	},
+	"startGame": "Começar jogo",
+	"complete": "Todas as palavras encontradas!"
+}

@@ -215,6 +215,24 @@ function LanguageDropdownContent({
 				))}
 			</DropdownMenuGroup>
 
+			<DropdownMenuSeparator className="my-2" />
+
+			{/* Other languages: each is listed in its own language */}
+			<DropdownMenuGroup>
+				<DropdownMenuLabel className="px-2 text-xs font-normal text-muted-foreground">
+					More languages
+				</DropdownMenuLabel>
+				{localeGroups.other.map((loc) => (
+					<LanguageMenuItem
+						key={loc}
+						locale={loc}
+						isSelected={currentLocale === loc}
+						onSelect={onSelect}
+						disabled={isPending}
+					/>
+				))}
+			</DropdownMenuGroup>
+
 			{/* Footer note */}
 			<DropdownMenuSeparator className="my-2" />
 			<p className="px-2 py-1.5 text-xs text-muted-foreground">{t('languageChangeNote')}</p>

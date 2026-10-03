@@ -1,0 +1,15 @@
+{
+	"name": "Spots",
+	"tagline": "Posicione todas as peças • Combine as regiões",
+	"highlight": "Regiões de dominó",
+	"description": "Posicione todos os dominós para que a regra de cada região seja cumprida",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Posicione o conjunto completo de peças para que todas as células sejam cobertas exatamente uma vez",
+		"rule2": "Um número é a soma dos pontos da região; = significa todos iguais; ≠ significa todos diferentes",
+		"rule3": "As peças só podem ficar sobre duas células que dividem um lado"
+	},
+	"startGame": "Começar jogo",
+	"complete": "Tabuleiro completo!"
+}

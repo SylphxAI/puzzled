@@ -1,0 +1,24 @@
+{
+	"name": "Rungs",
+	"tagline": "Paso a paso • Cadena de palabras",
+	"highlight": "Cadena de palabras",
+	"description": "Transforma una palabra en otra, una letra cada vez",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Cambia una letra cada vez",
+		"rule2": "Cada paso debe formar una palabra válida",
+		"rule3": "Llega a la palabra objetivo en el menor número de pasos posible"
+	},
+	"startGame": "Empezar partida",
+	"enterWord": "Escribe una palabra...",
+	"submit": "Ir",
+	"undo": "Deshacer",
+	"complete": "¡Lo lograste!",
+	"messages": {
+		"notInList": "No es una palabra válida",
+		"wrongLength": "La palabra debe tener la misma longitud",
+		"notOneChange": "Cambia exactamente una letra",
+		"alreadyUsed": "Ya has usado esta palabra"
+	}
+}
