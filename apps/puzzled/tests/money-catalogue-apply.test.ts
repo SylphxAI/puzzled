@@ -37,7 +37,7 @@ answer() { # body code
 case "$url" in
   *audience=sylphx-access*) answer '{"value":"jwt-fixture"}' 200 ;;
   */v1/access/github/token) answer "$FAKE_EXCHANGE_BODY" "$FAKE_EXCHANGE_CODE" ;;
-  *price_catalogs/default:sync*) answer "\${FAKE_SYNC_BODY:-{\}}" "\${FAKE_SYNC_CODE:-\${FAKE_MONEY_CODE:-200}}" ;;
+  *price_catalogs/default:sync*) answer "\${FAKE_SYNC_BODY:-{}}" "\${FAKE_SYNC_CODE:-\${FAKE_MONEY_CODE:-200}}" ;;
   */price_catalogs/default*) answer '{}' "\${FAKE_MONEY_CODE:-200}" ;;
   *) answer '{"unexpected":true}' 404 ;;
 esac
@@ -171,9 +171,7 @@ describe('preview sync that is not connected to Stripe', () => {
 	})
 
 	test('with the flag a failed PATCH or refused exchange still fails', () => {
-		expect(
-			run({ ...base, SYNC_FAILURE_NONFATAL: '1', FAKE_MONEY_CODE: '400' }).status,
-		).not.toBe(0)
+		expect(run({ ...base, SYNC_FAILURE_NONFATAL: '1', FAKE_MONEY_CODE: '400' }).status).not.toBe(0)
 		expect(
 			run({
 				SYNC_FAILURE_NONFATAL: '1',
