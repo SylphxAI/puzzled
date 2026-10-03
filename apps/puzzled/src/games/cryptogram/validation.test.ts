@@ -14,12 +14,13 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { cryptogramConfig } from './config'
 import type { PlayerGuesses } from './types'
 
-// Generate a puzzle for testing
-const { puzzleData, solution } = cryptogramConfig.generatePuzzle(12345)
+// A frozen puzzle from the Rust goldens
+const { puzzleData, solution } = frozenPuzzle(cryptogramConfig)
 
 // Create correct guesses (reverse cipher provides encrypted -> original mapping)
 const correctGuesses: PlayerGuesses = { ...solution.reverseCipher }

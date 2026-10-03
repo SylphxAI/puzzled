@@ -17,11 +17,12 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { arithmoConfig } from './config'
 
-// Generate a puzzle for testing
-const { puzzleData, solution } = arithmoConfig.generatePuzzle(12345)
+// A frozen puzzle from the Rust goldens
+const { puzzleData, solution } = frozenPuzzle(arithmoConfig)
 const correctEquation = solution.equation
 
 // Valid 8-character equations for testing (must evaluate correctly)
