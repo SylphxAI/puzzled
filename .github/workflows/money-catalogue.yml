@@ -40,6 +40,10 @@ jobs:
     timeout-minutes: 10
     env:
       ACCESS_NAME: puzzled-money-catalogue-preview
+      # Temporary: preview :sync fails with 400 merchant_not_connected until previews
+      # have per-product test-mode Stripe keys; remove this flag then. Any other
+      # preview failure still blocks production.
+      SYNC_FAILURE_NONFATAL: '1'
     steps:
       - uses: actions/checkout@v4.2.2
         with:
