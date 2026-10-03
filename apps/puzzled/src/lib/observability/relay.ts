@@ -7,6 +7,9 @@
  * client; the service scrubs it before storing.
  */
 
+import { env } from '../env'
+import { resolveSiteOrigin } from '../site-origin'
+
 import { type Breadcrumb, captureException } from './capture'
 
 const MAX_BODY_BYTES = 32_768
@@ -42,12 +45,31 @@ function text(value: unknown, max: number): string | undefined {
 
 function sameOrigin(request: Request): boolean {
 	const site = request.headers.get('sec-fetch-site')
-	if (site) return site === 'same-origin'
+	if (site !== null && site !== 'same-origin') return false
 	const origin = request.headers.get('origin')
-	const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host')
-	if (!origin || !host) return false
+	if (!origin || origin === 'null') return false
+	// The public edge sets these headers before rewriting Host to the web service.
+	// Lists are ambiguous here; do not use the canonical resolver's first-value fallback.
+	for (const name of ['origin', 'host', 'x-forwarded-host', 'x-forwarded-proto']) {
+		if (request.headers.get(name)?.includes(',')) return false
+	}
 	try {
-		return new URL(origin).host === host
+		const supplied = new URL(origin)
+		if (supplied.origin !== origin) return false
+		return (
+			origin ===
+			resolveSiteOrigin(
+				{
+					host: request.headers.get('host'),
+					forwardedHost: request.headers.get('x-forwarded-host'),
+					forwardedProto: request.headers.get('x-forwarded-proto'),
+					configuredUrl: env.SYLPHX_PUBLIC_URL,
+					nodeEnv: env.NODE_ENV,
+					port: env.PORT,
+				},
+				'request',
+			)
+		)
 	} catch {
 		return false
 	}
