@@ -97,6 +97,21 @@ pub fn reminder_payload(locale: &str) -> serde_json::Value {
             "今天的谜题等着你，只需几分钟。",
             "/zh-CN",
         ),
+        "ja" => (
+            "今日のパズルの準備ができました",
+            "今日のパズルがあなたを待っています。数分で遊べます。",
+            "/ja",
+        ),
+        "es" => (
+            "Tu puzle diario está listo",
+            "El puzle de hoy te está esperando. Solo te llevará unos minutos.",
+            "/es",
+        ),
+        "pt-BR" => (
+            "Seu quebra-cabeça diário está pronto",
+            "O quebra-cabeça de hoje está esperando por você. Leva só alguns minutos.",
+            "/pt-BR",
+        ),
         "en-GB" => (
             "Your daily puzzle is ready",
             "Today's puzzle is waiting. It only takes a few minutes.",
@@ -289,7 +304,9 @@ mod tests {
     #[test]
     fn validates_keys_and_all_locales() {
         assert!(!valid_keys("", ""));
-        for locale in ["en-US", "en-GB", "zh-HK", "zh-TW", "zh-CN"] {
+        for locale in [
+            "en-US", "en-GB", "zh-HK", "zh-TW", "zh-CN", "ja", "es", "pt-BR",
+        ] {
             let payload = reminder_payload(locale);
             assert!(!payload["body"].as_str().unwrap().is_empty());
         }

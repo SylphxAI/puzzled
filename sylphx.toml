@@ -53,6 +53,7 @@ value = ""
 
 [[services]]
 name = "web"
+instance_type = "micro"
 port = 3000
 # Readiness answers from the Next.js process and calls nothing. Probing "/"
 # rendered the home page (about 20 api reads) every 5 seconds.
@@ -68,6 +69,7 @@ connect = { services = ["api"] }
 # Rust owns the product API (sole backend). Next.js owns presentation only.
 [[services]]
 name = "api"
+instance_type = "nano"
 port = 8080
 # Complete public API namespace routes to Rust; no dual backend remains.
 path_prefixes = [

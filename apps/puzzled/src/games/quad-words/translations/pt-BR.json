@@ -1,0 +1,19 @@
+{
+	"name": "Quad",
+	"tagline": "4 palavras • 9 palpites",
+	"highlight": "Cada palpite vale para as quatro palavras",
+	"description": "Resolva 4 palavras ocultas ao mesmo tempo",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Descubra as 4 palavras ocultas em 9 tentativas",
+		"rule2": "Cada palpite vale para os 4 tabuleiros",
+		"rule3": "Verde = certa, Amarelo = posição errada, Cinza = não está na palavra"
+	},
+	"startGame": "Começar jogo",
+	"complete": "Desafio concluído!",
+	"messages": {
+		"notEnoughLetters": "Letras insuficientes",
+		"notInWordList": "Não está na lista de palavras"
+	}
+}

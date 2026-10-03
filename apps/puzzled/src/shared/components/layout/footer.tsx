@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { ChangeCookieChoice } from '@/features/analytics/components/change-cookie-choice'
 import { googleTagIds } from '@/features/analytics/lib/google-tag'
 import { getAllGameMetadata } from '@/games/registry'
@@ -21,6 +21,7 @@ const linkClass =
  */
 export async function Footer() {
 	const t = await getTranslations('footer')
+	const locale = await getLocale()
 	const tNav = await getTranslations('nav')
 	const tGame = await getTranslations()
 	const games = getAllGameMetadata().slice(0, FOOTER_GAME_LIMIT)
@@ -104,6 +105,13 @@ export async function Footer() {
 									{t('terms')}
 								</Link>
 							</li>
+							{locale === 'ja' && (
+								<li>
+									<Link href="/tokushoho" className={linkClass}>
+										特定商取引法に基づく表記
+									</Link>
+								</li>
+							)}
 							<li>
 								<Link href="/privacy#cookies" className={linkClass}>
 									{t('cookies')}

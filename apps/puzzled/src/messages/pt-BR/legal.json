@@ -1,0 +1,210 @@
+{
+	"privacy": {
+		"title": "Política de Privacidade",
+		"lastUpdated": "Última atualização",
+		"revision": "2026-10-01",
+		"eyebrow": "Legal",
+		"lead": "Esta política explica quais dados o Puzzled coleta, por que são coletados e como falar conosco sobre eles.",
+		"toc": {
+			"title": "Nesta página"
+		},
+		"cta": {
+			"title": "Outras páginas que você pode precisar",
+			"body": "Os Termos de Serviço tratam de contas, assinaturas e conduta. O suporte ajuda com dúvidas sobre conta e cobrança.",
+			"support": "Ir para o suporte"
+		},
+		"sections": {
+			"intro": {
+				"title": "Introdução",
+				"content": "Esta política explica como a Sylphx Limited (\"nós\" ou \"nosso\") coleta e usa dados pessoais quando você usa o Puzzled, e quais direitos você tem sobre eles."
+			},
+			"controller": {
+				"title": "Quem é responsável pelos seus dados",
+				"content": "A Sylphx Limited (registrada na Inglaterra e no País de Gales, número de empresa 16438428; sede registrada: 128 City Road, London EC1V 2NX, Reino Unido) é a controladora dos seus dados pessoais nos termos do UK GDPR e do Data Protection Act 2018."
+			},
+			"dataCollection": {
+				"title": "Dados que coletamos",
+				"content": "Coletamos os seguintes tipos de informação:",
+				"items": {
+					"account": "Informações da conta: nome, endereço de e-mail e foto de perfil",
+					"game": "Dados de jogo: pontuações, estatísticas, sequências e histórico de jogos",
+					"payment": "Informações de pagamento: a Sylphx Money, o serviço de pagamentos da Sylphx Limited, e seu processador de pagamentos, a Stripe, coletam os dados do seu cartão; nós recebemos o status da sua assinatura, os valores, as datas e as referências de pagamento",
+					"technical": "Dados técnicos: endereço IP, tipo de navegador e informações do dispositivo",
+					"errors": "Relatórios de erro: quando uma página ou o nosso servidor falha, registramos a mensagem de erro, o stack trace e o caminho da página (nunca a query string, endereços de e-mail ou qualquer coisa que você tenha digitado) em nosso próprio serviço de monitoramento de erros, para encontrar e corrigir a falha",
+					"referral": "Tags de indicação e de anúncios: se você chegar por um link com tags de campanha (parâmetros utm_ ou um ID de indicação, por exemplo vindo de outro produto da Sylphx) e tiver aceitado os cookies de análise, guardamos essas tags por 30 dias em um cookie próprio e as armazenamos junto com a sua conta se você se cadastrar. Se você chegar por um anúncio do Google e tiver ativado os cookies de publicidade, guardamos o ID de clique do anúncio por 90 dias no mesmo cookie e o repassamos apenas ao registro de pagamento de uma assinatura que você iniciar, não à sua conta. Usamos essas informações para saber qual link ou anúncio trouxe você, e não as vendemos."
+				}
+			},
+			"dataUse": {
+				"title": "Como usamos seus dados e nossa base legal",
+				"content": "Usamos seus dados para estas finalidades, com estas bases legais do UK GDPR:",
+				"items": {
+					"service": "Para fornecer o Puzzled, a sua conta, o Puzzled Plus e o plano família, e para responder às suas solicitações: execução do nosso contrato com você",
+					"improve": "Para manter o Puzzled seguro, evitar trapaças, abusos e fraudes, corrigir falhas e entender e melhorar nossos jogos: nossos interesses legítimos em manter um serviço seguro, funcional e em constante melhoria",
+					"communicate": "Para enviar mensagens sobre sua conta, sua assinatura e mudanças no Puzzled: nosso contrato com você e nossos interesses legítimos",
+					"analytics": "Para medir como o Puzzled é jogado, quais links e anúncios trazem jogadores e se eles se cadastram ou assinam, usando análise, medição de publicidade e o cookie de indicação: seu consentimento (análise e publicidade são escolhas separadas), que você pode retirar a qualquer momento em Alterar escolha de cookies, na seção Cookies",
+					"legal": "Para manter registros fiscais e contábeis, responder a solicitações legais e estabelecer, exercer ou defender direitos em processos judiciais: nossas obrigações legais e nossos interesses legítimos",
+					"noSale": "Não vendemos seus dados pessoais. Jogadores sem o Puzzled Plus podem ver publicidade no arquivo e nas telas de resultado (nunca durante um desafio), exibida pelo Google AdSense; o anúncio é exibido, e os cookies de publicidade são definidos, somente se você ativou os cookies de publicidade."
+				}
+			},
+			"payments": {
+				"title": "Pagamentos",
+				"content": "Quando você assina, a Sylphx Money (operada pela Sylphx Limited) e seu processador de pagamentos, a Stripe, processam o seu pagamento; nunca recebemos o número completo do seu cartão. Registramos que você pediu para o acesso começar imediatamente quando assinou. A Sylphx Money mantém um registro da sua assinatura, dos pagamentos e dos reembolsos (valores, datas e referências de pagamento) pelo tempo que a legislação fiscal e contábil exigir. Se você excluir sua conta, esses registros são mantidos sem o seu ID de jogador."
+			},
+			"thirdParty": {
+				"title": "Com quem compartilhamos dados",
+				"content": "Compartilhamos dados pessoais com prestadores de serviços que os processam para nós sob contrato, incluindo:",
+				"money": "Processamento de pagamentos e assinaturas",
+				"stripe": "Processamento de pagamentos",
+				"google": "Autenticação",
+				"mail": "Envio de e-mails (e-mails de login e verificação)",
+				"others": "Também podemos compartilhar dados com nossos provedores de hospedagem, consultores profissionais, autoridades quando a lei exigir, e com um comprador ou sucessor, caso nosso negócio ou o Puzzled seja vendido ou reorganizado.",
+				"googleMeasurement": "Medição de análise e publicidade (somente após o seu consentimento)"
+			},
+			"transfers": {
+				"title": "Transferências internacionais",
+				"content": "Alguns dos nossos prestadores processam dados fora do Reino Unido. Quando isso acontece, contamos com as regulamentações de adequação do Reino Unido ou com salvaguardas aprovadas por lei, como o UK International Data Transfer Agreement ou o UK Addendum às cláusulas contratuais padrão da UE. Entre em contato conosco para receber uma cópia da salvaguarda aplicável."
+			},
+			"retention": {
+				"title": "Por quanto tempo guardamos os dados",
+				"content": "Guardamos os dados da sua conta e dos seus jogos enquanto a sua conta estiver aberta. Quando você exclui sua conta, apagamos seu histórico de jogos, estatísticas, sequências, perfil e configurações. Guardamos outros dados apenas pelo tempo necessário para as finalidades acima, inclusive para cumprir obrigações legais, evitar fraudes e abusos e estabelecer ou defender direitos em processos judiciais. Backups e logs são sobrescritos no curso normal da operação."
+			},
+			"cookies": {
+				"title": "Cookies",
+				"content": "Usamos cookies estritamente necessários para fazer seu login, manter o Puzzled seguro e lembrar suas configurações. Usamos os cookies de análise e de indicação somente se você aceitar a análise, e a medição de publicidade somente se você ativar a publicidade separadamente nas Configurações; nada vem pré-selecionado, e recusar não lhe custa nada.",
+				"notices": "Mais um cookie lembra quais avisos do site você fechou ou já viu: puzzled_dismissed_notices. Ele é estritamente necessário, definido por nós (próprio) e mantido por um ano; guarda apenas os IDs desses avisos, sem dados pessoais, por isso é definido sem pedir permissão e não é usado para análise. Outro cookie próprio estritamente necessário, o puzzled_currency, lembra a moeda que você escolhe na página de preços (por exemplo, GBP ou USD) por um ano; guarda apenas o código da moeda, sem dados pessoais, e não é usado para análise.",
+				"google": "Se o Google Analytics ou o Google Ads estiver ativado neste site, ele só é carregado depois que você disser sim: o Google Analytics para análise e o Google Ads para medir se um anúncio levou a um cadastro ou a uma compra, com o plano e o preço, mas sem nome ou e-mail. Desativamos a personalização de anúncios e os sinais do Google e enviamos ao Google apenas endereços públicos de páginas. Você pode retirar o consentimento a qualquer momento com o botão abaixo, que também exclui os cookies do Google."
+			},
+			"rights": {
+				"title": "Seus direitos",
+				"content": "Você tem o direito de:",
+				"items": {
+					"access": "Acessar seus dados pessoais",
+					"correct": "Corrigir dados imprecisos",
+					"delete": "Solicitar a exclusão dos seus dados",
+					"export": "Exportar seus dados",
+					"restrict": "Pedir que restrinjamos o uso dos seus dados",
+					"object": "Opor-se, a qualquer momento, ao uso dos seus dados com base em nossos interesses legítimos e a qualquer marketing direto",
+					"withdraw": "Retirar seu consentimento a qualquer momento, quando nos baseamos nele, sem afetar o uso anterior à retirada",
+					"complain": "Reclamar conosco e junto ao Information Commissioner's Office (ico.org.uk) se você estiver insatisfeito com o modo como tratamos seus dados"
+				},
+				"response": "Respondemos às solicitações em até um mês, prazo que a lei nos permite prorrogar por até mais dois meses em caso de solicitações complexas ou numerosas. Fazemos buscas razoáveis e proporcionais e podemos cobrar uma taxa razoável por uma solicitação manifestamente infundada ou excessiva, ou recusá-la."
+			},
+			"children": {
+				"title": "Crianças",
+				"content": "As contas do Puzzled são para pessoas com 13 anos ou mais. Se soubermos que mantemos a conta de uma criança com menos de 13 anos, podemos encerrá-la e excluir os dados dela. Não criamos perfis de crianças para marketing."
+			},
+			"security": {
+				"title": "Segurança e violações",
+				"content": "Protegemos os dados pessoais com medidas técnicas e organizacionais adequadas, mas nenhum serviço é completamente seguro. Se ocorrer uma violação de dados pessoais, notificamos o Information Commissioner's Office quando a lei exigir e avisamos você diretamente quando a violação puder resultar em alto risco para os seus direitos e liberdades."
+			},
+			"changes": {
+				"title": "Alterações nesta política",
+				"content": "Podemos atualizar esta política. Publicamos a nova versão nesta página com uma nova data. Se pretendermos usar seus dados pessoais para uma nova finalidade, avisaremos você antes."
+			},
+			"contact": {
+				"title": "Fale conosco",
+				"content": "Para dúvidas relacionadas à privacidade, entre em contato:"
+			}
+		}
+	},
+	"terms": {
+		"title": "Termos de Serviço",
+		"lastUpdated": "Última atualização",
+		"revision": "2026-10-01",
+		"eyebrow": "Legal",
+		"lead": "Estes termos estabelecem as regras que se aplicam quando você usa o Puzzled, incluindo contas, assinaturas do Puzzled Plus e conduta.",
+		"toc": {
+			"title": "Nesta página"
+		},
+		"cta": {
+			"title": "Outras páginas que você pode precisar",
+			"body": "A Política de Privacidade explica quais dados são coletados e como são usados. O suporte ajuda com dúvidas sobre conta e cobrança.",
+			"support": "Ir para o suporte"
+		},
+		"sections": {
+			"keyTerms": {
+				"title": "Pontos principais",
+				"content": "Leia estes pontos com atenção. Os termos completos abaixo explicam cada um deles.",
+				"items": {
+					"renewal": "O Puzzled Plus é renovado automaticamente até você cancelar. Você pode cancelar a qualquer momento em Configurações > Assinatura.",
+					"refunds": "O Puzzled Plus é conteúdo digital fornecido imediatamente na compra. Ao assinar, você pede que o acesso comece agora e reconhece que perde o seu direito de arrependimento de 14 dias assim que o fornecimento começa. Os pagamentos não são reembolsados, salvo quando a lei exigir.",
+					"changes": "Podemos alterar jogos, recursos, preços e estes termos. Se uma alteração reduzir de forma relevante o que você pagou, você pode cancelar.",
+					"suspension": "Podemos suspender ou encerrar contas que trapaceiem ou violem estes termos.",
+					"liability": "Nossa responsabilidade perante você é limitada, conforme explica a Limitação de Responsabilidade. Seus direitos legais como consumidor não são afetados."
+				}
+			},
+			"acceptance": {
+				"title": "Aceitação dos Termos",
+				"content": "Ao acessar ou usar o Puzzled, você concorda em ficar vinculado a estes Termos de Serviço. Se você não concorda com estes termos, não use nossos serviços. Se uma tradução destes termos diferir da versão em inglês, prevalece a versão em inglês."
+			},
+			"seller": {
+				"title": "Quem somos",
+				"content": "O Puzzled é fornecido pela Sylphx Limited, empresa registrada na Inglaterra e no País de Gales (número de empresa 16438428). Sede registrada: 128 City Road, London EC1V 2NX, Reino Unido. Número de VAT: GB 502 7862 95."
+			},
+			"service": {
+				"title": "Nosso serviço",
+				"content": "O Puzzled oferece jogos e desafios diários para uso pessoal e não comercial. Podemos alterar, adicionar ou remover jogos, recursos, conteúdos e limites, e suspender ou retirar o Puzzled ou qualquer parte dele, por exemplo por motivos de manutenção, segurança, legais ou comerciais. Se uma alteração reduzir de forma relevante o que uma assinatura paga oferece, avisaremos você com antecedência, e você poderá cancelar e receber o reembolso do tempo restante do período que pagou."
+			},
+			"accounts": {
+				"title": "Contas de usuário",
+				"content": "Você precisa ter 13 anos ou mais para criar uma conta e, se tiver menos de 18, precisa da permissão de um responsável para assinar. Ao criar uma conta, você concorda em:",
+				"items": {
+					"accurate": "Fornecer informações corretas e completas",
+					"secure": "Manter suas credenciais de login seguras",
+					"responsible": "Responsabilizar-se por toda a atividade realizada na sua conta"
+				}
+			},
+			"subscriptions": {
+				"title": "Assinaturas do Puzzled Plus",
+				"content": "O desafio em destaque de hoje é grátis. O Puzzled Plus é uma assinatura paga opcional que libera todos os jogos, o arquivo dos dias anteriores e as estatísticas de cada jogo.",
+				"items": {
+					"billing": "Os preços são exibidos antes do pagamento e incluem o VAT quando aplicável. A Sylphx Money cobra quando você assina e no início de cada período mensal ou anual.",
+					"renewal": "Sua assinatura é renovada automaticamente até você cancelar. Você pode cancelar a qualquer momento em Configurações > Assinatura; o acesso continua até o fim do período que você pagou e você não é cobrado de novo.",
+					"cancellation": "Fornecimento imediato: ao assinar, você pede expressamente que o acesso comece de imediato e reconhece que perde o seu direito de arrependimento de 14 dias sobre este conteúdo digital assim que o fornecimento começa. Você ainda pode interromper as renovações a qualquer momento em Configurações > Assinatura e mantém o acesso até o fim do período que pagou.",
+					"refund": "Os pagamentos não são reembolsáveis e não reembolsamos períodos usados em parte, salvo quando estes termos ou a lei disserem o contrário. Se algo que entregamos não funcionou, corrigimos.",
+					"price": "Podemos alterar o preço do Puzzled Plus. Avisamos com antecedência, antes de um novo preço valer para a sua próxima renovação, e você pode cancelar antes disso.",
+					"family": "Um plano família cobre o assinante e até três pessoas que ele convidar. O assinante pode remover pessoas a qualquer momento.",
+					"statutory": "Nada nestes termos afeta seus direitos legais como consumidor."
+				}
+			},
+			"conduct": {
+				"title": "Conduta do usuário",
+				"content": "Você concorda em:",
+				"items": {
+					"legal": "Usar o serviço somente para fins lícitos",
+					"respect": "Respeitar os outros usuários e a nossa comunidade",
+					"noCheat": "Não usar trapaças, brechas ou ferramentas automatizadas",
+					"noInterfere": "Não copiar, extrair dados em massa (scraping), fazer engenharia reversa nem interferir no Puzzled, salvo quando a lei permitir"
+				}
+			},
+			"suspension": {
+				"title": "Suspensão e encerramento de contas",
+				"content": "Podemos suspender ou encerrar sua conta, e remover ou redefinir pontuações, sequências ou posições nos rankings, se tivermos motivos razoáveis para acreditar que você violou estes termos (inclusive por trapaça), por motivos de segurança ou quando a lei exigir. Fora isso, damos um aviso razoável antes de encerrar uma conta. Se encerrarmos sua conta sem um motivo grave enquanto houver um período pago em andamento, reembolsamos a parte não utilizada."
+			},
+			"ip": {
+				"title": "Propriedade intelectual",
+				"content": "Todos os jogos, conteúdos e materiais do Puzzled são de nossa propriedade ou licenciados para nós. Você não pode copiar, modificar nem distribuir nenhum conteúdo sem permissão. Você nos concede uma licença mundial e isenta de royalties para usar seu nome de exibição, sua foto de perfil e seus resultados para operar o Puzzled, incluindo rankings e resultados compartilhados, e uma licença perpétua e irrevogável para usar qualquer sugestão que você nos enviar."
+			},
+			"disclaimer": {
+				"title": "Isenção de responsabilidade",
+				"content": "O Puzzled é fornecido para entretenimento. Nós o prestamos com cuidado e competência razoáveis e conforme descrito, como a lei exige, mas não prometemos que será ininterrupto ou livre de erros, nem que pontuações, sequências ou estatísticas nunca serão perdidas ou corrigidas."
+			},
+			"liability": {
+				"title": "Limitação de responsabilidade",
+				"content": "Somos responsáveis pelas perdas que você sofrer que sejam consequência previsível de nosso descumprimento destes termos ou de nossa falta de cuidado e competência razoáveis. Não somos responsáveis por perdas que não eram previsíveis, por perdas causadas por eventos fora do nosso controle razoável, nem por qualquer perda comercial, como lucro ou oportunidade perdidos, porque o Puzzled é para uso pessoal. Se um conteúdo digital que fornecemos danificar seu dispositivo ou outro conteúdo digital por não termos usado cuidado e competência razoáveis, repararemos o dano ou pagaremos uma indenização. Fora isso, nossa responsabilidade total perante você se limita ao maior valor entre o que você nos pagou nos 12 meses anteriores ao surgimento da reclamação e £100. Nada nestes termos limita nossa responsabilidade por morte ou lesão corporal causada por nossa negligência, por fraude, ou por qualquer outra coisa que a lei não nos permita limitar."
+			},
+			"changes": {
+				"title": "Alterações nos Termos",
+				"content": "Podemos alterar estes termos, por exemplo para refletir mudanças no Puzzled, na lei ou em nosso negócio. Publicamos os novos termos nesta página com uma nova data. Se uma alteração afetar você de forma relevante, avisaremos com antecedência e, se você tiver uma assinatura paga, poderá cancelar antes de a alteração valer e receber o reembolso da parte não utilizada do seu período. Fora isso, os novos termos valem assim que publicados."
+			},
+			"general": {
+				"title": "Disposições gerais",
+				"content": "Podemos transferir nossos direitos e obrigações destes termos a outra organização, por exemplo se o Puzzled for vendido; avisaremos você, e você poderá cancelar se não concordar. Você não pode transferir os seus. Se um tribunal considerar que parte destes termos não pode ser exigida, o restante continua em vigor. Se não exigirmos o cumprimento de uma cláusula de imediato, ainda poderemos exigi-lo depois. Estes termos são regidos pelas leis da Inglaterra e do País de Gales. Você pode ajuizar uma ação nos tribunais da Inglaterra e do País de Gales ou, se morar na Escócia, na Irlanda do Norte ou em outro país, nos tribunais locais, e mantém a proteção da legislação consumerista obrigatória do lugar onde mora."
+			},
+			"contact": {
+				"title": "Contato",
+				"content": "Para dúvidas sobre estes termos, entre em contato:"
+			}
+		}
+	}
+}

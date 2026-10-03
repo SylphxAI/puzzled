@@ -1,0 +1,15 @@
+{
+	"name": "Cipher",
+	"tagline": "Decifre citações • Desafio de palavras",
+	"highlight": "Citações famosas",
+	"description": "Decifre citações famosas por substituição de letras",
+	"howToPlay": "Como jogar Cryptogram",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Cada letra foi trocada por outra letra diferente",
+		"rule2": "Descubra a substituição para revelar a citação",
+		"rule3": "A mesma letra sempre corresponde à mesma substituta"
+	},
+	"startGame": "Começar jogo",
+	"complete": "Citação resolvida!"
+}
