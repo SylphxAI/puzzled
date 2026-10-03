@@ -4,6 +4,7 @@ import { create } from '@bufbuild/protobuf'
 import { createClient } from '@connectrpc/connect'
 import { Button } from '@sylphx/ui'
 import { Sparkles } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import {
@@ -13,7 +14,14 @@ import {
 import { getConnectTransport } from '@/lib/connect/transport'
 import { Link } from '@/lib/i18n/routing'
 import { useSafeUser } from '@/lib/identity/react'
-import { GuestSignupPrompt } from './guest-signup-prompt'
+
+// The stronger ask is a dialog (Base UI and motion). It only appears for a guest
+// on a 2+ day run, so its code is fetched when it is first wanted, not with the
+// finished-day view of every player.
+const GuestSignupPrompt = dynamic(
+	() => import('./guest-signup-prompt').then((m) => m.GuestSignupPrompt),
+	{ ssr: false },
+)
 
 /** The inline card appears at the first finished day; the modal waits for a run. */
 export function shouldShowStreakCard(signedIn: boolean, daily: boolean, streak: number): boolean {
@@ -72,12 +80,14 @@ export function SaveStreakPrompt({ daily, gameSlug }: { daily: boolean; gameSlug
 					</Button>
 				</section>
 			) : null}
-			<GuestSignupPrompt
-				open={!dismissed && shouldOfferStreakSave(isSignedIn, daily, streak)}
-				onClose={() => setDismissed(true)}
-				streakCount={streak}
-				gameSlug={gameSlug}
-			/>
+			{!dismissed && shouldOfferStreakSave(isSignedIn, daily, streak) ? (
+				<GuestSignupPrompt
+					open
+					onClose={() => setDismissed(true)}
+					streakCount={streak}
+					gameSlug={gameSlug}
+				/>
+			) : null}
 		</>
 	)
 }
