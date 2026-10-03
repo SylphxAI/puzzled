@@ -1,27 +1,19 @@
 'use client'
 
-import {
-	Button,
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuGroup,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '@sylphx/ui'
-import { Check, ChevronDown, Languages } from 'lucide-react'
+import { Button } from '@sylphx/ui'
+import { ChevronDown, Languages } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { useTransition } from 'react'
-import {
-	type Locale,
-	localeBadges,
-	localeGroups,
-	localeNames,
-	localeShortNames,
-} from '@/lib/i18n/config'
+import { lazy, Suspense, useTransition } from 'react'
+import { type Locale, localeNames, localeShortNames } from '@/lib/i18n/config'
 import { usePathname, useRouter } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
+import { useLazyMenu } from './use-lazy-menu'
+
+// The dropdown runtime is fetched when a visitor reaches for the menu; until
+// then the page carries only the trigger below. `ssr` never applies: the menu
+// only mounts after a press.
+const loadMenu = () => import('./language-switcher-menu')
+const LanguageMenu = lazy(loadMenu)
 
 // ==========================================
 // Language Switcher Component
@@ -46,6 +38,7 @@ export function LanguageSwitcher({
 	const router = useRouter()
 	const pathname = usePathname()
 	const [isPending, startTransition] = useTransition()
+	const { opened, triggerProps } = useLazyMenu(loadMenu)
 
 	const handleLocaleChange = (newLocale: Locale) => {
 		if (newLocale === locale) return
@@ -60,221 +53,88 @@ export function LanguageSwitcher({
 		})
 	}
 
-	// Icon-only trigger (for header/navbar)
-	if (variant === 'icon') {
-		return (
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<Button
-						variant="ghost"
-						size="icon"
-						className={cn(
-							'relative h-11 w-11 rounded-full',
-							'hover:bg-muted',
-							isPending && 'pointer-events-none opacity-50',
-							className,
-						)}
-						aria-label={t('changeLanguage')}
-					>
-						<Languages className="h-5 w-5" aria-hidden="true" />
-						{isPending && (
-							<span className="absolute inset-0 flex items-center justify-center">
-								<span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-							</span>
-						)}
-					</Button>
-				</DropdownMenuTrigger>
-				<LanguageDropdownContent
-					currentLocale={locale}
-					onSelect={handleLocaleChange}
-					isPending={isPending}
-				/>
-			</DropdownMenu>
-		)
-	}
-
-	// Button trigger with text (for settings page)
-	if (variant === 'button') {
-		return (
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<Button
-						variant="outline"
-						className={cn(
-							'h-11 min-w-[180px] justify-between gap-3 px-4',
-							tone === 'inverse' &&
-								'border-white/25 bg-transparent text-white hover:border-white/40 hover:bg-white/10',
-							isPending && 'pointer-events-none opacity-50',
-							className,
-						)}
-						// WCAG 2.5.3: the name starts with the visible label.
-						aria-label={`${localeNames[locale]}, ${t('changeLanguage')}`}
-					>
-						<span className="flex items-center gap-3">
-							<Languages className="h-5 w-5 shrink-0" aria-hidden="true" />
-							<span className="truncate">{localeNames[locale]}</span>
-						</span>
-						<ChevronDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
-					</Button>
-				</DropdownMenuTrigger>
-				<LanguageDropdownContent
-					currentLocale={locale}
-					onSelect={handleLocaleChange}
-					isPending={isPending}
-				/>
-			</DropdownMenu>
-		)
-	}
-
-	// Inline variant (for inline text with current language)
-	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<button
-					type="button"
+	const trigger = (extra?: Record<string, unknown>) => {
+		// Icon-only trigger (for header/navbar)
+		if (variant === 'icon') {
+			return (
+				<Button
+					variant="ghost"
+					size="icon"
 					className={cn(
-						'inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm font-medium',
-						'text-primary underline-offset-4 hover:underline',
-						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+						'relative h-11 w-11 rounded-full',
+						'hover:bg-muted',
 						isPending && 'pointer-events-none opacity-50',
 						className,
 					)}
-					aria-label={`${localeShortNames[locale]}, ${t('changeLanguage')}`}
+					aria-label={t('changeLanguage')}
+					{...extra}
 				>
-					<Languages className="h-4 w-4" aria-hidden="true" />
-					<span>{localeShortNames[locale]}</span>
-				</button>
-			</DropdownMenuTrigger>
-			<LanguageDropdownContent
+					<Languages className="h-5 w-5" aria-hidden="true" />
+					{isPending && (
+						<span className="absolute inset-0 flex items-center justify-center">
+							<span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+						</span>
+					)}
+				</Button>
+			)
+		}
+
+		// Button trigger with text (for settings page)
+		if (variant === 'button') {
+			return (
+				<Button
+					variant="outline"
+					className={cn(
+						'h-11 min-w-[180px] justify-between gap-3 px-4',
+						tone === 'inverse' &&
+							'border-white/25 bg-transparent text-white hover:border-white/40 hover:bg-white/10',
+						isPending && 'pointer-events-none opacity-50',
+						className,
+					)}
+					// WCAG 2.5.3: the name starts with the visible label.
+					aria-label={`${localeNames[locale]}, ${t('changeLanguage')}`}
+					{...extra}
+				>
+					<span className="flex items-center gap-3">
+						<Languages className="h-5 w-5 shrink-0" aria-hidden="true" />
+						<span className="truncate">{localeNames[locale]}</span>
+					</span>
+					<ChevronDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
+				</Button>
+			)
+		}
+
+		// Inline variant (for inline text with current language)
+		return (
+			<button
+				type="button"
+				className={cn(
+					'inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm font-medium',
+					'text-primary underline-offset-4 hover:underline',
+					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+					isPending && 'pointer-events-none opacity-50',
+					className,
+				)}
+				aria-label={`${localeShortNames[locale]}, ${t('changeLanguage')}`}
+				{...extra}
+			>
+				<Languages className="h-4 w-4" aria-hidden="true" />
+				<span>{localeShortNames[locale]}</span>
+			</button>
+		)
+	}
+
+	const plainTrigger = trigger(triggerProps)
+	if (!opened) return plainTrigger
+
+	return (
+		<Suspense fallback={plainTrigger}>
+			<LanguageMenu
+				trigger={trigger()}
 				currentLocale={locale}
 				onSelect={handleLocaleChange}
 				isPending={isPending}
 			/>
-		</DropdownMenu>
-	)
-}
-
-// ==========================================
-// Dropdown Content
-// ==========================================
-
-interface LanguageDropdownContentProps {
-	currentLocale: Locale
-	onSelect: (locale: Locale) => void
-	isPending: boolean
-}
-
-function LanguageDropdownContent({
-	currentLocale,
-	onSelect,
-	isPending,
-}: LanguageDropdownContentProps) {
-	const t = useTranslations('common')
-
-	return (
-		<DropdownMenuContent align="end" className="w-64 p-2" sideOffset={8}>
-			{/* Header */}
-			<div className="mb-2 flex items-center gap-2 px-2 py-1.5">
-				<Languages className="h-4 w-4 text-muted-foreground" />
-				<span className="text-sm font-medium">{t('selectLanguage')}</span>
-			</div>
-
-			<DropdownMenuSeparator />
-
-			{/* English Group */}
-			<DropdownMenuGroup>
-				<DropdownMenuLabel className="px-2 text-xs font-normal text-muted-foreground">
-					English
-				</DropdownMenuLabel>
-				{localeGroups.english.map((loc) => (
-					<LanguageMenuItem
-						key={loc}
-						locale={loc}
-						isSelected={currentLocale === loc}
-						onSelect={onSelect}
-						disabled={isPending}
-					/>
-				))}
-			</DropdownMenuGroup>
-
-			<DropdownMenuSeparator className="my-2" />
-
-			{/* Chinese Group */}
-			<DropdownMenuGroup>
-				<DropdownMenuLabel className="px-2 text-xs font-normal text-muted-foreground">
-					中文
-				</DropdownMenuLabel>
-				{localeGroups.chinese.map((loc) => (
-					<LanguageMenuItem
-						key={loc}
-						locale={loc}
-						isSelected={currentLocale === loc}
-						onSelect={onSelect}
-						disabled={isPending}
-					/>
-				))}
-			</DropdownMenuGroup>
-
-			<DropdownMenuSeparator className="my-2" />
-
-			{/* Other languages: each is listed in its own language */}
-			<DropdownMenuGroup>
-				<DropdownMenuLabel className="px-2 text-xs font-normal text-muted-foreground">
-					More languages
-				</DropdownMenuLabel>
-				{localeGroups.other.map((loc) => (
-					<LanguageMenuItem
-						key={loc}
-						locale={loc}
-						isSelected={currentLocale === loc}
-						onSelect={onSelect}
-						disabled={isPending}
-					/>
-				))}
-			</DropdownMenuGroup>
-
-			{/* Footer note */}
-			<DropdownMenuSeparator className="my-2" />
-			<p className="px-2 py-1.5 text-xs text-muted-foreground">{t('languageChangeNote')}</p>
-		</DropdownMenuContent>
-	)
-}
-
-// ==========================================
-// Menu Item
-// ==========================================
-
-interface LanguageMenuItemProps {
-	locale: Locale
-	isSelected: boolean
-	onSelect: (locale: Locale) => void
-	disabled?: boolean
-}
-
-function LanguageMenuItem({ locale, isSelected, onSelect, disabled }: LanguageMenuItemProps) {
-	return (
-		<DropdownMenuItem
-			className={cn(
-				'flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5',
-				'focus:bg-accent',
-				isSelected && 'bg-accent/50',
-			)}
-			onSelect={() => onSelect(locale)}
-			disabled={disabled}
-		>
-			<span className="flex h-6 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-[10px] font-semibold uppercase text-muted-foreground">
-				{localeBadges[locale]}
-			</span>
-			<div className="flex flex-1 flex-col gap-0.5">
-				<span className={cn('text-sm', isSelected && 'font-medium')}>{localeNames[locale]}</span>
-				{/* Show region hint for Chinese variants */}
-				{locale === 'zh-HK' && <span className="text-xs text-muted-foreground">Hong Kong</span>}
-				{locale === 'zh-TW' && <span className="text-xs text-muted-foreground">Taiwan</span>}
-				{locale === 'zh-CN' && (
-					<span className="text-xs text-muted-foreground">Mainland China</span>
-				)}
-			</div>
-			{isSelected && <Check className="h-4 w-4 shrink-0 text-primary" />}
-		</DropdownMenuItem>
+		</Suspense>
 	)
 }
