@@ -7,7 +7,7 @@ import { defaultLocale, locales } from './config'
  *
  * URL Strategy:
  * - en-US (default): / (no prefix)
- * - Other locales: /en-gb/, /zh-hk/, /zh-tw/, /zh-cn/
+ * - Other locales: /en-gb/, /zh-hk/, /zh-tw/, /zh-cn/, /ja/, /es/, /pt-br/
  *
  * The locale prefix uses lowercase for cleaner URLs
  */

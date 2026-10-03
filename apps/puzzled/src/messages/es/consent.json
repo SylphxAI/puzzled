@@ -7,6 +7,6 @@
 	"analyticsLabel": "Cookies de analítica",
 	"analyticsHint": "Cuentan cómo se juegan los puzles.",
 	"marketingLabel": "Cookies publicitarias",
-	"marketingHint": "Nos permiten saber si nuestros anuncios de Google generan registros. Desactivadas por defecto.",
+	"marketingHint": "Miden si los anuncios de Google traen registros. Desactivadas por defecto.",
 	"change": "Cambiar elección de cookies"
 }

@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { resolveLocale } from '../../../../scripts/i18n-resolved-catalogue'
 import { DISMISSED_COOKIE } from '../lib/dismissed'
 
-const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN'] as const
+const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN', 'ja', 'es', 'pt-BR'] as const
 let locale: (typeof LOCALES)[number] = 'en-US'
 
 mock.module('next-intl', () => ({

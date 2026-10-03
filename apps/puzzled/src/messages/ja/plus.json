@@ -35,7 +35,7 @@
 		"legal": "表示価格にはVATが含まれます。販売元：Sylphx Limited（イングランド・ウェールズ登録）。サブスクリプションは、設定で解約するまで自動的に更新されます。",
 		"checkoutCancelled": "お支払いはキャンセルされました。料金は請求されていません。",
 		"alreadySubscribed": "すでにPuzzled Plusをご利用中です。",
-		"immediateSupplyConsent": "すぐに利用を開始したいため、14日間のクーリングオフの権利を失うことを理解しました。",
+		"immediateSupplyConsent": "すぐに利用を開始したいため、14日間の解約権を失うことを理解しました。",
 		"consentRequired": "続けるには、チェックボックスにチェックを入れてください。"
 	},
 	"trial": {

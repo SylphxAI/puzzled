@@ -7,6 +7,6 @@
 	"analyticsLabel": "解析Cookie",
 	"analyticsHint": "パズルの遊ばれ方を集計します。",
 	"marketingLabel": "広告Cookie",
-	"marketingHint": "Google広告から登録につながったかを確認するために使います。初期設定ではオフです。",
+	"marketingHint": "Google広告の成果を確認します。初期設定ではオフです。",
 	"change": "Cookieの選択を変更"
 }
