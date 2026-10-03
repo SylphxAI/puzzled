@@ -1,0 +1,15 @@
+{
+	"name": "Path",
+	"tagline": "Passe de 1 a n • Sem cruzar",
+	"highlight": "Caminho numerado",
+	"description": "Trace um caminho por todas as células, de 1 até n",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Comece no 1 e passe por todas as células exatamente uma vez, terminando no último número",
+		"rule2": "As células consecutivas devem se tocar para cima, para baixo, para a esquerda ou para a direita — sem diagonais",
+		"rule3": "As células numeradas são dicas fixas; passe por elas em ordem"
+	},
+	"startGame": "Começar jogo",
+	"complete": "Caminho completo!"
+}

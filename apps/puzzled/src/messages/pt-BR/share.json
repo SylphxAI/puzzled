@@ -1,0 +1,48 @@
+{
+	"title": "Compartilhe seu resultado",
+	"text": "Puzzled - {game}\n{result}",
+	"share": "Compartilhar",
+	"copy": "Copiar",
+	"card": {
+		"title": "Cartão de resultado do Puzzled",
+		"downloaded": "Imagem do cartão salva; legenda copiada para a área de transferência.",
+		"copied": "Legenda copiada para a área de transferência; este navegador não conseguiu gerar a imagem.",
+		"unavailable": "O compartilhamento não está disponível neste navegador.",
+		"statusWon": "Resolvido!",
+		"statusLost": "Dessa vez não",
+		"attemptsLabel": "Tentativas",
+		"scoreLabel": "Pontuação",
+		"streakLabel": "Sequência",
+		"timeLabel": "Tempo",
+		"mistakesLabel": "Erros",
+		"timeUnder1m": "Menos de um minuto",
+		"timeUnder5m": "1 a 5 minutos",
+		"timeOver5m": "Mais de 5 minutos",
+		"attemptsOf": "{attempts} de {max}",
+		"attemptsCount": "{attempts} tentativas",
+		"scorePoints": "{score} pontos",
+		"streakDays": "Sequência de {days} dias",
+		"patternSummary": "Padrão: {hit} certas / {near} perto / {miss} erradas",
+		"altOnDay": " em {day}",
+		"altTemplate": "Puzzled - {game}{day}. {result}",
+		"altDetailsTemplate": " {details}.",
+		"altLinkTemplate": " Jogue: {link}",
+		"detailSeparator": ", "
+	},
+	"challenge": {
+		"title": "Lado a lado",
+		"theirs": "Resultado dele(a)",
+		"yours": "Seu resultado"
+	},
+	"landing": {
+		"metaTitle": "Um resultado compartilhado",
+		"ogTitle": "{game}: um resultado para superar",
+		"metaDescription": "Veja o resultado de um amigo e jogue de graça o desafio de hoje do Puzzled.",
+		"eyebrow": "Um amigo compartilhou um resultado",
+		"titleSame": "Será que você consegue superar?",
+		"titleOther": "Veja como foi e jogue o desafio de hoje",
+		"bodySame": "Mesmo desafio, mesmo dia. Jogue de graça, sem precisar de conta, e veja os dois resultados lado a lado.",
+		"bodyOther": "Esse desafio é de outro dia. O desafio grátis de hoje está pronto, sem precisar de conta.",
+		"note": "Os resultados compartilhados nunca incluem a resposta."
+	}
+}

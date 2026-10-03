@@ -145,7 +145,7 @@ impl PreferencesService for PreferencesConnectService {
             || (!req.locale.is_empty()
                 && !matches!(
                     req.locale.as_str(),
-                    "en-US" | "en-GB" | "zh-HK" | "zh-TW" | "zh-CN"
+                    "en-US" | "en-GB" | "zh-HK" | "zh-TW" | "zh-CN" | "ja" | "es" | "pt-BR"
                 ))
         {
             return Err(ConnectError::new(

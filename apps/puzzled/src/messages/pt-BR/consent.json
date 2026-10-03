@@ -1,0 +1,12 @@
+{
+	"title": "Consentimento de análise",
+	"message": "Usamos o Google Analytics para contar as partidas; os cookies de publicidade ficam desativados, a menos que você os ative.",
+	"accept": "Aceitar",
+	"decline": "Recusar",
+	"learnMore": "Política de Privacidade",
+	"analyticsLabel": "Cookies de análise",
+	"analyticsHint": "Conta como os desafios são jogados.",
+	"marketingLabel": "Cookies de publicidade",
+	"marketingHint": "Nos ajudam a ver se nossos anúncios do Google levam a cadastros. Desativados por padrão.",
+	"change": "Alterar escolha de cookies"
+}
