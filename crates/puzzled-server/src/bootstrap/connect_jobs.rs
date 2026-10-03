@@ -19,16 +19,14 @@ use puzzled_core::puzzle_play::daily_time::product_day_key;
 
 /// Send the daily reminders due at `now`, each at the player's own reminder
 /// time in their own time zone (see [`jobs_db::claim_due_daily_reminders`]).
-/// Completed reminders suppress later ticks on the same local day. Leases
-/// recover interrupted workers; delivery-before-ack crashes may duplicate a
-/// reminder (at-least-once). Finished players are excluded when claimed.
+/// Safe to call as often as the schedule likes: a player is reminded once per
+/// local day, and never after finishing today's puzzle.
 pub async fn send_due_daily_reminders(
     pool: &sqlx::PgPool,
     now: chrono::DateTime<Utc>,
 ) -> Result<u32, Vec<String>> {
-    send_due_daily_reminders_with(pool, now, |user_id, deadline| async move {
-        crate::capabilities::preferences::adapters::web_push::send_daily(pool, &user_id, deadline)
-            .await
+    send_due_daily_reminders_with(pool, now, |user_id| async move {
+        crate::capabilities::preferences::adapters::web_push::send_daily(pool, &user_id).await
     })
     .await
 }
@@ -41,95 +39,32 @@ pub(crate) async fn send_due_daily_reminders_with<F, Fut>(
     mut send: F,
 ) -> Result<u32, Vec<String>>
 where
-    F: FnMut(String, tokio::time::Instant) -> Fut,
+    F: FnMut(String) -> Fut,
     Fut: std::future::Future<Output = Result<(), String>>,
 {
-    let started = tokio::time::Instant::now();
-    let elapsed_now = || {
-        chrono::Duration::from_std(started.elapsed())
-            .ok()
-            .and_then(|elapsed| now.checked_add_signed(elapsed))
-            .ok_or_else(|| vec!["daily reminder elapsed clock overflow".to_string()])
-    };
-    let mut claim_at = now;
-    let mut processed = 0u32;
-    let mut cursor = None;
+    let product_day = product_day_key(now).format("%Y-%m-%d").to_string();
+    let due = jobs_db::claim_due_daily_reminders(pool, now, &product_day)
+        .await
+        .map_err(|e| vec![e])?;
     let mut errors = Vec::new();
-    loop {
-        let product_day = product_day_key(claim_at).format("%Y-%m-%d").to_string();
-        let batch =
-            match jobs_db::claim_due_daily_reminders_after(pool, claim_at, &product_day, cursor)
-                .await
-            {
-                Ok(batch) => batch,
-                Err(error) => {
-                    errors.push(error);
-                    return Err(errors);
-                }
-            };
-        let Some(next_cursor) = batch.next_cursor else {
-            return if errors.is_empty() {
-                Ok(processed)
-            } else {
-                Err(errors)
-            };
-        };
-        cursor = Some(next_cursor);
-        for claim in batch.claims {
-            let user_id = &claim.user_id;
-            // Delivery returns success if any endpoint received the reminder;
-            // only a wholly unsuccessful retryable delivery releases this claim.
-            // Do not start abandoned batch work after its lease has expired.
-            // Keep the adapter's per-endpoint timeout: cancelling a whole player
-            // midway would discard its already-successful endpoint outcomes.
-            let delivery_started_at = elapsed_now()?;
-            let delivery_until = claim.lease_until - chrono::Duration::seconds(10);
-            if delivery_started_at >= delivery_until {
-                errors.push(format!("{user_id}: reminder lease expired before delivery"));
-                continue;
-            }
-            let budget = (delivery_until - delivery_started_at)
-                .to_std()
-                .map_err(|_| vec!["daily reminder deadline overflow".to_string()])?;
-            let deadline = tokio::time::Instant::now() + budget;
-            let lease_deadline = deadline + std::time::Duration::from_secs(10);
-            let delivery = send(user_id.clone(), deadline).await;
-            let completed_at = elapsed_now()?;
-            match delivery {
-                Ok(()) => {
-                    let acknowledgement = tokio::time::timeout_at(
-                        lease_deadline,
-                        jobs_db::acknowledge_daily_reminder(pool, &claim, completed_at),
-                    )
-                    .await
-                    .unwrap_or_else(|_| {
-                        Err("daily reminder acknowledgement deadline reached".to_string())
-                    });
-                    match acknowledgement {
-                        Ok(true) => processed += 1,
-                        Ok(false) => {
-                            errors.push(format!("{user_id}: reminder lease expired or replaced"))
-                        }
-                        Err(e) => errors.push(format!("{user_id} acknowledge: {e}")),
-                    }
-                }
-                Err(e) => {
-                    errors.push(format!("{user_id}: {e}"));
-                    let released = tokio::time::timeout_at(
-                        lease_deadline,
-                        jobs_db::release_daily_reminder(pool, &claim, completed_at),
-                    )
-                    .await
-                    .unwrap_or_else(|_| Err("daily reminder release deadline reached".to_string()));
-                    if let Err(release) = released {
-                        errors.push(format!("{user_id} release: {release}"));
-                    }
+    let mut processed = 0u32;
+    for (user_id, _time) in due {
+        // Delivery returns success if any endpoint received the reminder;
+        // only a wholly unsuccessful retryable delivery releases this claim.
+        match send(user_id.clone()).await {
+            Ok(()) => processed += 1,
+            Err(e) => {
+                errors.push(format!("{user_id}: {e}"));
+                if let Err(release) = jobs_db::release_daily_reminder(pool, &user_id).await {
+                    errors.push(format!("{user_id} release: {release}"));
                 }
             }
         }
-        // Keep progressing after failures. The invocation cursor advances past
-        // every candidate, so released players are retried only by a later tick.
-        claim_at = elapsed_now()?;
+    }
+    if errors.is_empty() {
+        Ok(processed)
+    } else {
+        Err(errors)
     }
 }
 
@@ -317,7 +252,7 @@ mod tests {
             let result = send_due_daily_reminders_with(
                 &pool,
                 now + chrono::Duration::minutes(tick * 15),
-                |user_id, _deadline| {
+                |user_id| {
                     let pool = &pool;
                     let sender = &sender;
                     async move {
@@ -373,141 +308,5 @@ mod tests {
     #[tokio::test]
     async fn all_failed_releases_daily_claim_for_next_tick_retry() {
         consecutive_reminder_ticks(false).await;
-    }
-    #[tokio::test]
-    async fn cancelled_worker_and_reconstructed_worker_recover_the_unacknowledged_batch() {
-        use crate::capabilities::jobs::adapters::jobs_db::REMINDER_LEASE_SECONDS;
-        let Some(pool) = fresh_database().await else {
-            return;
-        };
-        for _ in 0..3 {
-            sqlx::query("INSERT INTO notification_preferences (user_id, push_enabled, push_daily_reminder, daily_reminder_time, timezone) VALUES ($1, true, true, '08:00', 'UTC')")
-                .bind(Uuid::now_v7()).execute(&pool).await.unwrap();
-        }
-        let now = "2026-10-01T08:00:00Z".parse().unwrap();
-        let (entered, started) = tokio::sync::oneshot::channel();
-        let worker_pool = pool.clone();
-        let worker = tokio::spawn(async move {
-            let mut entered = Some(entered);
-            let mut attempts = 0;
-            send_due_daily_reminders_with(&worker_pool, now, |_, _| {
-                attempts += 1;
-                let first = attempts == 1;
-                if !first {
-                    if let Some(entered) = entered.take() {
-                        entered.send(()).unwrap();
-                    }
-                }
-                async move {
-                    if first {
-                        Ok(())
-                    } else {
-                        std::future::pending::<Result<(), String>>().await
-                    }
-                }
-            })
-            .await
-        });
-        started.await.unwrap();
-        worker.abort();
-        assert!(worker.await.unwrap_err().is_cancelled());
-        let delivered: i64 = sqlx::query_scalar(
-            "SELECT count(*) FROM notification_preferences WHERE last_daily_reminder_on IS NOT NULL",
-        )
-        .fetch_one(&pool)
-        .await
-        .unwrap();
-        assert_eq!(delivered, 1);
-        // Reconstruct the executor with no in-memory claim state. It cannot steal
-        // live leases; expiry recovers only the two not acknowledged as delivered.
-        assert_eq!(
-            send_due_daily_reminders_with(&pool, now, |_, _| async { Ok(()) })
-                .await
-                .unwrap(),
-            0
-        );
-        let retried = now + chrono::Duration::seconds(REMINDER_LEASE_SECONDS);
-        assert_eq!(
-            send_due_daily_reminders_with(&pool, retried, |_, _| async { Ok(()) })
-                .await
-                .unwrap(),
-            2
-        );
-        assert_eq!(
-            send_due_daily_reminders_with(&pool, retried, |_, _| async { Ok(()) })
-                .await
-                .unwrap(),
-            0
-        );
-    }
-
-    #[tokio::test]
-    async fn successful_tick_drains_more_than_one_bounded_batch() {
-        use crate::capabilities::jobs::adapters::jobs_db::REMINDER_CLAIM_BATCH;
-        let Some(pool) = fresh_database().await else {
-            return;
-        };
-        for _ in 0..(REMINDER_CLAIM_BATCH + 1) {
-            sqlx::query("INSERT INTO notification_preferences (user_id, push_enabled, push_daily_reminder, daily_reminder_time, timezone) VALUES ($1, true, true, '08:00', 'UTC')")
-                .bind(Uuid::now_v7()).execute(&pool).await.unwrap();
-        }
-        let now = "2026-10-01T08:00:00Z".parse().unwrap();
-        assert_eq!(
-            send_due_daily_reminders_with(&pool, now, |_, _| async { Ok(()) })
-                .await
-                .unwrap(),
-            (REMINDER_CLAIM_BATCH + 1) as u32
-        );
-        assert_eq!(
-            send_due_daily_reminders_with(&pool, now, |_, _| async { Ok(()) })
-                .await
-                .unwrap(),
-            0
-        );
-    }
-    #[tokio::test]
-    async fn failing_first_batch_does_not_starve_player_seventeen_or_retry_releases() {
-        use crate::capabilities::jobs::adapters::jobs_db::REMINDER_CLAIM_BATCH;
-        let Some(pool) = fresh_database().await else {
-            return;
-        };
-        for i in 1..=(REMINDER_CLAIM_BATCH + 1) {
-            sqlx::query("INSERT INTO notification_preferences (user_id, push_enabled, push_daily_reminder, daily_reminder_time, timezone) VALUES ($1, true, true, '08:00', 'UTC')")
-                .bind(Uuid::from_u128(i as u128)).execute(&pool).await.unwrap();
-        }
-        let now = "2026-10-01T08:00:00Z".parse().unwrap();
-        let mut attempts = Vec::new();
-        let result = send_due_daily_reminders_with(&pool, now, |user_id, _| {
-            let user = Uuid::parse_str(&user_id).unwrap();
-            attempts.push(user);
-            async move {
-                if user.as_u128() == (REMINDER_CLAIM_BATCH + 1) as u128 {
-                    Ok(())
-                } else {
-                    Err("retryable failure".to_string())
-                }
-            }
-        })
-        .await;
-        assert_eq!(result.unwrap_err().len(), REMINDER_CLAIM_BATCH as usize);
-        assert_eq!(attempts.len(), (REMINDER_CLAIM_BATCH + 1) as usize);
-        assert_eq!(
-            attempts
-                .iter()
-                .copied()
-                .collect::<std::collections::HashSet<_>>()
-                .len(),
-            attempts.len()
-        );
-        let delivered: Vec<Uuid> = sqlx::query_scalar(
-            "SELECT user_id FROM notification_preferences WHERE last_daily_reminder_on IS NOT NULL",
-        )
-        .fetch_all(&pool)
-        .await
-        .unwrap();
-        assert_eq!(
-            delivered,
-            vec![Uuid::from_u128((REMINDER_CLAIM_BATCH + 1) as u128)]
-        );
     }
 }
