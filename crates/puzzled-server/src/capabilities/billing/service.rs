@@ -120,17 +120,35 @@ mod tests {
 
     const USER: &str = "0192a000-0000-7000-8000-000000000001";
 
-    async fn finish_day(pool: &PgPool, day: &str) {
+    async fn session_on(pool: &PgPool, day: &str, status: &str) {
         sqlx::query(
-            r#"INSERT INTO "game_sessions" ("user_id", "game_slug", "day_key", "is_ritual")
-               VALUES ($1::uuid, $2, $3, true)"#,
+            r#"INSERT INTO "game_sessions" ("user_id", "game_slug", "day_key", "is_ritual", "status")
+               VALUES ($1::uuid, $2, $3, true, $4::game_status)"#,
         )
         .bind(USER)
         .bind(format!("game-{day}"))
         .bind(day)
+        .bind(status)
         .execute(pool)
         .await
         .unwrap();
+    }
+
+    async fn finish_day(pool: &PgPool, day: &str) {
+        session_on(pool, day, "won").await;
+    }
+
+    #[tokio::test]
+    async fn only_won_or_lost_days_count_as_finished() {
+        let Some(pool) = crate::test_support::fresh_database().await else {
+            return;
+        };
+        session_on(&pool, "2026-10-01", "won").await;
+        session_on(&pool, "2026-10-02", "lost").await;
+        session_on(&pool, "2026-10-03", "in_progress").await;
+        assert_eq!(billing_db::finished_days(&pool, USER).await.unwrap(), 2);
+        // Started-only days never reach the three-day threshold.
+        assert_eq!(reverse_trial_ends_ms(&pool, USER, 1, true).await, None);
     }
 
     #[tokio::test]
