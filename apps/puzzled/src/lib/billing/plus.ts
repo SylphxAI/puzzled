@@ -158,3 +158,26 @@ export function trialEndDate(
 export function showsCurrentPlan(access: PlusAccess | null | undefined): boolean {
 	return Boolean(access?.entitled) && !access?.trialEndsMs
 }
+
+/** The banner shows in the last three days of a paid trial. */
+export const TRIAL_BANNER_WINDOW_MS = 3 * 86_400_000
+
+/**
+ * When the "trial ends" banner applies, the trial's end (epoch ms), else null.
+ * Only a trialing subscription that will still convert: nothing once the
+ * viewer has cancelled, more than three days out, or after the end. Money's
+ * period end while `trialing` is the trial end.
+ */
+export function trialBannerEndMs(
+	sub: { status: string | null; cancelAtPeriodEnd: boolean; periodEndMs: number | null },
+	nowMs: number,
+): number | null {
+	if (sub.status !== 'trialing' || sub.cancelAtPeriodEnd || !sub.periodEndMs) return null
+	const left = sub.periodEndMs - nowMs
+	return left > 0 && left <= TRIAL_BANNER_WINDOW_MS ? sub.periodEndMs : null
+}
+
+/** The end date in the viewer's locale and time zone (the client passes no zone: the browser's own). */
+export function formatTrialEnd(endMs: number, locale: string, timeZone?: string): string {
+	return new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone }).format(new Date(endMs))
+}
