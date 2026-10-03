@@ -4,6 +4,7 @@ import { ExternalLink } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { rememberCheckoutQuote } from '@/features/analytics/lib/google-tag'
+import { trackCheckoutStarted, trackOfferClicked } from '@/features/analytics/lib/plus-funnel'
 import { startCheckout } from '@/lib/connect/billing-client'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
@@ -13,6 +14,8 @@ type Props = {
 	currency: string
 	/** The plan's price in `currency`, minor units: what a trial converts to. */
 	amountMinor: number
+	interval: 'month' | 'year'
+	trial: boolean
 	locale: string
 	signedIn: boolean
 	subscribed: boolean
@@ -24,6 +27,8 @@ export function SubscribeButton({
 	planId,
 	currency,
 	amountMinor,
+	interval,
+	trial,
 	locale,
 	signedIn,
 	subscribed,
@@ -79,6 +84,8 @@ export function SubscribeButton({
 							value: amountMinor / 100,
 							currency: currency.toUpperCase(),
 						})
+						trackOfferClicked('pricing')
+						trackCheckoutStarted({ plan: planId, interval, trial })
 						window.location.assign(await startCheckout(planId, locale, currency, consent))
 					} catch (err) {
 						logger.error('plus.checkout-failed', { planId, error: err })

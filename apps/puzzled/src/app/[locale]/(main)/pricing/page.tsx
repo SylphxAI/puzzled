@@ -26,6 +26,7 @@ import { withPresentationDeadline } from '@/lib/presentation-document'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
 import { cn } from '@/lib/utils'
 import { CurrencySwitcher } from './currency-switcher'
+import { PricingFunnelTracker } from './pricing-funnel-tracker'
 import { SubscribeButton } from './subscribe-button'
 
 type Props = {
@@ -103,6 +104,9 @@ export default async function PricingPage({ params, searchParams }: Props) {
 
 	return (
 		<main className="flex-1">
+			{cards.length > 0 && !showsCurrentPlan(access) ? (
+				<PricingFunnelTracker cancelled={checkout === 'cancelled'} />
+			) : null}
 			<MarketingHero
 				eyebrow={tPlus('name')}
 				title={t('title')}
@@ -235,6 +239,8 @@ export default async function PricingPage({ params, searchParams }: Props) {
 														planId={card.id}
 														currency={card.currency}
 														amountMinor={card.amountMinor}
+														interval={card.interval === 'year' ? 'year' : 'month'}
+														trial={card.trialDays > 0}
 														locale={locale}
 														signedIn={Boolean(user)}
 														subscribed={showsCurrentPlan(access)}

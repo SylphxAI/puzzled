@@ -127,6 +127,8 @@ export type GoogleTagController = {
 		params: Record<string, unknown>,
 		options?: { analyticsOnly?: boolean },
 	): boolean
+	/** A product event to GA4 only, and only with analytics consent (never to Ads). */
+	analyticsEvent(name: string, params: Record<string, unknown>): boolean
 	/** Has the visitor granted anything a Google destination could use? */
 	hasConsent(): boolean
 }
@@ -135,6 +137,8 @@ export type GoogleTagController = {
 function safeText(value: string): string {
 	return value.replace(/[^A-Za-z0-9_.:-]/g, '').slice(0, 100)
 }
+
+const FUNNEL_SURFACES = new Set(['result_card', 'day3', 'day7', 'pricing'])
 
 const OPAQUE_ID = /^[A-Za-z0-9_-]{6,128}$/
 
@@ -155,6 +159,22 @@ export function cleanEventParams(params: Record<string, unknown>): Record<string
 		else if (key === 'vital_route' && typeof value === 'string')
 			out[key] = value.replace(/[^A-Za-z0-9/[\]-]/g, '').slice(0, 40)
 		else if (key === 'vital_value' && typeof value === 'number' && Number.isFinite(value))
+			out[key] = value
+		else if (key === 'surface' && typeof value === 'string' && FUNNEL_SURFACES.has(value))
+			out[key] = value
+		else if (
+			key === 'interval' &&
+			typeof value === 'string' &&
+			(value === 'month' || value === 'year')
+		)
+			out[key] = value
+		else if (key === 'trial' && typeof value === 'string' && (value === 'yes' || value === 'no'))
+			out[key] = value
+		else if (
+			key === 'outcome' &&
+			typeof value === 'string' &&
+			(value === 'success' || value === 'cancel')
+		)
 			out[key] = value
 		else if (key === 'user_id' && typeof value === 'string' && OPAQUE_ID.test(value))
 			out[key] = value
@@ -275,6 +295,11 @@ export function createGoogleTag(input: {
 			gtag('event', name, { ...cleanEventParams(params), send_to: sendTo })
 			return true
 		},
+		analyticsEvent(name, params) {
+			if (!loaded || !gaOn || !ids.ga) return false
+			gtag('event', name, { ...cleanEventParams(params), send_to: [ids.ga] })
+			return true
+		},
 	}
 }
 
@@ -288,6 +313,11 @@ export function setActiveGoogleTag(controller: GoogleTagController | null): void
 /** The controller conversion helpers and the vitals reporter talk to. */
 export function getActiveGoogleTag(): GoogleTagController | null {
 	return active
+}
+
+/** Send a product event to GA4 through the active tag; false without consent. */
+export function sendAnalyticsEvent(name: string, params: Record<string, unknown>): boolean {
+	return active?.analyticsEvent(name, params) ?? false
 }
 
 export type CheckoutQuote = { plan: string; value: number; currency: string }
