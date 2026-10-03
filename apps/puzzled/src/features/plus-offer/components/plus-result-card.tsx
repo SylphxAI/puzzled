@@ -2,6 +2,8 @@
 
 import { Crown } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useEffect } from 'react'
+import { trackOfferClicked, trackOfferShown } from '@/features/analytics/lib/plus-funnel'
 import { Link } from '@/lib/i18n/routing'
 import { showResultPlusCard } from '../lib/plus-offer'
 import { usePlusOffer } from './plus-offer-context'
@@ -21,7 +23,11 @@ export function PlusResultCard({
 	const t = useTranslations('plus.offer')
 	const tUnlock = useTranslations('plus.unlock')
 	const offer = usePlusOffer()
-	if (!offer || !showResultPlusCard(offer, { mode, gameSlug })) return null
+	const visible = Boolean(offer && showResultPlusCard(offer, { mode, gameSlug }))
+	useEffect(() => {
+		if (visible) trackOfferShown('result_card')
+	}, [visible])
+	if (!offer || !visible) return null
 	return (
 		<section
 			aria-labelledby="plus-result-title"
@@ -37,6 +43,7 @@ export function PlusResultCard({
 			<p className="mt-1 text-sm text-muted-foreground">{t('resultBody')}</p>
 			<Link
 				href="/pricing"
+				onClick={() => trackOfferClicked('result_card')}
 				className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-primary px-5 font-semibold text-primary-foreground"
 			>
 				{tUnlock('cta')}

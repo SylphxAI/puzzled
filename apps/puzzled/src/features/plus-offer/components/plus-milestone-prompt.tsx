@@ -3,6 +3,7 @@
 import { Crown, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
+import { trackOfferClicked, trackOfferShown } from '@/features/analytics/lib/plus-funnel'
 import {
 	addDismissed,
 	DISMISSED_COOKIE,
@@ -50,6 +51,7 @@ export function PlusMilestonePrompt({
 
 	useEffect(() => {
 		recordSeen(milestone)
+		trackOfferShown(milestone >= 7 ? 'day7' : 'day3')
 	}, [milestone])
 
 	if (!open) return null
@@ -81,7 +83,10 @@ export function PlusMilestonePrompt({
 			</p>
 			<Link
 				href="/pricing"
-				onClick={() => setOpen(false)}
+				onClick={() => {
+					trackOfferClicked(milestone >= 7 ? 'day7' : 'day3')
+					setOpen(false)
+				}}
 				className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-primary px-5 font-semibold text-primary-foreground"
 			>
 				{tUnlock('cta')}
