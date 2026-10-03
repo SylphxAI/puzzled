@@ -18,9 +18,10 @@ pub fn valid_endpoint(endpoint: &str) -> bool {
         && url.password().is_none()
         && url.fragment().is_none()
         && endpoint.len() <= 4096
-        && PUSH_SERVICE_SUFFIXES
-            .iter()
-            .any(|suffix| host.strip_suffix(suffix).is_some_and(|label| !label.is_empty()))
+        && PUSH_SERVICE_SUFFIXES.iter().any(|suffix| {
+            host.strip_suffix(suffix)
+                .is_some_and(|label| !label.is_empty())
+        })
 }
 
 // Browser push services publish many regional hosts (Chrome now hands out
