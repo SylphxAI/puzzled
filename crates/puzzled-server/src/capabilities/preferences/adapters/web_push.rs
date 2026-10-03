@@ -18,11 +18,21 @@ pub fn valid_endpoint(endpoint: &str) -> bool {
         && url.password().is_none()
         && url.fragment().is_none()
         && endpoint.len() <= 4096
-        && (host == "fcm.googleapis.com"
-            || host == "updates.push.services.mozilla.com"
-            || host == "web.push.apple.com"
-            || host.ends_with(".notify.windows.com"))
+        && PUSH_SERVICE_SUFFIXES
+            .iter()
+            .any(|suffix| host.strip_suffix(suffix).is_some_and(|label| !label.is_empty()))
 }
+
+// Browser push services publish many regional hosts (Chrome now hands out
+// hosts such as jmt17.google.com), so match by domain suffix on a label
+// boundary. IP literals never end in these suffixes.
+const PUSH_SERVICE_SUFFIXES: [&str; 5] = [
+    ".googleapis.com",
+    ".google.com",
+    ".push.services.mozilla.com",
+    ".push.apple.com",
+    ".notify.windows.com",
+];
 
 pub fn valid_keys(p256dh: &str, auth: &str) -> bool {
     URL_SAFE_NO_PAD
@@ -256,8 +266,24 @@ mod tests {
             "https://fcm.googleapis.com/fcm/send/test",
             "https://updates.push.services.mozilla.com/wpush/v2/test",
             "https://web.push.apple.com/test",
+            "https://jmt17.google.com/fcm/send/test",
+            "https://wns2-par02p.notify.windows.com/w/?token=x",
+            "https://api.push.apple.com/3/device/x",
         ] {
-            assert!(valid_endpoint(url));
+            assert!(valid_endpoint(url), "{url}");
+        }
+        for url in [
+            "https://google.com/x",
+            "https://evilgoogle.com/x",
+            "https://fcm.googleapis.com.evil.com/x",
+            "https://evil.com/.google.com",
+            "http://jmt17.google.com/x",
+            "https://[::1]/x",
+            "https://127.0.0.1/x",
+            "https://jmt17.google.com:8443/x",
+            "https://u:p@jmt17.google.com/x",
+        ] {
+            assert!(!valid_endpoint(url), "{url}");
         }
     }
     #[test]
