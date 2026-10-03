@@ -14,7 +14,7 @@ pub mod capabilities;
 pub mod observability;
 pub mod shared;
 
-pub use bootstrap::{http_port, request_shutdown, router, shutdown_signal, AppState};
+pub use bootstrap::{drain_tasks, http_port, request_shutdown, router, shutdown_signal, AppState};
 pub use shared::db_config;
 
 // Compatibility re-exports used by binary and integration surfaces.

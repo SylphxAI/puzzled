@@ -1,0 +1,19 @@
+{
+	"name": "Quad",
+	"tagline": "4 palabras • 9 intentos",
+	"highlight": "Cada intento juega las cuatro palabras",
+	"description": "Resuelve 4 palabras ocultas a la vez",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Adivina las 4 palabras ocultas en 9 intentos",
+		"rule2": "Cada intento se aplica a los 4 tableros",
+		"rule3": "Verde = correcta, amarillo = posición incorrecta, gris = no está en la palabra"
+	},
+	"startGame": "Empezar partida",
+	"complete": "¡Puzle completado!",
+	"messages": {
+		"notEnoughLetters": "Faltan letras",
+		"notInWordList": "No está en la lista de palabras"
+	}
+}

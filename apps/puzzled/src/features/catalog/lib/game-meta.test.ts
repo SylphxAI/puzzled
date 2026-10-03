@@ -52,7 +52,16 @@ describe('game page search metadata', () => {
 	})
 
 	test('every locale fills every placeholder', () => {
-		for (const locale of ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN'] as const) {
+		for (const locale of [
+			'en-US',
+			'en-GB',
+			'zh-HK',
+			'zh-TW',
+			'zh-CN',
+			'ja',
+			'es',
+			'pt-BR',
+		] as const) {
 			const t = reader(locale)
 			for (const meta of getAllGameMetadata()) {
 				const copy = gameCopy(locale, meta.slug)

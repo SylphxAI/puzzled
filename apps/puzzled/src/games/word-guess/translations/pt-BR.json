@@ -1,0 +1,26 @@
+{
+	"name": "Five",
+	"tagline": "5 letras • 6 tentativas",
+	"highlight": "6 palpites",
+	"description": "Descubra a palavra de 5 letras em 6 tentativas",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Descubra a palavra em 6 tentativas",
+		"rule2": "Cada palpite precisa ser uma palavra válida de 5 letras",
+		"rule3": "A cor dos quadradinhos muda para mostrar o quanto você chegou perto",
+		"correct": "Verde significa que a letra está certa",
+		"present": "Amarelo significa que a letra está na palavra, mas no lugar errado",
+		"absent": "Cinza significa que a letra não está na palavra"
+	},
+	"keyboard": {
+		"enter": "Enter",
+		"delete": "Apagar"
+	},
+	"messages": {
+		"notEnoughLetters": "Letras insuficientes",
+		"notInWordList": "Não está na lista de palavras",
+		"correct": "Excelente!",
+		"gameOver": "A palavra era {word}"
+	}
+}

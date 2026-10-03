@@ -1,0 +1,24 @@
+{
+	"name": "Rungs",
+	"tagline": "Passo a passo • Corrente de palavras",
+	"highlight": "Corrente de palavras",
+	"description": "Transforme uma palavra em outra, uma letra por vez",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Mude uma letra por vez",
+		"rule2": "Cada passo deve formar uma palavra válida",
+		"rule3": "Chegue à palavra-alvo no menor número de passos possível"
+	},
+	"startGame": "Começar jogo",
+	"enterWord": "Digite uma palavra...",
+	"submit": "Ir",
+	"undo": "Desfazer",
+	"complete": "Você conseguiu!",
+	"messages": {
+		"notInList": "Não é uma palavra válida",
+		"wrongLength": "A palavra deve ter o mesmo tamanho",
+		"notOneChange": "Mude exatamente uma letra",
+		"alreadyUsed": "Você já usou esta palavra"
+	}
+}

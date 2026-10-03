@@ -407,6 +407,10 @@ export const notificationPreferences = pgTable('notification_preferences', {
 	timezone: text('timezone'),
 	/** Local date of the last daily reminder sent (one per local day) */
 	lastDailyReminderOn: date('last_daily_reminder_on', { mode: 'string' }),
+	/** Fenced, expiring Jobs claim; delivery is recorded only on success. */
+	dailyReminderClaimToken: uuid('daily_reminder_claim_token'),
+	dailyReminderClaimOn: date('daily_reminder_claim_on', { mode: 'string' }),
+	dailyReminderLeaseUntil: timestamp('daily_reminder_lease_until', { withTimezone: true }),
 
 	// Email Notifications
 	/** Master email toggle */
@@ -805,6 +809,17 @@ export const checkoutConsents = pgTable(
 	},
 	(t) => [index('checkout_consents_user_id_idx').on(t.userId)],
 )
+
+/**
+ * The reverse trial: every game for seven days after a player's third finished
+ * day. One row per account is the one-grant rule; it stays after the trial ends.
+ */
+export const plusTrials = pgTable('plus_trials', {
+	/** Platform user ID (no FK) */
+	userId: uuid('user_id').primaryKey(),
+	startedAt: timestamp('started_at').defaultNow().notNull(),
+	endsAt: timestamp('ends_at').notNull(),
+})
 
 /** A family plan owner and the invite code members join with. */
 export const familyGroups = pgTable('family_groups', {

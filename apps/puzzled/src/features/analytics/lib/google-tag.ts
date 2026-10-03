@@ -59,7 +59,7 @@ export const CONSENT_DEFAULT_SCRIPT = `window.dataLayer=window.dataLayer||[];fun
 
 export const SITE_TITLE = 'Puzzled'
 
-const LOCALE_PREFIX = /^\/(en-GB|zh-HK|zh-CN|zh-TW)(?=\/|$)/
+const LOCALE_PREFIX = /^\/(en-GB|zh-HK|zh-CN|zh-TW|ja|es|pt-BR)(?=\/|$)/
 const PUBLIC_PATHS = new Set([
 	'/',
 	'/pricing',

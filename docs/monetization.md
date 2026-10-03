@@ -38,6 +38,17 @@ family.
   `puzzled-core` `billing_access::policy::play_access`). A refused request is
   403 `plus_required` (another game) or `plus_required_archive` (a past day);
   the web renders the unlock path from the same rule, never a dead end.
+- **Reverse trial** (new players): after a player's third finished day the api
+  grants every game for 7 days, once per account (`plus_trials`, one row per
+  account, kept after it ends), then the account drops back to the free floor
+  with nothing charged and nothing taken away. Money has no grant API for this,
+  so it is Puzzled's own time-boxed access, owned by the Rust api
+  (`billing_access::reverse_trial`, `billing::service::access`). It is off
+  unless `PUZZLED_REVERSE_TRIAL=on` in the api environment; switch it on
+  together with Plus sales. Result screens and Settings > Subscription state the
+  true end date ("ends on DATE"). The 7-day card-up-front yearly trial is the
+  offer for returning players (pricing page); Money cannot yet hide it from a
+  new player who goes straight to the yearly plan.
 - An entitlement read that fails refuses paid play (fail closed to the free
   floor). The free daily puzzle never reads billing.
 - While Stripe is not configured, nothing is sold, so nothing is locked.
@@ -77,8 +88,10 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 - A price change creates a new Stripe price that takes over the lookup key;
   existing subscribers keep their price until they change plan. Players get
   at least 30 days' notice before a new price applies to their renewal.
-- Trials and discounts (a 7-day trial on the yearly plan, a win-back offer) are
-  allowed once Sylphx Money is live. Each states its real end date and real
+- Trials and discounts (a win-back offer) are allowed once Sylphx Money is live. The 7-day trial on
+  the yearly plan is declared in `config/commercial/catalogue.json`
+  (`trial_days`), read back through `ListPlans`, and the pricing page states its
+  real first-charge date. Each states its real end date and real
   price; the plan and price settings are in
   [growth.md](growth.md#ships-when-money-is-live).
 

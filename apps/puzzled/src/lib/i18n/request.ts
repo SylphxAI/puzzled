@@ -42,6 +42,87 @@ import enUSShare from '@/messages/en-US/share.json'
 import enUSStats from '@/messages/en-US/stats.json'
 import enUSStreak from '@/messages/en-US/streak.json'
 import enUSSupport from '@/messages/en-US/support.json'
+import esAchievements from '@/messages/es/achievements.json'
+import esAdmin from '@/messages/es/admin.json'
+import esAnnouncements from '@/messages/es/announcements.json'
+import esArchive from '@/messages/es/archive.json'
+import esAuth from '@/messages/es/auth.json'
+import esCalendar from '@/messages/es/calendar.json'
+import esCatalog from '@/messages/es/catalog.json'
+import esCommon from '@/messages/es/common.json'
+import esConsent from '@/messages/es/consent.json'
+import esDaily from '@/messages/es/daily.json'
+import esFooter from '@/messages/es/footer.json'
+import esGameResult from '@/messages/es/game-result.json'
+import esHome from '@/messages/es/home.json'
+import esLeaderboard from '@/messages/es/leaderboard.json'
+import esLegal from '@/messages/es/legal.json'
+import esModes from '@/messages/es/modes.json'
+import esNav from '@/messages/es/nav.json'
+import esOnboarding from '@/messages/es/onboarding.json'
+import esPagination from '@/messages/es/pagination.json'
+import esPlus from '@/messages/es/plus.json'
+import esPwa from '@/messages/es/pwa.json'
+import esReauth from '@/messages/es/reauth.json'
+import esSettings from '@/messages/es/settings.json'
+import esShare from '@/messages/es/share.json'
+import esStats from '@/messages/es/stats.json'
+import esStreak from '@/messages/es/streak.json'
+import esSupport from '@/messages/es/support.json'
+import jaAchievements from '@/messages/ja/achievements.json'
+import jaAdmin from '@/messages/ja/admin.json'
+import jaAnnouncements from '@/messages/ja/announcements.json'
+import jaArchive from '@/messages/ja/archive.json'
+import jaAuth from '@/messages/ja/auth.json'
+import jaCalendar from '@/messages/ja/calendar.json'
+import jaCatalog from '@/messages/ja/catalog.json'
+import jaCommon from '@/messages/ja/common.json'
+import jaConsent from '@/messages/ja/consent.json'
+import jaDaily from '@/messages/ja/daily.json'
+import jaFooter from '@/messages/ja/footer.json'
+import jaGameResult from '@/messages/ja/game-result.json'
+import jaHome from '@/messages/ja/home.json'
+import jaLeaderboard from '@/messages/ja/leaderboard.json'
+import jaLegal from '@/messages/ja/legal.json'
+import jaModes from '@/messages/ja/modes.json'
+import jaNav from '@/messages/ja/nav.json'
+import jaOnboarding from '@/messages/ja/onboarding.json'
+import jaPagination from '@/messages/ja/pagination.json'
+import jaPlus from '@/messages/ja/plus.json'
+import jaPwa from '@/messages/ja/pwa.json'
+import jaReauth from '@/messages/ja/reauth.json'
+import jaSettings from '@/messages/ja/settings.json'
+import jaShare from '@/messages/ja/share.json'
+import jaStats from '@/messages/ja/stats.json'
+import jaStreak from '@/messages/ja/streak.json'
+import jaSupport from '@/messages/ja/support.json'
+import ptBRAchievements from '@/messages/pt-BR/achievements.json'
+import ptBRAdmin from '@/messages/pt-BR/admin.json'
+import ptBRAnnouncements from '@/messages/pt-BR/announcements.json'
+import ptBRArchive from '@/messages/pt-BR/archive.json'
+import ptBRAuth from '@/messages/pt-BR/auth.json'
+import ptBRCalendar from '@/messages/pt-BR/calendar.json'
+import ptBRCatalog from '@/messages/pt-BR/catalog.json'
+import ptBRCommon from '@/messages/pt-BR/common.json'
+import ptBRConsent from '@/messages/pt-BR/consent.json'
+import ptBRDaily from '@/messages/pt-BR/daily.json'
+import ptBRFooter from '@/messages/pt-BR/footer.json'
+import ptBRGameResult from '@/messages/pt-BR/game-result.json'
+import ptBRHome from '@/messages/pt-BR/home.json'
+import ptBRLeaderboard from '@/messages/pt-BR/leaderboard.json'
+import ptBRLegal from '@/messages/pt-BR/legal.json'
+import ptBRModes from '@/messages/pt-BR/modes.json'
+import ptBRNav from '@/messages/pt-BR/nav.json'
+import ptBROnboarding from '@/messages/pt-BR/onboarding.json'
+import ptBRPagination from '@/messages/pt-BR/pagination.json'
+import ptBRPlus from '@/messages/pt-BR/plus.json'
+import ptBRPwa from '@/messages/pt-BR/pwa.json'
+import ptBRReauth from '@/messages/pt-BR/reauth.json'
+import ptBRSettings from '@/messages/pt-BR/settings.json'
+import ptBRShare from '@/messages/pt-BR/share.json'
+import ptBRStats from '@/messages/pt-BR/stats.json'
+import ptBRStreak from '@/messages/pt-BR/streak.json'
+import ptBRSupport from '@/messages/pt-BR/support.json'
 import zhCNAchievements from '@/messages/zh-CN/achievements.json'
 import zhCNAdmin from '@/messages/zh-CN/admin.json'
 import zhCNAnnouncements from '@/messages/zh-CN/announcements.json'
@@ -279,6 +360,93 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		stats: zhCNStats,
 		streak: zhCNStreak,
 		support: zhCNSupport,
+	},
+	ja: {
+		achievements: jaAchievements,
+		admin: jaAdmin,
+		announcements: jaAnnouncements,
+		archive: jaArchive,
+		auth: jaAuth,
+		calendar: jaCalendar,
+		catalog: jaCatalog,
+		common: jaCommon,
+		consent: jaConsent,
+		daily: jaDaily,
+		footer: jaFooter,
+		gameResult: jaGameResult,
+		home: jaHome,
+		leaderboard: jaLeaderboard,
+		legal: jaLegal,
+		modes: jaModes,
+		nav: jaNav,
+		onboarding: jaOnboarding,
+		pagination: jaPagination,
+		plus: jaPlus,
+		pwa: jaPwa,
+		reauth: jaReauth,
+		settings: jaSettings,
+		share: jaShare,
+		stats: jaStats,
+		streak: jaStreak,
+		support: jaSupport,
+	},
+	es: {
+		achievements: esAchievements,
+		admin: esAdmin,
+		announcements: esAnnouncements,
+		archive: esArchive,
+		auth: esAuth,
+		calendar: esCalendar,
+		catalog: esCatalog,
+		common: esCommon,
+		consent: esConsent,
+		daily: esDaily,
+		footer: esFooter,
+		gameResult: esGameResult,
+		home: esHome,
+		leaderboard: esLeaderboard,
+		legal: esLegal,
+		modes: esModes,
+		nav: esNav,
+		onboarding: esOnboarding,
+		pagination: esPagination,
+		plus: esPlus,
+		pwa: esPwa,
+		reauth: esReauth,
+		settings: esSettings,
+		share: esShare,
+		stats: esStats,
+		streak: esStreak,
+		support: esSupport,
+	},
+	'pt-BR': {
+		achievements: ptBRAchievements,
+		admin: ptBRAdmin,
+		announcements: ptBRAnnouncements,
+		archive: ptBRArchive,
+		auth: ptBRAuth,
+		calendar: ptBRCalendar,
+		catalog: ptBRCatalog,
+		common: ptBRCommon,
+		consent: ptBRConsent,
+		daily: ptBRDaily,
+		footer: ptBRFooter,
+		gameResult: ptBRGameResult,
+		home: ptBRHome,
+		leaderboard: ptBRLeaderboard,
+		legal: ptBRLegal,
+		modes: ptBRModes,
+		nav: ptBRNav,
+		onboarding: ptBROnboarding,
+		pagination: ptBRPagination,
+		plus: ptBRPlus,
+		pwa: ptBRPwa,
+		reauth: ptBRReauth,
+		settings: ptBRSettings,
+		share: ptBRShare,
+		stats: ptBRStats,
+		streak: ptBRStreak,
+		support: ptBRSupport,
 	},
 }
 

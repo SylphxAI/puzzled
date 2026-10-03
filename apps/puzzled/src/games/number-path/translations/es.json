@@ -1,0 +1,15 @@
+{
+	"name": "Path",
+	"tagline": "Visita de 1 a n • Sin cruces",
+	"highlight": "Camino numerado",
+	"description": "Dibuja un camino por todas las casillas del 1 al n",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Empieza en el 1 y visita cada casilla exactamente una vez, hasta el último número",
+		"rule2": "Las casillas consecutivas deben tocarse por arriba, abajo, izquierda o derecha, sin diagonales",
+		"rule3": "Las casillas numeradas son pistas fijas; visítalas en orden"
+	},
+	"startGame": "Empezar partida",
+	"complete": "¡Camino completado!"
+}

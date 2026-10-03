@@ -13,7 +13,7 @@ import { resolveLocale } from '../../../../scripts/i18n-resolved-catalogue'
  * every locale.
  */
 
-const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN'] as const
+const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN', 'ja', 'es', 'pt-BR'] as const
 
 type Json = Record<string, unknown>
 

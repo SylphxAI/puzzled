@@ -7,8 +7,8 @@
  * `src/app/[locale]`, so this list is the route table — never a guess.
  *
  * Locale variants are derived from `lib/i18n/config`: the default locale is
- * served un-prefixed, the other four as `/en-GB`, `/zh-HK`, `/zh-TW`,
- * `/zh-CN` (exact casing, no trailing slash).
+ * served un-prefixed, the others as `/en-GB`, `/zh-HK`, `/zh-TW`,
+ * `/zh-CN`, `/ja`, `/es`, `/pt-BR` (exact casing, no trailing slash).
  */
 
 import type { MetadataRoute } from 'next'

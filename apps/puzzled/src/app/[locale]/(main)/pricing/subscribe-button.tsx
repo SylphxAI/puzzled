@@ -65,6 +65,14 @@ export function SubscribeButton({
 				/>
 				<span>{t('immediateSupplyConsent')}</span>
 			</label>
+			{locale === 'ja' && (
+				<Link
+					href="/tokushoho"
+					className="mb-3 inline-flex min-h-11 items-center text-sm underline underline-offset-2"
+				>
+					特定商取引法に基づく表記
+				</Link>
+			)}
 			<button
 				type="button"
 				className={buttonClass}

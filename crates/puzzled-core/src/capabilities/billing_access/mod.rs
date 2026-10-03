@@ -3,3 +3,4 @@
 //! and the clock; nothing here reads Sylphx Money or the database.
 
 pub mod policy;
+pub mod reverse_trial;

@@ -1,0 +1,24 @@
+{
+	"name": "Rungs",
+	"tagline": "一歩ずつ • ワードチェーン",
+	"highlight": "ワードチェーン",
+	"description": "1文字ずつ変えて、ある単語を別の単語に変身させよう",
+	"howToPlay": "遊び方",
+	"rules": {
+		"title": "遊び方",
+		"rule1": "一度に変えられる文字は1つだけです",
+		"rule2": "変えるたびに、実在する単語になる必要があります",
+		"rule3": "できるだけ少ないステップでゴールの単語に到達しましょう"
+	},
+	"startGame": "ゲーム開始",
+	"enterWord": "単語を入力…",
+	"submit": "決定",
+	"undo": "元に戻す",
+	"complete": "クリア！",
+	"messages": {
+		"notInList": "有効な単語ではありません",
+		"wrongLength": "同じ文字数の単語にしてください",
+		"notOneChange": "変えるのはちょうど1文字だけです",
+		"alreadyUsed": "この単語はすでに使用済みです"
+	}
+}
