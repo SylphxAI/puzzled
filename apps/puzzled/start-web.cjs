@@ -48,6 +48,7 @@ if (require.main === module) {
 		console.error('[puzzled-web] standalone server.js not found under', __dirname)
 		process.exit(1)
 	}
+	require('./brotli.cjs').install(__dirname)
 	require(server)
 }
 
