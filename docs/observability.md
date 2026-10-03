@@ -74,6 +74,26 @@ attached. The api reports the route template and status only. The relay
 accepts same-origin reports only, at most 32 KB each and 20 per client per
 minute; a page sends at most 10.
 
+## Field Core Web Vitals
+
+Real visitors report LCP, INP, CLS and TTFB as a GA4 event `web_vitals`
+through the same consent-gated Google tag as page views (analytics consent
+only; never sent to Ads, nothing without consent). 10% of page loads are
+sampled once on load. The event carries `vital_route` (a fixed route template
+such as `/daily` or `/games/[slug]`, otherwise `other`), `vital_name`,
+`vital_rating` (good, needs-improvement, poor) and `vital_value` (ms, CLS
+unitless). No address, id, query or user data. Code: `web-vitals.ts` and
+`web-vitals-reporter.tsx` in `apps/puzzled/src/features/analytics`.
+
+Reading p75 per route: in GA4 register `vital_route`, `vital_name`,
+`vital_rating` as event-scoped custom dimensions and `vital_value` as a custom
+metric. In Explore, filter event `web_vitals`, dimensions `vital_route` and
+`vital_name`, metric `vital_value`, and read the 75th percentile (export to
+BigQuery and use `APPROX_QUANTILES(vital_value, 100)[OFFSET(75)]` if the UI
+only offers averages). Targets at p75: LCP 2500 ms, INP 200 ms, CLS 0.1,
+TTFB 800 ms. Samples are about a tenth of traffic, so wait for a few hundred
+events per route before trusting a route.
+
 ## Removed with the legacy host
 
 The analytics (`/api/observability/analytics`) and session-replay

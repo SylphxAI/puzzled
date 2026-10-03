@@ -122,7 +122,11 @@ export type GoogleTagController = {
 	/** A page view for a route; only allowlisted public routes are reported. */
 	pageView(pathname: string): boolean
 	/** A conversion event to the destinations the visitor consented to. */
-	event(name: string, params: Record<string, unknown>): boolean
+	event(
+		name: string,
+		params: Record<string, unknown>,
+		options?: { analyticsOnly?: boolean },
+	): boolean
 	/** Has the visitor granted anything a Google destination could use? */
 	hasConsent(): boolean
 }
@@ -146,6 +150,12 @@ export function cleanEventParams(params: Record<string, unknown>): Record<string
 			typeof value === 'string'
 		)
 			out[key] = safeText(value)
+		else if ((key === 'vital_name' || key === 'vital_rating') && typeof value === 'string')
+			out[key] = safeText(value)
+		else if (key === 'vital_route' && typeof value === 'string')
+			out[key] = value.replace(/[^A-Za-z0-9/[\]-]/g, '').slice(0, 40)
+		else if (key === 'vital_value' && typeof value === 'number' && Number.isFinite(value))
+			out[key] = value
 		else if (key === 'user_id' && typeof value === 'string' && OPAQUE_ID.test(value))
 			out[key] = value
 		else if (key === 'items' && Array.isArray(value)) {
@@ -259,8 +269,8 @@ export function createGoogleTag(input: {
 			const choice = input.consent()
 			return (Boolean(ids.ga) && choice.analytics) || (Boolean(ids.ads) && choice.marketing)
 		},
-		event(name, params) {
-			const sendTo = targets()
+		event(name, params, options) {
+			const sendTo = options?.analyticsOnly ? targets().filter((id) => id === ids.ga) : targets()
 			if (!loaded || sendTo.length === 0) return false
 			gtag('event', name, { ...cleanEventParams(params), send_to: sendTo })
 			return true
@@ -273,6 +283,11 @@ let active: GoogleTagController | null = null
 /** Make a controller the one conversion helpers talk to (null clears it). */
 export function setActiveGoogleTag(controller: GoogleTagController | null): void {
 	active = controller
+}
+
+/** The controller conversion helpers and the vitals reporter talk to. */
+export function getActiveGoogleTag(): GoogleTagController | null {
+	return active
 }
 
 export type CheckoutQuote = { plan: string; value: number; currency: string }
