@@ -224,6 +224,38 @@ async fn sender_outcomes_preserve_live_endpoints_and_prune_expired_ones() {
         .any(|endpoint| endpoint.ends_with("failed")));
 }
 
+#[tokio::test]
+async fn delivery_before_ack_crash_explicitly_allows_at_least_once_retry() {
+    use crate::capabilities::jobs::adapters::jobs_db::{
+        acknowledge_daily_reminder, claim_due_daily_reminders, REMINDER_LEASE_SECONDS,
+    };
+    let Some(pool) = crate::test_support::fresh_database().await else {
+        return;
+    };
+    sqlx::query("INSERT INTO notification_preferences (user_id, push_enabled, push_daily_reminder, daily_reminder_time, timezone) VALUES ($1, true, true, '08:00', 'UTC')")
+        .bind(Uuid::now_v7()).execute(&pool).await.unwrap();
+    let now = "2026-10-01T08:00:00Z".parse().unwrap();
+    let first = claim_due_daily_reminders(&pool, now, "2026-10-01")
+        .await
+        .unwrap()
+        .remove(0);
+    // Treat external delivery as successful, then lose the worker before ack.
+    // No database fact can distinguish that from a crash before delivery.
+    let expiry = now + chrono::Duration::seconds(REMINDER_LEASE_SECONDS);
+    let second = claim_due_daily_reminders(&pool, expiry, "2026-10-01")
+        .await
+        .unwrap()
+        .remove(0);
+    assert_eq!(first.user_id, second.user_id);
+    assert_ne!(first.token, second.token);
+    assert!(!acknowledge_daily_reminder(&pool, &first, expiry)
+        .await
+        .unwrap());
+    assert!(acknowledge_daily_reminder(&pool, &second, expiry)
+        .await
+        .unwrap());
+}
+
 /// Exercise authentication, request validation, adapter admission, and HTTP errors.
 #[tokio::test]
 async fn connect_push_foreign_endpoint_returns_404_without_any_writes() {

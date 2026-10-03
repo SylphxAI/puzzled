@@ -407,6 +407,10 @@ export const notificationPreferences = pgTable('notification_preferences', {
 	timezone: text('timezone'),
 	/** Local date of the last daily reminder sent (one per local day) */
 	lastDailyReminderOn: date('last_daily_reminder_on', { mode: 'string' }),
+	/** Fenced, expiring Jobs claim; delivery is recorded only on success. */
+	dailyReminderClaimToken: uuid('daily_reminder_claim_token'),
+	dailyReminderClaimOn: date('daily_reminder_claim_on', { mode: 'string' }),
+	dailyReminderLeaseUntil: timestamp('daily_reminder_lease_until', { withTimezone: true }),
 
 	// Email Notifications
 	/** Master email toggle */
