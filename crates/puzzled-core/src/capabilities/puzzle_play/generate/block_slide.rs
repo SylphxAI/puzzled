@@ -216,16 +216,54 @@ fn unpack(key: u64, n: usize) -> Vec<(i32, i32)> {
         .collect()
 }
 
-/// BFS minimum moves (any block, one cell, four directions), within `max_moves`.
-/// BFS depth is order-independent, so this equals the TS solver's answer.
-fn solve(blocks: &[Block], max_moves: u32) -> Option<u32> {
-    let target = blocks.iter().position(|b| b.is_target)?;
-    let n = blocks.len();
-    let sizes: Vec<(i32, i32)> = blocks.iter().map(|b| (b.width, b.height)).collect();
-    let start: Vec<(i32, i32)> = blocks.iter().map(|b| (b.x, b.y)).collect();
-    if start[target] == (EXIT_X, EXIT_Y) {
-        return Some(0);
+/// Most states one solve may hold. Keyed by board layout, a solve visits at
+/// most 964,656 states (the biggest block mix the generator makes: one 1x2,
+/// one 2x1 and six 1x1 blocks around the target, two cells empty), so this
+/// never changes an answer; it keeps the solver's memory under about 50 MiB
+/// even if the generator changes.
+const MAX_STATES: usize = 1 << 20;
+
+/// BFS minimum moves (any block, one cell, four directions), within
+/// `max_moves`, and the number of states visited. BFS depth is
+/// order-independent, so this equals the TS solver's answer.
+///
+/// A state is the board layout: the target, then each group of same-sized
+/// blocks as a sorted set of positions. Swapping two same-sized blocks gives
+/// the same layout and the same distance to the exit, so the answer is
+/// unchanged, but the visited set no longer holds every ordering of
+/// interchangeable blocks (20.5 million states, about 500 MiB, for the
+/// 2026-09-17 hard puzzle).
+fn solve(blocks: &[Block], max_moves: u32) -> (Option<u32>, usize) {
+    let Some(target) = blocks.iter().position(|b| b.is_target) else {
+        return (None, 0);
+    };
+    // The target first, then the other blocks grouped by size.
+    let mut order: Vec<usize> = (0..blocks.len()).filter(|&i| i != target).collect();
+    order.sort_by_key(|&i| (blocks[i].width, blocks[i].height));
+    order.insert(0, target);
+    let n = order.len();
+    let sizes: Vec<(i32, i32)> = order
+        .iter()
+        .map(|&i| (blocks[i].width, blocks[i].height))
+        .collect();
+    let mut groups = Vec::new();
+    let mut at = 1;
+    for run in sizes[1..].chunk_by(|a, b| a == b) {
+        if run.len() > 1 {
+            groups.push(at..at + run.len());
+        }
+        at += run.len();
     }
+    let canonical = |pos: &mut [(i32, i32)]| {
+        for group in &groups {
+            pos[group.clone()].sort_unstable();
+        }
+    };
+    let mut start: Vec<(i32, i32)> = order.iter().map(|&i| (blocks[i].x, blocks[i].y)).collect();
+    if start[0] == (EXIT_X, EXIT_Y) {
+        return (Some(0), 1);
+    }
+    canonical(&mut start);
     let start_key = pack(&start);
     let mut visited: HashSet<u64> = HashSet::new();
     visited.insert(start_key);
@@ -262,27 +300,40 @@ fn solve(blocks: &[Block], max_moves: u32) -> Option<u32> {
                 }
                 let mut next = pos.clone();
                 next[i] = (nx, ny);
+                canonical(&mut next);
                 let next_key = pack(&next);
                 if !visited.insert(next_key) {
                     continue;
                 }
-                if next[target] == (EXIT_X, EXIT_Y) {
-                    return Some(moves + 1);
+                if next[0] == (EXIT_X, EXIT_Y) {
+                    return (Some(moves + 1), visited.len());
+                }
+                if visited.len() >= MAX_STATES {
+                    return (None, visited.len());
                 }
                 queue.push_back((next_key, moves + 1));
             }
         }
     }
-    None
+    (None, visited.len())
 }
 
 /// `(puzzle_data, solution)` for a seed, or why none could be made.
 pub fn generate(seed: i64, difficulty: Option<&str>) -> Result<(Value, Value), String> {
+    generate_counted(seed, difficulty).0
+}
+
+/// [`generate`] plus the most states a single solve visited on the way.
+fn generate_counted(
+    seed: i64,
+    difficulty: Option<&str>,
+) -> (Result<(Value, Value), String>, usize) {
     let (min, max) = match difficulty.unwrap_or("medium") {
         "easy" => (4, 15),
         "hard" => (36, 80),
         _ => (16, 35),
     };
+    let mut most_states = 0;
     let mut current = seed as f64;
     for attempt in 0..MAX_ATTEMPTS {
         // Past the TS limit the doubled seed overflows to infinity; restart
@@ -300,7 +351,9 @@ pub fn generate(seed: i64, difficulty: Option<&str>) -> Result<(Value, Value), S
             current = next;
             continue;
         }
-        match solve(&blocks, 120) {
+        let (solved, states) = solve(&blocks, 120);
+        most_states = most_states.max(states);
+        match solved {
             Some(moves) if (min..=max).contains(&moves) => {
                 let blocks_json: Vec<Value> = blocks
                     .iter()
@@ -311,21 +364,27 @@ pub fn generate(seed: i64, difficulty: Option<&str>) -> Result<(Value, Value), S
                         })
                     })
                     .collect();
-                return Ok((
-                    json!({
-                        "blocks": blocks_json,
-                        "gridWidth": GRID_WIDTH, "gridHeight": GRID_HEIGHT,
-                        "exitX": EXIT_X, "exitY": EXIT_Y, "minMoves": moves,
-                    }),
-                    json!({ "minMoves": moves }),
-                ));
+                return (
+                    Ok((
+                        json!({
+                            "blocks": blocks_json,
+                            "gridWidth": GRID_WIDTH, "gridHeight": GRID_HEIGHT,
+                            "exitX": EXIT_X, "exitY": EXIT_Y, "minMoves": moves,
+                        }),
+                        json!({ "minMoves": moves }),
+                    )),
+                    most_states,
+                );
             }
             _ => current = next,
         }
     }
-    Err(format!(
-        "block-slide: no puzzle for seed {seed} within {MAX_ATTEMPTS} attempts"
-    ))
+    (
+        Err(format!(
+            "block-slide: no puzzle for seed {seed} within {MAX_ATTEMPTS} attempts"
+        )),
+        most_states,
+    )
 }
 
 /// The solution rewritten as the submission the validator grades, for the
@@ -333,4 +392,38 @@ pub fn generate(seed: i64, difficulty: Option<&str>) -> Result<(Value, Value), S
 #[must_use]
 pub fn solution_submission(solution: &Value) -> Value {
     json!({ "moveCount": solution.get("minMoves").cloned().unwrap_or(Value::Null) })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Board layouts of the biggest block mix the generator can make (one
+    /// 1x2, one 2x1 and six 1x1 blocks around the target, two cells empty).
+    /// A solve that keys states by layout can never visit more.
+    const MOST_LAYOUTS: usize = 964_656;
+
+    /// Product days whose puzzle made one solve hold 140-496 MiB when every
+    /// ordering of same-sized blocks was its own state; that OOM-killed the
+    /// 256 MiB api during the daily puzzle fill. Seed: `YYYYMMDD` + 0/1/2.
+    const HEAVY_DAYS: [(i64, &str); 6] = [
+        (20_260_919, "hard"), // 2026-09-17: 496 MiB, 21 s
+        (20_260_915, "hard"), // 2026-09-13: 248 MiB
+        (20_261_111, "hard"), // 2026-11-09: 248 MiB
+        (20_261_111, "easy"), // 2026-11-11: 248 MiB
+        (20_261_214, "easy"), // 2026-12-14: 232 MiB
+        (20_261_020, "hard"), // 2026-10-18: 140 MiB
+    ];
+
+    #[test]
+    fn a_solve_visits_each_board_layout_at_most_once() {
+        for (seed, difficulty) in HEAVY_DAYS {
+            let (made, states) = generate_counted(seed, Some(difficulty));
+            assert!(made.is_ok(), "seed {seed} {difficulty}: {made:?}");
+            assert!(
+                states <= MOST_LAYOUTS,
+                "seed {seed} {difficulty}: one solve visited {states} states"
+            );
+        }
+    }
 }
