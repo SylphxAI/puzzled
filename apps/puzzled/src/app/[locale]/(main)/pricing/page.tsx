@@ -27,6 +27,7 @@ import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
 import { cn } from '@/lib/utils'
 import { CurrencySwitcher } from './currency-switcher'
 import { PlusOffer } from './plus-offer'
+import { PricingFunnelTracker } from './pricing-funnel-tracker'
 import { SubscribeButton } from './subscribe-button'
 
 type Props = {
@@ -155,6 +156,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 
 	return (
 		<main className="flex-1">
+			{!plusMember ? <PricingFunnelTracker cancelled={checkout === 'cancelled'} /> : null}
 			<section id="plus" className="page-shell-wide scroll-mt-24 pb-8 pt-4 md:pb-12 md:pt-12">
 				{checkout === 'cancelled' ? (
 					<output className="mb-3 block rounded-xl bg-muted px-4 py-3 text-sm">
@@ -287,6 +289,8 @@ export default async function PricingPage({ params, searchParams }: Props) {
 													planId={card.id}
 													currency={card.currency}
 													amountMinor={card.amountMinor}
+													interval={card.interval}
+													trial={card.trialDays > 0}
 													locale={locale}
 													signedIn={Boolean(user)}
 													subscribed={showsCurrentPlan(access)}

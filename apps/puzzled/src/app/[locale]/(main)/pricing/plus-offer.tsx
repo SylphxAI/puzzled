@@ -90,6 +90,8 @@ export function PlusOffer({ yearly, monthly, locale, signedIn }: Props) {
 					planId={selected.id}
 					currency={selected.currency}
 					amountMinor={selected.amountMinor}
+					interval={selected.interval}
+					trial={selected.trialDays > 0}
 					locale={locale}
 					signedIn={signedIn}
 					subscribed={false}
