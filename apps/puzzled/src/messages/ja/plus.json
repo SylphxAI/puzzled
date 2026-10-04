@@ -39,7 +39,8 @@
 		"consentRequired": "続けるには、チェックボックスにチェックを入れてください。"
 	},
 	"trial": {
-		"endsOn": "Puzzled Plusの無料体験は{date}に終了します。料金は請求されず、終えた記録はすべて統計に残ります。"
+		"endsOn": "Puzzled Plusの無料体験は{date}に終了します。料金は請求されず、終えた記録はすべて統計に残ります。",
+		"endingSoon": "Puzzled Plusの無料体験は{date}に終了します。お試しいただきありがとうございます。それまでは、いつでも解約できます。"
 	},
 	"unlock": {
 		"title": "このゲームはPuzzled Plusの対象です",
