@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "../../../../brand/tokens.css";
 @plugin 'tailwindcss-animate';
+@source "../../../../packages/ui/src";
 
 /* =============================================
    Puzzled design tokens (2026-09-26 redesign)
