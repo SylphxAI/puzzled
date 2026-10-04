@@ -197,14 +197,11 @@
 	"policy": {
 		"terms_url": "https://puzzled.gg/terms#subscriptions",
 		"cancellation": {
-			"days": 14,
-			"applies_to": "the first subscription on an account only",
-			"refund": "cancel inside the window and it ends at once with a full refund of everything paid for it"
+			"effect": "access runs to the end of the paid period, then stops; nothing more is charged",
+			"refund": "none: payments are non-refundable and part-used periods are not refunded, except where the terms or the law say otherwise (docs/monetization.md section 4)",
+			"immediate_supply": "checkout records the express request for access to start at once and the acknowledgement that the 14-day cancellation right is lost"
 		},
-		"after_window": {
-			"cancel": "access runs to the end of the paid period, then stops",
-			"resume": "a cancellation can be resumed until the period ends"
-		},
+		"resume": "a cancellation can be resumed until the period ends",
 		"renewal": "subscriptions renew automatically until cancelled",
 		"vat": {
 			"display": "inclusive",
