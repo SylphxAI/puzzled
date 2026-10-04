@@ -36,7 +36,16 @@
 		"checkoutCancelled": "Se canceló el pago. No se te ha cobrado nada.",
 		"alreadySubscribed": "Ya tienes Puzzled Plus.",
 		"immediateSupplyConsent": "Quiero acceder ahora y entiendo que pierdo el derecho de desistimiento de 14 días.",
-		"consentRequired": "Marca la casilla para continuar."
+		"consentRequired": "Marca la casilla para continuar.",
+		"offerLead": "Los {count} juegos, todos los días anteriores y estadísticas de cada uno.",
+		"planChoice": "Elige un plan",
+		"monthlyEquivalent": "{price} al mes",
+		"continueToPayment": "Continuar al pago",
+		"renewsYearly": "Se renueva cada año por {price} hasta que lo canceles. Cancela cuando quieras en Ajustes.",
+		"renewsMonthly": "Se renueva cada mes por {price} hasta que lo canceles. Cancela cuando quieras en Ajustes.",
+		"familyLink": "Plan familiar para hasta {count} jugadores",
+		"notNowPlayFree": "Ahora no, jugar el puzzle gratis de hoy",
+		"choosePlus": "Elegir Puzzled Plus"
 	},
 	"trial": {
 		"endsOn": "Tu semana gratis de Puzzled Plus termina el {date}. No se cobra nada y todo lo que hayas completado se queda en tus estadísticas.",

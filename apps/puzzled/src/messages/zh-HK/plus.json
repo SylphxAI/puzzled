@@ -36,7 +36,16 @@
 		"checkoutCancelled": "已取消付款，你沒有被收費。",
 		"alreadySubscribed": "你已訂閱 Puzzled Plus。",
 		"immediateSupplyConsent": "我要即時使用，並明白我會失去 14 日取消權。",
-		"consentRequired": "請剔選方格以繼續。"
+		"consentRequired": "請剔選方格以繼續。",
+		"offerLead": "全部 {count} 款遊戲、每一個往日謎題，以及每款遊戲的統計。",
+		"planChoice": "選擇方案",
+		"monthlyEquivalent": "每月 {price}",
+		"continueToPayment": "繼續付款",
+		"renewsYearly": "每年以 {price} 自動續期，直至你取消。可隨時在「設定」中取消。",
+		"renewsMonthly": "每月以 {price} 自動續期，直至你取消。可隨時在「設定」中取消。",
+		"familyLink": "最多 {count} 人的家庭方案",
+		"notNowPlayFree": "暫時不訂閱，玩今日免費謎題",
+		"choosePlus": "選擇 Puzzled Plus"
 	},
 	"trial": {
 		"endsOn": "你的 Puzzled Plus 免費一星期會在 {date} 結束。不會收取任何費用，你已完成的內容會繼續保留在統計中。",
