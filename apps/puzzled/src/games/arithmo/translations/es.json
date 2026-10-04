@@ -1,0 +1,22 @@
+{
+	"name": "Arithmo",
+	"tagline": "8 caracteres • Puzle de mates",
+	"highlight": "Puzle de ecuaciones",
+	"description": "Adivina la ecuación en 6 intentos",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Adivina la ecuación oculta en 6 intentos",
+		"rule2": "Cada intento debe ser una ecuación válida",
+		"rule3": "Los colores muestran cuánto te has acercado"
+	},
+	"startGame": "Empezar partida",
+	"keyboard": {
+		"enter": "Intro",
+		"delete": "Borrar"
+	},
+	"messages": {
+		"notComplete": "Faltan caracteres",
+		"invalid": "Ecuación no válida"
+	}
+}

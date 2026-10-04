@@ -1,0 +1,27 @@
+{
+	"name": "Crowns",
+	"tagline": "Desafio de lógica • Posicione coroas",
+	"highlight": "Uma coroa por região",
+	"description": "Posicione uma coroa por linha, coluna e região colorida",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Posicione exatamente uma coroa em cada linha",
+		"rule2": "Posicione exatamente uma coroa em cada coluna",
+		"rule3": "Posicione exatamente uma coroa em cada região colorida",
+		"rule4": "As coroas não podem se tocar (nem na diagonal)"
+	},
+	"startGame": "Começar jogo",
+	"hasConflicts": "Algumas coroas estão em conflito",
+	"complete": "Desafio concluído!",
+	"difficulty": {
+		"easy": "Fácil",
+		"medium": "Médio",
+		"hard": "Difícil"
+	},
+	"difficultyDescriptions": {
+		"easy": "Um tabuleiro 5x5 — uma coroa por linha, coluna e região",
+		"medium": "Um tabuleiro 6x6 com mais regiões para raciocinar",
+		"hard": "Um tabuleiro 8x8 e as restrições mais apertadas"
+	}
+}

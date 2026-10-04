@@ -1,0 +1,15 @@
+{
+	"name": "Cipher",
+	"tagline": "Descifra citas • Puzle de palabras",
+	"highlight": "Citas famosas",
+	"description": "Descifra citas famosas por sustitución de letras",
+	"howToPlay": "Cómo jugar al criptograma",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Cada letra ha sido sustituida por otra distinta",
+		"rule2": "Averigua la sustitución para revelar la cita",
+		"rule3": "Una misma letra siempre se sustituye por la misma"
+	},
+	"startGame": "Empezar partida",
+	"complete": "¡Cita resuelta!"
+}

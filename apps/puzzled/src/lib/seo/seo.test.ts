@@ -31,7 +31,7 @@ import {
 process.env.SYLPHX_PUBLIC_URL = 'https://puzzled.gg'
 
 const BASE = 'https://puzzled.gg'
-const LOCALE_PREFIX = /^\/(en-GB|zh-HK|zh-TW|zh-CN)(?=\/|$)/
+const LOCALE_PREFIX = /^\/(en-GB|zh-HK|zh-TW|zh-CN|ja|es|pt-BR)(?=\/|$)/
 
 /** Path of a URL with any locale prefix removed (`/zh-HK/games` -> `/games`). */
 function localeAgnosticPath(url: string): string {
@@ -267,6 +267,9 @@ describe('metadata helper', () => {
 			'zh-HK': `${BASE}/zh-HK/games/sudoku`,
 			'zh-TW': `${BASE}/zh-TW/games/sudoku`,
 			'zh-CN': `${BASE}/zh-CN/games/sudoku`,
+			ja: `${BASE}/ja/games/sudoku`,
+			es: `${BASE}/es/games/sudoku`,
+			'pt-BR': `${BASE}/pt-BR/games/sudoku`,
 		})
 	})
 
@@ -278,6 +281,9 @@ describe('metadata helper', () => {
 			'zh-HK': `${BASE}/zh-HK`,
 			'zh-TW': `${BASE}/zh-TW`,
 			'zh-CN': `${BASE}/zh-CN`,
+			ja: `${BASE}/ja`,
+			es: `${BASE}/es`,
+			'pt-BR': `${BASE}/pt-BR`,
 		})
 	})
 

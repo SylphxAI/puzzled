@@ -1,0 +1,26 @@
+{
+	"name": "Five",
+	"tagline": "5 letras • 6 intentos",
+	"highlight": "6 intentos",
+	"description": "Adivina la palabra de 5 letras en 6 intentos",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Adivina la palabra en 6 intentos",
+		"rule2": "Cada intento debe ser una palabra válida de 5 letras",
+		"rule3": "El color de las fichas cambiará para mostrar cuánto te has acercado",
+		"correct": "Verde significa que la letra es correcta",
+		"present": "Amarillo significa que la letra está en la palabra, pero en otra posición",
+		"absent": "Gris significa que la letra no está en la palabra"
+	},
+	"keyboard": {
+		"enter": "Intro",
+		"delete": "Borrar"
+	},
+	"messages": {
+		"notEnoughLetters": "Faltan letras",
+		"notInWordList": "No está en la lista de palabras",
+		"correct": "¡Excelente!",
+		"gameOver": "La palabra era {word}"
+	}
+}
