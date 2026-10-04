@@ -7,6 +7,7 @@ import { localizedPath } from '@/lib/seo/metadata'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 import { cn } from '@/lib/utils'
 import { GameIcon } from '@/shared/components/ui/game-icons'
+import { HeroGuestNote } from './hero-guest-note'
 import { HeroPlayAction } from './hero-play-action'
 
 type GamePageHeroProps = {
@@ -156,17 +157,15 @@ export async function GamePageHero({
 
 						<HeroPlayAction locked={locked} label={t('gamePage.playCta')} />
 
-						{isGuest && (
-							<p className="mt-3 text-sm text-[#1a1712]/75">
-								{t('gamePage.guestNote')}{' '}
-								<Link
-									href={{ pathname: '/signup', query: { callbackUrl: `/games/${slug}` } }}
-									className="inline-flex min-h-11 items-center font-semibold text-[#1a1712] underline underline-offset-4"
-								>
-									{t('gamePage.guestSignIn')}
-								</Link>
-							</p>
-						)}
+						<HeroGuestNote isGuest={isGuest} locked={locked}>
+							{t('gamePage.guestNote')}{' '}
+							<Link
+								href={{ pathname: '/signup', query: { callbackUrl: `/games/${slug}` } }}
+								className="inline-flex min-h-11 items-center font-semibold text-[#1a1712] underline underline-offset-4"
+							>
+								{t('gamePage.guestSignIn')}
+							</Link>
+						</HeroGuestNote>
 					</div>
 
 					<div
