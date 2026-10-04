@@ -81,7 +81,16 @@ describe('the list itself', () => {
 	})
 
 	test('every season has a greeting in every shipped locale', () => {
-		for (const locale of ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN'] as const) {
+		for (const locale of [
+			'en-US',
+			'en-GB',
+			'zh-HK',
+			'zh-TW',
+			'zh-CN',
+			'ja',
+			'es',
+			'pt-BR',
+		] as const) {
 			const home = resolveLocale(locale).home as { seasons?: Record<string, string> }
 			for (const season of SEASONS) {
 				expect(

@@ -18,11 +18,22 @@ pub fn valid_endpoint(endpoint: &str) -> bool {
         && url.password().is_none()
         && url.fragment().is_none()
         && endpoint.len() <= 4096
-        && (host == "fcm.googleapis.com"
-            || host == "updates.push.services.mozilla.com"
-            || host == "web.push.apple.com"
-            || host.ends_with(".notify.windows.com"))
+        && PUSH_SERVICE_SUFFIXES.iter().any(|suffix| {
+            host.strip_suffix(suffix)
+                .is_some_and(|label| !label.is_empty())
+        })
 }
+
+// Browser push services publish many regional hosts (Chrome now hands out
+// hosts such as jmt17.google.com), so match by domain suffix on a label
+// boundary. IP literals never end in these suffixes.
+const PUSH_SERVICE_SUFFIXES: [&str; 5] = [
+    ".googleapis.com",
+    ".google.com",
+    ".push.services.mozilla.com",
+    ".push.apple.com",
+    ".notify.windows.com",
+];
 
 pub fn valid_keys(p256dh: &str, auth: &str) -> bool {
     URL_SAFE_NO_PAD
@@ -86,6 +97,21 @@ pub fn reminder_payload(locale: &str) -> serde_json::Value {
             "每日谜题准备好了",
             "今天的谜题等着你，只需几分钟。",
             "/zh-CN",
+        ),
+        "ja" => (
+            "今日のパズルの準備ができました",
+            "今日のパズルがあなたを待っています。数分で遊べます。",
+            "/ja",
+        ),
+        "es" => (
+            "Tu puzle diario está listo",
+            "El puzle de hoy te está esperando. Solo te llevará unos minutos.",
+            "/es",
+        ),
+        "pt-BR" => (
+            "Seu quebra-cabeça diário está pronto",
+            "O quebra-cabeça de hoje está esperando por você. Leva só alguns minutos.",
+            "/pt-BR",
         ),
         "en-GB" => (
             "Your daily puzzle is ready",
@@ -256,14 +282,32 @@ mod tests {
             "https://fcm.googleapis.com/fcm/send/test",
             "https://updates.push.services.mozilla.com/wpush/v2/test",
             "https://web.push.apple.com/test",
+            "https://jmt17.google.com/fcm/send/test",
+            "https://wns2-par02p.notify.windows.com/w/?token=x",
+            "https://api.push.apple.com/3/device/x",
         ] {
-            assert!(valid_endpoint(url));
+            assert!(valid_endpoint(url), "{url}");
+        }
+        for url in [
+            "https://google.com/x",
+            "https://evilgoogle.com/x",
+            "https://fcm.googleapis.com.evil.com/x",
+            "https://evil.com/.google.com",
+            "http://jmt17.google.com/x",
+            "https://[::1]/x",
+            "https://127.0.0.1/x",
+            "https://jmt17.google.com:8443/x",
+            "https://u:p@jmt17.google.com/x",
+        ] {
+            assert!(!valid_endpoint(url), "{url}");
         }
     }
     #[test]
     fn validates_keys_and_all_locales() {
         assert!(!valid_keys("", ""));
-        for locale in ["en-US", "en-GB", "zh-HK", "zh-TW", "zh-CN"] {
+        for locale in [
+            "en-US", "en-GB", "zh-HK", "zh-TW", "zh-CN", "ja", "es", "pt-BR",
+        ] {
             let payload = reminder_payload(locale);
             assert!(!payload["body"].as_str().unwrap().is_empty());
         }

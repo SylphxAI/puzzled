@@ -1,0 +1,91 @@
+{
+	"title": "Suporte e ajuda",
+	"description": "Escreva para o Puzzled sobre sua conta, seus jogos ou seus dados. Respondemos por e-mail.",
+	"hero": {
+		"eyebrow": "Suporte",
+		"lead": "Escreva para nós sobre sua conta, seu progresso ou um bug. Respondemos por e-mail.",
+		"factHuman": "Uma única caixa de entrada para tudo",
+		"factReply": "Respondemos por e-mail.",
+		"emailCta": "Enviar e-mail ao suporte",
+		"faqCta": "Ler as perguntas frequentes"
+	},
+	"include": {
+		"title": "O que incluir",
+		"account": "O endereço de e-mail da sua conta, se você tiver uma",
+		"game": "Em qual jogo ou página você estava",
+		"detail": "O que você esperava e o que aconteceu em vez disso",
+		"screenshot": "Uma captura de tela, se tiver"
+	},
+	"contact": {
+		"title": "Fale com a gente",
+		"subtitle": "Um único endereço recebe dúvidas sobre jogo, conta, privacidade e questões legais.",
+		"support": {
+			"title": "Suporte, privacidade e questões legais",
+			"body": "Problemas para entrar, um desafio que se comportou de forma estranha, sugestões ou um pedido para acessar, exportar, corrigir ou excluir seus dados — escreva para nós e cuidaremos disso."
+		},
+		"note": "O e-mail é o canal de suporte. Escreva do endereço da sua conta para que possamos conferir."
+	},
+	"email": {
+		"responseTime": "Respondemos por e-mail."
+	},
+	"faq": {
+		"title": "Perguntas que esta página responde",
+		"subtitle": "Escritas com base em como o produto realmente se comporta. Para o que o produto não resolve, escreva para o suporte.",
+		"signIn": {
+			"question": "Não consigo voltar para a minha conta. E agora?",
+			"answer": "Entre com o e-mail e a senha com que você se cadastrou, ou com o mesmo botão de provedor, se criou a conta assim. Se perdeu a senha, escolha “Esqueceu a senha?” ao lado do campo de senha na página de login: um link de redefinição é enviado para o seu e-mail, e por ele você define uma nova senha."
+		},
+		"guest": {
+			"question": "Joguei como visitante — meu progresso foi salvo?",
+			"answer": "A conclusão de um visitante vale para o dia em que você jogou, e o desafio diário grátis nunca exige conta. O resultado fica guardado em um ID de visitante naquele navegador, não em uma conta; por isso ele não acompanha você em outro dispositivo e não é levado para uma conta caso você entre depois. Só uma conta conectada mantém sequência, resultados e estatísticas entre dispositivos."
+		},
+		"dayStart": {
+			"question": "Quando começa um novo dia de desafios?",
+			"answer": "Tudo funciona no horário de Hong Kong (UTC+8, sem horário de verão): uma nova seleção diária aparece à meia-noite, e todos os jogadores recebem a mesma seleção naquele dia. Resultados e sequências usam esse mesmo relógio."
+		},
+		"streak": {
+			"question": "Por que minha sequência acabou?",
+			"answer": "Um dia de sequência significa concluir pelo menos um desafio válido em um dia de desafios. Se você não concluir nenhum, a sequência atual termina — sua melhor sequência e seus resultados anteriores continuam."
+		},
+		"accessibility": {
+			"question": "O Puzzled é acessível?",
+			"answer": "O suporte varia conforme o desafio, e o retrato honesto importa mais que um slogan. Já temos: um link para pular para o conteúdo no site principal; rótulos nos controles só com ícone dos jogos; regiões dinâmicas que anunciam status e resultados em vários desafios; contornos de foco visíveis para o teclado; e animações próprias desativadas quando o seu sistema pede movimento reduzido. Lacuna conhecida: alguns rótulos de controles dentro dos jogos ainda estão só em inglês, qualquer que seja o idioma da interface. Se um desafio impedir você de jogar, escreva para o suporte com o nome do desafio e o que aconteceu, para que a equipe analise o caso."
+		},
+		"data": {
+			"question": "Como obtenho uma cópia dos meus dados ou os excluo?",
+			"answer": "Escreva para {email} para pedir acesso, exportação, correção ou exclusão; esse único endereço cuida desses pedidos. A Política de Privacidade lista o que é coletado, quais terceiros estão envolvidos e os direitos que você pode exercer."
+		},
+		"cancel": {
+			"question": "Como cancelo o Puzzled Plus?",
+			"answer": "Você pode cancelar a qualquer momento em Configurações > Assinatura. O cancelamento interrompe as renovações futuras."
+		},
+		"afterCancel": {
+			"question": "O que acontece com o meu acesso depois que eu cancelar?",
+			"answer": "Você mantém o Plus até o fim do período que já pagou e não é cobrado de novo. Depois disso, você volta ao desafio diário grátis, e sua conta continua existindo."
+		},
+		"refunds": {
+			"question": "Posso pedir reembolso?",
+			"answer": "Os pagamentos não são reembolsáveis e não reembolsamos períodos usados em parte, salvo quando os termos ou a lei disserem o contrário. Se algo que entregamos não funcionou, corrigimos, e os seus direitos legais como consumidor não são afetados. Ao assinar, você pede que o acesso comece imediatamente e reconhece que isso encerra o seu direito de cancelamento de 14 dias. Para dúvidas sobre um pagamento, escreva para {email}."
+		}
+	},
+	"resources": {
+		"title": "Para onde ir em seguida",
+		"subtitle": "As páginas para as quais o suporte mais indica as pessoas.",
+		"reset": {
+			"title": "Redefinir sua senha",
+			"body": "Peça um link de redefinição quando não conseguir entrar."
+		},
+		"privacy": {
+			"title": "Política de Privacidade",
+			"body": "O que é coletado e os direitos que você tem."
+		},
+		"terms": {
+			"title": "Termos de Serviço",
+			"body": "As regras para usar o Puzzled."
+		}
+	},
+	"cta": {
+		"title": "Ainda precisa de ajuda?",
+		"body": "Conte o que aconteceu. Se for sobre a sua conta, escreva do endereço dela."
+	}
+}

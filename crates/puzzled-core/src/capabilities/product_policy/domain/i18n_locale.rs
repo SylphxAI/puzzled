@@ -4,7 +4,9 @@
 //! NO authority_rust / ts_deleted.
 
 /// Supported locales (TS `locales` order).
-pub const LOCALES: &[&str] = &["en-US", "en-GB", "zh-HK", "zh-TW", "zh-CN"];
+pub const LOCALES: &[&str] = &[
+    "en-US", "en-GB", "zh-HK", "zh-TW", "zh-CN", "ja", "es", "pt-BR",
+];
 
 /// Default locale (TS `defaultLocale`).
 pub const DEFAULT_LOCALE: &str = "en-US";
@@ -18,6 +20,9 @@ pub fn locale_name(locale: &str) -> Option<&'static str> {
         "zh-HK" => Some("繁體中文（香港）"),
         "zh-TW" => Some("正體中文（台灣）"),
         "zh-CN" => Some("简体中文"),
+        "ja" => Some("日本語"),
+        "es" => Some("Español"),
+        "pt-BR" => Some("Português (Brasil)"),
         _ => None,
     }
 }
@@ -30,6 +35,9 @@ pub fn locale_short_name(locale: &str) -> Option<&'static str> {
         "zh-HK" => Some("繁體中文"),
         "zh-TW" => Some("正體中文"),
         "zh-CN" => Some("简体中文"),
+        "ja" => Some("日本語"),
+        "es" => Some("Español"),
+        "pt-BR" => Some("Português"),
         _ => None,
     }
 }
@@ -43,6 +51,9 @@ pub fn locale_country_code(locale: &str) -> Option<&'static str> {
         "zh-HK" => Some("hk"),
         "zh-TW" => Some("tw"),
         "zh-CN" => Some("cn"),
+        "ja" => Some("jp"),
+        "es" => Some("es"),
+        "pt-BR" => Some("br"),
         _ => None,
     }
 }
@@ -53,7 +64,7 @@ pub fn locale_fallback(locale: &str) -> Option<&'static str> {
     match locale {
         "en-GB" => Some("en-US"),
         "zh-TW" => Some("zh-HK"),
-        "en-US" | "zh-HK" | "zh-CN" => None,
+        "en-US" | "zh-HK" | "zh-CN" | "ja" | "es" | "pt-BR" => None,
         _ => None,
     }
 }
@@ -62,6 +73,8 @@ pub fn locale_fallback(locale: &str) -> Option<&'static str> {
 pub const LOCALE_GROUP_ENGLISH: &[&str] = &["en-US", "en-GB"];
 /// Chinese family locales (TS `localeGroups.chinese`).
 pub const LOCALE_GROUP_CHINESE: &[&str] = &["zh-HK", "zh-TW", "zh-CN"];
+/// Other languages, each its own family (TS `localeGroups.other`).
+pub const LOCALE_GROUP_OTHER: &[&str] = &["ja", "es", "pt-BR"];
 
 /// Currency for locale (TS `_localeFormats.currency`).
 #[must_use]
@@ -72,6 +85,7 @@ pub fn locale_currency(locale: &str) -> Option<&'static str> {
         "zh-HK" => Some("HKD"),
         "zh-TW" => Some("TWD"),
         "zh-CN" => Some("CNY"),
+        "ja" | "es" | "pt-BR" => Some("USD"),
         _ => None,
     }
 }
@@ -81,7 +95,7 @@ pub fn locale_currency(locale: &str) -> Option<&'static str> {
 pub fn locale_date_style(locale: &str) -> Option<&'static str> {
     match locale {
         "en-US" | "en-GB" => Some("medium"),
-        "zh-HK" | "zh-TW" | "zh-CN" => Some("long"),
+        "zh-HK" | "zh-TW" | "zh-CN" | "ja" | "es" | "pt-BR" => Some("long"),
         _ => None,
     }
 }
@@ -136,7 +150,7 @@ mod tests {
 
     #[test]
     fn locale_catalog() {
-        assert_eq!(LOCALES.len(), 5);
+        assert_eq!(LOCALES.len(), 8);
         assert_eq!(DEFAULT_LOCALE, "en-US");
         assert!(is_valid_locale("en-US"));
         assert!(is_valid_locale("zh-CN"));
@@ -160,5 +174,7 @@ mod tests {
         assert_eq!(resolve_locale("nope"), DEFAULT_LOCALE);
         assert_eq!(LOCALE_GROUP_ENGLISH.len(), 2);
         assert_eq!(LOCALE_GROUP_CHINESE.len(), 3);
+        assert_eq!(LOCALE_GROUP_OTHER.len(), 3);
+        assert_eq!(locale_currency("ja"), Some("USD"));
     }
 }

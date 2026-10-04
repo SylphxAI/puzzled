@@ -1,0 +1,19 @@
+{
+	"name": "Quad",
+	"tagline": "4つの単語 • 9回",
+	"highlight": "1回の予想で4つの単語に挑戦",
+	"description": "4つの隠れた単語を同時に当てよう",
+	"howToPlay": "遊び方",
+	"rules": {
+		"title": "遊び方",
+		"rule1": "9回以内に4つの隠れた単語をすべて当てます",
+		"rule2": "1回の予想は4つのボードすべてに反映されます",
+		"rule3": "緑＝正解、黄色＝位置違い、グレー＝単語に含まれない"
+	},
+	"startGame": "ゲーム開始",
+	"complete": "パズルクリア！",
+	"messages": {
+		"notEnoughLetters": "文字数が足りません",
+		"notInWordList": "単語リストにありません"
+	}
+}

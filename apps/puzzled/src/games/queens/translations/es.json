@@ -1,0 +1,27 @@
+{
+	"name": "Crowns",
+	"tagline": "Puzle de lógica • Coloca coronas",
+	"highlight": "Una corona por región",
+	"description": "Coloca una corona por fila, columna y región de color",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Coloca exactamente una corona en cada fila",
+		"rule2": "Coloca exactamente una corona en cada columna",
+		"rule3": "Coloca exactamente una corona en cada región de color",
+		"rule4": "Las coronas no pueden tocarse entre sí (tampoco en diagonal)"
+	},
+	"startGame": "Empezar partida",
+	"hasConflicts": "Algunas coronas están en conflicto",
+	"complete": "¡Puzle completado!",
+	"difficulty": {
+		"easy": "Fácil",
+		"medium": "Medio",
+		"hard": "Difícil"
+	},
+	"difficultyDescriptions": {
+		"easy": "Un tablero de 5x5: una corona por fila, columna y región",
+		"medium": "Un tablero de 6x6 con más regiones que razonar",
+		"hard": "Un tablero de 8x8 y las restricciones más estrictas"
+	}
+}

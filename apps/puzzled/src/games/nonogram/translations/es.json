@@ -1,0 +1,31 @@
+{
+	"name": "Paint",
+	"tagline": "Cuadrícula 10×10 • Pixel art",
+	"highlight": "Puzle de imágenes",
+	"description": "Rellena casillas para revelar una imagen oculta",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Usa las pistas numéricas para rellenar casillas",
+		"rule2": "Los números indican casillas rellenas consecutivas",
+		"rule3": "Completa la cuadrícula para revelar la imagen"
+	},
+	"startGame": "Empezar partida",
+	"fillMode": "Rellenar",
+	"markMode": "Marcar",
+	"errors": "{count} errores",
+	"complete": "¡Imagen completada!",
+	"messages": {
+		"incorrect": "Esa casilla no debería estar rellena"
+	},
+	"difficulty": {
+		"easy": "Fácil",
+		"medium": "Medio",
+		"hard": "Difícil"
+	},
+	"difficultyDescriptions": {
+		"easy": "Una cuadrícula pequeña de 5x5 con una imagen sencilla",
+		"medium": "10x10, con más filas y columnas que leer",
+		"hard": "15x15 con mucho detalle"
+	}
+}

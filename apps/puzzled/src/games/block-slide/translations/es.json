@@ -1,0 +1,29 @@
+{
+	"name": "Slides",
+	"tagline": "Puzle Klotski • Desliza para ganar",
+	"highlight": "Puzle deslizante",
+	"description": "Desliza los bloques para liberar el objetivo",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Mueve los bloques deslizándolos en horizontal o vertical",
+		"rule2": "Lleva el bloque rojo hasta la salida de abajo",
+		"rule3": "Intenta resolverlo con el mínimo de movimientos"
+	},
+	"startGame": "Empezar partida",
+	"moves": "movimientos",
+	"minMoves": "Mín.",
+	"reset": "Reiniciar",
+	"giveUp": "Rendirse",
+	"hint": "Toca un bloque y usa las flechas para moverlo, o arrástralo directamente",
+	"difficulty": {
+		"easy": "Fácil",
+		"medium": "Medio",
+		"hard": "Difícil"
+	},
+	"difficultyDescriptions": {
+		"easy": "Pocos movimientos: un calentamiento rápido",
+		"medium": "Más piezas y una ruta más larga",
+		"hard": "Muchos movimientos y varias formas de atascarte"
+	}
+}
