@@ -29,8 +29,23 @@ permissions:
   contents: read
   actions: read
   checks: read
+  pull-requests: read
 
 jobs:
+  # Stop the line on a red trunk (merge groups only). While the trunk's newest
+  # conclusive Verify run is red and its way back is in motion, a merge group is
+  # admitted only for a revert, a live-outage fix or a pull request labelled
+  # `main-red-fix`. `observe` prints what it would refuse and refuses nothing;
+  # switch to `enforce` after a few merge groups have been read.
+  main-state:
+    if: github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: SylphxAI/.github/.github/actions/main-red-gate@3f5ec7d2c084f7bafb57a56973a2236dc5eae447 # main 3f5ec7d (SylphxAI/.github#166, trace window)
+        with:
+          mode: observe
+
   plan:
     name: Plan
     runs-on: ubuntu-latest
@@ -490,7 +505,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [plan, identifiers, lint-and-typecheck, security, unit-tests, build, rust-api, migrations, suite]
+    needs: [main-state, plan, identifiers, lint-and-typecheck, security, unit-tests, build, rust-api, migrations, suite]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
