@@ -39,7 +39,8 @@
 		"consentRequired": "Marca la casilla para continuar."
 	},
 	"trial": {
-		"endsOn": "Tu semana gratis de Puzzled Plus termina el {date}. No se cobra nada y todo lo que hayas completado se queda en tus estadísticas."
+		"endsOn": "Tu semana gratis de Puzzled Plus termina el {date}. No se cobra nada y todo lo que hayas completado se queda en tus estadísticas.",
+		"endingSoon": "Tu prueba gratuita de Puzzled Plus termina el {date}. Gracias por probarlo. Puedes cancelar cuando quieras antes de esa fecha."
 	},
 	"unlock": {
 		"title": "Este juego forma parte de Puzzled Plus",
