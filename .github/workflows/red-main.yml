@@ -43,7 +43,7 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch'
       || (github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.head_branch == 'main')
-    uses: SylphxAI/.github/.github/workflows/red-main.yml@3f5ec7d2c084f7bafb57a56973a2236dc5eae447 # main 3f5ec7d (SylphxAI/.github#166, trace window)
+    uses: SylphxAI/.github/.github/workflows/red-main.yml@05ac6474b96425bcb4965addd025a93e061b66c4 # main 05ac647 (SylphxAI/.github#179, step and error signature proof)
     # One secret, passed by name. The handler needs exactly the builder App's
     # private key, and `secrets: inherit` would hand it every secret this
     # repository holds. The handler reads it as
