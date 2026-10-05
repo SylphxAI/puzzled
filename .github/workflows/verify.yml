@@ -516,6 +516,48 @@ jobs:
           SYLPHX_PUBLIC_URL: https://puzzled.gg
         run: bun run lighthouse
 
+      # Seeded-play field-metric gate: five routes, the puzzle API answered from
+      # a fixed seed, real taps and key presses, LCP and INP read from the
+      # browser's own entries; the p75 per route is checked against the
+      # budgets (LCP 2500 ms, INP 600 ms ratcheting to 200 ms) and written to the
+      # job summary. Lighthouse only estimates INP (as TBT); this measures it.
+      - name: Serve the build on :3016
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          SYLPHX_PUBLIC_URL: https://puzzled.gg
+        run: |
+          set -euo pipefail
+          bun run start -p 3016 > "$RUNNER_TEMP/serve-vitals.log" 2>&1 &
+          echo "SERVE_PID=$!" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 60); do
+            status="$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3016/ || true)"
+            if [ "$status" = "200" ]; then exit 0; fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/serve-vitals.log"
+          exit 1
+
+      - name: Web vitals budget, seeded play (bun run test:vitals)
+        working-directory: apps/puzzled
+        env:
+          BASE_URL: http://localhost:3016
+        run: bun run test:vitals
+
+      - name: Stop the served build
+        if: always()
+        run: |
+          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
+
+      - name: Upload the web vitals report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-vitals-report
+          path: apps/puzzled/test-results/web-vitals
+          retention-days: 7
+
       - name: Upload the Lighthouse report
         if: always()
         uses: actions/upload-artifact@v4
