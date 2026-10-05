@@ -13,12 +13,12 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { frozenCrossword } from '../test-fixtures'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { crosswordConfig } from './config'
 
 // A frozen puzzle from the Rust goldens
-const { puzzleData, solution } = frozenCrossword(crosswordConfig)
+const { puzzleData, solution } = frozenPuzzle(crosswordConfig)
 
 // Create correct grid from solution
 const correctGrid = solution.grid

@@ -31,10 +31,3 @@ export function frozenPuzzle<TPuzzleData, TSolution>(
 	if (!found) throw new Error(`No frozen puzzle for ${slug} ${difficulty ?? ''}`)
 	return found as unknown as { puzzleData: TPuzzleData; solution: TSolution }
 }
-
-/** One puzzle for crossword, which has no Rust golden; frozen from the retired TS generator. */
-export function frozenCrossword<TPuzzleData, TSolution>(
-	_config: Pick<GameConfig<TPuzzleData, TSolution>, 'slug' | 'validateAndScore'>,
-): { puzzleData: TPuzzleData; solution: TSolution } {
-	return JSON.parse(readFileSync(join(import.meta.dir, 'crossword/frozen-puzzle.json'), 'utf8'))
-}
