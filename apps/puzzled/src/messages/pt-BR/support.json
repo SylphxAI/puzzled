@@ -65,7 +65,7 @@
 		},
 		"refunds": {
 			"question": "Posso pedir reembolso?",
-			"answer": "Os pagamentos não são reembolsáveis e não reembolsamos períodos usados em parte, salvo quando os termos ou a lei disserem o contrário. Se algo que entregamos não funcionou, corrigimos, e os seus direitos legais como consumidor não são afetados. Ao assinar, você pede que o acesso comece imediatamente e reconhece que isso encerra o seu direito de cancelamento de 14 dias. Para dúvidas sobre um pagamento, escreva para {email}."
+			"answer": "Os pagamentos não são reembolsáveis e não reembolsamos períodos usados em parte, salvo quando os termos ou a lei disserem o contrário. Se algo que entregamos não funcionou, corrigimos, e os seus direitos legais como consumidor não são afetados. Ao assinar, você pede que o acesso comece imediatamente e reconhece que isso encerra o seu direito de cancelamento de 14 dias. Se você mora no Brasil, pode desistir em até 7 dias após o primeiro pagamento e receber o reembolso integral, conforme o art. 49 do Código de Defesa do Consumidor. Para dúvidas sobre um pagamento, escreva para {email}."
 		}
 	},
 	"resources": {

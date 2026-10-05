@@ -114,6 +114,28 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   paid period is left (`legal.json` terms sections at lines 146, 198 and 182).
   Any other refund request is handled case by case by support. Every refund is
   a new Money ledger entry (commercial standard).
+- Per-market rules override the no-refund default where a market's law gives
+  the consumer more. They are applied by the buyer's market (billing country
+  on the Money invoice), not by the site locale, so the terms and the support
+  FAQ state them in every locale:
+  - **Brazil** (Código de Defesa do Consumidor, Lei 8.078/1990, art. 49): a
+    consumer who buys outside a shop, online included, may withdraw within 7
+    days of contracting and gets back everything paid, monetarily corrected
+    (art. 49, sole paragraph). The immediate-supply consent does not waive it.
+    Support rule: a subscriber whose Money invoice billing country is BR and
+    who asks to cancel within 7 days of their first payment gets a full refund
+    of that payment through Money and the subscription is cancelled at once;
+    no reason is asked. Decreto 7.962/2013 art. 5 requires the means to
+    exercise it to be stated: the support FAQ and the terms subscription refund
+    clause name it. Renewals stay under the default rules.
+  - **Japan** (特定商取引法, 通信販売): no statutory cooling-off applies to
+    online sales; art. 15-3 lets the seller's displayed return terms
+    (返品特約) govern. The 特定商取引法に基づく表記 page
+    (`/ja/tokushoho`, section 返品・キャンセル) states that no refund is given
+    after supply starts, except where the law requires or what we delivered
+    did not work.
+  - **UK and EU**: the 14-day cancellation right ends with the immediate-supply
+    consent above.
 - Sylphx Money's hosted portal handles payment methods, invoices and plan
   changes; cancellation stays in Settings so it is one flow.
 - An account with a subscription that still renews cannot be erased until it
