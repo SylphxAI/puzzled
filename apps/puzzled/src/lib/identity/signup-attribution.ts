@@ -22,8 +22,10 @@ export async function recordSignupAttribution(
 	cookieHeader: string | null,
 	userAgent: string,
 ): Promise<void> {
-	if (!accessToken || !cookieHeader || !hasAttributionCookie(cookieHeader)) return
-	const cookie = cookieHeader
+	// Every new account is recorded (the first-party signup count); the campaign tags
+	// are forwarded only when the attribution cookie is present.
+	if (!accessToken) return
+	const cookie = (hasAttributionCookie(cookieHeader ?? '') ? (cookieHeader ?? '') : '')
 		.split(';')
 		.map((pair) => pair.trim())
 		.filter((pair) => pair.startsWith(`${ATTRIBUTION_COOKIE}=`))

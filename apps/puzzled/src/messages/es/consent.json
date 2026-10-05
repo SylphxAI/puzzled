@@ -1,11 +1,11 @@
 {
 	"title": "Consentimiento de analítica",
-	"message": "Usamos Google Analytics para contar las partidas; las cookies publicitarias permanecen desactivadas a menos que las actives.",
+	"message": "Contamos visitas y partidas con un contador propio y anónimo, sin cookies. Las cookies opcionales de analítica y publicidad permanecen desactivadas a menos que las actives.",
 	"accept": "Aceptar",
 	"decline": "Rechazar",
 	"learnMore": "Política de privacidad",
 	"analyticsLabel": "Cookies de analítica",
-	"analyticsHint": "Cuentan cómo se juegan los puzles.",
+	"analyticsHint": "Google Analytics, si el sitio lo usa.",
 	"marketingLabel": "Cookies publicitarias",
 	"marketingHint": "Miden si los anuncios de Google traen registros. Desactivadas por defecto.",
 	"change": "Cambiar elección de cookies"

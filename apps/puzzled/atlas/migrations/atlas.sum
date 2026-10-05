@@ -1,4 +1,4 @@
-h1:D5xqbno2yNxcRp4NvcPt5dESVcK6XXvJdLI0bu6h7Uc=
+h1:1Ssf3tAS6+6CF9egbFF9N6y9t7ZvUQTsgQuLU6n4Jqo=
 20260222000000_baseline.sql h1:s1JJixhhZWCRAJEmnXzCswTzY2VTuTEhVJvqun+xTXk=
 20260812000000_ritual_completion_drc.sql h1:Xhu5TcrCf1UV6Zbxsj1/PYLpoIjLbz8KTjCsFpPA+98=
 20260812010000_ritual_one_finish_per_day.sql h1:B8dS3cJud3fZs0VIFBSmWLuBf6poa/s9sJMtoNMfWGE=
@@ -15,3 +15,4 @@ h1:D5xqbno2yNxcRp4NvcPt5dESVcK6XXvJdLI0bu6h7Uc=
 20261001020000_guest_credentials.sql h1:FTO1ZBZIkh/C6GUxE01mGNis7+YP1RdUi5IVxantFuw=
 20261002020000_plus_trials.sql h1:nwJUc2Rm8Wi3I/bNEixeW8zpjICqZ1s8Di5+71xmWhI=
 20261003160000_daily_reminder_lease.sql h1:tjHCXQHuU4W3WqgLPXvn/Lt6vuMZcd0BbbaLDhLG2CY=
+20261005210000_funnel_events.sql h1:4wvtqaasahlVdC/GP3EXkUwn7TwsEttBgX7KoNgj4h0=

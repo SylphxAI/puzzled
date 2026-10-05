@@ -22,6 +22,7 @@ use super::connect_jobs::jobs_connect_service;
 use super::connect_preferences::preferences_connect_service;
 use super::connect_puzzle::puzzle_connect_service;
 use super::connect_stats::stats_connect_service;
+use super::funnel_event::funnel_event;
 use super::health::{healthz, readyz};
 use super::observability_test::observability_test;
 use super::state::AppState;
@@ -46,6 +47,7 @@ pub fn router(state: AppState) -> Router {
             "/v1/guest/session",
             post(crate::capabilities::identity_access::adapters::guest_credentials::session),
         )
+        .route("/v1/funnel/event", post(funnel_event))
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route(DAILY_PUZZLES_PATH, post(daily_puzzles_tick))

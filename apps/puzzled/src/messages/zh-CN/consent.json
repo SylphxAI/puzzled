@@ -1,11 +1,11 @@
 {
 	"title": "分析同意",
-	"message": "我们使用 Google Analytics 了解大家如何玩谜题，广告 Cookie 默认关闭，需要在“设置”中自行开启。",
+	"message": "我们用自己的匿名计数器统计访问和游玩次数，不使用 Cookie。可选的分析和广告 Cookie 默认关闭，需要在“设置”中自行开启。",
 	"accept": "同意",
 	"decline": "拒绝",
 	"learnMore": "隐私政策",
 	"analyticsLabel": "分析 Cookie",
-	"analyticsHint": "统计大家如何玩谜题。",
+	"analyticsHint": "若网站使用，则启用 Google Analytics。",
 	"marketingLabel": "广告 Cookie",
 	"marketingHint": "让我们了解 Google 广告是否带来注册。默认关闭。",
 	"change": "更改 Cookie 选择"

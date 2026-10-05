@@ -1,11 +1,11 @@
 {
 	"title": "アクセス解析の同意",
-	"message": "プレイ回数の集計にGoogleアナリティクスを使用しています。広告Cookieは、オンにしない限り使用しません。",
+	"message": "訪問数とプレイ回数は、Cookieを使わない自社の匿名カウンターで集計しています。任意の分析Cookieと広告Cookieは、オンにしない限り使用しません。",
 	"accept": "同意する",
 	"decline": "同意しない",
 	"learnMore": "プライバシーポリシー",
 	"analyticsLabel": "解析Cookie",
-	"analyticsHint": "パズルの遊ばれ方を集計します。",
+	"analyticsHint": "サイトが使う場合のGoogleアナリティクス。",
 	"marketingLabel": "広告Cookie",
 	"marketingHint": "Google広告の成果を確認します。初期設定ではオフです。",
 	"change": "Cookieの選択を変更"
