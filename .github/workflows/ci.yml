@@ -384,6 +384,28 @@ jobs:
       PUZZLED_REQUIRE_DB_TESTS: "1"
     steps:
       - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Migration versions are free and in order
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          QUEUE_BASE: ${{ github.event.merge_group.base_sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = pull_request ]; then
+            git fetch --no-tags --quiet origin "$BASE_REF"
+            export MIGRATION_BASE="origin/$BASE_REF"
+          else
+            export MIGRATION_BASE="$QUEUE_BASE"
+            unset PR_NUMBER
+          fi
+          scripts/check-migration-order.sh apps/puzzled/atlas/migrations
 
       - name: No job selects a billed runner
         run: bash .github/scripts/check-ci-runner-profile.sh
