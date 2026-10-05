@@ -1,0 +1,10 @@
+{
+	"showing": "Mostrando {start}-{end} de {total}",
+	"loadMore": "Cargar más",
+	"loading": "Cargando...",
+	"previous": "Anterior",
+	"next": "Siguiente",
+	"all": "Todo",
+	"noResults": "No se encontraron resultados",
+	"page": "Página {page} de {total}"
+}

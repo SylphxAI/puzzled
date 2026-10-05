@@ -1,0 +1,21 @@
+{
+	"keepStreak": "Mantenha sua sequência!",
+	"streakAtRisk": "Sequência em risco!",
+	"legendaryAtRisk": "Sequência lendária em risco!",
+	"playToMaintain": "Jogue hoje para manter viva a sua sequência de {streak} dias",
+	"playNow": "Jogar agora",
+	"currentStreak": "Sequência atual",
+	"bestStreak": "Melhor sequência",
+	"days": "dias",
+	"daysToGo": "dias para chegar lá",
+	"nextMilestone": "Próxima meta",
+	"freezes": "Congelamentos",
+	"useFreeze": "Usar congelamento",
+	"playToday": "Jogar hoje",
+	"dismiss": "Dispensar",
+	"emergency": "EMERGÊNCIA! {time} para salvar sua sequência de {streak} dias!",
+	"emergencyTitle": "EMERGÊNCIA!",
+	"critical": "Sua sequência de {streak} dias expira em {time}!",
+	"criticalTitle": "Sequência em estado crítico!",
+	"elevated": "Não perca sua sequência de {streak} dias! Faltam {time}"
+}

@@ -1,0 +1,24 @@
+{
+	"name": "Match",
+	"tagline": "12 cartas • Encuentra sets",
+	"highlight": "Buscador de sets",
+	"description": "Encuentra sets de 3 cartas con patrones que coinciden",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Encuentra sets de 3 cartas en los que cada propiedad sea toda igual O toda distinta",
+		"rule2": "Cada carta tiene 4 propiedades: forma, color, relleno y cantidad",
+		"rule3": "Selecciona 3 cartas que formen un set válido"
+	},
+	"startGame": "Empezar partida",
+	"setsFound": "sets encontrados",
+	"clear": "Borrar",
+	"giveUp": "Rendirse",
+	"hint": "Selecciona 3 cartas para comprobar si forman un set válido",
+	"complete": "¡Todos los sets encontrados!",
+	"messages": {
+		"correct": "¡Set válido!",
+		"notASet": "No es un set válido",
+		"alreadyFound": "Set ya encontrado"
+	}
+}

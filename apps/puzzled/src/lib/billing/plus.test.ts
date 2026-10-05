@@ -7,11 +7,13 @@ import {
 import {
 	currencyForLocale,
 	formatPrice,
+	formatTrialEnd,
 	isPlayLocked,
 	isPlusRequiredError,
 	planCards,
 	showsCurrentPlan,
 	subscriptionView,
+	trialBannerEndMs,
 	trialEndDate,
 	yearlySavingPercent,
 } from './plus'
@@ -133,5 +135,43 @@ describe('Puzzled Plus presentation', () => {
 		)
 		expect(owner.periodEndMs).toBe(1000)
 		expect(owner.family?.inviteCode).toBe('ABCDEFGHJK')
+	})
+})
+
+describe('trial ending banner', () => {
+	const DAY = 86_400_000
+	const now = Date.UTC(2026, 9, 3, 12, 0, 0)
+	const trial = (over: Partial<Parameters<typeof trialBannerEndMs>[0]> = {}) => ({
+		status: 'trialing',
+		cancelAtPeriodEnd: false,
+		periodEndMs: now + 2 * DAY,
+		...over,
+	})
+
+	test('shows in the last three days, boundary included', () => {
+		expect(trialBannerEndMs(trial({ periodEndMs: now + 3 * DAY }), now)).toBe(now + 3 * DAY)
+		expect(trialBannerEndMs(trial({ periodEndMs: now + 1 }), now)).toBe(now + 1)
+	})
+
+	test('stays hidden just over three days out and after the end', () => {
+		expect(trialBannerEndMs(trial({ periodEndMs: now + 3 * DAY + 1 }), now)).toBeNull()
+		expect(trialBannerEndMs(trial({ periodEndMs: now }), now)).toBeNull()
+		expect(trialBannerEndMs(trial({ periodEndMs: now - DAY }), now)).toBeNull()
+		expect(trialBannerEndMs(trial({ periodEndMs: null }), now)).toBeNull()
+	})
+
+	test('stays hidden when not trialing or already cancelled', () => {
+		expect(trialBannerEndMs(trial({ status: 'active' }), now)).toBeNull()
+		expect(trialBannerEndMs(trial({ status: null }), now)).toBeNull()
+		expect(trialBannerEndMs(trial({ cancelAtPeriodEnd: true }), now)).toBeNull()
+	})
+
+	test('the date is written in the viewer locale and time zone', () => {
+		const end = Date.UTC(2026, 9, 5, 23, 30, 0)
+		expect(formatTrialEnd(end, 'en-US', 'UTC')).toBe('October 5, 2026')
+		expect(formatTrialEnd(end, 'en-GB', 'UTC')).toBe('5 October 2026')
+		// 23:30 UTC is already the next day in Hong Kong.
+		expect(formatTrialEnd(end, 'en-US', 'Asia/Hong_Kong')).toBe('October 6, 2026')
+		expect(formatTrialEnd(end, 'zh-HK', 'Asia/Hong_Kong')).toBe('2026年10月6日')
 	})
 })

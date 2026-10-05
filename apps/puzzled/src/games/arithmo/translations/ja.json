@@ -1,0 +1,22 @@
+{
+	"name": "Arithmo",
+	"tagline": "8文字 • 数式パズル",
+	"highlight": "数式パズル",
+	"description": "6回以内に数式を当てよう",
+	"howToPlay": "遊び方",
+	"rules": {
+		"title": "遊び方",
+		"rule1": "6回以内に隠された数式を当てます",
+		"rule2": "入力する式は正しい数式でなければなりません",
+		"rule3": "マスの色で、予想がどれだけ近いかがわかります"
+	},
+	"startGame": "ゲーム開始",
+	"keyboard": {
+		"enter": "決定",
+		"delete": "削除"
+	},
+	"messages": {
+		"notComplete": "文字数が足りません",
+		"invalid": "正しい数式ではありません"
+	}
+}

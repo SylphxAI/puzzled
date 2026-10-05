@@ -1,0 +1,30 @@
+{
+	"name": "Threads",
+	"tagline": "Encuentra 4 grupos de 4",
+	"highlight": "4 categorías",
+	"description": "Agrupa 16 palabras en 4 categorías",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Encuentra grupos de 4 elementos que tengan algo en común",
+		"rule2": "Selecciona 4 elementos y toca Enviar para comprobar",
+		"rule3": "Tienes 4 errores permitidos"
+	},
+	"submit": "Enviar",
+	"shuffle": "Mezclar",
+	"deselect": "Deseleccionar todo",
+	"mistakes": "Errores restantes",
+	"mistakesRemaining": "Quedan {remaining} de {total} errores",
+	"messages": {
+		"correct": "¡Correcto!",
+		"oneAway": "Casi...",
+		"incorrect": "Incorrecto",
+		"gameOver": "¡Mejor suerte la próxima vez!"
+	},
+	"difficulty": {
+		"0": "Fácil",
+		"1": "Medio",
+		"2": "Difícil",
+		"3": "Complicado"
+	}
+}

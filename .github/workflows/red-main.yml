@@ -22,11 +22,12 @@ on:
     types: [completed]
   workflow_dispatch:
 
-# The job's own token. With the builder App key (repositories in the org that
-# holds it) the handler writes through the App and uses none of these writes.
-# Without it (token mode) the handler notifies on this token: it never
-# reruns; it files the issue and comments on the affected pull
-# request; it never opens a pull request with it.
+# The job's own token. It carries every Actions call (dispatch, runs,
+# artifacts) and the failure notice, in every mode; the handler never hands it
+# to pull-request-controlled code. With the builder App key (repositories in
+# the org that holds it) branch pushes and pull requests go through the App.
+# Without it (token mode) the handler notifies on this token: it comments on the
+# affected pull request; it never opens a pull request with it.
 permissions:
   actions: write
   checks: read
@@ -42,7 +43,7 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch'
       || (github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.head_branch == 'main')
-    uses: SylphxAI/.github/.github/workflows/red-main.yml@e545f01eca2b1e7d8888d8cd0135c13bc56af294 # main e545f01 (SylphxAI/.github#149, never rerun a red main)
+    uses: SylphxAI/.github/.github/workflows/red-main.yml@05ac6474b96425bcb4965addd025a93e061b66c4 # main 05ac647 (SylphxAI/.github#179, step and error signature proof)
     # One secret, passed by name. The handler needs exactly the builder App's
     # private key, and `secrets: inherit` would hand it every secret this
     # repository holds. The handler reads it as
@@ -51,5 +52,12 @@ jobs:
     # repository's `vars.SYLPHX_BUILDER_APP_ID`.
     secrets:
       SYLPHX_BUILDER_PRIVATE_KEY: ${{ secrets.SYLPHX_BUILDER_PRIVATE_KEY }}
+    # A repository that keeps the App key in a GitHub environment (limited to
+    # the trunk and release tags) drops the `secrets:` block above and adds
+    # `environment: <name>` here: a `uses:` job cannot declare `environment:`,
+    # so the handler's own job enters it and reads the key from it.
     with:
       verify-workflow: verify.yml
+      # The longest suite lane a trace re-runs is slower than the 20 minute default, so the
+      # trace's shared deadline is raised (at most 60).
+      candidate-timeout-minutes: 30

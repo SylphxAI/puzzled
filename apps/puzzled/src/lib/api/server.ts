@@ -52,7 +52,12 @@ import {
 	type TodaysPuzzle,
 } from '@/lib/api/domain/daily'
 import { isNoIdentityError } from '@/lib/api/no-identity'
-import { OPEN_ACCESS, type PlusAccess } from '@/lib/billing/plus'
+import {
+	OPEN_ACCESS,
+	type PlusAccess,
+	subscriptionView,
+	trialBannerEndMs,
+} from '@/lib/billing/plus'
 import { getLeaderboard } from '@/lib/connect/stats-client'
 import type { GetLeaderboardInput } from '@/lib/connect/stats-domain'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
@@ -407,6 +412,21 @@ export const getServerSubscription = cache(async (refresh = false) => {
 	return createClient(BillingService, transport).getSubscription(
 		create(GetSubscriptionRequestSchema, { refresh }),
 	)
+})
+
+/**
+ * The end of the viewer's paid trial when it is in its last days (see
+ * `trialBannerEndMs`), else null. Rides the cached subscription read; a failed
+ * read shows nothing.
+ */
+export const getServerTrialBannerEndMs = cache(async (): Promise<number | null> => {
+	try {
+		const view = subscriptionView(await getServerSubscription())
+		return trialBannerEndMs(view, Date.now())
+	} catch (error) {
+		logger.warn('plus.trial-banner-read-failed', { error })
+		return null
+	}
 })
 
 /**

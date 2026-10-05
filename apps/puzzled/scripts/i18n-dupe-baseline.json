@@ -5488,6 +5488,3612 @@
 				"value": "验证失败",
 				"keys": ["auth.verificationFailed", "settings.security.verificationFailed"]
 			}
+		],
+		"ja": [
+			{
+				"value": "2026-10-01",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
+				"value": "2段階認証",
+				"keys": ["settings.security.twoFactorAuth", "settings.securityScore.checks.twoFactor"]
+			},
+			{
+				"value": "2段階認証は有効です",
+				"keys": [
+					"settings.security.mfaEnabled",
+					"settings.security.securityCheckup.twoFactorEnabled"
+				]
+			},
+			{
+				"value": "2段階認証を有効にする",
+				"keys": ["settings.security.enableMfa", "settings.securityScore.checks.enableTwoFactor"]
+			},
+			{
+				"value": "Apple",
+				"keys": [
+					"auth.apple",
+					"settings.account.providers.apple",
+					"settings.connectedAccounts.providers.apple"
+				]
+			},
+			{
+				"value": "CSVをエクスポート",
+				"keys": ["admin.analytics.export", "admin.users.export"]
+			},
+			{
+				"value": "Cookie",
+				"keys": ["footer.cookies", "legal.privacy.sections.cookies.title"]
+			},
+			{
+				"value": "Discord",
+				"keys": [
+					"settings.account.providers.discord",
+					"settings.connectedAccounts.providers.discord"
+				]
+			},
+			{
+				"value": "Facebook",
+				"keys": [
+					"settings.account.providers.facebook",
+					"settings.connectedAccounts.providers.facebook"
+				]
+			},
+			{
+				"value": "GitHub",
+				"keys": ["settings.account.providers.github", "settings.connectedAccounts.providers.github"]
+			},
+			{
+				"value": "Google",
+				"keys": [
+					"auth.google",
+					"settings.account.providers.google",
+					"settings.connectedAccounts.providers.google"
+				]
+			},
+			{
+				"value": "IPアドレス",
+				"keys": ["admin.auditLogs.details.ipAddress", "admin.auditLogs.table.ip"]
+			},
+			{
+				"value": "Microsoft",
+				"keys": [
+					"settings.account.providers.microsoft",
+					"settings.connectedAccounts.providers.microsoft"
+				]
+			},
+			{
+				"value": "Puzzled Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
+				"value": "Puzzledプレイヤー",
+				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
+			},
+			{
+				"value": "puzzled.gg/u/{username}でプロフィールを公開します",
+				"keys": [
+					"settings.privacy.profileVisibility.publicProfileDescription",
+					"settings.profile.publicProfileDescription"
+				]
+			},
+			{
+				"value": "{count}件を選択中",
+				"keys": ["admin.users.bulkActions", "admin.users.selectedUsers"]
+			},
+			{
+				"value": "{count}種類が有効",
+				"keys": [
+					"settings.notifications.overview.emailActive",
+					"settings.notifications.overview.pushActive"
+				]
+			},
+			{
+				"value": "{days}日連続",
+				"keys": ["home.hero.streakChip", "share.card.streakDays", "stats.identity.streakChip"]
+			},
+			{
+				"value": "{min}文字以上",
+				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
+			},
+			{
+				"value": "{name}を編集",
+				"keys": ["admin.plans.editPlan", "admin.plans.editPlanTitle"]
+			},
+			{
+				"value": "あわせてご覧ください",
+				"keys": ["legal.privacy.cta.title", "legal.terms.cta.title"]
+			},
+			{
+				"value": "おかえりなさい",
+				"keys": ["auth.welcomeBack", "settings.overview.welcomeBack"]
+			},
+			{
+				"value": "お問い合わせ",
+				"keys": [
+					"footer.contact",
+					"legal.privacy.sections.contact.title",
+					"legal.terms.sections.contact.title",
+					"support.contact.title"
+				]
+			},
+			{
+				"value": "お知らせを作成",
+				"keys": ["admin.announcements.create", "admin.announcements.createTitle"]
+			},
+			{
+				"value": "このページの内容",
+				"keys": ["legal.privacy.toc.title", "legal.terms.toc.title"]
+			},
+			{
+				"value": "すべて",
+				"keys": ["catalog.filterAll", "pagination.all"]
+			},
+			{
+				"value": "すべてのゲーム",
+				"keys": ["catalog.metaTitle", "catalog.suiteTitle", "catalog.title", "footer.allGames"]
+			},
+			{
+				"value": "すべてのゲームに戻る",
+				"keys": ["archive.backToGames", "daily.backToGames"]
+			},
+			{
+				"value": "すべてのゲームを見る",
+				"keys": [
+					"catalog.gamePage.relatedAll",
+					"common.notFound.browseCta",
+					"home.day.browseAll",
+					"home.lineup.seeAll"
+				]
+			},
+			{
+				"value": "すべてのユーザー",
+				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
+			},
+			{
+				"value": "すべてコピー",
+				"keys": ["settings.recoveryCodes.copy", "settings.security.copyAll"]
+			},
+			{
+				"value": "すべて表示",
+				"keys": ["admin.dashboard.viewAll", "settings.security.loginHistory.viewAll"]
+			},
+			{
+				"value": "ほか{count}件",
+				"keys": [
+					"settings.overview.moreAchievements",
+					"settings.playerCard.achievementsSection.more"
+				]
+			},
+			{
+				"value": "もう一度試す",
+				"keys": [
+					"auth.errorRetry",
+					"settings.sessions.retry",
+					"stats.dailyStatusRetry",
+					"stats.retry"
+				]
+			},
+			{
+				"value": "アカウント",
+				"keys": [
+					"nav.account",
+					"settings.account.title",
+					"settings.nav.account",
+					"settings.search.sections.account"
+				]
+			},
+			{
+				"value": "アカウントとデータを削除する",
+				"keys": ["settings.account.centreDeletion", "settings.privacy.centreDeletion"]
+			},
+			{
+				"value": "アカウントを作成",
+				"keys": ["auth.createAccount", "auth.signUpTitle"]
+			},
+			{
+				"value": "アカウントセンターを開く",
+				"keys": ["settings.account.centreCta", "settings.security.protectionCta"]
+			},
+			{
+				"value": "アクティブなセッション",
+				"keys": [
+					"admin.system.activeSessions",
+					"settings.security.sessions.title",
+					"settings.sessions.title"
+				]
+			},
+			{
+				"value": "アーカイブ",
+				"keys": ["archive.eyebrow", "archive.title", "modes.archive", "nav.archive"]
+			},
+			{
+				"value": "キャンセル",
+				"keys": [
+					"admin.announcements.cancel",
+					"admin.featureFlags.cancel",
+					"admin.plans.cancel",
+					"common.cancel",
+					"settings.profile.cancel",
+					"settings.recoveryCodes.cancel",
+					"settings.security.cancel",
+					"settings.sessions.cancel"
+				]
+			},
+			{
+				"value": "クイックアクション",
+				"keys": ["admin.commandPalette.actions", "admin.dashboard.quickActions"]
+			},
+			{
+				"value": "クイック操作",
+				"keys": ["settings.notifications.quickActions.title", "settings.overview.quickActions"]
+			},
+			{
+				"value": "クリア",
+				"keys": ["calendar.won", "gameResult.won", "settings.search.clear"]
+			},
+			{
+				"value": "ゲーム",
+				"keys": ["admin.analytics.game", "admin.games.title", "admin.sidebar.games", "nav.games"]
+			},
+			{
+				"value": "コピーしました！",
+				"keys": ["settings.recoveryCodes.copied", "settings.security.copied"]
+			},
+			{
+				"value": "コンバージョン率",
+				"keys": ["admin.analytics.conversionRate", "admin.dashboard.conversionRate"]
+			},
+			{
+				"value": "コンパクト表示",
+				"keys": ["settings.compactMode", "settings.preferences.appearance.compactMode"]
+			},
+			{
+				"value": "コードを再生成",
+				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
+			},
+			{
+				"value": "サポート",
+				"keys": ["nav.support", "support.hero.eyebrow"]
+			},
+			{
+				"value": "サポートへ",
+				"keys": ["legal.privacy.cta.support", "legal.terms.cta.support"]
+			},
+			{
+				"value": "サービス",
+				"keys": ["admin.dashboard.services", "admin.system.services"]
+			},
+			{
+				"value": "シェア",
+				"keys": [
+					"common.share",
+					"settings.playerCard.share",
+					"settings.playerCard.shareProfile",
+					"share.share"
+				]
+			},
+			{
+				"value": "システム状態",
+				"keys": ["admin.sidebar.system", "admin.system.title"]
+			},
+			{
+				"value": "システム設定に合わせる",
+				"keys": ["common.theme.system", "settings.preferences.appearance.system"]
+			},
+			{
+				"value": "スコア",
+				"keys": [
+					"gameResult.score",
+					"leaderboard.columns.score",
+					"share.card.scoreLabel",
+					"stats.history.score"
+				]
+			},
+			{
+				"value": "ステータス",
+				"keys": ["admin.dlq.table.status", "gameResult.status"]
+			},
+			{
+				"value": "スラッグ",
+				"keys": ["admin.plans.planSlug", "admin.plans.slug"]
+			},
+			{
+				"value": "セキュリティ",
+				"keys": [
+					"common.security",
+					"settings.nav.security",
+					"settings.overview.sections.security",
+					"settings.search.sections.security",
+					"settings.security.title"
+				]
+			},
+			{
+				"value": "セキュリティを強化",
+				"keys": ["settings.overview.improveSecurity", "settings.securityScore.actions.improve"]
+			},
+			{
+				"value": "セキュリティスコア",
+				"keys": [
+					"settings.overview.securityScore",
+					"settings.security.securityCheckup.securityScore",
+					"settings.securityScore.score"
+				]
+			},
+			{
+				"value": "セキュリティチェック",
+				"keys": ["settings.security.securityCheckup.title", "settings.securityScore.title"]
+			},
+			{
+				"value": "セッションを読み込めませんでした",
+				"keys": ["settings.security.sessionsUnavailableTitle", "settings.sessions.fetchError"]
+			},
+			{
+				"value": "タイム",
+				"keys": ["gameResult.time", "share.card.timeLabel", "stats.history.time"]
+			},
+			{
+				"value": "ダウンロード",
+				"keys": ["settings.recoveryCodes.download", "settings.security.download"]
+			},
+			{
+				"value": "ダッシュボード",
+				"keys": ["admin.dashboard.title", "admin.sidebar.dashboard"]
+			},
+			{
+				"value": "ダーク",
+				"keys": ["common.theme.dark", "settings.preferences.appearance.dark"]
+			},
+			{
+				"value": "テーマ",
+				"keys": ["settings.preferences.appearance.theme", "settings.theme"]
+			},
+			{
+				"value": "デイリー",
+				"keys": ["modes.daily", "settings.notifications.quickActions.daily"]
+			},
+			{
+				"value": "デイリーアクティブユーザー",
+				"keys": ["admin.analytics.dau", "admin.analytics.dauChart"]
+			},
+			{
+				"value": "デイリーリマインダー",
+				"keys": ["settings.overview.quickNotifications.daily", "settings.pushDailyReminder"]
+			},
+			{
+				"value": "デッドレターキュー",
+				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
+			},
+			{
+				"value": "デフォルトプランを作成",
+				"keys": ["admin.commandPalette.seedPlans", "admin.plans.seedDefault"]
+			},
+			{
+				"value": "データをエクスポート",
+				"keys": ["settings.privacy.exportButton", "settings.privacy.exportData"]
+			},
+			{
+				"value": "ナンバー",
+				"keys": ["catalog.category.math", "catalog.gamePage.genre.math"]
+			},
+			{
+				"value": "パスワード",
+				"keys": [
+					"auth.password",
+					"reauth.password",
+					"reauth.usePassword",
+					"settings.account.password.title",
+					"settings.recoveryCodes.passwordLabel",
+					"settings.security.password"
+				]
+			},
+			{
+				"value": "パスワードが必要です",
+				"keys": [
+					"settings.email.setPasswordRequired",
+					"settings.recoveryCodes.passwordRequiredForRegenerate",
+					"settings.security.passwordRequiredTitle"
+				]
+			},
+			{
+				"value": "パスワードをお忘れですか？",
+				"keys": ["auth.forgotPassword", "auth.forgotPasswordTitle"]
+			},
+			{
+				"value": "パスワードを入力してください",
+				"keys": [
+					"auth.passwordRequired",
+					"reauth.errors.passwordRequired",
+					"settings.recoveryCodes.passwordRequired"
+				]
+			},
+			{
+				"value": "パスワードを再設定",
+				"keys": ["auth.resetPassword", "auth.resetPasswordTitle"]
+			},
+			{
+				"value": "パスワードを設定",
+				"keys": [
+					"settings.account.password.setPassword",
+					"settings.security.goToAccountSettings",
+					"settings.securityScore.checks.setPassword"
+				]
+			},
+			{
+				"value": "パズル",
+				"keys": [
+					"leaderboard.moduleLabel",
+					"stats.history.module",
+					"stats.modules.module",
+					"stats.modules.title"
+				]
+			},
+			{
+				"value": "パズル #{number}",
+				"keys": ["daily.puzzleNumber", "home.day.puzzleNumber"]
+			},
+			{
+				"value": "フィーチャーフラグ",
+				"keys": ["admin.featureFlags.title", "admin.sidebar.featureFlags"]
+			},
+			{
+				"value": "プッシュ",
+				"keys": [
+					"settings.notifications.overview.push",
+					"settings.overview.quickNotifications.push"
+				]
+			},
+			{
+				"value": "プッシュ通知",
+				"keys": ["settings.notifications.push.heading", "settings.pushNotifications"]
+			},
+			{
+				"value": "プライバシー",
+				"keys": [
+					"settings.nav.privacy",
+					"settings.overview.sections.privacy",
+					"settings.privacy.title",
+					"settings.search.sections.privacy"
+				]
+			},
+			{
+				"value": "プライバシーポリシー",
+				"keys": [
+					"consent.learnMore",
+					"footer.privacy",
+					"legal.privacy.title",
+					"support.resources.privacy.title"
+				]
+			},
+			{
+				"value": "プランと料金",
+				"keys": ["admin.plans.title", "admin.sidebar.plansAndPricing"]
+			},
+			{
+				"value": "プレイを始める",
+				"keys": ["settings.overview.startPlaying", "stats.startPlaying"]
+			},
+			{
+				"value": "プレイヤー",
+				"keys": ["leaderboard.columns.player", "plus.family.unnamed"]
+			},
+			{
+				"value": "プレイヤーカード",
+				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
+			},
+			{
+				"value": "プレイ数",
+				"keys": [
+					"admin.analytics.gamesChart",
+					"admin.analytics.plays",
+					"admin.dashboard.gamesPlayed",
+					"settings.overview.stats.played",
+					"settings.playerCard.stats.gamesPlayed",
+					"stats.gamesPlayed"
+				]
+			},
+			{
+				"value": "プレイ済み",
+				"keys": ["calendar.played", "stats.played"]
+			},
+			{
+				"value": "プレミアムのみ",
+				"keys": [
+					"admin.announcements.premiumOnly",
+					"admin.featureFlags.premiumOnly",
+					"admin.users.filterPremium"
+				]
+			},
+			{
+				"value": "プレミアムユーザー",
+				"keys": ["admin.dashboard.premiumUsers", "admin.system.premiumUsers"]
+			},
+			{
+				"value": "プロフィール",
+				"keys": [
+					"nav.profile",
+					"settings.nav.profile",
+					"settings.profile.title",
+					"settings.search.sections.profile"
+				]
+			},
+			{
+				"value": "プロフィールと表示情報",
+				"keys": ["settings.overview.sections.identity", "settings.overview.sections.profile"]
+			},
+			{
+				"value": "ホームに戻る",
+				"keys": ["daily.backToHome", "gameResult.backToHome"]
+			},
+			{
+				"value": "ホーム画面に追加",
+				"keys": ["pwa.installTitle", "pwa.iosAddHome"]
+			},
+			{
+				"value": "ミス",
+				"keys": ["gameResult.mistakes", "share.card.mistakesLabel"]
+			},
+			{
+				"value": "メール",
+				"keys": [
+					"settings.notifications.overview.email",
+					"settings.overview.quickNotifications.email"
+				]
+			},
+			{
+				"value": "メールをご確認ください",
+				"keys": ["auth.checkEmail", "auth.checkYourEmail"]
+			},
+			{
+				"value": "メールアドレス",
+				"keys": ["auth.email", "settings.email.title", "settings.profile.email"]
+			},
+			{
+				"value": "メールアドレスを入力してください",
+				"keys": ["auth.emailRequired", "settings.email.emailRequired"]
+			},
+			{
+				"value": "メールアドレスを入力してください。パスワードを再設定するためのリンクをお送りします。",
+				"keys": ["auth.forgotPasswordDescription", "auth.resetInstructions"]
+			},
+			{
+				"value": "メール認証済み",
+				"keys": [
+					"settings.security.securityCheckup.emailVerified",
+					"settings.securityScore.checks.emailVerified"
+				]
+			},
+			{
+				"value": "ユーザー",
+				"keys": [
+					"admin.analytics.users",
+					"admin.auditLogs.details.user",
+					"admin.sidebar.users",
+					"admin.users.tableHeaders.user",
+					"admin.users.title"
+				]
+			},
+			{
+				"value": "ユーザー名",
+				"keys": ["settings.privacy.profileVisibility.visibleUsername", "settings.profile.username"]
+			},
+			{
+				"value": "ライト",
+				"keys": ["common.theme.light", "settings.preferences.appearance.light"]
+			},
+			{
+				"value": "ランキング",
+				"keys": ["leaderboard.title", "nav.leaderboard", "stats.viewLeaderboard"]
+			},
+			{
+				"value": "ランキングを見る",
+				"keys": ["settings.playerCard.boardLink", "settings.privacy.boardsCta"]
+			},
+			{
+				"value": "リカバリーコード",
+				"keys": ["settings.recoveryCodes.title", "settings.securityScore.checks.recoveryCodes"]
+			},
+			{
+				"value": "リソース",
+				"keys": ["admin.auditLogs.details.resource", "admin.auditLogs.table.resource"]
+			},
+			{
+				"value": "リソースの種類",
+				"keys": ["admin.auditLogs.details.resourceType", "admin.auditLogs.filters.resourceType"]
+			},
+			{
+				"value": "リンクをコピー",
+				"keys": ["plus.family.copy", "settings.playerCard.copyLink"]
+			},
+			{
+				"value": "ログアウト",
+				"keys": [
+					"admin.auditLogs.actions.logout",
+					"common.signOut",
+					"settings.account.signOutTitle",
+					"settings.sessions.signOut"
+				]
+			},
+			{
+				"value": "ログイン",
+				"keys": [
+					"admin.auditLogs.actions.login",
+					"auth.signIn",
+					"common.signIn",
+					"plus.unlock.signIn",
+					"stats.signIn"
+				]
+			},
+			{
+				"value": "ロジック",
+				"keys": ["catalog.category.logic", "catalog.gamePage.genre.logic"]
+			},
+			{
+				"value": "ワード",
+				"keys": ["catalog.category.word", "catalog.gamePage.genre.word"]
+			},
+			{
+				"value": "不明な場所",
+				"keys": [
+					"settings.security.loginHistory.unknownLocation",
+					"settings.sessions.unknownLocation"
+				]
+			},
+			{
+				"value": "不明な端末",
+				"keys": ["settings.security.loginHistory.unknownDevice", "settings.sessions.unknownDevice"]
+			},
+			{
+				"value": "今日",
+				"keys": [
+					"leaderboard.period.today",
+					"nav.today",
+					"stats.calendar.todayLabel",
+					"stats.today.title"
+				]
+			},
+			{
+				"value": "今日のおすすめ",
+				"keys": ["catalog.freeToday", "home.lineup.freeToday"]
+			},
+			{
+				"value": "今日の日課を遊ぶ({game})",
+				"keys": ["archive.emptyPlay", "archive.playToday"]
+			},
+			{
+				"value": "今日の無料パズルを遊ぶ",
+				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
+			},
+			{
+				"value": "今日はまだ終わっていません",
+				"keys": ["stats.streakCard.notPlayedToday", "stats.streakHintOpen"]
+			},
+			{
+				"value": "今週",
+				"keys": ["admin.analytics.thisWeek", "leaderboard.period.week"]
+			},
+			{
+				"value": "余白を小さくして、より密度の高いレイアウトにします",
+				"keys": [
+					"settings.compactModeDescription",
+					"settings.preferences.appearance.compactModeDescription"
+				]
+			},
+			{
+				"value": "保存",
+				"keys": [
+					"admin.announcements.save",
+					"admin.featureFlags.save",
+					"common.save",
+					"settings.achievements.save",
+					"settings.profile.save"
+				]
+			},
+			{
+				"value": "保存中...",
+				"keys": [
+					"settings.achievements.saving",
+					"settings.notifications.push.saving",
+					"settings.profile.saving"
+				]
+			},
+			{
+				"value": "保留中",
+				"keys": ["admin.dlq.stats.pending", "admin.dlq.status.pending"]
+			},
+			{
+				"value": "保護済み",
+				"keys": ["settings.connectedAccounts.secured", "settings.overview.badges.secure"]
+			},
+			{
+				"value": "公開プロフィール",
+				"keys": [
+					"settings.privacy.profileVisibility.publicProfile",
+					"settings.profile.publicProfile"
+				]
+			},
+			{
+				"value": "再試行",
+				"keys": ["admin.dlq.actions.retry", "common.retry"]
+			},
+			{
+				"value": "再試行中",
+				"keys": ["admin.dlq.stats.retrying", "admin.dlq.status.retrying"]
+			},
+			{
+				"value": "写真をアップロード",
+				"keys": ["settings.profile.avatarUpload.uploadPhoto", "settings.profile.uploadPhoto"]
+			},
+			{
+				"value": "分析",
+				"keys": [
+					"admin.analytics.title",
+					"admin.sidebar.analytics",
+					"settings.privacy.analytics.title"
+				]
+			},
+			{
+				"value": "利用規約",
+				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+			},
+			{
+				"value": "削除",
+				"keys": [
+					"admin.announcements.delete",
+					"admin.auditLogs.actions.delete",
+					"admin.dlq.actions.delete",
+					"admin.featureFlags.delete",
+					"plus.family.remove",
+					"settings.profile.avatarUpload.remove"
+				]
+			},
+			{
+				"value": "削除する",
+				"keys": [
+					"admin.announcements.deleteConfirm",
+					"admin.featureFlags.deleteConfirm",
+					"admin.plans.deleteConfirm"
+				]
+			},
+			{
+				"value": "前へ",
+				"keys": ["admin.auditLogs.pagination.previous", "pagination.previous"]
+			},
+			{
+				"value": "勝利",
+				"keys": ["stats.history.won", "stats.modules.won"]
+			},
+			{
+				"value": "勝利数",
+				"keys": [
+					"settings.overview.stats.wins",
+					"settings.playerCard.stats.wins",
+					"stats.calendar.tableWon"
+				]
+			},
+			{
+				"value": "勝率",
+				"keys": [
+					"settings.overview.stats.winRate",
+					"settings.playerCard.stats.winRate",
+					"stats.modules.winRate",
+					"stats.winRate"
+				]
+			},
+			{
+				"value": "名前",
+				"keys": ["admin.featureFlags.name", "auth.name"]
+			},
+			{
+				"value": "名前を入力してください",
+				"keys": ["auth.nameRequired", "settings.profile.nameRequiredDescription"]
+			},
+			{
+				"value": "変更を保存",
+				"keys": ["admin.plans.saveChanges", "settings.profile.saveChanges"]
+			},
+			{
+				"value": "失敗",
+				"keys": [
+					"admin.dlq.stats.failed",
+					"admin.dlq.status.failed",
+					"gameResult.lost",
+					"settings.security.loginHistory.failed"
+				]
+			},
+			{
+				"value": "完了",
+				"keys": [
+					"daily.completed",
+					"settings.recoveryCodes.done",
+					"stats.calendar.todayDone",
+					"stats.modules.finished",
+					"stats.today.done"
+				]
+			},
+			{
+				"value": "完了（勝利なし）",
+				"keys": ["stats.calendar.legendFinished", "stats.history.finished"]
+			},
+			{
+				"value": "実績",
+				"keys": [
+					"achievements.title",
+					"settings.playerCard.achievements",
+					"settings.playerCard.achievementsSection.title"
+				]
+			},
+			{
+				"value": "平均スコア",
+				"keys": ["admin.analytics.avgScore", "stats.avgScore"]
+			},
+			{
+				"value": "年額",
+				"keys": ["admin.plans.annual", "plus.pricing.yearly"]
+			},
+			{
+				"value": "成功",
+				"keys": ["admin.announcements.typeSuccess", "settings.security.loginHistory.success"]
+			},
+			{
+				"value": "挑戦回数",
+				"keys": ["gameResult.attempts", "share.card.attemptsLabel"]
+			},
+			{
+				"value": "操作",
+				"keys": [
+					"admin.auditLogs.table.action",
+					"admin.dlq.table.actions",
+					"admin.users.tableHeaders.actions"
+				]
+			},
+			{
+				"value": "料金",
+				"keys": ["admin.plans.prices", "admin.plans.pricing"]
+			},
+			{
+				"value": "新しいタブで開きます。",
+				"keys": ["settings.account.centreNote", "settings.privacy.centreNote"]
+			},
+			{
+				"value": "新しいパスワード",
+				"keys": ["auth.newPassword", "settings.account.password.newPassword"]
+			},
+			{
+				"value": "新規登録",
+				"keys": ["admin.analytics.signups", "auth.signUp", "common.signUp"]
+			},
+			{
+				"value": "日",
+				"keys": [
+					"settings.overview.stats.days",
+					"settings.playerCard.stats.days",
+					"stats.calendar.weekday.sun",
+					"streak.days"
+				]
+			},
+			{
+				"value": "日付",
+				"keys": ["stats.calendar.tableDay", "stats.history.day"]
+			},
+			{
+				"value": "日時",
+				"keys": ["admin.auditLogs.details.timestamp", "admin.auditLogs.table.timestamp"]
+			},
+			{
+				"value": "日連続",
+				"keys": ["onboarding.dayStreak", "settings.overview.dayStreak", "stats.dayStreak"]
+			},
+			{
+				"value": "普通",
+				"keys": ["auth.passwordStrength.fair", "settings.overview.protectionLevels.fair"]
+			},
+			{
+				"value": "更新",
+				"keys": [
+					"admin.analytics.lastUpdated",
+					"admin.auditLogs.actions.update",
+					"admin.auditLogs.filters.refresh",
+					"admin.dlq.refresh",
+					"admin.games.refresh",
+					"admin.system.refresh",
+					"common.refresh"
+				]
+			},
+			{
+				"value": "更新に失敗しました",
+				"keys": ["settings.achievements.saveFailed", "settings.profile.updateFailed"]
+			},
+			{
+				"value": "最終更新日",
+				"keys": ["legal.privacy.lastUpdated", "legal.terms.lastUpdated"]
+			},
+			{
+				"value": "最長の連続記録",
+				"keys": ["home.member.bestStreak", "settings.overview.stats.maxStreak", "streak.bestStreak"]
+			},
+			{
+				"value": "最長連続記録",
+				"keys": ["stats.maxStreak", "stats.milestones.metric.streak"]
+			},
+			{
+				"value": "月額",
+				"keys": ["admin.plans.monthly", "plus.pricing.monthly"]
+			},
+			{
+				"value": "有効",
+				"keys": [
+					"admin.announcements.active",
+					"admin.featureFlags.enabled",
+					"admin.plans.active",
+					"plus.subscription.status.active",
+					"settings.notifications.overview.enabled"
+				]
+			},
+			{
+				"value": "有効なメールアドレスを入力してください",
+				"keys": ["auth.emailInvalid", "settings.email.invalidEmail"]
+			},
+			{
+				"value": "未使用",
+				"keys": ["settings.streakFreeze.never", "settings.streakFreeze.neverUsed"]
+			},
+			{
+				"value": "未完了",
+				"keys": ["stats.calendar.todayOpen", "stats.today.open"]
+			},
+			{
+				"value": "未認証",
+				"keys": [
+					"admin.users.notVerified",
+					"settings.email.unverified",
+					"settings.profile.emailUnverified"
+				]
+			},
+			{
+				"value": "未連携",
+				"keys": ["settings.account.notConnected", "settings.connectedAccounts.notConnected"]
+			},
+			{
+				"value": "本人確認",
+				"keys": [
+					"reauth.title",
+					"settings.account.password.verifyIdentity",
+					"settings.connectedAccounts.verifyIdentity",
+					"settings.privacy.deleteAccount.verifyTitle",
+					"settings.security.verifyIdentity"
+				]
+			},
+			{
+				"value": "検索をクリア",
+				"keys": ["admin.commandPalette.clear", "settings.search.clearSearch"]
+			},
+			{
+				"value": "概要",
+				"keys": ["settings.nav.overview", "settings.security.tabs.overview"]
+			},
+			{
+				"value": "次へ",
+				"keys": ["admin.auditLogs.pagination.next", "common.next", "pagination.next"]
+			},
+			{
+				"value": "毎日お知らせする",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
+				"value": "法的情報",
+				"keys": ["footer.legalHeading", "legal.privacy.eyebrow", "legal.terms.eyebrow"]
+			},
+			{
+				"value": "無効",
+				"keys": [
+					"admin.announcements.inactive",
+					"admin.featureFlags.disabled",
+					"admin.plans.inactive",
+					"plus.subscription.status.other",
+					"settings.notifications.overview.emailOff",
+					"settings.notifications.overview.pushOff"
+				]
+			},
+			{
+				"value": "無料",
+				"keys": ["admin.users.free", "daily.freeToday", "plus.pricing.freeTitle"]
+			},
+			{
+				"value": "現在のパスワード",
+				"keys": ["settings.account.password.currentPassword", "settings.email.confirmPassword"]
+			},
+			{
+				"value": "現在の連続記録",
+				"keys": [
+					"home.member.currentStreak",
+					"settings.overview.stats.currentStreak",
+					"stats.currentStreak",
+					"streak.currentStreak"
+				]
+			},
+			{
+				"value": "環境設定",
+				"keys": [
+					"settings.nav.preferences",
+					"settings.overview.sections.preferences",
+					"settings.preferences.title",
+					"settings.search.sections.preferences"
+				]
+			},
+			{
+				"value": "監査ログ",
+				"keys": ["admin.auditLogs.title", "admin.dashboard.auditLogs", "admin.sidebar.auditLogs"]
+			},
+			{
+				"value": "監査ログが見つかりません",
+				"keys": ["admin.auditLogs.details.notFound", "admin.auditLogs.empty.title"]
+			},
+			{
+				"value": "確認",
+				"keys": ["common.confirm", "settings.security.verify"]
+			},
+			{
+				"value": "確認に失敗しました",
+				"keys": ["settings.profile.checkFailed", "settings.security.verificationFailed"]
+			},
+			{
+				"value": "移動",
+				"keys": ["admin.commandPalette.navigate", "settings.search.navigate"]
+			},
+			{
+				"value": "空間",
+				"keys": ["catalog.category.spatial", "catalog.gamePage.genre.spatial"]
+			},
+			{
+				"value": "端末をまたいでアクティブなセッションを管理します",
+				"keys": ["settings.security.sessions.description", "settings.sessions.description"]
+			},
+			{
+				"value": "管理操作",
+				"keys": ["admin.auditLogs.actions.admin_action", "admin.auditLogs.stats.adminActions"]
+			},
+			{
+				"value": "管理者にする",
+				"keys": ["admin.users.makeAdmin", "admin.users.makeAdminBulk"]
+			},
+			{
+				"value": "管理者のみ",
+				"keys": ["admin.featureFlags.adminOnly", "admin.users.filterAdmins"]
+			},
+			{
+				"value": "管理者を解除",
+				"keys": ["admin.users.removeAdmin", "admin.users.removeAdminBulk"]
+			},
+			{
+				"value": "結果を見る",
+				"keys": ["daily.viewResult", "gameResult.seeResult"]
+			},
+			{
+				"value": "統計",
+				"keys": ["nav.stats", "stats.title"]
+			},
+			{
+				"value": "総ユーザー数",
+				"keys": ["admin.dashboard.totalUsers", "admin.system.totalUsers", "admin.users.totalUsers"]
+			},
+			{
+				"value": "編集",
+				"keys": ["admin.plans.edit", "settings.playerCard.edit", "settings.profile.edit"]
+			},
+			{
+				"value": "良好",
+				"keys": [
+					"settings.overview.protectionLevels.good",
+					"settings.overview.security.good",
+					"settings.security.securityCheckup.scoreGood"
+				]
+			},
+			{
+				"value": "表示名とアバター",
+				"keys": ["settings.privacy.profileVisibility.visibleName", "settings.profile.identityTitle"]
+			},
+			{
+				"value": "要確認",
+				"keys": [
+					"settings.overview.security.needsAttention",
+					"settings.security.securityCheckup.scoreNeedsAttention"
+				]
+			},
+			{
+				"value": "視覚効果を減らす",
+				"keys": ["settings.preferences.appearance.reduceMotion", "settings.reduceMotion"]
+			},
+			{
+				"value": "解決済み",
+				"keys": ["admin.dlq.stats.resolved", "admin.dlq.status.resolved"]
+			},
+			{
+				"value": "設定",
+				"keys": [
+					"admin.dashboard.settings",
+					"admin.settings.title",
+					"admin.sidebar.settings",
+					"common.settings",
+					"settings.overview.title",
+					"settings.title"
+				]
+			},
+			{
+				"value": "設定を検索",
+				"keys": ["settings.search.ariaLabel", "settings.search.searchSettings"]
+			},
+			{
+				"value": "認証",
+				"keys": [
+					"legal.privacy.sections.thirdParty.google",
+					"settings.security.tabs.authentication"
+				]
+			},
+			{
+				"value": "認証アプリに表示される6桁のコードを入力してください",
+				"keys": [
+					"settings.security.enter6DigitCodeFromApp",
+					"settings.security.enterVerificationCode"
+				]
+			},
+			{
+				"value": "認証済み",
+				"keys": [
+					"admin.users.tableHeaders.verified",
+					"admin.users.verified",
+					"settings.email.verified",
+					"settings.playerCard.verified",
+					"settings.profile.emailVerified"
+				]
+			},
+			{
+				"value": "説明",
+				"keys": [
+					"admin.featureFlags.description",
+					"admin.plans.description",
+					"admin.plans.planDescription"
+				]
+			},
+			{
+				"value": "読み込み中...",
+				"keys": ["common.loading", "pagination.loading", "settings.security.loading"]
+			},
+			{
+				"value": "読み込めませんでした",
+				"keys": ["settings.playerCard.notLoaded", "stats.unknownSr"]
+			},
+			{
+				"value": "返信はメールでお送りします。",
+				"keys": ["support.email.responseTime", "support.hero.factReply"]
+			},
+			{
+				"value": "送信中...",
+				"keys": [
+					"auth.sending",
+					"reauth.sending",
+					"settings.testEmailSending",
+					"settings.testPushSending"
+				]
+			},
+			{
+				"value": "通知",
+				"keys": [
+					"settings.nav.notifications",
+					"settings.notifications.title",
+					"settings.overview.quickNotifications.title",
+					"settings.overview.sections.notifications",
+					"settings.preferences.notifications.title"
+				]
+			},
+			{
+				"value": "連携する",
+				"keys": ["settings.account.connect", "settings.connectedAccounts.connect"]
+			},
+			{
+				"value": "連携アカウント",
+				"keys": [
+					"settings.account.connectedAccounts",
+					"settings.connectedAccounts.title",
+					"settings.overview.sections.account"
+				]
+			},
+			{
+				"value": "連携済み",
+				"keys": ["settings.account.connected", "settings.connectedAccounts.connected"]
+			},
+			{
+				"value": "連携解除",
+				"keys": ["settings.account.disconnect", "settings.connectedAccounts.disconnect"]
+			},
+			{
+				"value": "連続",
+				"keys": ["settings.playerCard.stats.currentStreak", "settings.playerCard.stats.streak"]
+			},
+			{
+				"value": "連続記録",
+				"keys": [
+					"settings.notifications.quickActions.streak",
+					"settings.overview.stats.streak",
+					"share.card.streakLabel",
+					"stats.streak",
+					"stats.streakCard.title"
+				]
+			},
+			{
+				"value": "連続記録アラート",
+				"keys": [
+					"settings.notifications.push.streakAlert",
+					"settings.overview.quickNotifications.streak",
+					"settings.pushStreakAlert"
+				]
+			},
+			{
+				"value": "遊び方",
+				"keys": ["common.help", "common.howToPlay"]
+			},
+			{
+				"value": "遊ぶ",
+				"keys": ["archive.play", "common.play", "footer.playHeading", "home.lineup.play"]
+			},
+			{
+				"value": "過去のパズルを遊ぶ",
+				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
+			},
+			{
+				"value": "選択",
+				"keys": ["admin.commandPalette.select", "settings.search.select"]
+			},
+			{
+				"value": "閉じる",
+				"keys": [
+					"admin.commandPalette.close",
+					"admin.plans.close",
+					"auth.close",
+					"common.dismiss",
+					"streak.dismiss"
+				]
+			},
+			{
+				"value": "非常に良好",
+				"keys": [
+					"settings.overview.protectionLevels.excellent",
+					"settings.overview.security.excellent",
+					"settings.security.securityCheckup.scoreExcellent"
+				]
+			}
+		],
+		"es": [
+			{
+				"value": "+{count} más",
+				"keys": [
+					"settings.overview.moreAchievements",
+					"settings.playerCard.achievementsSection.more"
+				]
+			},
+			{
+				"value": "2026-10-01",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
+				"value": "Abrir el centro de cuenta",
+				"keys": ["settings.account.centreCta", "settings.security.protectionCta"]
+			},
+			{
+				"value": "Acciones",
+				"keys": ["admin.dlq.table.actions", "admin.users.tableHeaders.actions"]
+			},
+			{
+				"value": "Acciones rápidas",
+				"keys": [
+					"admin.commandPalette.actions",
+					"admin.dashboard.quickActions",
+					"settings.notifications.quickActions.title",
+					"settings.overview.quickActions"
+				]
+			},
+			{
+				"value": "Activo",
+				"keys": ["admin.announcements.active", "admin.plans.active"]
+			},
+			{
+				"value": "Actualizar",
+				"keys": [
+					"admin.auditLogs.actions.update",
+					"admin.auditLogs.filters.refresh",
+					"admin.dlq.refresh",
+					"admin.games.refresh",
+					"admin.system.refresh",
+					"common.refresh"
+				]
+			},
+			{
+				"value": "Ajustes",
+				"keys": [
+					"admin.dashboard.settings",
+					"admin.settings.title",
+					"admin.sidebar.settings",
+					"common.settings",
+					"settings.overview.title",
+					"settings.title"
+				]
+			},
+			{
+				"value": "Al menos {min} caracteres",
+				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
+			},
+			{
+				"value": "Alertas de racha",
+				"keys": ["settings.notifications.push.streakAlert", "settings.pushStreakAlert"]
+			},
+			{
+				"value": "Analítica",
+				"keys": ["admin.analytics.title", "admin.sidebar.analytics"]
+			},
+			{
+				"value": "Anterior",
+				"keys": ["admin.auditLogs.pagination.previous", "pagination.previous"]
+			},
+			{
+				"value": "Anual",
+				"keys": ["admin.plans.annual", "plus.pricing.yearly"]
+			},
+			{
+				"value": "Apariencia e idioma",
+				"keys": ["settings.nav.preferencesDesc", "settings.overview.sections.preferencesDesc"]
+			},
+			{
+				"value": "Apple",
+				"keys": [
+					"auth.apple",
+					"settings.account.providers.apple",
+					"settings.connectedAccounts.providers.apple"
+				]
+			},
+			{
+				"value": "Archivo",
+				"keys": ["archive.eyebrow", "modes.archive", "nav.archive"]
+			},
+			{
+				"value": "Autenticación",
+				"keys": [
+					"legal.privacy.sections.thirdParty.google",
+					"settings.security.tabs.authentication"
+				]
+			},
+			{
+				"value": "Autenticación en dos pasos",
+				"keys": ["settings.security.twoFactorAuth", "settings.securityScore.checks.twoFactor"]
+			},
+			{
+				"value": "Aún no",
+				"keys": ["stats.calendar.todayOpen", "stats.today.open"]
+			},
+			{
+				"value": "Borrar búsqueda",
+				"keys": ["admin.commandPalette.clear", "settings.search.clearSearch"]
+			},
+			{
+				"value": "Bueno",
+				"keys": [
+					"settings.overview.protectionLevels.good",
+					"settings.overview.security.good",
+					"settings.security.securityCheckup.scoreGood"
+				]
+			},
+			{
+				"value": "Buscar ajustes",
+				"keys": ["settings.search.ariaLabel", "settings.search.searchSettings"]
+			},
+			{
+				"value": "Cambiar idioma",
+				"keys": ["common.changeLanguage", "common.switchLanguage"]
+			},
+			{
+				"value": "Cancelar",
+				"keys": [
+					"admin.announcements.cancel",
+					"admin.featureFlags.cancel",
+					"admin.plans.cancel",
+					"common.cancel",
+					"settings.profile.cancel",
+					"settings.recoveryCodes.cancel",
+					"settings.security.cancel",
+					"settings.sessions.cancel"
+				]
+			},
+			{
+				"value": "Cargando...",
+				"keys": ["common.loading", "pagination.loading", "settings.security.loading"]
+			},
+			{
+				"value": "Cargar planes predeterminados",
+				"keys": ["admin.commandPalette.seedPlans", "admin.plans.seedDefault"]
+			},
+			{
+				"value": "Cerrar",
+				"keys": ["admin.commandPalette.close", "admin.plans.close", "auth.close"]
+			},
+			{
+				"value": "Cerrar sesión",
+				"keys": ["common.signOut", "settings.account.signOutTitle", "settings.sessions.signOut"]
+			},
+			{
+				"value": "Claro",
+				"keys": ["common.theme.light", "settings.preferences.appearance.light"]
+			},
+			{
+				"value": "Clasificación",
+				"keys": ["leaderboard.title", "nav.leaderboard", "stats.viewLeaderboard"]
+			},
+			{
+				"value": "Cola de mensajes fallidos",
+				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
+			},
+			{
+				"value": "Compartir",
+				"keys": [
+					"common.share",
+					"settings.playerCard.share",
+					"settings.playerCard.shareProfile",
+					"share.share"
+				]
+			},
+			{
+				"value": "Completadas",
+				"keys": [
+					"admin.analytics.completions",
+					"stats.calendar.tableFinished",
+					"stats.modules.finished"
+				]
+			},
+			{
+				"value": "Completado",
+				"keys": ["stats.calendar.todayDone", "stats.today.done"]
+			},
+			{
+				"value": "Conectada",
+				"keys": ["settings.account.connected", "settings.connectedAccounts.connected"]
+			},
+			{
+				"value": "Conectar",
+				"keys": ["settings.account.connect", "settings.connectedAccounts.connect"]
+			},
+			{
+				"value": "Confirmar",
+				"keys": ["common.confirm", "settings.security.confirm"]
+			},
+			{
+				"value": "Contacto",
+				"keys": [
+					"footer.contact",
+					"legal.privacy.sections.contact.title",
+					"legal.terms.sections.contact.title",
+					"support.contact.title"
+				]
+			},
+			{
+				"value": "Contraseña",
+				"keys": [
+					"auth.password",
+					"reauth.password",
+					"reauth.usePassword",
+					"settings.account.password.title",
+					"settings.recoveryCodes.passwordLabel",
+					"settings.security.password"
+				]
+			},
+			{
+				"value": "Contraseña actual",
+				"keys": ["settings.account.password.currentPassword", "settings.email.confirmPassword"]
+			},
+			{
+				"value": "Contraseña necesaria",
+				"keys": [
+					"settings.email.setPasswordRequired",
+					"settings.recoveryCodes.passwordRequiredForRegenerate",
+					"settings.security.passwordRequiredTitle"
+				]
+			},
+			{
+				"value": "Cookies",
+				"keys": ["footer.cookies", "legal.privacy.sections.cookies.title"]
+			},
+			{
+				"value": "Copiar enlace",
+				"keys": ["plus.family.copy", "settings.playerCard.copyLink"]
+			},
+			{
+				"value": "Copiar todos",
+				"keys": ["settings.recoveryCodes.copy", "settings.security.copyAll"]
+			},
+			{
+				"value": "Correo",
+				"keys": [
+					"settings.notifications.overview.email",
+					"settings.overview.quickNotifications.email",
+					"settings.profile.email"
+				]
+			},
+			{
+				"value": "Correo verificado",
+				"keys": [
+					"settings.security.securityCheckup.emailVerified",
+					"settings.securityScore.checks.emailVerified"
+				]
+			},
+			{
+				"value": "Crear anuncio",
+				"keys": ["admin.announcements.create", "admin.announcements.createTitle"]
+			},
+			{
+				"value": "Cuenta",
+				"keys": [
+					"nav.account",
+					"settings.account.title",
+					"settings.nav.account",
+					"settings.search.sections.account"
+				]
+			},
+			{
+				"value": "Cuentas conectadas",
+				"keys": [
+					"settings.account.connectedAccounts",
+					"settings.connectedAccounts.title",
+					"settings.overview.sections.account"
+				]
+			},
+			{
+				"value": "Códigos de recuperación",
+				"keys": ["settings.recoveryCodes.title", "settings.securityScore.checks.recoveryCodes"]
+			},
+			{
+				"value": "Cómo jugar",
+				"keys": ["common.help", "common.howToPlay"]
+			},
+			{
+				"value": "Desactivadas",
+				"keys": [
+					"settings.notifications.overview.emailOff",
+					"settings.notifications.overview.pushOff"
+				]
+			},
+			{
+				"value": "Descargar",
+				"keys": ["settings.recoveryCodes.download", "settings.security.download"]
+			},
+			{
+				"value": "Descartar",
+				"keys": ["common.dismiss", "streak.dismiss"]
+			},
+			{
+				"value": "Desconectar",
+				"keys": ["settings.account.disconnect", "settings.connectedAccounts.disconnect"]
+			},
+			{
+				"value": "Descripción",
+				"keys": [
+					"admin.featureFlags.description",
+					"admin.plans.description",
+					"admin.plans.planDescription"
+				]
+			},
+			{
+				"value": "Diario",
+				"keys": ["modes.daily", "settings.notifications.quickActions.daily"]
+			},
+			{
+				"value": "Dirección IP",
+				"keys": ["admin.auditLogs.details.ipAddress", "admin.auditLogs.table.ip"]
+			},
+			{
+				"value": "Discord",
+				"keys": [
+					"settings.account.providers.discord",
+					"settings.connectedAccounts.providers.discord"
+				]
+			},
+			{
+				"value": "Dispositivo desconocido",
+				"keys": ["settings.security.loginHistory.unknownDevice", "settings.sessions.unknownDevice"]
+			},
+			{
+				"value": "Día",
+				"keys": ["stats.calendar.tableDay", "stats.history.day"]
+			},
+			{
+				"value": "Editar",
+				"keys": ["admin.plans.edit", "settings.playerCard.edit", "settings.profile.edit"]
+			},
+			{
+				"value": "Editar {name}",
+				"keys": ["admin.plans.editPlan", "admin.plans.editPlanTitle"]
+			},
+			{
+				"value": "Elimina tu cuenta y sus datos",
+				"keys": ["settings.account.centreDeletion", "settings.privacy.centreDeletion"]
+			},
+			{
+				"value": "Eliminar",
+				"keys": [
+					"admin.announcements.delete",
+					"admin.auditLogs.actions.delete",
+					"admin.dlq.actions.delete",
+					"admin.featureFlags.delete"
+				]
+			},
+			{
+				"value": "Empezar a jugar",
+				"keys": ["settings.overview.startPlaying", "stats.startPlaying"]
+			},
+			{
+				"value": "En esta página",
+				"keys": [
+					"admin.auditLogs.stats.onThisPage",
+					"legal.privacy.toc.title",
+					"legal.terms.toc.title"
+				]
+			},
+			{
+				"value": "Enviando...",
+				"keys": [
+					"auth.sending",
+					"reauth.sending",
+					"settings.testEmailSending",
+					"settings.testPushSending"
+				]
+			},
+			{
+				"value": "Error al actualizar",
+				"keys": ["settings.achievements.saveFailed", "settings.profile.updateFailed"]
+			},
+			{
+				"value": "Errores",
+				"keys": ["gameResult.mistakes", "share.card.mistakesLabel"]
+			},
+			{
+				"value": "Esta semana",
+				"keys": ["admin.analytics.thisWeek", "leaderboard.period.week"]
+			},
+			{
+				"value": "Estado",
+				"keys": ["admin.dlq.table.status", "gameResult.status"]
+			},
+			{
+				"value": "Estado del sistema",
+				"keys": ["admin.dashboard.systemStatus", "admin.sidebar.system", "admin.system.title"]
+			},
+			{
+				"value": "Estadísticas",
+				"keys": ["nav.stats", "stats.title"]
+			},
+			{
+				"value": "Excelente",
+				"keys": [
+					"settings.overview.protectionLevels.excellent",
+					"settings.overview.security.excellent",
+					"settings.security.securityCheckup.scoreExcellent"
+				]
+			},
+			{
+				"value": "Explorar todos los juegos",
+				"keys": ["common.notFound.browseCta", "home.day.browseAll"]
+			},
+			{
+				"value": "Exportar CSV",
+				"keys": ["admin.analytics.export", "admin.users.export"]
+			},
+			{
+				"value": "Exportar tus datos",
+				"keys": ["legal.privacy.sections.rights.items.export", "settings.privacy.exportData"]
+			},
+			{
+				"value": "Facebook",
+				"keys": [
+					"settings.account.providers.facebook",
+					"settings.connectedAccounts.providers.facebook"
+				]
+			},
+			{
+				"value": "Fallido",
+				"keys": [
+					"admin.dlq.status.failed",
+					"gameResult.lost",
+					"settings.security.loginHistory.failed"
+				]
+			},
+			{
+				"value": "Fecha y hora",
+				"keys": ["admin.auditLogs.details.timestamp", "admin.auditLogs.table.timestamp"]
+			},
+			{
+				"value": "Ganado",
+				"keys": ["calendar.won", "gameResult.won"]
+			},
+			{
+				"value": "Gestiona tus sesiones activas en todos tus dispositivos",
+				"keys": ["settings.security.sessions.description", "settings.sessions.description"]
+			},
+			{
+				"value": "GitHub",
+				"keys": ["settings.account.providers.github", "settings.connectedAccounts.providers.github"]
+			},
+			{
+				"value": "Google",
+				"keys": [
+					"auth.google",
+					"settings.account.providers.google",
+					"settings.connectedAccounts.providers.google"
+				]
+			},
+			{
+				"value": "Gratis",
+				"keys": ["daily.freeToday", "plus.pricing.freeTitle"]
+			},
+			{
+				"value": "Guarda tu racha",
+				"keys": ["catalog.gamePage.guestSignIn", "onboarding.saveStreak"]
+			},
+			{
+				"value": "Guardando...",
+				"keys": [
+					"settings.achievements.saving",
+					"settings.notifications.push.saving",
+					"settings.profile.saving"
+				]
+			},
+			{
+				"value": "Guardar",
+				"keys": [
+					"admin.announcements.save",
+					"admin.featureFlags.save",
+					"common.save",
+					"settings.achievements.save",
+					"settings.profile.save"
+				]
+			},
+			{
+				"value": "Guardar cambios",
+				"keys": ["admin.plans.saveChanges", "settings.profile.saveChanges"]
+			},
+			{
+				"value": "Haz tu perfil visible en puzzled.gg/u/{username}",
+				"keys": [
+					"settings.privacy.profileVisibility.publicProfileDescription",
+					"settings.profile.publicProfileDescription"
+				]
+			},
+			{
+				"value": "Hoy",
+				"keys": [
+					"leaderboard.period.today",
+					"nav.today",
+					"stats.calendar.todayLabel",
+					"stats.today.title"
+				]
+			},
+			{
+				"value": "Hoy todavía está abierto",
+				"keys": ["stats.streakCard.notPlayedToday", "stats.streakHintOpen"]
+			},
+			{
+				"value": "Inactivo",
+				"keys": ["admin.announcements.inactive", "admin.plans.inactive"]
+			},
+			{
+				"value": "Indicadores de funciones",
+				"keys": ["admin.featureFlags.title", "admin.sidebar.featureFlags"]
+			},
+			{
+				"value": "Iniciar sesión",
+				"keys": ["auth.signIn", "common.signIn", "plus.unlock.signIn", "stats.signIn"]
+			},
+			{
+				"value": "Intentos",
+				"keys": ["gameResult.attempts", "share.card.attemptsLabel"]
+			},
+			{
+				"value": "Introduce tu contraseña",
+				"keys": ["auth.passwordRequired", "reauth.errors.passwordRequired"]
+			},
+			{
+				"value": "Introduce tu nombre",
+				"keys": ["auth.nameRequired", "settings.profile.nameRequiredDescription"]
+			},
+			{
+				"value": "Ir a soporte",
+				"keys": ["legal.privacy.cta.support", "legal.terms.cta.support"]
+			},
+			{
+				"value": "Juega el puzle gratuito de hoy",
+				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
+			},
+			{
+				"value": "Juega el ritual de hoy ({game})",
+				"keys": ["archive.emptyPlay", "archive.playToday"]
+			},
+			{
+				"value": "Juega puzles anteriores",
+				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
+			},
+			{
+				"value": "Juegos",
+				"keys": ["admin.games.title", "admin.sidebar.games", "nav.games"]
+			},
+			{
+				"value": "Jugadas",
+				"keys": [
+					"settings.overview.stats.played",
+					"settings.playerCard.stats.gamesPlayed",
+					"stats.played"
+				]
+			},
+			{
+				"value": "Jugador",
+				"keys": ["leaderboard.columns.player", "plus.family.unnamed"]
+			},
+			{
+				"value": "Jugador de Puzzled",
+				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
+			},
+			{
+				"value": "Jugar",
+				"keys": [
+					"archive.play",
+					"catalog.play",
+					"common.play",
+					"footer.playHeading",
+					"home.lineup.play"
+				]
+			},
+			{
+				"value": "Jugar ahora",
+				"keys": ["auth.brandPanel.playFree", "streak.playNow"]
+			},
+			{
+				"value": "Legal",
+				"keys": ["footer.legalHeading", "legal.privacy.eyebrow", "legal.terms.eyebrow"]
+			},
+			{
+				"value": "Logros",
+				"keys": [
+					"achievements.title",
+					"settings.playerCard.achievements",
+					"settings.playerCard.achievementsSection.title"
+				]
+			},
+			{
+				"value": "Mejor",
+				"keys": ["settings.playerCard.stats.maxStreak", "stats.best"]
+			},
+			{
+				"value": "Mejor racha",
+				"keys": [
+					"home.member.bestStreak",
+					"settings.overview.stats.maxStreak",
+					"stats.milestones.metric.streak",
+					"streak.bestStreak"
+				]
+			},
+			{
+				"value": "Mejorar la seguridad",
+				"keys": ["settings.overview.improveSecurity", "settings.securityScore.actions.improve"]
+			},
+			{
+				"value": "Mensual",
+				"keys": ["admin.plans.monthly", "plus.pricing.monthly"]
+			},
+			{
+				"value": "Microsoft",
+				"keys": [
+					"settings.account.providers.microsoft",
+					"settings.connectedAccounts.providers.microsoft"
+				]
+			},
+			{
+				"value": "Modo compacto",
+				"keys": ["settings.compactMode", "settings.preferences.appearance.compactMode"]
+			},
+			{
+				"value": "Navegar",
+				"keys": ["admin.commandPalette.navigate", "settings.search.navigate"]
+			},
+			{
+				"value": "No cargado",
+				"keys": ["settings.playerCard.notLoaded", "stats.unknownSr"]
+			},
+			{
+				"value": "No conectada",
+				"keys": ["settings.account.notConnected", "settings.connectedAccounts.notConnected"]
+			},
+			{
+				"value": "Nombre",
+				"keys": ["admin.featureFlags.name", "auth.name"]
+			},
+			{
+				"value": "Notificaciones",
+				"keys": [
+					"settings.nav.notifications",
+					"settings.notifications.title",
+					"settings.overview.quickNotifications.title",
+					"settings.overview.sections.notifications",
+					"settings.preferences.notifications.title"
+				]
+			},
+			{
+				"value": "Notificaciones push",
+				"keys": ["settings.notifications.push.heading", "settings.pushNotifications"]
+			},
+			{
+				"value": "Nueva contraseña",
+				"keys": ["auth.newPassword", "settings.account.password.newPassword"]
+			},
+			{
+				"value": "Nunca usada",
+				"keys": ["settings.streakFreeze.never", "settings.streakFreeze.neverUsed"]
+			},
+			{
+				"value": "Oscuro",
+				"keys": ["common.theme.dark", "settings.preferences.appearance.dark"]
+			},
+			{
+				"value": "Otras páginas que quizá necesites",
+				"keys": ["legal.privacy.cta.title", "legal.terms.cta.title"]
+			},
+			{
+				"value": "Panel",
+				"keys": ["admin.dashboard.title", "admin.sidebar.dashboard"]
+			},
+			{
+				"value": "Partidas jugadas",
+				"keys": [
+					"admin.analytics.gamesChart",
+					"admin.dashboard.gamesPlayed",
+					"settings.overview.stats.gamesPlayed",
+					"stats.gamesPlayed"
+				]
+			},
+			{
+				"value": "Perfil",
+				"keys": [
+					"nav.profile",
+					"settings.nav.profile",
+					"settings.profile.title",
+					"settings.search.sections.profile"
+				]
+			},
+			{
+				"value": "Perfil e identidad",
+				"keys": ["settings.overview.sections.identity", "settings.overview.sections.profile"]
+			},
+			{
+				"value": "Perfil público",
+				"keys": [
+					"settings.privacy.profileVisibility.publicProfile",
+					"settings.profile.publicProfile"
+				]
+			},
+			{
+				"value": "Planes y precios",
+				"keys": ["admin.plans.title", "admin.sidebar.plansAndPricing"]
+			},
+			{
+				"value": "Política de privacidad",
+				"keys": [
+					"consent.learnMore",
+					"footer.privacy",
+					"legal.privacy.title",
+					"support.resources.privacy.title"
+				]
+			},
+			{
+				"value": "Porcentaje de victorias",
+				"keys": ["settings.overview.stats.winRate", "stats.modules.winRate", "stats.winRate"]
+			},
+			{
+				"value": "Precios",
+				"keys": ["admin.plans.prices", "admin.plans.pricing"]
+			},
+			{
+				"value": "Preferencias",
+				"keys": [
+					"settings.nav.preferences",
+					"settings.overview.sections.preferences",
+					"settings.preferences.title",
+					"settings.search.sections.preferences"
+				]
+			},
+			{
+				"value": "Privacidad",
+				"keys": [
+					"settings.nav.privacy",
+					"settings.overview.sections.privacy",
+					"settings.privacy.title",
+					"settings.search.sections.privacy"
+				]
+			},
+			{
+				"value": "Próximamente",
+				"keys": ["common.comingSoon", "settings.connectedAccounts.comingSoon"]
+			},
+			{
+				"value": "Puntuación",
+				"keys": [
+					"gameResult.score",
+					"leaderboard.columns.score",
+					"share.card.scoreLabel",
+					"stats.history.score"
+				]
+			},
+			{
+				"value": "Puntuación de seguridad",
+				"keys": [
+					"settings.overview.securityScore",
+					"settings.security.securityCheckup.securityScore",
+					"settings.securityScore.score"
+				]
+			},
+			{
+				"value": "Puntuación media",
+				"keys": ["admin.analytics.avgScore", "stats.avgScore"]
+			},
+			{
+				"value": "Push",
+				"keys": [
+					"settings.notifications.overview.push",
+					"settings.overview.quickNotifications.push"
+				]
+			},
+			{
+				"value": "Puzzle",
+				"keys": ["leaderboard.moduleLabel", "stats.history.module", "stats.modules.module"]
+			},
+			{
+				"value": "Puzzled Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
+				"value": "Página {page} de {total}",
+				"keys": ["admin.auditLogs.pagination.page", "pagination.page"]
+			},
+			{
+				"value": "Quitar",
+				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
+			},
+			{
+				"value": "Quitar filtros",
+				"keys": ["admin.auditLogs.filters.clearFilters", "catalog.clearFilter"]
+			},
+			{
+				"value": "Racha",
+				"keys": [
+					"settings.notifications.quickActions.streak",
+					"settings.overview.stats.streak",
+					"settings.playerCard.stats.currentStreak",
+					"settings.playerCard.stats.streak",
+					"share.card.streakLabel",
+					"stats.streak",
+					"stats.streakCard.title"
+				]
+			},
+			{
+				"value": "Racha actual",
+				"keys": [
+					"home.member.currentStreak",
+					"settings.overview.stats.currentStreak",
+					"stats.currentStreak",
+					"streak.currentStreak"
+				]
+			},
+			{
+				"value": "Racha de {days} días",
+				"keys": ["home.hero.streakChip", "share.card.streakDays", "stats.identity.streakChip"]
+			},
+			{
+				"value": "Recordatorio diario",
+				"keys": ["settings.overview.quickNotifications.daily", "settings.pushDailyReminder"]
+			},
+			{
+				"value": "Recurso",
+				"keys": ["admin.auditLogs.details.resource", "admin.auditLogs.table.resource"]
+			},
+			{
+				"value": "Recuérdamelo cada día",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
+				"value": "Reducir movimiento",
+				"keys": ["settings.preferences.appearance.reduceMotion", "settings.reduceMotion"]
+			},
+			{
+				"value": "Regenerar códigos",
+				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
+			},
+			{
+				"value": "Registrarse",
+				"keys": ["auth.signUp", "common.signUp"]
+			},
+			{
+				"value": "Registros de auditoría",
+				"keys": ["admin.auditLogs.title", "admin.dashboard.auditLogs", "admin.sidebar.auditLogs"]
+			},
+			{
+				"value": "Reintentando",
+				"keys": ["admin.dlq.stats.retrying", "admin.dlq.status.retrying"]
+			},
+			{
+				"value": "Reintentar",
+				"keys": [
+					"admin.dlq.actions.retry",
+					"auth.errorRetry",
+					"common.retry",
+					"settings.sessions.retry",
+					"stats.dailyStatusRetry",
+					"stats.retry"
+				]
+			},
+			{
+				"value": "Requiere atención",
+				"keys": [
+					"settings.overview.security.needsAttention",
+					"settings.security.securityCheckup.scoreNeedsAttention"
+				]
+			},
+			{
+				"value": "Respondemos por correo electrónico.",
+				"keys": ["support.email.responseTime", "support.hero.factReply"]
+			},
+			{
+				"value": "Restablece tu contraseña",
+				"keys": ["auth.resetPasswordTitle", "support.resources.reset.title"]
+			},
+			{
+				"value": "Resumen",
+				"keys": [
+					"settings.nav.overview",
+					"settings.notifications.quickActions.digest",
+					"settings.security.tabs.overview"
+				]
+			},
+			{
+				"value": "Revisa tu correo",
+				"keys": ["auth.checkEmail", "auth.checkYourEmail"]
+			},
+			{
+				"value": "Revisión de seguridad",
+				"keys": ["settings.security.securityCheckup.title", "settings.securityScore.title"]
+			},
+			{
+				"value": "Se abre en una pestaña nueva.",
+				"keys": ["settings.account.centreNote", "settings.privacy.centreNote"]
+			},
+			{
+				"value": "Seguridad",
+				"keys": [
+					"auth.passwordStrength.label",
+					"common.security",
+					"settings.nav.security",
+					"settings.overview.sections.security",
+					"settings.search.sections.security",
+					"settings.security.title"
+				]
+			},
+			{
+				"value": "Seleccionar",
+				"keys": ["admin.commandPalette.select", "settings.search.select"]
+			},
+			{
+				"value": "Servicios",
+				"keys": ["admin.dashboard.services", "admin.system.services"]
+			},
+			{
+				"value": "Sesiones activas",
+				"keys": [
+					"admin.system.activeSessions",
+					"settings.security.sessions.title",
+					"settings.sessions.title"
+				]
+			},
+			{
+				"value": "Sesión cerrada",
+				"keys": [
+					"settings.securityAlerts.types.session_revoked",
+					"settings.sessions.sessionRevoked"
+				]
+			},
+			{
+				"value": "Siguiente",
+				"keys": ["admin.auditLogs.pagination.next", "common.next", "pagination.next"]
+			},
+			{
+				"value": "Sin alertas de seguridad",
+				"keys": ["settings.securityAlerts.noAlerts", "settings.securityScore.checks.noAlerts"]
+			},
+			{
+				"value": "Sin verificar",
+				"keys": [
+					"admin.users.notVerified",
+					"settings.email.unverified",
+					"settings.profile.emailUnverified"
+				]
+			},
+			{
+				"value": "Sistema",
+				"keys": ["common.theme.system", "settings.preferences.appearance.system"]
+			},
+			{
+				"value": "Slug",
+				"keys": ["admin.plans.planSlug", "admin.plans.slug"]
+			},
+			{
+				"value": "Solo administradores",
+				"keys": ["admin.featureFlags.adminOnly", "admin.users.filterAdmins"]
+			},
+			{
+				"value": "Solo premium",
+				"keys": [
+					"admin.announcements.premiumOnly",
+					"admin.featureFlags.premiumOnly",
+					"admin.users.filterPremium"
+				]
+			},
+			{
+				"value": "Subir foto",
+				"keys": ["settings.profile.avatarUpload.uploadPhoto", "settings.profile.uploadPhoto"]
+			},
+			{
+				"value": "Sí, eliminar",
+				"keys": [
+					"admin.announcements.deleteConfirm",
+					"admin.featureFlags.deleteConfirm",
+					"admin.plans.deleteConfirm"
+				]
+			},
+			{
+				"value": "Tarjeta de jugador",
+				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
+			},
+			{
+				"value": "Tasa de conversión",
+				"keys": ["admin.analytics.conversionRate", "admin.dashboard.conversionRate"]
+			},
+			{
+				"value": "Te damos la bienvenida de nuevo",
+				"keys": ["auth.welcomeBack", "settings.overview.welcomeBack"]
+			},
+			{
+				"value": "Tema",
+				"keys": ["settings.preferences.appearance.theme", "settings.theme"]
+			},
+			{
+				"value": "Tiempo",
+				"keys": ["gameResult.time", "share.card.timeLabel", "stats.history.time"]
+			},
+			{
+				"value": "Tipo de recurso",
+				"keys": ["admin.auditLogs.details.resourceType", "admin.auditLogs.filters.resourceType"]
+			},
+			{
+				"value": "Todos los juegos",
+				"keys": ["catalog.metaTitle", "catalog.title", "footer.allGames"]
+			},
+			{
+				"value": "Todos los usuarios",
+				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
+			},
+			{
+				"value": "Tu nombre",
+				"keys": ["auth.namePlaceholder", "settings.profile.displayNamePlaceholder"]
+			},
+			{
+				"value": "Términos del servicio",
+				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+			},
+			{
+				"value": "Ubicación desconocida",
+				"keys": [
+					"settings.security.loginHistory.unknownLocation",
+					"settings.sessions.unknownLocation"
+				]
+			},
+			{
+				"value": "Un puzzle gratis cada día",
+				"keys": ["auth.brandPanel.trustFree", "home.hero.ogBadge"]
+			},
+			{
+				"value": "Usa un diseño más denso con menos espacio",
+				"keys": [
+					"settings.compactModeDescription",
+					"settings.preferences.appearance.compactModeDescription"
+				]
+			},
+			{
+				"value": "Usuario",
+				"keys": ["admin.auditLogs.details.user", "admin.users.tableHeaders.user"]
+			},
+			{
+				"value": "Usuarios",
+				"keys": ["admin.analytics.users", "admin.sidebar.users", "admin.users.title"]
+			},
+			{
+				"value": "Usuarios activos diarios",
+				"keys": ["admin.analytics.dau", "admin.analytics.dauChart"]
+			},
+			{
+				"value": "Usuarios premium",
+				"keys": ["admin.dashboard.premiumUsers", "admin.system.premiumUsers"]
+			},
+			{
+				"value": "Usuarios totales",
+				"keys": ["admin.dashboard.totalUsers", "admin.system.totalUsers", "admin.users.totalUsers"]
+			},
+			{
+				"value": "Ver todo",
+				"keys": ["admin.dashboard.viewAll", "settings.security.loginHistory.viewAll"]
+			},
+			{
+				"value": "Ver todos los juegos",
+				"keys": ["catalog.gamePage.relatedAll", "home.lineup.seeAll"]
+			},
+			{
+				"value": "Verifica tu identidad",
+				"keys": [
+					"reauth.title",
+					"settings.account.password.verifyIdentity",
+					"settings.connectedAccounts.verifyIdentity",
+					"settings.privacy.deleteAccount.verifyTitle",
+					"settings.security.verifyIdentity"
+				]
+			},
+			{
+				"value": "Verificado",
+				"keys": [
+					"admin.users.tableHeaders.verified",
+					"settings.email.verified",
+					"settings.playerCard.verified",
+					"settings.profile.emailVerified"
+				]
+			},
+			{
+				"value": "Verificar",
+				"keys": ["reauth.verify", "settings.security.verify"]
+			},
+			{
+				"value": "Victorias",
+				"keys": [
+					"settings.overview.stats.wins",
+					"settings.playerCard.stats.wins",
+					"stats.calendar.tableWon"
+				]
+			},
+			{
+				"value": "Volver a todos los juegos",
+				"keys": ["archive.backToGames", "daily.backToGames"]
+			},
+			{
+				"value": "Volver al inicio",
+				"keys": ["daily.backToHome", "gameResult.backToHome"]
+			},
+			{
+				"value": "días",
+				"keys": ["settings.overview.stats.days", "settings.playerCard.stats.days", "streak.days"]
+			},
+			{
+				"value": "días de racha",
+				"keys": ["settings.overview.dayStreak", "stats.dayStreak"]
+			},
+			{
+				"value": "{count} seleccionados",
+				"keys": ["admin.users.bulkActions", "admin.users.selectedUsers"]
+			},
+			{
+				"value": "{count} tipos activos",
+				"keys": [
+					"settings.notifications.overview.emailActive",
+					"settings.notifications.overview.pushActive"
+				]
+			},
+			{
+				"value": "¡Copiado!",
+				"keys": ["settings.recoveryCodes.copied", "settings.security.copied"]
+			},
+			{
+				"value": "¿Olvidaste tu contraseña?",
+				"keys": ["auth.forgotPassword", "auth.forgotPasswordTitle"]
+			},
+			{
+				"value": "Última actualización",
+				"keys": ["legal.privacy.lastUpdated", "legal.terms.lastUpdated"]
+			}
+		],
+		"pt-BR": [
+			{
+				"value": "+{count} mais",
+				"keys": [
+					"settings.overview.moreAchievements",
+					"settings.playerCard.achievementsSection.more"
+				]
+			},
+			{
+				"value": "2026-10-01",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
+				"value": "Abre em uma nova guia.",
+				"keys": ["settings.account.centreNote", "settings.privacy.centreNote"]
+			},
+			{
+				"value": "Abrir a central da conta",
+				"keys": ["settings.account.centreCta", "settings.security.protectionCta"]
+			},
+			{
+				"value": "Ainda não",
+				"keys": ["stats.calendar.todayOpen", "stats.today.open"]
+			},
+			{
+				"value": "Alertas de sequência",
+				"keys": ["settings.notifications.push.streakAlert", "settings.pushStreakAlert"]
+			},
+			{
+				"value": "Anterior",
+				"keys": ["admin.auditLogs.pagination.previous", "pagination.previous"]
+			},
+			{
+				"value": "Anual",
+				"keys": ["admin.plans.annual", "plus.pricing.yearly"]
+			},
+			{
+				"value": "Análises",
+				"keys": [
+					"admin.analytics.title",
+					"admin.sidebar.analytics",
+					"settings.privacy.analytics.title"
+				]
+			},
+			{
+				"value": "Apple",
+				"keys": [
+					"auth.apple",
+					"settings.account.providers.apple",
+					"settings.connectedAccounts.providers.apple"
+				]
+			},
+			{
+				"value": "Arquivo",
+				"keys": ["archive.eyebrow", "modes.archive", "nav.archive"]
+			},
+			{
+				"value": "Ativo",
+				"keys": ["admin.announcements.active", "admin.plans.active"]
+			},
+			{
+				"value": "Atualizar",
+				"keys": [
+					"admin.auditLogs.filters.refresh",
+					"admin.dlq.refresh",
+					"admin.games.refresh",
+					"admin.system.refresh",
+					"common.refresh"
+				]
+			},
+			{
+				"value": "Autenticação",
+				"keys": [
+					"legal.privacy.sections.thirdParty.google",
+					"settings.security.tabs.authentication"
+				]
+			},
+			{
+				"value": "Autenticação em duas etapas",
+				"keys": ["settings.security.twoFactorAuth", "settings.securityScore.checks.twoFactor"]
+			},
+			{
+				"value": "Ações",
+				"keys": ["admin.dlq.table.actions", "admin.users.tableHeaders.actions"]
+			},
+			{
+				"value": "Ações rápidas",
+				"keys": [
+					"admin.commandPalette.actions",
+					"admin.dashboard.quickActions",
+					"settings.notifications.quickActions.title",
+					"settings.overview.quickActions"
+				]
+			},
+			{
+				"value": "Baixar",
+				"keys": ["settings.recoveryCodes.download", "settings.security.download"]
+			},
+			{
+				"value": "Bom",
+				"keys": [
+					"settings.overview.protectionLevels.good",
+					"settings.overview.security.good",
+					"settings.security.securityCheckup.scoreGood"
+				]
+			},
+			{
+				"value": "Buscar nas configurações",
+				"keys": ["settings.search.ariaLabel", "settings.search.searchSettings"]
+			},
+			{
+				"value": "Cadastrar-se",
+				"keys": ["auth.signUp", "common.signUp"]
+			},
+			{
+				"value": "Cancelar",
+				"keys": [
+					"admin.announcements.cancel",
+					"admin.featureFlags.cancel",
+					"admin.plans.cancel",
+					"common.cancel",
+					"settings.profile.cancel",
+					"settings.recoveryCodes.cancel",
+					"settings.security.cancel",
+					"settings.sessions.cancel"
+				]
+			},
+			{
+				"value": "Carregando...",
+				"keys": ["common.loading", "pagination.loading", "settings.security.loading"]
+			},
+			{
+				"value": "Cartão de jogador",
+				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
+			},
+			{
+				"value": "Claro",
+				"keys": ["common.theme.light", "settings.preferences.appearance.light"]
+			},
+			{
+				"value": "Com falha",
+				"keys": ["admin.dlq.stats.failed", "admin.dlq.status.failed"]
+			},
+			{
+				"value": "Começar a jogar",
+				"keys": ["settings.overview.startPlaying", "stats.startPlaying"]
+			},
+			{
+				"value": "Como jogar",
+				"keys": ["common.help", "common.howToPlay"]
+			},
+			{
+				"value": "Compartilhar",
+				"keys": [
+					"common.share",
+					"settings.playerCard.share",
+					"settings.playerCard.shareProfile",
+					"share.share"
+				]
+			},
+			{
+				"value": "Conclusões",
+				"keys": ["admin.analytics.completions", "stats.calendar.tableFinished"]
+			},
+			{
+				"value": "Concluído",
+				"keys": ["stats.calendar.todayDone", "stats.today.done"]
+			},
+			{
+				"value": "Concluído, sem vitória",
+				"keys": ["stats.calendar.legendFinished", "stats.history.finished"]
+			},
+			{
+				"value": "Conectada",
+				"keys": ["settings.account.connected", "settings.connectedAccounts.connected"]
+			},
+			{
+				"value": "Conectar",
+				"keys": ["settings.account.connect", "settings.connectedAccounts.connect"]
+			},
+			{
+				"value": "Configurações",
+				"keys": [
+					"admin.dashboard.settings",
+					"admin.settings.title",
+					"admin.sidebar.settings",
+					"settings.overview.title",
+					"settings.title"
+				]
+			},
+			{
+				"value": "Confira seu e-mail",
+				"keys": ["auth.checkEmail", "auth.checkYourEmail"]
+			},
+			{
+				"value": "Confirmar",
+				"keys": ["common.confirm", "settings.security.confirm"]
+			},
+			{
+				"value": "Confirme sua identidade",
+				"keys": [
+					"reauth.title",
+					"settings.account.password.verifyIdentity",
+					"settings.connectedAccounts.verifyIdentity",
+					"settings.privacy.deleteAccount.verifyTitle",
+					"settings.security.verifyIdentity"
+				]
+			},
+			{
+				"value": "Conquistas",
+				"keys": [
+					"achievements.title",
+					"settings.playerCard.achievements",
+					"settings.playerCard.achievementsSection.title"
+				]
+			},
+			{
+				"value": "Conta",
+				"keys": [
+					"nav.account",
+					"settings.account.title",
+					"settings.nav.account",
+					"settings.search.sections.account"
+				]
+			},
+			{
+				"value": "Contas conectadas",
+				"keys": [
+					"settings.account.connectedAccounts",
+					"settings.connectedAccounts.title",
+					"settings.overview.sections.account"
+				]
+			},
+			{
+				"value": "Contato",
+				"keys": ["footer.contact", "legal.terms.sections.contact.title"]
+			},
+			{
+				"value": "Cookies",
+				"keys": ["footer.cookies", "legal.privacy.sections.cookies.title"]
+			},
+			{
+				"value": "Copiado!",
+				"keys": ["settings.recoveryCodes.copied", "settings.security.copied"]
+			},
+			{
+				"value": "Copiar link",
+				"keys": ["plus.family.copy", "settings.playerCard.copyLink"]
+			},
+			{
+				"value": "Copiar tudo",
+				"keys": ["settings.recoveryCodes.copy", "settings.security.copyAll"]
+			},
+			{
+				"value": "Criar aviso",
+				"keys": ["admin.announcements.create", "admin.announcements.createTitle"]
+			},
+			{
+				"value": "Criar planos padrão",
+				"keys": ["admin.commandPalette.seedPlans", "admin.plans.seedDefault"]
+			},
+			{
+				"value": "Códigos de recuperação",
+				"keys": ["settings.recoveryCodes.title", "settings.securityScore.checks.recoveryCodes"]
+			},
+			{
+				"value": "Data e hora",
+				"keys": ["admin.auditLogs.details.timestamp", "admin.auditLogs.table.timestamp"]
+			},
+			{
+				"value": "Deixe seu perfil visível em puzzled.gg/u/{username}",
+				"keys": [
+					"settings.privacy.profileVisibility.publicProfileDescription",
+					"settings.profile.publicProfileDescription"
+				]
+			},
+			{
+				"value": "Desafio",
+				"keys": ["leaderboard.moduleLabel", "stats.history.module", "stats.modules.module"]
+			},
+			{
+				"value": "Desafio nº {number}",
+				"keys": ["daily.puzzleNumber", "home.day.puzzleNumber"]
+			},
+			{
+				"value": "Desconectar",
+				"keys": ["settings.account.disconnect", "settings.connectedAccounts.disconnect"]
+			},
+			{
+				"value": "Descrição",
+				"keys": [
+					"admin.featureFlags.description",
+					"admin.plans.description",
+					"admin.plans.planDescription"
+				]
+			},
+			{
+				"value": "Destaque de hoje",
+				"keys": ["catalog.freeToday", "home.lineup.freeToday"]
+			},
+			{
+				"value": "Dia",
+				"keys": ["stats.calendar.tableDay", "stats.history.day"]
+			},
+			{
+				"value": "Digite seu nome",
+				"keys": ["auth.nameRequired", "settings.profile.nameRequiredDescription"]
+			},
+			{
+				"value": "Digite sua senha",
+				"keys": ["auth.passwordRequired", "reauth.errors.passwordRequired"]
+			},
+			{
+				"value": "Digite um endereço de e-mail válido",
+				"keys": ["auth.emailInvalid", "settings.email.invalidEmail"]
+			},
+			{
+				"value": "Discord",
+				"keys": [
+					"settings.account.providers.discord",
+					"settings.connectedAccounts.providers.discord"
+				]
+			},
+			{
+				"value": "Dispensar",
+				"keys": ["common.dismiss", "streak.dismiss"]
+			},
+			{
+				"value": "Dispositivo desconhecido",
+				"keys": ["settings.security.loginHistory.unknownDevice", "settings.sessions.unknownDevice"]
+			},
+			{
+				"value": "Diário",
+				"keys": ["modes.daily", "settings.notifications.quickActions.daily"]
+			},
+			{
+				"value": "E-mail",
+				"keys": [
+					"auth.email",
+					"settings.notifications.overview.email",
+					"settings.overview.quickNotifications.email",
+					"settings.profile.email"
+				]
+			},
+			{
+				"value": "E-mail verificado",
+				"keys": [
+					"settings.security.securityCheckup.emailVerified",
+					"settings.securityScore.checks.emailVerified"
+				]
+			},
+			{
+				"value": "Editar",
+				"keys": ["admin.plans.edit", "settings.playerCard.edit", "settings.profile.edit"]
+			},
+			{
+				"value": "Editar {name}",
+				"keys": ["admin.plans.editPlan", "admin.plans.editPlanTitle"]
+			},
+			{
+				"value": "Em breve",
+				"keys": ["common.comingSoon", "settings.connectedAccounts.comingSoon"]
+			},
+			{
+				"value": "Em nova tentativa",
+				"keys": ["admin.dlq.stats.retrying", "admin.dlq.status.retrying"]
+			},
+			{
+				"value": "Endereço IP",
+				"keys": ["admin.auditLogs.details.ipAddress", "admin.auditLogs.table.ip"]
+			},
+			{
+				"value": "Entrar",
+				"keys": ["auth.signIn", "common.signIn", "plus.unlock.signIn", "stats.signIn"]
+			},
+			{
+				"value": "Enviando...",
+				"keys": [
+					"auth.sending",
+					"reauth.sending",
+					"settings.testEmailSending",
+					"settings.testPushSending"
+				]
+			},
+			{
+				"value": "Enviar foto",
+				"keys": ["settings.profile.avatarUpload.uploadPhoto", "settings.profile.uploadPhoto"]
+			},
+			{
+				"value": "Erros",
+				"keys": ["gameResult.mistakes", "share.card.mistakesLabel"]
+			},
+			{
+				"value": "Escuro",
+				"keys": ["common.theme.dark", "settings.preferences.appearance.dark"]
+			},
+			{
+				"value": "Esqueceu a senha?",
+				"keys": ["auth.forgotPassword", "auth.forgotPasswordTitle"]
+			},
+			{
+				"value": "Esta semana",
+				"keys": ["admin.analytics.thisWeek", "leaderboard.period.week"]
+			},
+			{
+				"value": "Estatísticas",
+				"keys": ["nav.stats", "stats.title"]
+			},
+			{
+				"value": "Excelente",
+				"keys": [
+					"settings.overview.protectionLevels.excellent",
+					"settings.overview.security.excellent",
+					"settings.security.securityCheckup.scoreExcellent"
+				]
+			},
+			{
+				"value": "Exclua sua conta e os dados dela",
+				"keys": ["settings.account.centreDeletion", "settings.privacy.centreDeletion"]
+			},
+			{
+				"value": "Excluir",
+				"keys": [
+					"admin.announcements.delete",
+					"admin.dlq.actions.delete",
+					"admin.featureFlags.delete"
+				]
+			},
+			{
+				"value": "Exportar CSV",
+				"keys": ["admin.analytics.export", "admin.users.export"]
+			},
+			{
+				"value": "Exportar seus dados",
+				"keys": ["legal.privacy.sections.rights.items.export", "settings.privacy.exportData"]
+			},
+			{
+				"value": "Facebook",
+				"keys": [
+					"settings.account.providers.facebook",
+					"settings.connectedAccounts.providers.facebook"
+				]
+			},
+			{
+				"value": "Falha na atualização",
+				"keys": ["settings.achievements.saveFailed", "settings.profile.updateFailed"]
+			},
+			{
+				"value": "Falha na verificação",
+				"keys": [
+					"auth.verificationFailed",
+					"settings.profile.checkFailed",
+					"settings.security.verificationFailed"
+				]
+			},
+			{
+				"value": "Feature flags",
+				"keys": ["admin.featureFlags.title", "admin.sidebar.featureFlags"]
+			},
+			{
+				"value": "Fechar",
+				"keys": ["admin.commandPalette.close", "admin.plans.close", "auth.close"]
+			},
+			{
+				"value": "Fila de mensagens mortas",
+				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
+			},
+			{
+				"value": "Gerar novos códigos",
+				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
+			},
+			{
+				"value": "Gerencie suas sessões ativas em todos os dispositivos",
+				"keys": ["settings.security.sessions.description", "settings.sessions.description"]
+			},
+			{
+				"value": "GitHub",
+				"keys": ["settings.account.providers.github", "settings.connectedAccounts.providers.github"]
+			},
+			{
+				"value": "Google",
+				"keys": [
+					"auth.google",
+					"settings.account.providers.google",
+					"settings.connectedAccounts.providers.google"
+				]
+			},
+			{
+				"value": "Grátis",
+				"keys": ["daily.freeToday", "plus.pricing.freeTitle"]
+			},
+			{
+				"value": "Hoje",
+				"keys": [
+					"leaderboard.period.today",
+					"nav.today",
+					"stats.calendar.todayLabel",
+					"stats.today.title"
+				]
+			},
+			{
+				"value": "Hoje ainda está em aberto",
+				"keys": ["stats.streakCard.notPlayedToday", "stats.streakHintOpen"]
+			},
+			{
+				"value": "Inativo",
+				"keys": ["admin.announcements.inactive", "admin.plans.inactive"]
+			},
+			{
+				"value": "Ir para as configurações",
+				"keys": ["auth.unsubscribe.goToSettings", "settings.email.goToSettings"]
+			},
+			{
+				"value": "Ir para o suporte",
+				"keys": ["legal.privacy.cta.support", "legal.terms.cta.support"]
+			},
+			{
+				"value": "Jogador",
+				"keys": ["leaderboard.columns.player", "plus.family.unnamed"]
+			},
+			{
+				"value": "Jogador do Puzzled",
+				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
+			},
+			{
+				"value": "Jogados",
+				"keys": [
+					"settings.overview.stats.played",
+					"settings.playerCard.stats.gamesPlayed",
+					"stats.played"
+				]
+			},
+			{
+				"value": "Jogar",
+				"keys": [
+					"archive.play",
+					"catalog.play",
+					"common.play",
+					"footer.playHeading",
+					"home.lineup.play"
+				]
+			},
+			{
+				"value": "Jogar agora",
+				"keys": ["auth.brandPanel.playFree", "streak.playNow"]
+			},
+			{
+				"value": "Jogar o desafio de hoje",
+				"keys": ["catalog.gamePage.playCta", "onboarding.playNow"]
+			},
+			{
+				"value": "Jogos",
+				"keys": ["admin.games.title", "admin.sidebar.games", "nav.games"]
+			},
+			{
+				"value": "Jogos disputados",
+				"keys": [
+					"admin.analytics.gamesChart",
+					"admin.dashboard.gamesPlayed",
+					"settings.overview.stats.gamesPlayed",
+					"stats.gamesPlayed"
+				]
+			},
+			{
+				"value": "Jogue desafios anteriores",
+				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
+			},
+			{
+				"value": "Jogue o desafio grátis de hoje",
+				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
+			},
+			{
+				"value": "Jogue o ritual de hoje ({game})",
+				"keys": ["archive.emptyPlay", "archive.playToday"]
+			},
+			{
+				"value": "Legal",
+				"keys": ["footer.legalHeading", "legal.privacy.eyebrow", "legal.terms.eyebrow"]
+			},
+			{
+				"value": "Lembrar todo dia",
+				"keys": [
+					"settings.notifications.push.dailyReminder",
+					"settings.notifications.push.enable",
+					"settings.notifications.push.enableNotifications"
+				]
+			},
+			{
+				"value": "Lembrete diário",
+				"keys": ["settings.overview.quickNotifications.daily", "settings.pushDailyReminder"]
+			},
+			{
+				"value": "Limpar busca",
+				"keys": ["admin.commandPalette.clear", "settings.search.clearSearch"]
+			},
+			{
+				"value": "Limpar filtros",
+				"keys": ["admin.auditLogs.filters.clearFilters", "catalog.clearFilter"]
+			},
+			{
+				"value": "Local desconhecido",
+				"keys": [
+					"settings.security.loginHistory.unknownLocation",
+					"settings.sessions.unknownLocation"
+				]
+			},
+			{
+				"value": "Logs de auditoria",
+				"keys": ["admin.auditLogs.title", "admin.dashboard.auditLogs", "admin.sidebar.auditLogs"]
+			},
+			{
+				"value": "Maior sequência",
+				"keys": ["stats.calendar.longestRunLabel", "stats.maxStreak"]
+			},
+			{
+				"value": "Melhor",
+				"keys": ["settings.playerCard.stats.maxStreak", "stats.best"]
+			},
+			{
+				"value": "Melhor sequência",
+				"keys": [
+					"home.member.bestStreak",
+					"settings.overview.stats.maxStreak",
+					"stats.milestones.metric.streak",
+					"streak.bestStreak"
+				]
+			},
+			{
+				"value": "Melhorar a segurança",
+				"keys": ["settings.overview.improveSecurity", "settings.securityScore.actions.improve"]
+			},
+			{
+				"value": "Mensal",
+				"keys": ["admin.plans.monthly", "plus.pricing.monthly"]
+			},
+			{
+				"value": "Microsoft",
+				"keys": [
+					"settings.account.providers.microsoft",
+					"settings.connectedAccounts.providers.microsoft"
+				]
+			},
+			{
+				"value": "Modo compacto",
+				"keys": ["settings.compactMode", "settings.preferences.appearance.compactMode"]
+			},
+			{
+				"value": "Navegar",
+				"keys": ["admin.commandPalette.navigate", "settings.search.navigate"]
+			},
+			{
+				"value": "Nenhum alerta de segurança",
+				"keys": ["settings.securityAlerts.noAlerts", "settings.securityScore.checks.noAlerts"]
+			},
+			{
+				"value": "Nesta página",
+				"keys": [
+					"admin.auditLogs.stats.onThisPage",
+					"legal.privacy.toc.title",
+					"legal.terms.toc.title"
+				]
+			},
+			{
+				"value": "Nome",
+				"keys": ["admin.featureFlags.name", "auth.name"]
+			},
+			{
+				"value": "Notificações",
+				"keys": [
+					"settings.nav.notifications",
+					"settings.notifications.title",
+					"settings.overview.quickNotifications.title",
+					"settings.overview.sections.notifications",
+					"settings.preferences.notifications.title"
+				]
+			},
+			{
+				"value": "Notificações push",
+				"keys": ["settings.notifications.push.heading", "settings.pushNotifications"]
+			},
+			{
+				"value": "Nova senha",
+				"keys": ["auth.newPassword", "settings.account.password.newPassword"]
+			},
+			{
+				"value": "Nunca usado",
+				"keys": ["settings.streakFreeze.never", "settings.streakFreeze.neverUsed"]
+			},
+			{
+				"value": "Não carregado",
+				"keys": ["settings.playerCard.notLoaded", "stats.unknownSr"]
+			},
+			{
+				"value": "Não conectada",
+				"keys": ["settings.account.notConnected", "settings.connectedAccounts.notConnected"]
+			},
+			{
+				"value": "Não verificado",
+				"keys": [
+					"admin.users.notVerified",
+					"settings.email.unverified",
+					"settings.profile.emailUnverified"
+				]
+			},
+			{
+				"value": "Nível de segurança",
+				"keys": [
+					"settings.overview.securityScore",
+					"settings.security.securityCheckup.securityScore",
+					"settings.securityScore.score"
+				]
+			},
+			{
+				"value": "Outras páginas que você pode precisar",
+				"keys": ["legal.privacy.cta.title", "legal.terms.cta.title"]
+			},
+			{
+				"value": "Painel",
+				"keys": ["admin.dashboard.title", "admin.sidebar.dashboard"]
+			},
+			{
+				"value": "Pelo menos {min} caracteres",
+				"keys": ["auth.passwordHint", "auth.passwordStrength.minLength"]
+			},
+			{
+				"value": "Perfil",
+				"keys": [
+					"nav.profile",
+					"settings.nav.profile",
+					"settings.profile.title",
+					"settings.search.sections.profile"
+				]
+			},
+			{
+				"value": "Perfil e identidade",
+				"keys": ["settings.overview.sections.identity", "settings.overview.sections.profile"]
+			},
+			{
+				"value": "Perfil público",
+				"keys": [
+					"settings.privacy.profileVisibility.publicProfile",
+					"settings.profile.publicProfile"
+				]
+			},
+			{
+				"value": "Planos e preços",
+				"keys": ["admin.plans.title", "admin.sidebar.plansAndPricing"]
+			},
+			{
+				"value": "Política de Privacidade",
+				"keys": [
+					"consent.learnMore",
+					"footer.privacy",
+					"legal.privacy.title",
+					"support.resources.privacy.title"
+				]
+			},
+			{
+				"value": "Pontuação",
+				"keys": [
+					"gameResult.score",
+					"leaderboard.columns.score",
+					"share.card.scoreLabel",
+					"stats.history.score"
+				]
+			},
+			{
+				"value": "Pontuação média",
+				"keys": ["admin.analytics.avgScore", "stats.avgScore"]
+			},
+			{
+				"value": "Posição",
+				"keys": ["leaderboard.columns.rank", "settings.playerCard.stats.rank"]
+			},
+			{
+				"value": "Preferências",
+				"keys": [
+					"settings.nav.preferences",
+					"settings.overview.sections.preferences",
+					"settings.preferences.title",
+					"settings.search.sections.preferences"
+				]
+			},
+			{
+				"value": "Preços",
+				"keys": ["admin.plans.prices", "admin.plans.pricing"]
+			},
+			{
+				"value": "Privacidade",
+				"keys": [
+					"settings.nav.privacy",
+					"settings.overview.sections.privacy",
+					"settings.privacy.title",
+					"settings.search.sections.privacy"
+				]
+			},
+			{
+				"value": "Próxima",
+				"keys": ["achievements.nextUp", "admin.auditLogs.pagination.next", "pagination.next"]
+			},
+			{
+				"value": "Push",
+				"keys": [
+					"settings.notifications.overview.push",
+					"settings.overview.quickNotifications.push"
+				]
+			},
+			{
+				"value": "Puzzled Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
+				"value": "Página {page} de {total}",
+				"keys": ["admin.auditLogs.pagination.page", "pagination.page"]
+			},
+			{
+				"value": "Q",
+				"keys": ["stats.calendar.weekday.thu", "stats.calendar.weekday.wed"]
+			},
+			{
+				"value": "Que bom ver você de novo",
+				"keys": ["auth.welcomeBack", "settings.overview.welcomeBack"]
+			},
+			{
+				"value": "Ranking",
+				"keys": ["leaderboard.title", "nav.leaderboard", "stats.viewLeaderboard"]
+			},
+			{
+				"value": "Razoável",
+				"keys": ["auth.passwordStrength.fair", "settings.overview.protectionLevels.fair"]
+			},
+			{
+				"value": "Recurso",
+				"keys": ["admin.auditLogs.details.resource", "admin.auditLogs.table.resource"]
+			},
+			{
+				"value": "Reduzir movimento",
+				"keys": ["settings.preferences.appearance.reduceMotion", "settings.reduceMotion"]
+			},
+			{
+				"value": "Remover",
+				"keys": ["plus.family.remove", "settings.profile.avatarUpload.remove"]
+			},
+			{
+				"value": "Remover admin",
+				"keys": ["admin.users.removeAdmin", "admin.users.removeAdminBulk"]
+			},
+			{
+				"value": "Requer atenção",
+				"keys": [
+					"settings.overview.security.needsAttention",
+					"settings.security.securityCheckup.scoreNeedsAttention"
+				]
+			},
+			{
+				"value": "Respondemos por e-mail.",
+				"keys": ["support.email.responseTime", "support.hero.factReply"]
+			},
+			{
+				"value": "S",
+				"keys": [
+					"stats.calendar.weekday.fri",
+					"stats.calendar.weekday.mon",
+					"stats.calendar.weekday.sat"
+				]
+			},
+			{
+				"value": "Sair",
+				"keys": ["common.signOut", "settings.account.signOutTitle", "settings.sessions.signOut"]
+			},
+			{
+				"value": "Salvando...",
+				"keys": [
+					"settings.achievements.saving",
+					"settings.notifications.push.saving",
+					"settings.profile.saving"
+				]
+			},
+			{
+				"value": "Salvar",
+				"keys": [
+					"admin.announcements.save",
+					"admin.featureFlags.save",
+					"common.save",
+					"settings.achievements.save",
+					"settings.profile.save"
+				]
+			},
+			{
+				"value": "Salvar alterações",
+				"keys": ["admin.plans.saveChanges", "settings.profile.saveChanges"]
+			},
+			{
+				"value": "Salve sua sequência",
+				"keys": ["catalog.gamePage.guestSignIn", "onboarding.saveStreak"]
+			},
+			{
+				"value": "Saúde do sistema",
+				"keys": ["admin.sidebar.system", "admin.system.title"]
+			},
+			{
+				"value": "Segurança",
+				"keys": [
+					"common.security",
+					"settings.nav.security",
+					"settings.overview.sections.security",
+					"settings.search.sections.security",
+					"settings.security.title"
+				]
+			},
+			{
+				"value": "Selecionar",
+				"keys": ["admin.commandPalette.select", "settings.search.select"]
+			},
+			{
+				"value": "Senha",
+				"keys": [
+					"auth.password",
+					"reauth.password",
+					"reauth.usePassword",
+					"settings.account.password.title",
+					"settings.recoveryCodes.passwordLabel",
+					"settings.security.password"
+				]
+			},
+			{
+				"value": "Senha atual",
+				"keys": ["settings.account.password.currentPassword", "settings.email.confirmPassword"]
+			},
+			{
+				"value": "Senha obrigatória",
+				"keys": [
+					"settings.email.setPasswordRequired",
+					"settings.recoveryCodes.passwordRequiredForRegenerate",
+					"settings.security.passwordRequiredTitle"
+				]
+			},
+			{
+				"value": "Sequência",
+				"keys": [
+					"settings.notifications.quickActions.streak",
+					"settings.overview.stats.streak",
+					"settings.playerCard.stats.currentStreak",
+					"settings.playerCard.stats.streak",
+					"share.card.streakLabel",
+					"stats.streak",
+					"stats.streakCard.title"
+				]
+			},
+			{
+				"value": "Sequência atual",
+				"keys": [
+					"home.member.currentStreak",
+					"settings.overview.stats.currentStreak",
+					"stats.currentStreak",
+					"streak.currentStreak"
+				]
+			},
+			{
+				"value": "Sequência de {days} dias",
+				"keys": ["home.hero.streakChip", "share.card.streakDays", "stats.identity.streakChip"]
+			},
+			{
+				"value": "Serviços",
+				"keys": ["admin.dashboard.services", "admin.system.services"]
+			},
+			{
+				"value": "Sessão encerrada",
+				"keys": [
+					"settings.securityAlerts.types.session_revoked",
+					"settings.sessions.sessionRevoked"
+				]
+			},
+			{
+				"value": "Sessões ativas",
+				"keys": [
+					"admin.system.activeSessions",
+					"settings.security.sessions.title",
+					"settings.sessions.title"
+				]
+			},
+			{
+				"value": "Seu nome",
+				"keys": ["auth.namePlaceholder", "settings.profile.displayNamePlaceholder"]
+			},
+			{
+				"value": "Sim, excluir",
+				"keys": [
+					"admin.announcements.deleteConfirm",
+					"admin.featureFlags.deleteConfirm",
+					"admin.plans.deleteConfirm"
+				]
+			},
+			{
+				"value": "Sistema",
+				"keys": ["common.theme.system", "settings.preferences.appearance.system"]
+			},
+			{
+				"value": "Slug",
+				"keys": ["admin.plans.planSlug", "admin.plans.slug"]
+			},
+			{
+				"value": "Somente premium",
+				"keys": [
+					"admin.announcements.premiumOnly",
+					"admin.featureFlags.premiumOnly",
+					"admin.users.filterPremium"
+				]
+			},
+			{
+				"value": "Status",
+				"keys": ["admin.dlq.table.status", "gameResult.status"]
+			},
+			{
+				"value": "Suporte",
+				"keys": ["nav.support", "support.hero.eyebrow"]
+			},
+			{
+				"value": "Taxa de conversão",
+				"keys": ["admin.analytics.conversionRate", "admin.dashboard.conversionRate"]
+			},
+			{
+				"value": "Taxa de vitória",
+				"keys": [
+					"settings.overview.stats.winRate",
+					"settings.playerCard.stats.winRate",
+					"stats.modules.winRate",
+					"stats.winRate"
+				]
+			},
+			{
+				"value": "Tema",
+				"keys": ["settings.preferences.appearance.theme", "settings.theme"]
+			},
+			{
+				"value": "Tempo",
+				"keys": ["gameResult.time", "share.card.timeLabel", "stats.history.time"]
+			},
+			{
+				"value": "Tentar novamente",
+				"keys": [
+					"auth.errorRetry",
+					"common.retry",
+					"settings.sessions.retry",
+					"stats.dailyStatusRetry",
+					"stats.retry"
+				]
+			},
+			{
+				"value": "Tentativas",
+				"keys": ["admin.dlq.table.retries", "gameResult.attempts", "share.card.attemptsLabel"]
+			},
+			{
+				"value": "Termos de Serviço",
+				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+			},
+			{
+				"value": "Tipo de recurso",
+				"keys": ["admin.auditLogs.details.resourceType", "admin.auditLogs.filters.resourceType"]
+			},
+			{
+				"value": "Todos",
+				"keys": ["catalog.filterAll", "pagination.all"]
+			},
+			{
+				"value": "Todos os jogos",
+				"keys": ["catalog.metaTitle", "catalog.title", "footer.allGames"]
+			},
+			{
+				"value": "Todos os usuários",
+				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
+			},
+			{
+				"value": "Tornar admin",
+				"keys": ["admin.users.makeAdmin", "admin.users.makeAdminBulk"]
+			},
+			{
+				"value": "Total de usuários",
+				"keys": ["admin.dashboard.totalUsers", "admin.system.totalUsers", "admin.users.totalUsers"]
+			},
+			{
+				"value": "Usa um layout mais denso, com espaçamentos menores",
+				"keys": [
+					"settings.compactModeDescription",
+					"settings.preferences.appearance.compactModeDescription"
+				]
+			},
+			{
+				"value": "Usuário",
+				"keys": ["admin.auditLogs.details.user", "admin.users.tableHeaders.user"]
+			},
+			{
+				"value": "Usuários",
+				"keys": ["admin.analytics.users", "admin.sidebar.users", "admin.users.title"]
+			},
+			{
+				"value": "Usuários ativos por dia",
+				"keys": ["admin.analytics.dau", "admin.analytics.dauChart"]
+			},
+			{
+				"value": "Usuários premium",
+				"keys": ["admin.dashboard.premiumUsers", "admin.system.premiumUsers"]
+			},
+			{
+				"value": "Venceu",
+				"keys": ["calendar.won", "gameResult.won", "stats.history.won"]
+			},
+			{
+				"value": "Ver todos os jogos",
+				"keys": [
+					"catalog.gamePage.relatedAll",
+					"common.notFound.browseCta",
+					"home.day.browseAll",
+					"home.lineup.seeAll"
+				]
+			},
+			{
+				"value": "Ver tudo",
+				"keys": ["admin.dashboard.viewAll", "settings.security.loginHistory.viewAll"]
+			},
+			{
+				"value": "Verificado",
+				"keys": [
+					"admin.users.tableHeaders.verified",
+					"settings.email.verified",
+					"settings.playerCard.verified",
+					"settings.profile.emailVerified"
+				]
+			},
+			{
+				"value": "Verificar",
+				"keys": ["reauth.verify", "settings.security.verify"]
+			},
+			{
+				"value": "Verificação de segurança",
+				"keys": ["settings.security.securityCheckup.title", "settings.securityScore.title"]
+			},
+			{
+				"value": "Visão geral",
+				"keys": ["settings.nav.overview", "settings.security.tabs.overview"]
+			},
+			{
+				"value": "Vitórias",
+				"keys": [
+					"settings.overview.stats.wins",
+					"settings.playerCard.stats.wins",
+					"stats.calendar.tableWon"
+				]
+			},
+			{
+				"value": "Voltar ao início",
+				"keys": ["daily.backToHome", "gameResult.backToHome"]
+			},
+			{
+				"value": "Voltar para todos os jogos",
+				"keys": ["archive.backToGames", "daily.backToGames"]
+			},
+			{
+				"value": "dias",
+				"keys": ["settings.overview.stats.days", "settings.playerCard.stats.days", "streak.days"]
+			},
+			{
+				"value": "dias seguidos",
+				"keys": ["settings.overview.dayStreak", "stats.dayStreak"]
+			},
+			{
+				"value": "{count} selecionados",
+				"keys": ["admin.users.bulkActions", "admin.users.selectedUsers"]
+			},
+			{
+				"value": "{count} tipos ativos",
+				"keys": [
+					"settings.notifications.overview.emailActive",
+					"settings.notifications.overview.pushActive"
+				]
+			},
+			{
+				"value": "Última atualização",
+				"keys": ["legal.privacy.lastUpdated", "legal.terms.lastUpdated"]
+			}
 		]
 	}
 }

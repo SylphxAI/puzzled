@@ -1,0 +1,17 @@
+{
+	"metaTitle": "Archivo de puzles",
+	"metaDescription": "Vuelve a jugar los puzles diarios anteriores del archivo de Puzzled.",
+	"eyebrow": "Archivo",
+	"title": "El archivo",
+	"body": "Todos los puzles diarios anteriores siguen aquí. Elige un día y juégalo de nuevo.",
+	"playFreeToday": "Juega el puzle gratuito de hoy ({game})",
+	"listTitle": "Días anteriores",
+	"listBody": "Los últimos {count} días de puzles, del más reciente al más antiguo. Cada uno abre el puzle de ese día.",
+	"playDayLabel": "Jugar {game} del {date}",
+	"play": "Jugar",
+	"playToday": "Juega el ritual de hoy ({game})",
+	"backToGames": "Volver a todos los juegos",
+	"emptyTitle": "El archivo aún está vacío",
+	"emptyBody": "Cada puzle diario pasado llega aquí al cambiar de día: hoy toca el ritual. Juégalo y el de mañana ocupará su lugar.",
+	"emptyPlay": "Juega el ritual de hoy ({game})"
+}

@@ -1,0 +1,31 @@
+{
+	"name": "Sudoku",
+	"tagline": "9×9マス • 王道ロジック",
+	"highlight": "クラシックパズル",
+	"description": "9×9のマスに1〜9の数字を入れよう",
+	"howToPlay": "遊び方",
+	"rules": {
+		"title": "遊び方",
+		"rule1": "各行に1〜9の数字を入れます",
+		"rule2": "各列に1〜9の数字を入れます",
+		"rule3": "各3×3ブロックに1〜9の数字を入れます"
+	},
+	"startGame": "ゲーム開始",
+	"difficulty": {
+		"easy": "かんたん",
+		"medium": "ふつう",
+		"hard": "むずかしい"
+	},
+	"notes": "メモ",
+	"notesMode": "メモモード",
+	"clear": "クリア",
+	"complete": "パズルクリア！",
+	"messages": {
+		"conflict": "この数字は他のマスと重複しています"
+	},
+	"difficultyDescriptions": {
+		"easy": "49マスが埋まった状態。気軽に始められます",
+		"medium": "39マスが埋まった、バランスのよい盤面",
+		"hard": "埋まっているのは29マスだけ。取っかかりが少なめです"
+	}
+}

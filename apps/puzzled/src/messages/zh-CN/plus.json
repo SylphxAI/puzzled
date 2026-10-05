@@ -39,7 +39,8 @@
 		"consentRequired": "请勾选方框以继续。"
 	},
 	"trial": {
-		"endsOn": "你的 Puzzled Plus 免费一周将于 {date} 结束。不会收取任何费用，你已完成的内容会继续保留在统计中。"
+		"endsOn": "你的 Puzzled Plus 免费一周将于 {date} 结束。不会收取任何费用，你已完成的内容会继续保留在统计中。",
+		"endingSoon": "你的 Puzzled Plus 试用将于 {date} 结束，谢谢你试用。结束前随时可以取消。"
 	},
 	"unlock": {
 		"title": "这款游戏属于 Puzzled Plus",

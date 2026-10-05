@@ -1,0 +1,15 @@
+{
+	"name": "Hunt",
+	"tagline": "Encuentra palabras • Puzles temáticos",
+	"highlight": "Palabras ocultas",
+	"description": "Encuentra palabras ocultas en la cuadrícula de letras",
+	"howToPlay": "Cómo jugar a la sopa de letras",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Encuentra todas las palabras ocultas en la cuadrícula de letras",
+		"rule2": "Las palabras pueden ir en horizontal, vertical o diagonal",
+		"rule3": "Arrastra de la primera a la última letra para seleccionar"
+	},
+	"startGame": "Empezar partida",
+	"complete": "¡Todas las palabras encontradas!"
+}

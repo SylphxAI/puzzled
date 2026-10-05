@@ -1,0 +1,27 @@
+{
+	"name": "Cage Sudoku",
+	"tagline": "Sudoku • Somas de gaiolas",
+	"highlight": "Desafio de somas",
+	"description": "Sudoku com restrições de soma por gaiola",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Preencha cada linha, coluna e bloco 3×3 com os números de 1 a 9",
+		"rule2": "Os números de cada gaiola devem somar o total da gaiola",
+		"rule3": "Nenhum número pode se repetir dentro de uma gaiola"
+	},
+	"startGame": "Começar jogo",
+	"complete": "Desafio concluído!",
+	"notes": "Anotações",
+	"notesMode": "Modo de anotações",
+	"difficulty": {
+		"easy": "Fácil",
+		"medium": "Médio",
+		"hard": "Difícil"
+	},
+	"difficultyDescriptions": {
+		"easy": "20 dígitos dados para você começar",
+		"medium": "10 dígitos dados — as somas das gaiolas fazem o resto",
+		"hard": "Nenhum dígito dado, só as somas das gaiolas"
+	}
+}
