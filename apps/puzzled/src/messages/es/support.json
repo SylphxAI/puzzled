@@ -65,7 +65,7 @@
 		},
 		"refunds": {
 			"question": "¿Puedo obtener un reembolso?",
-			"answer": "Los pagos no son reembolsables y no devolvemos períodos usados en parte, salvo que las condiciones o la ley dispongan otra cosa. Si algo que entregamos no funcionó, lo solucionamos, y tus derechos legales como consumidor no se ven afectados. Al suscribirte pides que el acceso empiece de inmediato y reconoces que esto pone fin a tu derecho de desistimiento de 14 días. Si tienes una duda sobre un pago, escribe a {email}."
+			"answer": "Los pagos no son reembolsables y no devolvemos períodos usados en parte, salvo que las condiciones o la ley dispongan otra cosa. Si algo que entregamos no funcionó, lo solucionamos, y tus derechos legales como consumidor no se ven afectados. Al suscribirte pides que el acceso empiece de inmediato y reconoces que esto pone fin a tu derecho de desistimiento de 14 días. Si vives en Brasil, puedes desistir en un plazo de 7 días desde tu primer pago y recibir el reembolso íntegro, según el artículo 49 del Código de Defensa del Consumidor de Brasil. Si tienes una duda sobre un pago, escribe a {email}."
 		}
 	},
 	"resources": {

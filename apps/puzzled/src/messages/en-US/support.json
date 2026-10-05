@@ -65,7 +65,7 @@
 		},
 		"refunds": {
 			"question": "Can I get a refund?",
-			"answer": "Payments are non-refundable and we do not refund part-used periods, except where the terms or the law say otherwise. If something we delivered did not work, we put it right, and your statutory rights as a consumer are not affected. When you subscribe you ask for access to start at once and acknowledge that this ends your 14-day right to cancel. For a question about a payment, write to {email}."
+			"answer": "Payments are non-refundable and we do not refund part-used periods, except where the terms or the law say otherwise. If something we delivered did not work, we put it right, and your statutory rights as a consumer are not affected. When you subscribe you ask for access to start at once and acknowledge that this ends your 14-day right to cancel. If you live in Brazil, you can withdraw within 7 days of your first payment and get a full refund under article 49 of the Brazilian Consumer Defence Code. For a question about a payment, write to {email}."
 		}
 	},
 	"resources": {
