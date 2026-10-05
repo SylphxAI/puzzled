@@ -11,7 +11,6 @@ import {
 } from '../types'
 import { SpellingBeeHowToPlay } from './components/how-to-play'
 import { WordHiveIcon } from './icon'
-import { calculateMaxScore, getPuzzleFromSeed } from './puzzles'
 import type { SpellingBeePuzzleClientData } from './types'
 import { calculateWordScore, MIN_WORD_LENGTH } from './types'
 
@@ -114,30 +113,6 @@ export const wordHiveConfig: GameConfig<
 		if (a.status !== 'won' && b.status === 'won') return -1
 		// Higher score = better
 		return (a.score ?? 0) - (b.score ?? 0)
-	},
-
-	/**
-	 * Generate puzzle from seed
-	 */
-	generatePuzzle: (seed: number) => {
-		const puzzle = getPuzzleFromSeed(seed)
-		const maxScore = calculateMaxScore(puzzle)
-
-		// NOTE: validWords and pangrams are in BOTH puzzleData and solution
-		// This is intentional - Spelling Bee shows valid words as player finds them
-		return {
-			puzzleData: {
-				centerLetter: puzzle.centerLetter,
-				outerLetters: puzzle.outerLetters,
-				maxScore,
-				validWords: puzzle.validWords,
-				pangrams: puzzle.pangrams,
-			},
-			solution: {
-				validWords: puzzle.validWords,
-				pangrams: puzzle.pangrams,
-			},
-		}
 	},
 
 	/**

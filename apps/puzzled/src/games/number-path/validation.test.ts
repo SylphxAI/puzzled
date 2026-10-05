@@ -8,12 +8,13 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { numberPathConfig } from './config'
 import { FIXTURE_3X3_CLUES, FIXTURE_3X3_PATH_A, FIXTURE_3X3_PATH_B } from './fixtures'
 import type { Cell, NumberPathPuzzleData, NumberPathSolution } from './types'
 
-const { puzzleData, solution } = numberPathConfig.generatePuzzle(12345)
+const { puzzleData, solution } = frozenPuzzle(numberPathConfig)
 
 function createSubmission(
 	status: 'won' | 'lost',

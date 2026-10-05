@@ -12,7 +12,6 @@ import {
 } from '../types'
 import { TangoHowToPlay } from './components/how-to-play'
 import { TangoIcon } from './icon'
-import { getPuzzleFromSeed } from './puzzles'
 import type {
 	CellValue,
 	TangoGuessInput,
@@ -49,13 +48,6 @@ export const tangoConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	/**
-	 * Generate puzzle from seed
-	 */
-	generatePuzzle(seed: number) {
-		return getPuzzleFromSeed(seed)
-	},
 
 	/**
 	 * Validate a guess

@@ -77,7 +77,7 @@ clean-break end state that replaces all of it.
 
 - Since 2026-09-26 (#246) the api owns generation: every game has a pure,
   seeded Rust generator (`puzzled-core` `puzzle_play::generate`, byte parity
-  with the TS generators, each puzzle self-checked by its validator and
+  with the (since deleted) TS generators, each puzzle self-checked by its validator and
   killer-sudoku proven unique). The daily pipeline stores 14 days ahead and
   the 30-day archive on a Compute schedule (signed tick receipt) and at
   start-up, generates and stores a missing day on first read, and alerts
