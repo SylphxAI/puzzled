@@ -39,13 +39,13 @@ describe('money catalogue spec', () => {
 		for (const product of spec.products) expect(product.features.plus).toBe('true')
 	})
 
-	test('only the individual yearly price carries the 7-day trial', () => {
+	test('no price carries a trial until the Money trial notice is live', () => {
 		const trials = Object.fromEntries(
 			spec.products.flatMap((p) => p.prices).map((price) => [price.key, price.trial_days ?? 0]),
 		)
 		expect(trials).toEqual({
 			plus_individual_monthly: 0,
-			plus_individual_yearly: 7,
+			plus_individual_yearly: 0,
 			plus_family_monthly: 0,
 			plus_family_yearly: 0,
 		})

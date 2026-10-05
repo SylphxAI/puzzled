@@ -144,7 +144,7 @@
 				"plus": "true",
 				"seats": "1"
 			},
-			"trial_days": 7,
+			"trial_days": 0,
 			"source": "the Money declaration of 2026-09-28; amounts as first declared in the 2026-09-26 Money migration plan"
 		},
 		{
@@ -211,7 +211,7 @@
 	},
 	"notes": [
 		"Applied to Sylphx Money by .github/workflows/money-catalogue.yml on every push to main that changes this file. That workflow is the only writer: no manual catalogue writes.",
-		"Only plus_individual_yearly carries a trial (7 days, card up front, docs/growth.md); every other plan has trial_days 0 and no plan has an introductory price. The trial ends in a charge of the full yearly price, stated on the pricing page with the real date.",
+		"No plan carries a trial today: the live Money plans offer none, so every plan has trial_days 0 and no plan has an introductory price. Turning on the 7-day card-up-front trial for plus_individual_yearly (docs/growth.md) is a one-line change that lands only after the Money trial notice is live. When it is on, the trial ends in a charge of the full yearly price, stated on the pricing page with the real date.",
 		"Every price is per plan, per interval, and covers one product (individual or family). grants is the shape Money's entitlement_grants:check answers in: a boolean feature is \"true\", and the `seats` limit is a decimal string (\"1\", \"4\") for how many people the price covers, the plan owner included. A plan is a product with the `plus` feature, ranked by its `seats` limit.",
 		"Fields the Money catalogue spec has no place for (seller, locales, localised names beyond en-US, unlocks, implies, policy, free, currency_display, plan_id) stay here as the record of what was declared and are not sent.",
 		"The checkout consent line and the no-voluntary-refund rule (owner#779) are the app's, not the catalogue's: the app records the immediate-supply consent before it creates a checkout session."
