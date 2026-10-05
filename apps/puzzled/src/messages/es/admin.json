@@ -290,9 +290,6 @@
 			"title": "No hay elementos en la cola",
 			"description": "Las ejecuciones de flujos de trabajo fallidas aparecerán aquí"
 		},
-		"confirmRetry": "Se iniciará una nueva ejecución del flujo de trabajo. ¿Continuar?",
-		"confirmRetryTitle": "Reintentar flujo de trabajo",
-		"confirmRetryDescription": "Se iniciará un nuevo intento de ejecución del flujo de trabajo. Se procesará de nuevo con sus datos originales.",
 		"confirmDelete": "Este elemento se eliminará de forma permanente. ¿Continuar?",
 		"confirmDeleteTitle": "Eliminar elemento",
 		"confirmDeleteDescription": "Este elemento de la cola de mensajes fallidos se eliminará de forma permanente. Esta acción no se puede deshacer.",

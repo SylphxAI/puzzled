@@ -290,9 +290,6 @@
 			"title": "佇列中無項目",
 			"description": "失敗的工作流程執行將顯示在此處"
 		},
-		"confirmRetry": "這將觸發新的工作流程執行。是否繼續？",
-		"confirmRetryTitle": "重試工作流程",
-		"confirmRetryDescription": "這將觸發新的工作流程執行嘗試。工作流程將使用其原始資料重新處理。",
 		"confirmDelete": "這將永久刪除此項目。是否繼續？",
 		"confirmDeleteTitle": "刪除項目",
 		"confirmDeleteDescription": "這將永久刪除此死信佇列項目。此操作無法撤銷。",

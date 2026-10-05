@@ -1,6 +1,5 @@
 'use client'
 
-import { ConfirmDialog } from '@sylphx/ui'
 import { AlertTriangle, CheckCircle, Clock, Loader2, Play, RefreshCw, XCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
@@ -180,20 +179,14 @@ function StatCard({
 
 function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void }) {
 	const t = useTranslations('admin.dlq')
-	const tCommon = useTranslations('common')
 	const locale = useLocale()
 	const [loading, setLoading] = useState<string | null>(null)
-	const [retryDialogOpen, setRetryDialogOpen] = useState(false)
 
 	const retryMutation = useDlqRetry()
 	const resolveMutation = useDlqResolve()
 	const markFailedMutation = useDlqMarkFailed()
 
-	const handleRetryClick = () => {
-		setRetryDialogOpen(true)
-	}
-
-	const handleRetryConfirm = () => {
+	const handleRetry = () => {
 		setLoading('retry')
 		retryMutation.mutate(
 			{ id: item.id },
@@ -286,7 +279,7 @@ function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void })
 							<button
 								type="button"
 								className="admin-btn admin-btn-ghost p-2"
-								onClick={handleRetryClick}
+								onClick={handleRetry}
 								disabled={loading !== null}
 								aria-label={t('actions.retry')}
 							>
@@ -337,18 +330,6 @@ function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void })
 					)}
 				</div>
 			</td>
-
-			{/* Retry Confirmation Dialog */}
-			<ConfirmDialog
-				open={retryDialogOpen}
-				onOpenChange={setRetryDialogOpen}
-				title={t('confirmRetryTitle')}
-				description={t('confirmRetryDescription')}
-				confirmLabel={t('actions.retry')}
-				cancelLabel={tCommon('cancel')}
-				onConfirm={handleRetryConfirm}
-				variant="default"
-			/>
 		</tr>
 	)
 }

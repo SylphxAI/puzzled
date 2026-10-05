@@ -290,9 +290,6 @@
 			"title": "队列中无项目",
 			"description": "失败的工作流执行将显示在此处"
 		},
-		"confirmRetry": "这将触发新的工作流执行。是否继续？",
-		"confirmRetryTitle": "重试工作流",
-		"confirmRetryDescription": "这将触发新的工作流执行尝试。工作流将使用其原始数据重新处理。",
 		"confirmDelete": "这将永久删除此项目。是否继续？",
 		"confirmDeleteTitle": "删除项目",
 		"confirmDeleteDescription": "这将永久删除此死信队列项目。此操作无法撤消。",

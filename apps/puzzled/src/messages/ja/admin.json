@@ -290,9 +290,6 @@
 			"title": "キューに項目はありません",
 			"description": "失敗したワークフローの実行はここに表示されます"
 		},
-		"confirmRetry": "新しいワークフローの実行が開始されます。続行しますか？",
-		"confirmRetryTitle": "ワークフローを再試行",
-		"confirmRetryDescription": "新しいワークフローの実行が開始されます。ワークフローは元のデータで再度処理されます。",
 		"confirmDelete": "この項目は完全に削除されます。続行しますか？",
 		"confirmDeleteTitle": "項目を削除",
 		"confirmDeleteDescription": "このデッドレターキューの項目は完全に削除されます。この操作は元に戻せません。",

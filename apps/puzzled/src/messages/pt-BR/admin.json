@@ -290,9 +290,6 @@
 			"title": "Nenhum item na fila",
 			"description": "As execuções de workflow com falha aparecerão aqui"
 		},
-		"confirmRetry": "Isso vai disparar uma nova execução do workflow. Continuar?",
-		"confirmRetryTitle": "Tentar o workflow de novo",
-		"confirmRetryDescription": "Isso vai disparar uma nova tentativa de execução do workflow. O workflow será processado de novo com os dados originais.",
 		"confirmDelete": "Isso vai excluir este item permanentemente. Continuar?",
 		"confirmDeleteTitle": "Excluir item",
 		"confirmDeleteDescription": "Isso vai excluir permanentemente este item da fila de mensagens mortas. Esta ação não pode ser desfeita.",

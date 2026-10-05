@@ -36,7 +36,6 @@ import enUSOnboarding from '@/messages/en-US/onboarding.json'
 import enUSPagination from '@/messages/en-US/pagination.json'
 import enUSPlus from '@/messages/en-US/plus.json'
 import enUSPwa from '@/messages/en-US/pwa.json'
-import enUSReauth from '@/messages/en-US/reauth.json'
 import enUSSettings from '@/messages/en-US/settings.json'
 import enUSShare from '@/messages/en-US/share.json'
 import enUSStats from '@/messages/en-US/stats.json'
@@ -63,7 +62,6 @@ import esOnboarding from '@/messages/es/onboarding.json'
 import esPagination from '@/messages/es/pagination.json'
 import esPlus from '@/messages/es/plus.json'
 import esPwa from '@/messages/es/pwa.json'
-import esReauth from '@/messages/es/reauth.json'
 import esSettings from '@/messages/es/settings.json'
 import esShare from '@/messages/es/share.json'
 import esStats from '@/messages/es/stats.json'
@@ -90,7 +88,6 @@ import jaOnboarding from '@/messages/ja/onboarding.json'
 import jaPagination from '@/messages/ja/pagination.json'
 import jaPlus from '@/messages/ja/plus.json'
 import jaPwa from '@/messages/ja/pwa.json'
-import jaReauth from '@/messages/ja/reauth.json'
 import jaSettings from '@/messages/ja/settings.json'
 import jaShare from '@/messages/ja/share.json'
 import jaStats from '@/messages/ja/stats.json'
@@ -117,7 +114,6 @@ import ptBROnboarding from '@/messages/pt-BR/onboarding.json'
 import ptBRPagination from '@/messages/pt-BR/pagination.json'
 import ptBRPlus from '@/messages/pt-BR/plus.json'
 import ptBRPwa from '@/messages/pt-BR/pwa.json'
-import ptBRReauth from '@/messages/pt-BR/reauth.json'
 import ptBRSettings from '@/messages/pt-BR/settings.json'
 import ptBRShare from '@/messages/pt-BR/share.json'
 import ptBRStats from '@/messages/pt-BR/stats.json'
@@ -145,7 +141,6 @@ import zhCNOnboarding from '@/messages/zh-CN/onboarding.json'
 import zhCNPagination from '@/messages/zh-CN/pagination.json'
 import zhCNPlus from '@/messages/zh-CN/plus.json'
 import zhCNPwa from '@/messages/zh-CN/pwa.json'
-import zhCNReauth from '@/messages/zh-CN/reauth.json'
 import zhCNSettings from '@/messages/zh-CN/settings.json'
 import zhCNShare from '@/messages/zh-CN/share.json'
 import zhCNStats from '@/messages/zh-CN/stats.json'
@@ -173,7 +168,6 @@ import zhHKOnboarding from '@/messages/zh-HK/onboarding.json'
 import zhHKPagination from '@/messages/zh-HK/pagination.json'
 import zhHKPlus from '@/messages/zh-HK/plus.json'
 import zhHKPwa from '@/messages/zh-HK/pwa.json'
-import zhHKReauth from '@/messages/zh-HK/reauth.json'
 import zhHKSettings from '@/messages/zh-HK/settings.json'
 import zhHKShare from '@/messages/zh-HK/share.json'
 import zhHKStats from '@/messages/zh-HK/stats.json'
@@ -230,7 +224,6 @@ interface LocaleMessages {
 	modes: Messages
 	onboarding: Messages
 	pwa: Messages
-	reauth: Messages
 	share: Messages
 	stats: Messages
 	streak: Messages
@@ -267,7 +260,6 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		modes: enUSModes,
 		onboarding: enUSOnboarding,
 		pwa: enUSPwa,
-		reauth: enUSReauth,
 		share: enUSShare,
 		stats: enUSStats,
 		streak: enUSStreak,
@@ -304,7 +296,6 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		modes: zhHKModes,
 		onboarding: zhHKOnboarding,
 		pwa: zhHKPwa,
-		reauth: zhHKReauth,
 		share: zhHKShare,
 		stats: zhHKStats,
 		streak: zhHKStreak,
@@ -355,7 +346,6 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		modes: zhCNModes,
 		onboarding: zhCNOnboarding,
 		pwa: zhCNPwa,
-		reauth: zhCNReauth,
 		share: zhCNShare,
 		stats: zhCNStats,
 		streak: zhCNStreak,
@@ -383,7 +373,6 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		pagination: jaPagination,
 		plus: jaPlus,
 		pwa: jaPwa,
-		reauth: jaReauth,
 		settings: jaSettings,
 		share: jaShare,
 		stats: jaStats,
@@ -412,7 +401,6 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		pagination: esPagination,
 		plus: esPlus,
 		pwa: esPwa,
-		reauth: esReauth,
 		settings: esSettings,
 		share: esShare,
 		stats: esStats,
@@ -441,7 +429,6 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		pagination: ptBRPagination,
 		plus: ptBRPlus,
 		pwa: ptBRPwa,
-		reauth: ptBRReauth,
 		settings: ptBRSettings,
 		share: ptBRShare,
 		stats: ptBRStats,

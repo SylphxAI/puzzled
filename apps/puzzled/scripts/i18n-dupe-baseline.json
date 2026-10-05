@@ -556,8 +556,6 @@
 				"value": "Password",
 				"keys": [
 					"auth.password",
-					"reauth.password",
-					"reauth.usePassword",
 					"settings.account.password.title",
 					"settings.recoveryCodes.passwordLabel",
 					"settings.security.password"
@@ -841,12 +839,7 @@
 			},
 			{
 				"value": "Sending...",
-				"keys": [
-					"auth.sending",
-					"reauth.sending",
-					"settings.testEmailSending",
-					"settings.testPushSending"
-				]
+				"keys": ["auth.sending", "settings.testEmailSending", "settings.testPushSending"]
 			},
 			{
 				"value": "Services",
@@ -1024,13 +1017,8 @@
 				]
 			},
 			{
-				"value": "Verify",
-				"keys": ["reauth.verify", "settings.security.verify"]
-			},
-			{
 				"value": "Verify Your Identity",
 				"keys": [
-					"reauth.title",
 					"settings.account.password.verifyIdentity",
 					"settings.connectedAccounts.verifyIdentity",
 					"settings.privacy.deleteAccount.verifyTitle",
@@ -1656,8 +1644,6 @@
 				"value": "Password",
 				"keys": [
 					"auth.password",
-					"reauth.password",
-					"reauth.usePassword",
 					"settings.account.password.title",
 					"settings.recoveryCodes.passwordLabel",
 					"settings.security.password"
@@ -1941,12 +1927,7 @@
 			},
 			{
 				"value": "Sending...",
-				"keys": [
-					"auth.sending",
-					"reauth.sending",
-					"settings.testEmailSending",
-					"settings.testPushSending"
-				]
+				"keys": ["auth.sending", "settings.testEmailSending", "settings.testPushSending"]
 			},
 			{
 				"value": "Services",
@@ -2124,13 +2105,8 @@
 				]
 			},
 			{
-				"value": "Verify",
-				"keys": ["reauth.verify", "settings.security.verify"]
-			},
-			{
 				"value": "Verify Your Identity",
 				"keys": [
-					"reauth.title",
 					"settings.account.password.verifyIdentity",
 					"settings.connectedAccounts.verifyIdentity",
 					"settings.privacy.deleteAccount.verifyTitle",
@@ -2309,10 +2285,6 @@
 					"settings.account.providers.microsoft",
 					"settings.connectedAccounts.providers.microsoft"
 				]
-			},
-			{
-				"value": "Password",
-				"keys": ["reauth.password", "reauth.usePassword"]
 			},
 			{
 				"value": "Premium Only",
@@ -3401,10 +3373,6 @@
 					"settings.account.providers.microsoft",
 					"settings.connectedAccounts.providers.microsoft"
 				]
-			},
-			{
-				"value": "Password",
-				"keys": ["reauth.password", "reauth.usePassword"]
 			},
 			{
 				"value": "Premium Only",
@@ -4500,10 +4468,6 @@
 					"settings.account.providers.microsoft",
 					"settings.connectedAccounts.providers.microsoft"
 				]
-			},
-			{
-				"value": "Password",
-				"keys": ["reauth.password", "reauth.usePassword"]
 			},
 			{
 				"value": "Premium Only",
@@ -5880,8 +5844,6 @@
 				"value": "パスワード",
 				"keys": [
 					"auth.password",
-					"reauth.password",
-					"reauth.usePassword",
 					"settings.account.password.title",
 					"settings.recoveryCodes.passwordLabel",
 					"settings.security.password"
@@ -5901,11 +5863,7 @@
 			},
 			{
 				"value": "パスワードを入力してください",
-				"keys": [
-					"auth.passwordRequired",
-					"reauth.errors.passwordRequired",
-					"settings.recoveryCodes.passwordRequired"
-				]
+				"keys": ["auth.passwordRequired", "settings.recoveryCodes.passwordRequired"]
 			},
 			{
 				"value": "パスワードを再設定",
@@ -6457,7 +6415,6 @@
 			{
 				"value": "本人確認",
 				"keys": [
-					"reauth.title",
 					"settings.account.password.verifyIdentity",
 					"settings.connectedAccounts.verifyIdentity",
 					"settings.privacy.deleteAccount.verifyTitle",
@@ -6673,12 +6630,7 @@
 			},
 			{
 				"value": "送信中...",
-				"keys": [
-					"auth.sending",
-					"reauth.sending",
-					"settings.testEmailSending",
-					"settings.testPushSending"
-				]
+				"keys": ["auth.sending", "settings.testEmailSending", "settings.testPushSending"]
 			},
 			{
 				"value": "通知",
@@ -6980,8 +6932,6 @@
 				"value": "Contraseña",
 				"keys": [
 					"auth.password",
-					"reauth.password",
-					"reauth.usePassword",
 					"settings.account.password.title",
 					"settings.recoveryCodes.passwordLabel",
 					"settings.security.password"
@@ -7140,12 +7090,7 @@
 			},
 			{
 				"value": "Enviando...",
-				"keys": [
-					"auth.sending",
-					"reauth.sending",
-					"settings.testEmailSending",
-					"settings.testPushSending"
-				]
+				"keys": ["auth.sending", "settings.testEmailSending", "settings.testPushSending"]
 			},
 			{
 				"value": "Error al actualizar",
@@ -7295,10 +7240,6 @@
 			{
 				"value": "Intentos",
 				"keys": ["gameResult.attempts", "share.card.attemptsLabel"]
-			},
-			{
-				"value": "Introduce tu contraseña",
-				"keys": ["auth.passwordRequired", "reauth.errors.passwordRequired"]
 			},
 			{
 				"value": "Introduce tu nombre",
@@ -7846,7 +7787,6 @@
 			{
 				"value": "Verifica tu identidad",
 				"keys": [
-					"reauth.title",
 					"settings.account.password.verifyIdentity",
 					"settings.connectedAccounts.verifyIdentity",
 					"settings.privacy.deleteAccount.verifyTitle",
@@ -7861,10 +7801,6 @@
 					"settings.playerCard.verified",
 					"settings.profile.emailVerified"
 				]
-			},
-			{
-				"value": "Verificar",
-				"keys": ["reauth.verify", "settings.security.verify"]
 			},
 			{
 				"value": "Victorias",
@@ -8115,7 +8051,6 @@
 			{
 				"value": "Confirme sua identidade",
 				"keys": [
-					"reauth.title",
 					"settings.account.password.verifyIdentity",
 					"settings.connectedAccounts.verifyIdentity",
 					"settings.privacy.deleteAccount.verifyTitle",
@@ -8223,10 +8158,6 @@
 				"keys": ["auth.nameRequired", "settings.profile.nameRequiredDescription"]
 			},
 			{
-				"value": "Digite sua senha",
-				"keys": ["auth.passwordRequired", "reauth.errors.passwordRequired"]
-			},
-			{
 				"value": "Digite um endereço de e-mail válido",
 				"keys": ["auth.emailInvalid", "settings.email.invalidEmail"]
 			},
@@ -8291,12 +8222,7 @@
 			},
 			{
 				"value": "Enviando...",
-				"keys": [
-					"auth.sending",
-					"reauth.sending",
-					"settings.testEmailSending",
-					"settings.testPushSending"
-				]
+				"keys": ["auth.sending", "settings.testEmailSending", "settings.testPushSending"]
 			},
 			{
 				"value": "Enviar foto",
@@ -8832,8 +8758,6 @@
 				"value": "Senha",
 				"keys": [
 					"auth.password",
-					"reauth.password",
-					"reauth.usePassword",
 					"settings.account.password.title",
 					"settings.recoveryCodes.passwordLabel",
 					"settings.security.password"
@@ -9042,10 +8966,6 @@
 					"settings.playerCard.verified",
 					"settings.profile.emailVerified"
 				]
-			},
-			{
-				"value": "Verificar",
-				"keys": ["reauth.verify", "settings.security.verify"]
 			},
 			{
 				"value": "Verificação de segurança",

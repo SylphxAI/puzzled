@@ -290,9 +290,6 @@
 			"title": "No items in queue",
 			"description": "Failed workflow executions will appear here"
 		},
-		"confirmRetry": "This will trigger a new workflow execution. Continue?",
-		"confirmRetryTitle": "Retry Workflow",
-		"confirmRetryDescription": "This will trigger a new workflow execution attempt. The workflow will be processed again with its original data.",
 		"confirmDelete": "This will permanently delete this item. Continue?",
 		"confirmDeleteTitle": "Delete Item",
 		"confirmDeleteDescription": "This will permanently delete this dead letter queue item. This action cannot be undone.",

@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { adminCheckResponse, checkAdminWithMfa } from '@/features/admin'
+import { requireAdmin } from '@/features/admin'
 import { adminModelCatalog, ai } from '@/features/puzzle-generator/server'
 import { logger } from '@/lib/logger'
 
@@ -9,13 +9,14 @@ export const dynamic = 'force-dynamic' // Prevent static generation at build tim
 /**
  * GET /api/admin/models
  * Lists admitted Models catalog SKUs to choose `puzzle_generator_model`.
- * Requires admin authentication with MFA
+ * Requires an admin session (the api's is_admin).
  */
 export async function GET(request: NextRequest) {
-	// Require admin authentication with MFA
-	const authResult = await checkAdminWithMfa(request)
-	const errorResponse = adminCheckResponse(authResult)
-	if (errorResponse) return errorResponse
+	try {
+		await requireAdmin()
+	} catch {
+		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+	}
 
 	const { searchParams } = new URL(request.url)
 	const search = searchParams.get('search')?.toLowerCase()
