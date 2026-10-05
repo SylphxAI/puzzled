@@ -361,18 +361,12 @@ test.describe('Game Pages', () => {
 			await page.goto(`/${LOCALE}/games/crossword`)
 			await page.waitForSelector('main', { timeout: 15000 })
 
-			// Either shows paywall OR shows game (if it's free today)
+			// Either shows paywall OR shows game (if it's free today). Wait for
+			// either to render: a one-shot isVisible() races hydration on WebKit.
 			const paywall = page.getByText(/premium|unlock|subscribe|sign in/i)
 			const gameContent = page.getByRole('button', { name: /play/i })
 
-			const hasPaywall = await paywall
-				.first()
-				.isVisible()
-				.catch(() => false)
-			const hasGame = await gameContent.isVisible().catch(() => false)
-
-			// One of these should be true
-			expect(hasPaywall || hasGame).toBe(true)
+			await expect(paywall.or(gameContent).first()).toBeVisible({ timeout: 15000 })
 		})
 
 		test("should show today's free game link on paywall", async ({ page }) => {
