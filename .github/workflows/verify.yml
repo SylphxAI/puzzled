@@ -60,6 +60,7 @@ jobs:
           lanes: |
             rust: crates/* proto/* Cargo.toml Cargo.lock apps/puzzled/atlas/*
             build: apps/* packages/* proto/* crates/* brand/* package.json bun.lock bunfig.toml turbo.json Cargo.toml Cargo.lock
+            browsers: apps/puzzled/e2e-tests/* apps/puzzled/playwright.config.ts
 
   build:
     name: Build (Next.js + release binary)
@@ -421,6 +422,107 @@ jobs:
         run: |
           if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
 
+  games-browsers:
+    name: Games (Chromium, Firefox, WebKit)
+    # Every game on the three engines players use. Trunk push, nightly and
+    # manual like the a11y suite, plus a ready pull request that changes the
+    # browser harness itself. Self-hosted: a $0 runner whatever the repository
+    # visibility.
+    if: >-
+      fromJSON(needs.plan.outputs.run).build &&
+      (github.event_name != 'pull_request' || fromJSON(needs.plan.outputs.run).browsers)
+    runs-on: sylphx-linux-standard
+    timeout-minutes: 40
+    needs: [plan, build]
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+
+      - name: bun install
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+              exit 0
+            fi
+            echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            sleep $((attempt * 3))
+          done
+          echo "bun install failed after retries"
+          exit 1
+
+      # Pinned by the @playwright/test version in bun.lock; nothing on the
+      # runner image is assumed.
+      - name: Install Playwright Chromium, Firefox and WebKit
+        working-directory: apps/puzzled
+        run: bunx playwright install --with-deps chromium firefox webkit
+
+      - name: Download the web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+
+      - name: Unpack the web build
+        run: tar -C apps/puzzled -xf web-build.tar
+
+      - name: Serve the build on :3016
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          SYLPHX_PUBLIC_URL: https://puzzled.gg
+        run: |
+          set -euo pipefail
+          bun run start -p 3016 > "$RUNNER_TEMP/serve-games.log" 2>&1 &
+          echo "SERVE_PID=$!" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 60); do
+            status="$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3016/ || true)"
+            if [ "$status" = "200" ]; then
+              echo "served build answered 200 on attempt ${attempt}"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "served build never answered 200 (last status ${status:-none})"
+          cat "$RUNNER_TEMP/serve-games.log"
+          exit 1
+
+      # Never retried: a flaky assertion is quarantined with an owner, not
+      # turned green by a second attempt.
+      - name: Game suite on Chromium, Firefox and WebKit
+        working-directory: apps/puzzled
+        env:
+          BASE_URL: http://localhost:3016
+        run: bun run test:e2e e2e-tests/games.e2e.ts --project=chromium --project=firefox --project=webkit --retries=0
+
+      - name: Show the server log
+        if: failure()
+        run: cat "$RUNNER_TEMP/serve-games.log" || true
+
+      - name: Upload the Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: games-playwright-report
+          path: |
+            apps/puzzled/playwright-report
+            apps/puzzled/test-results
+          retention-days: 7
+
+      - name: Stop the served build
+        if: always()
+        run: |
+          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
+
   lighthouse:
     name: Lighthouse Budgets
     # Trunk push, nightly and manual only, like the a11y suite.
@@ -528,7 +630,7 @@ jobs:
   verified:
     name: verified
     if: always()
-    needs: [plan, build, rust-api, seo-contract, a11y, lighthouse]
+    needs: [plan, build, rust-api, seo-contract, a11y, games-browsers, lighthouse]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
