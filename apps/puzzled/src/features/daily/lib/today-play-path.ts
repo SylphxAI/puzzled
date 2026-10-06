@@ -6,13 +6,16 @@ import { START_PARAM } from './start-param'
 export const DEFAULT_DAILY_DIFFICULTY: PuzzleDifficulty = 'medium'
 
 /**
- * Today's board for a game in one tap: the default level for games that have
- * levels (skipping the chooser), started on arrival, so the player lands on a
- * visible, playable board.
+ * Today's board for a game in one tap: the given level (or the default) for
+ * games that have levels, skipping the chooser, started on arrival, so the
+ * player lands on a visible, playable board.
  */
-export function todayPlayPath(gameSlug: string): string {
+export function todayPlayPath(
+	gameSlug: string,
+	difficulty: PuzzleDifficulty = DEFAULT_DAILY_DIFFICULTY,
+): string {
 	const query = gameSupportsDifficulty(gameSlug)
-		? `?difficulty=${DEFAULT_DAILY_DIFFICULTY}&${START_PARAM}=1`
+		? `?difficulty=${difficulty}&${START_PARAM}=1`
 		: `?${START_PARAM}=1`
 	return `/games/${gameSlug}${query}#play`
 }

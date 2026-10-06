@@ -30,6 +30,8 @@ type GamePageHeroProps = {
 	isGuest: boolean
 	/** Behind Puzzled Plus for this viewer: the unlock panel owns the action. */
 	locked: boolean
+	/** Where the play button goes: today's started board, or `#play` on an archive day. */
+	playHref: string
 }
 
 /**
@@ -50,6 +52,7 @@ export async function GamePageHero({
 	freeToday,
 	isGuest,
 	locked,
+	playHref,
 }: GamePageHeroProps) {
 	const t = await getTranslations('catalog')
 	const tNav = await getTranslations('nav')
@@ -155,7 +158,7 @@ export async function GamePageHero({
 							) : null}
 						</ul>
 
-						<HeroPlayAction locked={locked} label={t('gamePage.playCta')} />
+						<HeroPlayAction locked={locked} label={t('gamePage.playCta')} href={playHref} />
 
 						<HeroGuestNote isGuest={isGuest} locked={locked}>
 							{t('gamePage.guestNote')}{' '}
