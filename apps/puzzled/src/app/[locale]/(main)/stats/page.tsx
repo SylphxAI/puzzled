@@ -176,7 +176,7 @@ export default async function StatsPage({ params }: Props) {
 							{!user ? (
 								<Link
 									href="/login"
-									className="chip bg-muted text-foreground underline-offset-2 hover:underline"
+									className="chip min-h-11 bg-muted px-4 text-foreground underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 								>
 									{t('identity.signInCta')}
 								</Link>

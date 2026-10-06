@@ -226,6 +226,29 @@ test.describe('Company target size (44px effective hit area)', () => {
 		})
 	}
 
+	// Page-heading controls (chips that link, header actions) on the console
+	// routes a signed-out visitor reaches. The stats sign-in chip once shipped
+	// at 21px tall, under even the WCAG 2.2 2.5.8 24px floor.
+	for (const route of ['/en/stats', '/en/leaderboard']) {
+		test(`mobile page-heading controls on ${route}`, async ({ page }) => {
+			await page.setViewportSize(MOBILE)
+			await page.goto(route, { waitUntil: 'domcontentloaded' })
+			await settle(page)
+			await expect(page.locator('[data-console-header]').first()).toBeVisible()
+
+			const offenders = await targetOffenders(
+				page,
+				'[data-console-header] a[href], [data-console-header] button',
+			)
+			expect(
+				offenders,
+				`page-heading controls below 44px effective target:\n${offenders
+					.map((entry) => `  ${entry.width}x${entry.height} ${entry.target} "${entry.name}"`)
+					.join('\n')}`,
+			).toEqual([])
+		})
+	}
+
 	test('shell controls inside the open mobile drawer', async ({ page }, testInfo) => {
 		await page.setViewportSize(MOBILE)
 		await page.goto('/', { waitUntil: 'domcontentloaded' })

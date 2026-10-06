@@ -45,7 +45,7 @@ export function ConsoleHeader({
 		 * the only `banner` landmark, and a second `<header>` inside `<main>`
 		 * would announce a competing one to screen readers.
 		 */
-		<div className={cn('animate-enter', className)}>
+		<div data-console-header="" className={cn('animate-enter', className)}>
 			<div className="flex flex-wrap items-start justify-between gap-4">
 				<div className="min-w-0">
 					{eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
