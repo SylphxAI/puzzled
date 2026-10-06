@@ -101,8 +101,9 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   paid period and nothing more is charged.
 - Immediate supply: checkout records the player's express request for access
   to start at once and their acknowledgement that the 14-day cancellation
-  right is lost (`immediate_supply_consent`). The consent is stored before
-  checkout starts.
+  right is lost (`immediate_supply_consent`; digital content, Consumer
+  Contracts Regulations 2013 reg 37, so no voluntary refund follows from it).
+  The consent is stored before checkout starts.
 - No money-back guarantee. Cancellation ends renewal at the end of the paid
   period (`cancel_at_period_end`) and the api refunds nothing on cancel.
   Payments are non-refundable and part-used periods are not refunded, except
@@ -273,3 +274,30 @@ standing. The paywall applies to everyone:
   locked out of them, and so is an account with old play history.
 - Any later free or discounted access is a Money entitlement grant (account,
   feature, expiry, approver), never a rule in the play gate.
+
+## Measuring the Plus funnel
+
+Product events go to GA4 through the existing consent-gated Google tag
+(`apps/puzzled/src/features/analytics/lib/google-tag.ts`), GA4 only (never
+Ads), and only after the visitor granted analytics consent; without it nothing
+is sent and nothing is remembered. Events carry fixed values only (no account
+id, address or free text). Each fires at most once per slot per Hong Kong day
+per browser (`plus-funnel.ts`, one `puzzled:funnel:sent` record that resets
+daily). Counts are therefore consented-visitor counts, a sample, not all players.
+
+| Event | Parameters | Emitted from |
+| --- | --- | --- |
+| `plus_offer_shown` | `surface` = `result_card` / `day3` / `day7` / `pricing` | `plus-result-card.tsx` (result_card), `plus-milestone-prompt.tsx` (day3, day7), `pricing-funnel-tracker.tsx` (pricing) |
+| `plus_offer_clicked` | `surface` as above | the same card and prompt links; `subscribe-button.tsx` (pricing) |
+| `checkout_started` | `plan`, `interval` = `month` / `year`, `trial` = `yes` / `no` | `subscribe-button.tsx`, just before the Money redirect |
+| `checkout_returned` | `outcome` = `success` / `cancel` | `checkout-return-tracker.tsx` (success, confirmed subscription), `pricing-funnel-tracker.tsx` (`?checkout=cancelled`) |
+| `trial_started` | none | `checkout-return-tracker.tsx` when the confirmed subscription is trialing |
+
+Reading it in GA4 (Explore > Funnel): shown -> clicked -> `checkout_started` ->
+`checkout_returned` (`outcome=success`) -> `trial_started`, broken down by
+`surface` for the first two steps and by `interval` / `trial` for checkout. Offer
+click-through = clicked / shown per surface; checkout completion =
+`checkout_returned` success / `checkout_started`; the cancel share is the rest.
+Register `surface`, `plan`, `interval`, `trial` and `outcome` as event-scoped
+custom dimensions first. A paid purchase is the existing `purchase` Ads
+conversion; revenue truth stays in Sylphx Money, not in GA4.

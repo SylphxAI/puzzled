@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { GoogleTag } from '@/features/analytics/components/google-tag'
+import { WebVitalsReporter } from '@/features/analytics/components/web-vitals-reporter'
 import { CONSENT_DEFAULT_SCRIPT, googleTagIds } from '@/features/analytics/lib/google-tag'
 import { ErrorCapture } from '@/features/monitoring/components/error-capture'
 import { ApiProvider } from '@/lib/api/provider'
@@ -259,6 +260,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 					<PlatformProvider appId={config.app.id} config={config}>
 						{/* Before the children so its effects register first. */}
 						{googleTag ? <GoogleTag ids={googleTag} /> : null}
+						{googleTag?.ga ? <WebVitalsReporter /> : null}
 						<ApiProvider>
 							<NextIntlClientProvider messages={pickMessages(messages, CLIENT_NAMESPACES)}>
 								{children}
