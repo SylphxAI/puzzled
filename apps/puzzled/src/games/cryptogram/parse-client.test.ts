@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import { cryptogramConfig } from './config'
 import { parseCryptogramClientPayload } from './parse-client'
 import type { CryptogramPuzzleData, CryptogramSolution } from './types'
 import { type CryptogramClientState, cryptogramReducer, isFullyFilled } from './use-cryptogram'
 
-const { puzzleData, solution } = cryptogramConfig.generatePuzzle(20250101) as {
+const { puzzleData, solution } = frozenPuzzle(cryptogramConfig) as {
 	puzzleData: CryptogramPuzzleData
 	solution: CryptogramSolution
 }
