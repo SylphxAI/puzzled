@@ -39,6 +39,7 @@ permissions:
   contents: read
   actions: read
   checks: read
+  id-token: write
 
 jobs:
   plan:
@@ -139,7 +140,7 @@ jobs:
       - name: Put cargo on PATH
         run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
 
-      - uses: SylphxAI/.github/.github/actions/rust-sccache@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+      - uses: SylphxAI/.github/.github/actions/rust-sccache@c0aeae6f5d5afa5f463002804a59e5b6ea9a1310 # main after #194
         with:
           s3-access-key: ${{ secrets.SYLPHX_CI_CACHE_ACCESS_KEY }}
           s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
@@ -197,7 +198,7 @@ jobs:
       - name: Put cargo on PATH
         run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
 
-      - uses: SylphxAI/.github/.github/actions/rust-sccache@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+      - uses: SylphxAI/.github/.github/actions/rust-sccache@c0aeae6f5d5afa5f463002804a59e5b6ea9a1310 # main after #194
         with:
           s3-access-key: ${{ secrets.SYLPHX_CI_CACHE_ACCESS_KEY }}
           s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
