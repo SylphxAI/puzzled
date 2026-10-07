@@ -14,12 +14,13 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { killerSudokuConfig } from './config'
 
-// Generate a puzzle for testing (medium difficulty)
+// A frozen puzzle from the Rust goldens
 // NOTE: Seed 42 is known to work - seed 12345 fails due to cage generation edge case
-const { puzzleData, solution } = killerSudokuConfig.generatePuzzle(42, 'medium')
+const { puzzleData, solution } = frozenPuzzle(killerSudokuConfig, 'medium')
 
 // Create correct grid from solution
 const correctGrid = solution.grid
