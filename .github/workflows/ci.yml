@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/main-red-gate@73d9ddf27bb36f5835a618a1a32f2b03ba505289 # main 73d9ddf (pin floor)
+      - uses: SylphxAI/.github/.github/actions/main-red-gate@0e60d27730cdd0148c5649881d82c5bd58996931 # main 0e60d27 (pin floor)
         with:
           mode: observe
 
