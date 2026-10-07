@@ -62,6 +62,13 @@ A dashboard number should match this within late-event lag (15 minutes).
 | Depth | Games per completer per day | p50 in 1 to 3 is healthy; a heavy p90 may signal pressure |
 | Growth | Share rate, landing rate, landing-to-first-finish rate | shares per finish; landings per share; new completers per landing |
 | Reliability | Serve error rate, submit error rate, finish latency p50/p95 | The free daily path is the product |
+
+The reliability row is emitted and alertable, not a dashboard only: the api
+writes `event="puzzled.api.write.ok"` or `.write.failed` once per finished
+write request (the `puzzled-write-success` SLO in `SylphxAI/infra`, 99%),
+`event="puzzled.issue.turn_failed.<route>"` on any 5xx (one work item per
+fingerprint), and each backend error also reaches Sylphx Observability as a
+group ([observability.md](observability.md#quality-signals-owner-standardsquality-signalsmd)).
 | Revenue | Free-to-Plus conversion by completion-day density, paid churn, archive-gate conversion | Lagging; revenue never replaces the North Star |
 
 Prefer server-emitted events over client analytics for finish counts. Client
