@@ -94,7 +94,7 @@ export function collectClientModuleEvidence(
 	const registered = isValidGameSlug(slug)
 	return {
 		metadata: Boolean(metadata?.slug && metadata.name && metadata.description),
-		content_source: typeof config?.generatePuzzle === 'function',
+		content_source: serverValidator, // content comes from the Rust daily pipeline
 		interaction: hasPlayableInteraction(slug),
 		terminal_contract: typeof config?.validateAndScore === 'function',
 		server_validator: serverValidator,

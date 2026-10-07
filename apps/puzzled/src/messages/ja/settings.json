@@ -319,7 +319,7 @@
 		"nameRequiredDescription": "名前を入力してください",
 		"username": "ユーザー名",
 		"usernameHint": "ランキングと公開プロフィールで使用されます",
-		"usernamePlaceholder": "username",
+		"usernamePlaceholder": "ユーザー名",
 		"usernameAvailable": "このユーザー名は利用できます",
 		"usernameTaken": "このユーザー名は既に使われています",
 		"usernameTakenDescription": "別のユーザー名を選んでください",

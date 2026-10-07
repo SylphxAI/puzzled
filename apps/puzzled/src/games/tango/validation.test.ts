@@ -13,12 +13,13 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { tangoConfig } from './config'
 import type { CellValue } from './types'
 
-// Generate a puzzle for testing
-const { puzzleData, solution } = tangoConfig.generatePuzzle(12345)
+// A frozen puzzle from the Rust goldens
+const { puzzleData, solution } = frozenPuzzle(tangoConfig)
 
 // Create correct grid from solution
 const correctGrid = solution.grid
