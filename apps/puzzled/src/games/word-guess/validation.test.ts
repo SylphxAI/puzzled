@@ -12,6 +12,7 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { wordGuessConfig } from './config'
 
@@ -29,8 +30,8 @@ function createSubmission(
 	}
 }
 
-// Generate a puzzle for testing
-const { puzzleData, solution } = wordGuessConfig.generatePuzzle(12345)
+// A frozen puzzle from the Rust goldens
+const { puzzleData, solution } = frozenPuzzle(wordGuessConfig)
 const solutionWord = solution.word.toUpperCase()
 
 describe('word-guess validateAndScore', () => {

@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useReducer } from 'react'
-import { getWordList } from './puzzles'
+import { getWordList } from './dictionary'
 import type { WordLadderPuzzleData, WordLadderState } from './types'
 import { isOneLetterChange } from './types'
 

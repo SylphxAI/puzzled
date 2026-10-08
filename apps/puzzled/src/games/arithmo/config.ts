@@ -11,7 +11,6 @@ import {
 	type GameSubmission,
 } from '../types'
 import { ArithmoHowToPlay } from './components/how-to-play'
-import { getPuzzleFromSeed } from './equations'
 import { ArithmoIcon } from './icon'
 import type { ArithmoGuess, ArithmoGuessResult, ArithmoPuzzleData, ArithmoSolution } from './types'
 import { getGuessResult, isValidEquation } from './types'
@@ -61,13 +60,6 @@ export const arithmoConfig: GameConfig<
 		if (a.status !== 'won' && b.status === 'won') return -1
 		// Fewer attempts = better
 		return (b.attempts ?? Number.POSITIVE_INFINITY) - (a.attempts ?? Number.POSITIVE_INFINITY)
-	},
-
-	/**
-	 * Generate puzzle from seed
-	 */
-	generatePuzzle(seed: number) {
-		return getPuzzleFromSeed(seed)
 	},
 
 	/**

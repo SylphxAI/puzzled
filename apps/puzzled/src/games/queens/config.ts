@@ -10,10 +10,8 @@ import {
 	type GameConfig,
 	type GameResult,
 	type GameSubmission,
-	type PuzzleDifficulty,
 } from '../types'
 import { QueensHowToPlay } from './components/how-to-play'
-import { generateQueensPuzzle } from './generator'
 import { QueensIcon } from './icon'
 import type { QueensGuess, QueensGuessResult, QueensPuzzleData, QueensSolution } from './types'
 import { getConflicts, isSolved } from './types'
@@ -76,20 +74,6 @@ export const queensConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	/**
-	 * Generate puzzle from seed with optional difficulty
-	 * If difficulty not specified, defaults to 'medium' (6×6 board)
-	 */
-	generatePuzzle(seed: number, difficulty?: PuzzleDifficulty) {
-		const sizes: Record<PuzzleDifficulty, number> = {
-			easy: 5,
-			medium: 6,
-			hard: 8,
-		}
-		const boardSize = sizes[difficulty ?? 'medium']
-		return generateQueensPuzzle(seed, boardSize)
-	},
 
 	/**
 	 * Validate a single move

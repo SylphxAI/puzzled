@@ -14,7 +14,6 @@ import {
 } from '../types'
 import { PatternMatchHowToPlay } from './components/how-to-play'
 import { PatternMatchIcon } from './icon'
-import { getPuzzleForDate } from './puzzles'
 import type { Card, PatternMatchSolution } from './types'
 import { isValidSet } from './types'
 
@@ -80,25 +79,6 @@ export const patternMatchConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	/**
-	 * Generate puzzle from seed
-	 */
-	generatePuzzle(seed: number) {
-		const puzzle = getPuzzleForDate(seed)
-
-		const puzzleData: PatternMatchClientData = {
-			cards: puzzle.cards,
-			totalSets: puzzle.validSets.length,
-		}
-
-		const solution: PatternMatchSolution = {
-			validSets: puzzle.validSets,
-			totalSets: puzzle.validSets.length,
-		}
-
-		return { puzzleData, solution }
-	},
 
 	/**
 	 * Validate a single set guess (real-time feedback)

@@ -8,12 +8,13 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { pipPlaceConfig } from './config'
 import { FIXTURE_2X3_PUZZLE, FIXTURE_2X3_SOLUTION_A, FIXTURE_2X3_TILES_B } from './fixtures'
 import type { PipPlaceTile } from './types'
 
-const { puzzleData, solution } = pipPlaceConfig.generatePuzzle(12345)
+const { puzzleData, solution } = frozenPuzzle(pipPlaceConfig)
 
 function createSubmission(
 	status: 'won' | 'lost',
