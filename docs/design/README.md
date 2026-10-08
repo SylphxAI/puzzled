@@ -136,6 +136,7 @@ glyph in ink, and a deep form of the hue for small text on paper.
 | `/login`, `/signup`, password pages | account access | Sylphx Auth end users |
 | `/terms`, `/privacy`, `/support` | legal and help | operator: Sylphx Limited |
 | 404, error | recover | 404 offers today's free puzzle first |
+| Offline fallback | reconnect and return to Today | one connection message and one native retry; self-contained, no offline-play promise ([integration contract](offline.md)) |
 
 Removed from the home page: the "How Puzzled works" steps, the trust bullet row and the
 closing sales band (the featured card and the FAQ carry that job). Removed from `/games`:

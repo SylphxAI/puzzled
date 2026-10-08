@@ -4,7 +4,9 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev --turbopack",
-		"build": "next build",
+		"build": "bun run generate:offline && next build",
+		"generate:offline": "bun run scripts/generate-offline.tsx",
+		"check:offline": "bun run scripts/generate-offline.tsx --check",
 		"build:with-migrate": "atlas migrate apply --env production && next build",
 		"start": "next start",
 		"verify:seo": "bun run scripts/seo-verify.ts",

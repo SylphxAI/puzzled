@@ -1,13 +1,22 @@
-import { locales } from '@/lib/i18n/config'
+import { defaultLocale, locales } from '@/lib/i18n/config'
 import { inboundModulePublicRoutes } from '@/lib/module-routes'
 
 const inboundPublicRoutes = new Set(inboundModulePublicRoutes(locales))
 
 /**
  * Documents the app serves at the root, outside locale routing.
- * `next.config.ts` declares no rewrites for them; the metadata routes own them.
+ * `next.config.ts` declares no rewrites for them; metadata routes and the
+ * standalone public offline documents own them.
  */
-const STATIC_DOCUMENT_PATHS = new Set(['/robots.txt', '/sitemap.xml', '/manifest.webmanifest'])
+const STATIC_DOCUMENT_PATHS = new Set([
+	'/robots.txt',
+	'/sitemap.xml',
+	'/manifest.webmanifest',
+	'/offline.html',
+	...locales
+		.filter((locale) => locale !== defaultLocale)
+		.map((locale) => `/offline/${locale}.html`),
+])
 
 /**
  * Real static asset types served from `public/` or the build.

@@ -14,6 +14,22 @@ describe('proxy path skipping', () => {
 		}
 	})
 
+	test('serves only the generated offline documents outside locale routing', () => {
+		for (const path of [
+			'/offline.html',
+			'/offline/en-GB.html',
+			'/offline/zh-HK.html',
+			'/offline/zh-TW.html',
+			'/offline/zh-CN.html',
+			'/offline/ja.html',
+			'/offline/es.html',
+			'/offline/pt-BR.html',
+		]) {
+			expect(isProxySkippedPath(path)).toBe(true)
+		}
+		expect(isProxySkippedPath('/offline/missing.html')).toBe(false)
+	})
+
 	test('serves real static assets', () => {
 		for (const path of [
 			'/favicon.ico',
