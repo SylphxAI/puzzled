@@ -877,7 +877,30 @@
 		"boardsBody": "Seu nome de exibição e sua pontuação só aparecem em um ranking enquanto a sua visibilidade pública estiver ativada. Desative-a e você sai dos rankings sem perder nenhum progresso.",
 		"boardsCta": "Ver os rankings"
 	},
+	"deletePage": {
+		"title": "Exclua sua conta do Puzzled",
+		"description": "Você pode solicitar a exclusão da sua conta neste site sem instalar um aplicativo.",
+		"stepsTitle": "Exclua nas configurações da conta",
+		"steps": "Entre na conta do Puzzled que deseja excluir. Nas configurações da conta, escolha Excluir conta. Se tiver uma assinatura com renovação automática, cancele-a primeiro em Cobrança.",
+		"signIn": "Entre para excluir sua conta",
+		"erased": "A exclusão remove sua conta de acesso, histórico de jogos, estatísticas, sequências, perfil e configurações de notificações. Não pode ser desfeita, e você será desconectado.",
+		"retained": "Registros de pagamentos e reembolsos são mantidos sem seu ID de jogador para cumprir obrigações fiscais e contábeis. Backups e registros são sobrescritos durante a operação normal. Outros dados são mantidos apenas quando necessário para obrigações legais, prevenção de fraude ou reivindicações legais, conforme a política de privacidade.",
+		"privacy": "Leia a política de privacidade e retenção",
+		"helpTitle": "Não consegue entrar?",
+		"help": "Recupere sua senha ou envie uma solicitação de exclusão pelo endereço de e-mail da sua conta. Inclua seu ID de conta do Puzzled, se souber. Nunca envie sua senha. Podemos precisar verificar que a conta é sua antes de concluir a solicitação.",
+		"recover": "Recupere sua conta",
+		"email": "Solicite a exclusão por e-mail: {email}"
+	},
 	"sessions": {
+		"started": "Entrada: {time}",
+		"firstPage": "Primeira página",
+		"nextPage": "Próxima página",
+		"state": {
+			"active": "Ativa",
+			"revoked": "Sessão encerrada",
+			"expired": "Expirada",
+			"unknown": "Estado indisponível"
+		},
 		"title": "Sessões ativas",
 		"description": "Gerencie suas sessões ativas em todos os dispositivos",
 		"currentSession": "Este dispositivo",

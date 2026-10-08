@@ -877,7 +877,30 @@
 		"boardsBody": "Your display name and score appear on a board only while your public visibility setting is on. Switch it off and you drop off the boards without losing any progress.",
 		"boardsCta": "See the boards"
 	},
+	"deletePage": {
+		"title": "Delete your Puzzled account",
+		"description": "You can request account deletion on this website without installing an app.",
+		"stepsTitle": "Delete from account settings",
+		"steps": "Sign in to the Puzzled account you want to delete. In Account settings, choose Delete account. If you have a renewing subscription, cancel it in Billing before deleting your account.",
+		"signIn": "Sign in to delete your account",
+		"erased": "Deletion removes your sign-in account, game history, stats, streaks, profile and notification settings. It cannot be undone, and you will be signed out.",
+		"retained": "Payment and refund records are retained without your player ID for tax and accounting obligations. Backups and logs are overwritten in the normal course of operation; other information is retained only where needed for legal obligations, fraud prevention or legal claims, as explained in the privacy policy.",
+		"privacy": "Read the privacy and retention policy",
+		"helpTitle": "Cannot sign in?",
+		"help": "Recover your password, or email a deletion request from the address on your account. Include your Puzzled account ID if you know it. Never send your password. We may need to verify that the account is yours before completing the request.",
+		"recover": "Recover your account",
+		"email": "Request deletion by email: {email}"
+	},
 	"sessions": {
+		"started": "Signed in {time}",
+		"firstPage": "First page",
+		"nextPage": "Next page",
+		"state": {
+			"active": "Active",
+			"revoked": "Signed out",
+			"expired": "Expired",
+			"unknown": "Status unavailable"
+		},
 		"title": "Active Sessions",
 		"description": "Manage your active sessions across devices",
 		"currentSession": "This device",
