@@ -28,9 +28,9 @@ self.addEventListener('fetch', event => {
   return caches.match(path);
  }));
 });`
-const server = Bun.serve({
+const fixtureServerOptions = {
 	port: 0,
-	fetch(request) {
+	fetch(request: Request) {
 		const path = new URL(request.url).pathname
 		if (path === '/sw-fixture.js')
 			return new Response(fixtureWorker, { headers: { 'Content-Type': 'text/javascript' } })
@@ -43,15 +43,16 @@ const server = Bun.serve({
 			})
 		return new Response(
 			'<!doctype html><html lang="en"><title>Online fixture</title><h1>Online fixture</h1></html>',
-			{ headers: { 'Content-Type': 'text/html' } },
+			{ headers: { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' } },
 		)
 	},
-})
+}
+let server = Bun.serve(fixtureServerOptions)
 const origin = server.url.origin
-const browser = await chromium.launch({ headless: true })
+const browser = await chromium.launch({ headless: true, channel: 'chromium' })
 const cleanup = async () => {
 	await browser.close()
-	server.stop(true)
+	await server.stop(true)
 }
 process.once('SIGTERM', () => {
 	void cleanup().finally(() => process.exit(124))
@@ -87,6 +88,9 @@ try {
 					}),
 				)
 		})
+		// Stop our fixture origin as well: Chromium's offline emulation can leave
+		// service-worker-originated fetches online after a document navigation.
+		await server.stop(true)
 		await context.setOffline(true)
 		await page.goto(`${origin}/games/five`, { waitUntil: 'load' })
 		await page.getByRole('heading', { name: 'You’re offline' }).waitFor()
@@ -111,10 +115,21 @@ try {
 			throw new Error(`${name}: retry not keyboard reachable`)
 		await page.screenshot({ path: resolve(shots, `focus-${name}.png`), fullPage: true })
 		// A retry while still offline remains recoverable; reconnecting reaches Today.
-		await retry.click()
-		await page.getByRole('heading', { name: 'You’re offline' }).waitFor()
+		for (let attempt = 0; attempt < (name === 'phone' ? 20 : 1); attempt++) {
+			await Promise.all([
+				page.waitForEvent('framenavigated', { predicate: (frame) => frame === page.mainFrame() }),
+				retry.click(),
+			])
+			await page.waitForLoadState('load')
+			await page.getByRole('heading', { name: 'You’re offline' }).waitFor()
+		}
+		server = Bun.serve({ ...fixtureServerOptions, port: Number(new URL(origin).port) })
 		await context.setOffline(false)
-		await retry.click()
+		await Promise.all([
+			page.waitForEvent('framenavigated', { predicate: (frame) => frame === page.mainFrame() }),
+			retry.click(),
+		])
+		await page.waitForLoadState('load')
 		await page.getByRole('heading', { name: 'Online fixture' }).waitFor()
 		console.log(
 			`${name}: offline document, AA, 44px target, keyboard focus and retry/reconnect passed`,
@@ -146,3 +161,5 @@ try {
 } finally {
 	await cleanup()
 }
+// Reached only when every assertion and cleanup succeeded; failures still throw.
+process.exit(0)

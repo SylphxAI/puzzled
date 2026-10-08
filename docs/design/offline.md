@@ -42,7 +42,15 @@ acceptance are checked with that combined change, not in a separate deployment.
 
 From `apps/puzzled`, on a Sylphx Build lease:
 
+The lease needs Chromium and its OS libraries. On an Ubuntu Build image, admit
+`archive.ubuntu.com`, `security.ubuntu.com` and `apt.postgresql.org`, use HTTPS
+package mirrors, and admit `cdn.playwright.dev`, `storage.googleapis.com` and
+`playwright.download.prss.microsoft.com` for Playwright downloads. Installation
+and the probe must run in the same lease: machine-local browser caches do not
+survive a new lease. The before screenshots also need `puzzled.gg`.
+
 ```sh
+bunx playwright install --with-deps chromium --no-shell
 bun run generate:offline
 bun run check:offline
 bun test src/lib/proxy-paths.test.ts src/shared/components/offline-view.test.tsx
@@ -60,8 +68,11 @@ The browser check serves the actual generated documents with the app's CSP and
 uses a deliberately small **test-only** precache worker to exercise the integration
 contract. It checks phone, desktop and dark mode, an offline retry and online
 recovery, keyboard focus, axe WCAG 2.2 AA rules, 44px targets, and all locale
-layouts at 320px. It is not proof that the production service worker already
-implements the contract.
+layouts at 320px. The fixture origin is stopped during the outage, because
+Chromium offline emulation can leave service-worker fetches online after
+navigation. Retry assertions await a main-frame navigation; the phone check
+repeats offline retry 20 times sequentially. It is not proof that the production
+service worker already implements the contract.
 
 Screenshots from that check live in `docs/design/offline/`: the existing `/offline`
 404 on phone/desktop, the new offline documents on phone/desktop/dark mode, visible
