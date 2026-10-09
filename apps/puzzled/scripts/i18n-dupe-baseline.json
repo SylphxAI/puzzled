@@ -2311,10 +2311,6 @@
 				]
 			},
 			{
-				"value": "Password",
-				"keys": ["reauth.password", "reauth.usePassword"]
-			},
-			{
 				"value": "Premium Only",
 				"keys": [
 					"admin.announcements.premiumOnly",
@@ -2336,12 +2332,7 @@
 			},
 			{
 				"value": "Refresh",
-				"keys": [
-					"admin.dlq.refresh",
-					"admin.games.refresh",
-					"admin.system.refresh",
-					"common.refresh"
-				]
+				"keys": ["admin.dlq.refresh", "admin.games.refresh", "admin.system.refresh"]
 			},
 			{
 				"value": "Save",
@@ -2383,8 +2374,16 @@
 				"keys": ["auth.passwordStrength.fair", "settings.overview.protectionLevels.fair"]
 			},
 			{
+				"value": "上一頁",
+				"keys": ["admin.auditLogs.pagination.previous", "pagination.previous"]
+			},
+			{
 				"value": "上載相片",
 				"keys": ["settings.profile.avatarUpload.uploadPhoto", "settings.profile.uploadPhoto"]
+			},
+			{
+				"value": "下一頁",
+				"keys": ["admin.auditLogs.pagination.next", "pagination.next"]
 			},
 			{
 				"value": "下載",
@@ -2474,11 +2473,11 @@
 			},
 			{
 				"value": "免費",
-				"keys": ["admin.users.free", "plus.pricing.freeTitle"]
+				"keys": ["admin.users.free", "daily.freeToday", "plus.pricing.freeTitle"]
 			},
 			{
 				"value": "全部",
-				"keys": ["catalog.filterAll", "leaderboard.period.all"]
+				"keys": ["catalog.filterAll", "leaderboard.period.all", "pagination.all"]
 			},
 			{
 				"value": "全部複製",
@@ -2563,6 +2562,10 @@
 				"keys": ["legal.privacy.sections.rights.items.export", "settings.privacy.exportData"]
 			},
 			{
+				"value": "即將推出",
+				"keys": ["common.comingSoon", "settings.connectedAccounts.comingSoon"]
+			},
+			{
 				"value": "取消",
 				"keys": [
 					"common.cancel",
@@ -2595,6 +2598,7 @@
 			{
 				"value": "安全",
 				"keys": [
+					"common.security",
 					"settings.nav.security",
 					"settings.overview.badges.secure",
 					"settings.overview.sections.security",
@@ -2626,6 +2630,8 @@
 				"value": "密碼",
 				"keys": [
 					"auth.password",
+					"reauth.password",
+					"reauth.usePassword",
 					"settings.account.password.title",
 					"settings.recoveryCodes.passwordLabel",
 					"settings.security.password"
@@ -2644,7 +2650,8 @@
 				"keys": [
 					"calendar.played",
 					"settings.overview.stats.played",
-					"settings.playerCard.stats.gamesPlayed"
+					"settings.playerCard.stats.gamesPlayed",
+					"stats.played"
 				]
 			},
 			{
@@ -2871,6 +2878,10 @@
 				"keys": ["legal.privacy.toc.title", "legal.terms.toc.title"]
 			},
 			{
+				"value": "查看成績",
+				"keys": ["daily.viewResult", "gameResult.seeResult"]
+			},
+			{
 				"value": "查看排行榜",
 				"keys": ["settings.playerCard.boardLink", "settings.privacy.boardsCta"]
 			},
@@ -2963,6 +2974,10 @@
 				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
 			},
 			{
+				"value": "玩法",
+				"keys": ["common.help", "common.howToPlay"]
+			},
+			{
 				"value": "用戶",
 				"keys": [
 					"admin.auditLogs.details.user",
@@ -2977,7 +2992,8 @@
 					"admin.auditLogs.actions.login",
 					"auth.signIn",
 					"common.signIn",
-					"plus.unlock.signIn"
+					"plus.unlock.signIn",
+					"stats.signIn"
 				]
 			},
 			{
@@ -3033,6 +3049,10 @@
 			{
 				"value": "空間",
 				"keys": ["catalog.category.spatial", "catalog.gamePage.genre.spatial"]
+			},
+			{
+				"value": "第 {page} 頁，共 {total} 頁",
+				"keys": ["admin.auditLogs.pagination.page", "pagination.page"]
 			},
 			{
 				"value": "管理操作",
@@ -3123,6 +3143,14 @@
 				"keys": ["common.theme.system", "settings.preferences.appearance.system"]
 			},
 			{
+				"value": "載入中...",
+				"keys": ["common.loading", "pagination.loading"]
+			},
+			{
+				"value": "返回首頁",
+				"keys": ["daily.backToHome", "gameResult.backToHome"]
+			},
+			{
 				"value": "通知",
 				"keys": [
 					"settings.nav.notifications",
@@ -3139,6 +3167,7 @@
 					"settings.overview.stats.streak",
 					"settings.playerCard.stats.currentStreak",
 					"settings.playerCard.stats.streak",
+					"stats.streak",
 					"stats.streakCard.title"
 				]
 			},
@@ -3176,6 +3205,10 @@
 			{
 				"value": "邏輯",
 				"keys": ["catalog.category.logic", "catalog.gamePage.genre.logic"]
+			},
+			{
+				"value": "重新整理",
+				"keys": ["admin.auditLogs.filters.refresh", "common.refresh"]
 			},
 			{
 				"value": "重新產生代碼",
@@ -3222,7 +3255,12 @@
 			},
 			{
 				"value": "開始遊戲",
-				"keys": ["catalog.play", "common.play", "settings.overview.startPlaying"]
+				"keys": [
+					"catalog.play",
+					"common.play",
+					"settings.overview.startPlaying",
+					"stats.startPlaying"
+				]
 			},
 			{
 				"value": "關閉",
@@ -3278,6 +3316,10 @@
 					"settings.overview.security.needsAttention",
 					"settings.security.securityCheckup.scoreNeedsAttention"
 				]
+			},
+			{
+				"value": "驗證",
+				"keys": ["reauth.verify", "settings.security.verify"]
 			},
 			{
 				"value": "驗證你的身分",
@@ -3403,10 +3445,6 @@
 				]
 			},
 			{
-				"value": "Password",
-				"keys": ["reauth.password", "reauth.usePassword"]
-			},
-			{
 				"value": "Premium Only",
 				"keys": [
 					"admin.announcements.premiumOnly",
@@ -3428,12 +3466,7 @@
 			},
 			{
 				"value": "Refresh",
-				"keys": [
-					"admin.dlq.refresh",
-					"admin.games.refresh",
-					"admin.system.refresh",
-					"common.refresh"
-				]
+				"keys": ["admin.dlq.refresh", "admin.games.refresh", "admin.system.refresh"]
 			},
 			{
 				"value": "Save",
@@ -3475,8 +3508,16 @@
 				"keys": ["auth.passwordStrength.fair", "settings.overview.protectionLevels.fair"]
 			},
 			{
+				"value": "上一頁",
+				"keys": ["admin.auditLogs.pagination.previous", "pagination.previous"]
+			},
+			{
 				"value": "上傳照片",
 				"keys": ["settings.profile.avatarUpload.uploadPhoto", "settings.profile.uploadPhoto"]
+			},
+			{
+				"value": "下一頁",
+				"keys": ["admin.auditLogs.pagination.next", "pagination.next"]
 			},
 			{
 				"value": "下載",
@@ -3570,11 +3611,11 @@
 			},
 			{
 				"value": "免費",
-				"keys": ["admin.users.free", "plus.pricing.freeTitle"]
+				"keys": ["admin.users.free", "daily.freeToday", "plus.pricing.freeTitle"]
 			},
 			{
 				"value": "全部",
-				"keys": ["catalog.filterAll", "leaderboard.period.all"]
+				"keys": ["catalog.filterAll", "leaderboard.period.all", "pagination.all"]
 			},
 			{
 				"value": "全部複製",
@@ -3667,6 +3708,10 @@
 				"keys": ["legal.privacy.sections.rights.items.export", "settings.privacy.exportData"]
 			},
 			{
+				"value": "即將推出",
+				"keys": ["common.comingSoon", "settings.connectedAccounts.comingSoon"]
+			},
+			{
 				"value": "取消",
 				"keys": [
 					"common.cancel",
@@ -3699,6 +3744,7 @@
 			{
 				"value": "安全",
 				"keys": [
+					"common.security",
 					"settings.nav.security",
 					"settings.overview.badges.secure",
 					"settings.overview.sections.security",
@@ -3730,6 +3776,8 @@
 				"value": "密碼",
 				"keys": [
 					"auth.password",
+					"reauth.password",
+					"reauth.usePassword",
 					"settings.account.password.title",
 					"settings.recoveryCodes.passwordLabel",
 					"settings.security.password"
@@ -3748,7 +3796,8 @@
 				"keys": [
 					"calendar.played",
 					"settings.overview.stats.played",
-					"settings.playerCard.stats.gamesPlayed"
+					"settings.playerCard.stats.gamesPlayed",
+					"stats.played"
 				]
 			},
 			{
@@ -3974,6 +4023,10 @@
 				"keys": ["legal.privacy.toc.title", "legal.terms.toc.title"]
 			},
 			{
+				"value": "查看成績",
+				"keys": ["daily.viewResult", "gameResult.seeResult"]
+			},
+			{
 				"value": "查看排行榜",
 				"keys": ["settings.playerCard.boardLink", "settings.privacy.boardsCta"]
 			},
@@ -4058,6 +4111,10 @@
 				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
 			},
 			{
+				"value": "玩法",
+				"keys": ["common.help", "common.howToPlay"]
+			},
+			{
 				"value": "用戶",
 				"keys": [
 					"admin.auditLogs.details.user",
@@ -4072,7 +4129,8 @@
 					"admin.auditLogs.actions.login",
 					"auth.signIn",
 					"common.signIn",
-					"plus.unlock.signIn"
+					"plus.unlock.signIn",
+					"stats.signIn"
 				]
 			},
 			{
@@ -4115,6 +4173,10 @@
 			{
 				"value": "空間",
 				"keys": ["catalog.category.spatial", "catalog.gamePage.genre.spatial"]
+			},
+			{
+				"value": "第 {page} 頁，共 {total} 頁",
+				"keys": ["admin.auditLogs.pagination.page", "pagination.page"]
 			},
 			{
 				"value": "管理操作",
@@ -4205,6 +4267,14 @@
 				"keys": ["common.theme.system", "settings.preferences.appearance.system"]
 			},
 			{
+				"value": "載入中...",
+				"keys": ["common.loading", "pagination.loading"]
+			},
+			{
+				"value": "返回首頁",
+				"keys": ["daily.backToHome", "gameResult.backToHome"]
+			},
+			{
 				"value": "通知",
 				"keys": [
 					"settings.nav.notifications",
@@ -4221,6 +4291,7 @@
 					"settings.overview.stats.streak",
 					"settings.playerCard.stats.currentStreak",
 					"settings.playerCard.stats.streak",
+					"stats.streak",
 					"stats.streakCard.title"
 				]
 			},
@@ -4258,6 +4329,10 @@
 			{
 				"value": "邏輯",
 				"keys": ["catalog.category.logic", "catalog.gamePage.genre.logic"]
+			},
+			{
+				"value": "重新整理",
+				"keys": ["admin.auditLogs.filters.refresh", "common.refresh"]
 			},
 			{
 				"value": "重新產生代碼",
@@ -4304,7 +4379,12 @@
 			},
 			{
 				"value": "開始遊戲",
-				"keys": ["catalog.play", "common.play", "settings.overview.startPlaying"]
+				"keys": [
+					"catalog.play",
+					"common.play",
+					"settings.overview.startPlaying",
+					"stats.startPlaying"
+				]
 			},
 			{
 				"value": "關閉",
@@ -4375,6 +4455,10 @@
 				]
 			},
 			{
+				"value": "驗證",
+				"keys": ["reauth.verify", "settings.security.verify"]
+			},
+			{
 				"value": "驗證你的身分",
 				"keys": [
 					"settings.account.password.verifyIdentity",
@@ -4413,16 +4497,12 @@
 				]
 			},
 			{
-				"value": "Back to Home",
-				"keys": ["daily.backToHome", "gameResult.backToHome"]
-			},
-			{
 				"value": "Cancel",
 				"keys": ["admin.announcements.cancel", "admin.featureFlags.cancel", "admin.plans.cancel"]
 			},
 			{
 				"value": "Close",
-				"keys": ["admin.commandPalette.close", "admin.plans.close", "auth.close"]
+				"keys": ["admin.commandPalette.close", "admin.plans.close"]
 			},
 			{
 				"value": "Conversion Rate",
@@ -4502,10 +4582,6 @@
 				]
 			},
 			{
-				"value": "Password",
-				"keys": ["reauth.password", "reauth.usePassword"]
-			},
-			{
 				"value": "Premium Only",
 				"keys": [
 					"admin.announcements.premiumOnly",
@@ -4527,12 +4603,7 @@
 			},
 			{
 				"value": "Refresh",
-				"keys": [
-					"admin.dlq.refresh",
-					"admin.games.refresh",
-					"admin.system.refresh",
-					"common.refresh"
-				]
+				"keys": ["admin.dlq.refresh", "admin.games.refresh", "admin.system.refresh"]
 			},
 			{
 				"value": "Save",
@@ -4574,8 +4645,16 @@
 				"keys": ["auth.passwordStrength.fair", "settings.overview.protectionLevels.fair"]
 			},
 			{
+				"value": "上一页",
+				"keys": ["admin.auditLogs.pagination.previous", "pagination.previous"]
+			},
+			{
 				"value": "上传照片",
 				"keys": ["settings.profile.avatarUpload.uploadPhoto", "settings.profile.uploadPhoto"]
+			},
+			{
+				"value": "下一页",
+				"keys": ["admin.auditLogs.pagination.next", "pagination.next"]
 			},
 			{
 				"value": "下载",
@@ -4660,11 +4739,11 @@
 			},
 			{
 				"value": "免费",
-				"keys": ["admin.users.free", "plus.pricing.freeTitle"]
+				"keys": ["admin.users.free", "daily.freeToday", "plus.pricing.freeTitle"]
 			},
 			{
 				"value": "全部",
-				"keys": ["catalog.filterAll", "leaderboard.period.all"]
+				"keys": ["catalog.filterAll", "leaderboard.period.all", "pagination.all"]
 			},
 			{
 				"value": "全部复制",
@@ -4687,7 +4766,12 @@
 			},
 			{
 				"value": "关闭",
-				"keys": ["common.dismiss", "settings.notifications.push.disable", "streak.dismiss"]
+				"keys": [
+					"auth.close",
+					"common.dismiss",
+					"settings.notifications.push.disable",
+					"streak.dismiss"
+				]
 			},
 			{
 				"value": "再玩一次",
@@ -4740,12 +4824,24 @@
 				"keys": ["settings.account.centreDeletion", "settings.privacy.centreDeletion"]
 			},
 			{
+				"value": "刷新",
+				"keys": ["admin.auditLogs.filters.refresh", "common.refresh"]
+			},
+			{
 				"value": "前往支持页面",
 				"keys": ["legal.privacy.cta.support", "legal.terms.cta.support"]
 			},
 			{
 				"value": "前往设置",
 				"keys": ["auth.unsubscribe.goToSettings", "settings.email.goToSettings"]
+			},
+			{
+				"value": "加载中...",
+				"keys": ["common.loading", "pagination.loading"]
+			},
+			{
+				"value": "即将推出",
+				"keys": ["common.comingSoon", "settings.connectedAccounts.comingSoon"]
 			},
 			{
 				"value": "历史",
@@ -4794,7 +4890,7 @@
 			},
 			{
 				"value": "天连胜",
-				"keys": ["onboarding.dayStreak", "settings.overview.dayStreak"]
+				"keys": ["onboarding.dayStreak", "settings.overview.dayStreak", "stats.dayStreak"]
 			},
 			{
 				"value": "失败",
@@ -4807,6 +4903,7 @@
 			{
 				"value": "安全",
 				"keys": [
+					"common.security",
 					"settings.nav.security",
 					"settings.overview.badges.secure",
 					"settings.overview.sections.security",
@@ -4842,6 +4939,8 @@
 				"value": "密码",
 				"keys": [
 					"auth.password",
+					"reauth.password",
+					"reauth.usePassword",
 					"settings.account.password.title",
 					"settings.recoveryCodes.passwordLabel",
 					"settings.security.password"
@@ -4891,7 +4990,8 @@
 				"keys": [
 					"calendar.played",
 					"settings.overview.stats.played",
-					"settings.playerCard.stats.gamesPlayed"
+					"settings.playerCard.stats.gamesPlayed",
+					"stats.played"
 				]
 			},
 			{
@@ -4918,7 +5018,12 @@
 			},
 			{
 				"value": "开始游戏",
-				"keys": ["catalog.play", "common.play", "settings.overview.startPlaying"]
+				"keys": [
+					"catalog.play",
+					"common.play",
+					"settings.overview.startPlaying",
+					"stats.startPlaying"
+				]
 			},
 			{
 				"value": "开始玩",
@@ -5126,6 +5231,10 @@
 				"keys": ["common.notFound.browseCta", "home.lineup.seeAll"]
 			},
 			{
+				"value": "查看成绩",
+				"keys": ["daily.viewResult", "gameResult.seeResult"]
+			},
+			{
 				"value": "查看排行榜",
 				"keys": ["settings.playerCard.boardLink", "settings.privacy.boardsCta"]
 			},
@@ -5221,6 +5330,10 @@
 				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
 			},
 			{
+				"value": "玩法",
+				"keys": ["common.help", "common.howToPlay"]
+			},
+			{
 				"value": "用户",
 				"keys": [
 					"admin.auditLogs.details.user",
@@ -5239,7 +5352,8 @@
 					"admin.auditLogs.actions.login",
 					"auth.signIn",
 					"common.signIn",
-					"plus.unlock.signIn"
+					"plus.unlock.signIn",
+					"stats.signIn"
 				]
 			},
 			{
@@ -5253,6 +5367,10 @@
 			{
 				"value": "空间",
 				"keys": ["catalog.category.spatial", "catalog.gamePage.genre.spatial"]
+			},
+			{
+				"value": "第 {page} 页，共 {total} 页",
+				"keys": ["admin.auditLogs.pagination.page", "pagination.page"]
 			},
 			{
 				"value": "管理操作",
@@ -5356,6 +5474,10 @@
 				]
 			},
 			{
+				"value": "返回首页",
+				"keys": ["daily.backToHome", "gameResult.backToHome"]
+			},
+			{
 				"value": "连续 {days} 天",
 				"keys": ["home.hero.streakChip", "share.card.streakDays", "stats.identity.streakChip"]
 			},
@@ -5366,6 +5488,7 @@
 					"settings.overview.stats.streak",
 					"settings.playerCard.stats.currentStreak",
 					"settings.playerCard.stats.streak",
+					"stats.streak",
 					"stats.streakCard.title"
 				]
 			},
@@ -5476,8 +5599,13 @@
 				]
 			},
 			{
+				"value": "验证",
+				"keys": ["reauth.verify", "settings.security.verify"]
+			},
+			{
 				"value": "验证你的身份",
 				"keys": [
+					"reauth.title",
 					"settings.account.password.verifyIdentity",
 					"settings.connectedAccounts.verifyIdentity",
 					"settings.privacy.deleteAccount.verifyTitle",
@@ -6075,7 +6203,11 @@
 			},
 			{
 				"value": "ユーザー名",
-				"keys": ["settings.privacy.profileVisibility.visibleUsername", "settings.profile.username"]
+				"keys": [
+					"settings.privacy.profileVisibility.visibleUsername",
+					"settings.profile.username",
+					"settings.profile.usernamePlaceholder"
+				]
 			},
 			{
 				"value": "ライト",
