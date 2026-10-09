@@ -98,6 +98,8 @@ export type SubscriptionView = {
 	planId: PlanId | null
 	status: string | null
 	periodEndMs: number | null
+	/** Own subscription's paid trial end (Money's trial_end_time), when it has one. */
+	subscriptionTrialEndMs: number | null
 	cancelAtPeriodEnd: boolean
 	family: {
 		role: 'owner' | 'member'
@@ -119,6 +121,7 @@ export function subscriptionView(res: GetSubscriptionResponse): SubscriptionView
 		planId: (res.planId || null) as PlanId | null,
 		status: res.status || null,
 		periodEndMs: Number(res.currentPeriodEndMs) || null,
+		subscriptionTrialEndMs: Number(res.subscriptionTrialEndMs) || null,
 		cancelAtPeriodEnd: res.cancelAtPeriodEnd,
 		family: res.family
 			? {
@@ -165,16 +168,23 @@ export const TRIAL_BANNER_WINDOW_MS = 3 * 86_400_000
 /**
  * When the "trial ends" banner applies, the trial's end (epoch ms), else null.
  * Only a trialing subscription that will still convert: nothing once the
- * viewer has cancelled, more than three days out, or after the end. Money's
- * period end while `trialing` is the trial end.
+ * viewer has cancelled, more than three days out, or after the end. The end is
+ * Money's trial end; a row without one falls back to the period end, which
+ * equals it while `trialing`.
  */
 export function trialBannerEndMs(
-	sub: { status: string | null; cancelAtPeriodEnd: boolean; periodEndMs: number | null },
+	sub: {
+		status: string | null
+		cancelAtPeriodEnd: boolean
+		periodEndMs: number | null
+		subscriptionTrialEndMs?: number | null
+	},
 	nowMs: number,
 ): number | null {
-	if (sub.status !== 'trialing' || sub.cancelAtPeriodEnd || !sub.periodEndMs) return null
-	const left = sub.periodEndMs - nowMs
-	return left > 0 && left <= TRIAL_BANNER_WINDOW_MS ? sub.periodEndMs : null
+	const endMs = sub.subscriptionTrialEndMs || sub.periodEndMs
+	if (sub.status !== 'trialing' || sub.cancelAtPeriodEnd || !endMs) return null
+	const left = endMs - nowMs
+	return left > 0 && left <= TRIAL_BANNER_WINDOW_MS ? endMs : null
 }
 
 /** The end date in the viewer's locale and time zone (the client passes no zone: the browser's own). */

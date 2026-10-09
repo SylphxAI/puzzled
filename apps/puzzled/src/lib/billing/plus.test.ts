@@ -118,6 +118,19 @@ describe('Puzzled Plus presentation', () => {
 		expect(none.trialEndsMs).toBe(null)
 	})
 
+	test("subscription view carries Money's paid trial end", () => {
+		const view = subscriptionView(
+			create(GetSubscriptionResponseSchema, {
+				source: 'plus',
+				status: 'trialing',
+				subscriptionTrialEndMs: BigInt(1_790_000_000_000),
+			}),
+		)
+		expect(view.subscriptionTrialEndMs).toBe(1_790_000_000_000)
+		const none = subscriptionView(create(GetSubscriptionResponseSchema, { source: 'plus' }))
+		expect(none.subscriptionTrialEndMs).toBe(null)
+	})
+
 	test('subscription view reads optional fields as null', () => {
 		const view = subscriptionView(
 			create(GetSubscriptionResponseSchema, { salesOpen: true, source: 'none' }),
@@ -158,6 +171,13 @@ describe('trial ending banner', () => {
 		expect(trialBannerEndMs(trial({ periodEndMs: now }), now)).toBeNull()
 		expect(trialBannerEndMs(trial({ periodEndMs: now - DAY }), now)).toBeNull()
 		expect(trialBannerEndMs(trial({ periodEndMs: null }), now)).toBeNull()
+	})
+
+	test("uses Money's trial end over the period end", () => {
+		const sub = trial({ periodEndMs: now + 30 * DAY, subscriptionTrialEndMs: now + 2 * DAY })
+		expect(trialBannerEndMs(sub, now)).toBe(now + 2 * DAY)
+		const far = trial({ periodEndMs: now + 2 * DAY, subscriptionTrialEndMs: now + 10 * DAY })
+		expect(trialBannerEndMs(far, now)).toBeNull()
 	})
 
 	test('stays hidden when not trialing or already cancelled', () => {
