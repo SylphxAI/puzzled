@@ -17,7 +17,7 @@ export function BottomNav() {
 
 	return (
 		<nav
-			className="fixed inset-x-0 bottom-0 z-bottom-nav border-t border-hairline bg-background/85 pb-safe backdrop-blur-xl backdrop-saturate-150 md:hidden"
+			className="fixed inset-x-0 bottom-0 z-bottom-nav border-t border-hairline bg-background pb-safe md:hidden"
 			aria-label={t('nav.main')}
 		>
 			<div
