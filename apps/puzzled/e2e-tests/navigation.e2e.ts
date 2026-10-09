@@ -85,6 +85,27 @@ test.describe('Navigation', () => {
 			expect(links).toBeGreaterThan(0)
 		})
 
+		test('shows the Sign In label in the menu drawer when logged out', async ({ page }) => {
+			await page.setViewportSize({ width: 390, height: 844 })
+			await page.goto(`/${LOCALE}`)
+			await page.getByRole('button', { name: /open navigation menu/i }).click()
+
+			const signIn = page.getByRole('dialog').getByRole('link', { name: /^sign in$/i })
+			await expect(signIn).toBeVisible({ timeout: 10000 })
+			// The label is painted, not only exposed to assistive technology: an
+			// sr-only label sits in a 1px clipped box.
+			const labelBoxWidth = await signIn.evaluate((el) => {
+				const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+				let widest = 0
+				for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+					if (!node.textContent?.trim() || !node.parentElement) continue
+					widest = Math.max(widest, node.parentElement.getBoundingClientRect().width)
+				}
+				return widest
+			})
+			expect(labelBoxWidth).toBeGreaterThan(20)
+		})
+
 		test('should have home link accessible', async ({ page }) => {
 			await page.goto(`/${LOCALE}`)
 			await page.waitForSelector('main', { timeout: 10000 })
