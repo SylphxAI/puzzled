@@ -135,7 +135,7 @@ jobs:
           exit 1
 
       - name: Workflow parse
-        uses: SylphxAI/.github/.github/actions/workflow-lint@99c60737d8b8202c00e1d8a0cb214215472e0934 # advisory-audit guard with YAML scalar and nesting support
+        uses: SylphxAI/.github/.github/actions/workflow-lint@a0889a6675ad336d4911ab1ee37f747fae749367 # advisory-audit guard with decoded YAML scalar scanning
 
       - name: Run Biome lint
         run: bun run lint
