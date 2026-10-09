@@ -84,7 +84,10 @@ export async function CatalogHero({ gameCount, visibleCount, query, category }: 
 					</form>
 				</search>
 
-				<fieldset className="no-scrollbar min-w-0 -mx-4 mt-3 flex items-center gap-2 overflow-x-auto border-0 px-4 py-1 md:mx-0 md:px-0">
+				{/* On phones the chips scroll sideways; the trailing fade tells the eye the
+				    row continues, and the wider end padding lets the last chip scroll
+				    clear of the fade. */}
+				<fieldset className="no-scrollbar min-w-0 -mx-4 mt-3 flex items-center gap-2 overflow-x-auto border-0 py-1 ps-4 pe-10 [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] md:mx-0 md:px-0 md:[mask-image:none]">
 					<legend className="sr-only">{t('filterLabel')}</legend>
 					{filterOptions.map((option) => (
 						<Link

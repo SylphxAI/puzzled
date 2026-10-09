@@ -17,7 +17,7 @@
  * flashes and hydration stays consistent.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { CookieBanner, useSafeConsent } from '@/lib/identity/react'
 import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY, MARKETING_CONSENT_KEY } from '@/lib/storage-keys'
 
@@ -75,6 +75,26 @@ function ConsentSync() {
 	return null
 }
 
+const MODAL_SELECTOR = '[role="dialog"], [role="alertdialog"]'
+
+/**
+ * True while a modal dialog is open. The modal marks the rest of the app inert
+ * and sits below the banner's layer, so a banner left up would cover the
+ * modal's own actions (the result screen's Plus offer, Share, Play next) and
+ * could not be pressed itself. It comes back when the modal closes.
+ */
+function useModalOpen(): boolean {
+	const [open, setOpen] = useState(false)
+	useEffect(() => {
+		const sync = () => setOpen(document.querySelector(MODAL_SELECTOR) !== null)
+		sync()
+		const observer = new MutationObserver(sync)
+		observer.observe(document.body, { childList: true, subtree: true })
+		return () => observer.disconnect()
+	}, [])
+	return open
+}
+
 /**
  * Inner component that only renders when SDK is configured
  * CookieBanner uses useConsent internally which throws during SSR
@@ -87,8 +107,17 @@ function ConsentBannerInner() {
 		mirrorStoredConsent()
 	}
 
+	const modalOpen = useModalOpen()
+
 	return (
-		<CookieBanner position="bottom" privacyPolicyUrl="/privacy" variant="bar" onSave={handleSave} />
+		<div style={{ display: modalOpen ? 'none' : 'contents' }}>
+			<CookieBanner
+				position="bottom"
+				privacyPolicyUrl="/privacy"
+				variant="bar"
+				onSave={handleSave}
+			/>
+		</div>
 	)
 }
 
