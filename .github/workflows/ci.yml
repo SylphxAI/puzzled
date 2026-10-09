@@ -135,7 +135,7 @@ jobs:
           exit 1
 
       - name: Workflow parse
-        uses: SylphxAI/.github/.github/actions/workflow-lint@ef068ee58036050419b6bea34b617d4f5e2f3e88 # advisory-audit guard with post-merge-only job handling
+        uses: SylphxAI/.github/.github/actions/workflow-lint@99c60737d8b8202c00e1d8a0cb214215472e0934 # advisory-audit guard with YAML scalar and nesting support
 
       - name: Run Biome lint
         run: bun run lint
