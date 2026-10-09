@@ -68,7 +68,7 @@ jobs:
             web: apps/* packages/* proto/* brand/* package.json bun.lock bunfig.toml turbo.json biome.json buf.yaml buf.gen.yaml scripts/*
             rust: crates/* proto/* Cargo.toml Cargo.lock
             build: apps/* packages/* proto/* crates/* package.json bun.lock Cargo.toml Cargo.lock
-            migrations: apps/puzzled/atlas/* apps/puzzled/atlas.hcl crates/puzzled-server/src/*_tests.rs crates/puzzled-server/src/capabilities/preferences/*
+            migrations: apps/puzzled/atlas/* apps/puzzled/atlas.hcl crates/puzzled-server/src/*_tests.rs crates/puzzled-server/src/capabilities/preferences/* scripts/check-migration-order*
 
   # ==========================================
   # Repository Standards
@@ -392,15 +392,16 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
           BASE_REF: ${{ github.base_ref }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
           QUEUE_BASE: ${{ github.event.merge_group.base_sha }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          env -u PR_NUMBER -u GH_REPO -u GH_TOKEN bash scripts/check-migration-order.test.sh
           if [ "$EVENT" = pull_request ]; then
-            git fetch --no-tags --quiet origin "$BASE_REF"
-            export MIGRATION_BASE="origin/$BASE_REF"
+            export MIGRATION_BASE="$PR_BASE"
           else
             export MIGRATION_BASE="$QUEUE_BASE"
             unset PR_NUMBER

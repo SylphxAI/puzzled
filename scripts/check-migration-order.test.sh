@@ -16,6 +16,11 @@ g() { git -C "$R" -c user.email=t@t -c user.name=t "$@"; }
 mk() { R=$T/$1; mkdir -p "$R/m"; git -C "$R" init -q -b main; touch "$R/m/20260101000000_a.sql" "$R/m/20260102000000_b.sql"; g add -A; g commit -qm base; g branch -q origin/main 2>/dev/null; g checkout -q -b topic; }
 run() { out=$(cd "$R" && MIGRATION_BASE=main "$@" 2>&1); rc=$?; }
 
+# Guard the workflow binding as well as the script: no mutable remote ref or authenticated fetch.
+workflow="$(dirname "$S")/../.github/workflows/ci.yml"
+grep -Fq 'PR_BASE: ${{ github.event.pull_request.base.sha }}' "$workflow" && ok "workflow binds event base" || bad "workflow binds event base"
+grep -Fq 'export MIGRATION_BASE="$PR_BASE"' "$workflow" && ok "workflow uses immutable base" || bad "workflow uses immutable base"
+
 mk newer; touch "$R/m/20260103000000_c.sql"; g add -A; g commit -qm c
 run "$S" m; expect "newer version passes" 0 "migration order ok"
 
@@ -33,6 +38,12 @@ run "$S" m; expect "no added migrations passes" 0 "no added migrations"
 mk moved; touch "$R/m/20260103000000_c.sql"; g add -A; g commit -qm c
 g checkout -q main; touch "$R/m/20260104000000_x.sql"; g add -A; g commit -qm x; g checkout -q topic
 run "$S" m; expect "main moving past the branch fails" 1 "OUT OF ORDER"
+
+# CI uses immutable event SHAs, even without origin/main or persisted credentials.
+mk immutable; base_sha=$(g rev-parse main); g branch -D origin/main >/dev/null
+ touch "$R/m/20260103000000_c.sql"; g add -A; g commit -qm c
+run env MIGRATION_BASE="$base_sha" "$S" m; expect "immutable event base without remote ref passes" 0 "migration order ok"
+run env MIGRATION_BASE=missing-event-base "$S" m; expect "missing event base fails closed" 2 "no ref"
 
 # open pull request collision, with a stub gh
 mk coll; touch "$R/m/20260106000000_c.sql"; g add -A; g commit -qm c
