@@ -13,14 +13,8 @@ import {
 } from '../types'
 import { WordleHowToPlay } from './components/how-to-play'
 import { WordGuessIcon } from './icon'
-import {
-	type LetterStatus,
-	MAX_GUESSES,
-	WORD_LENGTH,
-	type WordlePuzzleData,
-	type WordleSolution,
-} from './types'
-import { isValidWord, SOLUTION_WORDS } from './words'
+import { type LetterStatus, WORD_LENGTH, type WordlePuzzleData, type WordleSolution } from './types'
+import { isValidWord } from './words'
 
 // ==========================================
 // Types
@@ -45,14 +39,6 @@ type WordleGuessResult = {
 // ==========================================
 // Helper Functions
 // ==========================================
-
-/**
- * Generate deterministic word from seed
- */
-function getWordFromSeed(seed: number): string {
-	const index = seed % SOLUTION_WORDS.length
-	return SOLUTION_WORDS[index].toUpperCase()
-}
 
 /**
  * Evaluate a guess against the solution
@@ -112,24 +98,6 @@ export const wordGuessConfig: GameConfig<
 	// Wordle uses deterministic seed-based generation from word list
 	// No LLM needed - 2,300+ words = 6+ years of puzzles
 	generationStrategy: 'seed',
-
-	/**
-	 * Generate puzzle from seed
-	 * Returns puzzleData (for client) and solution (server-only)
-	 */
-	generatePuzzle: (seed: number) => {
-		const word = getWordFromSeed(seed)
-
-		return {
-			puzzleData: {
-				wordLength: WORD_LENGTH,
-				maxAttempts: MAX_GUESSES,
-			},
-			solution: {
-				word,
-			},
-		}
-	},
 
 	/**
 	 * Validate a single guess (real-time feedback)

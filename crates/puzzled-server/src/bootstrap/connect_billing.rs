@@ -352,6 +352,8 @@ impl BillingService for BillingConnectService {
                     response.cancel_at_period_end = sub.cancel_at_period_end;
                     response.current_period_end_ms =
                         sub.current_period_end.map(|t| t.timestamp_millis());
+                    response.subscription_trial_end_ms =
+                        sub.trial_end.map(|t| t.timestamp_millis());
                     if let Some(plan) = plan {
                         response.plan_id = Some(plan.plan_id.clone());
                         if plan.family {
