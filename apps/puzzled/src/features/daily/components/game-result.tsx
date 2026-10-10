@@ -27,6 +27,7 @@ import { useTodayPercentile } from '@/lib/api'
 import { Link } from '@/lib/i18n/routing'
 import { productDayKey } from '@/lib/product-day'
 import { cn, getBaseUrl } from '@/lib/utils'
+import { CATEGORY_COLORS } from './category-colors'
 import { SaveStreakPrompt } from './save-streak-prompt'
 
 type MissedCategory = {
@@ -58,14 +59,6 @@ type GameResultProps = {
 	currentStreak?: number
 	/** Content-free pattern (hit / near / miss); modules opt in. */
 	pattern?: ResultCardTile[][]
-}
-
-// Category colors for displaying missed categories
-const CATEGORY_COLORS: Record<0 | 1 | 2 | 3, { bg: string; text: string }> = {
-	0: { bg: 'bg-accent-warm', text: 'text-accent-warm-foreground' },
-	1: { bg: 'bg-success', text: 'text-success' },
-	2: { bg: 'bg-info', text: 'text-info' },
-	3: { bg: 'bg-muted', text: 'text-foreground' },
 }
 
 export function GameResultCard({
