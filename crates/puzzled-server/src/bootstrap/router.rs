@@ -75,8 +75,8 @@ pub fn router(state: AppState) -> Router {
             crate::observability::capture_server_errors,
         ))
         // Quality signals (owner standards/quality-signals.md): a 5xx is one
-        // `puzzled.issue.turn_failed.<route>` line, a finished write one
-        // `puzzled.api.write.ok|failed` journey line. Outside the capturer so
+        // `puzzled.issue.turn_failed.<route>` line, a user-mutating RPC one
+        // `puzzled.user.write.ok|failed` journey line. Outside the capturer so
         // it sees every response, including a captured error's.
         .layer(axum::middleware::from_fn(crate::shared::signals::observe))
 }

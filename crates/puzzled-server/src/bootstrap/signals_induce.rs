@@ -11,9 +11,10 @@
 
 use axum::body::Bytes;
 use axum::http::{HeaderMap, StatusCode};
+use axum::response::{IntoResponse, Response};
 
 use super::observability_test::{authorized, nonce};
-use crate::shared::signals::{self, Kind};
+use crate::shared::signals::IssueSubject;
 
 /// The fingerprint the induce route reports for one request body: the nonce
 /// when it has one, else a fixed name. The nonce keeps calls distinguishable
@@ -25,21 +26,25 @@ pub(crate) fn subject(body: &[u8]) -> String {
     }
 }
 
-pub(crate) async fn signals_induce(headers: HeaderMap, body: Bytes) -> StatusCode {
+pub(crate) async fn signals_induce(headers: HeaderMap, body: Bytes) -> Response {
     let key = std::env::var("SYLPHX_API_KEY").ok();
     let header = headers
         .get(axum::http::header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok());
     if !authorized(header, key.as_deref()) {
-        return StatusCode::NOT_FOUND;
+        return StatusCode::NOT_FOUND.into_response();
     }
-    signals::issue(Kind::TurnFailed, &subject(&body), "503");
-    StatusCode::SERVICE_UNAVAILABLE
+    let mut response = StatusCode::SERVICE_UNAVAILABLE.into_response();
+    response
+        .extensions_mut()
+        .insert(IssueSubject(subject(&body)));
+    response
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::shared::signals::{self, Kind};
 
     #[test]
     fn the_subject_comes_from_the_nonce_or_a_fixed_name() {

@@ -91,13 +91,27 @@ them into work items without anyone reading a log. The rule is the platform's
 | Line | When | Becomes |
 | --- | --- | --- |
 | `event="puzzled.issue.turn_failed.<route>" severity="info"` | any 5xx the caller saw | one work item per fingerprint (`ProductIssueReported` → the desk alert intake); a repeat while it is open is a note, a return after it closed a new item |
-| `event="puzzled.api.write.ok\|failed" severity="info"` | one per finished write request (any method but GET, HEAD, OPTIONS) | the `puzzled-write-success` journey SLO in `SylphxAI/infra` |
+| `event="puzzled.user.write.ok\|failed" severity="info"` | one per finished user-mutating Connect RPC; HTTP 5xx fails it | the `puzzled-write-success` journey SLO in `SylphxAI/infra` |
 
 The route subject is the route template with its parameters removed
 (`/v1/puzzles/{game}/…` → `v1_puzzles…`), so no id, game slug or body ever
 enters a line. The code is in
 `crates/puzzled-server/src/shared/signals.rs`; the middleware is layered once
 in `crates/puzzled-server/src/bootstrap/router.rs`.
+
+The user-write journey enumerates submissions, result shares, profile and
+notification changes, account erasure, signup attribution, billing actions
+and streak changes. Connect read-only RPCs also use POST; `GetDaily`,
+`GetPuzzle`, `CheckGuess`, stats and other reads never count as writes.
+Admin, jobs, Compute ticks, guest bootstrap and induction are excluded.
+Client rejections do not count as availability failures. The old
+`puzzled.api.write.*` events are no longer emitted or selected by the SLO.
+Ten failed submissions therefore count ten writes and ten failures (100%),
+regardless of 1,000 successful reads.
+
+The induction handler supplies its nonce subject to the outer observer;
+it does not emit a second route fingerprint. Two calls with the same nonce
+produce two occurrences of one fingerprint and no user-write events.
 
 Read back after a deploy (the same `SYLPHX_API_KEY`):
 

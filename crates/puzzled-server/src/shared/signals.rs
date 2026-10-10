@@ -113,20 +113,44 @@ pub fn issue(kind: Kind, subject: &str, code: &str) {
     tracing::info!(event = %event, severity = "info", code, release = release(), "issue");
 }
 
-/// The journey line of one finished user journey: `puzzled.<journey>.ok` or
-/// `.failed`, the events of that journey's SLO.
-pub fn journey(name: &str, ok: bool) {
-    let event = format!("{PRODUCT}.{name}.{}", if ok { "ok" } else { "failed" });
-    tracing::info!(event = %event, severity = "info", release = release(), "journey");
+/// The nonce subject of an induced failure, consumed by the same observer
+/// that reports ordinary failures so one request produces one issue line.
+#[derive(Clone)]
+pub(crate) struct IssueSubject(pub String);
+
+/// User intent, not the HTTP verb: Connect reads also use POST. Operator,
+/// job, bootstrap and induction routes are not user-write journeys.
+fn is_user_write(path: &str) -> bool {
+    matches!(
+        path,
+        "/puzzled.v1.PuzzleService/SubmitGuess"
+            | "/puzzled.v1.PuzzleService/ShareResult"
+            | "/puzzled.v1.PreferencesService/SaveWebPushSubscription"
+            | "/puzzled.v1.PreferencesService/UpdateProfile"
+            | "/puzzled.v1.PreferencesService/UpdatePushPreferences"
+            | "/puzzled.v1.PreferencesService/UpdateEmailPreferences"
+            | "/puzzled.v1.PreferencesService/UnsubscribeEmail"
+            | "/puzzled.v1.PreferencesService/DeleteAccountData"
+            | "/puzzled.v1.PreferencesService/RecordSignupAttribution"
+            | "/puzzled.v1.BillingService/CreateCheckout"
+            | "/puzzled.v1.BillingService/CreatePortal"
+            | "/puzzled.v1.BillingService/CancelSubscription"
+            | "/puzzled.v1.BillingService/ResumeSubscription"
+            | "/puzzled.v1.BillingService/JoinFamily"
+            | "/puzzled.v1.BillingService/LeaveFamily"
+            | "/puzzled.v1.BillingService/RemoveFamilyMember"
+            | "/puzzled.v1.BillingService/ResetFamilyInvite"
+            | "/puzzled.v1.GamificationService/ToggleAutoFreeze"
+            | "/puzzled.v1.GamificationService/TryAutoFreeze"
+            | "/puzzled.v1.GamificationService/AddStreakFreezes"
+    )
 }
 
-/// Axum middleware (on matched routes): a 5xx reports `turn_failed` for the
-/// route; a write (any method but GET, HEAD and OPTIONS) writes the
-/// `api-write` journey line. The free daily read is a GET, so only writes
-/// (submits, shares, account changes) reach the journey; reads are covered by
-/// the edge SLOs.
+/// One availability outcome per finished user-mutating RPC. Client
+/// rejections are not server failures; only HTTP 5xx fails the journey.
+/// URI matching works for Connect fallback services without MatchedPath.
 pub async fn observe(req: Request, next: Next) -> Response {
-    let write = !matches!(*req.method(), Method::GET | Method::HEAD | Method::OPTIONS);
+    let write = req.method() == Method::POST && is_user_write(req.uri().path());
     let subject = req
         .extensions()
         .get::<MatchedPath>()
@@ -136,10 +160,20 @@ pub async fn observe(req: Request, next: Next) -> Response {
     let status = r.status().as_u16();
     let failed = status >= 500;
     if failed {
-        issue(Kind::TurnFailed, &subject, &status.to_string());
+        let subject = r
+            .extensions()
+            .get::<IssueSubject>()
+            .map(|s| s.0.as_str())
+            .unwrap_or(&subject);
+        issue(Kind::TurnFailed, subject, &status.to_string());
     }
     if write {
-        journey("api.write", !failed);
+        let event = if failed {
+            "puzzled.user.write.failed"
+        } else {
+            "puzzled.user.write.ok"
+        };
+        tracing::info!(event, severity = "info", release = release(), "journey");
     }
     r
 }
@@ -203,7 +237,7 @@ mod tests {
     }
 
     #[tokio::test(flavor = "current_thread")]
-    async fn failed_requests_report_one_fingerprint_and_writes_their_journey() {
+    async fn failed_requests_report_one_fingerprint_without_counting_bootstrap_as_user_write() {
         use axum::http::StatusCode;
         use axum::routing::{get, post};
         use tower::ServiceExt;
@@ -221,7 +255,10 @@ mod tests {
                 "/v1/guest/session",
                 post(|| async { StatusCode::SERVICE_UNAVAILABLE }),
             )
-            .route("/v1/puzzles/{game}/guess", post(|| async { "ok" }))
+            .route(
+                "/puzzled.v1.PuzzleService/ShareResult",
+                post(|| async { "ok" }),
+            )
             .route("/v1/daily", get(|| async { "ok" }))
             .route(
                 "/v1/boom",
@@ -243,7 +280,7 @@ mod tests {
                 .unwrap();
         }
         app.clone()
-            .oneshot(call("POST", "/v1/puzzles/queens/guess"))
+            .oneshot(call("POST", "/puzzled.v1.PuzzleService/ShareResult"))
             .await
             .unwrap();
         app.clone().oneshot(call("GET", "/v1/daily")).await.unwrap();
@@ -259,10 +296,8 @@ mod tests {
             events,
             [
                 "puzzled.issue.turn_failed.v1_guest_session",
-                "puzzled.api.write.failed",
                 "puzzled.issue.turn_failed.v1_guest_session",
-                "puzzled.api.write.failed",
-                "puzzled.api.write.ok",
+                "puzzled.user.write.ok",
                 "puzzled.issue.turn_failed.v1_boom",
             ],
             "{out}"
@@ -271,7 +306,55 @@ mod tests {
             out.lines().all(|l| l.contains("severity=\"info\"")),
             "{out}"
         );
-        // the path's own ids never reach a line
-        assert!(!out.contains("queens"), "{out}");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn failed_submissions_are_not_diluted_by_successful_connect_reads() {
+        use axum::http::StatusCode;
+        use axum::routing::post;
+        use tower::ServiceExt;
+
+        let cap = Capture::default();
+        let w = cap.clone();
+        let sub = tracing_subscriber::fmt()
+            .with_ansi(false)
+            .with_writer(move || w.clone())
+            .finish();
+        let _g = tracing::subscriber::set_default(sub);
+        // Connect services are the fallback, not matched Axum routes.
+        let app = axum::Router::new()
+            .fallback_service(post(|req: Request| async move {
+                if req.uri().path() == "/puzzled.v1.PuzzleService/SubmitGuess" {
+                    StatusCode::SERVICE_UNAVAILABLE
+                } else {
+                    StatusCode::OK
+                }
+            }))
+            .layer(axum::middleware::from_fn(observe));
+        for (path, count) in [
+            ("/puzzled.v1.PuzzleService/SubmitGuess", 10),
+            ("/puzzled.v1.PuzzleService/GetDaily", 1_000),
+        ] {
+            for _ in 0..count {
+                let req = axum::http::Request::builder()
+                    .method("POST")
+                    .uri(path)
+                    .body(axum::body::Body::empty())
+                    .unwrap();
+                app.clone().oneshot(req).await.unwrap();
+            }
+        }
+        let out = String::from_utf8(cap.0.lock().unwrap().clone()).unwrap();
+        let writes = out
+            .lines()
+            .filter(|l| l.contains("puzzled.user.write."))
+            .count();
+        let failed = out
+            .lines()
+            .filter(|l| l.contains("puzzled.user.write.failed"))
+            .count();
+        assert_eq!((writes, failed), (10, 10), "{out}");
+        assert_eq!(failed as f64 / writes as f64, 1.0);
+        assert!(!out.contains("puzzled.api.write."));
     }
 }
