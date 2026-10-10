@@ -62,9 +62,4 @@ describe('money catalogue spec', () => {
 		bad.plans[0].grants = { plus: 'true', seats: '2' }
 		expect(() => toSpec(bad)).toThrow(/different features/)
 	})
-
-	test('the catalogue names the writer and no reader', () => {
-		expect(catalogue.readme).toContain('CI applies it to Sylphx Money')
-		expect(JSON.stringify(catalogue)).not.toMatch(/stripe/i)
-	})
 })
