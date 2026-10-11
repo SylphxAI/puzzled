@@ -72,6 +72,9 @@ default and keep raw events per the privacy policy.
 
 Directional, not calendar commitments; recalibrate with live baselines and
 build our own cohort curves rather than copying casual-game medians.
+Numeric retention, conversion and revenue targets, the competitors they are
+set against and the cohort size each is judged on are in
+[north-star/MARKET-AND-TARGETS.md](north-star/MARKET-AND-TARGETS.md).
 
 | Stage | Exit criterion |
 | --- | --- |
