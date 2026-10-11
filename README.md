@@ -72,6 +72,10 @@ schema migrations applied by an Atlas job first. After a deploy, run
 `bun run verify:live` to check production
 ([docs/reference/live-verification.md](docs/reference/live-verification.md)).
 
+The merge gate's `stack` check compares against the change's base commit.
+[`.github/stack-departures.txt`](.github/stack-departures.txt) has no entries;
+keep the file so a later change cannot seed a new departure as existing debt.
+
 ### Daily Web Push configuration
 
 The existing manifest/icons and install prompt are reused; `/sw.js` adds

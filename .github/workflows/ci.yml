@@ -523,12 +523,29 @@ jobs:
     uses: ./.github/workflows/verify.yml
     secrets: inherit
 
+  # No new departure from the default stack (docs/stack-conformance.md in
+  # SylphxAI/.github): a backend service off Rust or a migration engine other
+  # than atlas fails unless .github/stack-departures.txt, which may only
+  # shrink, already lists it. Reads git objects only; a few seconds.
+  stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          filter: blob:none
+      - uses: SylphxAI/.github/.github/actions/stack-conformance@bc664ac7410c00d233fe4f729b6747969a4a9bed # SylphxAI/.github#208
+        with:
+          base: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || '' }}
+
   # Not required today (the ruleset names the seven jobs above); the single
   # check to require once the ruleset is reduced to one.
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [main-state, plan, identifiers, lint-and-typecheck, security, unit-tests, build, rust-api, migrations, suite]
+    needs: [main-state, plan, identifiers, lint-and-typecheck, security, unit-tests, build, rust-api, migrations, suite, stack]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
