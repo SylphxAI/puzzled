@@ -1,0 +1,2 @@
+# Recorded departures from the default stack (SylphxAI/owner standards/stack.md).
+# This list may only shrink; the stack-conformance check enforces it.
