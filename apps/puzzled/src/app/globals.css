@@ -650,14 +650,18 @@ body {
 	clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
 }
 
-/* Button reset */
-button:not([class*="bg-"]) {
-	background: transparent;
-}
+/* Button reset. Kept in the base layer: an unlayered element rule beats every
+   Tailwind utility, so a plain `button { border: none }` here once erased the
+   border of every bordered button (the cookie banner's three choices read as
+   captions). Tailwind's preflight already zeroes button borders. */
+@layer base {
+	button:not([class*="bg-"]) {
+		background: transparent;
+	}
 
-button {
-	border: none;
-	cursor: pointer;
+	button {
+		cursor: pointer;
+	}
 }
 
 /* Modal scrollbar compensation */
