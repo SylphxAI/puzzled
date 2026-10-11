@@ -38,10 +38,10 @@ const GAMES = [
 
 test.describe('Game Pages', () => {
 	test.describe('Game Loading', () => {
-		for (const game of GAMES.slice(0, 5)) {
-			// Test first 5 games for speed
+		for (const game of GAMES) {
 			test(`${game.name} should load game page`, async ({ page }) => {
-				await page.goto(`/${LOCALE}/games/${game.slug}`)
+				const response = await page.goto(`/${LOCALE}/games/${game.slug}`)
+				expect(response?.status() ?? 0).toBeLessThan(400)
 
 				// Wait for main content
 				await page.waitForSelector('main', { timeout: 15000 })
@@ -50,9 +50,11 @@ test.describe('Game Pages', () => {
 				// Either as ready screen or active game
 				await expect(page.locator('main')).toBeVisible()
 
-				// No error messages should be visible
-				const errorMessage = page.getByText(/error|not found|unavailable/i)
-				await expect(errorMessage).not.toBeVisible()
+				// Neither the game error boundary nor the 404 page rendered. Match
+				// their headings, not loose words: rules copy legitimately says
+				// "unavailable" (Queens) and must not fail the load check.
+				await expect(page.getByRole('heading', { name: /something went wrong/i })).toHaveCount(0)
+				await expect(page.getByRole('heading', { name: /this page is missing/i })).toHaveCount(0)
 			})
 		}
 	})
@@ -359,18 +361,12 @@ test.describe('Game Pages', () => {
 			await page.goto(`/${LOCALE}/games/crossword`)
 			await page.waitForSelector('main', { timeout: 15000 })
 
-			// Either shows paywall OR shows game (if it's free today)
+			// Either shows paywall OR shows game (if it's free today). Wait for
+			// either to render: a one-shot isVisible() races hydration on WebKit.
 			const paywall = page.getByText(/premium|unlock|subscribe|sign in/i)
 			const gameContent = page.getByRole('button', { name: /play/i })
 
-			const hasPaywall = await paywall
-				.first()
-				.isVisible()
-				.catch(() => false)
-			const hasGame = await gameContent.isVisible().catch(() => false)
-
-			// One of these should be true
-			expect(hasPaywall || hasGame).toBe(true)
+			await expect(paywall.or(gameContent).first()).toBeVisible({ timeout: 15000 })
 		})
 
 		test("should show today's free game link on paywall", async ({ page }) => {

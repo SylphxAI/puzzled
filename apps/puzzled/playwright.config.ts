@@ -53,24 +53,32 @@ export default defineConfig({
 		trace: 'on-first-retry',
 		// Screenshot on failure
 		screenshot: 'only-on-failure',
-		...(executablePath ? { launchOptions: { executablePath } } : {}),
 	},
 
-	// Configure projects for major browsers
+	// Chromium runs every suite. Firefox and WebKit run the game suite only:
+	// every game has to play on the three engines our players use (Chrome,
+	// Firefox, Safari), while the a11y and layout suites are engine-neutral
+	// and stay on Chromium.
 	projects: [
 		{
 			name: 'chromium',
-			use: { ...devices['Desktop Chrome'] },
+			use: {
+				...devices['Desktop Chrome'],
+				// The system Chromium override applies to Chromium alone; the
+				// other engines always use Playwright's own builds.
+				...(executablePath ? { launchOptions: { executablePath } } : {}),
+			},
 		},
-		// Optionally enable other browsers
-		// {
-		// 	name: 'firefox',
-		// 	use: { ...devices['Desktop Firefox'] },
-		// },
-		// {
-		// 	name: 'webkit',
-		// 	use: { ...devices['Desktop Safari'] },
-		// },
+		{
+			name: 'firefox',
+			testMatch: 'games.e2e.ts',
+			use: { ...devices['Desktop Firefox'] },
+		},
+		{
+			name: 'webkit',
+			testMatch: 'games.e2e.ts',
+			use: { ...devices['Desktop Safari'] },
+		},
 	],
 
 	// Run your local dev server before starting the tests
