@@ -2,6 +2,7 @@
 
 import { Check, ChevronRight } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { todayPlayPath } from '@/features/daily/lib/today-play-path'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
@@ -72,7 +73,7 @@ export function DifficultySelectionView({
 						return (
 							<li key={level}>
 								<Link
-									href={`/games/${gameSlug}?difficulty=${level}`}
+									href={todayPlayPath(gameSlug, level)}
 									className="group flex min-h-16 items-center gap-4 px-4 py-3 transition-colors hover:bg-muted active:bg-accent"
 								>
 									<span className="flex h-6 items-end gap-0.5" aria-hidden="true">
