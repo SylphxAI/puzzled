@@ -163,6 +163,48 @@ pub async fn today_overview(
     Ok((players.0.max(0) as u32, completions))
 }
 
+/// Rank a finish against the same ritual cohort used by today's overview.
+/// Metrics are larger-is-better, after wins have been ordered above losses.
+/// Word Groups stores its mistake count in the authoritative score (100 - 25 * mistakes).
+/// The current percentile wire has no hintsUsed; Cryptogram compares time, as
+/// its client comparator does when hintsUsed is absent on both results.
+pub async fn today_percentile(
+    pool: &PgPool,
+    day_key: &str,
+    game_slug: &str,
+    won: bool,
+    metric: i64,
+) -> Result<(Option<i32>, i32), String> {
+    let (total, beaten): (i64, i64) = sqlx::query_as(
+        r#"
+        SELECT COUNT(*), COUNT(*) FILTER (
+            WHERE (status = 'won', CASE game_slug
+                WHEN 'word-hive' THEN COALESCE(score, 0)::bigint
+                WHEN 'word-groups' THEN -COALESCE((100 - score) / 25, 4)::bigint
+                WHEN 'word-guess' THEN -COALESCE(attempts, 6)::bigint
+                WHEN 'quad-words' THEN -COALESCE(attempts::bigint, 9223372036854775807)
+                WHEN 'arithmo' THEN -COALESCE(attempts::bigint, 9223372036854775807)
+                WHEN 'word-box' THEN -COALESCE(attempts::bigint, 9223372036854775807)
+                ELSE -COALESCE(time_spent_ms::bigint, 9223372036854775807)
+            END) < ($3, $4)
+        )
+        FROM game_sessions
+        WHERE day_key = $1 AND game_slug = $2
+          AND is_ritual = true AND module_class = 'puzzle_ritual'
+          AND status IN ('won', 'lost')
+        "#,
+    )
+    .bind(day_key)
+    .bind(game_slug)
+    .bind(won)
+    .bind(metric)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("today percentile failed: {e}"))?;
+    let percentile = (total >= 10).then(|| ((beaten as f64 / total as f64) * 100.0).round() as i32);
+    Ok((percentile, total as i32))
+}
+
 #[cfg(test)]
 mod tests {
     use super::parse_user_id;
