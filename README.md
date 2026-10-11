@@ -15,6 +15,7 @@ service ([pricing and policy](docs/monetization.md)).
 
 - Goal, users and what we will not do: [docs/vision.md](docs/vision.md)
 - Capabilities and their status: [docs/capabilities.md](docs/capabilities.md)
+- Native app scope and readiness: [Keel plan](docs/reference/native-app-plan.md) (not a completed device spike)
 - Metrics, game rules, growth, design: [docs/](docs) (index in [AGENTS.md](AGENTS.md#where-things-live))
 
 ## How it is built
