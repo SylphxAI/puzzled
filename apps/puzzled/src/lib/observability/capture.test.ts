@@ -76,7 +76,12 @@ describe('captureException', () => {
 describe('relayBrowserError', () => {
 	const post = (
 		body: string,
-		headers: Record<string, string> = { 'sec-fetch-site': 'same-origin' },
+		headers: Record<string, string> = {
+			'sec-fetch-site': 'same-origin',
+			origin: 'http://localhost:3000',
+			'x-forwarded-host': 'localhost:3000',
+			'x-forwarded-proto': 'http',
+		},
 	) => new Request('https://app.test/api/observability/errors', { method: 'POST', body, headers })
 
 	it('refuses cross-site, oversized, and empty reports', async () => {
