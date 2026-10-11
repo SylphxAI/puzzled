@@ -877,7 +877,30 @@
 		"boardsBody": "Tu nombre visible y tu puntuación solo aparecen en una clasificación mientras tu visibilidad pública esté activada. Desactívala y desaparecerás de las clasificaciones sin perder ningún progreso.",
 		"boardsCta": "Ver las clasificaciones"
 	},
+	"deletePage": {
+		"title": "Elimina tu cuenta de Puzzled",
+		"description": "Puedes solicitar la eliminación de tu cuenta en este sitio web sin instalar una aplicación.",
+		"stepsTitle": "Elimina desde la configuración de la cuenta",
+		"steps": "Inicia sesión en la cuenta de Puzzled que quieres eliminar. En la configuración de la cuenta, elige Eliminar cuenta. Si tienes una suscripción que se renueva, cancélala primero en Facturación.",
+		"signIn": "Inicia sesión para eliminar tu cuenta",
+		"erased": "Se eliminan tu cuenta de acceso, historial de juego, estadísticas, rachas, perfil y configuración de notificaciones. No se puede deshacer y se cerrará tu sesión.",
+		"retained": "Los registros de pagos y reembolsos se conservan sin tu ID de jugador para cumplir las obligaciones fiscales y contables. Las copias de seguridad y los registros se sobrescriben durante el funcionamiento habitual. Otros datos se conservan solo cuando sea necesario por obligaciones legales, prevención del fraude o reclamaciones legales, según la política de privacidad.",
+		"privacy": "Lee la política de privacidad y conservación",
+		"helpTitle": "¿No puedes iniciar sesión?",
+		"help": "Recupera tu contraseña o envía una solicitud de eliminación desde el correo de tu cuenta. Incluye tu ID de cuenta de Puzzled si lo conoces. Nunca envíes tu contraseña. Es posible que debamos verificar que la cuenta es tuya antes de completar la solicitud.",
+		"recover": "Recupera tu cuenta",
+		"email": "Solicita la eliminación por correo: {email}"
+	},
 	"sessions": {
+		"started": "Inicio de sesión: {time}",
+		"firstPage": "Primera página",
+		"nextPage": "Página siguiente",
+		"state": {
+			"active": "Activa",
+			"revoked": "Sesión cerrada",
+			"expired": "Caducada",
+			"unknown": "Estado no disponible"
+		},
 		"title": "Sesiones activas",
 		"description": "Gestiona tus sesiones activas en todos tus dispositivos",
 		"currentSession": "Este dispositivo",
