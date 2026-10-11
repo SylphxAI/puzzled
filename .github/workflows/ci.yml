@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/main-red-gate@3f5ec7d2c084f7bafb57a56973a2236dc5eae447 # main 3f5ec7d (SylphxAI/.github#166, trace window)
+      - uses: SylphxAI/.github/.github/actions/main-red-gate@05ac6474b96425bcb4965addd025a93e061b66c4 # main 05ac647 (SylphxAI/.github, current handler)
         with:
           mode: observe
 
@@ -68,7 +68,7 @@ jobs:
             web: apps/* packages/* proto/* brand/* package.json bun.lock bunfig.toml turbo.json biome.json buf.yaml buf.gen.yaml scripts/*
             rust: crates/* proto/* Cargo.toml Cargo.lock
             build: apps/* packages/* proto/* crates/* package.json bun.lock Cargo.toml Cargo.lock
-            migrations: apps/puzzled/atlas/* apps/puzzled/atlas.hcl crates/puzzled-server/src/*_tests.rs crates/puzzled-server/src/capabilities/preferences/*
+            migrations: apps/puzzled/atlas/* apps/puzzled/atlas.hcl crates/puzzled-server/src/*_tests.rs crates/puzzled-server/src/capabilities/preferences/* scripts/check-migration-order*
 
   # ==========================================
   # Repository Standards
@@ -384,6 +384,29 @@ jobs:
       PUZZLED_REQUIRE_DB_TESTS: "1"
     steps:
       - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Migration versions are free and in order
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          QUEUE_BASE: ${{ github.event.merge_group.base_sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          env -u PR_NUMBER -u GH_REPO -u GH_TOKEN bash scripts/check-migration-order.test.sh
+          if [ "$EVENT" = pull_request ]; then
+            export MIGRATION_BASE="$PR_BASE"
+          else
+            export MIGRATION_BASE="$QUEUE_BASE"
+            unset PR_NUMBER
+          fi
+          scripts/check-migration-order.sh apps/puzzled/atlas/migrations
 
       - name: No job selects a billed runner
         run: bash .github/scripts/check-ci-runner-profile.sh
