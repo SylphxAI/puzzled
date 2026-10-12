@@ -91,7 +91,7 @@ them into work items without anyone reading a log. The rule is the platform's
 | Line | When | Becomes |
 | --- | --- | --- |
 | `event="puzzled.issue.turn_failed.<route>" severity="info"` | any 5xx the caller saw | one work item per fingerprint (`ProductIssueReported` → the desk alert intake); a repeat while it is open is a note, a return after it closed a new item |
-| `event="puzzled.user.write.ok\|failed" severity="info"` | one per finished user-mutating Connect RPC; HTTP 5xx fails it | the `puzzled-write-success` journey SLO in `SylphxAI/infra` |
+| `event="puzzled.user.write.ok\|failed" severity="info"` | one per finished user-mutating Connect RPC; HTTP 5xx fails it | the shared `product-journey-success` journey SLO in `SylphxAI/infra` (journey `puzzled.user.write`) |
 
 The route subject is the route template with its parameters removed
 (`/v1/puzzles/{game}/…` → `v1_puzzles…`), so no id, game slug or body ever

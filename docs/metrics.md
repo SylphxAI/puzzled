@@ -64,8 +64,9 @@ A dashboard number should match this within late-event lag (15 minutes).
 | Reliability | Serve error rate, submit error rate, finish latency p50/p95 | The free daily path is the product |
 
 The reliability row is emitted and alertable, not a dashboard only: the api
-writes `event="puzzled.api.write.ok"` or `.write.failed` once per finished
-write request (the `puzzled-write-success` SLO in `SylphxAI/infra`, 99%),
+writes `event="puzzled.user.write.ok"` or `.write.failed` once per finished
+user-mutating write (the shared `product-journey-success` SLO in
+`SylphxAI/infra`, 99%),
 `event="puzzled.issue.turn_failed.<route>"` on any 5xx (one work item per
 fingerprint), and each backend error also reaches Sylphx Observability as a
 group ([observability.md](observability.md#quality-signals-owner-standardsquality-signalsmd)).
