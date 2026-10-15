@@ -82,6 +82,31 @@ Observability host with `OBSERVABILITY_API_KEY`, which was never set, so they
 never delivered. They, their hooks, the Web Vitals reporter and the game
 analytics batcher are deleted. The SDK has no analytics or replay surface yet.
 
+## First-party funnel counter
+
+Visits, plays, sign-ups and Core Web Vitals are counted in our own database,
+not by a third party. Rows are anonymous (no user id, no IP, no cookie), so the
+counter runs without a consent choice. Google Analytics, when
+`GA_MEASUREMENT_ID` is set, stays opt-in and is separate.
+
+| Event | Written by |
+| --- | --- |
+| `landing` | browser, once per session (`FunnelReporter`) |
+| `game_start` | browser, when a playable board is shown (`GamePageClient`) |
+| `signup` | api, in `RecordSignupAttribution`, once per new account |
+| `web_vitals` | browser, `LCP` `CLS` `INP` `FCP` `TTFB` (`useReportWebVitals`) |
+
+The browser posts same-origin JSON to `POST /v1/funnel/event` (api,
+`crates/puzzled-server/src/bootstrap/funnel_event.rs`); the table is
+`funnel_events`. Read it with SQL:
+
+```sql
+SELECT event, count(*) FROM funnel_events
+WHERE occurred_at > now() - interval '1 day' GROUP BY 1;
+SELECT metric, percentile_cont(0.75) WITHIN GROUP (ORDER BY value) AS p75
+FROM funnel_events WHERE event = 'web_vitals' GROUP BY 1;
+```
+
 ## Production check
 
 Both services have a test trigger that fails on purpose with

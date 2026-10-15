@@ -33,6 +33,8 @@ mod daily_pipeline_tests;
 #[cfg(test)]
 mod daily_reminder_tests;
 #[cfg(test)]
+mod funnel_tests;
+#[cfg(test)]
 mod guest_ownership_tests;
 #[cfg(test)]
 mod money_access_tests;

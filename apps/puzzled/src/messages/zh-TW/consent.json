@@ -1,7 +1,7 @@
 {
-	"message": "我們使用 Google Analytics 了解大家如何玩謎題，廣告 Cookie 預設關閉，需要在「設定」中自行開啟。",
+	"message": "我們用自家的匿名計數器統計造訪與遊玩次數，不使用 Cookie。可選的分析與廣告 Cookie 預設關閉，需要在「設定」中自行開啟。",
 	"learnMore": "隱私政策",
-	"analyticsHint": "統計大家如何玩謎題。",
+	"analyticsHint": "若網站使用，將啟用 Google Analytics。",
 	"marketingHint": "讓我們了解 Google 廣告是否帶來註冊。預設關閉。",
 	"change": "變更 Cookie 選擇"
 }

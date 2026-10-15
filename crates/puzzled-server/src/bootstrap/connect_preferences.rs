@@ -562,6 +562,12 @@ impl PreferencesService for PreferencesConnectService {
         _request: ServiceRequest<'_, RecordSignupAttributionRequest>,
     ) -> ServiceResult<RecordSignupAttributionResponse> {
         let identity = require_identity(&ctx)?;
+        // Every new account is one signup in the first-party funnel, tagged or not.
+        if let Some(pool) = &self.state.pool {
+            if let Err(error) = crate::capabilities::funnel::record_signup(pool).await {
+                tracing::warn!(%error, "funnel signup not recorded");
+            }
+        }
         let tags = ctx
             .headers()
             .get_all(axum::http::header::COOKIE)

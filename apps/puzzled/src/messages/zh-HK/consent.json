@@ -1,11 +1,11 @@
 {
 	"title": "分析同意",
-	"message": "我哋用 Google Analytics 了解大家點樣玩謎題，廣告 Cookie 預設關閉，需要喺「設定」自行開啟。",
+	"message": "我哋用自家嘅匿名計數器統計到訪同遊玩次數，唔使用 Cookie。可選嘅分析同廣告 Cookie 預設關閉，需要喺「設定」自行開啟。",
 	"accept": "同意",
 	"decline": "拒絕",
 	"learnMore": "私隱政策",
 	"analyticsLabel": "分析 Cookie",
-	"analyticsHint": "統計大家點樣玩謎題。",
+	"analyticsHint": "若網站使用，會啟用 Google Analytics。",
 	"marketingLabel": "廣告 Cookie",
 	"marketingHint": "等我哋知道 Google 廣告有冇帶嚟註冊。預設關閉。",
 	"change": "更改 Cookie 選擇"
