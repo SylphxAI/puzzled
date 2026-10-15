@@ -532,7 +532,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+      - uses: SylphxAI/.github/.github/actions/needs-pass@46ec433892bca8693193049b5ee7441bb916a7ad # main
         with:
           needs: ${{ toJSON(needs) }}
           required: plan
