@@ -105,7 +105,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4.0"
+          bun-version: "1.4.3"
 
       - uses: actions/setup-node@v4.4.0
         with:
@@ -181,7 +181,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4.0"
+          bun-version: "1.4.3"
 
       - name: Dependency vulnerability audit (shipped dependencies)
         # Fail-closed on high+ advisories in what ships to players. Dev-only
@@ -242,7 +242,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4.0"
+          bun-version: "1.4.3"
 
       - uses: actions/setup-node@v4.4.0
         with:

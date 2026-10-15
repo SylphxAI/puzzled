@@ -47,7 +47,7 @@ jobs:
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: '1.4.0'
+          bun-version: '1.4.3'
       - name: Apply the catalogue
         run: bash scripts/money-catalogue-apply.sh
 
@@ -65,6 +65,6 @@ jobs:
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: '1.4.0'
+          bun-version: '1.4.3'
       - name: Apply the catalogue
         run: bash scripts/money-catalogue-apply.sh
