@@ -15,7 +15,7 @@ use crate::capabilities::leaderboard::adapters::leaderboard_db::{
     LeaderboardType as DbType,
 };
 use crate::capabilities::stats::adapters::sessions_stats_db::{
-    today_overview, user_history_on_connection, user_stats_on_connection,
+    today_overview, today_percentile, user_history_on_connection, user_stats_on_connection,
 };
 use crate::proto::puzzled::v1::{
     GetHistoryRequest, GetHistoryResponse, GetLeaderboardRequest, GetLeaderboardResponse,
@@ -204,7 +204,42 @@ impl StatsService for StatsConnectService {
             });
         }
 
-        // Without sessions/DB generated Connect path: honest stub residual (parity with REST null path).
+        if let Some(pool) = &self.state.pool {
+            // Match each game's compareForPercentile, with wins first and strict
+            // comparisons so tied finishes do not count as beaten players.
+            let metric = match slug {
+                "word-hive" => i64::from(req.score.unwrap_or(0)),
+                "word-groups" => -i64::from(req.mistakes.unwrap_or(4)),
+                "word-guess" => -i64::from(req.attempts.unwrap_or(6)),
+                "quad-words" | "arithmo" | "word-box" => {
+                    -req.attempts.map(i64::from).unwrap_or(i64::MAX)
+                }
+                _ => req.time_spent_ms.unwrap_or(i64::MAX).saturating_neg(),
+            };
+            let day_key = product_day_key_string(Utc::now());
+            let (percentile, total_players) =
+                today_percentile(pool, &day_key, slug, status == "won", metric)
+                    .await
+                    .map_err(|error| {
+                        tracing::warn!(%error, game_slug = slug, "today percentile read failed");
+                        ConnectError::new(ErrorCode::Internal, "today_percentile_failed")
+                    })?;
+            return Response::ok(GetTodayPercentileResponse {
+                percentile,
+                total_players,
+                game_slug: slug.into(),
+                status: status.into(),
+                score: req.score,
+                attempts: req.attempts,
+                mistakes: req.mistakes,
+                time_spent_ms: req.time_spent_ms,
+                stub: false,
+                dispatch: "product_db_sessions".into(),
+                ..Default::default()
+            });
+        }
+
+        // No database: do not invent a cohort.
         Response::ok(GetTodayPercentileResponse {
             percentile: None,
             total_players: 0,
@@ -373,6 +408,177 @@ pub fn stats_connect_service(state: AppState) -> Arc<StatsConnectService> {
 #[cfg(test)]
 mod public_disclosure_tests {
     use super::*;
+    use axum::body::{to_bytes, Body};
+    use axum::http::{Request, StatusCode};
+    use tower::ServiceExt;
+
+    async fn percentile_rpc(pool: &sqlx::PgPool, body: serde_json::Value) -> serde_json::Value {
+        let response = crate::router(AppState::new(Some(pool.clone())))
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/puzzled.v1.StatsService/GetTodayPercentile")
+                    .header("content-type", "application/json")
+                    .body(Body::from(body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        serde_json::from_slice(&to_bytes(response.into_body(), usize::MAX).await.unwrap()).unwrap()
+    }
+
+    #[tokio::test]
+    async fn get_today_percentile_ranks_twelve_seeded_sessions() {
+        let Some(pool) = crate::test_support::fresh_database().await else {
+            return;
+        };
+        let day_key = product_day_key_string(Utc::now());
+        for i in 0..12_i32 {
+            sqlx::query(
+                "INSERT INTO game_sessions
+                 (user_id, game_slug, mode, status, score, attempts, time_spent_ms,
+                  day_key, is_ritual, module_class)
+                 VALUES ($1, 'sudoku', 'daily', 'won', 100, 1, $2, $3, true, 'puzzle_ritual')",
+            )
+            .bind(uuid::Uuid::now_v7())
+            .bind((i + 1) * 1_000)
+            .bind(&day_key)
+            .execute(&pool)
+            .await
+            .unwrap();
+        }
+        // Faster than six, tied with one, slower than five: ties are not beaten.
+        let response = percentile_rpc(
+            &pool,
+            serde_json::json!({"gameSlug": "sudoku", "status": "won", "timeSpentMs": "6000"}),
+        )
+        .await;
+        assert_eq!(response["totalPlayers"], 12);
+        assert_eq!(response["percentile"], 50);
+        assert!(!response["stub"].as_bool().unwrap_or(false));
+        assert_eq!(response["dispatch"], "product_db_sessions");
+
+        // Non-ritual, unfinished, other-day, other-module and other-game rows
+        // cannot inflate the cohort, even if their finish metric is worse.
+        for (slug, day, ritual, class, status) in [
+            ("sudoku", day_key.as_str(), false, "puzzle_ritual", "won"),
+            (
+                "sudoku",
+                day_key.as_str(),
+                true,
+                "puzzle_ritual",
+                "in_progress",
+            ),
+            ("sudoku", "2000-01-01", true, "puzzle_ritual", "won"),
+            ("sudoku", day_key.as_str(), true, "other", "won"),
+            ("crossword", day_key.as_str(), true, "puzzle_ritual", "won"),
+        ] {
+            sqlx::query(
+                "INSERT INTO game_sessions
+                 (user_id, game_slug, mode, status, time_spent_ms, day_key, is_ritual, module_class)
+                 VALUES ($1, $2, 'daily', $3::game_status, 99000, $4, $5, $6)",
+            )
+            .bind(uuid::Uuid::now_v7())
+            .bind(slug)
+            .bind(status)
+            .bind(day)
+            .bind(ritual)
+            .bind(class)
+            .execute(&pool)
+            .await
+            .unwrap();
+        }
+        let response = percentile_rpc(
+            &pool,
+            serde_json::json!({"gameSlug": "sudoku", "status": "won", "timeSpentMs": "6000"}),
+        )
+        .await;
+        assert_eq!(response["totalPlayers"], 12);
+        assert_eq!(response["percentile"], 50);
+
+        // A win beats a loss regardless of elapsed time. Losses still compare time.
+        sqlx::query("UPDATE game_sessions SET status = 'lost' WHERE time_spent_ms = 1000")
+            .execute(&pool)
+            .await
+            .unwrap();
+        let response = percentile_rpc(
+            &pool,
+            serde_json::json!({"gameSlug": "sudoku", "status": "won", "timeSpentMs": "6000"}),
+        )
+        .await;
+        assert_eq!(response["percentile"], 58);
+        let response = percentile_rpc(
+            &pool,
+            serde_json::json!({"gameSlug": "sudoku", "status": "lost", "timeSpentMs": "500"}),
+        )
+        .await;
+        assert_eq!(response["percentile"], 8);
+
+        // Below ten finishers, return the real count without revealing percentile.
+        sqlx::query("DELETE FROM game_sessions WHERE time_spent_ms >= 10000")
+            .execute(&pool)
+            .await
+            .unwrap();
+        let response = percentile_rpc(
+            &pool,
+            serde_json::json!({"gameSlug": "sudoku", "status": "won", "timeSpentMs": "6000"}),
+        )
+        .await;
+        assert_eq!(response["totalPlayers"], 9);
+        assert!(response
+            .get("percentile")
+            .is_none_or(serde_json::Value::is_null));
+        assert_eq!(response["dispatch"], "product_db_sessions");
+    }
+
+    #[tokio::test]
+    async fn get_today_percentile_uses_each_games_ranking_metric() {
+        let Some(pool) = crate::test_support::fresh_database().await else {
+            return;
+        };
+        let day_key = product_day_key_string(Utc::now());
+        for slug in [
+            "word-groups",
+            "word-hive",
+            "word-guess",
+            "quad-words",
+            "arithmo",
+            "word-box",
+        ] {
+            for i in 0..12_i32 {
+                sqlx::query(
+                    "INSERT INTO game_sessions
+                     (user_id, game_slug, mode, status, score, attempts, time_spent_ms,
+                      day_key, is_ritual, module_class)
+                     VALUES ($1, $2, 'daily', 'won', $3, $4, 1000, $5, true, 'puzzle_ritual')",
+                )
+                .bind(uuid::Uuid::now_v7())
+                .bind(slug)
+                .bind(if slug == "word-groups" {
+                    100 - (i % 4) * 25
+                } else {
+                    i
+                })
+                .bind(i + 1)
+                .bind(&day_key)
+                .execute(&pool)
+                .await
+                .unwrap();
+            }
+            let response = percentile_rpc(
+                &pool,
+                serde_json::json!({
+                    "gameSlug": slug, "status": "won", "attempts": 6,
+                    "mistakes": 1, "score": 6, "timeSpentMs": "99000"
+                }),
+            )
+            .await;
+            assert_eq!(response["totalPlayers"], 12, "{slug}");
+            assert_eq!(response["percentile"], 50, "{slug}");
+            assert_eq!(response["dispatch"], "product_db_sessions", "{slug}");
+        }
+    }
 
     #[test]
     fn public_entries_do_not_disclose_or_reuse_player_identifiers() {
