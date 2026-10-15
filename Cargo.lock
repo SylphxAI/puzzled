@@ -3089,9 +3089,9 @@ dependencies = [
 
 [[package]]
 name = "sylphx"
-version = "0.3.0"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00922b53c85dbe9dc3c2431fb20af1764d420e13844d48a7e025b9cc321cfd3e"
+checksum = "157996df59b5522ab168ddd966a90a13b98e7e2b132b8b606cfe15a5e515365c"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",
@@ -3100,6 +3100,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "tokio",
  "uuid",
 ]
