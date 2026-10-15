@@ -317,7 +317,7 @@ jobs:
     name: Accessibility (WCAG 2.2 AA)
     # Trunk push, nightly and manual only: a full browser suite on every PR push
     # costs more than it catches before it lands.
-    if: github.event_name != 'pull_request' && fromJSON(needs.plan.outputs.run).build
+    if: github.event_name != 'pull_request' && github.event_name != 'pull_request_target' && github.event_name != 'merge_group' && fromJSON(needs.plan.outputs.run).build
     runs-on: ubuntu-latest
     timeout-minutes: 40
     needs: [plan, build]
@@ -424,7 +424,7 @@ jobs:
   lighthouse:
     name: Lighthouse Budgets
     # Trunk push, nightly and manual only, like the a11y suite.
-    if: github.event_name != 'pull_request' && fromJSON(needs.plan.outputs.run).build
+    if: github.event_name != 'pull_request' && github.event_name != 'pull_request_target' && github.event_name != 'merge_group' && fromJSON(needs.plan.outputs.run).build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [plan, build]

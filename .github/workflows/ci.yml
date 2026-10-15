@@ -135,7 +135,7 @@ jobs:
           exit 1
 
       - name: Workflow parse
-        uses: SylphxAI/.github/.github/actions/workflow-lint@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+        uses: SylphxAI/.github/.github/actions/workflow-lint@a0889a6675ad336d4911ab1ee37f747fae749367 # advisory-audit guard with decoded YAML scalar scanning
 
       - name: Run Biome lint
         run: bun run lint
@@ -179,15 +179,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.4.0"
-
-      - name: Dependency vulnerability audit (shipped dependencies)
-        # Fail-closed on high+ advisories in what ships to players. Dev-only
-        # tooling (lhci and its browser download chain) is out of scope.
-        run: bun audit --audit-level=high --prod
-
+      # Advisory databases change independently of this commit. Defer the
+      # dependency audit to launch, then own it on a separate main schedule;
+      # never make every unrelated PR repair a newly published advisory.
+      # SylphxAI/.github docs/dependency-audits.md
       - name: Secret detection
         # Binary install (not the GH Action docker path): self-hosted
         # sylphx-linux-standard runners may lack a Docker daemon; docker-based
