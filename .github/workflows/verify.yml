@@ -539,7 +539,9 @@ jobs:
           cat "$RUNNER_TEMP/serve-vitals.log"
           exit 1
 
+      # always(): a Lighthouse miss must not hide the vitals table.
       - name: Web vitals budget, seeded play (bun run test:vitals)
+        if: always()
         working-directory: apps/puzzled
         env:
           BASE_URL: http://localhost:3016
@@ -550,9 +552,12 @@ jobs:
         run: |
           if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
 
+      # After the server is stopped, so a failed vitals run still publishes
+      # the table. A missing report is not a failure: the test writes it only
+      # when it reaches the assertion.
       - name: Upload the web vitals report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: web-vitals-report
           path: apps/puzzled/test-results/web-vitals
