@@ -894,9 +894,9 @@
 	"sessions": {
 		"started": "登入時間：{time}",
 		"firstPage": "第一頁",
-		"nextPage": "下一頁",
+		"nextPage": "下一頁工作階段",
 		"state": {
-			"active": "使用中",
+			"active": "此工作階段使用中",
 			"revoked": "已登出",
 			"expired": "已過期",
 			"unknown": "狀態未能讀取"

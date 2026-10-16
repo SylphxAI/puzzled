@@ -894,9 +894,9 @@
 	"sessions": {
 		"started": "登录时间：{time}",
 		"firstPage": "第一页",
-		"nextPage": "下一页",
+		"nextPage": "下一页会话",
 		"state": {
-			"active": "使用中",
+			"active": "此会话使用中",
 			"revoked": "已退出",
 			"expired": "已过期",
 			"unknown": "状态不可用"

@@ -896,8 +896,8 @@
 		"firstPage": "Primeira página",
 		"nextPage": "Próxima página",
 		"state": {
-			"active": "Ativa",
-			"revoked": "Sessão encerrada",
+			"active": "Esta sessão está ativa",
+			"revoked": "Esta sessão está encerrada",
 			"expired": "Expirada",
 			"unknown": "Estado indisponível"
 		},

@@ -896,7 +896,7 @@
 		"firstPage": "First page",
 		"nextPage": "Next page",
 		"state": {
-			"active": "Active",
+			"active": "This session is active",
 			"revoked": "Signed out",
 			"expired": "Expired",
 			"unknown": "Status unavailable"

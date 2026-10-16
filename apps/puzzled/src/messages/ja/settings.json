@@ -896,7 +896,7 @@
 		"firstPage": "最初のページ",
 		"nextPage": "次のページ",
 		"state": {
-			"active": "有効",
+			"active": "このセッションは有効",
 			"revoked": "ログアウト済み",
 			"expired": "期限切れ",
 			"unknown": "状態を取得できません"
