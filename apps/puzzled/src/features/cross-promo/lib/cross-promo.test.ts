@@ -11,6 +11,7 @@ describe('one own-product card a product day', () => {
 	test('a day shows exactly one product, and the next day may show another', () => {
 		const today = productForDay('2026-06-01')
 		const tomorrow = productForDay('2026-06-02')
+		if (!today || !tomorrow) throw new Error('expected a product')
 		expect(OWN_PRODUCTS).toContainEqual(today)
 		expect(today).not.toEqual(tomorrow)
 	})
