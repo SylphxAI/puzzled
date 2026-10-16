@@ -65,6 +65,7 @@ const PUBLIC_PATHS = new Set([
 	'/pricing',
 	'/privacy',
 	'/terms',
+	'/delete-account',
 	'/support',
 	'/login',
 	'/signup',
