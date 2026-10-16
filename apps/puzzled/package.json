@@ -19,6 +19,7 @@
 		"test:a11y": "playwright test e2e-tests/a11y.e2e.ts e2e-tests/accessibility.e2e.ts",
 		"test:settings": "playwright test e2e-tests/settings-profile.e2e.ts",
 		"lighthouse": "lhci autorun",
+		"test:vitals": "playwright test e2e-tests/web-vitals.e2e.ts --workers=1 --retries=0",
 		"atlas:diff": "atlas migrate diff --env local",
 		"atlas:apply": "atlas migrate apply --env local",
 		"atlas:status": "atlas migrate status --env local",
