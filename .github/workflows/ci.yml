@@ -524,12 +524,10 @@ jobs:
     secrets: inherit
 
   # The repository's chat senders: a forbidden chat API host in the tree fails
-  # the gate. The action reports nothing without full history, so the checkout
-  # fetches all of it (SylphxAI/.github .github/actions/chat-senders).
+  # the gate. The action checks only the lines the event adds and reports
+  # nothing without full history, so the checkout fetches all of it.
   chat-senders:
     name: Chat senders
-    needs: plan
-    if: needs.plan.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
