@@ -70,7 +70,9 @@ export function QueensHowToPlay() {
 				<p className="text-sm font-medium">Controls</p>
 				<ul className="space-y-1 text-xs text-muted-foreground">
 					<li>• Click/tap a cell to place or remove a crown</li>
-					<li>• Use arrow keys to navigate, Space/Enter to toggle</li>
+					<li className="hidden pointer-fine:block">
+						• Use arrow keys to navigate, Space/Enter to toggle
+					</li>
 					<li>• Red highlight shows conflicts</li>
 				</ul>
 			</div>

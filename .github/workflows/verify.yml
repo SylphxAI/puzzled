@@ -49,7 +49,7 @@ jobs:
       base: ${{ steps.range.outputs.base }}
       run: ${{ steps.range.outputs.run }}
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           filter: blob:none
 
@@ -69,18 +69,18 @@ jobs:
     if: fromJSON(needs.plan.outputs.run).build
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: "1.4.0"
+          bun-version: "1.4.3"
 
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
 
       - name: Cache bun modules
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
@@ -117,7 +117,7 @@ jobs:
         run: tar -C apps/puzzled --exclude=.next/cache --exclude=.next/standalone -cf web-build.tar .next
 
       - name: Share the web build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: web-build
           path: web-build.tar
@@ -132,7 +132,7 @@ jobs:
           NODE_ENV: production
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
           components: clippy, rustfmt
 
@@ -167,7 +167,7 @@ jobs:
       PUZZLED_REQUIRE_DB_TESTS: "1"
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # Postgres for the Puzzled Plus flow test (buy, unlock, family, cancel,
       # refund); it creates its own throwaway database. Our runners cannot run
@@ -190,7 +190,7 @@ jobs:
           echo "PUZZLED_TEST_DATABASE_URL=postgres://postgres:postgres@127.0.0.1:${PGPORT}/postgres" >> "$GITHUB_ENV"
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
           components: clippy, rustfmt
 
@@ -237,18 +237,18 @@ jobs:
     if: fromJSON(needs.plan.outputs.run).build
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: "1.4.0"
+          bun-version: "1.4.3"
 
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
 
       - name: Cache bun modules
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
@@ -269,7 +269,7 @@ jobs:
           exit 1
 
       - name: Download the web build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: web-build
 
@@ -323,18 +323,18 @@ jobs:
     needs: [plan, build]
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: "1.4.0"
+          bun-version: "1.4.3"
 
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
 
       - name: Cache bun modules
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
@@ -361,7 +361,7 @@ jobs:
         run: bunx playwright install --with-deps chromium
 
       - name: Download the web build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: web-build
 
@@ -408,7 +408,7 @@ jobs:
 
       - name: Upload the Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: a11y-playwright-report
           path: |
@@ -430,7 +430,7 @@ jobs:
     needs: [plan, build]
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # The runner does not keep Playwright's browser cache under
       # $HOME/.cache/ms-playwright, so pin one path for this job: letting the
@@ -439,16 +439,16 @@ jobs:
       - name: Pin the Playwright browser cache
         run: echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/ms-playwright" >> "$GITHUB_ENV"
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: "1.4.0"
+          bun-version: "1.4.3"
 
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
 
       - name: Cache bun modules
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
@@ -490,7 +490,7 @@ jobs:
           echo "CHROME_PATH=$bin" >> "$GITHUB_ENV"
 
       - name: Download the web build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: web-build
 
@@ -518,7 +518,7 @@ jobs:
 
       - name: Upload the Lighthouse report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: lighthouse-report
           path: apps/puzzled/.lighthouseci
@@ -532,7 +532,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+      - uses: SylphxAI/.github/.github/actions/needs-pass@46ec433892bca8693193049b5ee7441bb916a7ad # main
         with:
           needs: ${{ toJSON(needs) }}
           required: plan

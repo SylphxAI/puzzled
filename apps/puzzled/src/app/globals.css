@@ -112,6 +112,7 @@
 	--color-accent-warm: var(--brand-color-accent);
 	--color-accent-warm-soft: #fcf0d2;
 	--color-accent-warm-foreground: var(--brand-color-accent-text);
+	--color-on-accent: #1a1712;
 	--color-ink: var(--brand-color-ink);
 	--color-ink-muted: #2a2620;
 	--color-ink-foreground: #f7f3ea;
@@ -200,9 +201,11 @@
 	--color-surface-muted: #171614;
 	--color-surface-raised: #252320;
 	--color-success: #6fcf8e;
+	--color-success-foreground: #121110;
 	--color-warning: #f4c55c;
 	--color-error: #f27b70;
 	--color-info: #7ea6ff;
+	--color-info-foreground: #121110;
 	--color-destructive: #f27b70;
 	--color-correct: #4f9a61;
 	--color-present: #c49a24;

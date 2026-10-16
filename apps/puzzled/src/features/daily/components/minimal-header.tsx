@@ -69,7 +69,7 @@ export function MinimalHeader({
 		 */
 		<div
 			className={cn(
-				'sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-sticky border-b border-hairline bg-background/85 backdrop-blur-xl md:top-16',
+				'sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-sticky border-b border-hairline bg-background md:top-16',
 				className,
 			)}
 		>
