@@ -77,7 +77,8 @@ Run the narrowest affected check first; the full workspace is for the end.
 ## CI and the merge queue
 
 The queue runs only the fast gate (`ci.yml`: lint, typecheck, secret scan,
-affected unit tests, and the migration lane when `apps/puzzled/atlas/` changes).
+affected unit tests, the chat-senders gate, and the migration lane when
+`apps/puzzled/atlas/` changes).
 `verify.yml` runs the full suite (production web build, release binary,
 database-backed Rust tests, SEO, accessibility, Lighthouse) after merge and
 nightly, and marks the commit `verified`. A draft runs the gate only; a pull
