@@ -523,16 +523,33 @@ jobs:
     uses: ./.github/workflows/verify.yml
     secrets: inherit
 
+  # The repository's chat senders: a forbidden chat API host in the tree fails
+  # the gate. The action checks only the lines the event adds and reports
+  # nothing without full history, so the checkout fetches all of it.
+  chat-senders:
+    name: Chat senders
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: SylphxAI/.github/.github/actions/chat-senders@5cfd55a41435cca8e4b7caf6506faf04ca08d200
+        with:
+          mode: fail
+
   # Not required today (the ruleset names the seven jobs above); the single
   # check to require once the ruleset is reduced to one.
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [main-state, plan, identifiers, lint-and-typecheck, security, unit-tests, build, rust-api, migrations, suite]
+    needs: [main-state, plan, identifiers, lint-and-typecheck, security, unit-tests, build, rust-api, migrations, chat-senders, suite]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: SylphxAI/.github/.github/actions/needs-pass@46ec433892bca8693193049b5ee7441bb916a7ad # main
         with:
           needs: ${{ toJSON(needs) }}
-          required: plan
+          required: plan,chat-senders
