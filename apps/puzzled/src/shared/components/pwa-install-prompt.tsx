@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@sylphx/ui'
-import { Download, X } from 'lucide-react'
+import { Download, Share, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useState } from 'react'
 import { usePathname } from '@/lib/i18n/routing'
@@ -163,9 +163,8 @@ export function PWAInstallPrompt() {
 					{isIOS && (
 						<div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
 							<span>{t('iosTap')}</span>
-							<svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-								<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-							</svg>
+							{/* Safari's Share button: the square with an upward arrow. */}
+							<Share className="h-5 w-5" aria-hidden="true" />
 							<span>{t('iosThen')}</span>
 							<span className="font-medium">{t('iosAddHome')}</span>
 						</div>

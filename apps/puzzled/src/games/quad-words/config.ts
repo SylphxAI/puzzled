@@ -11,7 +11,6 @@ import {
 } from '../types'
 import { QuordleHowToPlay } from './components/how-to-play'
 import { QuadWordsIcon } from './icon'
-import { getPuzzleFromSeed } from './puzzles'
 import type {
 	QuordleGuessInput,
 	QuordleGuessResult,
@@ -62,13 +61,6 @@ export const quadWordsConfig: GameConfig<
 		if (a.status !== 'won' && b.status === 'won') return -1
 		// Fewer attempts = better
 		return (b.attempts ?? Number.POSITIVE_INFINITY) - (a.attempts ?? Number.POSITIVE_INFINITY)
-	},
-
-	/**
-	 * Generate puzzle from seed
-	 */
-	generatePuzzle(seed: number) {
-		return getPuzzleFromSeed(seed)
 	},
 
 	/**

@@ -11,7 +11,6 @@ import {
 } from '../types'
 import { LetterBoxedHowToPlay } from './components/how-to-play'
 import { WordBoxIcon } from './icon'
-import { getPuzzleFromSeed } from './puzzles'
 import type {
 	LetterBoxedGuessInput,
 	LetterBoxedGuessResult,
@@ -68,13 +67,6 @@ export const wordBoxConfig: GameConfig<
 		if (a.status !== 'won' && b.status === 'won') return -1
 		// Fewer words = better
 		return (b.attempts ?? Number.POSITIVE_INFINITY) - (a.attempts ?? Number.POSITIVE_INFINITY)
-	},
-
-	/**
-	 * Generate puzzle from seed
-	 */
-	generatePuzzle(seed: number) {
-		return getPuzzleFromSeed(seed)
 	},
 
 	/**

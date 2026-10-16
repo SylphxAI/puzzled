@@ -140,39 +140,9 @@ export interface ParsedPuzzle<TPuzzleData, TSolution> {
 }
 
 /**
- * Default implementation for parsing puzzle data from server
- * Most games can use this instead of implementing parsePuzzleData
- *
- * Logic:
- * 1. If server provides { puzzleData, solution } structure, use it directly
- * 2. Otherwise, generate from seed (fallback for archive mode)
- *
- * @param config - Game config with generatePuzzle function
- * @param data - Raw puzzle data from server
- * @param puzzleId - Puzzle ID for fallback generation
- * @param difficulty - Optional difficulty level for games with supportsDifficulty
- */
-export function defaultParsePuzzleData<TPuzzleData, TSolution>(
-	config: Pick<GameConfig<TPuzzleData, TSolution>, 'generatePuzzle'>,
-	data: unknown,
-	puzzleId?: string,
-	difficulty?: PuzzleDifficulty,
-): ParsedPuzzle<TPuzzleData, TSolution> {
-	// Server provides nested structure with puzzleData and solution
-	if (data && typeof data === 'object' && 'puzzleData' in data && 'solution' in data) {
-		return data as ParsedPuzzle<TPuzzleData, TSolution>
-	}
-
-	// Fallback: generate from seed (for archive mode or missing data)
-	const seed = Number.parseInt(puzzleId || String(Date.now()), 10)
-	return config.generatePuzzle(seed, difficulty)
-}
-
-/**
  * Client-only puzzle data parser
  *
- * Use this in client components instead of defaultParsePuzzleData.
- * Does NOT require the config (which imports server-only code).
+ * Use this in client components; it does not need the game config.
  *
  * IMPORTANT: This throws an error if the data format is invalid.
  * In production, the server always provides valid { puzzleData, solution } format.
@@ -201,7 +171,7 @@ export function parsePuzzleDataClient<TPuzzleData, TSolution>(
  * Note: Props are optional to support default values in game components.
  * GameRenderer always provides puzzleId, puzzleData, and mode.
  * puzzleData is typed as unknown because GameRenderer is generic.
- * Each game component should use defaultParsePuzzleData() for type-safe parsing.
+ * Each game component should use parsePuzzleDataClient() for type-safe parsing.
  */
 export interface GameProps {
 	/** Unique puzzle identifier (always provided by GameRenderer) */
@@ -305,7 +275,6 @@ export interface GameDisplayMeta {
  * Each game implements this interface to be registered in the system
  *
  * PLUG-AND-PLAY: Games are self-contained modules that define their own:
- * - Puzzle generation (generatePuzzle)
  * - Validation AND scoring (validateAndScore) <- Server-side score calculation
  * - UI components (HowToPlayContent)
  * - Translations (in translations/ folder)
@@ -397,24 +366,6 @@ export interface GameConfig<
 	 * - 'llm': Uses LLM to generate (requires semantic understanding) - NO fallback
 	 */
 	generationStrategy: PuzzleGenerationStrategy
-
-	/**
-	 * Generate puzzle data and solution for a given seed
-	 * Seed is deterministic based on date, ensuring all users get same puzzle
-	 *
-	 * @param seed - Numeric seed based on UTC date (YYYYMMDD)
-	 * @param difficulty - Optional difficulty level (for games with supportsDifficulty)
-	 * @param difficultyParams - Optional parameters from DifficultyLevelConfig.params
-	 * @returns puzzleData (sent to client) and solution (kept server-side)
-	 */
-	generatePuzzle: (
-		seed: number,
-		difficulty?: PuzzleDifficulty,
-		difficultyParams?: Record<string, unknown>,
-	) => {
-		puzzleData: TPuzzleData
-		solution: TSolution
-	}
 
 	// ==========================================
 	// Validation & Scoring (SERVER-SIDE)

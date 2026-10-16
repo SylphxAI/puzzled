@@ -12,8 +12,8 @@ import {
 	type GameSubmission,
 } from '../types'
 import { WordLadderHowToPlay } from './components/how-to-play'
+import { getWordList } from './dictionary'
 import { WordLadderIcon } from './icon'
-import { getPuzzleFromSeed, getWordList } from './puzzles'
 import type {
 	WordLadderGuess,
 	WordLadderGuessResult,
@@ -62,13 +62,6 @@ export const wordLadderConfig: GameConfig<
 			return formatTimer(stats.timeSpentMs)
 		}
 		return stats.score ? `${stats.score} pts` : 'Won'
-	},
-
-	/**
-	 * Generate puzzle from seed
-	 */
-	generatePuzzle(seed: number) {
-		return getPuzzleFromSeed(seed)
 	},
 
 	/**

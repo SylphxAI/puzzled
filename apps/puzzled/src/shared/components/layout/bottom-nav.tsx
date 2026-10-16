@@ -17,7 +17,7 @@ export function BottomNav() {
 
 	return (
 		<nav
-			className="fixed inset-x-0 bottom-0 z-bottom-nav border-t border-hairline bg-background/85 pb-safe backdrop-blur-xl backdrop-saturate-150 md:hidden"
+			className="fixed inset-x-0 bottom-0 z-bottom-nav border-t border-hairline bg-background pb-safe md:hidden"
 			aria-label={t('nav.main')}
 		>
 			<div
@@ -32,7 +32,7 @@ export function BottomNav() {
 							href={href}
 							aria-current={isActive ? 'page' : undefined}
 							className={cn(
-								'pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-[10.5px] font-medium tracking-tight transition-colors',
+								'pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium tracking-tight transition-colors',
 								isActive ? 'text-foreground' : 'text-muted-foreground',
 							)}
 						>

@@ -10,10 +10,8 @@ import {
 	type GameConfig,
 	type GameResult,
 	type GameSubmission,
-	type PuzzleDifficulty,
 } from '../types'
 import { NonogramHowToPlay } from './components/how-to-play'
-import { generateNonogramPuzzle } from './generator'
 import { NonogramIcon } from './icon'
 import type {
 	NonogramGuess,
@@ -89,19 +87,6 @@ export const nonogramConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	/**
-	 * Generate puzzle from seed
-	 * Currently uses 10x10 patterns for all difficulties.
-	 */
-	generatePuzzle(seed: number, _difficulty?: PuzzleDifficulty) {
-		const { puzzleData, solution } = generateNonogramPuzzle(seed)
-
-		return {
-			puzzleData,
-			solution,
-		}
-	},
 
 	/**
 	 * Validate a single cell guess

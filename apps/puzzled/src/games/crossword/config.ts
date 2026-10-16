@@ -12,14 +12,13 @@ import {
 } from '../types'
 import { CrosswordHowToPlay } from './components/how-to-play'
 import { CrosswordIcon } from './icon'
-import { getPuzzleFromSeed } from './puzzles'
 import type {
 	CrosswordGuess,
 	CrosswordGuessResult,
 	CrosswordPuzzleClientData,
 	CrosswordSolution,
 } from './types'
-import { GRID_SIZE, isGridComplete } from './types'
+import { isGridComplete } from './types'
 
 export type { CrosswordPuzzleClientData, CrosswordSolution }
 
@@ -52,36 +51,6 @@ export const crosswordConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	/**
-	 * Generate puzzle from seed
-	 * Uses curated word square pool with human-written clues
-	 */
-	generatePuzzle(seed: number) {
-		const puzzle = getPuzzleFromSeed(seed)
-
-		// Create client data with grid structure (nulls for black squares, empty for letters)
-		const clientGrid: (string | null)[][] = []
-		for (let row = 0; row < GRID_SIZE; row++) {
-			clientGrid[row] = []
-			for (let col = 0; col < GRID_SIZE; col++) {
-				// null = black square, empty string = letter cell
-				clientGrid[row][col] = puzzle.grid[row][col] === null ? null : ''
-			}
-		}
-
-		const puzzleData: CrosswordPuzzleClientData = {
-			grid: clientGrid,
-			clues: puzzle.clues,
-		}
-
-		// Solution contains the full grid
-		const solution: CrosswordSolution = {
-			grid: puzzle.grid.map((row) => row.map((cell) => cell ?? '')),
-		}
-
-		return { puzzleData, solution }
-	},
 
 	/**
 	 * Validate a single cell guess

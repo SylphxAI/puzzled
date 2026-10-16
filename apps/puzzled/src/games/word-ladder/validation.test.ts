@@ -13,11 +13,12 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { wordLadderConfig } from './config'
 
-// Generate a puzzle for testing
-const { puzzleData, solution } = wordLadderConfig.generatePuzzle(12345)
+// A frozen puzzle from the Rust goldens
+const { puzzleData, solution } = frozenPuzzle(wordLadderConfig)
 
 // Get start and end words from solution
 const startWord = solution.path[0]

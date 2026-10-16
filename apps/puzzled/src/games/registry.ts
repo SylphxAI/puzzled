@@ -210,12 +210,6 @@ export function getSeedFromDate(date: Date = new Date()): number {
 	return year * 10000 + month * 100 + day
 }
 
-// NOTE: Server-only puzzle generation functions are in registry.server.ts
-// - generatePuzzleWithLLM()
-// - generateGamePuzzle()
-// - generateAllPuzzles()
-// This separation prevents bundler errors from server deps in client bundles.
-
 /**
  * CORE VALIDATION FUNCTION - Validates submission AND calculates score
  *
@@ -240,7 +234,7 @@ export function validateAndScore(
 		return { valid: false, error: `Unknown game: ${slug}` }
 	}
 	// The stored {solution, puzzleData} pair was produced by this same module
-	// (registry.server.ts stores whatever its generatePuzzle returned), and the
+	// (the Rust daily pipeline stores whatever its generator returned), and the
 	// registry cannot re-derive those types from a runtime slug - so the pair is
 	// handed over as opaque data and each game narrows what it receives.
 	return config.validateAndScore(solution, puzzleData, submission)

@@ -12,7 +12,6 @@ import {
 } from '../types'
 import { CryptogramHowToPlay } from './components/how-to-play'
 import { CryptogramIcon } from './icon'
-import { getPuzzleFromSeed } from './puzzles'
 import type {
 	CryptogramGuess,
 	CryptogramGuessResult,
@@ -68,13 +67,6 @@ export const cryptogramConfig: GameConfig<
 		const hintDiff = (a.hintsUsed ?? 0) - (b.hintsUsed ?? 0)
 		if (hintDiff !== 0) return -hintDiff
 		return (b.timeSpentMs ?? Number.POSITIVE_INFINITY) - (a.timeSpentMs ?? Number.POSITIVE_INFINITY)
-	},
-
-	/**
-	 * Generate puzzle from seed
-	 */
-	generatePuzzle(seed: number) {
-		return getPuzzleFromSeed(seed)
 	},
 
 	/**

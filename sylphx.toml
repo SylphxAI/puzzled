@@ -51,6 +51,12 @@ value = "https://puzzled.gg"
 [env.PUZZLED_ADMIN_PRINCIPALS]
 value = ""
 
+# Reverse trial (docs/monetization.md): after a player's third finished day the
+# api opens every game for 7 days, once per account. On together with Plus
+# sales; set "off" to stop new grants (running trials end on their own date).
+[env.PUZZLED_REVERSE_TRIAL]
+value = "on"
+
 [[services]]
 name = "web"
 instance_type = "micro"

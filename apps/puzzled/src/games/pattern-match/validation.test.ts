@@ -14,11 +14,12 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { patternMatchConfig } from './config'
 
-// Generate a puzzle for testing
-const { puzzleData, solution } = patternMatchConfig.generatePuzzle(12345)
+// A frozen puzzle from the Rust goldens
+const { puzzleData, solution } = frozenPuzzle(patternMatchConfig)
 
 // Valid sets from solution
 const validSets = solution.validSets

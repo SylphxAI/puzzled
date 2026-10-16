@@ -592,6 +592,7 @@ fn entitlement_live_is_unchanged_by_the_erasure_rule() {
         status: "some_future_status".into(),
         cancel_at_period_end: false,
         current_period_end: None,
+        trial_end: None,
         price_keys: vec![],
     };
     assert!(!s.live() && !s.renews() && s.renews_for_erasure());
@@ -638,6 +639,26 @@ async fn subscriptions_are_read_with_their_period_and_prices() {
         subs[0].current_period_end.unwrap().timestamp(),
         4_070_908_800_i64
     );
+}
+
+#[tokio::test]
+async fn a_trialing_subscription_is_read_with_its_trial_end() {
+    let mut row = sub(USER, "trialing", false);
+    row["trial_end_time"] = json!("2098-12-29T00:00:00Z");
+    let (money, _) = fake_money(200, json!({"customer_subscriptions": [row]})).await;
+    let subs = money.subscriptions(USER).await.unwrap();
+    assert_eq!(subs[0].trial_end.unwrap().timestamp(), 4_070_649_600_i64);
+    assert_eq!(
+        subs[0].current_period_end.unwrap().timestamp(),
+        4_070_908_800_i64
+    );
+    // No trial: none is invented from the period end.
+    let (money, _) = fake_money(
+        200,
+        json!({"customer_subscriptions": [sub(USER, "active", false)]}),
+    )
+    .await;
+    assert_eq!(money.subscriptions(USER).await.unwrap()[0].trial_end, None);
 }
 
 #[tokio::test]

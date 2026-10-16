@@ -13,7 +13,6 @@ import {
 } from '../types'
 import { WordSearchHowToPlay } from './components/how-to-play'
 import { WordSearchIcon } from './icon'
-import { getPuzzleFromSeed } from './puzzles'
 import type {
 	WordSearchGuess,
 	WordSearchGuessResult,
@@ -51,13 +50,6 @@ export const wordSearchConfig: GameConfig<
 	// Custom: perfect game = won in under 60 seconds (not based on mistakes)
 	isPerfectGame: (stats) => {
 		return stats.status === 'won' && (stats.timeSpentMs ?? Number.POSITIVE_INFINITY) < MINUTE_MS
-	},
-
-	/**
-	 * Generate puzzle from seed
-	 */
-	generatePuzzle(seed: number) {
-		return getPuzzleFromSeed(seed)
 	},
 
 	/**

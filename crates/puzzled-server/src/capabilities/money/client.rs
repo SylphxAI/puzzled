@@ -146,6 +146,8 @@ pub struct Subscription {
     pub status: String,
     pub cancel_at_period_end: bool,
     pub current_period_end: Option<DateTime<Utc>>,
+    /// When its trial ends (Money's `trial_end_time`); None without a trial.
+    pub trial_end: Option<DateTime<Utc>>,
     /// The catalogue price keys it sells.
     pub price_keys: Vec<String>,
 }
@@ -174,6 +176,15 @@ impl Subscription {
             "canceled" | "incomplete_expired" | "expired"
         ) && !self.cancel_at_period_end
     }
+}
+
+/// An RFC 3339 timestamp field of a Money resource; None when absent or unreadable.
+fn timestamp(resource: &Value, field: &str) -> Option<DateTime<Utc>> {
+    resource
+        .get(field)
+        .and_then(Value::as_str)
+        .and_then(|t| DateTime::parse_from_rfc3339(t).ok())
+        .map(|t| t.with_timezone(&Utc))
 }
 
 /// A path segment that cannot escape its place in the URL.
@@ -559,11 +570,8 @@ impl Money {
                         .get("cancel_at_period_end")
                         .and_then(Value::as_bool)
                         .unwrap_or(false),
-                    current_period_end: sub
-                        .get("current_period_end_time")
-                        .and_then(Value::as_str)
-                        .and_then(|t| DateTime::parse_from_rfc3339(t).ok())
-                        .map(|t| t.with_timezone(&Utc)),
+                    current_period_end: timestamp(sub, "current_period_end_time"),
+                    trial_end: timestamp(sub, "trial_end_time"),
                     price_keys: sub
                         .get("items")
                         .and_then(Value::as_array)

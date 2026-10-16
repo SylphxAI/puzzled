@@ -35,8 +35,8 @@ Run the narrowest affected check first; the full workspace is for the end.
   a generated Connect client.
 - Daily puzzles are generated, validated and stored by the Rust pipeline
   (`crates/puzzled-server/src/capabilities/daily_pipeline`), 14 days ahead. The
-  TypeScript generators stay only as the reference implementation the Rust ports
-  are tested against (`apps/puzzled/scripts/export-generator-fixtures.ts`).
+  TypeScript generators are deleted; the frozen goldens under
+  `crates/puzzled-core/tests/fixtures/generate/*.json` are the parity record.
 - Why one authority: a client that holds an answer or asserts a finish can be
   cheated, and two write paths drift. So do not add TypeScript backend logic
   (jobs, generation, database writes) or a REST `/api/v1` or Hono layer, and do
