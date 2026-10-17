@@ -35,10 +35,11 @@ run-name: sylphx-check ${{ inputs.request }}
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   check:
-    uses: SylphxAI/.github/.github/workflows/rust-check.yml@13890e5cc13e308f376748fd23f626b637a47771 # SylphxAI/.github #122
+    uses: SylphxAI/.github/.github/workflows/rust-check.yml@3340c261b6e864787d44d3c12f319d5495fbae57 # main after #198
     with:
       ref: ${{ inputs.ref }}
       packages: ${{ inputs.packages }}
