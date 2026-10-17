@@ -9,7 +9,7 @@ use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
 use crate::capabilities::money::{pricing, Money};
 use crate::capabilities::preferences::unsubscribe::UnsubscribeTokens;
 use crate::capabilities::tryit_conversions::TryitReporter;
-use crate::shared::tick_receipt::TickVerifier;
+use sylphx::auth::verify::TickVerifier;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -42,7 +42,11 @@ impl AppState {
             erasure: AuthErasure::from_env(),
             pool,
             money: None,
-            ticks: TickVerifier::from_env(),
+            ticks: std::env::var("COMPUTE_TICK_RECEIPT_JWKS_URL")
+                .ok()
+                .filter(|url| !url.trim().is_empty())
+                .map(TickVerifier::new)
+                .unwrap_or_default(),
             tryit: TryitReporter::from_env(),
         }
     }

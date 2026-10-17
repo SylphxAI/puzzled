@@ -1193,9 +1193,18 @@ mod tests {
     }
 
     fn tick_state() -> AppState {
-        use crate::shared::tick_receipt::{test_signing, KeySet, TickVerifier};
-        let keys = KeySet::from_json(&test_signing::jwks(&test_signing::key()))
-            .unwrap_or_else(|_| panic!("test keys"));
+        use base64::Engine as _;
+        use sylphx::auth::verify::{
+            Jwks, TickVerifier, CALLBACK_RECEIPT_ISSUER, CALLBACK_RECEIPT_TYP,
+        };
+        let key = ed25519_dalek::SigningKey::from_bytes(&[7; 32]);
+        let keys: Jwks = serde_json::from_value(serde_json::json!({"keys": [{
+            "issuer": CALLBACK_RECEIPT_ISSUER, "typ": CALLBACK_RECEIPT_TYP,
+            "kty": "OKP", "crv": "Ed25519", "alg": "EdDSA", "use": "sig",
+            "kid": "compute-tick-1",
+            "x": base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(key.verifying_key().as_bytes()),
+            "not_before_unix_seconds": 0, "not_after_unix_seconds": 4_102_444_800i64
+        }]})).unwrap_or_else(|_| panic!("test keys"));
         AppState::new(None).with_ticks(TickVerifier::with_keys(keys))
     }
 
@@ -1217,12 +1226,26 @@ mod tests {
     }
 
     fn receipt_for(path: &str) -> String {
-        use crate::shared::tick_receipt::test_signing;
-        test_signing::mint(
-            &test_signing::key(),
-            &format!("https://puzzled.test{path}"),
-            chrono::Utc::now().timestamp(),
-        )
+        use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
+        use ed25519_dalek::{Signer as _, SigningKey};
+        use sylphx::auth::verify::{CALLBACK_RECEIPT_ISSUER, CALLBACK_RECEIPT_TYP};
+        let now = chrono::Utc::now().timestamp();
+        let h = URL_SAFE_NO_PAD.encode(
+            serde_json::json!({
+                "alg": "EdDSA", "typ": CALLBACK_RECEIPT_TYP, "kid": "compute-tick-1"
+            })
+            .to_string(),
+        );
+        let p = URL_SAFE_NO_PAD.encode(
+            serde_json::json!({
+                "iss": CALLBACK_RECEIPT_ISSUER, "aud": format!("https://puzzled.test{path}"),
+                "schedule_id": "puzzled-test", "tick_id": "tick-1", "iat": now, "exp": now + 300
+            })
+            .to_string(),
+        );
+        let signed = format!("{h}.{p}");
+        let sig = SigningKey::from_bytes(&[7; 32]).sign(signed.as_bytes());
+        format!("{signed}.{}", URL_SAFE_NO_PAD.encode(sig.to_bytes()))
     }
 
     #[tokio::test]
@@ -1253,12 +1276,27 @@ mod tests {
             "/internal/compute/daily-puzzles",
             "/internal/compute/audit-log-retention",
             "/internal/compute/tryit-conversions",
+            "/internal/compute/daily-reminders",
         ] {
             let refused = router(tick_state())
                 .oneshot(tick_request(path, "{}", None))
                 .await
                 .unwrap_or_else(|e| panic!("{path}: {e}"));
             assert_eq!(refused.status(), StatusCode::UNAUTHORIZED, "{path}");
+            let wrong_url = router(tick_state())
+                .oneshot(tick_request(path, "{}", Some(&receipt_for("/other"))))
+                .await
+                .unwrap_or_else(|e| panic!("{path}: {e}"));
+            assert_eq!(wrong_url.status(), StatusCode::UNAUTHORIZED, "{path}");
+            let changed_query = router(tick_state())
+                .oneshot(tick_request(
+                    &format!("{path}?extra=1"),
+                    "{}",
+                    Some(&receipt_for(path)),
+                ))
+                .await
+                .unwrap_or_else(|e| panic!("{path}: {e}"));
+            assert_eq!(changed_query.status(), StatusCode::UNAUTHORIZED, "{path}");
             let admitted = router(tick_state())
                 .oneshot(tick_request(path, "{}", Some(&receipt_for(path))))
                 .await

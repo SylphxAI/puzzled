@@ -124,8 +124,8 @@ dockerfile = "crates/puzzled-server/Dockerfile"
 context = "."
 
 # Scheduled work (Compute). Each tick carries Compute's signed receipt for its
-# exact URL, verified against Compute's published keys
-# (crates/puzzled-server/src/shared/tick_receipt.rs); no shared secret.
+# exact URL, verified against Compute's published keys by the sylphx Rust SDK
+# (`sylphx::auth::verify::TickVerifier`); no shared secret.
 #
 # Daily puzzles (#246): store every game's puzzle 14 days ahead and backfill
 # the 30-day archive; a low buffer alerts. The api also runs this at start-up.

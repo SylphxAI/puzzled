@@ -1,12 +1,13 @@
 //! Compute schedule ticks (`[[compute.schedules]]` in sylphx.toml). Each tick
 //! is admitted only with Compute's signed receipt for its exact URL
-//! (`shared::tick_receipt`), never a shared secret.
+//! through `sylphx::auth::verify`, never a shared secret.
 
-use axum::extract::State;
-use axum::http::{HeaderMap, StatusCode};
+use axum::extract::{OriginalUri, State};
+use axum::http::{header, HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde_json::json;
+use sylphx::auth::verify::{TickVerifier, VerifyError};
 
 use super::state::AppState;
 use crate::capabilities::daily_pipeline;
@@ -17,9 +18,71 @@ pub const AUDIT_RETENTION_PATH: &str = "/internal/compute/audit-log-retention";
 pub const DAILY_REMINDERS_PATH: &str = "/internal/compute/daily-reminders";
 pub const TRYIT_CONVERSIONS_PATH: &str = "/internal/compute/tryit-conversions";
 
+/// Product transport mapping only; signature, claims and keys belong to the SDK.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TickError {
+    Missing,
+    Invalid,
+    Unavailable,
+}
+
+impl TickError {
+    fn response(self) -> (StatusCode, Json<serde_json::Value>) {
+        let (status, error) = match self {
+            Self::Missing => (StatusCode::UNAUTHORIZED, "tick_receipt_missing"),
+            Self::Invalid => (StatusCode::UNAUTHORIZED, "tick_receipt_invalid"),
+            Self::Unavailable => (StatusCode::SERVICE_UNAVAILABLE, "tick_receipt_unavailable"),
+        };
+        (status, Json(json!({"error": error})))
+    }
+}
+
+/// Extract the bearer and exact public URL, then delegate admission to the SDK.
+/// The edge preserves Host; forwarded-host is only a fallback for old routes.
+pub async fn admit_tick(
+    verifier: &TickVerifier,
+    headers: &HeaderMap,
+    path: &str,
+) -> Result<(), TickError> {
+    let token = headers
+        .get(header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.strip_prefix("Bearer "))
+        .map(str::trim)
+        .filter(|t| !t.is_empty())
+        .ok_or(TickError::Missing)?;
+    let host = headers
+        .get(header::HOST)
+        .or_else(|| headers.get("x-forwarded-host"))
+        .and_then(|v| v.to_str().ok())
+        .map(str::trim)
+        .filter(|h| !h.is_empty())
+        .ok_or(TickError::Invalid)?;
+    verifier
+        .verify_tick_receipt(token, &format!("https://{host}{path}"))
+        .await
+        .map(|_| ())
+        .map_err(|error| match error {
+            VerifyError::Keys(_) => TickError::Unavailable,
+            _ => TickError::Invalid,
+        })
+}
+
 /// Store every missing daily puzzle (14 days ahead, 30-day archive).
-pub async fn daily_puzzles_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    if let Err(reject) = state.ticks.admit(&headers, DAILY_PUZZLES_PATH).await {
+pub async fn daily_puzzles_tick(
+    State(state): State<AppState>,
+    OriginalUri(uri): OriginalUri,
+    headers: HeaderMap,
+) -> Response {
+    if let Err(reject) = admit_tick(
+        &state.ticks,
+        &headers,
+        uri.path_and_query()
+            .map(|p| p.as_str())
+            .unwrap_or(uri.path()),
+    )
+    .await
+    {
         return reject.response().into_response();
     }
     let Some(pool) = &state.pool else {
@@ -62,8 +125,20 @@ pub async fn daily_puzzles_tick(State(state): State<AppState>, headers: HeaderMa
 }
 
 /// Strip IPs after 30 days and delete audit rows after a year.
-pub async fn audit_retention_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    if let Err(reject) = state.ticks.admit(&headers, AUDIT_RETENTION_PATH).await {
+pub async fn audit_retention_tick(
+    State(state): State<AppState>,
+    OriginalUri(uri): OriginalUri,
+    headers: HeaderMap,
+) -> Response {
+    if let Err(reject) = admit_tick(
+        &state.ticks,
+        &headers,
+        uri.path_and_query()
+            .map(|p| p.as_str())
+            .unwrap_or(uri.path()),
+    )
+    .await
+    {
         return reject.response().into_response();
     }
     let Some(pool) = &state.pool else {
@@ -90,8 +165,20 @@ pub async fn audit_retention_tick(State(state): State<AppState>, headers: Header
     }
 }
 /// Retry the Tryit conversions still queued (a 503 or a failed send).
-pub async fn tryit_conversions_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    if let Err(reject) = state.ticks.admit(&headers, TRYIT_CONVERSIONS_PATH).await {
+pub async fn tryit_conversions_tick(
+    State(state): State<AppState>,
+    OriginalUri(uri): OriginalUri,
+    headers: HeaderMap,
+) -> Response {
+    if let Err(reject) = admit_tick(
+        &state.ticks,
+        &headers,
+        uri.path_and_query()
+            .map(|p| p.as_str())
+            .unwrap_or(uri.path()),
+    )
+    .await
+    {
         return reject.response().into_response();
     }
     let (Some(pool), Some(reporter)) = (&state.pool, &state.tryit) else {
@@ -116,8 +203,20 @@ pub async fn tryit_conversions_tick(State(state): State<AppState>, headers: Head
 }
 
 /// Send the daily reminders that are due now, each at its player's own time.
-pub async fn daily_reminders_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    if let Err(reject) = state.ticks.admit(&headers, DAILY_REMINDERS_PATH).await {
+pub async fn daily_reminders_tick(
+    State(state): State<AppState>,
+    OriginalUri(uri): OriginalUri,
+    headers: HeaderMap,
+) -> Response {
+    if let Err(reject) = admit_tick(
+        &state.ticks,
+        &headers,
+        uri.path_and_query()
+            .map(|p| p.as_str())
+            .unwrap_or(uri.path()),
+    )
+    .await
+    {
         return reject.response().into_response();
     }
     let Some(pool) = &state.pool else {
