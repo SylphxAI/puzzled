@@ -126,9 +126,12 @@ product-side unlock on top of Money's plans, entitlements and coupons. Effects a
 industry benchmarks; the product has no payers yet, so none is measured.
 
 - [ ] **Plus on sale, yearly first** (S). Plans `individual_yearly` US$39.99 and `individual_monthly`
-      US$4.99 (about 33% off); pricing toggle defaults to yearly; label the saving from the live prices
-      with `yearlySavingPercent` (today's prices are 4 months free, so say that, never a rounder claim).
-      Family US$7.99 up to 4 seats stays; test 6 seats later.
+      US$4.99 (about 33% off); the pricing page leads with Plus and preselects yearly, with the monthly
+      equivalent as secondary text and the saving from the live prices via `yearlySavingPercent`
+      (today's prices are 4 months free, so say that, never a rounder claim). One unticked consent tick
+      and one "Continue to payment" button sit in the first screen; the Family plan and today's free
+      puzzle are text links under it, and the Free card sits below the fold. Family US$7.99 up to 4
+      seats stays; test 6 seats later.
 - [~] **7-day trial on the yearly plan** (S). Source ready (`trial_days` is 0 until the Money trial notice is live; it becomes 7 in `config/commercial/catalogue.json`, pricing page states the real first-charge date); live when Money applies the catalogue and honours it at checkout. The pre-conversion reminder email is not built. Money plan setting `trial_days = 7` on `individual_yearly`
       only; card up front; a reminder before it converts and one-step cancel (UK DMCC). Trial end date is
       the real one.
