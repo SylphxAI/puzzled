@@ -1,0 +1,21 @@
+{
+	"keepStreak": "¡Mantén tu racha!",
+	"streakAtRisk": "¡Tu racha está en peligro!",
+	"legendaryAtRisk": "¡Tu racha legendaria está en peligro!",
+	"playToMaintain": "Juega hoy para mantener viva tu racha de {streak} días",
+	"playNow": "Jugar ahora",
+	"currentStreak": "Racha actual",
+	"bestStreak": "Mejor racha",
+	"days": "días",
+	"daysToGo": "días restantes",
+	"nextMilestone": "Próximo hito",
+	"freezes": "Congelaciones",
+	"useFreeze": "Usar congelación",
+	"playToday": "Juega hoy",
+	"dismiss": "Descartar",
+	"emergency": "¡URGENTE! ¡Quedan {time} para salvar tu racha de {streak} días!",
+	"emergencyTitle": "¡URGENTE!",
+	"critical": "¡Tu racha de {streak} días caduca en {time}!",
+	"criticalTitle": "¡Racha en estado crítico!",
+	"elevated": "¡No pierdas tu racha de {streak} días! Quedan {time}"
+}

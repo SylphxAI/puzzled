@@ -1,0 +1,51 @@
+{
+	"period": {
+		"today": "Hoje",
+		"week": "Esta semana",
+		"all": "Geral"
+	},
+	"title": "Ranking",
+	"metaDescription": "Rankings de desafios de hoje, da semana e de todos os tempos — quem concluiu o quê e onde fica a sua pontuação.",
+	"eyebrow": "Rankings do Puzzled",
+	"description": "Um desafio e um período por vez, exatamente como as pontuações são contadas. Só aparecem jogadores que escolheram ser públicos.",
+	"chip": "Ranking: {module}",
+	"anonymous": "Jogador anônimo",
+	"scopeLabel": "Período do ranking",
+	"moduleLabel": "Desafio",
+	"loadingBoard": "Carregando ranking…",
+	"boardTitle": "Ranking de {module}",
+	"boardDescription": "Período: {period}. Cada linha é o total aceito de um jogador neste período.",
+	"columns": {
+		"rank": "Posição",
+		"player": "Jogador",
+		"score": "Pontuação"
+	},
+	"tableCaption": "Ranking de {module} para {period}: posição, jogador e pontuação",
+	"you": "Você",
+	"empty": {
+		"title": "Este ranking ainda está esquentando",
+		"body": "Ainda não há pontuações de {module} neste período — o relógio está correndo e o ranking é seu para começar.",
+		"play": "Jogar {module}"
+	},
+	"notes": {
+		"top": "Mostrando os {count} primeiros de {module}.",
+		"policy": "Só aparecem jogadores que escolheram ser públicos.",
+		"viewerAway": "Você ainda não está entre os {count} primeiros neste período.",
+		"guest": "As partidas de visitante contam para o seu próprio histórico, mas não aparecem nos rankings.",
+		"signIn": "Entre para ocupar um lugar"
+	},
+	"unavailable": {
+		"title": "Este ranking não carregou",
+		"body": "A leitura do ranking não voltou, então nenhuma linha é exibida em vez de uma tabela vazia.",
+		"footnote": "Tente novamente em instantes.",
+		"retry": "Tentar este ranking de novo"
+	},
+	"how": {
+		"title": "Como os rankings funcionam",
+		"description": "As regras por trás desses números.",
+		"scores": "Um ranking soma todas as pontuações aceitas que você fez naquele desafio durante o período selecionado.",
+		"visibility": "Seu nome e sua pontuação só aparecem enquanto a sua visibilidade pública estiver ativada.",
+		"boards": "Há rankings de pontuação para todos os desafios: hoje, esta semana e geral.",
+		"visibilityCta": "Revisar minha visibilidade"
+	}
+}

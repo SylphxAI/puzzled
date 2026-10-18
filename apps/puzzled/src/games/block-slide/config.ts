@@ -1,8 +1,7 @@
 /**
  * Block Slide Game Configuration
  *
- * ⚠️ FROZEN ALGORITHMS: See generator.ts and solver.ts
- * This config binds the frozen algorithms to the game system.
+ * Generation lives in the Rust pipeline (puzzled-core puzzle_play::generate).
  */
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
@@ -13,10 +12,8 @@ import {
 	type GameConfig,
 	type GameResult,
 	type GameSubmission,
-	type PuzzleDifficulty,
 } from '../types'
 import { BlockSlideHowToPlay } from './components/how-to-play'
-import { generateBlockSlidePuzzle } from './generator'
 import { BlockSlideIcon } from './icon'
 import type { Block, BlockSlidePuzzle, BlockSlideSolution, Direction } from './types'
 import { canMove, isWin, moveBlock } from './types'
@@ -112,20 +109,6 @@ export const blockSlideConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	/**
-	 * Generate puzzle from seed with optional difficulty
-	 * If difficulty not specified, defaults to 'medium'
-	 */
-	generatePuzzle(seed: number, difficulty?: PuzzleDifficulty) {
-		const difficultyRanges: Record<PuzzleDifficulty, { min: number; max: number }> = {
-			easy: { min: 4, max: 15 },
-			medium: { min: 16, max: 35 },
-			hard: { min: 36, max: 80 },
-		}
-		const range = difficultyRanges[difficulty ?? 'medium']
-		return generateBlockSlidePuzzle(seed, range)
-	},
 
 	/**
 	 * Validate a single move (real-time feedback)

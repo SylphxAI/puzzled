@@ -1,0 +1,29 @@
+{
+	"name": "Slides",
+	"tagline": "Quebra-cabeça Klotski • Deslize para vencer",
+	"highlight": "Quebra-cabeça de deslizar",
+	"description": "Deslize os blocos para liberar o alvo",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Mova os blocos deslizando-os na horizontal ou na vertical",
+		"rule2": "Leve o bloco vermelho até a saída, na parte de baixo",
+		"rule3": "Tente resolver com o mínimo de jogadas"
+	},
+	"startGame": "Começar jogo",
+	"moves": "jogadas",
+	"minMoves": "Mín.",
+	"reset": "Reiniciar",
+	"giveUp": "Desistir",
+	"hint": "Toque em um bloco e use as setas para movê-lo, ou arraste diretamente",
+	"difficulty": {
+		"easy": "Fácil",
+		"medium": "Médio",
+		"hard": "Difícil"
+	},
+	"difficultyDescriptions": {
+		"easy": "Poucas jogadas — um aquecimento rápido",
+		"medium": "Mais peças e um caminho mais longo",
+		"hard": "Muitas jogadas e vários jeitos de ficar travado"
+	}
+}

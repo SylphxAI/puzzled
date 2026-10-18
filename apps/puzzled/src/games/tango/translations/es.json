@@ -1,0 +1,16 @@
+{
+	"name": "Duo",
+	"tagline": "Puzle de equilibrio • ☀️ y 🌙",
+	"highlight": "Puzle binario",
+	"description": "Equilibra soles y lunas en cada fila y columna",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Cada fila y columna debe tener el mismo número de soles y de lunas",
+		"rule2": "No puede haber más de 2 símbolos iguales seguidos",
+		"rule3": "Todas las filas deben ser distintas, y todas las columnas también"
+	},
+	"startGame": "Empezar partida",
+	"hasConflicts": "Algunas casillas incumplen las reglas",
+	"complete": "¡Puzle completado!"
+}

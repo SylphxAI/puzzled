@@ -10,10 +10,8 @@ import {
 	type GameConfig,
 	type GameResult,
 	type GameSubmission,
-	type PuzzleDifficulty,
 } from '../types'
 import { SudokuHowToPlay } from './components/how-to-play'
-import { generateSudokuPuzzle } from './generator'
 import { SudokuIcon } from './icon'
 import type {
 	SudokuGuess,
@@ -81,23 +79,6 @@ export const sudokuConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	/**
-	 * Generate puzzle from seed with optional difficulty
-	 * If difficulty not specified, defaults to 'medium'
-	 */
-	generatePuzzle(seed: number, difficulty?: PuzzleDifficulty) {
-		const puzzleDifficulty = difficulty ?? 'medium'
-		const { puzzleData, solution } = generateSudokuPuzzle(seed, puzzleDifficulty)
-
-		return {
-			puzzleData: {
-				grid: puzzleData.grid,
-				difficulty: puzzleData.difficulty,
-			},
-			solution,
-		}
-	},
 
 	/**
 	 * Validate a single cell guess

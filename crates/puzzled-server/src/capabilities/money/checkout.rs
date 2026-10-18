@@ -28,6 +28,9 @@ pub fn locale_prefix(locale: &str) -> &'static str {
         "zh-cn" => "/zh-CN",
         "zh-hk" => "/zh-HK",
         "zh-tw" => "/zh-TW",
+        "ja" => "/ja",
+        "es" => "/es",
+        "pt-br" => "/pt-BR",
         _ => "",
     }
 }
@@ -58,6 +61,9 @@ pub fn checkout_locale(locale: &str) -> Option<&'static str> {
         "zh-HK" => Some("zh-HK"),
         "zh-TW" | "zh-Hant" => Some("zh-TW"),
         "zh-CN" | "zh-Hans" | "zh" => Some("zh"),
+        "ja" => Some("ja"),
+        "es" => Some("es"),
+        "pt-BR" => Some("pt-BR"),
         _ => Some("auto"),
     }
 }

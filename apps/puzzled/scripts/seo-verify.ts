@@ -319,7 +319,7 @@ async function main(): Promise<void> {
 			assert(locSet.has(expected), `missing ${expected}`)
 		}
 		assert(!locSet.has(`${origin}/${defaultLocale}/games`), 'default locale is prefixed')
-		return 'en-US un-prefixed; en-GB, zh-HK, zh-TW, zh-CN as served'
+		return 'en-US un-prefixed; en-GB, zh-HK, zh-TW, zh-CN, ja, es, pt-BR as served'
 	})
 
 	await check('sitemap omits lastmod instead of faking freshness', async () => {
@@ -328,7 +328,17 @@ async function main(): Promise<void> {
 	})
 
 	await check('sitemap carries a reciprocal hreflang cluster per entry', async () => {
-		const expectedLanguages = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN', 'x-default']
+		const expectedLanguages = [
+			'en-US',
+			'en-GB',
+			'zh-HK',
+			'zh-TW',
+			'zh-CN',
+			'ja',
+			'es',
+			'pt-BR',
+			'x-default',
+		]
 		for (const [loc, cluster] of clusters) {
 			assert(
 				Object.keys(cluster).length === expectedLanguages.length,

@@ -12,7 +12,6 @@ import {
 } from '../types'
 import { NumberPathHowToPlay } from './components/how-to-play'
 import { NumberPathIcon } from './icon'
-import { getPuzzleFromSeed } from './puzzles'
 import type {
 	Cell,
 	NumberPathGuess,
@@ -49,10 +48,6 @@ export const numberPathConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	generatePuzzle(seed: number) {
-		return getPuzzleFromSeed(seed)
-	},
 
 	validateGuess(solution: NumberPathSolution, guess: NumberPathGuess): NumberPathGuessResult {
 		const { cell } = guess

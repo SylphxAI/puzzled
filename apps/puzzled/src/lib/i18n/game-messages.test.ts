@@ -24,7 +24,7 @@ import {
  */
 
 const GAMES_ROOT = join(import.meta.dir, '..', '..', 'games')
-const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN'] as const
+const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN', 'ja', 'es', 'pt-BR'] as const
 const TRANSLATED_LOCALES = ['zh-HK', 'zh-TW', 'zh-CN'] as const
 
 /** The modules the daily ritual actually serves, with their copy keys. */

@@ -1,0 +1,23 @@
+{
+	"name": "Mini Grid",
+	"tagline": "Grade 5×5 • Resolução rápida",
+	"highlight": "Desafio 5×5",
+	"description": "Resolva umas palavras cruzadas compactas",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Preencha a grade 5×5 usando as dicas",
+		"rule2": "Toque em uma célula e digite as letras",
+		"rule3": "Toque na mesma célula para mudar de direção"
+	},
+	"startGame": "Começar jogo",
+	"across": "Horizontais",
+	"down": "Verticais",
+	"acrossOnly": "Só dicas horizontais hoje",
+	"selectCell": "Toque em uma célula para começar",
+	"complete": "Desafio concluído!",
+	"messages": {
+		"correct": "Certo!",
+		"incorrect": "Tente de novo"
+	}
+}

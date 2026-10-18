@@ -26,6 +26,7 @@ import {
 import { lineupStatus } from '@/features/home/lib/home-day-copy'
 import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from '@/features/home/lib/home-faq'
 import { MarketingFaq } from '@/features/marketing/components'
+import { TrialEndingBanner } from '@/features/plus/components/trial-ending-banner'
 import { PlusMilestonePrompt } from '@/features/plus-offer/components/plus-milestone-prompt'
 import {
 	dueMilestone,
@@ -40,6 +41,7 @@ import {
 	getServerPlusOfferAccess,
 	getServerStreakInfo,
 	getServerTodayOverview,
+	getServerTrialBannerEndMs,
 	hasServerProgressIdentity,
 	type PersonalDailyResult,
 	type StreakInfo,
@@ -240,8 +242,13 @@ async function HomeDayIsland({
 		})
 	}
 
+	const trialEndMs = facts.user ? await getServerTrialBannerEndMs() : null
+
 	return (
 		<>
+			{trialEndMs ? (
+				<TrialEndingBanner endMs={trialEndMs} manageHref="/settings/subscription" />
+			) : null}
 			<HomeDay
 				locale={locale}
 				dateLabel={dateLabel}

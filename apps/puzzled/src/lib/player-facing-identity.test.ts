@@ -2,7 +2,7 @@
  * Player-facing identity hygiene oracle — CATALOG §3.2 marks / PUZ-MARKS (`dead`).
  *
  * Corpus (player-visible copy only):
- *  1. messages:      all JSON under src/messages (all five locales)
+ *  1. messages:      all JSON under src/messages (all eight locales)
  *  2. translations:  all JSON under a game `translations` folder
  *  3. manifest:      public/manifest.webmanifest
  *  4. TSX copy:      every TSX file under src/app, src/features, src/games and
@@ -355,7 +355,7 @@ describe('player-facing mark corpus', () => {
 	test('covers locales, translations, manifest, app/feature/game TSX copy, configs, data and achievements', () => {
 		const entries = buildCorpus()
 		expect(entries.length).toBeGreaterThan(1000)
-		for (const locale of ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN']) {
+		for (const locale of ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN', 'ja', 'es', 'pt-BR']) {
 			expect(entries.some((entry) => entry.surface.includes(`/messages/${locale}/`))).toBe(true)
 		}
 		for (const surface of [

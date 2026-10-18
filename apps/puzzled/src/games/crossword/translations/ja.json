@@ -1,0 +1,23 @@
+{
+	"name": "Mini Grid",
+	"tagline": "5×5マス • サクッと解ける",
+	"highlight": "5×5パズル",
+	"description": "コンパクトなクロスワードを解こう",
+	"howToPlay": "遊び方",
+	"rules": {
+		"title": "遊び方",
+		"rule1": "ヒントを手がかりに5×5のマスを埋めます",
+		"rule2": "マスをタップして文字を入力します",
+		"rule3": "同じマスをもう一度タップすると、向きが切り替わります"
+	},
+	"startGame": "ゲーム開始",
+	"across": "ヨコ",
+	"down": "タテ",
+	"acrossOnly": "今日はヨコのヒントのみ",
+	"selectCell": "マスをタップして開始",
+	"complete": "パズルクリア！",
+	"messages": {
+		"correct": "正解！",
+		"incorrect": "もう一度挑戦"
+	}
+}

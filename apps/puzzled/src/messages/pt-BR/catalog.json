@@ -1,0 +1,402 @@
+{
+	"metaTitle": "Todos os jogos",
+	"metaDescription": "Veja todos os desafios diários do Puzzled — o jogo grátis de hoje e toda a coleção de rituais de palavras, lógica e números.",
+	"title": "Todos os jogos",
+	"subtitle": "{count} desafios diários em um só ritual. Um deles é grátis todos os dias, e todo mundo joga a mesma seleção — renovada à meia-noite, no horário de Hong Kong.",
+	"heroEyebrow": "Coleção de desafios diários",
+	"searchLabel": "Filtrar jogos pelo título",
+	"searchPlaceholder": "Filtrar jogos pelo título…",
+	"searchSubmit": "Filtrar",
+	"filterLabel": "Filtrar jogos por categoria",
+	"filterAll": "Todos",
+	"category": {
+		"word": "Palavras",
+		"logic": "Lógica",
+		"math": "Números",
+		"spatial": "Espaciais"
+	},
+	"freeToday": "Destaque de hoje",
+	"open": "Abrir",
+	"play": "Jogar",
+	"showing": "Mostrando {count} de {total} jogos",
+	"clearFilter": "Limpar filtros",
+	"emptyTitle": "Nenhum desafio corresponde a esses filtros",
+	"emptyDescription": "Tente outro título ou limpe os filtros para ver a coleção inteira.",
+	"featuredPlay": "Jogar {game}",
+	"featuredNote": "Aberto a todos hoje — sem precisar de conta. Amanhã outro desafio ocupa o lugar.",
+	"suiteTitle": "A coleção completa",
+	"ritual": {
+		"title": "Como funciona um dia no Puzzled",
+		"body": "Um dia de desafios, uma seleção compartilhada, igual para todos os jogadores.",
+		"step1Title": "Escolha o desafio de hoje",
+		"step1Body": "O destaque de hoje vem primeiro, e todos os {count} desafios compartilham a mesma seleção diária. O destaque de hoje é grátis para todos; os outros jogos são liberados com o Puzzled Plus.",
+		"step2Title": "Resolva no seu ritmo",
+		"step2Body": "A maioria dos desafios leva de dois a dez minutos, e os que têm níveis de dificuldade permitem que você aqueça ou se desafie mais.",
+		"step3Title": "Mantenha o hábito",
+		"step3Body": "Uma conclusão por dia aumenta sua sequência, e cada tentativa concluída é verificada no servidor antes de valer."
+	},
+	"faq": {
+		"title": "Antes de começar",
+		"body": "A versão resumida de como este catálogo funciona.",
+		"start": {
+			"question": "Por onde devo começar?",
+			"answer": "Abra o destaque de hoje. Ele não exige conta nem pagamento. Os outros desafios são liberados com o Puzzled Plus."
+		},
+		"rotation": {
+			"question": "Como o destaque de hoje muda?",
+			"answer": "Um desafio é destacado por dia, e o rodízio vira à meia-noite, no horário de Hong Kong. Todo mundo recebe o mesmo destaque no mesmo dia."
+		},
+		"account": {
+			"question": "Preciso de uma conta?",
+			"answer": "Não. O destaque de hoje pode ser jogado como visitante; uma conta mantém sua sequência, seus resultados e suas estatísticas em todos os dispositivos."
+		},
+		"share": {
+			"question": "Posso compartilhar um resultado sem dar spoiler?",
+			"answer": "Sim. Os cartões de resultado mostram o desafio, o dia e o seu padrão de resolução — nunca a solução."
+		}
+	},
+	"breadcrumbLabel": "Trilha de navegação",
+	"gamePage": {
+		"playCta": "Jogar o desafio de hoje",
+		"guestNote": "Não precisa de conta para jogar.",
+		"guestSignIn": "Salve sua sequência",
+		"howToPlayTitle": "Como jogar {game}",
+		"tipsTitle": "Dicas e estratégia para {game}",
+		"faqTitle": "Perguntas sobre {game}",
+		"relatedTitle": "Mais desafios para experimentar",
+		"relatedAll": "Ver todos os jogos",
+		"metaTitle": "{game}: desafio diário de {genre}",
+		"metaDescription": "{game} é um desafio diário de {genre}. {rule} Um novo desafio por dia; o destaque de hoje é grátis, sem precisar de conta.",
+		"genre": {
+			"word": "palavras",
+			"logic": "lógica",
+			"math": "números",
+			"spatial": "raciocínio espacial"
+		}
+	},
+	"game": {
+		"word-guess": {
+			"tips": [
+				"Comece com um palpite sem letras repetidas, para que cada quadradinho ensine algo novo.",
+				"Trate uma letra cinza como descartada e guarde os palpites restantes para letras ainda não testadas.",
+				"Mude uma letra amarela de posição antes de acrescentar letras novas à linha."
+			],
+			"faq": [
+				{
+					"question": "Como termina uma rodada de Five?",
+					"answer": "Você tem seis palpites. A rodada termina quando a palavra é descoberta ou o último palpite é usado, e as partidas concluídas são verificadas no servidor."
+				},
+				{
+					"question": "A palavra diária do Five é a mesma para todos os jogadores?",
+					"answer": "Sim. Todo mundo joga a mesma palavra no mesmo dia, e a seleção vira à meia-noite, no horário de Hong Kong."
+				}
+			]
+		},
+		"word-groups": {
+			"tips": [
+				"Leia as dezesseis palavras antes de enviar qualquer coisa e anote as que combinam com dois temas.",
+				"“Falta uma” significa que três das suas quatro escolhas estão certas, então troque uma só palavra.",
+				"As palavras que sobram e não combinam com nada no começo costumam ser o último fio da meada."
+			],
+			"faq": [
+				{
+					"question": "Quantos erros o Threads permite?",
+					"answer": "Quatro. Cada grupo de quatro rejeitado custa um erro, e a rodada termina quando eles acabam."
+				},
+				{
+					"question": "O que significa “falta uma” no Threads?",
+					"answer": "Três das quatro palavras escolhidas pertencem a um grupo de verdade e uma não, então troque uma única palavra."
+				}
+			]
+		},
+		"word-hive": {
+			"tips": [
+				"Liste as palavras mais curtas que você consegue formar com a letra central antes de buscar as mais longas.",
+				"Repita letras à vontade; uma letra da colmeia pode aparecer mais de uma vez na palavra.",
+				"Deixe o pangrama por último, já que usar as sete letras rende um bônus de sete pontos."
+			],
+			"faq": [
+				{
+					"question": "O que conta como pangrama no Hive?",
+					"answer": "Uma palavra que usa as sete letras da colmeia. Cada uma soma sete pontos além do número de letras."
+				},
+				{
+					"question": "Quanto tempo leva uma rodada de Hive?",
+					"answer": "A estimativa do catálogo é de cerca de cinco minutos, e a escala de níveis sobe a cada palavra que você encontra."
+				}
+			]
+		},
+		"crossword": {
+			"tips": [
+				"Preencha primeiro as palavras horizontais mais curtas; as letras delas dão uma vantagem para as dicas verticais.",
+				"Toque duas vezes no mesmo quadrado para alternar entre horizontal e vertical quando uma dica emperrar.",
+				"Deixe uma dica difícil para depois e deixe as letras cruzadas reduzirem as opções."
+			],
+			"faq": [
+				{
+					"question": "Como alterno entre horizontal e vertical no Mini Grid?",
+					"answer": "Toque em um quadrado para selecioná-lo e toque de novo para mudar de direção, para que uma mesma célula sirva a duas dicas."
+				},
+				{
+					"question": "Quanto tempo leva um desafio do Mini Grid?",
+					"answer": "A estimativa é de cerca de cinco minutos, e a grade é pequena o bastante para resolver de uma vez só."
+				}
+			]
+		},
+		"sudoku": {
+			"tips": [
+				"Procure um dígito cujos quadrados possíveis dentro de uma região tenham se reduzido a uma única célula.",
+				"Use o modo de anotações para listar candidatos e apague-os assim que uma jogada os descartar.",
+				"Quando duas células de uma região têm o mesmo par de candidatos, nenhuma outra célula dali pode usá-los."
+			],
+			"faq": [
+				{
+					"question": "Como sei que uma grade de Sudoku está concluída?",
+					"answer": "Cada linha, coluna e bloco 3×3 tem os dígitos de 1 a 9 uma vez, e uma grade completa, sem conflitos, encerra o desafio."
+				},
+				{
+					"question": "O Sudoku tem níveis de dificuldade?",
+					"answer": "Sim. Fácil, médio e difícil mudam quantas células começam preenchidas; nos tabuleiros mais difíceis, mais trabalho fica por sua conta."
+				}
+			]
+		},
+		"nonogram": {
+			"tips": [
+				"Comece pelo maior bloco de uma linha e teste todas as posições que ele pode ocupar.",
+				"Blocos maiores que a metade da linha têm uma parte do meio que precisa ser preenchida.",
+				"Marque os quadrados que você pode descartar; menos espaços em branco facilitam a leitura das dicas cruzadas."
+			],
+			"faq": [
+				{
+					"question": "Como o Paint trata uma célula errada?",
+					"answer": "Um quadrado preenchido que não pode fazer parte da imagem é rejeitado e somado à contagem de erros exibida acima da grade."
+				},
+				{
+					"question": "Quanto tempo leva um desafio do Paint?",
+					"answer": "A estimativa do catálogo é de cerca de oito minutos para a grade 10×10, e as dicas ficam mais fáceis conforme a imagem vai se formando."
+				}
+			]
+		},
+		"word-ladder": {
+			"tips": [
+				"Mude exatamente uma letra por passo e confira se a nova palavra parece real antes de enviar.",
+				"Trabalhe de trás para frente, a partir da palavra-alvo, quando o início não tiver um vizinho óbvio.",
+				"Planeje a corrente inteira, porque uma palavra já usada não pode aparecer de novo."
+			],
+			"faq": [
+				{
+					"question": "O que conta como um passo válido no Rungs?",
+					"answer": "Cada passo muda exatamente uma letra e precisa formar uma palavra real do mesmo tamanho, ou o jogo rejeita a jogada."
+				},
+				{
+					"question": "Quanto tempo leva um desafio do Rungs?",
+					"answer": "A estimativa é de cerca de três minutos, e o objetivo é usar o menor número de passos, não digitar mais rápido."
+				}
+			]
+		},
+		"arithmo": {
+			"tips": [
+				"Equilibre os dois lados antes de enviar; um palpite que não resulta em igualdade é rejeitado.",
+				"Fixe os caracteres que já estão no lugar certo e reconstrua a equação em torno deles.",
+				"Varie os operadores que você testa logo no início; a equação pode usar mais, menos, vezes ou dividido."
+			],
+			"faq": [
+				{
+					"question": "Qual é o tamanho da equação oculta no Arithmo?",
+					"answer": "Oito caracteres, contando os dígitos, os operadores e o único sinal de igual."
+				},
+				{
+					"question": "Quantas tentativas o Arithmo permite?",
+					"answer": "Seis palpites. Verde marca um caractere no lugar certo, amarelo significa que ele aparece em outra posição da equação e cinza significa que não é usado."
+				}
+			]
+		},
+		"pattern-match": {
+			"tips": [
+				"Compare uma propriedade por vez, começando pelo número de formas em cada carta.",
+				"Se duas cartas combinam em uma propriedade, a terceira também precisa combinar, ou o trio não vale.",
+				"As cartas de um conjunto que você já encontrou ficam bloqueadas, então examine as cartas intactas em seguida."
+			],
+			"faq": [
+				{
+					"question": "O que faz três cartas formarem um conjunto no Match?",
+					"answer": "Nas quatro propriedades — forma, cor, preenchimento e quantidade —, as três cartas precisam ser todas iguais ou todas diferentes."
+				},
+				{
+					"question": "Quanto tempo leva um tabuleiro do Match?",
+					"answer": "A estimativa é de cerca de quatro minutos, e o tabuleiro tem doze cartas com vários conjuntos escondidos entre elas."
+				}
+			]
+		},
+		"block-slide": {
+			"tips": [
+				"Libere o espaço embaixo do bloco-alvo antes de empurrá-lo em direção à linha de saída.",
+				"Mantenha o total de jogadas baixo; uma peça empurrada para um canto é difícil de resgatar.",
+				"Reinicie um tabuleiro travado em vez de testar jogadas ao acaso; o mínimo é mostrado como referência."
+			],
+			"faq": [
+				{
+					"question": "Como venço um desafio do Slides?",
+					"answer": "Deslize o bloco vermelho até a saída na borda inferior; a rodada termina assim que ele chega à abertura."
+				},
+				{
+					"question": "O Slides tem níveis de dificuldade?",
+					"answer": "Sim. Nos tabuleiros fácil, médio e difícil, são necessárias mais jogadas conforme o nível sobe, de um caminho curto a um longo."
+				}
+			]
+		},
+		"crowns": {
+			"tips": [
+				"Elimine os oito vizinhos de cada coroa, já que esses quadrados nunca podem ter outra.",
+				"As regiões pequenas são as mais rápidas de resolver, então comece pelas mais apertadas.",
+				"Quando uma linha ou coluna já tem sua coroa, trate todos os outros quadrados dela como indisponíveis."
+			],
+			"faq": [
+				{
+					"question": "Qual é o objetivo do Crowns?",
+					"answer": "Uma coroa em cada linha, coluna e região colorida, sem que duas coroas se toquem, nem mesmo na diagonal."
+				},
+				{
+					"question": "O Crowns tem níveis de dificuldade?",
+					"answer": "Sim. O fácil usa um tabuleiro 5×5, o médio 6×6 e o difícil 8×8; tabuleiros maiores exigem mais dedução."
+				}
+			]
+		},
+		"duo": {
+			"tips": [
+				"Dois símbolos iguais lado a lado obrigam os quadrados ao redor a ter o símbolo oposto.",
+				"Faça a contagem de cada linha conforme ela cresce: uma linha de seis precisa de três sóis e três luas.",
+				"Teste um quadrado de cara ou coroa contra a regra de unicidade, já que não pode haver duas linhas iguais."
+			],
+			"faq": [
+				{
+					"question": "Quais são as regras do Duo?",
+					"answer": "Cada linha e coluna tem o mesmo número de sóis e luas, nenhuma linha mostra três símbolos iguais juntos, e não pode haver duas linhas repetidas."
+				},
+				{
+					"question": "Quanto tempo leva um tabuleiro do Duo?",
+					"answer": "A estimativa é de cerca de cinco minutos, e a grade 6×6 costuma ceder a uma passada cuidadosa."
+				}
+			]
+		},
+		"word-box": {
+			"tips": [
+				"Termine cada palavra com uma letra que abra uma boa próxima palavra, porque a corrente só avança.",
+				"Alterne os lados dentro de cada palavra; letras do mesmo lado não podem ficar lado a lado.",
+				"Anote as letras que ainda faltam usar na caixa, pois a última palavra costuma juntar as sobras."
+			],
+			"faq": [
+				{
+					"question": "Como funciona a corrente de palavras no Frame?",
+					"answer": "Cada nova palavra começa com a última letra da palavra anterior, e letras vizinhas dentro de uma palavra precisam vir de lados diferentes."
+				},
+				{
+					"question": "Quando um desafio do Frame está resolvido?",
+					"answer": "Quando a corrente usou todas as doze letras da caixa; uma corrente mais curta é o resultado mais elegante."
+				}
+			]
+		},
+		"quad-words": {
+			"tips": [
+				"Comece com uma variedade de letras comuns, porque cada palpite é avaliado nos quatro tabuleiros.",
+				"Acompanhe cada letra amarela por tabuleiro; ela pode estar em posições diferentes em palavras diferentes.",
+				"Depois de resolver um tabuleiro, guarde os palpites restantes para as palavras ainda em aberto."
+			],
+			"faq": [
+				{
+					"question": "Quantos palpites tenho no Quad?",
+					"answer": "Nove no total, e cada palpite é conferido nos quatro tabuleiros ao mesmo tempo."
+				},
+				{
+					"question": "Todo mundo joga as mesmas quatro palavras por dia?",
+					"answer": "Sim. Todo mundo joga as mesmas quatro palavras no mesmo dia, e a seleção muda à meia-noite, no horário de Hong Kong."
+				}
+			]
+		},
+		"killer-sudoku": {
+			"tips": [
+				"Procure gaiolas com apenas uma divisão possível, como duas células que somam três.",
+				"Os dígitos da gaiola ainda obedecem às linhas, colunas e regiões do Sudoku, então risque o que a grade já tem.",
+				"Subtraia uma gaiola concluída da linha, da coluna e da região que ela cruza para restringir as outras células."
+			],
+			"faq": [
+				{
+					"question": "O que as gaiolas somam no Cage Sudoku?",
+					"answer": "Cada gaiola tem um total: seus dígitos precisam somar esse número, e nenhum dígito pode se repetir dentro da gaiola."
+				},
+				{
+					"question": "O Cage Sudoku tem níveis de dificuldade?",
+					"answer": "Sim. Fácil, médio e difícil diferem em quantos dígitos começam preenchidos, e o difícil não dá nenhum."
+				}
+			]
+		},
+		"cryptogram": {
+			"tips": [
+				"Comece por uma palavra de uma letra, que em inglês só pode representar “a” ou “I”.",
+				"Letras duplas deixam pistas, então um par repetido reduz as opções rapidamente.",
+				"Atualize todas as ocorrências de uma letra assim que decidir por ela, mantendo o mapeamento consistente."
+			],
+			"faq": [
+				{
+					"question": "Como sei que uma citação do Cipher foi resolvida?",
+					"answer": "Quando a substituição está certa, o texto decodificado fica legível em inglês normal e o desafio informa que a citação foi resolvida."
+				},
+				{
+					"question": "Quanto tempo leva um desafio do Cipher?",
+					"answer": "A estimativa é de cerca de cinco minutos, embora citações mais longas exijam mais letras para encaixar."
+				}
+			]
+		},
+		"word-search": {
+			"tips": [
+				"Veja o tema primeiro; a grade esconde de seis a dez palavras que têm um assunto em comum.",
+				"Confira as diagonais nos dois sentidos e as linhas lidas de trás para frente, não só da esquerda para a direita.",
+				"Siga da última letra para a primeira quando uma palavra longa for difícil de enxergar."
+			],
+			"faq": [
+				{
+					"question": "Em quais direções as palavras ocultas correm no Hunt?",
+					"answer": "Na horizontal, na vertical e na diagonal, para frente ou para trás, sempre em linha reta."
+				},
+				{
+					"question": "Todo mundo recebe a mesma grade do Hunt?",
+					"answer": "Sim. A grade diária e o tema são idênticos para todos os jogadores e se renovam à meia-noite, no horário de Hong Kong."
+				}
+			]
+		},
+		"number-path": {
+			"tips": [
+				"Resolva as dicas dos cantos logo no início, já que uma célula numerada no canto tem só dois vizinhos.",
+				"Conte os quadrados entre dois números conhecidos; quando o total bate, esse caminho é obrigatório.",
+				"Divida o tabuleiro nas dicas numeradas e resolva cada trecho separadamente."
+			],
+			"faq": [
+				{
+					"question": "O que conta como um Path concluído?",
+					"answer": "Uma linha que começa no 1, passa por todas as células exatamente uma vez, só se move entre células lado a lado e termina no último número."
+				},
+				{
+					"question": "Quanto tempo leva um desafio do Path?",
+					"answer": "A estimativa é de cerca de cinco minutos em um tabuleiro 6×6, e as dicas impressas resolvem boa parte da dedução inicial."
+				}
+			]
+		},
+		"pip-place": {
+			"tips": [
+				"Estude primeiro os rótulos das regiões; uma soma zero prende toda aquela região a pontas em branco.",
+				"Regiões marcadas com = recebem números iguais, então coloque ali peças que repetem um valor.",
+				"Lembre-se de que cada peça cobre duas células que dividem um lado, nunca um par na diagonal."
+			],
+			"faq": [
+				{
+					"question": "Como funcionam as regras das regiões no Spots?",
+					"answer": "Um número é o total de pontos daquela região, = significa que todos os pontos ali são iguais e ≠ significa que são todos diferentes."
+				},
+				{
+					"question": "O que precisa ser verdade quando um tabuleiro do Spots está concluído?",
+					"answer": "Cada célula é coberta uma vez pelo conjunto completo de peças, cada peça une duas células que dividem um lado, e todas as regras das regiões são cumpridas."
+				}
+			]
+		}
+	}
+}

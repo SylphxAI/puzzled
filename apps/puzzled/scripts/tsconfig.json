@@ -10,7 +10,6 @@
 		"./**/*.ts",
 		"../src/lib/db/**/*.ts",
 		"../src/games/**/*.ts",
-		"../src/features/puzzle-generator/**/*.ts",
 		"../src/lib/connect/**/*.ts"
 	]
 }

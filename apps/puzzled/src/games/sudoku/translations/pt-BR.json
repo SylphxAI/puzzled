@@ -1,0 +1,31 @@
+{
+	"name": "Sudoku",
+	"tagline": "Grade 9×9 • Lógica clássica",
+	"highlight": "Desafio clássico",
+	"description": "Preencha a grade 9×9 com os números de 1 a 9",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Preencha cada linha com os números de 1 a 9",
+		"rule2": "Preencha cada coluna com os números de 1 a 9",
+		"rule3": "Preencha cada bloco 3×3 com os números de 1 a 9"
+	},
+	"startGame": "Começar jogo",
+	"difficulty": {
+		"easy": "Fácil",
+		"medium": "Médio",
+		"hard": "Difícil"
+	},
+	"notes": "Anotações",
+	"notesMode": "Modo de anotações",
+	"clear": "Limpar",
+	"complete": "Desafio concluído!",
+	"messages": {
+		"conflict": "Este número está em conflito com outra célula"
+	},
+	"difficultyDescriptions": {
+		"easy": "49 células preenchidas — um começo fácil",
+		"medium": "39 células preenchidas — uma grade equilibrada",
+		"hard": "Só 29 células preenchidas — poucos pontos de partida"
+	}
+}

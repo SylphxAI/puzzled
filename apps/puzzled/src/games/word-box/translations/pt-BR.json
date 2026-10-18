@@ -1,0 +1,15 @@
+{
+	"name": "Frame",
+	"tagline": "12 letras • Corrente de palavras",
+	"highlight": "Corrente de palavras",
+	"description": "Conecte as letras ao redor da caixa para formar palavras",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Forme palavras com as 12 letras dos lados da caixa",
+		"rule2": "Letras consecutivas devem ser de lados diferentes",
+		"rule3": "Cada nova palavra começa com a última letra da palavra anterior"
+	},
+	"startGame": "Começar jogo",
+	"complete": "Desafio concluído!"
+}

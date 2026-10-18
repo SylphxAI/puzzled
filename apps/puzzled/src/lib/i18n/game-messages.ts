@@ -46,60 +46,117 @@ import wordSearchEn from '@/games/word-search/translations/en.json'
 // Locale overlays — partial copy is allowed
 // ==========================================
 
+import arithmoEs from '@/games/arithmo/translations/es.json'
+import arithmoJa from '@/games/arithmo/translations/ja.json'
+import arithmoPtBR from '@/games/arithmo/translations/pt-BR.json'
 import arithmoZhCN from '@/games/arithmo/translations/zh-CN.json'
 import arithmoZhHK from '@/games/arithmo/translations/zh-HK.json'
 import arithmoZhTW from '@/games/arithmo/translations/zh-TW.json'
+import blockSlideEs from '@/games/block-slide/translations/es.json'
+import blockSlideJa from '@/games/block-slide/translations/ja.json'
+import blockSlidePtBR from '@/games/block-slide/translations/pt-BR.json'
 import blockSlideZhCN from '@/games/block-slide/translations/zh-CN.json'
 import blockSlideZhHK from '@/games/block-slide/translations/zh-HK.json'
 import blockSlideZhTW from '@/games/block-slide/translations/zh-TW.json'
+import crosswordEs from '@/games/crossword/translations/es.json'
+import crosswordJa from '@/games/crossword/translations/ja.json'
+import crosswordPtBR from '@/games/crossword/translations/pt-BR.json'
 import crosswordZhCN from '@/games/crossword/translations/zh-CN.json'
 import crosswordZhHK from '@/games/crossword/translations/zh-HK.json'
 import crosswordZhTW from '@/games/crossword/translations/zh-TW.json'
+import cryptogramEs from '@/games/cryptogram/translations/es.json'
+import cryptogramJa from '@/games/cryptogram/translations/ja.json'
+import cryptogramPtBR from '@/games/cryptogram/translations/pt-BR.json'
 import cryptogramZhCN from '@/games/cryptogram/translations/zh-CN.json'
 import cryptogramZhHK from '@/games/cryptogram/translations/zh-HK.json'
 import cryptogramZhTW from '@/games/cryptogram/translations/zh-TW.json'
+import killerSudokuEs from '@/games/killer-sudoku/translations/es.json'
+import killerSudokuJa from '@/games/killer-sudoku/translations/ja.json'
+import killerSudokuPtBR from '@/games/killer-sudoku/translations/pt-BR.json'
 import killerSudokuZhCN from '@/games/killer-sudoku/translations/zh-CN.json'
 import killerSudokuZhHK from '@/games/killer-sudoku/translations/zh-HK.json'
 import killerSudokuZhTW from '@/games/killer-sudoku/translations/zh-TW.json'
+import nonogramEs from '@/games/nonogram/translations/es.json'
+import nonogramJa from '@/games/nonogram/translations/ja.json'
+import nonogramPtBR from '@/games/nonogram/translations/pt-BR.json'
 import nonogramZhCN from '@/games/nonogram/translations/zh-CN.json'
 import nonogramZhHK from '@/games/nonogram/translations/zh-HK.json'
 import nonogramZhTW from '@/games/nonogram/translations/zh-TW.json'
+import numberPathEs from '@/games/number-path/translations/es.json'
+import numberPathJa from '@/games/number-path/translations/ja.json'
+import numberPathPtBR from '@/games/number-path/translations/pt-BR.json'
 import numberPathZhCN from '@/games/number-path/translations/zh-CN.json'
 import numberPathZhHK from '@/games/number-path/translations/zh-HK.json'
 import numberPathZhTW from '@/games/number-path/translations/zh-TW.json'
+import patternMatchEs from '@/games/pattern-match/translations/es.json'
+import patternMatchJa from '@/games/pattern-match/translations/ja.json'
+import patternMatchPtBR from '@/games/pattern-match/translations/pt-BR.json'
 import patternMatchZhCN from '@/games/pattern-match/translations/zh-CN.json'
 import patternMatchZhHK from '@/games/pattern-match/translations/zh-HK.json'
 import patternMatchZhTW from '@/games/pattern-match/translations/zh-TW.json'
+import pipPlaceEs from '@/games/pip-place/translations/es.json'
+import pipPlaceJa from '@/games/pip-place/translations/ja.json'
+import pipPlacePtBR from '@/games/pip-place/translations/pt-BR.json'
 import pipPlaceZhCN from '@/games/pip-place/translations/zh-CN.json'
 import pipPlaceZhHK from '@/games/pip-place/translations/zh-HK.json'
 import pipPlaceZhTW from '@/games/pip-place/translations/zh-TW.json'
+import quadWordsEs from '@/games/quad-words/translations/es.json'
+import quadWordsJa from '@/games/quad-words/translations/ja.json'
+import quadWordsPtBR from '@/games/quad-words/translations/pt-BR.json'
 import quadWordsZhCN from '@/games/quad-words/translations/zh-CN.json'
 import quadWordsZhHK from '@/games/quad-words/translations/zh-HK.json'
 import quadWordsZhTW from '@/games/quad-words/translations/zh-TW.json'
+import queensEs from '@/games/queens/translations/es.json'
+import queensJa from '@/games/queens/translations/ja.json'
+import queensPtBR from '@/games/queens/translations/pt-BR.json'
 import queensZhCN from '@/games/queens/translations/zh-CN.json'
 import queensZhHK from '@/games/queens/translations/zh-HK.json'
 import queensZhTW from '@/games/queens/translations/zh-TW.json'
+import sudokuEs from '@/games/sudoku/translations/es.json'
+import sudokuJa from '@/games/sudoku/translations/ja.json'
+import sudokuPtBR from '@/games/sudoku/translations/pt-BR.json'
 import sudokuZhCN from '@/games/sudoku/translations/zh-CN.json'
 import sudokuZhHK from '@/games/sudoku/translations/zh-HK.json'
 import sudokuZhTW from '@/games/sudoku/translations/zh-TW.json'
+import tangoEs from '@/games/tango/translations/es.json'
+import tangoJa from '@/games/tango/translations/ja.json'
+import tangoPtBR from '@/games/tango/translations/pt-BR.json'
 import tangoZhCN from '@/games/tango/translations/zh-CN.json'
 import tangoZhHK from '@/games/tango/translations/zh-HK.json'
 import tangoZhTW from '@/games/tango/translations/zh-TW.json'
+import wordBoxEs from '@/games/word-box/translations/es.json'
+import wordBoxJa from '@/games/word-box/translations/ja.json'
+import wordBoxPtBR from '@/games/word-box/translations/pt-BR.json'
 import wordBoxZhCN from '@/games/word-box/translations/zh-CN.json'
 import wordBoxZhHK from '@/games/word-box/translations/zh-HK.json'
 import wordBoxZhTW from '@/games/word-box/translations/zh-TW.json'
+import wordGroupsEs from '@/games/word-groups/translations/es.json'
+import wordGroupsJa from '@/games/word-groups/translations/ja.json'
+import wordGroupsPtBR from '@/games/word-groups/translations/pt-BR.json'
 import wordGroupsZhCN from '@/games/word-groups/translations/zh-CN.json'
 import wordGroupsZhHK from '@/games/word-groups/translations/zh-HK.json'
 import wordGroupsZhTW from '@/games/word-groups/translations/zh-TW.json'
+import wordGuessEs from '@/games/word-guess/translations/es.json'
+import wordGuessJa from '@/games/word-guess/translations/ja.json'
+import wordGuessPtBR from '@/games/word-guess/translations/pt-BR.json'
 import wordGuessZhCN from '@/games/word-guess/translations/zh-CN.json'
 import wordGuessZhHK from '@/games/word-guess/translations/zh-HK.json'
 import wordGuessZhTW from '@/games/word-guess/translations/zh-TW.json'
+import wordHiveEs from '@/games/word-hive/translations/es.json'
+import wordHiveJa from '@/games/word-hive/translations/ja.json'
+import wordHivePtBR from '@/games/word-hive/translations/pt-BR.json'
 import wordHiveZhCN from '@/games/word-hive/translations/zh-CN.json'
 import wordHiveZhHK from '@/games/word-hive/translations/zh-HK.json'
 import wordHiveZhTW from '@/games/word-hive/translations/zh-TW.json'
+import wordLadderEs from '@/games/word-ladder/translations/es.json'
+import wordLadderJa from '@/games/word-ladder/translations/ja.json'
+import wordLadderPtBR from '@/games/word-ladder/translations/pt-BR.json'
 import wordLadderZhCN from '@/games/word-ladder/translations/zh-CN.json'
 import wordLadderZhHK from '@/games/word-ladder/translations/zh-HK.json'
 import wordLadderZhTW from '@/games/word-ladder/translations/zh-TW.json'
+import wordSearchEs from '@/games/word-search/translations/es.json'
+import wordSearchJa from '@/games/word-search/translations/ja.json'
+import wordSearchPtBR from '@/games/word-search/translations/pt-BR.json'
 import wordSearchZhCN from '@/games/word-search/translations/zh-CN.json'
 import wordSearchZhHK from '@/games/word-search/translations/zh-HK.json'
 import wordSearchZhTW from '@/games/word-search/translations/zh-TW.json'
@@ -238,6 +295,75 @@ export const GAME_TRANSLATIONS_BY_LOCALE: Partial<Record<Locale, GameMessages>> 
 		wordHive: wordHiveZhTW,
 		wordLadder: wordLadderZhTW,
 		wordSearch: wordSearchZhTW,
+	},
+	ja: {
+		arithmo: arithmoJa,
+		blockSlide: blockSlideJa,
+		crossword: crosswordJa,
+		cryptogram: cryptogramJa,
+		killerSudoku: killerSudokuJa,
+		nonogram: nonogramJa,
+		numberPath: numberPathJa,
+		patternMatch: patternMatchJa,
+		pipPlace: pipPlaceJa,
+		quadWords: quadWordsJa,
+		queens: queensJa,
+		crowns: queensJa,
+		sudoku: sudokuJa,
+		tango: tangoJa,
+		duo: tangoJa,
+		wordBox: wordBoxJa,
+		wordGroups: wordGroupsJa,
+		wordGuess: wordGuessJa,
+		wordHive: wordHiveJa,
+		wordLadder: wordLadderJa,
+		wordSearch: wordSearchJa,
+	},
+	es: {
+		arithmo: arithmoEs,
+		blockSlide: blockSlideEs,
+		crossword: crosswordEs,
+		cryptogram: cryptogramEs,
+		killerSudoku: killerSudokuEs,
+		nonogram: nonogramEs,
+		numberPath: numberPathEs,
+		patternMatch: patternMatchEs,
+		pipPlace: pipPlaceEs,
+		quadWords: quadWordsEs,
+		queens: queensEs,
+		crowns: queensEs,
+		sudoku: sudokuEs,
+		tango: tangoEs,
+		duo: tangoEs,
+		wordBox: wordBoxEs,
+		wordGroups: wordGroupsEs,
+		wordGuess: wordGuessEs,
+		wordHive: wordHiveEs,
+		wordLadder: wordLadderEs,
+		wordSearch: wordSearchEs,
+	},
+	'pt-BR': {
+		arithmo: arithmoPtBR,
+		blockSlide: blockSlidePtBR,
+		crossword: crosswordPtBR,
+		cryptogram: cryptogramPtBR,
+		killerSudoku: killerSudokuPtBR,
+		nonogram: nonogramPtBR,
+		numberPath: numberPathPtBR,
+		patternMatch: patternMatchPtBR,
+		pipPlace: pipPlacePtBR,
+		quadWords: quadWordsPtBR,
+		queens: queensPtBR,
+		crowns: queensPtBR,
+		sudoku: sudokuPtBR,
+		tango: tangoPtBR,
+		duo: tangoPtBR,
+		wordBox: wordBoxPtBR,
+		wordGroups: wordGroupsPtBR,
+		wordGuess: wordGuessPtBR,
+		wordHive: wordHivePtBR,
+		wordLadder: wordLadderPtBR,
+		wordSearch: wordSearchPtBR,
 	},
 }
 

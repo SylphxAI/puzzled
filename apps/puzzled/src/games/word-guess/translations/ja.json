@@ -1,0 +1,26 @@
+{
+	"name": "Five",
+	"tagline": "5文字 • 6回",
+	"highlight": "6回の予想",
+	"description": "6回以内に5文字の単語を当てよう",
+	"howToPlay": "遊び方",
+	"rules": {
+		"title": "遊び方",
+		"rule1": "6回以内に単語を当てます",
+		"rule2": "入力できるのは、実在する5文字の単語のみです",
+		"rule3": "タイルの色が変わり、予想がどれだけ近いかがわかります",
+		"correct": "緑は、文字が正しい位置にあることを示します",
+		"present": "黄色は、文字は単語に含まれるが位置が違うことを示します",
+		"absent": "グレーは、その文字が単語に含まれないことを示します"
+	},
+	"keyboard": {
+		"enter": "決定",
+		"delete": "削除"
+	},
+	"messages": {
+		"notEnoughLetters": "文字数が足りません",
+		"notInWordList": "単語リストにありません",
+		"correct": "お見事！",
+		"gameOver": "正解は {word} でした"
+	}
+}

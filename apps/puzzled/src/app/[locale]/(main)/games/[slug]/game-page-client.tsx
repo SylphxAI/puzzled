@@ -1,12 +1,21 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useState } from 'react'
-import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { MinimalHeader } from '@/features/daily/components/minimal-header'
 import type { GameSlug } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import type { GameMode } from '@/lib/db/schema'
 import { GameRenderer } from './game-renderer'
+
+// The help dialog (Base UI dialog, motion and the game's how-to content) is only
+// needed once someone asks for it, so it stays out of the route's first load.
+// It mounts on the first press of the help button and stays mounted after that,
+// so closing keeps its exit animation.
+const HowToPlayModal = dynamic(
+	() => import('@/features/daily/components/how-to-play-modal').then((m) => m.HowToPlayModal),
+	{ ssr: false },
+)
 
 type GamePageClientProps = {
 	slug: GameSlug
@@ -32,15 +41,18 @@ export function GamePageClient({
 	difficulty,
 }: GamePageClientProps) {
 	const [showHelpModal, setShowHelpModal] = useState(false)
+	const [helpRequested, setHelpRequested] = useState(false)
 
 	return (
 		<div className="flex flex-1 flex-col">
 			{/* Help Modal - managed at page level */}
-			<HowToPlayModal
-				open={showHelpModal}
-				onClose={() => setShowHelpModal(false)}
-				gameSlug={slug}
-			/>
+			{helpRequested ? (
+				<HowToPlayModal
+					open={showHelpModal}
+					onClose={() => setShowHelpModal(false)}
+					gameSlug={slug}
+				/>
+			) : null}
 
 			{/* Minimal Header with help button */}
 			<MinimalHeader
@@ -49,7 +61,10 @@ export function GamePageClient({
 				currentStreak={currentStreak}
 				mode={mode}
 				locale={locale}
-				onHelpClick={() => setShowHelpModal(true)}
+				onHelpClick={() => {
+					setHelpRequested(true)
+					setShowHelpModal(true)
+				}}
 				difficulty={difficulty}
 				changeDifficultyHref={difficulty && mode === 'daily' ? `/games/${slug}#play` : undefined}
 			/>

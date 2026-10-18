@@ -3,7 +3,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { TrialEndingBanner } from '@/features/plus/components/trial-ending-banner'
 import type { SubscriptionView } from '@/lib/billing/plus'
+import { trialBannerEndMs } from '@/lib/billing/plus'
 import {
 	cancelSubscription,
 	leaveFamily,
@@ -40,6 +42,7 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 	)
 	const [inviteCode, setInviteCode] = useState(view?.family?.inviteCode ?? null)
 	const [copied, setCopied] = useState(false)
+	const [nowMs] = useState(() => Date.now())
 
 	const date = (ms: number | null) =>
 		ms ? new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(ms)) : ''
@@ -76,8 +79,11 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 				? (view.status as string)
 				: 'other'
 
+	const trialEndMs = trialBannerEndMs(view, nowMs)
+
 	return (
 		<div className="space-y-6">
+			{trialEndMs ? <TrialEndingBanner endMs={trialEndMs} /> : null}
 			{message ? (
 				<output className="block rounded-xl bg-muted px-4 py-3 text-sm">{message}</output>
 			) : null}

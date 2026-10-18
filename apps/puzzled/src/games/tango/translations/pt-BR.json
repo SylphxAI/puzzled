@@ -1,0 +1,16 @@
+{
+	"name": "Duo",
+	"tagline": "Desafio de equilíbrio • ☀️ e 🌙",
+	"highlight": "Desafio binário",
+	"description": "Equilibre sóis e luas em cada linha e coluna",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Cada linha e coluna deve ter o mesmo número de sóis e luas",
+		"rule2": "No máximo 2 símbolos iguais seguidos",
+		"rule3": "Todas as linhas devem ser únicas, e todas as colunas também"
+	},
+	"startGame": "Começar jogo",
+	"hasConflicts": "Algumas células violam as regras",
+	"complete": "Desafio concluído!"
+}

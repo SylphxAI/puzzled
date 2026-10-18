@@ -1,0 +1,17 @@
+{
+	"metaTitle": "Arquivo de quebra-cabeças",
+	"metaDescription": "Jogue de novo os desafios diários anteriores no arquivo do Puzzled.",
+	"eyebrow": "Arquivo",
+	"title": "O arquivo",
+	"body": "Todos os desafios diários anteriores continuam aqui. Escolha um dia e jogue de novo.",
+	"playFreeToday": "Jogue o desafio grátis de hoje ({game})",
+	"listTitle": "Dias anteriores",
+	"listBody": "Os últimos {count} dias de desafios, do mais recente ao mais antigo. Cada um abre o desafio que foi jogado naquele dia.",
+	"playDayLabel": "Jogar {game} de {date}",
+	"play": "Jogar",
+	"playToday": "Jogue o ritual de hoje ({game})",
+	"backToGames": "Voltar para todos os jogos",
+	"emptyTitle": "O arquivo ainda está vazio",
+	"emptyBody": "Cada desafio diário anterior aparece aqui conforme os dias passam — hoje é o ritual. Jogue e a seleção de amanhã toma o lugar dele.",
+	"emptyPlay": "Jogue o ritual de hoje ({game})"
+}

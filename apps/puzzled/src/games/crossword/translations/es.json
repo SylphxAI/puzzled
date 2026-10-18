@@ -1,0 +1,23 @@
+{
+	"name": "Mini Grid",
+	"tagline": "Cuadrícula 5×5 • Resolución rápida",
+	"highlight": "Puzle 5×5",
+	"description": "Resuelve un crucigrama compacto",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Rellena la cuadrícula de 5×5 con las pistas",
+		"rule2": "Toca una casilla y escribe letras",
+		"rule3": "Toca la misma casilla para cambiar de dirección"
+	},
+	"startGame": "Empezar partida",
+	"across": "Horizontales",
+	"down": "Verticales",
+	"acrossOnly": "Hoy solo hay pistas horizontales",
+	"selectCell": "Toca una casilla para empezar",
+	"complete": "¡Puzle completado!",
+	"messages": {
+		"correct": "¡Correcto!",
+		"incorrect": "Inténtalo de nuevo"
+	}
+}

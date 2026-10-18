@@ -1,0 +1,31 @@
+{
+	"name": "Paint",
+	"tagline": "10×10マス • ドット絵",
+	"highlight": "お絵かきパズル",
+	"description": "マスを塗って隠れた絵を完成させよう",
+	"howToPlay": "遊び方",
+	"rules": {
+		"title": "遊び方",
+		"rule1": "数字のヒントを使ってマスを塗ります",
+		"rule2": "数字は、連続して塗るマスの数を表します",
+		"rule3": "すべて塗り終えると絵が現れます"
+	},
+	"startGame": "ゲーム開始",
+	"fillMode": "塗る",
+	"markMode": "印",
+	"errors": "ミス {count} 回",
+	"complete": "絵が完成しました！",
+	"messages": {
+		"incorrect": "このマスは塗らないマスです"
+	},
+	"difficulty": {
+		"easy": "かんたん",
+		"medium": "ふつう",
+		"hard": "むずかしい"
+	},
+	"difficultyDescriptions": {
+		"easy": "シンプルな絵の小さな5×5マス",
+		"medium": "10×10マス。読み取る行と列が増えます",
+		"hard": "15×15マス。細部まで描き込まれています"
+	}
+}

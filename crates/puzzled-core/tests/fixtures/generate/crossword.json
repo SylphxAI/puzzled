@@ -1,0 +1,997 @@
+[
+	{
+		"difficulty": null,
+		"generatorVersion": "rust-crossword-v2",
+		"puzzleData": {
+			"clueSet": "rows-columns",
+			"clues": {
+				"across": [
+					{
+						"clue": "Gem weight unit",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Humiliate",
+						"col": 0,
+						"length": 5,
+						"number": 6,
+						"row": 1
+					},
+					{
+						"clue": "Lift up",
+						"col": 0,
+						"length": 5,
+						"number": 7,
+						"row": 2
+					},
+					{
+						"clue": "Valuable item",
+						"col": 0,
+						"length": 5,
+						"number": 8,
+						"row": 3
+					},
+					{
+						"clue": "Chompers",
+						"col": 0,
+						"length": 5,
+						"number": 9,
+						"row": 4
+					}
+				],
+				"down": [
+					{
+						"clue": "Diamond measure",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Degrade",
+						"col": 1,
+						"length": 5,
+						"number": 2,
+						"row": 0
+					},
+					{
+						"clue": "Pay increase",
+						"col": 2,
+						"length": 5,
+						"number": 3,
+						"row": 0
+					},
+					{
+						"clue": "Resource",
+						"col": 3,
+						"length": 5,
+						"number": 4,
+						"row": 0
+					},
+					{
+						"clue": "Dentist's focus",
+						"col": 4,
+						"length": 5,
+						"number": 5,
+						"row": 0
+					}
+				]
+			},
+			"grid": [
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""]
+			]
+		},
+		"seed": 20250101,
+		"solution": {
+			"grid": [
+				["C", "A", "R", "A", "T"],
+				["A", "B", "A", "S", "E"],
+				["R", "A", "I", "S", "E"],
+				["A", "S", "S", "E", "T"],
+				["T", "E", "E", "T", "H"]
+			]
+		}
+	},
+	{
+		"difficulty": null,
+		"generatorVersion": "rust-crossword-v2",
+		"puzzleData": {
+			"clueSet": "rows-columns",
+			"clues": {
+				"across": [
+					{
+						"clue": "Shipping box",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Black bird",
+						"col": 0,
+						"length": 5,
+						"number": 6,
+						"row": 1
+					},
+					{
+						"clue": "Turn away",
+						"col": 0,
+						"length": 5,
+						"number": 7,
+						"row": 2
+					},
+					{
+						"clue": "Brief and to the point",
+						"col": 0,
+						"length": 5,
+						"number": 8,
+						"row": 3
+					},
+					{
+						"clue": "Come in",
+						"col": 0,
+						"length": 5,
+						"number": 9,
+						"row": 4
+					}
+				],
+				"down": [
+					{
+						"clue": "Wooden box",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Poe bird",
+						"col": 1,
+						"length": 5,
+						"number": 2,
+						"row": 0
+					},
+					{
+						"clue": "Prevent",
+						"col": 2,
+						"length": 5,
+						"number": 3,
+						"row": 0
+					},
+					{
+						"clue": "Concise",
+						"col": 3,
+						"length": 5,
+						"number": 4,
+						"row": 0
+					},
+					{
+						"clue": "Go inside",
+						"col": 4,
+						"length": 5,
+						"number": 5,
+						"row": 0
+					}
+				]
+			},
+			"grid": [
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""]
+			]
+		},
+		"seed": 20260226,
+		"solution": {
+			"grid": [
+				["C", "R", "A", "T", "E"],
+				["R", "A", "V", "E", "N"],
+				["A", "V", "E", "R", "T"],
+				["T", "E", "R", "S", "E"],
+				["E", "N", "T", "E", "R"]
+			]
+		}
+	},
+	{
+		"difficulty": null,
+		"generatorVersion": "rust-crossword-v2",
+		"puzzleData": {
+			"clueSet": "rows-columns",
+			"clues": {
+				"across": [
+					{
+						"clue": "Single piece of information",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Wake up",
+						"col": 0,
+						"length": 5,
+						"number": 6,
+						"row": 1
+					},
+					{
+						"clue": "Of the ebb and flow",
+						"col": 0,
+						"length": 5,
+						"number": 7,
+						"row": 2
+					},
+					{
+						"clue": "Way of using words",
+						"col": 0,
+						"length": 5,
+						"number": 8,
+						"row": 3
+					},
+					{
+						"clue": "Brawl",
+						"col": 0,
+						"length": 5,
+						"number": 9,
+						"row": 4
+					}
+				],
+				"down": [
+					{
+						"clue": "Singular of data",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Get up",
+						"col": 1,
+						"length": 5,
+						"number": 2,
+						"row": 0
+					},
+					{
+						"clue": "Moon-driven, as a current",
+						"col": 2,
+						"length": 5,
+						"number": 3,
+						"row": 0
+					},
+					{
+						"clue": "How a term is employed",
+						"col": 3,
+						"length": 5,
+						"number": 4,
+						"row": 0
+					},
+					{
+						"clue": "Fight",
+						"col": 4,
+						"length": 5,
+						"number": 5,
+						"row": 0
+					}
+				]
+			},
+			"grid": [
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""]
+			]
+		},
+		"seed": 20260926,
+		"solution": {
+			"grid": [
+				["D", "A", "T", "U", "M"],
+				["A", "R", "I", "S", "E"],
+				["T", "I", "D", "A", "L"],
+				["U", "S", "A", "G", "E"],
+				["M", "E", "L", "E", "E"]
+			]
+		}
+	},
+	{
+		"difficulty": null,
+		"generatorVersion": "rust-crossword-v2",
+		"puzzleData": {
+			"clueSet": "rows-columns",
+			"clues": {
+				"across": [
+					{
+						"clue": "Show to be true",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Black bird",
+						"col": 0,
+						"length": 5,
+						"number": 6,
+						"row": 1
+					},
+					{
+						"clue": "Done openly",
+						"col": 0,
+						"length": 5,
+						"number": 7,
+						"row": 2
+					},
+					{
+						"clue": "Edge",
+						"col": 0,
+						"length": 5,
+						"number": 8,
+						"row": 3
+					},
+					{
+						"clue": "Come in",
+						"col": 0,
+						"length": 5,
+						"number": 9,
+						"row": 4
+					}
+				],
+				"down": [
+					{
+						"clue": "Demonstrate",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Poe bird",
+						"col": 1,
+						"length": 5,
+						"number": 2,
+						"row": 0
+					},
+					{
+						"clue": "Not hidden",
+						"col": 2,
+						"length": 5,
+						"number": 3,
+						"row": 0
+					},
+					{
+						"clue": "Brink",
+						"col": 3,
+						"length": 5,
+						"number": 4,
+						"row": 0
+					},
+					{
+						"clue": "Go inside",
+						"col": 4,
+						"length": 5,
+						"number": 5,
+						"row": 0
+					}
+				]
+			},
+			"grid": [
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""]
+			]
+		},
+		"seed": 20261001,
+		"solution": {
+			"grid": [
+				["P", "R", "O", "V", "E"],
+				["R", "A", "V", "E", "N"],
+				["O", "V", "E", "R", "T"],
+				["V", "E", "R", "G", "E"],
+				["E", "N", "T", "E", "R"]
+			]
+		}
+	},
+	{
+		"difficulty": null,
+		"generatorVersion": "rust-crossword-v2",
+		"puzzleData": {
+			"clueSet": "rows-columns",
+			"clues": {
+				"across": [
+					{
+						"clue": "Bread grain",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Lift with effort",
+						"col": 0,
+						"length": 5,
+						"number": 6,
+						"row": 1
+					},
+					{
+						"clue": "Consumed",
+						"col": 0,
+						"length": 5,
+						"number": 7,
+						"row": 2
+					},
+					{
+						"clue": "Turn away",
+						"col": 0,
+						"length": 5,
+						"number": 8,
+						"row": 3
+					},
+					{
+						"clue": "One part in ten",
+						"col": 0,
+						"length": 5,
+						"number": 9,
+						"row": 4
+					}
+				],
+				"down": [
+					{
+						"clue": "Crop in a Kansas field",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Throw with a grunt",
+						"col": 1,
+						"length": 5,
+						"number": 2,
+						"row": 0
+					},
+					{
+						"clue": "Swallowed",
+						"col": 2,
+						"length": 5,
+						"number": 3,
+						"row": 0
+					},
+					{
+						"clue": "Prevent",
+						"col": 3,
+						"length": 5,
+						"number": 4,
+						"row": 0
+					},
+					{
+						"clue": "Place after ninth",
+						"col": 4,
+						"length": 5,
+						"number": 5,
+						"row": 0
+					}
+				]
+			},
+			"grid": [
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""]
+			]
+		},
+		"seed": 20261231,
+		"solution": {
+			"grid": [
+				["W", "H", "E", "A", "T"],
+				["H", "E", "A", "V", "E"],
+				["E", "A", "T", "E", "N"],
+				["A", "V", "E", "R", "T"],
+				["T", "E", "N", "T", "H"]
+			]
+		}
+	},
+	{
+		"difficulty": null,
+		"generatorVersion": "rust-v1",
+		"puzzleData": {
+			"clues": {
+				"across": [
+					{
+						"clue": "Portion",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Wives quarters",
+						"col": 0,
+						"length": 5,
+						"number": 6,
+						"row": 1
+					},
+					{
+						"clue": "Sports venue",
+						"col": 0,
+						"length": 5,
+						"number": 7,
+						"row": 2
+					},
+					{
+						"clue": "Kingdom",
+						"col": 0,
+						"length": 5,
+						"number": 8,
+						"row": 3
+					},
+					{
+						"clue": "Medical flush",
+						"col": 0,
+						"length": 5,
+						"number": 9,
+						"row": 4
+					}
+				],
+				"down": [
+					{
+						"clue": "Split",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Palace section",
+						"col": 1,
+						"length": 5,
+						"number": 2,
+						"row": 0
+					},
+					{
+						"clue": "Stadium",
+						"col": 2,
+						"length": 5,
+						"number": 3,
+						"row": 0
+					},
+					{
+						"clue": "Domain",
+						"col": 3,
+						"length": 5,
+						"number": 4,
+						"row": 0
+					},
+					{
+						"clue": "Cleansing procedure",
+						"col": 4,
+						"length": 5,
+						"number": 5,
+						"row": 0
+					}
+				]
+			},
+			"grid": [
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""]
+			]
+		},
+		"seed": 20250101,
+		"solution": {
+			"grid": [
+				["S", "H", "A", "R", "E"],
+				["H", "A", "R", "E", "M"],
+				["A", "R", "E", "N", "A"],
+				["R", "E", "A", "L", "M"],
+				["E", "N", "E", "M", "A"]
+			]
+		}
+	},
+	{
+		"difficulty": null,
+		"generatorVersion": "rust-v1",
+		"puzzleData": {
+			"clues": {
+				"across": [
+					{
+						"clue": "Vital organ",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Glowing coal",
+						"col": 0,
+						"length": 5,
+						"number": 6,
+						"row": 1
+					},
+					{
+						"clue": "Mistreat",
+						"col": 0,
+						"length": 5,
+						"number": 7,
+						"row": 2
+					},
+					{
+						"clue": "Tree secretion",
+						"col": 0,
+						"length": 5,
+						"number": 8,
+						"row": 3
+					},
+					{
+						"clue": "Fashion direction",
+						"col": 0,
+						"length": 5,
+						"number": 9,
+						"row": 4
+					}
+				],
+				"down": [
+					{
+						"clue": "Center of love",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Hot ash",
+						"col": 1,
+						"length": 5,
+						"number": 2,
+						"row": 0
+					},
+					{
+						"clue": "Misuse",
+						"col": 2,
+						"length": 5,
+						"number": 3,
+						"row": 0
+					},
+					{
+						"clue": "Pine product",
+						"col": 3,
+						"length": 5,
+						"number": 4,
+						"row": 0
+					},
+					{
+						"clue": "Popular style",
+						"col": 4,
+						"length": 5,
+						"number": 5,
+						"row": 0
+					}
+				]
+			},
+			"grid": [
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""]
+			]
+		},
+		"seed": 20260226,
+		"solution": {
+			"grid": [
+				["H", "E", "A", "R", "T"],
+				["E", "M", "B", "E", "R"],
+				["A", "B", "U", "S", "E"],
+				["R", "E", "S", "I", "N"],
+				["T", "R", "E", "N", "D"]
+			]
+		}
+	},
+	{
+		"difficulty": null,
+		"generatorVersion": "rust-v1",
+		"puzzleData": {
+			"clues": {
+				"across": [
+					{
+						"clue": "Syrup tree",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Fake name",
+						"col": 0,
+						"length": 5,
+						"number": 6,
+						"row": 1
+					},
+					{
+						"clue": "Spotted horse",
+						"col": 0,
+						"length": 5,
+						"number": 7,
+						"row": 2
+					},
+					{
+						"clue": "Metric volume",
+						"col": 0,
+						"length": 5,
+						"number": 8,
+						"row": 3
+					},
+					{
+						"clue": "Paper",
+						"col": 0,
+						"length": 5,
+						"number": 9,
+						"row": 4
+					}
+				],
+				"down": [
+					{
+						"clue": "Leaf shape",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Stage name",
+						"col": 1,
+						"length": 5,
+						"number": 2,
+						"row": 0
+					},
+					{
+						"clue": "Bean type",
+						"col": 2,
+						"length": 5,
+						"number": 3,
+						"row": 0
+					},
+					{
+						"clue": "Liter spelling",
+						"col": 3,
+						"length": 5,
+						"number": 4,
+						"row": 0
+					},
+					{
+						"clue": "Composition",
+						"col": 4,
+						"length": 5,
+						"number": 5,
+						"row": 0
+					}
+				]
+			},
+			"grid": [
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""]
+			]
+		},
+		"seed": 20260926,
+		"solution": {
+			"grid": [
+				["M", "A", "P", "L", "E"],
+				["A", "L", "I", "A", "S"],
+				["P", "I", "N", "T", "O"],
+				["L", "I", "T", "R", "E"],
+				["E", "S", "S", "A", "Y"]
+			]
+		}
+	},
+	{
+		"difficulty": null,
+		"generatorVersion": "rust-v1",
+		"puzzleData": {
+			"clues": {
+				"across": [
+					{
+						"clue": "Atmosphere layer",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Striped animal",
+						"col": 0,
+						"length": 5,
+						"number": 6,
+						"row": 1
+					},
+					{
+						"clue": "Very overweight",
+						"col": 0,
+						"length": 5,
+						"number": 7,
+						"row": 2
+					},
+					{
+						"clue": "Approaches",
+						"col": 0,
+						"length": 5,
+						"number": 8,
+						"row": 3
+					},
+					{
+						"clue": "Reduces",
+						"col": 0,
+						"length": 5,
+						"number": 9,
+						"row": 4
+					}
+				],
+				"down": [
+					{
+						"clue": "O3 layer",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Safari animal",
+						"col": 1,
+						"length": 5,
+						"number": 2,
+						"row": 0
+					},
+					{
+						"clue": "Heavy",
+						"col": 2,
+						"length": 5,
+						"number": 3,
+						"row": 0
+					},
+					{
+						"clue": "Gets close",
+						"col": 3,
+						"length": 5,
+						"number": 4,
+						"row": 0
+					},
+					{
+						"clue": "Lessens",
+						"col": 4,
+						"length": 5,
+						"number": 5,
+						"row": 0
+					}
+				]
+			},
+			"grid": [
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""]
+			]
+		},
+		"seed": 20261001,
+		"solution": {
+			"grid": [
+				["O", "Z", "O", "N", "E"],
+				["Z", "E", "B", "R", "A"],
+				["O", "B", "E", "S", "E"],
+				["N", "E", "A", "R", "S"],
+				["E", "A", "S", "E", "S"]
+			]
+		}
+	},
+	{
+		"difficulty": null,
+		"generatorVersion": "rust-v1",
+		"puzzleData": {
+			"clues": {
+				"across": [
+					{
+						"clue": "Use money",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Town square",
+						"col": 0,
+						"length": 5,
+						"number": 6,
+						"row": 1
+					},
+					{
+						"clue": "One who consumes",
+						"col": 0,
+						"length": 5,
+						"number": 7,
+						"row": 2
+					},
+					{
+						"clue": "Nose-related",
+						"col": 0,
+						"length": 5,
+						"number": 8,
+						"row": 3
+					},
+					{
+						"clue": "Pub game pieces",
+						"col": 0,
+						"length": 5,
+						"number": 9,
+						"row": 4
+					}
+				],
+				"down": [
+					{
+						"clue": "Shell out",
+						"col": 0,
+						"length": 5,
+						"number": 1,
+						"row": 0
+					},
+					{
+						"clue": "Shopping center",
+						"col": 1,
+						"length": 5,
+						"number": 2,
+						"row": 0
+					},
+					{
+						"clue": "Diner",
+						"col": 2,
+						"length": 5,
+						"number": 3,
+						"row": 0
+					},
+					{
+						"clue": "Sinus area",
+						"col": 3,
+						"length": 5,
+						"number": 4,
+						"row": 0
+					},
+					{
+						"clue": "Pointed missiles",
+						"col": 4,
+						"length": 5,
+						"number": 5,
+						"row": 0
+					}
+				]
+			},
+			"grid": [
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""],
+				["", "", "", "", ""]
+			]
+		},
+		"seed": 20261231,
+		"solution": {
+			"grid": [
+				["S", "P", "E", "N", "D"],
+				["P", "L", "A", "Z", "A"],
+				["E", "A", "T", "E", "R"],
+				["N", "A", "S", "A", "L"],
+				["D", "A", "R", "T", "S"]
+			]
+		}
+	}
+]

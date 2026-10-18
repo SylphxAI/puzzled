@@ -1,0 +1,102 @@
+{
+	"metaTitle": "Jogos de raciocínio e quebra-cabeças diários grátis",
+	"metaDescription": "Jogue um jogo de raciocínio diário grátis — palavras, lógica, números e quebra-cabeças espaciais — e mantenha o hábito. Um desafio grátis por dia, sem precisar de conta.",
+	"greeting": {
+		"morning": "Bom dia",
+		"afternoon": "Boa tarde",
+		"evening": "Boa noite",
+		"night": "Resolvendo desafios de madrugada?",
+		"default": "Pronto para jogar"
+	},
+	"hero": {
+		"guestTitle": "Um desafio grátis, todos os dias",
+		"streakChip": "Sequência de {days} dias",
+		"playersToday": "{count} jogadores concluíram hoje",
+		"progressRingLabel": "{done} de {total} desafios concluídos hoje",
+		"progressUnverified": "Não conseguimos carregar seu progresso salvo agora. Você ainda pode jogar — conferimos sua conclusão quando você enviar.",
+		"ogEyebrow": "Desafio diário grátis",
+		"ogBadge": "Desafio grátis todos os dias"
+	},
+	"lineup": {
+		"title": "Seleção de hoje",
+		"subtitle": "Uma rotação, renovada todos os dias. O catálogo completo está na página de jogos.",
+		"seeAll": "Ver todos os jogos",
+		"play": "Jogar",
+		"freeToday": "Destaque de hoje"
+	},
+	"value": {
+		"dailyTitle": "Uma seleção nova todo dia",
+		"dailyBody": "Os novos desafios chegam à meia-noite, no horário de Hong Kong — os mesmos para todo mundo, para que os resultados possam ser comparados com justiça.",
+		"honestTitle": "Resultados honestos e verificados",
+		"honestBody": "Cada conclusão é conferida no servidor, então sequências, tempos e posição no ranking realmente significam algo.",
+		"shareTitle": "Compartilhe sem spoilers",
+		"shareBody": "O cartão de resultado mostra o padrão e o tempo — nunca a resposta. Envie sem estragar o dia de ninguém."
+	},
+	"member": {
+		"currentStreak": "Sequência atual",
+		"bestStreak": "Melhor sequência",
+		"gamesPlayed": "Desafios concluídos",
+		"viewStats": "Ver suas estatísticas"
+	},
+	"tomorrow": {
+		"title": "{game} é grátis amanhã.",
+		"body": "Mesmo ritual, seleção nova.",
+		"cta": "Ver o catálogo"
+	},
+	"faq": {
+		"title": "Perguntas e respostas",
+		"subtitle": "A versão resumida de como o Puzzled funciona.",
+		"free": {
+			"question": "O Puzzled é grátis?",
+			"answer": "Sim. Todos os desafios são grátis todos os dias e nunca exigem pagamento nem conta."
+		},
+		"account": {
+			"question": "Preciso de uma conta para jogar?",
+			"answer": "Não. Você pode concluir o desafio grátis de hoje como visitante. Uma conta mantém sua sequência, seus resultados e suas estatísticas em todos os dispositivos."
+		},
+		"schedule": {
+			"question": "Quando os novos desafios aparecem?",
+			"answer": "Todos os dias à meia-noite, no horário de Hong Kong. Todo mundo joga a mesma seleção no mesmo dia, e é isso que torna os resultados compartilhados comparáveis."
+		},
+		"streak": {
+			"question": "Como funcionam as sequências?",
+			"answer": "Conclua pelo menos um desafio válido em um dia de desafios para aumentar sua sequência. Perder um único dia não apaga o seu histórico."
+		},
+		"share": {
+			"question": "Posso compartilhar meu resultado sem dar spoiler?",
+			"answer": "Sim. O cartão de resultado mostra o seu resultado (tempo, tentativas ou padrão de resolução), o desafio e o dia — nunca a solução. Quem abrir joga o desafio do mesmo dia."
+		},
+		"catalog": {
+			"question": "Quais desafios estão incluídos?",
+			"answer": "Dezenove desafios diários de palavras, lógica, números, jogos espaciais e entretenimento leve, todos seguindo o mesmo ritual diário."
+		}
+	},
+	"todaysPuzzles": "Desafios de hoje",
+	"day": {
+		"puzzleNumber": "Desafio nº {number}",
+		"resetsIn": "Renova em",
+		"resetsAt": "meia-noite em Hong Kong",
+		"guestTitle": "Jogue o {game} de hoje, de graça",
+		"titleMemberReady": "O {game} de hoje está pronto",
+		"titleMemberStreak": "Sua sequência de {days} dias está esperando",
+		"titleMemberDone": "Tudo feito por hoje — muito bem",
+		"titleDone": "O {game} de hoje foi concluído",
+		"bodyGuest": "O Puzzled é uma seleção diária de desafios de palavras, lógica e números. Um deles é grátis todos os dias, leva poucos minutos e não exige cadastro.",
+		"bodyMember": "Sua sequência, suas estatísticas e a seleção de hoje estão a um toque de distância.",
+		"playToday": "Jogar o {game} de hoje",
+		"playAgain": "Jogar o de hoje de novo",
+		"browseAll": "Ver todos os jogos",
+		"finishersToday": "{count} já concluíram hoje",
+		"freeToday": "Grátis hoje",
+		"guestNote": "Sem cadastro, sem cartão. Pronto em poucos minutos."
+	},
+	"seasons": {
+		"newYear": "Feliz Ano Novo",
+		"lunarNewYear": "Feliz Ano Novo Lunar",
+		"easter": "Feliz Páscoa",
+		"dragonBoat": "Feliz Festival do Barco do Dragão",
+		"midAutumn": "Feliz Festival do Meio do Outono",
+		"halloween": "Feliz Halloween",
+		"christmas": "Feliz Natal"
+	}
+}

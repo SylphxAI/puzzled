@@ -35,8 +35,8 @@ Run the narrowest affected check first; the full workspace is for the end.
   a generated Connect client.
 - Daily puzzles are generated, validated and stored by the Rust pipeline
   (`crates/puzzled-server/src/capabilities/daily_pipeline`), 14 days ahead. The
-  TypeScript generators stay only as the reference implementation the Rust ports
-  are tested against (`apps/puzzled/scripts/export-generator-fixtures.ts`).
+  TypeScript generators are deleted; the frozen goldens under
+  `crates/puzzled-core/tests/fixtures/generate/*.json` are the parity record.
 - Why one authority: a client that holds an answer or asserts a finish can be
   cheated, and two write paths drift. So do not add TypeScript backend logic
   (jobs, generation, database writes) or a REST `/api/v1` or Hono layer, and do
@@ -77,10 +77,15 @@ Run the narrowest affected check first; the full workspace is for the end.
 ## CI and the merge queue
 
 The queue runs only the fast gate (`ci.yml`: lint, typecheck, secret scan,
-affected unit tests, and the migration lane when `apps/puzzled/atlas/` changes).
+affected unit tests, the chat-senders gate, and the migration lane when
+`apps/puzzled/atlas/` changes).
 `verify.yml` runs the full suite (production web build, release binary,
-database-backed Rust tests, SEO, accessibility, Lighthouse) after merge and
-nightly, and marks the commit `verified`. A draft runs the gate only; a pull
+database-backed Rust tests, SEO, accessibility, Lighthouse, and the seeded
+web-vitals gate) after merge and nightly, and marks the commit `verified`.
+The web-vitals gate loads five routes (`/`, `/games`, `/games/sudoku`,
+`/games/word-search`, `/games/nonogram`) on a seeded puzzle API, plays each,
+and fails the Lighthouse job when LCP p75 exceeds 2500 ms or INP p75 exceeds
+600 ms (ratchet toward 200 ms). It does not run on pull requests. A draft runs the gate only; a pull
 request marked ready also runs the affected suite. See the
 [optimistic-merge guide](https://github.com/SylphxAI/.github/blob/main/docs/optimistic-merge.md).
 

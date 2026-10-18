@@ -1,12 +1,15 @@
 /**
  * i18n Configuration
  *
- * Supports 5 locales with region-specific variants:
+ * Supports 8 locales with region-specific variants:
  * - en-US: American English (default, no URL prefix)
  * - en-GB: British English
  * - zh-HK: 香港繁體中文
  * - zh-TW: 台灣正體中文
  * - zh-CN: 简体中文
+ * - ja: 日本語
+ * - es: Español
+ * - pt-BR: Português (Brasil)
  *
  * Every locale fact lives in one table, `LOCALE_REGISTRY`: the locale list, the
  * display names, the fallback chain, the formatting preferences, the Open Graph
@@ -26,6 +29,9 @@ export const locales = [
 	'zh-HK', // Hong Kong Traditional Chinese
 	'zh-TW', // Taiwan Traditional Chinese
 	'zh-CN', // Simplified Chinese
+	'ja', // Japanese
+	'es', // Spanish
+	'pt-BR', // Brazilian Portuguese
 ] as const
 
 export type Locale = (typeof locales)[number]
@@ -114,6 +120,36 @@ export const LOCALE_REGISTRY: Record<Locale, LocaleFacts> = {
 		fallback: null, // Base Simplified Chinese
 		formats: { dateStyle: 'long', numberGrouping: true, currency: 'CNY' },
 	},
+	ja: {
+		tag: 'ja',
+		ogLocale: 'ja_JP',
+		english: 'Japanese',
+		native: '日本語',
+		short: '日本語',
+		badge: '日',
+		fallback: null,
+		formats: { dateStyle: 'long', numberGrouping: true, currency: 'USD' },
+	},
+	es: {
+		tag: 'es',
+		ogLocale: 'es_ES',
+		english: 'Spanish',
+		native: 'Español',
+		short: 'Español',
+		badge: 'ES',
+		fallback: null,
+		formats: { dateStyle: 'long', numberGrouping: true, currency: 'USD' },
+	},
+	'pt-BR': {
+		tag: 'pt-BR',
+		ogLocale: 'pt_BR',
+		english: 'Portuguese (Brazil)',
+		native: 'Português (Brasil)',
+		short: 'Português',
+		badge: 'PT',
+		fallback: null,
+		formats: { dateStyle: 'long', numberGrouping: true, currency: 'USD' },
+	},
 }
 
 /** Project one registry field across every locale. */
@@ -143,12 +179,15 @@ export const localeFallbacks: Record<Locale, Locale | null> = localeFacts('fallb
 export const localeFormats: Record<Locale, LocaleFormatPreferences> = localeFacts('formats')
 
 /** Group locales by language family. */
-export type LocaleGroupName = 'english' | 'chinese'
+export type LocaleGroupName = 'english' | 'chinese' | 'other'
 
 /** Language subtag (from each locale's own tag) -> its group in the menu. */
 const LANGUAGE_GROUPS: Record<string, LocaleGroupName> = {
 	en: 'english',
 	zh: 'chinese',
+	ja: 'other',
+	es: 'other',
+	pt: 'other',
 }
 
 function groupLocales(group: LocaleGroupName): Locale[] {
@@ -160,6 +199,7 @@ function groupLocales(group: LocaleGroupName): Locale[] {
 export const localeGroups: Record<LocaleGroupName, Locale[]> = {
 	english: groupLocales('english'),
 	chinese: groupLocales('chinese'),
+	other: groupLocales('other'),
 }
 
 // ==========================================

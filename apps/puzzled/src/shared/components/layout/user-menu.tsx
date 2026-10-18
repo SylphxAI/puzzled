@@ -1,20 +1,18 @@
 'use client'
 
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuGroup,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '@sylphx/ui'
-import { LogIn, LogOut, Settings, User } from 'lucide-react'
+import { LogIn, User } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
+import { lazy, Suspense } from 'react'
 import { Link } from '@/lib/i18n/routing'
 import { useSafeAuth, useSafeUser } from '@/lib/identity/react'
 import { cn } from '@/lib/utils'
+import { useLazyMenu } from './use-lazy-menu'
+
+// The dropdown runtime is fetched when the signed-in visitor reaches for the
+// menu; until then the bar carries only the avatar button.
+const loadMenu = () => import('./user-menu-dropdown')
+const UserMenuDropdown = lazy(loadMenu)
 
 type UserMenuProps = {
 	/** Size variant for the trigger button */
@@ -34,6 +32,7 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 	const t = useTranslations()
 	const { user, isLoading } = useSafeUser()
 	const { signOut } = useSafeAuth()
+	const { opened, triggerProps } = useLazyMenu(loadMenu)
 
 	const handleSignOut = async () => {
 		await signOut()
@@ -62,63 +61,51 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 
 	// Authenticated user menu
 	if (user) {
-		return (
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<button
-						type="button"
+		const trigger = (extra?: Record<string, unknown>) => (
+			<button
+				type="button"
+				className={cn(
+					'flex items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+					size === 'sm' && 'text-muted-foreground hover:text-foreground',
+					buttonSize,
+				)}
+				aria-label={t('common.userMenu')}
+				{...extra}
+			>
+				{user.image ? (
+					<Image
+						src={user.image}
+						alt={`${user.name || 'User'}'s avatar`}
+						width={size === 'sm' ? 28 : 32}
+						height={size === 'sm' ? 28 : 32}
+						className={cn('rounded-full', avatarSize)}
+					/>
+				) : size === 'sm' ? (
+					<User className="h-5 w-5" />
+				) : (
+					<div
 						className={cn(
-							'flex items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-							size === 'sm' && 'text-muted-foreground hover:text-foreground',
-							buttonSize,
+							'flex items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground',
+							avatarSize,
 						)}
-						aria-label={t('common.userMenu')}
 					>
-						{user.image ? (
-							<Image
-								src={user.image}
-								alt={`${user.name || 'User'}'s avatar`}
-								width={size === 'sm' ? 28 : 32}
-								height={size === 'sm' ? 28 : 32}
-								className={cn('rounded-full', avatarSize)}
-							/>
-						) : size === 'sm' ? (
-							<User className="h-5 w-5" />
-						) : (
-							<div
-								className={cn(
-									'flex items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground',
-									avatarSize,
-								)}
-							>
-								{user.name?.charAt(0) || user.email?.charAt(0) || '?'}
-							</div>
-						)}
-					</button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end" className={menuWidth}>
-					<DropdownMenuLabel className="font-normal">
-						<div className="flex flex-col space-y-1">
-							<p className="truncate text-sm font-medium">{user.name}</p>
-							<p className="truncate text-xs text-muted-foreground">{user.email}</p>
-						</div>
-					</DropdownMenuLabel>
-					<DropdownMenuSeparator />
-					<DropdownMenuGroup>
-						<DropdownMenuItem asChild>
-							<Link href="/settings" className="flex items-center gap-2">
-								<Settings className="h-4 w-4" />
-								{t('common.settings')}
-							</Link>
-						</DropdownMenuItem>
-					</DropdownMenuGroup>
-					<DropdownMenuSeparator />
-					<DropdownMenuItem destructive onClick={handleSignOut}>
-						<LogOut className="mr-2 h-4 w-4" />
-						{t('common.signOut')}
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
+						{user.name?.charAt(0) || user.email?.charAt(0) || '?'}
+					</div>
+				)}
+			</button>
+		)
+		const plainTrigger = trigger(triggerProps)
+		if (!opened) return plainTrigger
+		return (
+			<Suspense fallback={plainTrigger}>
+				<UserMenuDropdown
+					trigger={trigger()}
+					name={user.name}
+					email={user.email}
+					menuWidth={menuWidth}
+					onSignOut={handleSignOut}
+				/>
+			</Suspense>
 		)
 	}
 

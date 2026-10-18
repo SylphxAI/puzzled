@@ -46,7 +46,16 @@ describe('CookieBanner (mobile compact)', () => {
 			'marketingHint',
 			'change',
 		]
-		for (const locale of ['en-US', 'en-GB', 'zh-HK', 'zh-CN', 'zh-TW'] as const) {
+		for (const locale of [
+			'en-US',
+			'en-GB',
+			'zh-HK',
+			'zh-CN',
+			'zh-TW',
+			'ja',
+			'es',
+			'pt-BR',
+		] as const) {
 			const consent = (resolveLocale(locale) as unknown as Record<string, Record<string, string>>)
 				.consent
 			for (const key of keys) expect(typeof consent?.[key]).toBe('string')
@@ -58,7 +67,7 @@ describe('CookieBanner (mobile compact)', () => {
 			for (const key of ['settings', 'save', 'back'])
 				expect(common?.[key]?.length).toBeLessThanOrEqual(12)
 			for (const key of ['analyticsHint', 'marketingHint']) {
-				expect(consent?.[key]?.length).toBeLessThanOrEqual(locale.startsWith('en') ? 80 : 40)
+				expect(consent?.[key]?.length).toBeLessThanOrEqual(/^(zh|ja)/.test(locale) ? 40 : 80)
 			}
 		}
 	})

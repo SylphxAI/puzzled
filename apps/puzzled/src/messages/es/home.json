@@ -1,0 +1,102 @@
+{
+	"metaTitle": "Juegos de ingenio y puzzles diarios gratis",
+	"metaDescription": "Juega un juego de ingenio diario gratis —puzzles de palabras, lógica, números y espacio— y mantén el hábito. Un puzzle gratis cada día, sin necesidad de cuenta.",
+	"greeting": {
+		"morning": "Buenos días",
+		"afternoon": "Buenas tardes",
+		"evening": "Buenas noches",
+		"night": "¿Puzzles de madrugada?",
+		"default": "Listo para jugar"
+	},
+	"hero": {
+		"guestTitle": "Un puzzle gratis, todos los días",
+		"streakChip": "Racha de {days} días",
+		"playersToday": "{count} jugadores han terminado hoy",
+		"progressRingLabel": "{done} de {total} puzzles completados hoy",
+		"progressUnverified": "No pudimos cargar tu progreso guardado ahora mismo. Aun así puedes jugar: comprobamos tu resultado cuando lo envíes.",
+		"ogEyebrow": "Puzzle diario gratis",
+		"ogBadge": "Un puzzle gratis cada día"
+	},
+	"lineup": {
+		"title": "Selección de hoy",
+		"subtitle": "Una rotación que se renueva cada día. El catálogo completo está en la página de juegos.",
+		"seeAll": "Ver todos los juegos",
+		"play": "Jugar",
+		"freeToday": "Elegido de hoy"
+	},
+	"value": {
+		"dailyTitle": "Un conjunto nuevo cada día",
+		"dailyBody": "Los puzzles nuevos llegan a medianoche, hora de Hong Kong: el mismo conjunto para todos, así los resultados se comparan con justicia.",
+		"honestTitle": "Resultados honestos y verificados",
+		"honestBody": "Cada resultado se comprueba en el servidor, así que las rachas, los tiempos y tu puesto en la clasificación significan algo de verdad.",
+		"shareTitle": "Comparte sin spoilers",
+		"shareBody": "Tu tarjeta de resultado muestra el patrón y el tiempo, nunca la respuesta. Envíala sin arruinarle el día a nadie."
+	},
+	"member": {
+		"currentStreak": "Racha actual",
+		"bestStreak": "Mejor racha",
+		"gamesPlayed": "Puzzles completados",
+		"viewStats": "Ver tus estadísticas"
+	},
+	"tomorrow": {
+		"title": "{game} será gratis mañana.",
+		"body": "El mismo ritual, un conjunto nuevo.",
+		"cta": "Ver el catálogo"
+	},
+	"faq": {
+		"title": "Preguntas y respuestas",
+		"subtitle": "La versión corta de cómo funciona Puzzled.",
+		"free": {
+			"question": "¿Puzzled es gratis?",
+			"answer": "Sí. Hay un puzzle gratis cada día, que nunca exige pago ni cuenta."
+		},
+		"account": {
+			"question": "¿Necesito una cuenta para jugar?",
+			"answer": "No. Puedes completar el puzzle gratis de hoy como invitado. Una cuenta conserva tu racha, tus resultados y tus estadísticas en todos tus dispositivos."
+		},
+		"schedule": {
+			"question": "¿Cuándo aparecen los puzzles nuevos?",
+			"answer": "Todos los días a medianoche, hora de Hong Kong. Todo el mundo juega el mismo conjunto el mismo día, y eso es lo que hace comparables los resultados compartidos."
+		},
+		"streak": {
+			"question": "¿Cómo funcionan las rachas?",
+			"answer": "Completa al menos un puzzle válido en un día de puzzles para alargar tu racha. Fallar un solo día no borra tu historial."
+		},
+		"share": {
+			"question": "¿Puedo compartir mi resultado sin revelar la solución?",
+			"answer": "Sí. La tarjeta de resultado muestra tu resultado (tiempo, intentos o patrón de resolución), el puzzle y el día, nunca la solución. Quien la abra juega el puzzle de ese mismo día."
+		},
+		"catalog": {
+			"question": "¿Qué puzzles incluye?",
+			"answer": "Diecinueve puzzles diarios de palabras, lógica, números, espacio y entretenimiento ligero, todos con el mismo ritual diario."
+		}
+	},
+	"todaysPuzzles": "Puzzles de hoy",
+	"day": {
+		"puzzleNumber": "Puzzle n.º {number}",
+		"resetsIn": "Se renueva en",
+		"resetsAt": "medianoche en Hong Kong",
+		"guestTitle": "Juega {game} de hoy, gratis",
+		"titleMemberReady": "{game} de hoy está listo",
+		"titleMemberStreak": "Tu racha de {days} días te espera",
+		"titleMemberDone": "Todo hecho por hoy: bien jugado",
+		"titleDone": "{game} de hoy está completado",
+		"bodyGuest": "Puzzled es un conjunto diario de puzzles de palabras, lógica y números. Uno es gratis cada día, lleva unos minutos y no requiere registro.",
+		"bodyMember": "Tu racha, tus estadísticas y la selección de hoy están a un toque.",
+		"playToday": "Juega {game} de hoy",
+		"playAgain": "Jugar hoy otra vez",
+		"browseAll": "Explorar todos los juegos",
+		"finishersToday": "{count} lo han completado hoy hasta ahora",
+		"freeToday": "Gratis hoy",
+		"guestNote": "Sin registro ni tarjeta. Listo en unos minutos."
+	},
+	"seasons": {
+		"newYear": "Feliz Año Nuevo",
+		"lunarNewYear": "Feliz Año Nuevo Lunar",
+		"easter": "Felices Pascuas",
+		"dragonBoat": "Feliz Festival del Bote del Dragón",
+		"midAutumn": "Feliz Festival del Medio Otoño",
+		"halloween": "Feliz Halloween",
+		"christmas": "Feliz Navidad"
+	}
+}

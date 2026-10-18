@@ -3,7 +3,7 @@
  * Implements GameConfig interface for modular game system
  */
 
-import { pickRandom, seededRandom, shuffleArray } from '@/games/shared'
+import { pickRandom } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
 	type GameCompletionStats,
@@ -14,14 +14,8 @@ import {
 } from '../types'
 import { ConnectionsHowToPlay } from './components/how-to-play'
 import { WordGroupsIcon } from './icon'
-import { PUZZLES } from './puzzles'
-import type {
-	Category,
-	ConnectionsPuzzle,
-	ConnectionsPuzzleData,
-	ConnectionsSolution,
-} from './types'
-import { MAX_MISTAKES, TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from './types'
+import type { Category, ConnectionsPuzzleData, ConnectionsSolution } from './types'
+import { TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from './types'
 
 export type { ConnectionsPuzzleData, ConnectionsSolution }
 
@@ -45,27 +39,6 @@ type ConnectionsGuessResult = {
 // ==========================================
 // Helper Functions
 // ==========================================
-
-/**
- * Get puzzle from seed deterministically
- */
-function getPuzzleFromSeed(seed: number): ConnectionsPuzzle {
-	const index = seed % PUZZLES.length
-	return PUZZLES[index]
-}
-
-/**
- * Get all words from puzzle and shuffle them
- *
- * ⚠️ FROZEN: Uses shared seededRandom + shuffleArray for deterministic results
- * DO NOT change the algorithm - it will break historical puzzles
- */
-function getShuffledWords(puzzle: ConnectionsPuzzle, seed: number): string[] {
-	const allWords = puzzle.categories.flatMap((cat) => cat.words)
-	// Use the FROZEN shared LCG algorithm for deterministic shuffle
-	// Previous implementation used Math.sin() which varies across JS engines
-	return shuffleArray(allWords, seededRandom(seed))
-}
 
 /**
  * Check if words match a category
@@ -108,27 +81,6 @@ export const wordGroupsConfig: GameConfig<
 	// Connections uses LLM for daily puzzle generation (semantic categories)
 	// Archive mode uses seed-based selection from curated puzzle pool
 	generationStrategy: 'llm',
-
-	/**
-	 * Generate puzzle from seed
-	 * Uses curated puzzle pool with themed word groups
-	 */
-	generatePuzzle: (seed: number) => {
-		const puzzle = getPuzzleFromSeed(seed)
-		const shuffledWords = getShuffledWords(puzzle, seed)
-
-		return {
-			puzzleData: {
-				words: shuffledWords,
-				maxMistakes: MAX_MISTAKES,
-				wordsPerCategory: WORDS_PER_CATEGORY,
-				totalCategories: TOTAL_CATEGORIES,
-			},
-			solution: {
-				categories: puzzle.categories,
-			},
-		}
-	},
 
 	/**
 	 * Validate a single guess (real-time feedback)

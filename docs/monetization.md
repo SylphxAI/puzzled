@@ -38,17 +38,21 @@ family.
   `puzzled-core` `billing_access::policy::play_access`). A refused request is
   403 `plus_required` (another game) or `plus_required_archive` (a past day);
   the web renders the unlock path from the same rule, never a dead end.
-- **Reverse trial** (new players): after a player's third finished day the api
-  grants every game for 7 days, once per account (`plus_trials`, one row per
-  account, kept after it ends), then the account drops back to the free floor
-  with nothing charged and nothing taken away. Money has no grant API for this,
-  so it is Puzzled's own time-boxed access, owned by the Rust api
-  (`billing_access::reverse_trial`, `billing::service::access`). It is off
-  unless `PUZZLED_REVERSE_TRIAL=on` in the api environment; switch it on
-  together with Plus sales. Result screens and Settings > Subscription state the
-  true end date ("ends on DATE"). The 7-day card-up-front yearly trial is the
-  offer for returning players (pricing page); Money cannot yet hide it from a
-  new player who goes straight to the yearly plan.
+- **Reverse trial** (new players): after a player's third finished day (a daily
+  ritual puzzle that ended won or lost; a day only started does not count) the
+  api grants every game for 7 days, once per account (`plus_trials`, one row
+  per account, kept after it ends), then the account drops back to the free
+  floor with nothing charged and nothing taken away. Money has no grant API for
+  this, so it is Puzzled's own time-boxed access, owned by the Rust api
+  (`billing_access::reverse_trial`, `billing::service::access`). It is on in
+  production (`PUZZLED_REVERSE_TRIAL=on` in sylphx.toml, together with Plus
+  sales); set it to `off` to stop new grants. Result screens and Settings >
+  Subscription state the true end date ("ends on DATE"). The 7-day
+  card-up-front yearly trial is the offer for returning players (pricing page).
+  Money gives that checkout trial once per customer per product: a subject that
+  ever had a Plus subscription, in any status, checks out with no trial. Money
+  cannot yet hide it from a new player who goes straight to the yearly plan, so
+  one player can hold the reverse trial and later one card-up-front trial.
 - An entitlement read that fails refuses paid play (fail closed to the free
   floor). The free daily puzzle never reads billing.
 - While Stripe is not configured, nothing is sold, so nothing is locked.
@@ -114,6 +118,28 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   paid period is left (`legal.json` terms sections at lines 146, 198 and 182).
   Any other refund request is handled case by case by support. Every refund is
   a new Money ledger entry (commercial standard).
+- Per-market rules override the no-refund default where a market's law gives
+  the consumer more. They are applied by the buyer's market (billing country
+  on the Money invoice), not by the site locale, so the terms and the support
+  FAQ state them in every locale:
+  - **Brazil** (Código de Defesa do Consumidor, Lei 8.078/1990, art. 49): a
+    consumer who buys outside a shop, online included, may withdraw within 7
+    days of contracting and gets back everything paid, monetarily corrected
+    (art. 49, sole paragraph). The immediate-supply consent does not waive it.
+    Support rule: a subscriber whose Money invoice billing country is BR and
+    who asks to cancel within 7 days of their first payment gets a full refund
+    of that payment through Money and the subscription is cancelled at once;
+    no reason is asked. Decreto 7.962/2013 art. 5 requires the means to
+    exercise it to be stated: the support FAQ and the terms subscription refund
+    clause name it. Renewals stay under the default rules.
+  - **Japan** (特定商取引法, 通信販売): no statutory cooling-off applies to
+    online sales; art. 15-3 lets the seller's displayed return terms
+    (返品特約) govern. The 特定商取引法に基づく表記 page
+    (`/ja/tokushoho`, section 返品・キャンセル) states that no refund is given
+    after supply starts, except where the law requires or what we delivered
+    did not work.
+  - **UK and EU**: the 14-day cancellation right ends with the immediate-supply
+    consent above.
 - Sylphx Money's hosted portal handles payment methods, invoices and plan
   changes; cancellation stays in Settings so it is one flow.
 - An account with a subscription that still renews cannot be erased until it

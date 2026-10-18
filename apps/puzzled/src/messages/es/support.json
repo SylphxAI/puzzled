@@ -1,0 +1,91 @@
+{
+	"title": "Soporte y ayuda",
+	"description": "Escribe a Puzzled sobre tu cuenta, tus juegos o tus datos. Respondemos por correo electrónico.",
+	"hero": {
+		"eyebrow": "Soporte",
+		"lead": "Escríbenos sobre tu cuenta, tu progreso o un error. Respondemos por correo electrónico.",
+		"factHuman": "Un solo buzón para todo",
+		"factReply": "Respondemos por correo electrónico.",
+		"emailCta": "Escribir a soporte",
+		"faqCta": "Leer las preguntas frecuentes"
+	},
+	"include": {
+		"title": "Qué incluir",
+		"account": "El correo electrónico de tu cuenta, si tienes una",
+		"game": "En qué juego o página estabas",
+		"detail": "Qué esperabas y qué ocurrió en su lugar",
+		"screenshot": "Una captura de pantalla, si la tienes"
+	},
+	"contact": {
+		"title": "Contacto",
+		"subtitle": "Una sola dirección atiende las preguntas sobre juego, cuenta, privacidad y asuntos legales.",
+		"support": {
+			"title": "Soporte, privacidad y asuntos legales",
+			"body": "Problemas para iniciar sesión, un puzzle que falló, comentarios, o una solicitud para acceder a tus datos, exportarlos, corregirlos o eliminarlos: escríbenos y nos ocuparemos."
+		},
+		"note": "El correo electrónico es el canal de soporte. Escribe desde la dirección de tu cuenta para que podamos comprobarla."
+	},
+	"email": {
+		"responseTime": "Respondemos por correo electrónico."
+	},
+	"faq": {
+		"title": "Preguntas que esta página puede resolver",
+		"subtitle": "Escrito a partir de cómo funciona realmente el producto. Para cualquier cosa que el producto no pueda decidir, escribe a soporte.",
+		"signIn": {
+			"question": "No puedo volver a entrar en mi cuenta. ¿Qué hago?",
+			"answer": "Inicia sesión con el correo y la contraseña con los que te registraste, o con el mismo botón de proveedor si creaste la cuenta así. Si has perdido la contraseña, elige «¿Olvidaste tu contraseña?» junto al campo de contraseña en la página de inicio de sesión: te enviaremos por correo un enlace de restablecimiento y desde él podrás crear una contraseña nueva."
+		},
+		"guest": {
+			"question": "Jugué como invitado: ¿se guarda mi progreso?",
+			"answer": "Una partida terminada como invitado cuenta para el día en que jugaste, y el puzzle diario gratuito nunca necesita una cuenta. El resultado se guarda con un identificador de invitado en ese navegador, no en una cuenta, así que no te sigue a otro dispositivo y tampoco pasa a una cuenta si inicias sesión más tarde. Una cuenta con sesión iniciada es lo que conserva la racha, los resultados y las estadísticas entre dispositivos."
+		},
+		"dayStart": {
+			"question": "¿Cuándo empieza un nuevo día de puzzles?",
+			"answer": "Todo funciona con la hora de Hong Kong (UTC+8, sin horario de verano): un nuevo conjunto diario aparece a medianoche y todos los jugadores reciben el mismo conjunto ese día. Los resultados y las rachas usan ese mismo reloj."
+		},
+		"streak": {
+			"question": "¿Por qué terminó mi racha?",
+			"answer": "Un día de racha significa completar al menos un puzzle válido dentro de un día de puzzles. Si no completas ninguno, la racha actual termina; tu mejor racha y tus resultados anteriores se conservan."
+		},
+		"accessibility": {
+			"question": "¿Es accesible Puzzled?",
+			"answer": "La compatibilidad varía según el puzzle, y es más importante ser sinceros que usar un eslogan. Ya disponible: un enlace para saltar al contenido en el sitio principal; etiquetas en los controles de los juegos que solo tienen icono; regiones dinámicas que anuncian el estado y los resultados en varios puzzles; contornos de foco visibles para el teclado; y animaciones propias desactivadas cuando tu sistema pide reducir el movimiento. Carencia conocida: algunas etiquetas de controles dentro de los juegos siguen estando solo en inglés, sea cual sea el idioma de interfaz que elijas. Si un puzzle te lo impide, escribe a soporte con el nombre del puzzle y lo que ocurrió, para que el equipo pueda revisar ese caso."
+		},
+		"data": {
+			"question": "¿Cómo obtengo una copia de mis datos o los elimino?",
+			"answer": "Escribe a {email} para solicitar acceso, una exportación, una corrección o la eliminación; esa única dirección gestiona esas solicitudes. La Política de privacidad indica qué datos se recogen, qué terceros intervienen y los derechos que puedes ejercer."
+		},
+		"cancel": {
+			"question": "¿Cómo cancelo Puzzled Plus?",
+			"answer": "Puedes cancelar en cualquier momento en Ajustes > Suscripción. Al cancelar se detienen las renovaciones futuras."
+		},
+		"afterCancel": {
+			"question": "¿Qué pasa con mi acceso después de cancelar?",
+			"answer": "Conservas Plus hasta el final del período que has pagado y no se te vuelve a cobrar. Después vuelves al puzzle diario gratuito, y tu cuenta se mantiene."
+		},
+		"refunds": {
+			"question": "¿Puedo obtener un reembolso?",
+			"answer": "Los pagos no son reembolsables y no devolvemos períodos usados en parte, salvo que las condiciones o la ley dispongan otra cosa. Si algo que entregamos no funcionó, lo solucionamos, y tus derechos legales como consumidor no se ven afectados. Al suscribirte pides que el acceso empiece de inmediato y reconoces que esto pone fin a tu derecho de desistimiento de 14 días. Si vives en Brasil, puedes desistir en un plazo de 7 días desde tu primer pago y recibir el reembolso íntegro, según el artículo 49 del Código de Defensa del Consumidor de Brasil. Si tienes una duda sobre un pago, escribe a {email}."
+		}
+	},
+	"resources": {
+		"title": "Adónde ir ahora",
+		"subtitle": "Las páginas a las que soporte dirige a la gente con más frecuencia.",
+		"reset": {
+			"title": "Restablece tu contraseña",
+			"body": "Pide un enlace de restablecimiento cuando no puedas iniciar sesión."
+		},
+		"privacy": {
+			"title": "Política de privacidad",
+			"body": "Qué datos se recogen y qué derechos tienes."
+		},
+		"terms": {
+			"title": "Términos del servicio",
+			"body": "Las normas para usar Puzzled."
+		}
+	},
+	"cta": {
+		"title": "¿Sigues necesitando ayuda?",
+		"body": "Cuéntanos qué ocurrió. Si se trata de tu cuenta, escribe desde la dirección de la cuenta."
+	}
+}

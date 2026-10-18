@@ -1,0 +1,39 @@
+{
+	"name": "Hive",
+	"tagline": "7 letras • Palavras sem fim",
+	"highlight": "Encontre palavras",
+	"description": "Quantas palavras você consegue formar com 7 letras?",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Crie palavras usando as 7 letras mostradas",
+		"rule2": "Toda palavra deve incluir a letra central",
+		"rule3": "As palavras devem ter pelo menos 4 letras",
+		"rule4": "As letras podem ser usadas mais de uma vez"
+	},
+	"messages": {
+		"tooShort": "As palavras devem ter pelo menos 4 letras",
+		"missingCenter": "Falta a letra central",
+		"invalidLetter": "Letra inválida usada",
+		"notInList": "Não está na lista de palavras",
+		"alreadyFound": "Já encontrada!"
+	},
+	"shuffle": "Embaralhar",
+	"delete": "Apagar",
+	"enter": "Enter",
+	"foundWords": "Palavras encontradas",
+	"pangram": "Pangrama",
+	"pangramBonus": "+7 de bônus",
+	"ranks": {
+		"beginner": "Início",
+		"goodStart": "Aquecimento",
+		"movingUp": "Firme",
+		"good": "Afiado",
+		"solid": "Brilhante",
+		"nice": "Genial",
+		"great": "Deslumbrante",
+		"amazing": "Craque",
+		"genius": "Mestre",
+		"queenBee": "Colmeia perfeita 👑"
+	}
+}

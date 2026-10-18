@@ -7,6 +7,7 @@ import { localizedPath } from '@/lib/seo/metadata'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 import { cn } from '@/lib/utils'
 import { GameIcon } from '@/shared/components/ui/game-icons'
+import { HeroGuestNote } from './hero-guest-note'
 import { HeroPlayAction } from './hero-play-action'
 
 type GamePageHeroProps = {
@@ -131,42 +132,46 @@ export async function GamePageHero({
 							{description}
 						</p>
 
-						<ul className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] font-medium text-[#1a1712]/75">
-							<li className="inline-flex items-center gap-1">
-								<Clock className="h-3.5 w-3.5" aria-hidden="true" />
-								{duration}
-							</li>
-							{highlight ? (
-								<li>
-									<span aria-hidden="true">· </span>
-									{highlight}
+						{/* Each item carries its own leading separator; the wrapper clips the
+						    separator of whichever item starts a line, so a wrapped row never
+						    opens with a stray bullet. */}
+						<div className="mt-4 overflow-hidden">
+							<ul className="-ms-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium text-[#1a1712]/75">
+								<li className="relative inline-flex items-center gap-1 ps-4">
+									<MetaSeparator />
+									<Clock className="h-3.5 w-3.5" aria-hidden="true" />
+									{duration}
 								</li>
-							) : null}
-							<li>
-								<span aria-hidden="true">· </span>
-								{t(`category.${category}`)}
-							</li>
-							{difficultyLabels.length > 0 ? (
-								<li>
-									<span aria-hidden="true">· </span>
-									{difficultyLabels.join(' / ')}
+								{highlight ? (
+									<li className="relative ps-4">
+										<MetaSeparator />
+										{highlight}
+									</li>
+								) : null}
+								<li className="relative ps-4">
+									<MetaSeparator />
+									{t(`category.${category}`)}
 								</li>
-							) : null}
-						</ul>
+								{difficultyLabels.length > 0 ? (
+									<li className="relative ps-4">
+										<MetaSeparator />
+										{difficultyLabels.join(' / ')}
+									</li>
+								) : null}
+							</ul>
+						</div>
 
 						<HeroPlayAction locked={locked} label={t('gamePage.playCta')} />
 
-						{isGuest && (
-							<p className="mt-3 text-sm text-[#1a1712]/75">
-								{t('gamePage.guestNote')}{' '}
-								<Link
-									href={{ pathname: '/signup', query: { callbackUrl: `/games/${slug}` } }}
-									className="inline-flex min-h-11 items-center font-semibold text-[#1a1712] underline underline-offset-4"
-								>
-									{t('gamePage.guestSignIn')}
-								</Link>
-							</p>
-						)}
+						<HeroGuestNote isGuest={isGuest} locked={locked}>
+							{t('gamePage.guestNote')}{' '}
+							<Link
+								href={{ pathname: '/signup', query: { callbackUrl: `/games/${slug}` } }}
+								className="inline-flex min-h-11 items-center font-semibold text-[#1a1712] underline underline-offset-4"
+							>
+								{t('gamePage.guestSignIn')}
+							</Link>
+						</HeroGuestNote>
 					</div>
 
 					<div
@@ -187,5 +192,13 @@ export async function GamePageHero({
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
 			/>
 		</section>
+	)
+}
+
+function MetaSeparator() {
+	return (
+		<span aria-hidden="true" className="absolute start-1.5">
+			·
+		</span>
 	)
 }

@@ -36,10 +36,20 @@
 		"checkoutCancelled": "已取消付款，你没有被扣费。",
 		"alreadySubscribed": "你已订阅 Puzzled Plus。",
 		"immediateSupplyConsent": "我要立即使用，并明白我会失去 14 天取消权。",
-		"consentRequired": "请勾选方框以继续。"
+		"consentRequired": "请勾选方框以继续。",
+		"offerLead": "全部 {count} 款游戏、每一个往日谜题，以及每款游戏的统计。",
+		"planChoice": "选择方案",
+		"monthlyEquivalent": "每月 {price}",
+		"continueToPayment": "继续付款",
+		"renewsYearly": "每年以 {price} 自动续期，直到你取消。可随时在“设置”中取消。",
+		"renewsMonthly": "每月以 {price} 自动续期，直到你取消。可随时在“设置”中取消。",
+		"familyLink": "最多 {count} 人的家庭方案",
+		"notNowPlayFree": "暂不订阅，玩今日免费谜题",
+		"choosePlus": "选择 Puzzled Plus"
 	},
 	"trial": {
-		"endsOn": "你的 Puzzled Plus 免费一周将于 {date} 结束。不会收取任何费用，你已完成的内容会继续保留在统计中。"
+		"endsOn": "你的 Puzzled Plus 免费一周将于 {date} 结束。不会收取任何费用，你已完成的内容会继续保留在统计中。",
+		"endingSoon": "你的 Puzzled Plus 试用将于 {date} 结束，谢谢你试用。结束前随时可以取消。"
 	},
 	"unlock": {
 		"title": "这款游戏属于 Puzzled Plus",

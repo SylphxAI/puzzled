@@ -12,7 +12,6 @@ import {
 } from '../types'
 import { PipPlaceHowToPlay } from './components/how-to-play'
 import { PipPlaceIcon } from './icon'
-import { getPuzzleFromSeed } from './puzzles'
 import type {
 	PipPlaceGuess,
 	PipPlaceGuessResult,
@@ -49,10 +48,6 @@ export const pipPlaceConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	generatePuzzle(seed: number) {
-		return getPuzzleFromSeed(seed)
-	},
 
 	validateGuess(solution: PipPlaceSolution, guess: PipPlaceGuess): PipPlaceGuessResult {
 		const { cell } = guess

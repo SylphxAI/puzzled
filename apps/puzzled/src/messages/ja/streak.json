@@ -1,0 +1,21 @@
+{
+	"keepStreak": "連続記録を続けましょう!",
+	"streakAtRisk": "連続記録が途切れそうです!",
+	"legendaryAtRisk": "伝説の連続記録が途切れそうです!",
+	"playToMaintain": "今日遊んで、{streak}日連続の記録を守りましょう",
+	"playNow": "今すぐ遊ぶ",
+	"currentStreak": "現在の連続記録",
+	"bestStreak": "最長の連続記録",
+	"days": "日",
+	"daysToGo": "日で達成",
+	"nextMilestone": "次のマイルストーン",
+	"freezes": "フリーズ",
+	"useFreeze": "フリーズを使う",
+	"playToday": "今日遊ぶ",
+	"dismiss": "閉じる",
+	"emergency": "緊急です! {streak}日連続の記録を守るまで、あと{time}!",
+	"emergencyTitle": "緊急です!",
+	"critical": "{streak}日連続の記録が{time}後に途切れます!",
+	"criticalTitle": "連続記録が危険です!",
+	"elevated": "{streak}日連続の記録を途切れさせないで! 残り{time}"
+}

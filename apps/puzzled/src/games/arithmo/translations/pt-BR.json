@@ -1,0 +1,22 @@
+{
+	"name": "Arithmo",
+	"tagline": "8 caracteres • Desafio de matemática",
+	"highlight": "Desafio de equação",
+	"description": "Descubra a equação em 6 tentativas",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Descubra a equação oculta em 6 tentativas",
+		"rule2": "Cada palpite precisa ser uma equação válida",
+		"rule3": "As cores mostram o quanto você chegou perto"
+	},
+	"startGame": "Começar jogo",
+	"keyboard": {
+		"enter": "Enter",
+		"delete": "Apagar"
+	},
+	"messages": {
+		"notComplete": "Caracteres insuficientes",
+		"invalid": "Equação inválida"
+	}
+}

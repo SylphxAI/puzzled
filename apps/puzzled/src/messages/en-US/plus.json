@@ -36,10 +36,20 @@
 		"checkoutCancelled": "Checkout was cancelled. You have not been charged.",
 		"alreadySubscribed": "You already have Puzzled Plus.",
 		"immediateSupplyConsent": "I want access now and understand I lose the 14-day cancellation right.",
-		"consentRequired": "Please tick the box to continue."
+		"consentRequired": "Please tick the box to continue.",
+		"offerLead": "All {count} games, every past day, and stats for each.",
+		"planChoice": "Choose a plan",
+		"monthlyEquivalent": "{price} a month",
+		"continueToPayment": "Continue to payment",
+		"renewsYearly": "Renews every year at {price} until you cancel. Cancel any time in Settings.",
+		"renewsMonthly": "Renews every month at {price} until you cancel. Cancel any time in Settings.",
+		"familyLink": "Family plan for up to {count} players",
+		"notNowPlayFree": "Not now, play today's free puzzle",
+		"choosePlus": "Choose Puzzled Plus"
 	},
 	"trial": {
-		"endsOn": "Your free week of Puzzled Plus ends on {date}. Nothing is charged, and everything you finished stays in your stats."
+		"endsOn": "Your free week of Puzzled Plus ends on {date}. Nothing is charged, and everything you finished stays in your stats.",
+		"endingSoon": "Your Puzzled Plus trial ends on {date}. Thanks for trying it. You can cancel any time before then."
 	},
 	"unlock": {
 		"title": "This game is part of Puzzled Plus",

@@ -1,0 +1,27 @@
+{
+	"name": "Cage Sudoku",
+	"tagline": "Sudoku • Sumas de jaulas",
+	"highlight": "Puzle de sumas",
+	"description": "Sudoku con restricciones de suma por jaula",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Rellena cada fila, columna y cuadro de 3×3 con 1-9",
+		"rule2": "Los números de cada jaula deben sumar el total de la jaula",
+		"rule3": "No se pueden repetir números dentro de una jaula"
+	},
+	"startGame": "Empezar partida",
+	"complete": "¡Puzle completado!",
+	"notes": "Notas",
+	"notesMode": "Modo notas",
+	"difficulty": {
+		"easy": "Fácil",
+		"medium": "Medio",
+		"hard": "Difícil"
+	},
+	"difficultyDescriptions": {
+		"easy": "20 dígitos dados para empezar",
+		"medium": "10 dígitos dados: las sumas de las jaulas hacen el resto",
+		"hard": "Sin dígitos dados, solo sumas de jaulas"
+	}
+}

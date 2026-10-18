@@ -23,7 +23,7 @@ import { resolveGameMessages } from './game-messages'
 
 type Json = Record<string, unknown>
 
-const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN'] as const
+const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN', 'ja', 'es', 'pt-BR'] as const
 type Locale = (typeof LOCALES)[number]
 
 /**
@@ -38,6 +38,9 @@ const COMMON_BY_LOCALE: Record<Locale, Json> = {
 	'zh-HK': resolveLocale('zh-HK').common as Json,
 	'zh-TW': resolveLocale('zh-TW').common as Json,
 	'zh-CN': resolveLocale('zh-CN').common as Json,
+	ja: resolveLocale('ja').common as Json,
+	es: resolveLocale('es').common as Json,
+	'pt-BR': resolveLocale('pt-BR').common as Json,
 }
 
 /** Deep lookup for a dotted path, or `undefined` when any segment is absent. */

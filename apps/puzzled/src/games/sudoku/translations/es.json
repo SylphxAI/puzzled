@@ -1,0 +1,31 @@
+{
+	"name": "Sudoku",
+	"tagline": "Cuadrícula 9×9 • Lógica clásica",
+	"highlight": "Puzle clásico",
+	"description": "Rellena la cuadrícula de 9×9 con los números del 1 al 9",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Rellena cada fila con los números del 1 al 9",
+		"rule2": "Rellena cada columna con los números del 1 al 9",
+		"rule3": "Rellena cada cuadro de 3×3 con los números del 1 al 9"
+	},
+	"startGame": "Empezar partida",
+	"difficulty": {
+		"easy": "Fácil",
+		"medium": "Medio",
+		"hard": "Difícil"
+	},
+	"notes": "Notas",
+	"notesMode": "Modo notas",
+	"clear": "Borrar",
+	"complete": "¡Puzle completado!",
+	"messages": {
+		"conflict": "Este número entra en conflicto con otra casilla"
+	},
+	"difficultyDescriptions": {
+		"easy": "49 casillas rellenas: un inicio fácil",
+		"medium": "39 casillas rellenas: una cuadrícula equilibrada",
+		"hard": "Solo 29 casillas rellenas: pocos sitios por donde empezar"
+	}
+}

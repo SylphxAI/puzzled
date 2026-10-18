@@ -3,7 +3,7 @@ import type { Locale } from '@/lib/i18n/config'
 import { resolveLocale } from '../../../../../scripts/i18n-resolved-catalogue'
 import { FAQ_KEYS } from './faq-keys'
 
-const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN'] as const
+const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN', 'ja', 'es', 'pt-BR'] as const
 
 type Faq = Record<string, { question?: unknown; answer?: unknown } | undefined>
 

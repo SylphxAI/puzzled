@@ -1,0 +1,15 @@
+{
+	"name": "Frame",
+	"tagline": "12 letras • Encadena palabras",
+	"highlight": "Cadena de palabras",
+	"description": "Conecta las letras alrededor del cuadro para formar palabras",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Forma palabras con las 12 letras de los lados del cuadro",
+		"rule2": "Las letras consecutivas deben ser de lados distintos",
+		"rule3": "Cada palabra nueva empieza con la última letra de la anterior"
+	},
+	"startGame": "Empezar partida",
+	"complete": "¡Puzle completado!"
+}

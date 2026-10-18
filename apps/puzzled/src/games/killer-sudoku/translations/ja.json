@@ -1,0 +1,27 @@
+{
+	"name": "Cage Sudoku",
+	"tagline": "数独 • ケージ合計",
+	"highlight": "合計パズル",
+	"description": "ケージの合計条件つき数独",
+	"howToPlay": "遊び方",
+	"rules": {
+		"title": "遊び方",
+		"rule1": "各行・各列・各3×3ブロックに1〜9を入れます",
+		"rule2": "各ケージ内の数字の合計は、ケージに示された数になります",
+		"rule3": "同じケージ内に同じ数字は入りません"
+	},
+	"startGame": "ゲーム開始",
+	"complete": "パズルクリア！",
+	"notes": "メモ",
+	"notesMode": "メモモード",
+	"difficulty": {
+		"easy": "かんたん",
+		"medium": "ふつう",
+		"hard": "むずかしい"
+	},
+	"difficultyDescriptions": {
+		"easy": "最初から20個の数字がヒントとして入っています",
+		"medium": "ヒントの数字は10個。ケージの合計が頼りです",
+		"hard": "ヒントの数字はなし。ケージの合計だけで解きます"
+	}
+}

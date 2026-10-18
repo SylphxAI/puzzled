@@ -102,5 +102,7 @@ unsubscribe/sign-out revoke the browser endpoint, and 404/410 deliveries prune
 expired endpoints. The reminder claim is once per player per local day: if any
 browser receives it, the claim stays held even when another endpoint fails.
 Only a retryable failure with no successful delivery releases the claim for the
-next tick. Delivery is not verified until Ops sets the keys and a real browser
-receives and opens a reminder in production.
+next tick. The keys are set on the production api. On 2026-10-05 a real
+browser (Firefox, Mozilla push service) on a test account received the 18:45
+UTC reminder and opened it: the click closed the notification and opened
+`https://puzzled.gg/`. The test account was then deleted in Settings.

@@ -1,0 +1,30 @@
+{
+	"name": "Threads",
+	"tagline": "4つずつ4グループを見つけよう",
+	"highlight": "4つのカテゴリ",
+	"description": "16個の単語を4つのカテゴリに分けよう",
+	"howToPlay": "遊び方",
+	"rules": {
+		"title": "遊び方",
+		"rule1": "共通点のある4つのアイテムのグループを探します",
+		"rule2": "4つ選んで「送信」をタップすると判定されます",
+		"rule3": "間違えられるのは4回までです"
+	},
+	"submit": "送信",
+	"shuffle": "シャッフル",
+	"deselect": "すべて選択解除",
+	"mistakes": "残りのミス",
+	"mistakesRemaining": "残りミス {remaining}/{total} 回",
+	"messages": {
+		"correct": "正解！",
+		"oneAway": "あと1つ…",
+		"incorrect": "不正解",
+		"gameOver": "次はきっとうまくいきます！"
+	},
+	"difficulty": {
+		"0": "かんたん",
+		"1": "ふつう",
+		"2": "むずかしい",
+		"3": "ひっかけ"
+	}
+}

@@ -14,11 +14,12 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import type { GameSubmission } from '../types'
 import { sudokuConfig } from './config'
 
-// Generate a puzzle for testing
-const { puzzleData, solution } = sudokuConfig.generatePuzzle(12345, 'medium')
+// A frozen puzzle from the Rust goldens
+const { puzzleData, solution } = frozenPuzzle(sudokuConfig, 'medium')
 
 // Create a correct final grid from solution
 const correctGrid = solution.grid

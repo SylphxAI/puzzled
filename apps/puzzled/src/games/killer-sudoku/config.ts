@@ -10,10 +10,8 @@ import {
 	type GameConfig,
 	type GameResult,
 	type GameSubmission,
-	type PuzzleDifficulty,
 } from '../types'
 import { KillerSudokuHowToPlay } from './components/how-to-play'
-import { generateKillerSudokuPuzzle } from './generator'
 import { KillerSudokuIcon } from './icon'
 import type {
 	KillerSudokuGuessInput,
@@ -78,20 +76,6 @@ export const killerSudokuConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	/**
-	 * Generate puzzle from seed with optional difficulty
-	 * If difficulty not specified, defaults to 'hard' (pure Killer Sudoku)
-	 */
-	generatePuzzle(seed: number, difficulty?: PuzzleDifficulty) {
-		const givenDigits: Record<PuzzleDifficulty, number> = {
-			easy: 20,
-			medium: 10,
-			hard: 0, // Pure Killer Sudoku
-		}
-		const numGiven = givenDigits[difficulty ?? 'hard']
-		return generateKillerSudokuPuzzle(seed, numGiven)
-	},
 
 	/**
 	 * Validate a cell guess

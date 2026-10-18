@@ -1,0 +1,48 @@
+{
+	"title": "結果をシェア",
+	"text": "Puzzled - {game}\n{result}",
+	"share": "シェア",
+	"copy": "コピー",
+	"card": {
+		"title": "Puzzled結果カード",
+		"downloaded": "カード画像を保存し、キャプションをクリップボードにコピーしました。",
+		"copied": "キャプションをクリップボードにコピーしました。このブラウザでは画像を作成できませんでした。",
+		"unavailable": "このブラウザではシェアを利用できません。",
+		"statusWon": "クリア!",
+		"statusLost": "今回は惜しくも失敗",
+		"attemptsLabel": "挑戦回数",
+		"scoreLabel": "スコア",
+		"streakLabel": "連続記録",
+		"timeLabel": "タイム",
+		"mistakesLabel": "ミス",
+		"timeUnder1m": "1分未満",
+		"timeUnder5m": "1〜5分",
+		"timeOver5m": "5分以上",
+		"attemptsOf": "{max}回中{attempts}回",
+		"attemptsCount": "{attempts}回",
+		"scorePoints": "{score}ポイント",
+		"streakDays": "{days}日連続",
+		"patternSummary": "パターン: 一致 {hit} / 惜しい {near} / はずれ {miss}",
+		"altOnDay": "({day})",
+		"altTemplate": "Puzzled - {game}{day}。{result}",
+		"altDetailsTemplate": " {details}。",
+		"altLinkTemplate": " 遊ぶ: {link}",
+		"detailSeparator": "、"
+	},
+	"challenge": {
+		"title": "結果を並べて比較",
+		"theirs": "相手の結果",
+		"yours": "あなたの結果"
+	},
+	"landing": {
+		"metaTitle": "シェアされたパズルの結果",
+		"ogTitle": "{game}: 超えたい結果",
+		"metaDescription": "友だちの結果を見てから、今日のPuzzledパズルを無料で遊びましょう。",
+		"eyebrow": "友だちが結果をシェアしました",
+		"titleSame": "この結果を超えられますか?",
+		"titleOther": "結果を見てから、今日のパズルに挑戦しよう",
+		"bodySame": "同じ日の同じパズルです。アカウント不要で無料で遊べて、2人の結果を並べて比べられます。",
+		"bodyOther": "このパズルは別の日のものです。今日の無料パズルは、アカウントなしですぐに遊べます。",
+		"note": "シェアされた結果に答えは含まれません。"
+	}
+}

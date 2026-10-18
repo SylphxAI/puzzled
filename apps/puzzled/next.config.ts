@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
 	productionBrowserSourceMaps: true,
 
 	// Redirects: active locale aliases and real game renames only.
-	// Removed locales (es/ja/ko/de/fr/pt-BR/it/nl/pl/tr/id/th/vi) and dead
+	// Removed locales (ko/de/fr/it/nl/pl/tr/id/th/vi) and dead
 	// slugs (worldle/nerdle) are not redirected — no legacy surface.
 	async redirects() {
 		return [
@@ -33,7 +33,7 @@ const nextConfig: NextConfig = {
 			// The cookie policy is one section of the privacy policy, not a page of its own.
 			{ source: '/cookies', destination: '/privacy#cookies', permanent: true },
 			{
-				source: '/:locale(en-GB|zh-HK|zh-TW|zh-CN)/cookies',
+				source: '/:locale(en-GB|zh-HK|zh-TW|zh-CN|ja|es|pt-BR)/cookies',
 				destination: '/:locale/privacy#cookies',
 				permanent: true,
 			},

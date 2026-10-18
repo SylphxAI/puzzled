@@ -1,0 +1,15 @@
+{
+	"name": "Spots",
+	"tagline": "Coloca todas las fichas • Cumple las regiones",
+	"highlight": "Regiones de dominó",
+	"description": "Coloca todos los dominós para que se cumpla la regla de cada región",
+	"howToPlay": "Cómo jugar",
+	"rules": {
+		"title": "Cómo jugar",
+		"rule1": "Coloca el juego completo de fichas para cubrir cada casilla exactamente una vez",
+		"rule2": "Un número es la suma de puntos de la región; = significa todos iguales; ≠ significa todos distintos",
+		"rule3": "Las fichas solo pueden ocupar dos casillas que compartan un lado"
+	},
+	"startGame": "Empezar partida",
+	"complete": "¡Tablero completado!"
+}

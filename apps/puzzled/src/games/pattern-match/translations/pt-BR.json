@@ -1,0 +1,24 @@
+{
+	"name": "Match",
+	"tagline": "12 cartas • Encontre conjuntos",
+	"highlight": "Caça-conjuntos",
+	"description": "Encontre conjuntos de 3 cartas com padrões que combinam",
+	"howToPlay": "Como jogar",
+	"rules": {
+		"title": "Como jogar",
+		"rule1": "Encontre conjuntos de 3 cartas em que cada propriedade seja toda igual OU toda diferente",
+		"rule2": "Cada carta tem 4 propriedades: forma, cor, preenchimento e quantidade",
+		"rule3": "Selecione 3 cartas que formem um conjunto válido"
+	},
+	"startGame": "Começar jogo",
+	"setsFound": "conjuntos encontrados",
+	"clear": "Limpar",
+	"giveUp": "Desistir",
+	"hint": "Selecione 3 cartas para ver se formam um conjunto válido",
+	"complete": "Todos os conjuntos encontrados!",
+	"messages": {
+		"correct": "Conjunto válido!",
+		"notASet": "Não é um conjunto válido",
+		"alreadyFound": "Conjunto já encontrado"
+	}
+}

@@ -98,7 +98,7 @@ should move.
 | 5 | How-to-play structured data on game pages (programmatic pages) | Rank for "how to play X" from the rules the pages already show | Per-game page markup | Search landings | S | none |
 | 6 | Friends' results for today (friends leaderboard) | Compare with people you know, no public shame board | Result screen, opt-in | Share and return rates | M | cloud#9830 |
 | 7 | Seasonal themes (shipped; holiday puzzles are not built) | Fresh reasons to share on festival days | Home banner, result card and share caption on the day | Share rate | S | none; the hand-set list in `apps/puzzled/src/features/seasons/lib/seasons.ts` stands in for cloud#9828 (calendar) and is replaced when it exists |
-| 8 | Own-product promotion at session end (cross-promotion) | Point finished players to our other products | Already-played view, at most one card a day | Cross-product signups | S | cloud#9826 |
+| 8 | Own-product promotion at session end (cross-promotion) | Point finished players to our other products | Already-played view, at most one card a day. Shipped: one card, chosen from the product day, linking a live own product (`features/cross-promo`); the link carries `utm_source=puzzled` and nothing about the player, and the card is not on the finish screen | Cross-product signups | S | none |
 
 Seasonal themes: one typed list of days keyed to the product day (Asia/Hong_Kong), each with an id,
 inclusive day ranges for 2026-2027, an accent from the game colour themes and a glyph; the greeting
@@ -126,13 +126,16 @@ product-side unlock on top of Money's plans, entitlements and coupons. Effects a
 industry benchmarks; the product has no payers yet, so none is measured.
 
 - [ ] **Plus on sale, yearly first** (S). Plans `individual_yearly` US$39.99 and `individual_monthly`
-      US$4.99 (about 33% off); pricing toggle defaults to yearly; label the saving from the live prices
-      with `yearlySavingPercent` (today's prices are 4 months free, so say that, never a rounder claim).
-      Family US$7.99 up to 4 seats stays; test 6 seats later.
-- [~] **7-day trial on the yearly plan** (S). Source done (`trial_days = 7` in `config/commercial/catalogue.json`, pricing page states the real first-charge date); live when Money applies the catalogue and honours it at checkout. The pre-conversion reminder email is not built. Money plan setting `trial_days = 7` on `individual_yearly`
+      US$4.99 (about 33% off); the pricing page leads with Plus and preselects yearly, with the monthly
+      equivalent as secondary text and the saving from the live prices via `yearlySavingPercent`
+      (today's prices are 4 months free, so say that, never a rounder claim). One unticked consent tick
+      and one "Continue to payment" button sit in the first screen; the Family plan and today's free
+      puzzle are text links under it, and the Free card sits below the fold. Family US$7.99 up to 4
+      seats stays; test 6 seats later.
+- [~] **7-day trial on the yearly plan** (S). Source ready (`trial_days` is 0 until the Money trial notice is live; it becomes 7 in `config/commercial/catalogue.json`, pricing page states the real first-charge date); live when Money applies the catalogue and honours it at checkout. The pre-conversion reminder email is not built. Money plan setting `trial_days = 7` on `individual_yearly`
       only; card up front; a reminder before it converts and one-step cancel (UK DMCC). Trial end date is
       the real one.
-- [~] **Reverse trial as the default** (M). Built behind `PUZZLED_REVERSE_TRIAL=on` (off until Money is live); the "ends on DATE" line is on the result screen and in Settings. After the 3rd finished day, grant an entitlement that opens
+- [~] **Reverse trial as the default** (M). On in production (`PUZZLED_REVERSE_TRIAL=on` in sylphx.toml); a finished day is one that ended won or lost; the "ends on DATE" line is on the result screen and in Settings. After the 3rd finished day, grant an entitlement that opens
       all 19 games for 7 days, then drops back to free; one grant per account; a true "ends on
       DATE" line on the result screen. Runs instead of the card-up-front trial for new players; the
       yearly trial serves returning ones.
@@ -184,6 +187,8 @@ Beyond the owner standards, these stay true here and each has a reason:
   a reminder before a trial converts and before each renewal of a longer term, ending in one step, and
   the cooling-off periods. A save offer is one skippable step, never an obstacle.
 - **Consent:** reminders, win-back and attribution run only on recorded consent; quiet hours hold.
+  The own-product card (backlog row 8) is a public link with campaign tags and no player data;
+  the destination records it only under its own consent.
 - **Cubeage is a separate company.** Cross-promotion with a Cubeage title is a public link that carries
   no user data, unless a partner link with a data-sharing agreement and the user's consent exists
   (cloud#9826 item 9).
