@@ -35,6 +35,7 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
 	{ path: '/support', changeFrequency: 'monthly', priority: 0.6 },
 	{ path: '/privacy', changeFrequency: 'yearly', priority: 0.3 },
 	{ path: '/terms', changeFrequency: 'yearly', priority: 0.3 },
+	{ path: '/delete-account', changeFrequency: 'yearly', priority: 0.3 },
 ]
 
 /** Per-game pages: daily freshness, same weight class as the catalogue. */

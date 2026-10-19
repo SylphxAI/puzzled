@@ -42,7 +42,15 @@ function localeAgnosticPath(url: string): string {
 describe('route truth table', () => {
 	test('lists the public surfaces and nothing else', () => {
 		const paths = PUBLIC_ROUTES.map((route) => route.path)
-		expect(paths).toEqual(['/', '/games', '/pricing', '/support', '/privacy', '/terms'])
+		expect(paths).toEqual([
+			'/',
+			'/games',
+			'/pricing',
+			'/support',
+			'/privacy',
+			'/terms',
+			'/delete-account',
+		])
 		for (const path of paths) {
 			expect(isPrivateRoutePath(path)).toBe(false)
 		}

@@ -53,6 +53,10 @@ pub fn router(state: AppState) -> Router {
         .route(DAILY_REMINDERS_PATH, post(daily_reminders_tick))
         .route(TRYIT_CONVERSIONS_PATH, post(tryit_conversions_tick))
         .route("/observability/test", post(observability_test))
+        .route(
+            "/signals:induce",
+            post(super::signals_induce::signals_induce),
+        )
         .with_state(state)
         .fallback_service(connect.into_axum_service())
         .layer(axum::middleware::from_fn_with_state(
@@ -70,4 +74,9 @@ pub fn router(state: AppState) -> Router {
         .layer(axum::middleware::from_fn(
             crate::observability::capture_server_errors,
         ))
+        // Quality signals (owner standards/quality-signals.md): a 5xx is one
+        // `puzzled.issue.turn_failed.<route>` line, a user-mutating RPC one
+        // `puzzled.user.write.ok|failed` journey line. Outside the capturer so
+        // it sees every response, including a captured error's.
+        .layer(axum::middleware::from_fn(crate::shared::signals::observe))
 }
