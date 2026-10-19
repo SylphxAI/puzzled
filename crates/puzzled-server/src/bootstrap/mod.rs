@@ -15,6 +15,7 @@ pub(crate) mod identity;
 pub(crate) mod lifecycle;
 mod observability_test;
 mod router;
+mod signals_induce;
 mod state;
 
 pub use lifecycle::{drain_tasks, http_port, request_shutdown, shutdown_signal};

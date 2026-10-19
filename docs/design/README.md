@@ -131,7 +131,7 @@ glyph in ink, and a deep form of the hue for small text on paper.
 | `/games/{slug}` | learn and play one game | full-bleed cover in the game's colour; the difficulty list; the board; rules, tips, FAQ, related games |
 | `/archive` | replay a past day | sign-in gate for guests |
 | `/stats`, `/leaderboard` | see your record | 2×2 summary; today's list; streak calendar |
-| `/pricing` | understand and buy Puzzled Plus | live prices from `ListPlans`; Plus emphasised; closed-sales state lists what Plus includes |
+| `/pricing` | understand and buy Puzzled Plus | live prices from `ListPlans`; the first screen is the Plus offer with Yearly preselected, an unticked consent tick and one checkout button; the Free card and the comparison sit below it, with one text link back to today's free puzzle; closed-sales state lists what Plus includes |
 | `/profile`, `/settings/*`, `/family/join` | manage the account | shared console chrome |
 | `/login`, `/signup`, password pages | account access | Sylphx Auth end users |
 | `/terms`, `/privacy`, `/support` | legal and help | operator: Sylphx Limited |
