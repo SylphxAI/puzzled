@@ -1,0 +1,116 @@
+{
+	"slug": "puzzled",
+	"name": { "en": "Puzzled", "zh-Hant": "Puzzled" },
+	"category": { "en": "Games", "zh-Hant": "遊戲" },
+	"tagline": {
+		"en": "A free daily brain game: word, logic, number and spatial puzzles, one free puzzle every day.",
+		"zh-Hant": "每日免費腦力遊戲：文字、邏輯、數字及空間謎題，每天一道免費謎題。"
+	},
+	"external": "https://puzzled.gg",
+	"services": ["Hosting", "Data"],
+	"privacy": {
+		"updated": "2026-10-08",
+		"summary": {
+			"en": "Puzzled uses account information, puzzle progress and preferences to provide daily games. Optional analytics and advertising have separate consent choices. Email hi@puzzled.gg about your data.",
+			"zh-Hant": "Puzzled 使用帳戶資料、謎題進度及偏好設定提供每日遊戲。選用的分析與廣告功能各有獨立的同意選項。如有資料相關問題，請電郵 hi@puzzled.gg。"
+		},
+		"sections": [
+			{
+				"heading": { "en": "Account and puzzle data", "zh-Hant": "帳戶與謎題資料" },
+				"body": [
+					{
+						"en": "When you use an account, Puzzled uses your account identifier, email address, display name and profile picture where supplied. It stores game sessions, puzzle state, scores, attempts, time spent and completion records to provide progress, statistics and streaks.",
+						"zh-Hant": "使用帳戶時，Puzzled 會使用您的帳戶識別碼、電郵地址，以及已提供的顯示名稱和個人圖片。產品儲存遊戲紀錄、謎題狀態、分數、嘗試次數、遊玩時間及完成紀錄，以提供進度、統計與連勝功能。"
+					},
+					{
+						"en": "Preferences include language, profile and leaderboard visibility, and notification settings. If you enable browser reminders, Puzzled stores the push subscription endpoint and encryption keys needed to deliver them, together with your reminder preferences.",
+						"zh-Hant": "偏好設定包括語言、個人檔案與排行榜顯示選項，以及通知設定。如啟用瀏覽器提醒，Puzzled 會儲存傳送提醒所需的推送訂閱端點、加密金鑰及提醒偏好設定。"
+					}
+				]
+			},
+			{
+				"heading": {
+					"en": "Browser storage and optional measurement",
+					"zh-Hant": "瀏覽器儲存與選用的成效分析"
+				},
+				"body": [
+					{
+						"en": "Cookies and local storage support sessions, preferences and your cookie choices. Analytics runs only after analytics consent; advertising storage requires a separate advertising choice. You can withdraw the cookie choice from the Privacy Policy on puzzled.gg.",
+						"zh-Hant": "Cookie 與本機儲存用於工作階段、偏好設定及您的 Cookie 選擇。分析功能只在同意分析後運作；廣告儲存須另外選擇同意廣告。您可在 puzzled.gg 的私隱政策撤回 Cookie 選擇。"
+					}
+				]
+			},
+			{
+				"heading": { "en": "Subscriptions and payments", "zh-Hant": "訂閱與付款" },
+				"body": [
+					{
+						"en": "Puzzled Plus checkout and subscription entitlements use Sylphx Money. Payment processing is handled by that service and its payment processor, not by a Puzzled card-entry form. Puzzled uses subscription access information to decide which paid games are available. Today's featured puzzle does not require payment.",
+						"zh-Hant": "Puzzled Plus 的結帳及訂閱權限由 Sylphx Money 處理。付款由該服務及其付款處理商處理，而非透過 Puzzled 的信用卡輸入表格。Puzzled 使用訂閱權限資料判斷可使用哪些付費遊戲。今日精選謎題無須付款。"
+					}
+				]
+			},
+			{
+				"heading": { "en": "Fault reports", "zh-Hant": "故障報告" },
+				"body": [
+					{
+						"en": "To find and fix faults, our error-monitoring service receives error messages, stack traces and the affected page path without its query string. The error capture code does not attach request bodies.",
+						"zh-Hant": "為找出及修正故障，我們的錯誤監察服務接收錯誤訊息、堆疊追蹤及受影響的頁面路徑，但不包括查詢字串。錯誤記錄程式不會附上請求內容。"
+					}
+				]
+			},
+			{
+				"heading": { "en": "Data requests and the full policy", "zh-Hant": "資料要求與完整政策" },
+				"body": [
+					{
+						"en": "For access, export, correction or deletion requests, email hi@puzzled.gg from the address on your account. The Privacy Policy on puzzled.gg explains the legal bases, retention, service providers and your rights. Support, privacy and legal questions all use this one inbox.",
+						"zh-Hant": "如需查閱、匯出、更正或刪除資料，請以帳戶所用的電郵地址寄信至 hi@puzzled.gg。puzzled.gg 的私隱政策說明法律依據、保留安排、服務供應商及您的權利。支援、私隱與法律問題均由同一收件匣處理。"
+					}
+				]
+			}
+		]
+	},
+	"support": {
+		"email": "hi@puzzled.gg",
+		"faq": [
+			{
+				"q": { "en": "How do I contact support?", "zh-Hant": "如何聯絡支援？" },
+				"a": {
+					"en": "Email hi@puzzled.gg about playing, accounts, privacy or legal questions. We reply by email. Include the game or page, what you expected, what happened and a screenshot if available. For account questions, write from the address on your account.",
+					"zh-Hant": "遊戲、帳戶、私隱或法律問題，請電郵 hi@puzzled.gg。我們會以電郵回覆。請附上遊戲或頁面名稱、預期結果、實際情況及截圖（如有）。帳戶問題請以帳戶所用的電郵地址來信。"
+				}
+			},
+			{
+				"q": {
+					"en": "Do I need to pay to play today's featured puzzle?",
+					"zh-Hant": "玩今日精選謎題需要付款嗎？"
+				},
+				"a": {
+					"en": "No. Today's featured puzzle is free and does not require an account. Puzzled Plus is the subscription for the other games and past-day archive; it is separate from the free daily puzzle.",
+					"zh-Hant": "不需要。今日精選謎題免費，亦無須帳戶。Puzzled Plus 是提供其他遊戲及過往謎題的訂閱，與每日免費謎題分開。"
+				}
+			},
+			{
+				"q": { "en": "When does a new puzzle day start?", "zh-Hant": "新的謎題日何時開始？" },
+				"a": {
+					"en": "Puzzled uses Hong Kong time (UTC+8, without daylight saving). The puzzle day changes at midnight in that time zone, not at midnight on your device.",
+					"zh-Hant": "Puzzled 採用香港時間（UTC+8，無夏令時間）。謎題日在該時區的午夜更換，而非您裝置所在地的午夜。"
+				}
+			},
+			{
+				"q": {
+					"en": "How do I get a copy of my data, or delete it?",
+					"zh-Hant": "如何取得我的資料副本，或要求刪除？"
+				},
+				"a": {
+					"en": "Email hi@puzzled.gg for access, export, correction or deletion. The Privacy Policy on puzzled.gg lists the data collected and the rights you can exercise.",
+					"zh-Hant": "查閱、匯出、更正或刪除資料，請電郵 hi@puzzled.gg。puzzled.gg 的私隱政策列明收集的資料及您可以行使的權利。"
+				}
+			}
+		]
+	},
+	"source": {
+		"repo": "SylphxAI/puzzled",
+		"path": "publisher/app.json",
+		"note": "Manually authored product-owned content; behavioural sources and contact policy are recorded in publisher/README.md. Hosting and Data declarations remain in sylphx.toml."
+	}
+}
