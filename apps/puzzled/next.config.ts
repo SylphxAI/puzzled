@@ -9,6 +9,9 @@ const tracingRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '../
 
 const nextConfig: NextConfig = {
 	output: 'standalone',
+	// Brotli is served by brotli.cjs (start-web.cjs); Next's own compression is gzip-only
+	// and the edge passes the origin's encoding through.
+	compress: false,
 	// Pin monorepo tracing so standalone server.js is apps/puzzled/server.js.
 	outputFileTracingRoot: tracingRoot,
 	transpilePackages: [],

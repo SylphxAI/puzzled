@@ -52,6 +52,7 @@ describe('puzzled web listen bind', () => {
 				'process.stdout.write(process.env.HOSTNAME + "\\n" + process.env.PORT)\n',
 			)
 			copyFileSync(startWebPath, join(root, 'start-web.cjs'))
+			copyFileSync(new URL('../../brotli.cjs', import.meta.url), join(root, 'brotli.cjs'))
 			const result = spawnSync(process.execPath, ['start-web.cjs'], {
 				cwd: root,
 				env: {

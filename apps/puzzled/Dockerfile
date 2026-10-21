@@ -34,6 +34,9 @@ RUN cd apps/puzzled/.next/static && mkdir -p ../source-maps && find . -name '*.m
       'mkdir -p "../source-maps/$(dirname "$1")" && mv "$1" "../source-maps/$1"' _ {} \; \
     && test -z "$(find . -name '*.map')"
 
+# Brotli q11 beside every compressible static asset (served by brotli.cjs).
+RUN bun apps/puzzled/scripts/precompress-static.mjs apps/puzzled/.next/static
+
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000
@@ -49,7 +52,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/static ./apps/
 COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/source-maps ./apps/puzzled/.next/source-maps
 COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/source-maps ./.next/source-maps
-COPY --chown=nextjs:nodejs apps/puzzled/start-web.cjs ./start-web.cjs
+COPY --chown=nextjs:nodejs apps/puzzled/start-web.cjs apps/puzzled/brotli.cjs ./
 EXPOSE 3000
 # start-web.cjs binds HOSTNAME=0.0.0.0 and honors Knative PORT.
 CMD ["node", "start-web.cjs"]
