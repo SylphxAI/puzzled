@@ -69,6 +69,16 @@ fi
 code=$(curl -sS -o "$work/sync.out" -w '%{http_code}' -X POST "${base}:sync" \
   -H "Authorization: Bearer ${key}" -H 'Content-Type: application/json' --data '{}')
 if [ "$code" -ge 300 ]; then
+  # Preview has no test-mode Stripe key yet, so its :sync answers 400
+  # merchant_not_connected. Only that answer, only with the flag (set on the preview
+  # job alone), is a warning; the PATCH, the exchange and every other sync failure
+  # stay fatal. Remove this when previews have per-product test-mode Stripe keys.
+  if [ "${SYNC_FAILURE_NONFATAL:-}" = "1" ] && [ "$code" = "400" ] \
+    && grep -q 'merchant_not_connected' "$work/sync.out"; then
+    echo "::warning::price_catalogs/default:sync answered 400 merchant_not_connected; the preview has no Stripe test-mode connection, so it is not blocking production"
+    echo "catalogue patched on ${resource##*/}, not synced"
+    exit 0
+  fi
   echo "::error::POST price_catalogs/default:sync answered ${code}"; cat "$work/sync.out"; exit 1
 fi
 echo "catalogue applied to ${resource##*/}"
