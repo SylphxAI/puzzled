@@ -1,6 +1,30 @@
 import { FIRST_FINISH_DAY_KEY } from '@/lib/storage-keys'
 
 /**
+ * Marks the day's primary action (home's play button) so the install offer can
+ * stay off it.
+ */
+export const DAY_PRIMARY_ACTION_ATTR = 'data-day-primary-action'
+
+/**
+ * Whether the install offer may render.
+ *
+ * The offer is docked above the tab bar, so on a screen whose first view
+ * carries the day's play button it would sit on top of the primary action. It
+ * therefore waits until that action has left the viewport; a screen with no
+ * such action never holds it back.
+ */
+export function shouldShowInstallOffer(input: {
+	eligible: boolean
+	standalone: boolean
+	requested: boolean
+	primaryActionVisible: boolean
+}): boolean {
+	const { eligible, standalone, requested, primaryActionVisible } = input
+	return eligible && !standalone && requested && !primaryActionVisible
+}
+
+/**
  * The install offer is for someone who has already come to play: at least one
  * finished day, and a later product day than the first finish. It never
  * appears on a game page, where a board or a result may be open.
