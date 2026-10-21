@@ -1,30 +1,33 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, spyOn, test } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test'
 import * as capture from './capture'
-import { relayBrowserError } from './relay'
+import { relayBrowserError, resetRelayLimiter } from './relay'
 
-const previous = {
-	NODE_ENV: process.env.NODE_ENV,
-	SYLPHX_PUBLIC_URL: process.env.SYLPHX_PUBLIC_URL,
-}
+/**
+ * The relay reads `NODE_ENV` and `SYLPHX_PUBLIC_URL` through live getters, so a
+ * value left set here would decide another test file's origin. Each test gets
+ * them for its own body and nothing outlives it.
+ */
+const WATCHED = ['NODE_ENV', 'SYLPHX_PUBLIC_URL'] as const
+const env = process.env as Record<string, string | undefined>
+const saved = new Map<string, string | undefined>()
 let captureSpy: ReturnType<typeof spyOn<typeof capture, 'captureException'>>
 let client = 0
-beforeAll(() => {
-	Object.assign(process.env, { NODE_ENV: 'production' })
-	delete process.env.SYLPHX_PUBLIC_URL
-})
 beforeEach(() => {
+	for (const key of WATCHED) saved.set(key, env[key])
+	env.NODE_ENV = 'production'
+	delete env.SYLPHX_PUBLIC_URL
+	resetRelayLimiter()
 	captureSpy = spyOn(capture, 'captureException').mockResolvedValue(undefined)
 	client += 1
 })
 afterEach(() => {
 	captureSpy.mockRestore()
-	delete process.env.SYLPHX_PUBLIC_URL
-})
-afterAll(() => {
-	for (const [key, value] of Object.entries(previous)) {
-		if (value === undefined) delete process.env[key]
-		else process.env[key] = value
+	for (const key of WATCHED) {
+		const value = saved.get(key)
+		if (value === undefined) delete env[key]
+		else env[key] = value
 	}
+	saved.clear()
 })
 
 function post(
