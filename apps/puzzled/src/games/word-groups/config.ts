@@ -8,14 +8,11 @@ import {
 	DEFAULT_LAUNCH_DATE,
 	type GameCompletionStats,
 	type GameConfig,
-	type GameResult,
 	type GameShareStats,
-	type GameSubmission,
 } from '../types'
 import { ConnectionsHowToPlay } from './components/how-to-play'
 import { WordGroupsIcon } from './icon'
 import type { Category, ConnectionsPuzzleData, ConnectionsSolution } from './types'
-import { TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from './types'
 
 export type { ConnectionsPuzzleData, ConnectionsSolution }
 
@@ -43,7 +40,7 @@ type ConnectionsGuessResult = {
 /**
  * Check if words match a category
  */
-function findMatchingCategory(words: string[], categories: Category[]): Category | undefined {
+function _findMatchingCategory(words: string[], categories: Category[]): Category | undefined {
 	const wordSet = new Set(words.map((w) => w.toUpperCase()))
 
 	return categories.find((cat) => {
@@ -81,97 +78,6 @@ export const wordGroupsConfig: GameConfig<
 	// Connections uses LLM for daily puzzle generation (semantic categories)
 	// Archive mode uses seed-based selection from curated puzzle pool
 	generationStrategy: 'llm',
-
-	/**
-	 * Validate a single guess (real-time feedback)
-	 */
-	validateGuess: (
-		solution: ConnectionsSolution,
-		guess: ConnectionsGuess,
-	): ConnectionsGuessResult => {
-		// Validate correct number of words
-		if (guess.words.length !== WORDS_PER_CATEGORY) {
-			return {
-				valid: false,
-				isCorrect: false,
-				error: `Must select exactly ${WORDS_PER_CATEGORY} words`,
-			}
-		}
-
-		// Check if words match any category
-		const matchingCategory = findMatchingCategory(guess.words, solution.categories)
-
-		if (matchingCategory) {
-			return {
-				valid: true,
-				isCorrect: true,
-				category: matchingCategory,
-			}
-		}
-
-		return {
-			valid: true,
-			isCorrect: false,
-		}
-	},
-
-	/**
-	 * CORE VALIDATION - Validates submission AND calculates score
-	 *
-	 * Scoring: Mistake-based
-	 * - 0 mistakes: 100 points
-	 * - 1 mistake: 75 points
-	 * - 2 mistakes: 50 points
-	 * - 3 mistakes: 25 points
-	 * - 4+ mistakes (loss): 0 points
-	 */
-	validateAndScore: (
-		solution: ConnectionsSolution,
-		_puzzleData: ConnectionsPuzzleData,
-		submission: GameSubmission,
-	): GameResult => {
-		const data = submission.data as { foundCategories?: string[][]; mistakes?: number } | undefined
-
-		// Must have found categories to validate
-		if (!data?.foundCategories) {
-			return { valid: false, error: 'Missing found categories data' }
-		}
-
-		// Count valid categories found
-		const foundCategories = data.foundCategories
-		const validCategoryCount = foundCategories.filter((found) => {
-			if (!Array.isArray(found) || found.length !== WORDS_PER_CATEGORY) {
-				return false
-			}
-			return findMatchingCategory(found, solution.categories) !== undefined
-		}).length
-
-		const foundAll = validCategoryCount === TOTAL_CATEGORIES
-
-		// Verify claimed status
-		if (submission.status === 'won' && !foundAll) {
-			return {
-				valid: false,
-				error: 'Invalid win claim - not all categories found correctly',
-			}
-		}
-		if (submission.status === 'lost' && foundAll) {
-			return {
-				valid: false,
-				error: 'Invalid loss claim - all categories found correctly',
-			}
-		}
-
-		// Calculate score
-		if (!foundAll) {
-			return { valid: true, status: 'lost', score: 0 }
-		}
-
-		const mistakes = data.mistakes ?? 0
-		const score = Math.max(0, 100 - mistakes * 25)
-
-		return { valid: true, status: 'won', score }
-	},
 
 	/**
 	 * Perfect game: no mistakes

@@ -74,6 +74,9 @@ describe('captureException', () => {
 })
 
 describe('relayBrowserError', () => {
+	// A distinct client address per request keeps each expectation independent
+	// of the process-wide rate-limit window that other test files may fill.
+	let client = 0
 	const post = (
 		body: string,
 		headers: Record<string, string> = {
@@ -82,7 +85,12 @@ describe('relayBrowserError', () => {
 			'x-forwarded-host': 'localhost:3000',
 			'x-forwarded-proto': 'http',
 		},
-	) => new Request('https://app.test/api/observability/errors', { method: 'POST', body, headers })
+	) =>
+		new Request('https://app.test/api/observability/errors', {
+			method: 'POST',
+			body,
+			headers: { ...headers, 'x-forwarded-for': `relay-capture-${++client}` },
+		})
 
 	it('refuses cross-site, oversized, and empty reports', async () => {
 		expect((await relayBrowserError(post('{}', { 'sec-fetch-site': 'cross-site' }))).status).toBe(

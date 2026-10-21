@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, spyOn, test } from 'bun:test'
 import * as capture from './capture'
-import { relayBrowserError } from './relay'
+import { relayBrowserError, resetRelayLimiter } from './relay'
 
 const previous = {
 	NODE_ENV: process.env.NODE_ENV,
@@ -13,6 +13,7 @@ beforeAll(() => {
 	delete process.env.SYLPHX_PUBLIC_URL
 })
 beforeEach(() => {
+	resetRelayLimiter()
 	captureSpy = spyOn(capture, 'captureException').mockResolvedValue(undefined)
 	client += 1
 })
