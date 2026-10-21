@@ -313,7 +313,7 @@ jobs:
       - name: Put cargo on PATH
         run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
 
-      - uses: SylphxAI/.github/.github/actions/rust-sccache@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+      - uses: SylphxAI/.github/.github/actions/rust-sccache@ab6c0f4e55d8a0d2328547087b192e6de8891234 # SylphxAI/.github main (optimistic-merge template)
         with:
           s3-access-key: ${{ secrets.SYLPHX_CI_CACHE_ACCESS_KEY }}
           s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
@@ -351,7 +351,7 @@ jobs:
       - name: Put cargo on PATH
         run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
 
-      - uses: SylphxAI/.github/.github/actions/rust-sccache@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+      - uses: SylphxAI/.github/.github/actions/rust-sccache@ab6c0f4e55d8a0d2328547087b192e6de8891234 # SylphxAI/.github main (optimistic-merge template)
         with:
           s3-access-key: ${{ secrets.SYLPHX_CI_CACHE_ACCESS_KEY }}
           s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
@@ -476,7 +476,7 @@ jobs:
       - name: Put cargo on PATH
         run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
 
-      - uses: SylphxAI/.github/.github/actions/rust-sccache@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+      - uses: SylphxAI/.github/.github/actions/rust-sccache@ab6c0f4e55d8a0d2328547087b192e6de8891234 # SylphxAI/.github main (optimistic-merge template)
         with:
           s3-access-key: ${{ secrets.SYLPHX_CI_CACHE_ACCESS_KEY }}
           s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
