@@ -126,9 +126,10 @@ pub fn validate_browser(incoming: &Incoming) -> Option<Row> {
 
 pub async fn insert(pool: &PgPool, row: &Row) -> Result<(), String> {
     sqlx::query(
-        r#"INSERT INTO "funnel_events" ("event", "path", "game_slug", "metric", "value", "rating")
-           VALUES ($1, $2, $3, $4, $5, $6)"#,
+        r#"INSERT INTO "funnel_events" ("id", "event", "path", "game_slug", "metric", "value", "rating")
+           VALUES ($1, $2, $3, $4, $5, $6, $7)"#,
     )
+    .bind(uuid::Uuid::now_v7())
     .bind(row.event)
     .bind(&row.path)
     .bind(&row.game_slug)
@@ -150,9 +151,10 @@ pub async fn record_signup(pool: &PgPool, user_id: &str) -> Result<(), String> {
         r#"WITH first_signup AS (
             INSERT INTO funnel_signup_receipts (user_id) VALUES ($1)
             ON CONFLICT DO NOTHING RETURNING user_id
-        ) INSERT INTO funnel_events (event) SELECT 'signup' FROM first_signup"#,
+        ) INSERT INTO funnel_events (id, event) SELECT $2, 'signup' FROM first_signup"#,
     )
     .bind(user_id)
+    .bind(uuid::Uuid::now_v7())
     .execute(pool)
     .await
     .map_err(|e| format!("funnel signup insert failed: {e}"))?;

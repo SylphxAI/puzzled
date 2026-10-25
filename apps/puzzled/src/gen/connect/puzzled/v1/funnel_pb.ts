@@ -19,16 +19,16 @@ import { file_google_protobuf_cpp_features } from '@bufbuild/protobuf/wkt'
 export const file_puzzled_v1_funnel: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		'ChdwdXp6bGVkL3YxL2Z1bm5lbC5wcm90bxIKcHV6emxlZC52MSKAAQoYUmVjb3JkRnVubmVsRXZlbnRSZXF1ZXN0Eg0KBWV2ZW50GAEgASgJEgwKBHBhdGgYAiABKAkSEQoJZ2FtZV9zbHVnGAMgASgJEg4KBm1ldHJpYxgEIAEoCRIUCgV2YWx1ZRgFIAEoAUIFqgECCAESDgoGcmF0aW5nGAYgASgJIhsKGVJlY29yZEZ1bm5lbEV2ZW50UmVzcG9uc2UyawoNRnVubmVsU2VydmljZRJaCgtSZWNvcmRFdmVudBIkLnB1enpsZWQudjEuUmVjb3JkRnVubmVsRXZlbnRSZXF1ZXN0GiUucHV6emxlZC52MS5SZWNvcmRGdW5uZWxFdmVudFJlc3BvbnNlQhSSAxEIAhABGAEgAigBMAHCPgIQA2IIZWRpdGlvbnNw6Qc',
+		'ChdwdXp6bGVkL3YxL2Z1bm5lbC5wcm90bxIKcHV6emxlZC52MSJ6ChJSZWNvcmRFdmVudFJlcXVlc3QSDQoFZXZlbnQYASABKAkSDAoEcGF0aBgCIAEoCRIRCglnYW1lX3NsdWcYAyABKAkSDgoGbWV0cmljGAQgASgJEhQKBXZhbHVlGAUgASgBQgWqAQIIARIOCgZyYXRpbmcYBiABKAkiFQoTUmVjb3JkRXZlbnRSZXNwb25zZTJfCg1GdW5uZWxTZXJ2aWNlEk4KC1JlY29yZEV2ZW50Eh4ucHV6emxlZC52MS5SZWNvcmRFdmVudFJlcXVlc3QaHy5wdXp6bGVkLnYxLlJlY29yZEV2ZW50UmVzcG9uc2VCFJIDEQgCEAEYASACKAEwAcI+AhADYghlZGl0aW9uc3DpBw',
 		[file_google_protobuf_cpp_features],
 	)
 
 /**
  * Anonymous first-party counters. Signup is server-only.
  *
- * @generated from message puzzled.v1.RecordFunnelEventRequest
+ * @generated from message puzzled.v1.RecordEventRequest
  */
-export type RecordFunnelEventRequest = Message<'puzzled.v1.RecordFunnelEventRequest'> & {
+export type RecordEventRequest = Message<'puzzled.v1.RecordEventRequest'> & {
 	/**
 	 * @generated from field: string event = 1;
 	 */
@@ -61,23 +61,23 @@ export type RecordFunnelEventRequest = Message<'puzzled.v1.RecordFunnelEventRequ
 }
 
 /**
- * Describes the message puzzled.v1.RecordFunnelEventRequest.
- * Use `create(RecordFunnelEventRequestSchema)` to create a new message.
+ * Describes the message puzzled.v1.RecordEventRequest.
+ * Use `create(RecordEventRequestSchema)` to create a new message.
  */
-export const RecordFunnelEventRequestSchema: GenMessage<RecordFunnelEventRequest> =
+export const RecordEventRequestSchema: GenMessage<RecordEventRequest> =
 	/*@__PURE__*/
 	messageDesc(file_puzzled_v1_funnel, 0)
 
 /**
- * @generated from message puzzled.v1.RecordFunnelEventResponse
+ * @generated from message puzzled.v1.RecordEventResponse
  */
-export type RecordFunnelEventResponse = Message<'puzzled.v1.RecordFunnelEventResponse'> & {}
+export type RecordEventResponse = Message<'puzzled.v1.RecordEventResponse'> & {}
 
 /**
- * Describes the message puzzled.v1.RecordFunnelEventResponse.
- * Use `create(RecordFunnelEventResponseSchema)` to create a new message.
+ * Describes the message puzzled.v1.RecordEventResponse.
+ * Use `create(RecordEventResponseSchema)` to create a new message.
  */
-export const RecordFunnelEventResponseSchema: GenMessage<RecordFunnelEventResponse> =
+export const RecordEventResponseSchema: GenMessage<RecordEventResponse> =
 	/*@__PURE__*/
 	messageDesc(file_puzzled_v1_funnel, 1)
 
@@ -90,7 +90,7 @@ export const FunnelService: GenService<{
 	 */
 	recordEvent: {
 		methodKind: 'unary'
-		input: typeof RecordFunnelEventRequestSchema
-		output: typeof RecordFunnelEventResponseSchema
+		input: typeof RecordEventRequestSchema
+		output: typeof RecordEventResponseSchema
 	}
 }> = /*@__PURE__*/ serviceDesc(file_puzzled_v1_funnel, 0)

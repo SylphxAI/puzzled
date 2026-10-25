@@ -1056,7 +1056,7 @@ export const guestCredentials = pgTable(
 export const funnelEvents = pgTable(
 	'funnel_events',
 	{
-		id: uuid('id').primaryKey().default(sql`uuidv7()`),
+		id: uuid('id').primaryKey(),
 		occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
 		event: text('event').notNull(),
 		path: text('path'),

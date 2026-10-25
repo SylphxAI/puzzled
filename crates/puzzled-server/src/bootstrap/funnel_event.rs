@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::proto::puzzled::v1::{
-    FunnelService, RecordFunnelEventRequest, RecordFunnelEventResponse,
+    FunnelService, RecordEventRequest, RecordEventResponse,
 };
 use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
@@ -50,8 +50,8 @@ impl FunnelService for FunnelConnectService {
     async fn record_event(
         &self,
         ctx: RequestContext,
-        request: ServiceRequest<'_, RecordFunnelEventRequest>,
-    ) -> ServiceResult<RecordFunnelEventResponse> {
+        request: ServiceRequest<'_, RecordEventRequest>,
+    ) -> ServiceResult<RecordEventResponse> {
         let origin = crate::shared::public_origin::public_origin()
             .map_err(|_| ConnectError::new(ErrorCode::Unavailable, "public_origin_unavailable"))?;
         if !crate::shared::public_origin::admits_browser(ctx.headers(), &origin) {
@@ -88,7 +88,7 @@ impl FunnelService for FunnelConnectService {
             rating: Some(input.rating),
         };
         let Some(row) = validate_browser(&incoming) else {
-            return Response::ok(RecordFunnelEventResponse::default());
+            return Response::ok(RecordEventResponse::default());
         };
         let Some(pool) = &self.state.pool else {
             return Err(ConnectError::new(
@@ -105,7 +105,7 @@ impl FunnelService for FunnelConnectService {
                 ConnectError::new(ErrorCode::Unavailable, "funnel_unavailable")
             })?;
         }
-        Response::ok(RecordFunnelEventResponse::default())
+        Response::ok(RecordEventResponse::default())
     }
 }
 

@@ -16,7 +16,7 @@ option features.(pb.cpp).string_type = STRING;
 import "google/protobuf/cpp_features.proto";
 
 // Anonymous first-party counters. Signup is server-only.
-message RecordFunnelEventRequest {
+message RecordEventRequest {
   string event = 1;
   string path = 2;
   string game_slug = 3;
@@ -24,7 +24,7 @@ message RecordFunnelEventRequest {
   double value = 5 [features.field_presence = EXPLICIT];
   string rating = 6;
 }
-message RecordFunnelEventResponse {}
+message RecordEventResponse {}
 service FunnelService {
-  rpc RecordEvent(RecordFunnelEventRequest) returns (RecordFunnelEventResponse);
+  rpc RecordEvent(RecordEventRequest) returns (RecordEventResponse);
 }

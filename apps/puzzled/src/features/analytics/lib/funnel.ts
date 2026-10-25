@@ -4,7 +4,7 @@
  * without a consent choice. Never throws and never blocks the page.
  */
 import { create, toJsonString } from '@bufbuild/protobuf'
-import { RecordFunnelEventRequestSchema } from '@/gen/connect/puzzled/v1/funnel_pb'
+import { RecordEventRequestSchema } from '@/gen/connect/puzzled/v1/funnel_pb'
 import { resolveConnectBaseUrl } from '@/lib/connect/transport'
 
 export type FunnelEvent =
@@ -35,8 +35,8 @@ export function sendFunnel(
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', 'Connect-Protocol-Version': '1' },
 			body: toJsonString(
-				RecordFunnelEventRequestSchema,
-				create(RecordFunnelEventRequestSchema, {
+				RecordEventRequestSchema,
+				create(RecordEventRequestSchema, {
 					...payload,
 					gameSlug: payload.event === 'game_start' ? payload.game_slug : undefined,
 				}),
