@@ -4,9 +4,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::proto::puzzled::v1::{
-    FunnelService, RecordEventRequest, RecordEventResponse,
-};
+use crate::proto::puzzled::v1::{FunnelService, RecordEventRequest, RecordEventResponse};
 use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
