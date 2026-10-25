@@ -9,7 +9,7 @@ import { isProxySkippedPath } from './proxy-paths'
 
 describe('proxy path skipping', () => {
 	test('serves the root metadata documents outside locale routing', () => {
-		for (const path of ['/robots.txt', '/sitemap.xml', '/manifest.webmanifest']) {
+		for (const path of ['/robots.txt', '/sitemap.xml', '/manifest.webmanifest', '/offline.html']) {
 			expect(isProxySkippedPath(path)).toBe(true)
 		}
 	})
