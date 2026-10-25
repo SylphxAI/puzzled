@@ -96,9 +96,13 @@ counter runs without a consent choice. Google Analytics, when
 | `signup` | api, in `RecordSignupAttribution`, once per new account |
 | `web_vitals` | browser, `LCP` `CLS` `INP` `FCP` `TTFB` (`useReportWebVitals`) |
 
-The browser posts same-origin JSON to `POST /v1/funnel/event` (api,
+The browser posts same-origin ProtoJSON to the native Connect RPC
+`POST /puzzled.v1.FunnelService/RecordEvent` (api implementation:
 `crates/puzzled-server/src/bootstrap/funnel_event.rs`); the table is
-`funnel_events`. Read it with SQL:
+`funnel_events`. Signup retries are deduplicated atomically by a separate
+`funnel_signup_receipts` table (player id only, erased with the account); event
+rows carry no player id. Web Vitals are document-load metrics, not soft-navigation
+metrics. Read it with SQL:
 
 ```sql
 SELECT event, count(*) FROM funnel_events

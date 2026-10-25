@@ -1,0 +1,30 @@
+edition = "2024";
+
+package puzzled.v1;
+
+// Proto3 -> Edition 2024 carries identical wire semantics: pin every proto3
+// default that moved between representations so the migration is a pure
+// edition cutover with no breaking findings and no consumer impact.
+option features.field_presence = IMPLICIT;
+option features.enum_type = OPEN;
+option features.repeated_field_encoding = PACKED;
+option features.utf8_validation = VERIFY;
+option features.message_encoding = LENGTH_PREFIXED;
+option features.json_format = ALLOW;
+option features.(pb.cpp).string_type = STRING;
+
+import "google/protobuf/cpp_features.proto";
+
+// Anonymous first-party counters. Signup is server-only.
+message RecordFunnelEventRequest {
+  string event = 1;
+  string path = 2;
+  string game_slug = 3;
+  string metric = 4;
+  double value = 5 [features.field_presence = EXPLICIT];
+  string rating = 6;
+}
+message RecordFunnelEventResponse {}
+service FunnelService {
+  rpc RecordEvent(RecordFunnelEventRequest) returns (RecordFunnelEventResponse);
+}

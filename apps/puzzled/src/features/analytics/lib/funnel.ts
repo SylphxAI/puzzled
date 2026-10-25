@@ -1,8 +1,10 @@
 /**
  * First-party funnel counter (browser side). Posts anonymous events to the
- * api's `/v1/funnel/event`: no cookie, no user id, no third party, so it runs
+ * api's native Connect FunnelService: no cookie, no user id, no third party, so it runs
  * without a consent choice. Never throws and never blocks the page.
  */
+import { create, toJsonString } from '@bufbuild/protobuf'
+import { RecordFunnelEventRequestSchema } from '@/gen/connect/puzzled/v1/funnel_pb'
 import { resolveConnectBaseUrl } from '@/lib/connect/transport'
 
 export type FunnelEvent =
@@ -16,7 +18,7 @@ export type FunnelEvent =
 			path?: string
 	  }
 
-export const FUNNEL_PATH = '/v1/funnel/event'
+export const FUNNEL_PATH = '/puzzled.v1.FunnelService/RecordEvent'
 
 /** The path without locale prefix is not needed: the raw pathname is stored, query and hash dropped. */
 export function funnelUrl(base: string): string {
@@ -31,8 +33,14 @@ export function sendFunnel(
 	try {
 		void send(funnelUrl(resolveConnectBaseUrl()), {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(payload),
+			headers: { 'Content-Type': 'application/json', 'Connect-Protocol-Version': '1' },
+			body: toJsonString(
+				RecordFunnelEventRequestSchema,
+				create(RecordFunnelEventRequestSchema, {
+					...payload,
+					gameSlug: payload.event === 'game_start' ? payload.game_slug : undefined,
+				}),
+			),
 			keepalive: true,
 			credentials: 'omit',
 		}).catch(() => {})

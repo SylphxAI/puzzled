@@ -564,7 +564,9 @@ impl PreferencesService for PreferencesConnectService {
         let identity = require_identity(&ctx)?;
         // Every new account is one signup in the first-party funnel, tagged or not.
         if let Some(pool) = &self.state.pool {
-            if let Err(error) = crate::capabilities::funnel::record_signup(pool).await {
+            if let Err(error) =
+                crate::capabilities::funnel::record_signup(pool, &identity.user_id).await
+            {
                 tracing::warn!(%error, "funnel signup not recorded");
             }
         }

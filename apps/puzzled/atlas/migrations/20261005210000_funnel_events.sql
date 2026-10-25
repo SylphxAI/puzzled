@@ -11,3 +11,8 @@ CREATE TABLE "funnel_events" (
     "rating" text
 );
 CREATE INDEX "funnel_events_event_time_idx" ON "funnel_events" ("event", "occurred_at");
+
+-- Separate idempotency receipt; event rows remain anonymous. Deleted on erasure.
+CREATE TABLE "funnel_signup_receipts" (
+    "user_id" uuid PRIMARY KEY
+);

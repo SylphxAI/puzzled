@@ -106,19 +106,21 @@ pub async fn insert(pool: &PgPool, row: &Row) -> Result<(), String> {
 }
 
 /// A new account. Best effort: a failure is logged by the caller, never surfaced.
-pub async fn record_signup(pool: &PgPool) -> Result<(), String> {
-    insert(
-        pool,
-        &Row {
-            event: "signup",
-            path: None,
-            game_slug: None,
-            metric: None,
-            value: None,
-            rating: None,
-        },
+pub async fn record_signup(pool: &PgPool, user_id: &str) -> Result<(), String> {
+    let user_id = uuid::Uuid::parse_str(user_id).map_err(|e| e.to_string())?;
+    // The receipt and anonymous event commit together; retries/concurrent calls
+    // cannot inflate signup counts and a failed insert leaves the call retryable.
+    sqlx::query(
+        r#"WITH first_signup AS (
+            INSERT INTO funnel_signup_receipts (user_id) VALUES ($1)
+            ON CONFLICT DO NOTHING RETURNING user_id
+        ) INSERT INTO funnel_events (event) SELECT 'signup' FROM first_signup"#,
     )
+    .bind(user_id)
+    .execute(pool)
     .await
+    .map_err(|e| format!("funnel signup insert failed: {e}"))?;
+    Ok(())
 }
 
 #[cfg(test)]

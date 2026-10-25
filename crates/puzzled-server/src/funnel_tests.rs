@@ -23,7 +23,11 @@ async fn landing_game_start_signup_and_web_vitals_are_counted() {
     )
     .await
     .unwrap();
-    record_signup(&pool).await.unwrap();
+    let player = uuid::Uuid::now_v7().to_string();
+    let (first, retry) = tokio::join!(record_signup(&pool, &player), record_signup(&pool, &player));
+    first.unwrap();
+    retry.unwrap();
+    record_signup(&pool, &player).await.unwrap();
     insert(
         &pool,
         &row(r#"{"event":"web_vitals","metric":"LCP","value":1800,"rating":"good","path":"/"}"#),

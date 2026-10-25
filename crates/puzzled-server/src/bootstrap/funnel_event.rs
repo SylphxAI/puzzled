@@ -1,14 +1,16 @@
-//! `POST /v1/funnel/event`: the browser's side of the first-party funnel
-//! counter (`capabilities::funnel`). Same-origin JSON only, 2 KB body, a
-//! process-wide cap of 1200 rows a minute. Always 204 for an accepted or
-//! ignored event, so a page never retries or waits.
+//! Anonymous first-party counters over native Connect RPC, with same-origin validation
+//! and a process-wide cap of 1200 browser rows per minute.
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use axum::body::Bytes;
-use axum::extract::State;
-use axum::http::{HeaderMap, StatusCode};
+use crate::proto::puzzled::v1::{
+    FunnelService, RecordFunnelEventRequest, RecordFunnelEventResponse,
+};
+use connectrpc::{
+    ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
+};
+use std::sync::Arc;
 
 use super::state::AppState;
 use crate::capabilities::funnel::{insert, validate_browser, Incoming};
@@ -39,36 +41,76 @@ fn within_cap(now_secs: u64) -> bool {
     }
 }
 
-pub(crate) async fn funnel_event(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    body: Bytes,
-) -> StatusCode {
-    let Ok(origin) = crate::shared::public_origin::public_origin() else {
-        return StatusCode::SERVICE_UNAVAILABLE;
-    };
-    if !crate::shared::public_origin::admits_browser(&headers, &origin) || body.len() > 2048 {
-        return StatusCode::FORBIDDEN;
+pub struct FunnelConnectService {
+    state: AppState,
+}
+
+#[allow(refining_impl_trait_internal, refining_impl_trait_reachable)]
+impl FunnelService for FunnelConnectService {
+    async fn record_event(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, RecordFunnelEventRequest>,
+    ) -> ServiceResult<RecordFunnelEventResponse> {
+        let origin = crate::shared::public_origin::public_origin()
+            .map_err(|_| ConnectError::new(ErrorCode::Unavailable, "public_origin_unavailable"))?;
+        if !crate::shared::public_origin::admits_browser(ctx.headers(), &origin) {
+            return Err(ConnectError::new(
+                ErrorCode::PermissionDenied,
+                "same_origin_required",
+            ));
+        }
+        let input = request.to_owned_message();
+        // Bound retained data as well as the router's shared request-body cap.
+        if [
+            &input.event,
+            &input.path,
+            &input.game_slug,
+            &input.metric,
+            &input.rating,
+        ]
+        .iter()
+        .map(|s| s.len())
+        .sum::<usize>()
+            > 2048
+        {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "event_too_large",
+            ));
+        }
+        let incoming = Incoming {
+            event: input.event,
+            path: Some(input.path),
+            game_slug: Some(input.game_slug),
+            metric: Some(input.metric),
+            value: input.value,
+            rating: Some(input.rating),
+        };
+        let Some(row) = validate_browser(&incoming) else {
+            return Response::ok(RecordFunnelEventResponse::default());
+        };
+        let Some(pool) = &self.state.pool else {
+            return Err(ConnectError::new(
+                ErrorCode::Unavailable,
+                "funnel_unavailable",
+            ));
+        };
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_or(0, |d| d.as_secs());
+        if within_cap(now) {
+            insert(pool, &row).await.map_err(|error| {
+                tracing::warn!(%error, "funnel event not recorded");
+                ConnectError::new(ErrorCode::Unavailable, "funnel_unavailable")
+            })?;
+        }
+        Response::ok(RecordFunnelEventResponse::default())
     }
-    let Some(pool) = &state.pool else {
-        return StatusCode::NO_CONTENT;
-    };
-    let Some(row) = serde_json::from_slice::<Incoming>(&body)
-        .ok()
-        .and_then(|incoming| validate_browser(&incoming))
-    else {
-        return StatusCode::NO_CONTENT;
-    };
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0, |d| d.as_secs());
-    if !within_cap(now) {
-        return StatusCode::NO_CONTENT;
-    }
-    if let Err(error) = insert(pool, &row).await {
-        tracing::warn!(%error, "funnel event not recorded");
-    }
-    StatusCode::NO_CONTENT
+}
+
+pub fn funnel_connect_service(state: AppState) -> Arc<FunnelConnectService> {
+    Arc::new(FunnelConnectService { state })
 }
 
 #[cfg(test)]
