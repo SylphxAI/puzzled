@@ -1,7 +1,7 @@
 -- Schema only. First-party funnel counter: anonymous rows (no user id, no IP,
 -- no cookie). Safe to drop on rollback; nothing else reads it.
 CREATE TABLE "funnel_events" (
-    "id" bigserial PRIMARY KEY,
+    "id" uuid PRIMARY KEY DEFAULT uuidv7(),
     "occurred_at" timestamptz NOT NULL DEFAULT now(),
     "event" text NOT NULL CHECK ("event" IN ('landing', 'game_start', 'signup', 'web_vitals')),
     "path" text,

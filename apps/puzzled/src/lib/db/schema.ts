@@ -14,6 +14,7 @@ import {
 	boolean,
 	check,
 	date,
+	doublePrecision,
 	index,
 	integer,
 	jsonb,
@@ -1050,3 +1051,30 @@ export const guestCredentials = pgTable(
 		),
 	],
 )
+
+/** Anonymous first-party event rows; no player identity or browser cookie. */
+export const funnelEvents = pgTable(
+	'funnel_events',
+	{
+		id: uuid('id').primaryKey().default(sql`uuidv7()`),
+		occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
+		event: text('event').notNull(),
+		path: text('path'),
+		gameSlug: text('game_slug'),
+		metric: text('metric'),
+		value: doublePrecision('value'),
+		rating: text('rating'),
+	},
+	(table) => [
+		index('funnel_events_event_time_idx').on(table.event, table.occurredAt),
+		check(
+			'funnel_events_event_check',
+			sql`${table.event} IN ('landing', 'game_start', 'signup', 'web_vitals')`,
+		),
+	],
+)
+
+/** Retry deduplication only; erased with the account, not linked from event rows. */
+export const funnelSignupReceipts = pgTable('funnel_signup_receipts', {
+	userId: uuid('user_id').primaryKey(),
+})

@@ -206,6 +206,11 @@ async fn every_subject_naming_the_player_loses_its_sign_in_with_the_rows() {
     )
     .await;
 
+    // Exercise all four anonymous counters and concurrent signup retries in the
+    // database-backed erasure lane, then prove only the identity receipt is erased.
+    crate::funnel_tests::assert_four_events_and_signup_retry_safety(&pool, &player.to_string())
+        .await;
+
     let (status, body) = delete_account(&app(&pool, Some(base)), &token(&player.to_string())).await;
     assert_eq!(status, StatusCode::OK, "{body}");
 
@@ -226,6 +231,18 @@ async fn every_subject_naming_the_player_loses_its_sign_in_with_the_rows() {
     // The rows are gone, the subject map included (it is part of the erasure).
     assert_eq!(preference_rows(&pool, player).await, 0);
     assert_eq!(subject_rows(&pool, player).await, 0);
+    let receipts: i64 =
+        sqlx::query_scalar("SELECT count(*) FROM funnel_signup_receipts WHERE user_id = $1")
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(receipts, 0);
+    let events: i64 = sqlx::query_scalar("SELECT count(*) FROM funnel_events")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(events, 4);
 }
 
 #[tokio::test]

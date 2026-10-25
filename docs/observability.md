@@ -102,7 +102,9 @@ The browser posts same-origin ProtoJSON to the native Connect RPC
 `funnel_events`. Signup retries are deduplicated atomically by a separate
 `funnel_signup_receipts` table (player id only, erased with the account); event
 rows carry no player id. Web Vitals are document-load metrics, not soft-navigation
-metrics. Read it with SQL:
+metrics. Only allowlisted public paths are retained, without locale/query/hash;
+game-detail paths use the `/games/:slug` template and private paths are dropped.
+Read it with SQL:
 
 ```sql
 SELECT event, count(*) FROM funnel_events

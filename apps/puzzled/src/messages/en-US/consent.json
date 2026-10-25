@@ -1,6 +1,6 @@
 {
 	"title": "Analytics consent",
-	"message": "We count visits and plays with our own anonymous counter, without cookies. Optional analytics and advertising cookies stay off unless you turn them on.",
+	"message": "We count visits and plays anonymously without cookies; optional cookies stay off until you accept.",
 	"accept": "Accept",
 	"decline": "Decline",
 	"learnMore": "Privacy policy",

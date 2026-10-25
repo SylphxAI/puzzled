@@ -1,6 +1,6 @@
 {
 	"title": "分析同意",
-	"message": "我哋用自家嘅匿名計數器統計到訪同遊玩次數，唔使用 Cookie。可選嘅分析同廣告 Cookie 預設關閉，需要喺「設定」自行開啟。",
+	"message": "我哋唔用 Cookie 匿名統計到訪同遊玩次數，可選嘅分析同廣告 Cookie 要你同意先會開啟。",
 	"accept": "同意",
 	"decline": "拒絕",
 	"learnMore": "私隱政策",

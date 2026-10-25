@@ -33,7 +33,41 @@ pub struct Row {
 
 fn clean_path(raw: &str) -> Option<String> {
     let path = raw.split(['?', '#']).next()?;
-    (path.starts_with('/') && path.len() <= 200 && path.is_ascii()).then(|| path.to_owned())
+    if !path.starts_with('/') || path.len() > 200 || !path.is_ascii() {
+        return None;
+    }
+    let mut parts = path.trim_matches('/').split('/');
+    let first = parts.next().unwrap_or_default();
+    let path = if matches!(
+        first,
+        "en-US" | "en-GB" | "zh-HK" | "zh-CN" | "zh-TW" | "ja" | "es" | "pt-BR"
+    ) {
+        format!("/{}", parts.collect::<Vec<_>>().join("/"))
+    } else {
+        path.trim_end_matches('/').to_owned()
+    };
+    let path = if path.is_empty() { "/" } else { &path };
+    if matches!(
+        path,
+        "/" | "/games"
+            | "/pricing"
+            | "/privacy"
+            | "/terms"
+            | "/support"
+            | "/login"
+            | "/signup"
+            | "/delete-account"
+    ) {
+        return Some(path.to_owned());
+    }
+    // Never persist arbitrary account/share identifiers or user-entered paths.
+    if path
+        .strip_prefix("/games/")
+        .is_some_and(|slug| clean_slug(slug).is_some())
+    {
+        return Some("/games/:slug".to_owned());
+    }
+    None
 }
 
 fn clean_slug(raw: &str) -> Option<String> {
@@ -56,7 +90,9 @@ pub fn validate_browser(incoming: &Incoming) -> Option<Row> {
         _ => return None,
     };
     let path = incoming.path.as_deref().and_then(clean_path);
-    let game_slug = incoming.game_slug.as_deref().and_then(clean_slug);
+    let game_slug = (event == "game_start")
+        .then(|| incoming.game_slug.as_deref().and_then(clean_slug))
+        .flatten();
     if event == "game_start" && game_slug.is_none() {
         return None;
     }
@@ -144,6 +180,22 @@ mod tests {
         assert_eq!(row.path.as_deref(), Some("/pricing"));
         let row = validate_browser(&incoming(r#"{"event":"landing","path":"http://x"}"#)).unwrap();
         assert_eq!(row.path, None);
+    }
+
+    #[test]
+    fn private_paths_are_not_retained() {
+        for path in [
+            "/account/alice",
+            "/share/private-id",
+            "/login/alice@example.com",
+        ] {
+            assert_eq!(clean_path(path), None);
+        }
+        assert_eq!(
+            clean_path("/zh-HK/pricing?token=secret"),
+            Some("/pricing".to_owned())
+        );
+        assert_eq!(clean_path("/games/sudoku"), Some("/games/:slug".to_owned()));
     }
 
     #[test]

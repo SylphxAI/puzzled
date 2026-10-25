@@ -14,29 +14,32 @@ async fn landing_game_start_signup_and_web_vitals_are_counted() {
     let Some(pool) = fresh_database().await else {
         return;
     };
-    insert(&pool, &row(r#"{"event":"landing","path":"/"}"#))
+    assert_four_events_and_signup_retry_safety(&pool, &uuid::Uuid::now_v7().to_string()).await;
+}
+
+pub(crate) async fn assert_four_events_and_signup_retry_safety(pool: &sqlx::PgPool, player: &str) {
+    insert(pool, &row(r#"{"event":"landing","path":"/"}"#))
         .await
         .unwrap();
     insert(
-        &pool,
+        pool,
         &row(r#"{"event":"game_start","game_slug":"word-guess"}"#),
     )
     .await
     .unwrap();
-    let player = uuid::Uuid::now_v7().to_string();
-    let (first, retry) = tokio::join!(record_signup(&pool, &player), record_signup(&pool, &player));
+    let (first, retry) = tokio::join!(record_signup(pool, player), record_signup(pool, player));
     first.unwrap();
     retry.unwrap();
-    record_signup(&pool, &player).await.unwrap();
+    record_signup(pool, player).await.unwrap();
     insert(
-        &pool,
+        pool,
         &row(r#"{"event":"web_vitals","metric":"LCP","value":1800,"rating":"good","path":"/"}"#),
     )
     .await
     .unwrap();
     let counts: Vec<(String, i64)> =
         sqlx::query_as(r#"SELECT "event", count(*) FROM "funnel_events" GROUP BY 1 ORDER BY 1"#)
-            .fetch_all(&pool)
+            .fetch_all(pool)
             .await
             .unwrap();
     assert_eq!(
