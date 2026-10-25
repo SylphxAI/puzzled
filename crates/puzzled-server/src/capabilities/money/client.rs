@@ -448,6 +448,15 @@ impl Money {
         })
     }
 
+    /// Forget this account's cached answers on checkout return. This does not
+    /// grant access: the next read must still be confirmed by Money. Clones
+    /// share the cache, so paid play sees the same fresh answer as Settings.
+    pub fn refresh_grants(&self, user_id: &str) {
+        if let Ok(mut cache) = self.grants.lock() {
+            cache.retain(|(subject, _), _| subject != user_id);
+        }
+    }
+
     /// The entitlement answer for `feature`, from the cache when it is fresh
     /// and otherwise from Money. A Money error is an `Err`, remembered for 5
     /// seconds so an outage is not retried per request; callers that must tell

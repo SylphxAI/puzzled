@@ -847,3 +847,36 @@ async fn a_subscription_row_with_omitted_fields_is_read_not_dropped() {
     assert!(!subs[0].live());
     assert_eq!(money.has_renewing_subscription(USER).await, Ok(true));
 }
+
+#[tokio::test]
+async fn checkout_refresh_rechecks_only_the_buyers_grants_without_granting_access() {
+    let (money, fake) = fake_money(200, json!({"entitled": false})).await;
+    let other = "0190a0a0-0000-7000-8000-000000000002";
+    assert!(!is_premium(&money, USER).await);
+    assert!(!is_premium(&money, other).await);
+    fake.lock().unwrap().answer = json!({"entitled": true});
+    assert!(!is_premium(&money, USER).await, "denial is still cached");
+    money.refresh_grants(USER);
+    assert!(
+        is_premium(&money, USER).await,
+        "confirmed Money grant is immediate"
+    );
+    assert!(
+        !is_premium(&money, other).await,
+        "another account keeps its cache"
+    );
+    assert_eq!(fake.lock().unwrap().checks.len(), 3);
+
+    fake.lock().unwrap().answer = json!({"entitled": false});
+    money.refresh_grants(USER);
+    assert!(
+        !is_premium(&money, USER).await,
+        "refresh itself grants nothing"
+    );
+    fake.lock().unwrap().status = 503;
+    money.refresh_grants(USER);
+    assert!(
+        !is_premium(&money, USER).await,
+        "failed refresh never invents Plus"
+    );
+}

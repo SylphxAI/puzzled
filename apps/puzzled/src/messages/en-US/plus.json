@@ -72,6 +72,7 @@
 		"description": "Your Puzzled Plus plan, payments and family.",
 		"free": "You are on the free plan: today's featured puzzle, every day.",
 		"closed": "Puzzled Plus is not on sale yet. Every game is free for now.",
+		"checkoutPending": "Confirming your subscription. This page will update automatically. If it takes longer, refresh this page.",
 		"checkoutSuccess": "Welcome to Puzzled Plus. Every game and the archive are open.",
 		"plan": {
 			"individual_monthly": "Puzzled Plus, monthly",

@@ -72,6 +72,7 @@
 		"description": "Puzzled Plusのプラン、お支払い、ファミリーの設定です。",
 		"free": "無料プランをご利用中です。毎日、今日のおすすめパズルを遊べます。",
 		"closed": "Puzzled Plusはまだ販売前です。今のところ、すべてのゲームが無料です。",
+		"checkoutPending": "サブスクリプションを確認しています。このページは自動更新されます。時間がかかる場合は再読み込みしてください。",
 		"checkoutSuccess": "Puzzled Plusへようこそ。すべてのゲームとアーカイブをご利用いただけます。",
 		"plan": {
 			"individual_monthly": "Puzzled Plus（月額）",

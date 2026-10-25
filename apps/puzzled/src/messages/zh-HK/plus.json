@@ -72,6 +72,7 @@
 		"description": "你的 Puzzled Plus 方案、付款和家庭成員。",
 		"free": "你正使用免費方案：每天一題今日精選謎題。",
 		"closed": "Puzzled Plus 尚未開售，現時所有遊戲免費。",
+		"checkoutPending": "正在確認你的訂閱。此頁面將自動更新；如等候較久，請重新整理。",
 		"checkoutSuccess": "歡迎加入 Puzzled Plus。全部遊戲和往日題庫已經開放。",
 		"plan": {
 			"individual_monthly": "Puzzled Plus（按月）",

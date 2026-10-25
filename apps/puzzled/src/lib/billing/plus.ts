@@ -191,3 +191,12 @@ export function trialBannerEndMs(
 export function formatTrialEnd(endMs: number, locale: string, timeZone?: string): string {
 	return new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone }).format(new Date(endMs))
 }
+
+/** A checkout return is confirmed only by the buyer's own live Money subscription. */
+export function checkoutConfirmed(view: SubscriptionView | null): boolean {
+	return Boolean(
+		view?.entitled &&
+			view.source === 'plus' &&
+			(view.status === 'active' || view.status === 'trialing'),
+	)
+}

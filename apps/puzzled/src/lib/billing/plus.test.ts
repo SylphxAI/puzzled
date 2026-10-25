@@ -5,6 +5,7 @@ import {
 	ListPlansResponseSchema,
 } from '@/gen/connect/puzzled/v1/billing_pb'
 import {
+	checkoutConfirmed,
 	currencyForLocale,
 	formatPrice,
 	formatTrialEnd,
@@ -194,4 +195,17 @@ describe('trial ending banner', () => {
 		expect(formatTrialEnd(end, 'en-US', 'Asia/Hong_Kong')).toBe('October 6, 2026')
 		expect(formatTrialEnd(end, 'zh-HK', 'Asia/Hong_Kong')).toBe('2026年10月6日')
 	})
+})
+
+test('checkout success requires an own confirmed subscription, not a return URL or free trial', () => {
+	const view = subscriptionView(
+		create(GetSubscriptionResponseSchema, { entitled: true, source: 'plus', status: 'active' }),
+	)
+	expect(checkoutConfirmed(view)).toBe(true)
+	expect(checkoutConfirmed({ ...view, status: 'trialing' })).toBe(true)
+	expect(checkoutConfirmed(null)).toBe(false)
+	expect(checkoutConfirmed({ ...view, entitled: false })).toBe(false)
+	expect(checkoutConfirmed({ ...view, source: 'trial' })).toBe(false)
+	expect(checkoutConfirmed({ ...view, source: 'family' })).toBe(false)
+	expect(checkoutConfirmed({ ...view, status: null })).toBe(false)
 })
