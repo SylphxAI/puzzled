@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'bun:test'
+import { frozenPuzzle } from '../test-fixtures'
 import { sudokuConfig } from './config'
 import { parseSudokuClientPayload } from './parse-client'
 import { isGridSolved, type SudokuCell } from './types'
 
-const { puzzleData, solution } = sudokuConfig.generatePuzzle(4242, 'easy') as {
+const { puzzleData, solution } = frozenPuzzle(sudokuConfig, 'easy') as {
 	puzzleData: { grid: (number | null)[][]; difficulty: 'easy' }
 	solution: { grid: number[][] }
 }

@@ -211,4 +211,98 @@ mod tests {
         let result = validate_and_score_sudoku(&solution.puzzle_data, &submission);
         assert_eq!(result, ScoringResult::valid(SubmissionStatus::Lost, 0));
     }
+
+    // The three cases below replaced the web's `sudoku/validation.test.ts` when
+    // grading moved wholly into this core; they are the same assertions against
+    // the one implementation that scores a finish.
+
+    /// A winning submission carrying `grid`.
+    fn winning(grid: Value) -> GameSubmission {
+        GameSubmission {
+            status: SubmissionStatus::Won,
+            attempts: 1,
+            time_spent_ms: 0,
+            data: Some(serde_json::json!({ "finalGrid": grid, "mistakes": 0 })),
+        }
+    }
+
+    #[test]
+    fn an_alternate_valid_completion_scores_the_same_as_the_stored_answer() {
+        // "Not the canonical answer": a served clue the solver left out of the
+        // grid it proves against. The finish is a complete, rule-respecting
+        // grid, so it scores exactly as the stored one does.
+        let solution = puzzle(12_345);
+        let mut clues = solution.puzzle_data.clone();
+        let (row, col) = clues
+            .grid
+            .iter()
+            .enumerate()
+            .find_map(|(r, cells)| {
+                cells
+                    .iter()
+                    .enumerate()
+                    .find_map(|(c, cell)| cell.is_some().then_some((r, c)))
+            })
+            .expect("a medium puzzle serves clues");
+        clues.grid[row][col] = None;
+
+        let stored_puzzle_score = validate_and_score_sudoku(
+            &solution.puzzle_data,
+            &winning(grid_to_json(&solution.solution.grid)),
+        );
+        let alternate =
+            validate_and_score_sudoku(&clues, &winning(grid_to_json(&solution.solution.grid)));
+        assert_eq!(alternate, stored_puzzle_score);
+        assert_eq!(alternate, ScoringResult::valid(SubmissionStatus::Won, 1000));
+    }
+
+    #[test]
+    fn a_valid_grid_that_violates_a_served_clue_is_refused() {
+        let solution = puzzle(12_345);
+        let mut grid = solution.solution.grid.clone();
+        let (row, col) = solution
+            .puzzle_data
+            .grid
+            .iter()
+            .enumerate()
+            .find_map(|(r, cells)| {
+                cells
+                    .iter()
+                    .enumerate()
+                    .find_map(|(c, cell)| cell.map(|_| (r, c)))
+            })
+            .expect("a medium puzzle serves clues");
+        grid[row][col] = (grid[row][col] % 9) + 1;
+        let result =
+            validate_and_score_sudoku(&solution.puzzle_data, &winning(grid_to_json(&grid)));
+        assert_eq!(
+            result,
+            ScoringResult::invalid("Invalid win claim - grid violates Sudoku rules or given clues")
+        );
+    }
+
+    #[test]
+    fn fractional_cells_and_invalid_boxes_are_refused() {
+        let solution = puzzle(12_345);
+
+        let mut fractional = solution.solution.grid.clone();
+        fractional[0][0] = 5;
+        let mut json = grid_to_json(&fractional);
+        json[0][0] = serde_json::json!(4.5);
+        assert_eq!(
+            validate_and_score_sudoku(&solution.puzzle_data, &winning(json)),
+            ScoringResult::invalid("Invalid win claim - grid violates Sudoku rules or given clues")
+        );
+
+        // A grid whose rows and columns are each valid but whose box repeats.
+        let mut boxed = solution.solution.grid.clone();
+        let (r0, c0) = (0, 0);
+        let (r1, c1) = (1, 1);
+        boxed[r0][c0] = solution.solution.grid[r1][c1];
+        boxed[r1][c1] = solution.solution.grid[r0][c0];
+        assert_eq!(
+            validate_and_score_sudoku(&solution.puzzle_data, &winning(grid_to_json(&boxed))),
+            ScoringResult::invalid("Invalid win claim - grid violates Sudoku rules or given clues")
+        );
+    }
 }

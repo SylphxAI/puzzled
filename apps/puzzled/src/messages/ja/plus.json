@@ -36,7 +36,16 @@
 		"checkoutCancelled": "お支払いはキャンセルされました。料金は請求されていません。",
 		"alreadySubscribed": "すでにPuzzled Plusをご利用中です。",
 		"immediateSupplyConsent": "すぐに利用を開始したいため、14日間の解約権を失うことを理解しました。",
-		"consentRequired": "続けるには、チェックボックスにチェックを入れてください。"
+		"consentRequired": "続けるには、チェックボックスにチェックを入れてください。",
+		"offerLead": "全{count}ゲーム、過去のすべての日、ゲームごとの統計。",
+		"planChoice": "プランを選ぶ",
+		"monthlyEquivalent": "月あたり{price}",
+		"continueToPayment": "お支払いへ進む",
+		"renewsYearly": "解約するまで、毎年{price}で自動更新されます。設定からいつでも解約できます。",
+		"renewsMonthly": "解約するまで、毎月{price}で自動更新されます。設定からいつでも解約できます。",
+		"familyLink": "最大{count}人のファミリープラン",
+		"notNowPlayFree": "今はやめて、今日の無料パズルをプレイ",
+		"choosePlus": "Puzzled Plusを選ぶ"
 	},
 	"trial": {
 		"endsOn": "Puzzled Plusの無料体験は{date}に終了します。料金は請求されず、終えた記録はすべて統計に残ります。",

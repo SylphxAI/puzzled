@@ -171,3 +171,85 @@ describe('server base URL', () => {
 		})
 	})
 })
+
+describe('site origin request-validation mode', () => {
+	test('never substitutes SEO fallback for missing or invalid request authority', () => {
+		for (const input of [
+			{ host: 'web:3000', nodeEnv: 'production' },
+			{
+				host: 'web:3000',
+				forwardedHost: 'puzzled.gg/path',
+				forwardedProto: 'https',
+				nodeEnv: 'production',
+			},
+			{ forwardedHost: 'bad..puzzled.gg', forwardedProto: 'https', nodeEnv: 'production' },
+			{ forwardedHost: 'puzzled.gg:99999', forwardedProto: 'https', nodeEnv: 'production' },
+		]) {
+			expect(resolveSiteOrigin(input, 'request')).toBeNull()
+			if (!input.forwardedHost || input.forwardedHost.includes('/'))
+				expect(resolveSiteOrigin(input)).toBe(PRODUCTION_SITE_ORIGIN)
+		}
+	})
+
+	test('configured authority or complete forwarded authority is sufficient', () => {
+		expect(
+			resolveSiteOrigin(
+				{ configuredUrl: 'https://puzzled.gg', host: 'web:3000', nodeEnv: 'production' },
+				'request',
+			),
+		).toBe('https://puzzled.gg')
+		expect(
+			resolveSiteOrigin(
+				{
+					host: 'web:3000',
+					forwardedHost: 'puzzled.gg',
+					forwardedProto: 'https',
+					nodeEnv: 'production',
+				},
+				'request',
+			),
+		).toBe('https://puzzled.gg')
+	})
+
+	test('bad explicit scheme is not silently replaced by HTTPS', () => {
+		const input = {
+			configuredUrl: 'https://puzzled.gg',
+			forwardedHost: 'puzzled.gg',
+			forwardedProto: 'http',
+			nodeEnv: 'production',
+		}
+		expect(resolveSiteOrigin(input, 'request')).toBeNull()
+		expect(resolveSiteOrigin(input)).toBe('https://puzzled.gg')
+	})
+})
+
+describe('strict bracketed request authority', () => {
+	test('production configured origin does not excuse a malformed request host', () => {
+		const input = {
+			configuredUrl: 'https://puzzled.gg',
+			host: '[::1]garbage',
+			nodeEnv: 'production',
+		}
+		expect(resolveSiteOrigin(input, 'request')).toBeNull()
+		expect(resolveSiteOrigin(input)).toBe('https://puzzled.gg')
+	})
+
+	test('development forwarded IPv6 authority retains every suffix byte', () => {
+		for (const forwardedHost of ['[::1]garbage', '[::1', '[::1]]', '[::1]:3000junk', '[::1]:']) {
+			expect(
+				resolveSiteOrigin(
+					{ forwardedHost, forwardedProto: 'http', nodeEnv: 'development' },
+					'request',
+				),
+			).toBeNull()
+		}
+		for (const forwardedHost of ['[::1]', '[::1]:3000']) {
+			expect(
+				resolveSiteOrigin(
+					{ forwardedHost, forwardedProto: 'http', nodeEnv: 'development' },
+					'request',
+				),
+			).toBe(`http://${forwardedHost}`)
+		}
+	})
+})

@@ -14,8 +14,8 @@
  * SECURITY ARCHITECTURE:
  * - Client NEVER calculates score
  * - Client sends submission data (moves, final state, etc.)
- * - Server validates AND calculates score using validateAndScore()
- * - This prevents score manipulation attacks
+ * - The Rust core (`crates/puzzled-core` `validate_and_score`) validates and
+ *   scores every submission; this package renders and captures input only
  */
 
 import type { ComponentType } from 'react'
@@ -140,39 +140,9 @@ export interface ParsedPuzzle<TPuzzleData, TSolution> {
 }
 
 /**
- * Default implementation for parsing puzzle data from server
- * Most games can use this instead of implementing parsePuzzleData
- *
- * Logic:
- * 1. If server provides { puzzleData, solution } structure, use it directly
- * 2. Otherwise, generate from seed (fallback for archive mode)
- *
- * @param config - Game config with generatePuzzle function
- * @param data - Raw puzzle data from server
- * @param puzzleId - Puzzle ID for fallback generation
- * @param difficulty - Optional difficulty level for games with supportsDifficulty
- */
-export function defaultParsePuzzleData<TPuzzleData, TSolution>(
-	config: Pick<GameConfig<TPuzzleData, TSolution>, 'generatePuzzle'>,
-	data: unknown,
-	puzzleId?: string,
-	difficulty?: PuzzleDifficulty,
-): ParsedPuzzle<TPuzzleData, TSolution> {
-	// Server provides nested structure with puzzleData and solution
-	if (data && typeof data === 'object' && 'puzzleData' in data && 'solution' in data) {
-		return data as ParsedPuzzle<TPuzzleData, TSolution>
-	}
-
-	// Fallback: generate from seed (for archive mode or missing data)
-	const seed = Number.parseInt(puzzleId || String(Date.now()), 10)
-	return config.generatePuzzle(seed, difficulty)
-}
-
-/**
  * Client-only puzzle data parser
  *
- * Use this in client components instead of defaultParsePuzzleData.
- * Does NOT require the config (which imports server-only code).
+ * Use this in client components; it does not need the game config.
  *
  * IMPORTANT: This throws an error if the data format is invalid.
  * In production, the server always provides valid { puzzleData, solution } format.
@@ -201,7 +171,7 @@ export function parsePuzzleDataClient<TPuzzleData, TSolution>(
  * Note: Props are optional to support default values in game components.
  * GameRenderer always provides puzzleId, puzzleData, and mode.
  * puzzleData is typed as unknown because GameRenderer is generic.
- * Each game component should use defaultParsePuzzleData() for type-safe parsing.
+ * Each game component should use parsePuzzleDataClient() for type-safe parsing.
  */
 export interface GameProps {
 	/** Unique puzzle identifier (always provided by GameRenderer) */
@@ -305,19 +275,17 @@ export interface GameDisplayMeta {
  * Each game implements this interface to be registered in the system
  *
  * PLUG-AND-PLAY: Games are self-contained modules that define their own:
- * - Puzzle generation (generatePuzzle)
- * - Validation AND scoring (validateAndScore) <- Server-side score calculation
  * - UI components (HowToPlayContent)
  * - Translations (in translations/ folder)
  *
- * SECURITY: The validateAndScore function runs on SERVER only.
- * Client sends submission data, server validates AND calculates score.
+ * Grading is not a game module concern: the Rust core owns validation and
+ * scoring for every game, so a client cannot assert a finish or a score.
  */
 export interface GameConfig<
-	TPuzzleData = unknown,
-	TSolution = unknown,
-	TGuess = unknown,
-	TGuessResult = unknown,
+	_TPuzzleData = unknown,
+	_TSolution = unknown,
+	_TGuess = unknown,
+	_TGuessResult = unknown,
 > {
 	// ==========================================
 	// Metadata
@@ -397,67 +365,6 @@ export interface GameConfig<
 	 * - 'llm': Uses LLM to generate (requires semantic understanding) - NO fallback
 	 */
 	generationStrategy: PuzzleGenerationStrategy
-
-	/**
-	 * Generate puzzle data and solution for a given seed
-	 * Seed is deterministic based on date, ensuring all users get same puzzle
-	 *
-	 * @param seed - Numeric seed based on UTC date (YYYYMMDD)
-	 * @param difficulty - Optional difficulty level (for games with supportsDifficulty)
-	 * @param difficultyParams - Optional parameters from DifficultyLevelConfig.params
-	 * @returns puzzleData (sent to client) and solution (kept server-side)
-	 */
-	generatePuzzle: (
-		seed: number,
-		difficulty?: PuzzleDifficulty,
-		difficultyParams?: Record<string, unknown>,
-	) => {
-		puzzleData: TPuzzleData
-		solution: TSolution
-	}
-
-	// ==========================================
-	// Validation & Scoring (SERVER-SIDE)
-	// ==========================================
-
-	/**
-	 * Validate a single guess/move (real-time validation)
-	 * Used for games that need feedback on each guess (e.g., Wordle)
-	 *
-	 * @param solution - The stored solution
-	 * @param guess - User's guess
-	 * @param puzzleData - Optional puzzle context
-	 * @returns Validation result with feedback
-	 */
-	validateGuess?(solution: TSolution, guess: TGuess, puzzleData?: TPuzzleData): TGuessResult
-
-	/**
-	 * CORE VALIDATION FUNCTION - RUNS ON SERVER ONLY
-	 *
-	 * Validates the submission AND calculates the score.
-	 * This is the single source of truth for game results.
-	 *
-	 * Security: Client sends moves/final state, server validates everything.
-	 * The client NEVER calculates score - this function does.
-	 *
-	 * Scoring Guidelines (implement per-game):
-	 * - Wordle: 100 - (attempts-1)*15, 0 for loss
-	 * - Sudoku: 1000 - mistakes*50 - seconds, min 100
-	 * - Queens: 500 - seconds, min 100
-	 * - Nonogram: 500 - errors*25 - seconds/2, min 100
-	 * - Connections: 100 - mistakes*20
-	 * - Block Slide: 200 - moves + par bonus
-	 *
-	 * @param solution - The stored solution
-	 * @param puzzleData - The puzzle configuration
-	 * @param submission - User's submission with game-specific data
-	 * @returns Validation result with server-calculated score
-	 */
-	validateAndScore(
-		solution: TSolution,
-		puzzleData: TPuzzleData,
-		submission: GameSubmission,
-	): GameResult
 
 	// ==========================================
 	// Game Lifecycle (optional)

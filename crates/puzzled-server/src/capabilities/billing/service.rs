@@ -23,8 +23,8 @@ pub struct Entitlement {
     pub trial_ends_ms: Option<i64>,
 }
 
-/// Is the reverse trial on? Off unless `PUZZLED_REVERSE_TRIAL=on`; it is
-/// switched on together with Plus sales (docs/growth.md).
+/// Is the reverse trial on? Off unless `PUZZLED_REVERSE_TRIAL=on`; sylphx.toml
+/// turns it on together with Plus sales (docs/monetization.md).
 #[must_use]
 pub fn reverse_trial_enabled() -> bool {
     std::env::var("PUZZLED_REVERSE_TRIAL").is_ok_and(|v| v.trim().eq_ignore_ascii_case("on"))
@@ -120,17 +120,22 @@ mod tests {
 
     const USER: &str = "0192a000-0000-7000-8000-000000000001";
 
-    async fn finish_day(pool: &PgPool, day: &str) {
+    async fn play_day(pool: &PgPool, day: &str, status: &str) {
         sqlx::query(
-            r#"INSERT INTO "game_sessions" ("user_id", "game_slug", "day_key", "is_ritual")
-               VALUES ($1::uuid, $2, $3, true)"#,
+            r#"INSERT INTO "game_sessions" ("user_id", "game_slug", "day_key", "is_ritual", "status")
+               VALUES ($1::uuid, $2, $3, true, $4::game_status)"#,
         )
         .bind(USER)
         .bind(format!("game-{day}"))
         .bind(day)
+        .bind(status)
         .execute(pool)
         .await
         .unwrap();
+    }
+
+    async fn finish_day(pool: &PgPool, day: &str) {
+        play_day(pool, day, "won").await;
     }
 
     #[tokio::test]
@@ -159,6 +164,30 @@ mod tests {
         assert_eq!(
             billing_db::trial_ends_at_ms(&pool, USER).await.unwrap(),
             Some(reverse_trial::ends_at(now))
+        );
+    }
+
+    #[tokio::test]
+    async fn only_won_or_lost_days_count_as_finished() {
+        let Some(pool) = crate::test_support::fresh_database().await else {
+            return;
+        };
+        // A day that was started but not finished is not a finished day.
+        play_day(&pool, "2026-10-01", "won").await;
+        play_day(&pool, "2026-10-02", "lost").await;
+        play_day(&pool, "2026-10-03", "in_progress").await;
+        assert_eq!(billing_db::finished_days(&pool, USER).await.unwrap(), 2);
+        assert_eq!(reverse_trial_ends_ms(&pool, USER, 1, true).await, None);
+        assert_eq!(
+            billing_db::trial_ends_at_ms(&pool, USER).await.unwrap(),
+            None
+        );
+        // Finishing a third day grants it.
+        play_day(&pool, "2026-10-04", "lost").await;
+        assert_eq!(billing_db::finished_days(&pool, USER).await.unwrap(), 3);
+        assert_eq!(
+            reverse_trial_ends_ms(&pool, USER, 1, true).await,
+            Some(reverse_trial::ends_at(1))
         );
     }
 

@@ -38,17 +38,21 @@ family.
   `puzzled-core` `billing_access::policy::play_access`). A refused request is
   403 `plus_required` (another game) or `plus_required_archive` (a past day);
   the web renders the unlock path from the same rule, never a dead end.
-- **Reverse trial** (new players): after a player's third finished day the api
-  grants every game for 7 days, once per account (`plus_trials`, one row per
-  account, kept after it ends), then the account drops back to the free floor
-  with nothing charged and nothing taken away. Money has no grant API for this,
-  so it is Puzzled's own time-boxed access, owned by the Rust api
-  (`billing_access::reverse_trial`, `billing::service::access`). It is off
-  unless `PUZZLED_REVERSE_TRIAL=on` in the api environment; switch it on
-  together with Plus sales. Result screens and Settings > Subscription state the
-  true end date ("ends on DATE"). The 7-day card-up-front yearly trial is the
-  offer for returning players (pricing page); Money cannot yet hide it from a
-  new player who goes straight to the yearly plan.
+- **Reverse trial** (new players): after a player's third finished day (a daily
+  ritual puzzle that ended won or lost; a day only started does not count) the
+  api grants every game for 7 days, once per account (`plus_trials`, one row
+  per account, kept after it ends), then the account drops back to the free
+  floor with nothing charged and nothing taken away. Money has no grant API for
+  this, so it is Puzzled's own time-boxed access, owned by the Rust api
+  (`billing_access::reverse_trial`, `billing::service::access`). It is on in
+  production (`PUZZLED_REVERSE_TRIAL=on` in sylphx.toml, together with Plus
+  sales); set it to `off` to stop new grants. Result screens and Settings >
+  Subscription state the true end date ("ends on DATE"). The 7-day
+  card-up-front yearly trial is the offer for returning players (pricing page).
+  Money gives that checkout trial once per customer per product: a subject that
+  ever had a Plus subscription, in any status, checks out with no trial. Money
+  cannot yet hide it from a new player who goes straight to the yearly plan, so
+  one player can hold the reverse trial and later one card-up-front trial.
 - An entitlement read that fails refuses paid play (fail closed to the free
   floor). The free daily puzzle never reads billing.
 - While Stripe is not configured, nothing is sold, so nothing is locked.

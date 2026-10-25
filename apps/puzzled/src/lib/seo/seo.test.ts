@@ -6,7 +6,7 @@
  * separately by `scripts/seo-verify.ts` against a `next start` build.
  */
 
-import { describe, expect, test } from 'bun:test'
+import { afterAll, describe, expect, test } from 'bun:test'
 import robots from '@/app/robots'
 import sitemap from '@/app/sitemap'
 import { getGameSlugs } from '@/games/registry'
@@ -27,8 +27,22 @@ import {
 	stripLocalePrefix,
 } from '@/lib/seo/routes'
 
-// Deterministic origin for the documents and metadata under test.
+// Deterministic origin for the documents and metadata under test. Held only
+// for this file: the relay and canonical resolvers read these values live, so
+// leaving `https://puzzled.gg` set would make another file's loopback requests
+// fail closed (relay.ts -> site-origin.ts). `sitemap()` runs while the suites
+// are collected, so this cannot move into a `beforeAll`.
+const PREVIOUS_ORIGIN = {
+	SYLPHX_PUBLIC_URL: process.env.SYLPHX_PUBLIC_URL,
+	NODE_ENV: process.env.NODE_ENV,
+}
 process.env.SYLPHX_PUBLIC_URL = 'https://puzzled.gg'
+afterAll(() => {
+	for (const [key, value] of Object.entries(PREVIOUS_ORIGIN)) {
+		if (value === undefined) delete process.env[key]
+		else process.env[key] = value
+	}
+})
 
 const BASE = 'https://puzzled.gg'
 const LOCALE_PREFIX = /^\/(en-GB|zh-HK|zh-TW|zh-CN|ja|es|pt-BR)(?=\/|$)/
@@ -42,7 +56,15 @@ function localeAgnosticPath(url: string): string {
 describe('route truth table', () => {
 	test('lists the public surfaces and nothing else', () => {
 		const paths = PUBLIC_ROUTES.map((route) => route.path)
-		expect(paths).toEqual(['/', '/games', '/pricing', '/support', '/privacy', '/terms'])
+		expect(paths).toEqual([
+			'/',
+			'/games',
+			'/pricing',
+			'/support',
+			'/privacy',
+			'/terms',
+			'/delete-account',
+		])
 		for (const path of paths) {
 			expect(isPrivateRoutePath(path)).toBe(false)
 		}

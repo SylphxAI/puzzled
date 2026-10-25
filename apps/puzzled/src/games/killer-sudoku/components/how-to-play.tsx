@@ -84,7 +84,7 @@ export function KillerSudokuHowToPlay() {
 				<p className="text-sm font-medium">Controls</p>
 				<ul className="space-y-1 text-xs text-muted-foreground">
 					<li>• Click a cell and use number keys or buttons</li>
-					<li>• Press N to toggle notes mode</li>
+					<li className="hidden pointer-fine:block">• Press N to toggle notes mode</li>
 					<li>• No duplicate numbers in cages</li>
 				</ul>
 			</div>

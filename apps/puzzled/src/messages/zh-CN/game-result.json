@@ -17,11 +17,11 @@
 	"srWonWithAttempts": "恭喜！您在 {attempts, plural, one {# 次尝试} other {# 次尝试}}中获胜！",
 	"srWonWithScore": "恭喜！您获得了 {score} 分！",
 	"srLostWithSolution": "游戏结束。答案是 {word}。",
-	"beatPercent": "You beat {percent}% of players today!",
-	"topPercent": "Top {percent}% today!",
-	"perfectGame": "Perfect game! 🎯",
-	"playersToday": "{count} players today",
+	"beatPercent": "你击败了今天 {percent}% 的玩家！",
+	"topPercent": "今天前 {percent}%！",
+	"perfectGame": "完美通关！🎯",
+	"playersToday": "今天有 {count} 位玩家挑战",
 	"playNext": "下一款：{game}",
-	"backToHome": "Back to Home",
-	"missedCategories": "You missed:"
+	"backToHome": "返回首页",
+	"missedCategories": "你错过了："
 }

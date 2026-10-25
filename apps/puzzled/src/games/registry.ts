@@ -36,9 +36,7 @@ import type {
 	GameDifficulty,
 	GameDisplayMeta,
 	GameRegistry,
-	GameResult,
 	GameSkill,
-	GameSubmission,
 	RegisteredGameConfig,
 } from './types'
 import { wordBoxConfig } from './word-box/config'
@@ -208,42 +206,6 @@ export function getSeedFromDate(date: Date = new Date()): number {
 	const month = date.getUTCMonth() + 1
 	const day = date.getUTCDate()
 	return year * 10000 + month * 100 + day
-}
-
-// NOTE: Server-only puzzle generation functions are in registry.server.ts
-// - generatePuzzleWithLLM()
-// - generateGamePuzzle()
-// - generateAllPuzzles()
-// This separation prevents bundler errors from server deps in client bundles.
-
-/**
- * CORE VALIDATION FUNCTION - Validates submission AND calculates score
- *
- * This is the single source of truth for game results.
- * Client sends moves/final state, server validates everything and calculates score.
- * The client NEVER calculates score.
- *
- * @param slug - Game identifier
- * @param solution - The stored solution
- * @param puzzleData - The puzzle configuration
- * @param submission - User's submission with game-specific data
- * @returns Validation result with server-calculated score
- */
-export function validateAndScore(
-	slug: string,
-	solution: unknown,
-	puzzleData: unknown,
-	submission: GameSubmission,
-): GameResult {
-	const config = getGameConfig(slug)
-	if (!config) {
-		return { valid: false, error: `Unknown game: ${slug}` }
-	}
-	// The stored {solution, puzzleData} pair was produced by this same module
-	// (registry.server.ts stores whatever its generatePuzzle returned), and the
-	// registry cannot re-derive those types from a runtime slug - so the pair is
-	// handed over as opaque data and each game narrows what it receives.
-	return config.validateAndScore(solution, puzzleData, submission)
 }
 
 // ==========================================

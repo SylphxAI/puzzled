@@ -15,15 +15,13 @@ import {
 	useQuery,
 	useQueryClient,
 } from '@tanstack/react-query'
-import type { Announcement } from '@/gen/connect/puzzled/v1/admin_pb'
+import { getGameMetadata } from '@/games/registry'
 import {
 	createAnnouncement,
 	deleteAnnouncement,
 	gameAnalytics,
 	gamesOverview,
 	getAuditLog,
-	getSettings,
-	listAnnouncements,
 	listAuditLogs,
 	listDlq,
 	markDlqFailed,
@@ -31,17 +29,9 @@ import {
 	retryDlq,
 	systemHealth,
 	updateAnnouncement,
-	updateSetting,
 } from '@/lib/connect/admin-client'
 import { isAlreadyPlayedError } from '@/lib/connect/already-played'
-import {
-	checkUsername,
-	getNotificationPreferences,
-	getProfile,
-	updateEmailPreferences,
-	updateProfile,
-	updatePushPreferences,
-} from '@/lib/connect/preferences-client'
+import { getNotificationPreferences, updatePushPreferences } from '@/lib/connect/preferences-client'
 import {
 	admitGetDailyViaConnect,
 	admitSubmitGuessViaConnect,
@@ -129,21 +119,7 @@ export async function fetchDailyStatusForClient(input: { gameSlug: string; diffi
 		code: 'CONNECT_PLAY_FAIL_CLOSED',
 		message: admit.error || 'connect_play_fail_closed',
 	})
-}
-
-export function useDailyStatus(
-	gameSlug: string,
-	difficulty?: string,
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.dailyStatus(gameSlug, difficulty),
-		queryFn: () => fetchDailyStatusForClient({ gameSlug, difficulty }),
-		...options,
-	})
-}
-
-/**
+} /**
  * TD-08: the useTodaysPuzzle query body - the same mapping as the server
  * accessor (lib/api/domain/daily mapTodaysPuzzle). slice/stub/authority stay
  * client adapter fields.
@@ -163,19 +139,6 @@ export async function fetchTodaysPuzzleForClient(input: { gameSlug: string; diff
 		message: admit.error || 'connect_play_fail_closed',
 	})
 }
-
-export function useTodaysPuzzle(
-	gameSlug: string,
-	difficulty?: string,
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.todaysPuzzle(gameSlug, difficulty),
-		queryFn: () => fetchTodaysPuzzleForClient({ gameSlug, difficulty }),
-		...options,
-	})
-}
-
 export type SaveResultInput = {
 	status: 'won' | 'lost'
 	attempts: number
@@ -478,42 +441,7 @@ export function useUpdatePushPreferences() {
 			queryClient.invalidateQueries({ queryKey: queryKeys.notificationPreferences() })
 		},
 	})
-}
-
-export function useUpdateEmailPreferences() {
-	const queryClient = useQueryClient()
-
-	return useMutation({
-		mutationFn: async (input: Record<string, unknown>) => {
-			try {
-				const p = await updateEmailPreferences({
-					emailEnabled: typeof input.emailEnabled === 'boolean' ? input.emailEnabled : undefined,
-					emailWeeklyDigest:
-						typeof input.emailWeeklyDigest === 'boolean' ? input.emailWeeklyDigest : undefined,
-					emailMarketing:
-						typeof input.emailMarketing === 'boolean' ? input.emailMarketing : undefined,
-				})
-				return {
-					pushEnabled: p.pushEnabled,
-					pushDailyReminder: p.pushDailyReminder,
-					pushStreakAlert: p.pushStreakAlert,
-					pushNewGames: p.pushNewGames,
-					dailyReminderTime: p.dailyReminderTime,
-					emailEnabled: p.emailEnabled,
-					emailWeeklyDigest: p.emailWeeklyDigest,
-					emailMarketing: p.emailMarketing,
-				}
-			} catch (e) {
-				throw toApiError(e, 'PREFERENCES_UPDATE_FAILED')
-			}
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.notificationPreferences() })
-		},
-	})
-}
-
-// ==========================================
+} // ==========================================
 // Admin (sole Connect, exact admin scope)
 // ==========================================
 
@@ -756,23 +684,6 @@ export function useDlqMarkFailed() {
 		},
 	})
 }
-
-export function useAnnouncements(
-	options?: Omit<UseQueryOptions<Announcement[], ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.announcements(),
-		queryFn: async () => {
-			try {
-				return await listAnnouncements()
-			} catch (e) {
-				throw toApiError(e, 'ANNOUNCEMENTS_FAILED')
-			}
-		},
-		...options,
-	})
-}
-
 export function useCreateAnnouncement() {
 	const queryClient = useQueryClient()
 	return useMutation({
@@ -840,39 +751,6 @@ export function useDeleteAnnouncement() {
 		},
 	})
 }
-
-export function useSettings(
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.settings(),
-		queryFn: async () => {
-			try {
-				return await getSettings()
-			} catch (e) {
-				throw toApiError(e, 'SETTINGS_FAILED')
-			}
-		},
-		...options,
-	})
-}
-
-export function useUpdateSetting() {
-	const queryClient = useQueryClient()
-	return useMutation({
-		mutationFn: async (input: { key: string; valueJson: string }) => {
-			try {
-				return await updateSetting(input.key, input.valueJson)
-			} catch (e) {
-				throw toApiError(e, 'SETTINGS_UPDATE_FAILED')
-			}
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.settings() })
-		},
-	})
-}
-
 export type GamesOverviewEntry = {
 	slug: string
 	name: string
@@ -885,28 +763,6 @@ export type GamesOverviewEntry = {
 
 export type GamesOverviewResponse = GamesOverviewEntry[]
 
-const GAME_NAMES: Record<string, string> = {
-	'word-guess': 'Five',
-	'word-groups': 'Threads',
-	'word-hive': 'Hive',
-	crossword: 'Mini Grid',
-	sudoku: 'Sudoku',
-	nonogram: 'Paint',
-	'word-ladder': 'Rungs',
-	arithmo: 'Arithmo',
-	'pattern-match': 'Match',
-	'block-slide': 'Slides',
-	crowns: 'Crowns',
-	duo: 'Duo',
-	'word-box': 'Frame',
-	'quad-words': 'Quad',
-	'killer-sudoku': 'Cage Sudoku',
-	cryptogram: 'Cipher',
-	'word-search': 'Hunt',
-	'number-path': 'Path',
-	'pip-place': 'Spots',
-}
-
 export function useGamesOverview(
 	options?: Omit<UseQueryOptions<GamesOverviewResponse, ApiError>, 'queryKey' | 'queryFn'>,
 ) {
@@ -918,7 +774,7 @@ export function useGamesOverview(
 				return rows.map((g) => {
 					return {
 						slug: g.slug,
-						name: GAME_NAMES[g.slug] ?? g.slug,
+						name: getGameMetadata(g.slug)?.name ?? g.slug,
 						todayPlayed: Number(g.todayPlayed),
 						todayGamesPlayed: Number(g.todayPlayed),
 						todayWins: Number(g.todayWins),
@@ -1002,63 +858,5 @@ export function useSystemHealth(
 		refetchInterval: 30 * 1000,
 		...options,
 	})
-}
-
-// ==========================================
-// Profile (sole Connect) — used by future settings surfaces
-// ==========================================
-
-export function useProfile(
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: ['puzzled', 'profile'] as const,
-		queryFn: async () => {
-			try {
-				return await getProfile()
-			} catch (e) {
-				throw toApiError(e, 'PROFILE_FAILED')
-			}
-		},
-		...options,
-	})
-}
-
-export function useUpdateProfile() {
-	const queryClient = useQueryClient()
-	return useMutation({
-		mutationFn: async (input: Record<string, unknown>) => {
-			try {
-				return await updateProfile({
-					username: typeof input.username === 'string' ? input.username : undefined,
-					bio: typeof input.bio === 'string' ? input.bio : undefined,
-					isPublicProfile:
-						typeof input.isPublicProfile === 'boolean' ? input.isPublicProfile : undefined,
-					compactMode: typeof input.compactMode === 'boolean' ? input.compactMode : undefined,
-					leaderboardVisible:
-						typeof input.leaderboardVisible === 'boolean' ? input.leaderboardVisible : undefined,
-				})
-			} catch (e) {
-				throw toApiError(e, 'PROFILE_UPDATE_FAILED')
-			}
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['puzzled', 'profile'] as const })
-		},
-	})
-}
-
-export function useCheckUsername() {
-	return useMutation({
-		mutationFn: async (input: { username: string }) => {
-			try {
-				return { available: await checkUsername(input.username) }
-			} catch (e) {
-				throw toApiError(e, 'USERNAME_CHECK_FAILED')
-			}
-		},
-	})
-}
-
-// Kept as a fail-closed fence: no REST residual exists (sole Connect).
+} // Kept as a fail-closed fence: no REST residual exists (sole Connect).
 export { shouldUseRestPlayResidual }

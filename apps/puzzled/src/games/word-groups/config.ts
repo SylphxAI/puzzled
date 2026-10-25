@@ -3,25 +3,16 @@
  * Implements GameConfig interface for modular game system
  */
 
-import { pickRandom, seededRandom, shuffleArray } from '@/games/shared'
+import { pickRandom } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
 	type GameCompletionStats,
 	type GameConfig,
-	type GameResult,
 	type GameShareStats,
-	type GameSubmission,
 } from '../types'
 import { ConnectionsHowToPlay } from './components/how-to-play'
 import { WordGroupsIcon } from './icon'
-import { PUZZLES } from './puzzles'
-import type {
-	Category,
-	ConnectionsPuzzle,
-	ConnectionsPuzzleData,
-	ConnectionsSolution,
-} from './types'
-import { MAX_MISTAKES, TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from './types'
+import type { Category, ConnectionsPuzzleData, ConnectionsSolution } from './types'
 
 export type { ConnectionsPuzzleData, ConnectionsSolution }
 
@@ -47,30 +38,9 @@ type ConnectionsGuessResult = {
 // ==========================================
 
 /**
- * Get puzzle from seed deterministically
- */
-function getPuzzleFromSeed(seed: number): ConnectionsPuzzle {
-	const index = seed % PUZZLES.length
-	return PUZZLES[index]
-}
-
-/**
- * Get all words from puzzle and shuffle them
- *
- * ⚠️ FROZEN: Uses shared seededRandom + shuffleArray for deterministic results
- * DO NOT change the algorithm - it will break historical puzzles
- */
-function getShuffledWords(puzzle: ConnectionsPuzzle, seed: number): string[] {
-	const allWords = puzzle.categories.flatMap((cat) => cat.words)
-	// Use the FROZEN shared LCG algorithm for deterministic shuffle
-	// Previous implementation used Math.sin() which varies across JS engines
-	return shuffleArray(allWords, seededRandom(seed))
-}
-
-/**
  * Check if words match a category
  */
-function findMatchingCategory(words: string[], categories: Category[]): Category | undefined {
+function _findMatchingCategory(words: string[], categories: Category[]): Category | undefined {
 	const wordSet = new Set(words.map((w) => w.toUpperCase()))
 
 	return categories.find((cat) => {
@@ -108,118 +78,6 @@ export const wordGroupsConfig: GameConfig<
 	// Connections uses LLM for daily puzzle generation (semantic categories)
 	// Archive mode uses seed-based selection from curated puzzle pool
 	generationStrategy: 'llm',
-
-	/**
-	 * Generate puzzle from seed
-	 * Uses curated puzzle pool with themed word groups
-	 */
-	generatePuzzle: (seed: number) => {
-		const puzzle = getPuzzleFromSeed(seed)
-		const shuffledWords = getShuffledWords(puzzle, seed)
-
-		return {
-			puzzleData: {
-				words: shuffledWords,
-				maxMistakes: MAX_MISTAKES,
-				wordsPerCategory: WORDS_PER_CATEGORY,
-				totalCategories: TOTAL_CATEGORIES,
-			},
-			solution: {
-				categories: puzzle.categories,
-			},
-		}
-	},
-
-	/**
-	 * Validate a single guess (real-time feedback)
-	 */
-	validateGuess: (
-		solution: ConnectionsSolution,
-		guess: ConnectionsGuess,
-	): ConnectionsGuessResult => {
-		// Validate correct number of words
-		if (guess.words.length !== WORDS_PER_CATEGORY) {
-			return {
-				valid: false,
-				isCorrect: false,
-				error: `Must select exactly ${WORDS_PER_CATEGORY} words`,
-			}
-		}
-
-		// Check if words match any category
-		const matchingCategory = findMatchingCategory(guess.words, solution.categories)
-
-		if (matchingCategory) {
-			return {
-				valid: true,
-				isCorrect: true,
-				category: matchingCategory,
-			}
-		}
-
-		return {
-			valid: true,
-			isCorrect: false,
-		}
-	},
-
-	/**
-	 * CORE VALIDATION - Validates submission AND calculates score
-	 *
-	 * Scoring: Mistake-based
-	 * - 0 mistakes: 100 points
-	 * - 1 mistake: 75 points
-	 * - 2 mistakes: 50 points
-	 * - 3 mistakes: 25 points
-	 * - 4+ mistakes (loss): 0 points
-	 */
-	validateAndScore: (
-		solution: ConnectionsSolution,
-		_puzzleData: ConnectionsPuzzleData,
-		submission: GameSubmission,
-	): GameResult => {
-		const data = submission.data as { foundCategories?: string[][]; mistakes?: number } | undefined
-
-		// Must have found categories to validate
-		if (!data?.foundCategories) {
-			return { valid: false, error: 'Missing found categories data' }
-		}
-
-		// Count valid categories found
-		const foundCategories = data.foundCategories
-		const validCategoryCount = foundCategories.filter((found) => {
-			if (!Array.isArray(found) || found.length !== WORDS_PER_CATEGORY) {
-				return false
-			}
-			return findMatchingCategory(found, solution.categories) !== undefined
-		}).length
-
-		const foundAll = validCategoryCount === TOTAL_CATEGORIES
-
-		// Verify claimed status
-		if (submission.status === 'won' && !foundAll) {
-			return {
-				valid: false,
-				error: 'Invalid win claim - not all categories found correctly',
-			}
-		}
-		if (submission.status === 'lost' && foundAll) {
-			return {
-				valid: false,
-				error: 'Invalid loss claim - all categories found correctly',
-			}
-		}
-
-		// Calculate score
-		if (!foundAll) {
-			return { valid: true, status: 'lost', score: 0 }
-		}
-
-		const mistakes = data.mistakes ?? 0
-		const score = Math.max(0, 100 - mistakes * 25)
-
-		return { valid: true, status: 'won', score }
-	},
 
 	/**
 	 * Perfect game: no mistakes

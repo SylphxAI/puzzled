@@ -89,6 +89,9 @@ message GetSubscriptionResponse {
   Family family = 9;
   // Reverse trial: when the free access ends. Set only while it runs.
   int64 trial_ends_ms = 10 [features.field_presence = EXPLICIT];
+  // Own subscription: when its paid trial ends and the first charge happens
+  // (Money's trial_end_time). Set only when Money reports one.
+  int64 subscription_trial_end_ms = 11 [features.field_presence = EXPLICIT];
 }
 
 message CreateCheckoutRequest {

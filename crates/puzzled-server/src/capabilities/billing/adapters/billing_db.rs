@@ -200,11 +200,14 @@ pub async fn trial_ends_at_ms(pool: &PgPool, user_id: &str) -> Result<Option<i64
     .map_err(|e| format!("trial read failed: {e}"))
 }
 
-/// Distinct product days the account has finished (a qualifying ritual finish).
+/// Distinct product days the account has finished: a qualifying ritual finish
+/// that ended won or lost (the same rule as daily puzzle completers). A day
+/// that was only started does not count.
 pub async fn finished_days(pool: &PgPool, user_id: &str) -> Result<i64, String> {
     sqlx::query_scalar::<_, i64>(
         r#"SELECT count(DISTINCT "day_key") FROM "game_sessions"
-           WHERE "user_id" = $1 AND "is_ritual" AND "day_key" IS NOT NULL"#,
+           WHERE "user_id" = $1 AND "is_ritual" AND "day_key" IS NOT NULL
+             AND "status" IN ('won', 'lost')"#,
     )
     .bind(uid(user_id)?)
     .fetch_one(pool)
