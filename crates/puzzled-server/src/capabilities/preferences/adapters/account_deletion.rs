@@ -53,6 +53,11 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
         r#"DELETE FROM "account_attribution" WHERE "user_id" = $1"#,
     ),
     (
+        "funnel_signup_receipts",
+        "user_id",
+        r#"DELETE FROM "funnel_signup_receipts" WHERE "user_id" = $1"#,
+    ),
+    (
         "auth_subjects",
         "user_id",
         r#"DELETE FROM "auth_subjects" WHERE "user_id" = $1"#,
