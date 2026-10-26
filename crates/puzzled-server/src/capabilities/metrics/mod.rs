@@ -39,8 +39,20 @@ pub async fn audience(pool: &PgPool, user_id: &str, paid: bool) {
         return;
     };
     let day = puzzled_core::puzzle_play::daily_time::product_day_key(Utc::now()).to_string();
-    if sqlx::query("INSERT INTO metric_audiences (user_id, day_key, paid) VALUES ($1,$2,$3) ON CONFLICT (user_id,day_key) DO UPDATE SET paid = metric_audiences.paid OR excluded.paid")
-        .bind(uid).bind(day).bind(paid).execute(pool).await.is_err() { capture_failed(); }
+    // The task may outlive its response: serialize with erasure, then recheck
+    // the account so a delayed observation cannot recreate a deleted row.
+    let stored = async {
+        let mut tx = pool.begin().await?;
+        crate::capabilities::identity_access::adapters::guest_credentials::lock_players(
+            &mut tx, vec![uid],
+        ).await?;
+        sqlx::query("INSERT INTO metric_audiences (user_id, day_key, paid) SELECT $1,$2,$3 WHERE EXISTS (SELECT 1 FROM auth_subjects WHERE user_id=$1) ON CONFLICT (user_id,day_key) DO UPDATE SET paid = metric_audiences.paid OR excluded.paid")
+            .bind(uid).bind(day).bind(paid).execute(&mut *tx).await?;
+        tx.commit().await
+    }.await;
+    if stored.is_err() {
+        capture_failed();
+    }
 }
 
 pub async fn landing_on(
@@ -114,11 +126,14 @@ pub async fn rollup(pool: &PgPool, now: DateTime<Utc>) -> Result<usize, String> 
         if !lock { return Ok(0); }
         let explanations: Option<serde_json::Value> = sqlx::query_scalar("SELECT value FROM app_settings WHERE key = 'metrics_explained_days'")
             .fetch_optional(&mut *tx).await?;
+        // Keep comparison context outside the visible window: its oldest
+        // report still needs the preceding day and week for alert evaluation.
+        let context_start = start - Duration::days(7);
         let old: Vec<(String, serde_json::Value)> = sqlx::query_as("SELECT day_key,report FROM metric_days WHERE day_key >= $1")
-            .bind(start.to_string()).fetch_all(&mut *tx).await?;
+            .bind(context_start.to_string()).fetch_all(&mut *tx).await?;
         let old: std::collections::BTreeMap<_, _> = old.into_iter().filter_map(|(k,v)| serde_json::from_value::<Day>(v).ok().map(|v|(k,v))).collect();
         let rows = sqlx::query(include_str!("rollup.sql"))
-            .bind(start.to_string()).bind(today.to_string()).fetch_all(&mut *tx).await?;
+            .bind(context_start.to_string()).bind(today.to_string()).fetch_all(&mut *tx).await?;
         let mut days = std::collections::BTreeMap::<String, Day>::new();
         for r in rows {
             let key: String = r.try_get("day_key")?;
@@ -144,10 +159,17 @@ pub async fn rollup(pool: &PgPool, now: DateTime<Utc>) -> Result<usize, String> 
             if day.complete {
                 day.alerts = policy::alerts(&day, days.get(&(date - Duration::days(1)).to_string()), days.get(&(date - Duration::days(7)).to_string()), explained);
             }
+            if key < start.to_string() {
+                days.insert(key, day);
+                continue;
+            }
             let value = serde_json::to_value(&day).map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
             sqlx::query("INSERT INTO metric_days (day_key,report,generated_at,id) VALUES ($1,$2,$3,$4) ON CONFLICT (day_key) DO UPDATE SET report = excluded.report, generated_at = excluded.generated_at")
                 .bind(&key).bind(value).bind(now).bind(Uuid::now_v7()).execute(&mut *tx).await?;
-            if key == closed.to_string() {
+            // Catch up every closed day in the recompute window. Compute's
+            // last-only delivery can resume after more than one missed day;
+            // queuing only yesterday would silently lose the intervening alerts.
+            if day.complete {
                 for signal in &day.alerts {
                     sqlx::query("INSERT INTO metric_alert_outbox (day_key,signal) VALUES ($1,$2) ON CONFLICT DO NOTHING")
                         .bind(&key).bind(signal).execute(&mut *tx).await?;
@@ -160,7 +182,7 @@ pub async fn rollup(pool: &PgPool, now: DateTime<Utc>) -> Result<usize, String> 
                 .bind(cutoff.to_string()).execute(&mut *tx).await?;
         }
         tx.commit().await?;
-        Ok(days.len())
+        Ok(days.keys().filter(|key| **key >= start.to_string()).count())
     }.await;
     let count = result.map_err(|e| e.to_string())?;
     // Durable at-least-once outbox: log first, then acknowledge. A crash may

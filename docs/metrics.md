@@ -161,7 +161,9 @@ existing platform issue intake as
 no date, player id, URL or personal row. Acknowledgement follows logging, so a
 crash can repeat an occurrence but cannot silently lose the alert. Ordinary
 retries do not re-emit an acknowledged day/signal; the dashboard shows all current
-signals even if the delivery was already acknowledged. Sparse cohorts do not page.
+signals even if the delivery was already acknowledged. After missed ticks, the
+next rollup queues violations for every closed day in its 35-day window, not
+only yesterday. Sparse cohorts do not page.
 
 | Signal | Default threshold |
 | --- | --- |

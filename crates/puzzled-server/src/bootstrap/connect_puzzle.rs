@@ -551,7 +551,6 @@ impl PuzzleService for PuzzleConnectService {
             .map_err(|_| ConnectError::new(ErrorCode::InvalidArgument, "invalid_share"))?;
         let mut access = self.adopt_guest_progress_if_needed(&ctx, true).await?;
         let uid = access
-            .identities
             .primary()
             .and_then(|i| {
                 puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid(&i.user_id)

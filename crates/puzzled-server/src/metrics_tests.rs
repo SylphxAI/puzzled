@@ -9,6 +9,53 @@ fn time(raw: &str) -> DateTime<Utc> {
         .unwrap()
         .with_timezone(&Utc)
 }
+
+#[tokio::test]
+async fn a_delayed_audience_observation_does_not_recreate_an_erased_account() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let user = Uuid::now_v7();
+    sqlx::query(
+        "INSERT INTO auth_subjects (subject,user_id) VALUES ('metrics-erasure-fixture',$1)",
+    )
+    .bind(user)
+    .execute(&pool)
+    .await
+    .unwrap();
+    metrics::audience(&pool, &user.to_string(), false).await;
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM metric_audiences WHERE user_id=$1")
+        .bind(user)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(count, 1);
+    let mut tx = pool.begin().await.unwrap();
+    crate::capabilities::identity_access::adapters::guest_credentials::lock_players(
+        &mut tx,
+        vec![user],
+    )
+    .await
+    .unwrap();
+    sqlx::query("DELETE FROM metric_audiences WHERE user_id=$1")
+        .bind(user)
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    sqlx::query("DELETE FROM auth_subjects WHERE user_id=$1")
+        .bind(user)
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    tx.commit().await.unwrap();
+    metrics::audience(&pool, &user.to_string(), true).await;
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM metric_audiences WHERE user_id=$1")
+        .bind(user)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(count, 0);
+}
 async fn finish(
     pool: &PgPool,
     user: Uuid,
@@ -204,4 +251,54 @@ async fn alerts_are_durable_emitted_once_per_day_and_rollup_retries_do_not_dupli
     );
     let d = &metrics::reports(&pool).await.unwrap()[1].0;
     assert_eq!(d.alerts.len(), 2);
+}
+
+#[tokio::test]
+async fn a_missed_day_is_alerted_when_the_schedule_resumes() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    sqlx::query("INSERT INTO metric_counters (day_key,event,count) VALUES ('2026-10-23','share',20), ('2026-10-24','free_finish_failed',5)")
+        .execute(&pool).await.unwrap();
+    // First tick after an outage: neither violation occurred yesterday.
+    let now = time("2026-10-25T16:17:00Z");
+    metrics::rollup(&pool, now).await.unwrap();
+    metrics::rollup(&pool, now).await.unwrap();
+    let alerts: Vec<(String, String, bool)> = sqlx::query_as(
+        "SELECT day_key, signal, emitted_at IS NOT NULL FROM metric_alert_outbox ORDER BY day_key, signal",
+    ).fetch_all(&pool).await.unwrap();
+    assert_eq!(
+        alerts,
+        vec![
+            ("2026-10-23".into(), "shares_without_landings".into(), true),
+            ("2026-10-24".into(), "free_finish_errors".into(), true),
+        ]
+    );
+}
+
+#[tokio::test]
+async fn the_oldest_visible_day_keeps_its_alert_comparison_context() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    for _ in 0..20 {
+        finish(
+            &pool,
+            Uuid::now_v7(),
+            "2026-09-21",
+            "sudoku",
+            true,
+            "puzzle_ritual",
+            "won",
+        )
+        .await;
+    }
+    metrics::rollup(&pool, time("2026-10-25T16:17:00Z"))
+        .await
+        .unwrap();
+    let rows = metrics::reports(&pool).await.unwrap();
+    assert_eq!(rows.len(), 35);
+    let (oldest, _) = rows.last().unwrap();
+    assert_eq!(oldest.day_key, "2026-09-22");
+    assert!(oldest.alerts.contains(&"completers_drop".into()));
 }
