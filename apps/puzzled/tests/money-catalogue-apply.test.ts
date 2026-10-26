@@ -37,6 +37,13 @@ answer() { # body code
 case "$url" in
   *audience=sylphx-access*) answer '{"value":"jwt-fixture"}' 200 ;;
   */v1/access/github/token) answer "$FAKE_EXCHANGE_BODY" "$FAKE_EXCHANGE_CODE" ;;
+  */licence_keys:generate) touch "$RUNNER_TEMP/generated-licence-key"; answer '{}' 200 ;;
+  */licence_keys/*)
+    if [ -n "$FAKE_KEY_EXISTS" ] || [ -f "$RUNNER_TEMP/generated-licence-key" ]; then
+      answer '{}' 200
+    else
+      answer '{"error":"not found"}' 404
+    fi ;;
   */price_catalogs/default*) answer '{}' "\${FAKE_MONEY_CODE:-200}" ;;
   *) answer '{"unexpected":true}' 404 ;;
 esac
@@ -95,7 +102,19 @@ describe('money catalogue apply script', () => {
 			'PATCH https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/price_catalogs/default?allow_missing=true',
 			'POST https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/price_catalogs/default:sync',
 		])
+		expect(result.calls.filter((c) => c.includes('licence_keys:generate'))).toHaveLength(1)
 		expect(result.calls.some((c) => c.includes('/catalogs/default'))).toBe(false)
+	})
+
+	test('an existing licence key is reused without a generate call', () => {
+		const result = run({
+			FAKE_EXCHANGE_BODY: GRANTED,
+			FAKE_EXCHANGE_CODE: '200',
+			FAKE_KEY_EXISTS: '1',
+		})
+		expect(result.status).toBe(0)
+		expect(result.calls.filter((c) => c.includes('licence_keys:generate'))).toEqual([])
+		expect(result.calls.filter((c) => c.includes('/licence_keys/puzzled_plus'))).toHaveLength(1)
 	})
 
 	test('a refused exchange stops before any Money write', () => {

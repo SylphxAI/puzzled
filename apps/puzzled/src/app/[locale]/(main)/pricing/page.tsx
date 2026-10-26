@@ -107,6 +107,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 		card ? formatPrice(card.amountMinor, card.currency, locale) : null
 
 	const plusMember = showsCurrentPlan(access)
+	const plusOnce = cards.find((card) => !card.family && card.interval === 'once')
 	const plusYear = yearly(false)
 	const plusMonth = monthly(false)
 	const memberButtonClass = [
@@ -203,6 +204,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 							</div>
 						) : (
 							<PlusOffer
+								once={plusOnce}
 								yearly={plusYear}
 								monthly={plusMonth}
 								locale={locale}
