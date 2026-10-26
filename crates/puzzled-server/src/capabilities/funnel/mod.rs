@@ -85,6 +85,7 @@ fn clean_slug(raw: &str) -> Option<String> {
 pub fn validate_browser(incoming: &Incoming) -> Option<Row> {
     let event = match incoming.event.as_str() {
         "landing" => "landing",
+        "share_landing" => "share_landing",
         "game_start" => "game_start",
         "web_vitals" => "web_vitals",
         _ => return None,

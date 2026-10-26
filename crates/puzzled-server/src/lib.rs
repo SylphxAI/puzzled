@@ -37,6 +37,8 @@ mod funnel_tests;
 #[cfg(test)]
 mod guest_ownership_tests;
 #[cfg(test)]
+mod metrics_tests;
+#[cfg(test)]
 mod money_access_tests;
 #[cfg(test)]
 mod result_shares_tests;
@@ -1255,6 +1257,7 @@ mod tests {
             "/internal/compute/daily-puzzles",
             "/internal/compute/audit-log-retention",
             "/internal/compute/tryit-conversions",
+            "/internal/compute/product-metrics",
         ] {
             let refused = router(tick_state())
                 .oneshot(tick_request(path, "{}", None))
@@ -1268,6 +1271,45 @@ mod tests {
             // Admitted; without a database the tick answers 503 so Compute retries.
             assert_eq!(admitted.status(), StatusCode::SERVICE_UNAVAILABLE, "{path}");
         }
+    }
+
+    #[tokio::test]
+    async fn metric_reports_are_admin_only_and_landings_require_same_origin() {
+        let path = "/puzzled.v1.AdminService/GetMetricsReport";
+        let anonymous = router(AppState::new(None))
+            .oneshot(build_connect_request(path, Body::from("{}")))
+            .await
+            .unwrap();
+        assert_eq!(anonymous.status(), StatusCode::UNAUTHORIZED);
+        let customer = mint_test_token("f715210b-9df3-4945-b5bd-94fc4609bc30");
+        let response = router(AppState::new(None))
+            .oneshot(build_connect_request_with_auth(
+                path,
+                Body::from("{}"),
+                &customer,
+            ))
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        let product_admin =
+            mint_test_token_with_scope("f715210b-9df3-4945-b5bd-94fc4609bc30", Some("admin"));
+        let response = router(AppState::new(None))
+            .oneshot(build_connect_request_with_auth(
+                path,
+                Body::from("{}"),
+                &product_admin,
+            ))
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let response = router(AppState::new(None))
+            .oneshot(build_connect_request(
+                "/puzzled.v1.PuzzleService/RecordShareLanding",
+                Body::from("{}"),
+            ))
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
     }
 
     #[tokio::test]

@@ -31,6 +31,8 @@ const MAX_EVENT: usize = 64;
 pub enum Kind {
     /// A dependency the request or job needed failed (database, Auth, Money).
     ToolFailed,
+    /// A scheduled product metric crossed a stop-the-line threshold.
+    MetricRegression,
     /// A request ended in an error the caller saw (a 5xx).
     TurnFailed,
 }
@@ -39,6 +41,7 @@ impl Kind {
     fn name(self) -> &'static str {
         match self {
             Kind::ToolFailed => "tool_failed",
+            Kind::MetricRegression => "metric_regression",
             Kind::TurnFailed => "turn_failed",
         }
     }

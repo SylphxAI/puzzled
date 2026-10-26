@@ -481,6 +481,7 @@ pub async fn adopt_guest_sessions_on_connection(
         .await
         .map_err(|e| e.to_string())?;
     super::result_shares_db::adopt_guest_shares(&mut *connection, account, guest).await?;
+    crate::capabilities::metrics::adopt(&mut *connection, account, guest).await?;
     crate::capabilities::gamification::adapters::freezes_db::adopt_guest_freezes(
         &mut *connection,
         account,

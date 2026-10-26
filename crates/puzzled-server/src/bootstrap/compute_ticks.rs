@@ -140,3 +140,32 @@ pub async fn daily_reminders_tick(State(state): State<AppState>, headers: Header
         }
     }
 }
+
+pub const METRICS_PATH: &str = "/internal/compute/product-metrics";
+pub async fn metrics_tick(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    if let Err(reject) = state.ticks.admit(&headers, METRICS_PATH).await {
+        return reject.response().into_response();
+    }
+    let Some(pool) = &state.pool else {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({"error":"no_database"})),
+        )
+            .into_response();
+    };
+    match crate::capabilities::metrics::rollup(pool, chrono::Utc::now()).await {
+        Ok(days) => (StatusCode::OK, Json(json!({"days":days}))).into_response(),
+        Err(_) => {
+            crate::shared::signals::issue(
+                crate::shared::signals::Kind::ToolFailed,
+                "metrics_rollup",
+                "rollup_failed",
+            );
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({"error":"metrics_failed"})),
+            )
+                .into_response()
+        }
+    }
+}

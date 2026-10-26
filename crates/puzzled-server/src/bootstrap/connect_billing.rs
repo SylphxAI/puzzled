@@ -370,6 +370,24 @@ impl BillingService for BillingConnectService {
                 }
             }
         }
+        // An observation is not admission. Never make the response wait on
+        // metric storage or another Money answer; unknown answers are excluded.
+        let observed_pool = pool.clone();
+        let observed_money = money.clone();
+        let observed_user = identity.user_id.clone();
+        let paid = matches!(response.source.as_str(), "plus" | "family");
+        tokio::spawn(async move {
+            if observed_money
+                .try_check(
+                    &observed_user,
+                    crate::capabilities::money::access::FEATURE_PLUS,
+                )
+                .await
+                .is_ok()
+            {
+                crate::capabilities::metrics::audience(&observed_pool, &observed_user, paid).await;
+            }
+        });
         Response::ok(response)
     }
 

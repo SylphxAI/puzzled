@@ -23,6 +23,16 @@ use crate::capabilities::identity_access::adapters::{auth_subjects, guest_creden
 /// erased account.
 pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
+        "share_landings",
+        "user_id",
+        r#"DELETE FROM "share_landings" WHERE "user_id" = $1"#,
+    ),
+    (
+        "metric_audiences",
+        "user_id",
+        r#"DELETE FROM "metric_audiences" WHERE "user_id" = $1"#,
+    ),
+    (
         "guest_credentials",
         "user_id",
         r#"DELETE FROM "guest_credentials" WHERE "user_id" = $1"#,

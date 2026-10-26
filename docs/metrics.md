@@ -111,3 +111,78 @@ behind payment, or optimise share bots.
 
 Daily: completers and free-finish errors. Weekly: retention, share funnel and
 game mix. Monthly: subscription cohorts and what each game costs to run.
+
+## Scheduled operator report
+
+The admin Analytics page (`/admin/analytics`) reads **persisted aggregates**, not live SQL, through
+`AdminService.GetMetricsReport` (the api checks the exact product `admin` scope).
+It shows the last 35 Hong Kong product days, refresh time, provisional/closed
+status, the signed-in split, D7 numerator/denominator, weekly regulars, share
+landings and new completers, and every triggered stop-the-line signal. An empty
+cohort is **not** 0% retention. Missing or >30-minute-old reports show a warning.
+
+Compute calls the signed `/internal/compute/product-metrics` callback at minutes
+2, 17, 32 and 47 of every hour. It recomputes the trailing 35 days from the same
+qualifying `game_sessions` predicate as the core oracles, in a repeatable-read
+transaction. Today stays provisional; a day closes after a 15-minute late-event
+allowance. D7 for completed day D compares first completers on D−7 with those
+who completed again on D. It does not treat merely opening the site as returning.
+A lock and upserts make overlapping/retried ticks safe. Failed ticks return 503
+for Compute to retry and emit `puzzled.issue.tool_failed.metrics_rollup`.
+
+Anonymous share-landing visits are counted only by the visible browser page, not by the public
+result read used by crawlers/metadata. Linking a landing to a first finish requires explicit analytics consent (also required in the RPC); declined or absent consent records no linked receipt. The api admits the existing signed-in or
+server-issued guest credential, requires same origin, verifies the share, excludes
+self-landings and deduplicates `(player, share, product day)`. A new completer
+counts on their **first completer day** only if their first qualifying finish
+follows a landing in the preceding seven product days (D−6 through D). Guest
+attribution follows the proven guest-to-account adoption transaction. A landing
+never inserts or validates a finish. The anonymous funnel counter stays anonymous
+and separate. Identity-bound landing receipts and observed audiences are erased
+with the account. Landing receipts are retained for at most 41 product days (35 report days plus the six-day attribution lookback); audience receipts for 35 product days; reports/counters carry
+no player ids. Existing finishes are not rewritten or backfilled.
+
+New share-tap, landing and free-finish counters begin at deployment; historical
+zeros in those columns mean **not collected**, not evidence of a broken funnel.
+Catalog size/release are observed from deployment onward, never invented for
+historical days. Free-finish outcomes are counted without any Money read and do
+not block the response. The Plus/free comparison is completion per **observed
+signed-in subscription viewer** that day, not all subscribers or all guests;
+reverse trials belong to the free audience, unanswerable Money reads are excluded.
+Plus includes Money grants/family seats; it is an access-segment proxy, not a
+revenue measure. Raw landings/audiences are not exposed through the report.
+
+### Initial stop-the-line thresholds
+
+These policy defaults are versioned in the core and visible here. Closed-day
+violations are persisted in a durable alert outbox and emitted through the
+existing platform issue intake as
+`puzzled.issue.metric_regression.<signal>` (`severity=info`). The fingerprint has
+no date, player id, URL or personal row. Acknowledgement follows logging, so a
+crash can repeat an occurrence but cannot silently lose the alert. Ordinary
+retries do not re-emit an acknowledged day/signal; the dashboard shows all current
+signals even if the delivery was already acknowledged. Sparse cohorts do not page.
+
+| Signal | Default threshold |
+| --- | --- |
+| `completers_drop` | D <80% of D−1, with at least 20 completers on D−1, unless the admin setting `metrics_explained_days` (JSON array of product-day strings) records an investigated deploy/content explanation |
+| `free_finish_errors` | At least 5 free-daily submission server failures and >1% of free-daily submission outcomes; client rejections are not server failures |
+| `share_rate_collapse` | Shares/completer <50% of D−1, with at least 20 shares on D−1 and nonzero completers on both days |
+| `paid_completion_gap` | Observed Plus completion rate <50% of observed free rate, at least 20 audience observations in each segment |
+| `entertainment_drift` | At least 20 entertainment completers and >3× puzzle completers |
+| `catalog_without_habit` | Catalog larger than D−7 but completers no larger, with at least 20 on D−7 and an observed historical catalog size |
+| `shares_without_landings` | At least 20 share taps and zero anonymous landing visits on the closed day |
+
+A deploy alone is not an explanation: investigate the drop before adding its day
+to the setting. Thresholds may be changed by reviewed core-policy changes after
+live baselines exist. Reliability's existing write-journey SLO remains active
+between closed-day reports. Compute monitors failed/missed deliveries; a failed
+metrics job is not a healthy zero-user day.
+
+After rollout: verify the serving SHA; read this report as an admin; confirm its
+`generated_at` advances at the next scheduled tick; and read the platform's issue
+intake for any triggered fingerprint. Use only isolated test fixtures to induce
+metric regressions; never manufacture finishes or change a real player's data to
+prove an alert. The database tests assert the report against both canonical SQL
+oracles, cohort timing, all seven threshold policies, deduplication, adoption,
+erasure and durable alert retries.

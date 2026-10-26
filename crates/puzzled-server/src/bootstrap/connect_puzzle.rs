@@ -51,7 +51,8 @@ use crate::proto::puzzled::v1::{
     CheckGuessRequest, CheckGuessResponse, DailyCompletion, GameProgress, GetDailyRequest,
     GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse, GetSharedResultRequest,
     GetSharedResultResponse, GetTodayProgressRequest, GetTodayProgressResponse, PuzzleService,
-    ShareResultRequest, ShareResultResponse, SubmitGuessRequest, SubmitGuessResponse,
+    RecordShareLandingRequest, RecordShareLandingResponse, ShareResultRequest, ShareResultResponse,
+    SubmitGuessRequest, SubmitGuessResponse,
 };
 
 const SLICE_PUZZLE: &str = "S2-puzzle-connect";
@@ -91,416 +92,7 @@ impl PuzzleConnectService {
         true
     }
 
-    /// Reassign accepted guest rows onto the Platform account before a personal
-    /// read or write. Fail closed so a missed merge cannot accept a second finish.
-    async fn adopt_guest_progress_if_needed(
-        &self,
-        ctx: &RequestContext,
-        guest_write: bool,
-    ) -> Result<crate::bootstrap::identity::RequestAccess, ConnectError> {
-        crate::bootstrap::identity::admitted_request_identities(
-            ctx,
-            self.state.pool.as_ref(),
-            guest_write,
-        )
-        .await
-    }
-
-    /// Admit a served puzzle (Puzzled Plus gate, the one admission point).
-    ///
-    /// A future day is refused so no one can read tomorrow's solution early.
-    /// Today's featured game is free to everyone; every other game and every
-    /// past day needs Puzzled Plus once it is on sale. While Money is not
-    /// configured nothing is sold, so nothing is locked. An entitlement read
-    /// that fails refuses (fail closed to the free floor).
-    async fn enforce_play_access(
-        &self,
-        user_id: Option<&str>,
-        game_slug: &str,
-        date: NaiveDate,
-    ) -> Result<(), ConnectError> {
-        let today = product_day_key(Utc::now());
-        if date > today {
-            return Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "future_puzzle_date",
-            ));
-        }
-        let is_today = date == today;
-        let free_today = is_game_free_today(game_slug, today);
-        // The free daily puzzle is decided without any billing read.
-        if play_access(true, false, is_today, free_today).is_ok() {
-            return Ok(());
-        }
-        let sales_open = self.state.sales_open().await;
-        if !sales_open {
-            return Ok(());
-        }
-        let entitled = match (user_id, &self.state.pool) {
-            (Some(uid), Some(pool)) => {
-                match entitlement_access(pool, self.state.money.as_ref(), uid).await {
-                    Ok(found) => found.entitled,
-                    Err(error) => {
-                        warn!(%error, "entitlement read failed; refusing paid play");
-                        false
-                    }
-                }
-            }
-            _ => false,
-        };
-        // Money unreachable: it cannot vouch for anyone, so nothing that is
-        // free today is locked behind it.
-        if !entitled {
-            if let (Some(uid), Some(money)) = (user_id, self.state.money.as_ref()) {
-                if money
-                    .try_check(uid, crate::capabilities::money::access::FEATURE_PLUS)
-                    .await
-                    .is_err()
-                {
-                    // Intended: player experience over a small leak while Money
-                    // is down. Counted so an outage-long free ride is visible.
-                    tracing::warn!(
-                        event = "money_entitlement_unanswerable_allowed",
-                        feature = crate::capabilities::money::access::FEATURE_PLUS,
-                        "Money could not answer the Plus check; play allowed"
-                    );
-                    return Ok(());
-                }
-            }
-        }
-        play_access(sales_open, entitled, is_today, free_today)
-            .map_err(|denied| ConnectError::new(ErrorCode::PermissionDenied, denied.code()))
-    }
-}
-
-fn parse_difficulty(raw: &str) -> SudokuDifficulty {
-    match raw.trim().to_ascii_lowercase().as_str() {
-        "easy" => SudokuDifficulty::Easy,
-        "hard" => SudokuDifficulty::Hard,
-        _ => SudokuDifficulty::Medium,
-    }
-}
-
-fn difficulty_label(d: SudokuDifficulty) -> &'static str {
-    match d {
-        SudokuDifficulty::Easy => "easy",
-        SudokuDifficulty::Medium => "medium",
-        SudokuDifficulty::Hard => "hard",
-    }
-}
-
-fn parse_status(raw: &str) -> Option<SubmissionStatus> {
-    match raw.trim().to_ascii_lowercase().as_str() {
-        "won" => Some(SubmissionStatus::Won),
-        "lost" => Some(SubmissionStatus::Lost),
-        _ => None,
-    }
-}
-
-fn status_label(s: SubmissionStatus) -> &'static str {
-    match s {
-        SubmissionStatus::Won => "won",
-        SubmissionStatus::Lost => "lost",
-    }
-}
-
-/// Deterministic sudoku fallback when no stored row exists (S0 / no DB).
-fn sudoku_puzzle_data(seed: i64, difficulty: SudokuDifficulty) -> Value {
-    let generated = generate_sudoku_puzzle(seed, difficulty);
-    serde_json::to_value(&generated.puzzle_data).unwrap_or(Value::Null)
-}
-
-/// Deterministic mini-crossword fallback when no stored row exists.
-/// Free rotation includes crossword; free floor must not depend on pre-seed.
-/// Most slugs one GetTodayProgress may name (the catalogue is nineteen).
-const MAX_PROGRESS_SLUGS: usize = 64;
-
-/// Requested slugs paired with their canonical storage slug, request order kept.
-fn progress_slugs(raw: &[String]) -> Result<Vec<(String, String)>, ConnectError> {
-    if raw.len() > MAX_PROGRESS_SLUGS {
-        return Err(ConnectError::new(
-            ErrorCode::InvalidArgument,
-            "too_many_games",
-        ));
-    }
-    raw.iter()
-        .map(|slug| {
-            let canonical = canonicalize_game_slug(slug.trim());
-            if canonical.is_empty() {
-                return Err(ConnectError::new(
-                    ErrorCode::InvalidArgument,
-                    "game_slug_required",
-                ));
-            }
-            if !is_valid_game_slug(canonical) {
-                return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
-            }
-            Ok((slug.clone(), canonical.to_string()))
-        })
-        .collect()
-}
-
-/// Per-game flags in request order. A finish is reported only when the row
-/// exists; nothing here carries a puzzle or an answer.
-fn progress_entries(
-    slugs: &[(String, String)],
-    finished: &HashMap<String, CompletedSession>,
-) -> Vec<GameProgress> {
-    slugs
-        .iter()
-        .map(|(requested, canonical)| {
-            let session = finished.get(canonical);
-            GameProgress {
-                game_slug: requested.clone(),
-                has_completed: session.is_some(),
-                completed_session: session
-                    .map(|session| DailyCompletion {
-                        status: session.status.clone(),
-                        score: session.score.and_then(|score| u32::try_from(score).ok()),
-                        attempts: u32::try_from(session.attempts).ok(),
-                        completed_at_ms: session
-                            .completed_at
-                            .map(|completed_at| completed_at.and_utc().timestamp_millis()),
-                        difficulty: session.difficulty.clone(),
-                        ..Default::default()
-                    })
-                    .into(),
-                ..Default::default()
-            }
-        })
-        .collect()
-}
-
-fn date_from_string(raw: Option<&str>) -> Option<NaiveDate> {
-    let raw = raw?.trim();
-    if raw.is_empty() {
-        return None;
-    }
-    NaiveDate::parse_from_str(raw, "%Y-%m-%d").ok()
-}
-
-#[allow(refining_impl_trait_internal, refining_impl_trait_reachable)]
-impl PuzzleService for PuzzleConnectService {
-    async fn get_puzzle(
-        &self,
-        _ctx: RequestContext,
-        request: ServiceRequest<'_, GetPuzzleRequest>,
-    ) -> ServiceResult<GetPuzzleResponse> {
-        let req = request.to_owned_message();
-        let game_slug = req.game_slug.trim();
-        if game_slug.is_empty() {
-            return Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "game_slug_required",
-            ));
-        }
-        if game_slug != "sudoku" {
-            return Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "unsupported_game_slug",
-            ));
-        }
-
-        let difficulty = parse_difficulty(&req.difficulty);
-        let puzzle_data = sudoku_puzzle_data(req.seed, difficulty);
-
-        Response::ok(GetPuzzleResponse {
-            game_slug: game_slug.to_string(),
-            seed: req.seed,
-            difficulty: difficulty_label(difficulty).to_string(),
-            puzzle_data_json: client_safe_puzzle_data(puzzle_data).to_string(),
-            slice: SLICE_PUZZLE.to_string(),
-            ..Default::default()
-        })
-    }
-
-    async fn get_daily(
-        &self,
-        ctx: RequestContext,
-        request: ServiceRequest<'_, GetDailyRequest>,
-    ) -> ServiceResult<GetDailyResponse> {
-        let req = request.to_owned_message();
-        let game_slug = canonicalize_game_slug(req.game_slug.trim());
-        if game_slug.is_empty() {
-            return Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "game_slug_required",
-            ));
-        }
-        if !is_valid_game_slug(game_slug) {
-            return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
-        }
-
-        let platform = crate::bootstrap::identity::require_identity(&ctx).ok();
-        let difficulty = {
-            let d = req.difficulty.trim();
-            if d.is_empty() {
-                None
-            } else {
-                Some(d.to_string())
-            }
-        };
-        let today = product_day_key(Utc::now());
-        // Archive reads: puzzle_date (YYYY-MM-DD), default = product day key.
-        let puzzle_date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
-        let is_archive = puzzle_date != today;
-
-        self.enforce_play_access(
-            platform.as_ref().map(|identity| identity.user_id.as_str()),
-            game_slug,
-            puzzle_date,
-        )
-        .await?;
-
-        // The stored puzzle for this day, generated and stored first on a miss
-        // (daily pipeline, #246). Every game has one.
-        let (puzzle_data, puzzle_id, stub) = match daily_pipeline::resolve(
-            self.state.pool.as_ref(),
-            game_slug,
-            puzzle_date,
-            difficulty.as_deref(),
-        )
-        .await
-        {
-            Ok(found) => (
-                Some(puzzled_core::puzzle_play::generate::served_payload(
-                    game_slug,
-                    &found.puzzle_data,
-                    &found.solution,
-                )),
-                found.id,
-                false,
-            ),
-            Err(error) => {
-                warn!(%error, game_slug, %puzzle_date, "get_daily puzzle unavailable");
-                (None, None, true)
-            }
-        };
-
-        let mut access = self.adopt_guest_progress_if_needed(&ctx, false).await?;
-        let identity = access.primary().map(|identity| identity.user_id.clone());
-        // Completion is server-derived from the user's sessions.
-        let completed_session = match (identity.as_deref(), access.connection()) {
-            (Some(uid), Some(connection)) => {
-                match load_completed_session_on_connection(
-                    connection,
-                    uid,
-                    game_slug,
-                    Some(puzzle_date),
-                    puzzle_id.as_deref(),
-                )
-                .await
-                {
-                    Ok(v) => v,
-                    Err(error) => {
-                        warn!(%error, "get_daily completed session lookup failed");
-                        return Err(ConnectError::new(
-                            ErrorCode::Internal,
-                            "session_lookup_failed",
-                        ));
-                    }
-                }
-            }
-            _ => None,
-        };
-        let has_completed = completed_session.is_some();
-
-        let puzzle_data_value = puzzle_data.clone();
-        let response = match build_daily_status(
-            game_slug,
-            today,
-            difficulty.as_deref(),
-            if has_completed {
-                Some(Value::Null)
-            } else {
-                None
-            },
-            puzzle_id.clone(),
-            puzzle_data_value,
-        ) {
-            Ok(body) => Response::ok(GetDailyResponse {
-                game_slug: game_slug.to_string(),
-                puzzle_number: body.puzzle.puzzle_number,
-                puzzle_date: if is_archive {
-                    puzzle_date.format("%Y-%m-%d").to_string()
-                } else {
-                    body.puzzle.puzzle_date
-                },
-                puzzle_id,
-                difficulty: body
-                    .puzzle
-                    .difficulty
-                    .unwrap_or_else(|| difficulty.unwrap_or_default()),
-                has_completed,
-                can_play: !has_completed,
-                mode: body.mode.to_string(),
-                slice: SLICE_DAILY.to_string(),
-                stub,
-                puzzle_data_json: puzzle_data
-                    .map(client_safe_puzzle_data)
-                    .map(|v| v.to_string())
-                    .unwrap_or_default(),
-                completed_session: completed_session
-                    .map(|session| DailyCompletion {
-                        status: session.status,
-                        score: session.score.and_then(|score| u32::try_from(score).ok()),
-                        attempts: u32::try_from(session.attempts).ok(),
-                        completed_at_ms: session
-                            .completed_at
-                            .map(|completed_at| completed_at.and_utc().timestamp_millis()),
-                        difficulty: session.difficulty,
-                        ..Default::default()
-                    })
-                    .into(),
-                ..Default::default()
-            }),
-            Err(404) => Err(ConnectError::new(ErrorCode::NotFound, "unknown_game")),
-            Err(_) => Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "invalid_query",
-            )),
-        };
-        if response.is_ok() {
-            access.commit().await?;
-        }
-        response
-    }
-
-    async fn get_today_progress(
-        &self,
-        ctx: RequestContext,
-        request: ServiceRequest<'_, GetTodayProgressRequest>,
-    ) -> ServiceResult<GetTodayProgressResponse> {
-        let req = request.to_owned_message();
-        let slugs = progress_slugs(&req.game_slugs)?;
-
-        let mut access = self.adopt_guest_progress_if_needed(&ctx, false).await?;
-        let identity = access.primary().map(|identity| identity.user_id.clone());
-        // The product day is the server's; the client never names it.
-        let today = product_day_key(Utc::now());
-
-        let finished = match (identity.as_deref(), access.connection()) {
-            (Some(uid), Some(connection)) if !slugs.is_empty() => {
-                let canonical: Vec<String> = slugs.iter().map(|(_, c)| c.clone()).collect();
-                load_today_progress_on_connection(connection, uid, &canonical, today)
-                    .await
-                    .map_err(|error| {
-                        warn!(%error, "get_today_progress lookup failed");
-                        ConnectError::new(ErrorCode::Internal, "session_lookup_failed")
-                    })?
-            }
-            _ => HashMap::new(),
-        };
-        access.commit().await?;
-
-        Response::ok(GetTodayProgressResponse {
-            day_key: today.format("%Y-%m-%d").to_string(),
-            games: progress_entries(&slugs, &finished),
-            ..Default::default()
-        })
-    }
-
-    async fn submit_guess(
+    async fn submit_guess_inner(
         &self,
         ctx: RequestContext,
         request: ServiceRequest<'_, SubmitGuessRequest>,
@@ -746,6 +338,489 @@ impl PuzzleService for PuzzleConnectService {
             reveal_json: Some(solution.to_string()),
             ..Default::default()
         })
+    }
+
+    /// Reassign accepted guest rows onto the Platform account before a personal
+    /// read or write. Fail closed so a missed merge cannot accept a second finish.
+    async fn adopt_guest_progress_if_needed(
+        &self,
+        ctx: &RequestContext,
+        guest_write: bool,
+    ) -> Result<crate::bootstrap::identity::RequestAccess, ConnectError> {
+        crate::bootstrap::identity::admitted_request_identities(
+            ctx,
+            self.state.pool.as_ref(),
+            guest_write,
+        )
+        .await
+    }
+
+    /// Admit a served puzzle (Puzzled Plus gate, the one admission point).
+    ///
+    /// A future day is refused so no one can read tomorrow's solution early.
+    /// Today's featured game is free to everyone; every other game and every
+    /// past day needs Puzzled Plus once it is on sale. While Money is not
+    /// configured nothing is sold, so nothing is locked. An entitlement read
+    /// that fails refuses (fail closed to the free floor).
+    async fn enforce_play_access(
+        &self,
+        user_id: Option<&str>,
+        game_slug: &str,
+        date: NaiveDate,
+    ) -> Result<(), ConnectError> {
+        let today = product_day_key(Utc::now());
+        if date > today {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "future_puzzle_date",
+            ));
+        }
+        let is_today = date == today;
+        let free_today = is_game_free_today(game_slug, today);
+        // The free daily puzzle is decided without any billing read.
+        if play_access(true, false, is_today, free_today).is_ok() {
+            return Ok(());
+        }
+        let sales_open = self.state.sales_open().await;
+        if !sales_open {
+            return Ok(());
+        }
+        let entitled = match (user_id, &self.state.pool) {
+            (Some(uid), Some(pool)) => {
+                match entitlement_access(pool, self.state.money.as_ref(), uid).await {
+                    Ok(found) => found.entitled,
+                    Err(error) => {
+                        warn!(%error, "entitlement read failed; refusing paid play");
+                        false
+                    }
+                }
+            }
+            _ => false,
+        };
+        // Money unreachable: it cannot vouch for anyone, so nothing that is
+        // free today is locked behind it.
+        if !entitled {
+            if let (Some(uid), Some(money)) = (user_id, self.state.money.as_ref()) {
+                if money
+                    .try_check(uid, crate::capabilities::money::access::FEATURE_PLUS)
+                    .await
+                    .is_err()
+                {
+                    // Intended: player experience over a small leak while Money
+                    // is down. Counted so an outage-long free ride is visible.
+                    tracing::warn!(
+                        event = "money_entitlement_unanswerable_allowed",
+                        feature = crate::capabilities::money::access::FEATURE_PLUS,
+                        "Money could not answer the Plus check; play allowed"
+                    );
+                    return Ok(());
+                }
+            }
+        }
+        play_access(sales_open, entitled, is_today, free_today)
+            .map_err(|denied| ConnectError::new(ErrorCode::PermissionDenied, denied.code()))
+    }
+}
+
+fn parse_difficulty(raw: &str) -> SudokuDifficulty {
+    match raw.trim().to_ascii_lowercase().as_str() {
+        "easy" => SudokuDifficulty::Easy,
+        "hard" => SudokuDifficulty::Hard,
+        _ => SudokuDifficulty::Medium,
+    }
+}
+
+fn difficulty_label(d: SudokuDifficulty) -> &'static str {
+    match d {
+        SudokuDifficulty::Easy => "easy",
+        SudokuDifficulty::Medium => "medium",
+        SudokuDifficulty::Hard => "hard",
+    }
+}
+
+fn parse_status(raw: &str) -> Option<SubmissionStatus> {
+    match raw.trim().to_ascii_lowercase().as_str() {
+        "won" => Some(SubmissionStatus::Won),
+        "lost" => Some(SubmissionStatus::Lost),
+        _ => None,
+    }
+}
+
+fn status_label(s: SubmissionStatus) -> &'static str {
+    match s {
+        SubmissionStatus::Won => "won",
+        SubmissionStatus::Lost => "lost",
+    }
+}
+
+/// Deterministic sudoku fallback when no stored row exists (S0 / no DB).
+fn sudoku_puzzle_data(seed: i64, difficulty: SudokuDifficulty) -> Value {
+    let generated = generate_sudoku_puzzle(seed, difficulty);
+    serde_json::to_value(&generated.puzzle_data).unwrap_or(Value::Null)
+}
+
+/// Deterministic mini-crossword fallback when no stored row exists.
+/// Free rotation includes crossword; free floor must not depend on pre-seed.
+/// Most slugs one GetTodayProgress may name (the catalogue is nineteen).
+const MAX_PROGRESS_SLUGS: usize = 64;
+
+/// Requested slugs paired with their canonical storage slug, request order kept.
+fn progress_slugs(raw: &[String]) -> Result<Vec<(String, String)>, ConnectError> {
+    if raw.len() > MAX_PROGRESS_SLUGS {
+        return Err(ConnectError::new(
+            ErrorCode::InvalidArgument,
+            "too_many_games",
+        ));
+    }
+    raw.iter()
+        .map(|slug| {
+            let canonical = canonicalize_game_slug(slug.trim());
+            if canonical.is_empty() {
+                return Err(ConnectError::new(
+                    ErrorCode::InvalidArgument,
+                    "game_slug_required",
+                ));
+            }
+            if !is_valid_game_slug(canonical) {
+                return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
+            }
+            Ok((slug.clone(), canonical.to_string()))
+        })
+        .collect()
+}
+
+/// Per-game flags in request order. A finish is reported only when the row
+/// exists; nothing here carries a puzzle or an answer.
+fn progress_entries(
+    slugs: &[(String, String)],
+    finished: &HashMap<String, CompletedSession>,
+) -> Vec<GameProgress> {
+    slugs
+        .iter()
+        .map(|(requested, canonical)| {
+            let session = finished.get(canonical);
+            GameProgress {
+                game_slug: requested.clone(),
+                has_completed: session.is_some(),
+                completed_session: session
+                    .map(|session| DailyCompletion {
+                        status: session.status.clone(),
+                        score: session.score.and_then(|score| u32::try_from(score).ok()),
+                        attempts: u32::try_from(session.attempts).ok(),
+                        completed_at_ms: session
+                            .completed_at
+                            .map(|completed_at| completed_at.and_utc().timestamp_millis()),
+                        difficulty: session.difficulty.clone(),
+                        ..Default::default()
+                    })
+                    .into(),
+                ..Default::default()
+            }
+        })
+        .collect()
+}
+
+fn date_from_string(raw: Option<&str>) -> Option<NaiveDate> {
+    let raw = raw?.trim();
+    if raw.is_empty() {
+        return None;
+    }
+    NaiveDate::parse_from_str(raw, "%Y-%m-%d").ok()
+}
+
+#[allow(refining_impl_trait_internal, refining_impl_trait_reachable)]
+impl PuzzleService for PuzzleConnectService {
+    async fn record_share_landing(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, RecordShareLandingRequest>,
+    ) -> ServiceResult<RecordShareLandingResponse> {
+        let origin = crate::shared::public_origin::public_origin()
+            .map_err(|_| ConnectError::new(ErrorCode::Unavailable, "public_origin_unavailable"))?;
+        if !crate::shared::public_origin::admits_browser(ctx.headers(), &origin) {
+            return Err(ConnectError::new(
+                ErrorCode::PermissionDenied,
+                "same_origin_required",
+            ));
+        }
+        let input = request.to_owned_message();
+        if !input.analytics_consent {
+            return Response::ok(RecordShareLandingResponse::default());
+        }
+        let share = uuid::Uuid::parse_str(input.share_id.trim())
+            .map_err(|_| ConnectError::new(ErrorCode::InvalidArgument, "invalid_share"))?;
+        let mut access = self.adopt_guest_progress_if_needed(&ctx, true).await?;
+        let uid = access
+            .identities
+            .primary()
+            .and_then(|i| {
+                puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid(&i.user_id)
+            })
+            .ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required"))?;
+        let connection = access
+            .connection()
+            .ok_or_else(|| ConnectError::new(ErrorCode::Unavailable, "database_unavailable"))?;
+        crate::capabilities::metrics::landing_on(connection, uid, share)
+            .await
+            .map_err(|_| ConnectError::new(ErrorCode::Unavailable, "landing_unavailable"))?;
+        access.commit().await?;
+        Response::ok(RecordShareLandingResponse::default())
+    }
+
+    async fn get_puzzle(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, GetPuzzleRequest>,
+    ) -> ServiceResult<GetPuzzleResponse> {
+        let req = request.to_owned_message();
+        let game_slug = req.game_slug.trim();
+        if game_slug.is_empty() {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "game_slug_required",
+            ));
+        }
+        if game_slug != "sudoku" {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "unsupported_game_slug",
+            ));
+        }
+
+        let difficulty = parse_difficulty(&req.difficulty);
+        let puzzle_data = sudoku_puzzle_data(req.seed, difficulty);
+
+        Response::ok(GetPuzzleResponse {
+            game_slug: game_slug.to_string(),
+            seed: req.seed,
+            difficulty: difficulty_label(difficulty).to_string(),
+            puzzle_data_json: client_safe_puzzle_data(puzzle_data).to_string(),
+            slice: SLICE_PUZZLE.to_string(),
+            ..Default::default()
+        })
+    }
+
+    async fn get_daily(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, GetDailyRequest>,
+    ) -> ServiceResult<GetDailyResponse> {
+        let req = request.to_owned_message();
+        let game_slug = canonicalize_game_slug(req.game_slug.trim());
+        if game_slug.is_empty() {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "game_slug_required",
+            ));
+        }
+        if !is_valid_game_slug(game_slug) {
+            return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
+        }
+
+        let platform = crate::bootstrap::identity::require_identity(&ctx).ok();
+        let difficulty = {
+            let d = req.difficulty.trim();
+            if d.is_empty() {
+                None
+            } else {
+                Some(d.to_string())
+            }
+        };
+        let today = product_day_key(Utc::now());
+        // Archive reads: puzzle_date (YYYY-MM-DD), default = product day key.
+        let puzzle_date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
+        let is_archive = puzzle_date != today;
+
+        self.enforce_play_access(
+            platform.as_ref().map(|identity| identity.user_id.as_str()),
+            game_slug,
+            puzzle_date,
+        )
+        .await?;
+
+        // The stored puzzle for this day, generated and stored first on a miss
+        // (daily pipeline, #246). Every game has one.
+        let (puzzle_data, puzzle_id, stub) = match daily_pipeline::resolve(
+            self.state.pool.as_ref(),
+            game_slug,
+            puzzle_date,
+            difficulty.as_deref(),
+        )
+        .await
+        {
+            Ok(found) => (
+                Some(puzzled_core::puzzle_play::generate::served_payload(
+                    game_slug,
+                    &found.puzzle_data,
+                    &found.solution,
+                )),
+                found.id,
+                false,
+            ),
+            Err(error) => {
+                warn!(%error, game_slug, %puzzle_date, "get_daily puzzle unavailable");
+                (None, None, true)
+            }
+        };
+
+        let mut access = self.adopt_guest_progress_if_needed(&ctx, false).await?;
+        let identity = access.primary().map(|identity| identity.user_id.clone());
+        // Completion is server-derived from the user's sessions.
+        let completed_session = match (identity.as_deref(), access.connection()) {
+            (Some(uid), Some(connection)) => {
+                match load_completed_session_on_connection(
+                    connection,
+                    uid,
+                    game_slug,
+                    Some(puzzle_date),
+                    puzzle_id.as_deref(),
+                )
+                .await
+                {
+                    Ok(v) => v,
+                    Err(error) => {
+                        warn!(%error, "get_daily completed session lookup failed");
+                        return Err(ConnectError::new(
+                            ErrorCode::Internal,
+                            "session_lookup_failed",
+                        ));
+                    }
+                }
+            }
+            _ => None,
+        };
+        let has_completed = completed_session.is_some();
+
+        let puzzle_data_value = puzzle_data.clone();
+        let response = match build_daily_status(
+            game_slug,
+            today,
+            difficulty.as_deref(),
+            if has_completed {
+                Some(Value::Null)
+            } else {
+                None
+            },
+            puzzle_id.clone(),
+            puzzle_data_value,
+        ) {
+            Ok(body) => Response::ok(GetDailyResponse {
+                game_slug: game_slug.to_string(),
+                puzzle_number: body.puzzle.puzzle_number,
+                puzzle_date: if is_archive {
+                    puzzle_date.format("%Y-%m-%d").to_string()
+                } else {
+                    body.puzzle.puzzle_date
+                },
+                puzzle_id,
+                difficulty: body
+                    .puzzle
+                    .difficulty
+                    .unwrap_or_else(|| difficulty.unwrap_or_default()),
+                has_completed,
+                can_play: !has_completed,
+                mode: body.mode.to_string(),
+                slice: SLICE_DAILY.to_string(),
+                stub,
+                puzzle_data_json: puzzle_data
+                    .map(client_safe_puzzle_data)
+                    .map(|v| v.to_string())
+                    .unwrap_or_default(),
+                completed_session: completed_session
+                    .map(|session| DailyCompletion {
+                        status: session.status,
+                        score: session.score.and_then(|score| u32::try_from(score).ok()),
+                        attempts: u32::try_from(session.attempts).ok(),
+                        completed_at_ms: session
+                            .completed_at
+                            .map(|completed_at| completed_at.and_utc().timestamp_millis()),
+                        difficulty: session.difficulty,
+                        ..Default::default()
+                    })
+                    .into(),
+                ..Default::default()
+            }),
+            Err(404) => Err(ConnectError::new(ErrorCode::NotFound, "unknown_game")),
+            Err(_) => Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "invalid_query",
+            )),
+        };
+        if response.is_ok() {
+            access.commit().await?;
+        }
+        response
+    }
+
+    async fn get_today_progress(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, GetTodayProgressRequest>,
+    ) -> ServiceResult<GetTodayProgressResponse> {
+        let req = request.to_owned_message();
+        let slugs = progress_slugs(&req.game_slugs)?;
+
+        let mut access = self.adopt_guest_progress_if_needed(&ctx, false).await?;
+        let identity = access.primary().map(|identity| identity.user_id.clone());
+        // The product day is the server's; the client never names it.
+        let today = product_day_key(Utc::now());
+
+        let finished = match (identity.as_deref(), access.connection()) {
+            (Some(uid), Some(connection)) if !slugs.is_empty() => {
+                let canonical: Vec<String> = slugs.iter().map(|(_, c)| c.clone()).collect();
+                load_today_progress_on_connection(connection, uid, &canonical, today)
+                    .await
+                    .map_err(|error| {
+                        warn!(%error, "get_today_progress lookup failed");
+                        ConnectError::new(ErrorCode::Internal, "session_lookup_failed")
+                    })?
+            }
+            _ => HashMap::new(),
+        };
+        access.commit().await?;
+
+        Response::ok(GetTodayProgressResponse {
+            day_key: today.format("%Y-%m-%d").to_string(),
+            games: progress_entries(&slugs, &finished),
+            ..Default::default()
+        })
+    }
+
+    async fn submit_guess(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, SubmitGuessRequest>,
+    ) -> ServiceResult<SubmitGuessResponse> {
+        let input = request.to_owned_message();
+        let today = product_day_key(Utc::now());
+        let free = date_from_string(input.puzzle_date.as_deref()).unwrap_or(today) == today
+            && is_game_free_today(canonicalize_game_slug(input.game_slug.trim()), today);
+        let result = self.submit_guess_inner(ctx, request).await;
+        if free {
+            if let Some(pool) = self.state.pool.clone() {
+                let failed = result.as_ref().err().is_some_and(|e| {
+                    matches!(
+                        e.code,
+                        ErrorCode::Internal
+                            | ErrorCode::Unavailable
+                            | ErrorCode::Unknown
+                            | ErrorCode::DeadlineExceeded
+                    )
+                });
+                tokio::spawn(async move {
+                    crate::capabilities::metrics::count(
+                        &pool,
+                        if failed {
+                            "free_finish_failed"
+                        } else {
+                            "free_finish_ok"
+                        },
+                    )
+                    .await;
+                });
+            }
+        }
+        result
     }
 
     async fn check_guess(

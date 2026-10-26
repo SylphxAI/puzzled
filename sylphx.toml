@@ -199,3 +199,17 @@ command = ["puzzled-server", "erase-player"]
 timeout = "10m"
 retries = 0
 concurrency = "forbid"
+
+# Persist product-day aggregates and evaluate stop-the-line alerts, at most
+# 15 minutes behind. Closed days have a 15-minute late-event allowance.
+[[compute.schedules]]
+id = "puzzled-product-metrics"
+idempotency_key = "puzzled-product-metrics-v1"
+service = "api"
+path = "/internal/compute/product-metrics"
+calendar = { kind = "cron", expression = "2,17,32,47 * * * *", timezone = "UTC" }
+overlap = "skip"
+catch_up = "last_only"
+target = { kind = "http", method = "POST", signed = true }
+retry = { max_attempts = 3 }
+pause = false
