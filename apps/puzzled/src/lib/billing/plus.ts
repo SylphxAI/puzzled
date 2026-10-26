@@ -36,7 +36,12 @@ export function isPlusRequiredError(message: string | undefined | null): boolean
 	return Boolean(message && /plus_required/.test(message))
 }
 
-export type PlanId = 'individual_monthly' | 'individual_yearly' | 'family_monthly' | 'family_yearly'
+export type PlanId =
+	| 'individual_monthly'
+	| 'individual_yearly'
+	| 'individual_once'
+	| 'family_monthly'
+	| 'family_yearly'
 
 /** Currency shown for a locale: pounds for en-GB, US dollars otherwise. */
 export function currencyForLocale(locale: string): 'gbp' | 'usd' {
@@ -46,12 +51,14 @@ export function currencyForLocale(locale: string): 'gbp' | 'usd' {
 export type PlanCard = {
 	id: PlanId
 	family: boolean
-	interval: 'month' | 'year'
+	interval: 'month' | 'year' | 'once'
 	currency: string
 	/** Minor units, tax included. */
 	amountMinor: number
 	/** Free trial days before the first charge; 0 when none. */
 	trialDays: number
+	/** Days a one-time licence pass grants access; 0 for other plans. */
+	accessDays: number
 }
 
 /** Plan cards in one currency; a plan without a price in it is left out. */
@@ -65,10 +72,11 @@ export function planCards(plans: ListPlansResponse['plans'], currency: string): 
 		cards.push({
 			id: plan.id as PlanId,
 			family: plan.family,
-			interval: plan.interval === 'year' ? 'year' : 'month',
+			interval: plan.interval === 'year' ? 'year' : plan.interval === 'month' ? 'month' : 'once',
 			currency: price.currency,
 			amountMinor: Number(price.unitAmountMinor),
 			trialDays: plan.trialDays,
+			accessDays: plan.accessDays,
 		})
 	}
 	return cards

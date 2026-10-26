@@ -68,11 +68,31 @@ describe('Puzzled Plus presentation', () => {
 			currency: 'gbp',
 			amountMinor: 399,
 			trialDays: 0,
+			accessDays: 0,
 		})
 		expect(cards[1].currency).toBe('usd')
 		expect(formatPrice(399, 'gbp', 'en-GB')).toBe('£3.99')
 		expect(yearlySavingPercent(499, 3999)).toBe(33)
 		expect(yearlySavingPercent(499, 6000)).toBe(null)
+	})
+
+	test('a one-time pass keeps its interval and access term', () => {
+		const plans = create(ListPlansResponseSchema, {
+			plans: [
+				{
+					id: 'individual_once',
+					interval: '',
+					accessDays: 3,
+					prices: [{ currency: 'usd', unitAmountMinor: BigInt(99) }],
+				},
+			],
+		}).plans
+		expect(planCards(plans, 'usd')[0]).toMatchObject({
+			id: 'individual_once',
+			interval: 'once',
+			accessDays: 3,
+			amountMinor: 99,
+		})
 	})
 
 	test('a reverse-trial viewer still sees the buy button; a subscriber sees the current plan', () => {

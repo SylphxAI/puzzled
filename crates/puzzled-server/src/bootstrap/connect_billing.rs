@@ -279,6 +279,7 @@ impl BillingService for BillingConnectService {
                 family: plan.family,
                 interval: plan.interval,
                 trial_days: i32::try_from(plan.trial_days).unwrap_or(0),
+                access_days: i32::try_from(plan.access_days).unwrap_or(0),
                 prices: plan
                     .prices
                     .into_iter()

@@ -8,11 +8,11 @@ use axum::extract::State;
 use axum::http::{Request, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tower::ServiceExt;
 
-use super::access::{family_active, is_premium, seats, FEATURE_PLUS, FEATURE_SEATS};
-use super::checkout::{create_session, session_body, CheckoutError, Consent};
+use super::access::{FEATURE_PLUS, FEATURE_SEATS, family_active, is_premium, seats};
+use super::checkout::{CheckoutError, Consent, create_session, session_body};
 use super::client::Subscription;
 use super::client::{Catalog, Money};
 use super::pricing::{plan, plans};
@@ -473,11 +473,55 @@ async fn pricing_is_derived_from_the_catalogue_fixture() {
     assert_eq!(shown[1].trial_days, 7);
     assert_eq!(shown[3].trial_days, 0);
     assert_eq!(first.interval, "month");
+    assert!(shown.iter().all(|plan| plan.access_days == 0));
     assert!(!first.family && shown[2].family && shown[2].seats == 4);
     assert_eq!(
         first.prices,
         vec![("gbp".to_string(), 1000), ("usd".to_string(), 1100)]
     );
+}
+
+#[test]
+fn a_one_time_licence_pass_keeps_its_access_term() {
+    let mut value = catalog_fixture(&[]);
+    value["spec"]["products"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "key": "weekend", "features": {"plus": "true", "seats": "1"},
+            "licence": {"scheme": "sylphx-offline-ed25519-v1", "plan": "plus",
+                        "token_product": "puzzled", "key": "plus-key",
+                        "term": {"unit": "days", "count": 3}},
+            "prices": [{"key": "weekend_once", "unit_amounts": {"USD": "99", "GBP": "79"}}]
+        }));
+    let catalog = parsed(value);
+    let pass = plan(&catalog, "individual_once").unwrap();
+    assert_eq!(pass.price_key, "weekend_once");
+    assert_eq!(pass.interval, "");
+    assert_eq!(pass.access_days, 3);
+    assert_eq!(pass.trial_days, 0);
+    assert_eq!(pass.prices, vec![("gbp".into(), 79), ("usd".into(), 99)]);
+}
+
+#[test]
+fn a_one_time_pass_without_a_positive_day_term_is_not_sold() {
+    let mut value = catalog_fixture(&[]);
+    value["spec"]["products"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "key": "bad-once", "features": {"plus": "true", "seats": "1"},
+            "prices": [{"key": "bad_once", "unit_amounts": {"USD": "99"}}]
+        }));
+    assert!(plan(&parsed(value.clone()), "individual_once").is_none());
+
+    let product_index = value["spec"]["products"].as_array().unwrap().len() - 1;
+    value["spec"]["products"][product_index]["licence"] =
+        json!({"term": {"unit": "days", "count": 0}});
+    assert!(plan(&parsed(value.clone()), "individual_once").is_none());
+    value["spec"]["products"][product_index]["licence"] =
+        json!({"term": {"unit": "months", "count": 3}});
+    assert!(plan(&parsed(value), "individual_once").is_none());
 }
 
 #[test]

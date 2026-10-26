@@ -4,7 +4,10 @@
 		"lead": "今天精選謎題人人免費。Puzzled Plus 開放全部 {count} 款遊戲、過往題庫，以及每款遊戲的統計。",
 		"freeBody": "每天一款精選謎題，不需註冊帳號。",
 		"playFree": "玩今天的免費謎題：{game}",
-		"legal": "價格已包含增值稅。由 Sylphx Limited（於英格蘭及威爾斯註冊）出售。訂閱會自動續訂，直至你在「設定」中取消。"
+		"legal": "價格已包含增值稅。由 Sylphx Limited（於英格蘭及威爾斯註冊）出售。訂閱會自動續訂，直至你在「設定」中取消。",
+		"weekendPass": "{days} 天通行證",
+		"oneTime": "單次付款",
+		"passTerms": "單次付款，可使用 Puzzled Plus {days} 天，不會自動續約。"
 	},
 	"unlock": {
 		"body": "今天的免費謎題是 {game}。Puzzled Plus 開放全部 {count} 款遊戲和所有過往題目。"

@@ -10,9 +10,16 @@
 import { readFileSync } from 'node:fs'
 
 type Names = Record<string, string>
+type Licence = {
+	scheme: 'sylphx-offline-ed25519-v1'
+	plan: string
+	token_product: string
+	key: string
+	term: { unit: 'calendar_years' | 'calendar_months' | 'days'; count: number }
+}
 type Catalogue = {
 	features: Record<string, { kind: string; name: Names }>
-	products: { id: string; name: Names }[]
+	products: { id: string; name: Names; licence?: Licence }[]
 	plans: {
 		price_key: string
 		product: string
@@ -33,6 +40,7 @@ export type Spec = {
 		key: string
 		display_name: string
 		features: Record<string, string>
+		licence?: Licence
 		prices: {
 			key: string
 			recurring_interval: string
@@ -72,10 +80,22 @@ export function toSpec(catalogue: Catalogue): Spec {
 		for (const key of Object.keys(grants)) {
 			if (!(key in catalogue.features)) fail(`${product.id} grants undeclared feature ${key}`)
 		}
+		if (product.licence) {
+			if (plans.some((plan) => plan.interval))
+				fail(`${product.id} has a licence on a recurring price`)
+			if (!KEY.test(product.licence.key)) fail(`${product.id} has an invalid licence key`)
+			if (!product.licence.plan || !product.licence.token_product) {
+				fail(`${product.id} has an incomplete licence`)
+			}
+			if (!Number.isInteger(product.licence.term.count) || product.licence.term.count < 1) {
+				fail(`${product.id} has an invalid licence term`)
+			}
+		}
 		return {
 			key: product.id,
 			display_name: product.name['en-US'] ?? product.id,
 			features: grants,
+			...(product.licence ? { licence: product.licence } : {}),
 			prices: plans.map((plan) => {
 				if (!KEY.test(plan.price_key)) fail(`price key ${plan.price_key} is not accepted by Money`)
 				return {
