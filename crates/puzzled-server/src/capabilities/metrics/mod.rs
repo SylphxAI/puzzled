@@ -145,8 +145,8 @@ pub async fn rollup(pool: &PgPool, now: DateTime<Utc>) -> Result<usize, String> 
                 day.alerts = policy::alerts(&day, days.get(&(date - Duration::days(1)).to_string()), days.get(&(date - Duration::days(7)).to_string()), explained);
             }
             let value = serde_json::to_value(&day).map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
-            sqlx::query("INSERT INTO metric_days (day_key,report,generated_at) VALUES ($1,$2,$3) ON CONFLICT (day_key) DO UPDATE SET report = excluded.report, generated_at = excluded.generated_at")
-                .bind(&key).bind(value).bind(now).execute(&mut *tx).await?;
+            sqlx::query("INSERT INTO metric_days (day_key,report,generated_at,id) VALUES ($1,$2,$3,$4) ON CONFLICT (day_key) DO UPDATE SET report = excluded.report, generated_at = excluded.generated_at")
+                .bind(&key).bind(value).bind(now).bind(Uuid::now_v7()).execute(&mut *tx).await?;
             if key == closed.to_string() {
                 for signal in &day.alerts {
                     sqlx::query("INSERT INTO metric_alert_outbox (day_key,signal) VALUES ($1,$2) ON CONFLICT DO NOTHING")

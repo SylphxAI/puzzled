@@ -1086,7 +1086,8 @@ export const funnelSignupReceipts = pgTable('funnel_signup_receipts', {
 
 // Scheduled aggregate reports (read by the api; no player ids in these reports).
 export const metricDays = pgTable('metric_days', {
-	dayKey: text('day_key').primaryKey(),
+	id: uuid('id').primaryKey().notNull(),
+	dayKey: text('day_key').unique().notNull(),
 	report: jsonb('report').notNull(),
 	generatedAt: timestamp('generated_at', { withTimezone: true }).defaultNow().notNull(),
 })
