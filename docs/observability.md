@@ -82,6 +82,37 @@ Observability host with `OBSERVABILITY_API_KEY`, which was never set, so they
 never delivered. They, their hooks, the Web Vitals reporter and the game
 analytics batcher are deleted. The SDK has no analytics or replay surface yet.
 
+## First-party funnel counter
+
+Visits, plays, sign-ups and Core Web Vitals are counted in our own database,
+not by a third party. Rows are anonymous (no user id, no IP, no cookie), so the
+counter runs without a consent choice. Google Analytics, when
+`GA_MEASUREMENT_ID` is set, stays opt-in and is separate.
+
+| Event | Written by |
+| --- | --- |
+| `landing` | browser, once per session (`FunnelReporter`) |
+| `game_start` | browser, when a playable board is shown (`GamePageClient`) |
+| `signup` | api, in `RecordSignupAttribution`, once per new account |
+| `web_vitals` | browser, `LCP` `CLS` `INP` `FCP` `TTFB` (`useReportWebVitals`) |
+
+The browser posts same-origin ProtoJSON to the native Connect RPC
+`POST /puzzled.v1.FunnelService/RecordEvent` (api implementation:
+`crates/puzzled-server/src/bootstrap/funnel_event.rs`); the table is
+`funnel_events`. Signup retries are deduplicated atomically by a separate
+`funnel_signup_receipts` table (player id only, erased with the account); event
+rows carry no player id. Web Vitals are document-load metrics, not soft-navigation
+metrics. Only allowlisted public paths are retained, without locale/query/hash;
+game-detail paths use the `/games/:slug` template and private paths are dropped.
+Read it with SQL:
+
+```sql
+SELECT event, count(*) FROM funnel_events
+WHERE occurred_at > now() - interval '1 day' GROUP BY 1;
+SELECT metric, percentile_cont(0.75) WITHIN GROUP (ORDER BY value) AS p75
+FROM funnel_events WHERE event = 'web_vitals' GROUP BY 1;
+```
+
 ## Quality signals (owner standards/quality-signals.md)
 
 The api reports its own problems as structured log lines; the platform turns
