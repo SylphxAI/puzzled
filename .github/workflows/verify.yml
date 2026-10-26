@@ -522,6 +522,7 @@ jobs:
       # budgets (LCP 2500 ms, INP 600 ms ratcheting to 200 ms) and written to the
       # job summary. Lighthouse only estimates INP (as TBT); this measures it.
       - name: Serve the build on :3016
+        if: always()
         working-directory: apps/puzzled
         env:
           SKIP_ENV_VALIDATION: 'true'
