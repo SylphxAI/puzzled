@@ -507,6 +507,31 @@ jobs:
       # CLS <= 0.1, TBT <= 300 ms, FCP <= 2500 ms (raised from 2000 ms: under
       # applied throttling FCP and LCP land on the same banner paint at ~2.0 s,
       # inside run-to-run noise) and speed index <= 3000 ms, all at error.
+      # Both browser harnesses need a real board, not the API-error fallback.
+      # Serve the same frozen boards as the unit fixtures; no account or write.
+      - name: Start fixture GetDaily API
+        if: always()
+        working-directory: apps/puzzled
+        run: |
+          set -euo pipefail
+          bun scripts/serve-puzzle-fixture.ts > "$RUNNER_TEMP/puzzle-fixture.log" 2>&1 &
+          echo "FIXTURE_API_PID=$!" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 30); do
+            if curl -fsS --max-time 5 -X POST \
+              -H 'content-type: application/json' -H 'connect-protocol-version: 1' \
+              --data '{"gameSlug":"word-search","difficulty":""}' \
+              http://127.0.0.1:8787/puzzled.v1.PuzzleService/GetDaily \
+              > "$RUNNER_TEMP/puzzle-fixture-ready.json" 2>/dev/null; then
+              node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(d.gameSlug!=="word-search"||d.canPlay!==true||typeof d.puzzleDataJson!=="string"||d.puzzleDataJson.length<10)process.exit(1)' \
+                "$RUNNER_TEMP/puzzle-fixture-ready.json"
+              echo "API_INTERNAL_URL=http://127.0.0.1:8787" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/puzzle-fixture.log"
+          exit 1
+
       # lhci starts `bun run start` itself on port 3000.
       - name: Lighthouse budget (bun run lighthouse)
         working-directory: apps/puzzled
@@ -552,6 +577,7 @@ jobs:
         if: always()
         run: |
           if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
+          if [ -n "${FIXTURE_API_PID:-}" ]; then kill "$FIXTURE_API_PID" 2>/dev/null || true; fi
 
       # After the server is stopped, so a failed vitals run still publishes
       # the table. A missing report is not a failure: the test writes it only
