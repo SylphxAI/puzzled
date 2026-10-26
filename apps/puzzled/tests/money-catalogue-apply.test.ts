@@ -43,7 +43,7 @@ case "$url" in
     if [ "\${FAKE_MERCHANT_CONNECT_CODE:-200}" -lt 300 ]; then touch "$RUNNER_TEMP/connected-merchant"; fi
     answer "\${FAKE_MERCHANT_CONNECT_BODY:-{}}" "\${FAKE_MERCHANT_CONNECT_CODE:-200}" ;;
   */merchant_accounts/default)
-    body='{"livemode":false,"state":"connected","charges_enabled":true}'
+    body='{"state":"connected","charges_enabled":true}'
     if [ -f "$RUNNER_TEMP/connected-merchant" ]; then
       if [ -n "$FAKE_CONNECTED_MERCHANT_BODY" ]; then body="$FAKE_CONNECTED_MERCHANT_BODY"; fi
       answer "$body" "\${FAKE_CONNECTED_MERCHANT_CODE:-200}"
@@ -161,25 +161,33 @@ describe('money catalogue apply script', () => {
 		expect(readback).toBeLessThan(patch)
 	})
 
-	test('an existing connected test merchant is reused without reconnecting', () => {
-		const result = run({
-			FAKE_EXCHANGE_BODY: GRANTED,
-			FAKE_EXCHANGE_CODE: '200',
-			FAKE_MERCHANT_EXISTS: '1',
-			STRIPE_TEST_RESTRICTED_KEY: 'rk_test_fixture',
-		})
-		expect(result.status).toBe(0)
-		expect(result.merchantConnect).toBeUndefined()
-		expect(result.calls.filter((c) => c.includes('merchant_accounts'))).toEqual([
-			'GET https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/merchant_accounts/default',
-		])
+	test('an existing connected test merchant is reused with omitted or explicit false livemode', () => {
+		for (const body of [
+			'{"state":"connected","charges_enabled":true}',
+			'{"livemode":false,"state":"connected","charges_enabled":true}',
+		]) {
+			const result = run({
+				FAKE_EXCHANGE_BODY: GRANTED,
+				FAKE_EXCHANGE_CODE: '200',
+				FAKE_MERCHANT_EXISTS: '1',
+				FAKE_MERCHANT_BODY: body,
+				STRIPE_TEST_RESTRICTED_KEY: 'rk_test_fixture',
+			})
+			expect(result.status).toBe(0)
+			expect(result.merchantConnect).toBeUndefined()
+			expect(result.calls.filter((c) => c.includes('merchant_accounts'))).toEqual([
+				'GET https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/merchant_accounts/default',
+			])
+		}
 	})
 
 	test('a live, disconnected or charge-disabled merchant is never reused', () => {
 		for (const body of [
 			'{"livemode":true,"state":"connected","charges_enabled":true}',
 			'{"livemode":false,"state":"disconnected","charges_enabled":true}',
+			'{"state":"disconnected","charges_enabled":true}',
 			'{"livemode":false,"state":"connected","charges_enabled":false}',
+			'{"state":"connected","charges_enabled":false}',
 		]) {
 			const result = run({
 				FAKE_EXCHANGE_BODY: GRANTED,
