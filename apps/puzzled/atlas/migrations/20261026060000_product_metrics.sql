@@ -2,7 +2,7 @@
 -- erased with the player, and never used to assert a finish.
 CREATE TABLE "metric_days" (
   "id" uuid PRIMARY KEY NOT NULL,
-  "day_key" text UNIQUE NOT NULL,
+  "day_key" text CONSTRAINT "metric_days_day_key_unique" UNIQUE NOT NULL,
   "report" jsonb NOT NULL,
   "generated_at" timestamptz NOT NULL DEFAULT now()
 );
