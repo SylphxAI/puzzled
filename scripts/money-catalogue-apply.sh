@@ -82,7 +82,7 @@ bun scripts/money-catalogue-spec.ts config/commercial/catalogue.json > "$work/ca
 # an already connected account is reused, a missing one is connected once with the
 # test restricted key. Production has no test key and never takes this path.
 require_test_merchant() {
-  if ! jq -e '.livemode == false and .state == "connected" and .charges_enabled == true' "$1" >/dev/null; then
+  if ! jq -e '(.livemode // false) == false and .state == "connected" and .charges_enabled == true' "$1" >/dev/null; then
     echo "::error::merchant account is not a connected, charges-enabled Stripe test account"; exit 1
   fi
 }
