@@ -41,6 +41,9 @@ jobs:
     timeout-minutes: 10
     env:
       ACCESS_NAME: puzzled-money-catalogue-preview
+      # Preview has no test-mode Stripe connection; only its merchant_not_connected
+      # response is nonfatal. Every other preview failure still blocks production.
+      SYNC_FAILURE_NONFATAL: '1'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
