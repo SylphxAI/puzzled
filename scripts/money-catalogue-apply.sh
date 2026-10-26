@@ -118,9 +118,16 @@ if [ "$code" -ge 300 ]; then
   echo "::error::PATCH price_catalogs/default answered ${code}"; cat "$work/patch.out"; exit 1
 fi
 
-code=$(curl -sS -o "$work/sync.out" -w '%{http_code}' -X POST "${base}:sync" \
-  -H "Authorization: Bearer ${key}" -H 'Content-Type: application/json' --data '{}')
+code=$(call_with_retry POST "${base}:sync" "$work/sync.out" --data '{}')
 if [ "$code" -ge 300 ]; then
+  # Only a preview with no test-mode Stripe connection may continue to
+  # production. Every other sync failure, and every production failure, is fatal.
+  if [ "${SYNC_FAILURE_NONFATAL:-}" = "1" ] && [ "$code" = 400 ] \
+    && grep -q 'merchant_not_connected' "$work/sync.out"; then
+    echo "::warning::price_catalogs/default:sync answered 400 merchant_not_connected; the preview has no Stripe test-mode connection, so it is not blocking production"
+    echo "catalogue patched on ${resource##*/}, not synced"
+    exit 0
+  fi
   echo "::error::POST price_catalogs/default:sync answered ${code}"; cat "$work/sync.out"; exit 1
 fi
 echo "catalogue applied to ${resource##*/}"

@@ -44,7 +44,8 @@ case "$url" in
     else
       answer '{"error":"not found"}' 404
     fi ;;
-  */price_catalogs/default*) answer '{}' "\${FAKE_MONEY_CODE:-200}" ;;
+  */price_catalogs/default:sync) answer "\${FAKE_SYNC_BODY:-{}}" "\${FAKE_SYNC_CODE:-200}" ;;
+  */price_catalogs/default*) answer "\${FAKE_MONEY_BODY:-{}}" "\${FAKE_MONEY_CODE:-200}" ;;
   *) answer '{"unexpected":true}' 404 ;;
 esac
 `
@@ -149,6 +150,46 @@ describe('money catalogue apply script', () => {
 		expect(result.status).not.toBe(0)
 		expect(result.calls.filter((c) => c.includes(':sync'))).toEqual([])
 	})
+
+	test('only an unconnected preview may continue to production', () => {
+		const merchantMissing = JSON.stringify({
+			code: 'INVALID_STATE',
+			details: [{ reason: 'merchant_not_connected' }],
+		})
+		const result = run({
+			FAKE_EXCHANGE_BODY: GRANTED,
+			FAKE_EXCHANGE_CODE: '200',
+			FAKE_SYNC_BODY: merchantMissing,
+			FAKE_SYNC_CODE: '400',
+			SYNC_FAILURE_NONFATAL: '1',
+		})
+		expect(result.status).toBe(0)
+		expect(result.stdout).toContain('catalogue patched on e, not synced')
+		expect(result.stdout).toContain('merchant_not_connected')
+	})
+
+	test('a merchant connection failure without the preview flag or any other sync failure is fatal', () => {
+		const merchantMissing = JSON.stringify({
+			code: 'INVALID_STATE',
+			details: [{ reason: 'merchant_not_connected' }],
+		})
+		for (const env of [
+			{ FAKE_SYNC_BODY: merchantMissing, FAKE_SYNC_CODE: '400' },
+			{
+				FAKE_SYNC_BODY: '{"code":"INVALID_STATE","details":[{"reason":"different_failure"}]}',
+				FAKE_SYNC_CODE: '400',
+				SYNC_FAILURE_NONFATAL: '1',
+			},
+			{ FAKE_SYNC_BODY: '{"code":"INTERNAL"}', FAKE_SYNC_CODE: '500', SYNC_FAILURE_NONFATAL: '1' },
+		] as Record<string, string>[]) {
+			const result = run({
+				FAKE_EXCHANGE_BODY: GRANTED,
+				FAKE_EXCHANGE_CODE: '200',
+				...env,
+			})
+			expect(result.status).not.toBe(0)
+		}
+	})
 })
 
 describe('money catalogue workflow and reader', () => {
@@ -162,6 +203,7 @@ describe('money catalogue workflow and reader', () => {
 				needs?: string
 				if: string
 				'continue-on-error'?: boolean
+				env?: Record<string, string>
 				steps: { run?: string; 'continue-on-error'?: boolean }[]
 			}
 		>
@@ -172,8 +214,10 @@ describe('money catalogue workflow and reader', () => {
 		expect(workflow.on.push.branches).toEqual(['main'])
 	})
 
-	test('preview failure blocks production without an always or continue-on-error bypass', () => {
+	test('production stays gated on preview except the declared merchant-connection miss', () => {
 		expect(workflow.jobs.production.needs).toBe('preview')
+		expect(workflow.jobs.preview.env?.SYNC_FAILURE_NONFATAL).toBe('1')
+		expect(workflow.jobs.production.env?.SYNC_FAILURE_NONFATAL).toBeUndefined()
 		for (const job of [workflow.jobs.preview, workflow.jobs.production]) {
 			// GitHub adds success() to this condition: a failed prerequisite skips production.
 			expect(job.if).toBe("github.ref == 'refs/heads/main'")
