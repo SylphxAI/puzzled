@@ -9,6 +9,7 @@ import { resolveConnectBaseUrl } from '@/lib/connect/transport'
 
 export type FunnelEvent =
 	| { event: 'landing'; path: string }
+	| { event: 'share_landing' }
 	| { event: 'game_start'; game_slug: string; path?: string }
 	| {
 			event: 'web_vitals'
