@@ -174,7 +174,16 @@ message GetSharedResultResponse {
   uint32 streak = 8 [features.field_presence = EXPLICIT];
 }
 
+message RecordShareLandingRequest {
+  string share_id = 1;
+  // Explicit analytics opt-in; absent/false never records attribution.
+  bool analytics_consent = 2;
+}
+message RecordShareLandingResponse {}
+
 service PuzzleService {
+  // Same-origin, credential-bound, deduplicated; never counts as a finish.
+  rpc RecordShareLanding(RecordShareLandingRequest) returns (RecordShareLandingResponse);
   rpc GetPuzzle(GetPuzzleRequest) returns (GetPuzzleResponse);
   rpc GetDaily(GetDailyRequest) returns (GetDailyResponse);
   rpc GetTodayProgress(GetTodayProgressRequest) returns (GetTodayProgressResponse);

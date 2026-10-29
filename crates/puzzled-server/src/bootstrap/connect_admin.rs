@@ -15,12 +15,13 @@ use crate::proto::puzzled::v1::{
     AdminService, Announcement, AppSettings, AuditLogEntry, CreateAnnouncementRequest,
     CreateAnnouncementResponse, DailyStat, DeleteAnnouncementRequest, DeleteAnnouncementResponse,
     DlqEntry, GamesOverviewRequest, GamesOverviewResponse, GetAuditLogRequest, GetAuditLogResponse,
-    GetGameAnalyticsRequest, GetGameAnalyticsResponse, GetSettingsRequest, GetSettingsResponse,
-    ListAnnouncementsRequest, ListAnnouncementsResponse, ListAuditLogsRequest,
-    ListAuditLogsResponse, ListDlqRequest, ListDlqResponse, MarkDlqFailedRequest,
-    MarkDlqFailedResponse, ResolveDlqRequest, ResolveDlqResponse, RetryDlqRequest,
-    RetryDlqResponse, SystemHealthRequest, SystemHealthResponse, UpdateAnnouncementRequest,
-    UpdateAnnouncementResponse, UpdateSettingsRequest, UpdateSettingsResponse,
+    GetGameAnalyticsRequest, GetGameAnalyticsResponse, GetMetricsReportRequest,
+    GetMetricsReportResponse, GetSettingsRequest, GetSettingsResponse, ListAnnouncementsRequest,
+    ListAnnouncementsResponse, ListAuditLogsRequest, ListAuditLogsResponse, ListDlqRequest,
+    ListDlqResponse, MarkDlqFailedRequest, MarkDlqFailedResponse, MetricDay, ResolveDlqRequest,
+    ResolveDlqResponse, RetryDlqRequest, RetryDlqResponse, SystemHealthRequest,
+    SystemHealthResponse, UpdateAnnouncementRequest, UpdateAnnouncementResponse,
+    UpdateSettingsRequest, UpdateSettingsResponse,
 };
 
 fn announcement_from_json(v: &Value) -> Announcement {
@@ -192,6 +193,54 @@ impl AdminConnectService {
 
 #[allow(refining_impl_trait_internal, refining_impl_trait_reachable)]
 impl AdminService for AdminConnectService {
+    async fn get_metrics_report(
+        &self,
+        ctx: RequestContext,
+        _request: ServiceRequest<'_, GetMetricsReportRequest>,
+    ) -> ServiceResult<GetMetricsReportResponse> {
+        require_admin(&ctx)?;
+        let rows = crate::capabilities::metrics::reports(self.pool()?)
+            .await
+            .map_err(|_| ConnectError::new(ErrorCode::Unavailable, "metrics_unavailable"))?;
+        let stale = rows
+            .first()
+            .and_then(|(_, t)| chrono::DateTime::parse_from_rfc3339(t).ok())
+            .is_none_or(|t| chrono::Utc::now().signed_duration_since(t).num_minutes() > 30);
+        let n = |v: i64| u32::try_from(v).unwrap_or(u32::MAX);
+        let days = rows
+            .into_iter()
+            .map(|(d, generated_at)| MetricDay {
+                day_key: d.day_key,
+                complete: d.complete,
+                daily_puzzle_completers: n(d.daily_puzzle_completers),
+                signed_in_completers: n(d.signed_in_completers),
+                daily_entertainment_completers: n(d.daily_entertainment_completers),
+                weekly_ritualists: n(d.weekly_ritualists),
+                d7_cohort: n(d.d7_cohort),
+                d7_returned: n(d.d7_returned),
+                share_landings: n(d.share_landings),
+                share_landing_completers: n(d.share_landing_completers),
+                shares: n(d.shares),
+                free_finish_ok: n(d.free_finish_ok),
+                free_finish_failed: n(d.free_finish_failed),
+                paid_active: n(d.paid_active),
+                paid_completers: n(d.paid_completers),
+                free_active: n(d.free_active),
+                free_completers: n(d.free_completers),
+                catalog_size: n(d.catalog_size),
+                release: d.release,
+                alerts: d.alerts,
+                generated_at,
+                ..Default::default()
+            })
+            .collect();
+        Response::ok(GetMetricsReportResponse {
+            days,
+            stale,
+            ..Default::default()
+        })
+    }
+
     async fn list_announcements(
         &self,
         ctx: RequestContext,

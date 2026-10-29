@@ -1,6 +1,6 @@
 //! Native Connect JobsService — the app's sole scheduled-work executor.
 //!
-//! Inbound: dest Events product credential (`Authorization: Bearer`).
+//! Inbound: SDK-verified Compute callback receipt (`Authorization: Bearer`).
 //! Effects: dest Events `POST /v1/deliveries` (push + email).
 
 use std::sync::Arc;
@@ -147,10 +147,19 @@ impl JobsConnectService {
     /// URL. The Events product key used before was never set in production,
     /// so every call was refused; a shared bearer is not an admission.
     async fn admit_tick(&self, ctx: &RequestContext) -> Result<(), ConnectError> {
+        // The procedure path alone drops the query. Axum preserves the exact
+        // original URI in extensions before Connect dispatches the request.
+        let uri = &ctx
+            .extensions()
+            .get::<axum::extract::OriginalUri>()
+            .ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "tick_receipt_invalid"))?
+            .0;
         admit_tick(
-            &self.state.ticks,
+            &self.state.tick_jwks_url,
             ctx.headers(),
-            "/puzzled.v1.JobsService/RunRetentionJob",
+            uri.path_and_query()
+                .map(|p| p.as_str())
+                .unwrap_or(uri.path()),
         )
         .await
         .map_err(|error| match error {

@@ -13,6 +13,7 @@ import { productDayKey } from '@/lib/product-day'
 import { getBaseUrl } from '@/lib/utils'
 import { ChallengeMemoryWriter } from './challenge-memory'
 import { ResultCardSummary } from './result-card-summary'
+import { ShareLandingReporter } from './share-landing-reporter'
 
 type SharedResultLandingProps = {
 	shared: SharedResult
@@ -43,6 +44,7 @@ export async function SharedResultLanding({ shared, shareId, locale }: SharedRes
 
 	return (
 		<main className="flex-1">
+			<ShareLandingReporter shareId={shareId} />
 			{target.sameAsShared && (
 				<ChallengeMemoryWriter
 					shareId={shareId}

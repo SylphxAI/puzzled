@@ -67,6 +67,15 @@ Cite the ID column.
   `usr_...` form (Auth's move, cloud#10008) reach the same player; never decode
   the new form. Compute's signed tick receipts (EdDSA JWT, `aud` equal to the
   exact URL) are the only admission for JobsService and `/internal/compute/*`.
+  The published `sylphx` Rust SDK's `Expect::callback` and `Verifier::verify`
+  own receipt verification and published-key handling. Puzzled only extracts
+  the bearer and public HTTPS host plus original path and query, then maps
+  invalid or missing receipts to 401 and key-provider failures to 503. The
+  existing `COMPUTE_TICK_RECEIPT_JWKS_URL` override changes the SDK's key URL,
+  not the required issuer or audience. Router tests use a local JWKS server
+  through this same SDK path; no copied verifier or injected product key set
+  remains. Schedule IDs, targets, calendars, retries and overlap policies are
+  unchanged by this integration.
 - **Never:** a second play authority (REST `/api/v1`, Hono, client
   `isComplete`); another publisher's daily grid; third-party marks as titles;
   kube, route or deployment-spec writes; `{project}.api.sylphx.com` or a

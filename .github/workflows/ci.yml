@@ -107,7 +107,7 @@ jobs:
         with:
           bun-version: "1.4.3"
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
 
@@ -244,7 +244,7 @@ jobs:
         with:
           bun-version: "1.4.3"
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
 
@@ -306,7 +306,7 @@ jobs:
           echo "PROTOC=$HOME/.local/bin/protoc" >> "$GITHUB_ENV"
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           components: 
 
@@ -344,7 +344,7 @@ jobs:
           echo "PROTOC=$HOME/.local/bin/protoc" >> "$GITHUB_ENV"
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           components: clippy, rustfmt
 
@@ -469,7 +469,7 @@ jobs:
           echo "PROTOC=$HOME/.local/bin/protoc" >> "$GITHUB_ENV"
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           components: 
 
@@ -482,13 +482,13 @@ jobs:
           s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
 
       # The tests that apply apps/puzzled/atlas/migrations to a throwaway
-      # database (billing flow, result shares, account erasure, push ownership)
-      # and the one that parses every table for player-id columns.
+      # database (billing flow and cutover, Money access, result shares, account
+      # erasure, push ownership) and the one that parses every table for player-id columns.
       - name: Migration-backed tests
         run: |
           set -euo pipefail
           LOG="${RUNNER_TEMP}/puzzled-migration-backed-tests.log"
-          CARGO_TERM_COLOR=never cargo test -p puzzled-server --lib -- billing_flow_tests result_shares_tests account_erasure_tests account_deletion retention_push_tests guest_ownership_tests today_progress_tests | tee "$LOG"
+          CARGO_TERM_COLOR=never cargo test -p puzzled-server --lib -- billing_flow_tests billing_cutover_tests money_access_tests result_shares_tests account_erasure_tests account_deletion retention_push_tests guest_ownership_tests today_progress_tests | tee "$LOG"
           # Fail closed if a renamed filter selects nothing, or if the actual
           # two-user HTTP ownership regression was not exercised.
           grep -Eq '^test guest_ownership_tests::unsigned_ids_and_forged_internal_headers_cannot_read_or_adopt \.\.\. ok$' "$LOG"
@@ -514,6 +514,8 @@ jobs:
           grep -Eq '^test guest_ownership_tests::wrong_origin_legacy_claim_is_forbidden_without_database_effect \.\.\. ok$' "$LOG"
           grep -Eq '^test guest_ownership_tests::signed_in_player_with_legacy_id_ends_with_history_on_the_account \.\.\. ok$' "$LOG"
           grep -Eq '^test result: ok\. [1-9][0-9]* passed;' "$LOG"
+          grep -Eq '^test billing_cutover_tests::reader_removal_refuses_every_kind_of_legacy_record \.\.\. ok$' "$LOG"
+          grep -Eq '^test money_access_tests::checkout_return_refresh_unlocks_paid_play_only_after_money_confirms \.\.\. ok$' "$LOG"
           grep -Eq '^test retention_push_tests::connect_push_foreign_endpoint_returns_404_without_any_writes \.\.\. ok$' "$LOG"
 
   # The full suite on a ready pull request; never in a merge group or a draft.
@@ -549,7 +551,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@46ec433892bca8693193049b5ee7441bb916a7ad # main
+      - uses: SylphxAI/.github/.github/actions/needs-pass@000d98547b68d07c4da1c62f534da85f1bd4001b # main
         with:
           needs: ${{ toJSON(needs) }}
           required: plan,chat-senders

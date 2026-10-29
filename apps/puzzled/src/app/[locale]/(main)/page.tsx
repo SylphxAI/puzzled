@@ -320,8 +320,11 @@ export default async function HomePage({ params }: Props) {
 	// Cookie-only read (no network): does this viewer have progress we owe them a
 	// placeholder for, rather than guest copy that may be wrong for a member?
 	const hasProgressIdentity = await hasServerProgressIdentity()
-	const todaysFreeGame = getTodaysFreeGame()
-	const tomorrowsFreeGame = getTomorrowsFreeGame()
+	// One server instant keeps the rotation, puzzle number and both streamed
+	// date labels on the same product day even while a request crosses midnight.
+	const now = new Date()
+	const todaysFreeGame = getTodaysFreeGame(now)
+	const tomorrowsFreeGame = getTomorrowsFreeGame(now)
 
 	const gameMetadata = getAllGameMetadata()
 	const metadataBySlug = new Map(gameMetadata.map((game) => [game.slug, game]))
@@ -343,7 +346,7 @@ export default async function HomePage({ params }: Props) {
 	}
 	// The day has an identity: this is the puzzle number `getPuzzleNumber`
 	// already computes for the module and the product day.
-	const puzzleNumber = getPuzzleNumber(todaysFreeGame)
+	const puzzleNumber = getPuzzleNumber(todaysFreeGame, now)
 
 	// Rotation-only fallback: no completions are known yet, so nothing here can
 	// claim a finish or a score. It is exactly what a first-time visitor sees.
@@ -376,7 +379,7 @@ export default async function HomePage({ params }: Props) {
 						// the same thing the island below renders, so nothing swaps.
 						<HomeDayFallback
 							locale={locale}
-							dateLabel={formatProductDay(new Date(), locale)}
+							dateLabel={formatProductDay(now, locale)}
 							puzzleNumber={puzzleNumber}
 							freeGame={freeGame}
 						/>
@@ -385,7 +388,7 @@ export default async function HomePage({ params }: Props) {
 			>
 				<HomeDayIsland
 					locale={locale}
-					dateLabel={formatProductDay(new Date(), locale)}
+					dateLabel={formatProductDay(now, locale)}
 					puzzleNumber={puzzleNumber}
 					freeGame={freeGame}
 				/>

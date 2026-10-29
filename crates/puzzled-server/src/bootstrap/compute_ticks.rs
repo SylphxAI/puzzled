@@ -7,7 +7,7 @@ use axum::http::{header, HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde_json::json;
-use sylphx::auth::verify::{TickVerifier, VerifyError};
+use sylphx::auth::verify::{Expect, Verifier, VerifyError};
 
 use super::state::AppState;
 use crate::capabilities::daily_pipeline;
@@ -39,11 +39,7 @@ impl TickError {
 
 /// Extract the bearer and exact public URL, then delegate admission to the SDK.
 /// The edge preserves Host; forwarded-host is only a fallback for old routes.
-pub async fn admit_tick(
-    verifier: &TickVerifier,
-    headers: &HeaderMap,
-    path: &str,
-) -> Result<(), TickError> {
+pub async fn admit_tick(jwks_url: &str, headers: &HeaderMap, path: &str) -> Result<(), TickError> {
     let token = headers
         .get(header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
@@ -58,8 +54,10 @@ pub async fn admit_tick(
         .map(str::trim)
         .filter(|h| !h.is_empty())
         .ok_or(TickError::Invalid)?;
-    verifier
-        .verify_tick_receipt(token, &format!("https://{host}{path}"))
+    // The published SDK owns signature, issuer, audience, expiry and key
+    // handling. Only the transport knows the original public request URL.
+    Verifier::with_jwks_url(Expect::callback(format!("https://{host}{path}")), jwks_url)
+        .verify(token)
         .await
         .map(|_| ())
         .map_err(|error| match error {
@@ -75,7 +73,7 @@ pub async fn daily_puzzles_tick(
     headers: HeaderMap,
 ) -> Response {
     if let Err(reject) = admit_tick(
-        &state.ticks,
+        &state.tick_jwks_url,
         &headers,
         uri.path_and_query()
             .map(|p| p.as_str())
@@ -131,7 +129,7 @@ pub async fn audit_retention_tick(
     headers: HeaderMap,
 ) -> Response {
     if let Err(reject) = admit_tick(
-        &state.ticks,
+        &state.tick_jwks_url,
         &headers,
         uri.path_and_query()
             .map(|p| p.as_str())
@@ -171,7 +169,7 @@ pub async fn tryit_conversions_tick(
     headers: HeaderMap,
 ) -> Response {
     if let Err(reject) = admit_tick(
-        &state.ticks,
+        &state.tick_jwks_url,
         &headers,
         uri.path_and_query()
             .map(|p| p.as_str())
@@ -209,7 +207,7 @@ pub async fn daily_reminders_tick(
     headers: HeaderMap,
 ) -> Response {
     if let Err(reject) = admit_tick(
-        &state.ticks,
+        &state.tick_jwks_url,
         &headers,
         uri.path_and_query()
             .map(|p| p.as_str())
@@ -234,6 +232,47 @@ pub async fn daily_reminders_tick(
             (
                 StatusCode::SERVICE_UNAVAILABLE,
                 Json(json!({"error": "send_failed", "failed": errors.len()})),
+            )
+                .into_response()
+        }
+    }
+}
+
+pub const METRICS_PATH: &str = "/internal/compute/product-metrics";
+pub async fn metrics_tick(
+    State(state): State<AppState>,
+    OriginalUri(uri): OriginalUri,
+    headers: HeaderMap,
+) -> Response {
+    if let Err(reject) = admit_tick(
+        &state.tick_jwks_url,
+        &headers,
+        uri.path_and_query()
+            .map(|p| p.as_str())
+            .unwrap_or(uri.path()),
+    )
+    .await
+    {
+        return reject.response().into_response();
+    }
+    let Some(pool) = &state.pool else {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({"error":"no_database"})),
+        )
+            .into_response();
+    };
+    match crate::capabilities::metrics::rollup(pool, chrono::Utc::now()).await {
+        Ok(days) => (StatusCode::OK, Json(json!({"days":days}))).into_response(),
+        Err(_) => {
+            crate::shared::signals::issue(
+                crate::shared::signals::Kind::ToolFailed,
+                "metrics_rollup",
+                "rollup_failed",
+            );
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({"error":"metrics_failed"})),
             )
                 .into_response()
         }

@@ -4,8 +4,8 @@
 # workflow is the ONLY writer of the catalogue: no manual catalogue writes.
 # Change the catalogue by PR to that file.
 #
-# No stored secret: after supported Access admission, each job trades a GitHub OIDC token
-# (audience sylphx-access) for a 15-minute billing:write key bound to this
+# No stored Sylphx key: after supported Access admission, each job trades a GitHub OIDC
+# token (audience sylphx-access) for a 15-minute billing:write key bound to this
 # repository, this file's path and refs/heads/main
 # (kernel/access/tenant-manifest.toml, cloud#10444). The key's own name gives
 # the org, project and env it belongs to, so none is written here. The path of
@@ -41,6 +41,10 @@ jobs:
     timeout-minutes: 10
     env:
       ACCESS_NAME: puzzled-money-catalogue-preview
+      # Without the optional test key, only merchant_not_connected is nonfatal.
+      # Every other preview failure still blocks production.
+      SYNC_FAILURE_NONFATAL: '1'
+      STRIPE_TEST_RESTRICTED_KEY: ${{ secrets.STRIPE_TEST_RESTRICTED_KEY }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

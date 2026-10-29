@@ -10,6 +10,7 @@ mod connect_jobs;
 mod connect_preferences;
 mod connect_puzzle;
 mod connect_stats;
+mod funnel_event;
 mod health;
 pub(crate) mod identity;
 pub(crate) mod lifecycle;

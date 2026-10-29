@@ -2,10 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { TrialEndingBanner } from '@/features/plus/components/trial-ending-banner'
 import type { SubscriptionView } from '@/lib/billing/plus'
-import { trialBannerEndMs } from '@/lib/billing/plus'
+import { checkoutConfirmed, trialBannerEndMs } from '@/lib/billing/plus'
 import {
 	cancelSubscription,
 	leaveFamily,
@@ -37,10 +37,23 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 	const router = useRouter()
 	const [busy, setBusy] = useState(false)
 	const [confirming, setConfirming] = useState<'cancel' | 'leave' | null>(null)
-	const [message, setMessage] = useState<string | null>(
-		fromCheckout && view?.entitled ? t('checkoutSuccess') : null,
-	)
-	const [inviteCode, setInviteCode] = useState(view?.family?.inviteCode ?? null)
+	const [message, setMessage] = useState<string | null>(null)
+	const confirmed = checkoutConfirmed(view)
+	// The processor may confirm just after the redirect. Re-read the server's
+	// Money answer for a bounded period; neither the URL nor polling grants Plus.
+	useEffect(() => {
+		if (!fromCheckout || confirmed) return
+		let attempts = 0
+		const timer = setInterval(() => {
+			router.refresh()
+			if (++attempts >= 15) clearInterval(timer)
+		}, 2000)
+		return () => clearInterval(timer)
+	}, [fromCheckout, confirmed, router])
+	const notice =
+		message ?? (fromCheckout ? t(confirmed ? 'checkoutSuccess' : 'checkoutPending') : null)
+	const [newInviteCode, setInviteCode] = useState<string | null>(null)
+	const inviteCode = newInviteCode ?? view?.family?.inviteCode ?? null
 	const [copied, setCopied] = useState(false)
 	const [nowMs] = useState(() => Date.now())
 
@@ -84,8 +97,8 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 	return (
 		<div className="space-y-6">
 			{trialEndMs ? <TrialEndingBanner endMs={trialEndMs} /> : null}
-			{message ? (
-				<output className="block rounded-xl bg-muted px-4 py-3 text-sm">{message}</output>
+			{notice ? (
+				<output className="block rounded-xl bg-muted px-4 py-3 text-sm">{notice}</output>
 			) : null}
 
 			<Card>

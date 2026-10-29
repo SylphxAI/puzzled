@@ -14,6 +14,7 @@ import {
 	boolean,
 	check,
 	date,
+	doublePrecision,
 	index,
 	integer,
 	jsonb,
@@ -314,6 +315,11 @@ export const gameSessions = pgTable(
 		index('game_sessions_game_slug_completed_idx').on(table.gameSlug, table.completedAt),
 		// daily puzzle completers recompute: day_key + is_ritual + module_class
 		index('game_sessions_drc_day_key_idx').on(table.dayKey, table.isRitual, table.moduleClass),
+		index('game_sessions_metric_cohort_idx')
+			.on(table.userId, table.dayKey)
+			.where(
+				sql`${table.isRitual} = true AND ${table.moduleClass} = 'puzzle_ritual' AND ${table.status} IN ('won', 'lost')`,
+			),
 		// One ritual finish per user/module/product day (null puzzle_id safe)
 		uniqueIndex('game_sessions_ritual_user_game_day_uidx')
 			.on(table.userId, table.gameSlug, table.dayKey)
@@ -1049,4 +1055,87 @@ export const guestCredentials = pgTable(
         )`,
 		),
 	],
+)
+
+/** Anonymous first-party event rows; no player identity or browser cookie. */
+export const funnelEvents = pgTable(
+	'funnel_events',
+	{
+		id: uuid('id').primaryKey(),
+		occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
+		event: text('event').notNull(),
+		path: text('path'),
+		gameSlug: text('game_slug'),
+		metric: text('metric'),
+		value: doublePrecision('value'),
+		rating: text('rating'),
+	},
+	(table) => [
+		index('funnel_events_event_time_idx').on(table.event, table.occurredAt),
+		check(
+			'funnel_events_event_check',
+			sql`${table.event} IN ('landing', 'game_start', 'signup', 'web_vitals', 'share_landing')`,
+		),
+	],
+)
+
+/** Retry deduplication only; erased with the account, not linked from event rows. */
+export const funnelSignupReceipts = pgTable('funnel_signup_receipts', {
+	userId: uuid('user_id').primaryKey(),
+})
+
+// Scheduled aggregate reports (read by the api; no player ids in these reports).
+export const metricDays = pgTable('metric_days', {
+	id: uuid('id').primaryKey().notNull(),
+	dayKey: text('day_key').unique().notNull(),
+	report: jsonb('report').notNull(),
+	generatedAt: timestamp('generated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+export const metricCounters = pgTable(
+	'metric_counters',
+	{
+		dayKey: text('day_key').notNull(),
+		event: text('event').notNull(),
+		count: bigint('count', { mode: 'number' }).default(0).notNull(),
+	},
+	(t) => [
+		primaryKey({ name: 'metric_counters_pkey', columns: [t.dayKey, t.event] }),
+		check(
+			'metric_counters_event_check',
+			sql`${t.event} IN ('share', 'free_finish_ok', 'free_finish_failed')`,
+		),
+	],
+)
+export const shareLandings = pgTable(
+	'share_landings',
+	{
+		userId: uuid('user_id').notNull(),
+		shareId: uuid('share_id')
+			.notNull()
+			.references(() => resultShares.id, { onDelete: 'cascade' }),
+		dayKey: text('day_key').notNull(),
+		landedAt: timestamp('landed_at', { withTimezone: true }).defaultNow().notNull(),
+	},
+	(t) => [
+		primaryKey({ name: 'share_landings_pkey', columns: [t.userId, t.shareId, t.dayKey] }),
+		index('share_landings_day_idx').on(t.dayKey),
+	],
+)
+export const metricAudiences = pgTable(
+	'metric_audiences',
+	{
+		userId: uuid('user_id').notNull(),
+		dayKey: text('day_key').notNull(),
+		paid: boolean('paid').notNull(),
+	},
+	(t) => [primaryKey({ name: 'metric_audiences_pkey', columns: [t.userId, t.dayKey] })],
+)
+export const metricAlertOutbox = pgTable(
+	'metric_alert_outbox',
+	{
+		dayKey: text('day_key').notNull(),
+		signal: text('signal').notNull(),
+		emittedAt: timestamp('emitted_at', { withTimezone: true }),
+	},
+	(t) => [primaryKey({ name: 'metric_alert_outbox_pkey', columns: [t.dayKey, t.signal] })],
 )

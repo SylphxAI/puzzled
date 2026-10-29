@@ -473,11 +473,55 @@ async fn pricing_is_derived_from_the_catalogue_fixture() {
     assert_eq!(shown[1].trial_days, 7);
     assert_eq!(shown[3].trial_days, 0);
     assert_eq!(first.interval, "month");
+    assert!(shown.iter().all(|plan| plan.access_days == 0));
     assert!(!first.family && shown[2].family && shown[2].seats == 4);
     assert_eq!(
         first.prices,
         vec![("gbp".to_string(), 1000), ("usd".to_string(), 1100)]
     );
+}
+
+#[test]
+fn a_one_time_licence_pass_keeps_its_access_term() {
+    let mut value = catalog_fixture(&[]);
+    value["spec"]["products"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "key": "weekend", "features": {"plus": "true", "seats": "1"},
+            "licence": {"scheme": "sylphx-offline-ed25519-v1", "plan": "plus",
+                        "token_product": "puzzled", "key": "plus-key",
+                        "term": {"unit": "days", "count": 3}},
+            "prices": [{"key": "weekend_once", "unit_amounts": {"USD": "99", "GBP": "79"}}]
+        }));
+    let catalog = parsed(value);
+    let pass = plan(&catalog, "individual_once").unwrap();
+    assert_eq!(pass.price_key, "weekend_once");
+    assert_eq!(pass.interval, "");
+    assert_eq!(pass.access_days, 3);
+    assert_eq!(pass.trial_days, 0);
+    assert_eq!(pass.prices, vec![("gbp".into(), 79), ("usd".into(), 99)]);
+}
+
+#[test]
+fn a_one_time_pass_without_a_positive_day_term_is_not_sold() {
+    let mut value = catalog_fixture(&[]);
+    value["spec"]["products"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "key": "bad-once", "features": {"plus": "true", "seats": "1"},
+            "prices": [{"key": "bad_once", "unit_amounts": {"USD": "99"}}]
+        }));
+    assert!(plan(&parsed(value.clone()), "individual_once").is_none());
+
+    let product_index = value["spec"]["products"].as_array().unwrap().len() - 1;
+    value["spec"]["products"][product_index]["licence"] =
+        json!({"term": {"unit": "days", "count": 0}});
+    assert!(plan(&parsed(value.clone()), "individual_once").is_none());
+    value["spec"]["products"][product_index]["licence"] =
+        json!({"term": {"unit": "months", "count": 3}});
+    assert!(plan(&parsed(value), "individual_once").is_none());
 }
 
 #[test]
@@ -846,4 +890,37 @@ async fn a_subscription_row_with_omitted_fields_is_read_not_dropped() {
     assert!(!subs[0].cancel_at_period_end, "an omitted false is false");
     assert!(!subs[0].live());
     assert_eq!(money.has_renewing_subscription(USER).await, Ok(true));
+}
+
+#[tokio::test]
+async fn checkout_refresh_rechecks_only_the_buyers_grants_without_granting_access() {
+    let (money, fake) = fake_money(200, json!({"entitled": false})).await;
+    let other = "0190a0a0-0000-7000-8000-000000000002";
+    assert!(!is_premium(&money, USER).await);
+    assert!(!is_premium(&money, other).await);
+    fake.lock().unwrap().answer = json!({"entitled": true});
+    assert!(!is_premium(&money, USER).await, "denial is still cached");
+    money.refresh_grants(USER);
+    assert!(
+        is_premium(&money, USER).await,
+        "confirmed Money grant is immediate"
+    );
+    assert!(
+        !is_premium(&money, other).await,
+        "another account keeps its cache"
+    );
+    assert_eq!(fake.lock().unwrap().checks.len(), 3);
+
+    fake.lock().unwrap().answer = json!({"entitled": false});
+    money.refresh_grants(USER);
+    assert!(
+        !is_premium(&money, USER).await,
+        "refresh itself grants nothing"
+    );
+    fake.lock().unwrap().status = 503;
+    money.refresh_grants(USER);
+    assert!(
+        !is_premium(&money, USER).await,
+        "failed refresh never invents Plus"
+    );
 }

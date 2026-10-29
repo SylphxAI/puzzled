@@ -80,6 +80,7 @@ port = 8080
 # Complete public API namespace routes to Rust; no dual backend remains.
 path_prefixes = [
   "/v1/guest/session",
+  "/puzzled.v1.FunnelService",
   "/puzzled.v1.AdminService",
   "/puzzled.v1.BillingService",
   "/puzzled.v1.GamificationService",
@@ -125,7 +126,7 @@ context = "."
 
 # Scheduled work (Compute). Each tick carries Compute's signed receipt for its
 # exact URL, verified against Compute's published keys by the sylphx Rust SDK
-# (`sylphx::auth::verify::TickVerifier`); no shared secret.
+# (`sylphx::auth::verify::Expect::callback`); no shared secret.
 #
 # Daily puzzles (#246): store every game's puzzle 14 days ahead and backfill
 # the 30-day archive; a low buffer alerts. The api also runs this at start-up.
@@ -198,3 +199,17 @@ command = ["puzzled-server", "erase-player"]
 timeout = "10m"
 retries = 0
 concurrency = "forbid"
+
+# Persist product-day aggregates and evaluate stop-the-line alerts, at most
+# 15 minutes behind. Closed days have a 15-minute late-event allowance.
+[[compute.schedules]]
+id = "puzzled-product-metrics"
+idempotency_key = "puzzled-product-metrics-v1"
+service = "api"
+path = "/internal/compute/product-metrics"
+calendar = { kind = "cron", expression = "2,17,32,47 * * * *", timezone = "UTC" }
+overlap = "skip"
+catch_up = "last_only"
+target = { kind = "http", method = "POST", signed = true }
+retry = { max_attempts = 3 }
+pause = false

@@ -3,17 +3,10 @@
  * Guess the equation in 6 tries (Nerdle-style)
  */
 
-import { calculateWordleScore } from '@/games/shared'
-import {
-	DEFAULT_LAUNCH_DATE,
-	type GameConfig,
-	type GameResult,
-	type GameSubmission,
-} from '../types'
+import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
 import { ArithmoHowToPlay } from './components/how-to-play'
 import { ArithmoIcon } from './icon'
 import type { ArithmoGuess, ArithmoGuessResult, ArithmoPuzzleData, ArithmoSolution } from './types'
-import { getGuessResult, isValidEquation } from './types'
 
 // Client-side puzzle data
 type ArithmoPuzzleClientData = ArithmoPuzzleData
@@ -60,84 +53,5 @@ export const arithmoConfig: GameConfig<
 		if (a.status !== 'won' && b.status === 'won') return -1
 		// Fewer attempts = better
 		return (b.attempts ?? Number.POSITIVE_INFINITY) - (a.attempts ?? Number.POSITIVE_INFINITY)
-	},
-
-	/**
-	 * Validate an equation guess
-	 */
-	validateGuess(solution: ArithmoSolution, guess: ArithmoGuess): ArithmoGuessResult {
-		const equation = guess.equation
-
-		// Check if valid equation
-		if (!isValidEquation(equation)) {
-			return {
-				valid: false,
-				error: 'Invalid equation',
-			}
-		}
-
-		// Get result
-		const result = getGuessResult(equation, solution.equation)
-
-		return {
-			valid: true,
-			result,
-		}
-	},
-
-	/**
-	 * CORE VALIDATION - Validates submission AND calculates score
-	 *
-	 * Scoring: Attempt-based (like Wordle)
-	 * - 1 attempt: 100 points
-	 * - 2 attempts: 85 points
-	 * - 3 attempts: 70 points
-	 * - 4 attempts: 55 points
-	 * - 5 attempts: 40 points
-	 * - 6 attempts: 25 points
-	 * - Loss: 0 points
-	 */
-	validateAndScore(
-		solution: ArithmoSolution,
-		_puzzleData: ArithmoPuzzleClientData,
-		submission: GameSubmission,
-	): GameResult {
-		const data = submission.data as { guesses?: string[] } | undefined
-
-		// Must have guesses to validate
-		if (!data?.guesses || !Array.isArray(data.guesses) || data.guesses.length === 0) {
-			return { valid: false, error: 'Missing guesses data' }
-		}
-
-		// Validate each guess is a valid equation
-		for (const guess of data.guesses) {
-			if (!isValidEquation(guess)) {
-				return { valid: false, error: `Invalid equation in guesses: ${guess}` }
-			}
-		}
-
-		// Check if final guess matches solution
-		const lastGuess = data.guesses[data.guesses.length - 1]
-		const won = lastGuess === solution.equation
-
-		// Verify claimed status
-		if (submission.status === 'won' && !won) {
-			return {
-				valid: false,
-				error: 'Invalid win claim - final guess does not match solution',
-			}
-		}
-		if (submission.status === 'lost' && won) {
-			return {
-				valid: false,
-				error: 'Invalid loss claim - final guess matches solution',
-			}
-		}
-
-		// Calculate score using shared Wordle-style formula
-		const attempts = data.guesses.length
-		const score = calculateWordleScore(won, attempts)
-
-		return { valid: true, status: won ? 'won' : 'lost', score }
 	},
 }

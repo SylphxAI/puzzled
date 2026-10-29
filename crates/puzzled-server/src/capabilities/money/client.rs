@@ -213,6 +213,17 @@ pub struct CatalogPrice {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct CatalogLicence {
+    pub term: CatalogLicenceTerm,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct CatalogLicenceTerm {
+    pub unit: String,
+    pub count: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CatalogProduct {
     pub key: String,
     /// Feature grants: `plus`/`family` are `"true"`, `seats` a decimal string.
@@ -220,6 +231,8 @@ pub struct CatalogProduct {
     pub features: std::collections::BTreeMap<String, String>,
     #[serde(default)]
     pub prices: Vec<CatalogPrice>,
+    #[serde(default)]
+    pub licence: Option<CatalogLicence>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Deserialize)]
@@ -446,6 +459,15 @@ impl Money {
             limit: parsed.limit.as_deref().and_then(|l| l.trim().parse().ok()),
             ends_at: ends,
         })
+    }
+
+    /// Forget this account's cached answers on checkout return. This does not
+    /// grant access: the next read must still be confirmed by Money. Clones
+    /// share the cache, so paid play sees the same fresh answer as Settings.
+    pub fn refresh_grants(&self, user_id: &str) {
+        if let Ok(mut cache) = self.grants.lock() {
+            cache.retain(|(subject, _), _| subject != user_id);
+        }
     }
 
     /// The entitlement answer for `feature`, from the cache when it is fresh
