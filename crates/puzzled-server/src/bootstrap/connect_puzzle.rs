@@ -164,6 +164,12 @@ impl PuzzleConnectService {
         let (puzzle_data, solution, resolved_id) =
             match (req.puzzle_id.as_deref(), &self.state.pool) {
                 (Some(pid), Some(pool)) => match fetch_puzzle_by_id(pool, pid).await {
+                    Ok(Some(p)) if p.puzzle_date != date => {
+                        return Err(ConnectError::new(
+                            ErrorCode::InvalidArgument,
+                            "puzzle_date_mismatch",
+                        ));
+                    }
                     Ok(Some(p)) if p.game_slug == game_slug => {
                         (p.puzzle_data, p.solution, Some(p.id.to_string()))
                     }
