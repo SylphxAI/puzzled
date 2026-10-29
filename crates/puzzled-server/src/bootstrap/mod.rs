@@ -10,11 +10,13 @@ mod connect_jobs;
 mod connect_preferences;
 mod connect_puzzle;
 mod connect_stats;
+mod funnel_event;
 mod health;
 pub(crate) mod identity;
 pub(crate) mod lifecycle;
 mod observability_test;
 mod router;
+mod signals_induce;
 mod state;
 
 pub use lifecycle::{drain_tasks, http_port, request_shutdown, shutdown_signal};

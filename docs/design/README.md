@@ -131,7 +131,7 @@ glyph in ink, and a deep form of the hue for small text on paper.
 | `/games/{slug}` | learn and play one game | full-bleed cover in the game's colour; the difficulty list; the board; rules, tips, FAQ, related games |
 | `/archive` | replay a past day | sign-in gate for guests |
 | `/stats`, `/leaderboard` | see your record | 2×2 summary; today's list; streak calendar |
-| `/pricing` | understand and buy Puzzled Plus | live prices from `ListPlans`; Plus emphasised; closed-sales state lists what Plus includes |
+| `/pricing` | understand and buy Puzzled Plus | live prices from `ListPlans`; the first screen is the Plus offer with Yearly preselected, an unticked consent tick and one checkout button; the Free card and the comparison sit below it, with one text link back to today's free puzzle; closed-sales state lists what Plus includes |
 | `/profile`, `/settings/*`, `/family/join` | manage the account | shared console chrome |
 | `/login`, `/signup`, password pages | account access | Sylphx Auth end users |
 | `/terms`, `/privacy`, `/support` | legal and help | operator: Sylphx Limited |
@@ -149,3 +149,21 @@ band. Leaderboard moved from the top bar to Stats, the menu sheet and the footer
 - Unread personal data renders geometry-matched skeletons, never zeros.
 - Dialogs are bottom sheets on phones (grabber, safe-area padding, 28 px corners) and
   centred cards from 640 px.
+
+## Offline navigation
+
+After the root service worker is ready, a failed same-origin GET navigation
+shows `public/offline.html`: Puzzled's mark, wordmark, paper/ink tokens (including
+dark mode), a clear connection requirement, and one **Try again** action that
+retries the requested URL. It does not offer offline puzzles or claim a finish
+was saved. The page is self-contained: no hydration, remote fonts, or assets.
+
+The source is `src/shared/components/offline/offline-document.tsx`; run
+`bun scripts/generate-offline.tsx` from `apps/puzzled` after changing it or the
+shared brand/button components or tokens. A unit test guards the generated HTML.
+Only this public document enters the worker cache; RPCs, credentials, puzzles,
+account responses, and visited pages do not. Network HTTP errors remain intact.
+For a manual check, load Puzzled online, wait for the worker to activate, enable
+browser offline mode, then navigate/reload a puzzle URL. Retry stays on that URL;
+reconnect and retry to return to the live page. `e2e-tests/offline.e2e.ts` covers
+this against either the local app or `BASE_URL` in CI mode.

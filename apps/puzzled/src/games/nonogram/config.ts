@@ -4,13 +4,7 @@
  */
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
-import {
-	DEFAULT_LAUNCH_DATE,
-	type DifficultyLevelConfig,
-	type GameConfig,
-	type GameResult,
-	type GameSubmission,
-} from '../types'
+import { DEFAULT_LAUNCH_DATE, type DifficultyLevelConfig, type GameConfig } from '../types'
 import { NonogramHowToPlay } from './components/how-to-play'
 import { NonogramIcon } from './icon'
 import type {
@@ -87,95 +81,4 @@ export const nonogramConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	/**
-	 * Validate a single cell guess
-	 */
-	validateGuess(solution: NonogramSolution, guess: NonogramGuess): NonogramGuessResult {
-		const shouldBeFilled = solution.grid[guess.row]?.[guess.col]
-
-		// For nonogram, we only check if filled cells are correct
-		// Empty/marked cells are just for player reference
-		if (guess.state === 'filled') {
-			return { correct: shouldBeFilled === true }
-		}
-
-		// Marking a cell as empty is correct if it shouldn't be filled
-		return { correct: true }
-	},
-
-	/**
-	 * CORE VALIDATION - Validates submission AND calculates score
-	 *
-	 * Scoring: Time-based with error penalty
-	 * - Base: 500 points
-	 * - Time penalty: -1 point per 2 seconds
-	 * - Error penalty: -25 points per error
-	 * - Minimum: 100 points for a win
-	 */
-	validateAndScore(
-		solution: NonogramSolution,
-		_puzzleData: NonogramPuzzleClientData,
-		submission: GameSubmission,
-	): GameResult {
-		const data = submission.data as { finalGrid?: boolean[][]; errors?: number } | undefined
-
-		// Must have final grid to validate
-		if (!data?.finalGrid) {
-			return { valid: false, error: 'Missing final grid data' }
-		}
-
-		const finalGrid = data.finalGrid
-		const solutionGrid = solution.grid
-		const gridSize = solutionGrid.length
-
-		// Validate grid dimensions
-		if (!Array.isArray(finalGrid) || finalGrid.length !== gridSize) {
-			return { valid: false, error: 'Invalid grid dimensions' }
-		}
-
-		// Check each cell matches solution
-		let allCorrect = true
-		for (let row = 0; row < gridSize; row++) {
-			if (!Array.isArray(finalGrid[row]) || finalGrid[row].length !== gridSize) {
-				return { valid: false, error: `Invalid row ${row} dimensions` }
-			}
-			for (let col = 0; col < gridSize; col++) {
-				const submitted = finalGrid[row][col] === true
-				const expected = solutionGrid[row][col] === true
-				if (submitted !== expected) {
-					allCorrect = false
-					break
-				}
-			}
-			if (!allCorrect) break
-		}
-
-		// Verify claimed status
-		if (submission.status === 'won' && !allCorrect) {
-			return {
-				valid: false,
-				error: 'Invalid win claim - grid does not match solution',
-			}
-		}
-		if (submission.status === 'lost' && allCorrect) {
-			return {
-				valid: false,
-				error: 'Invalid loss claim - grid matches solution',
-			}
-		}
-
-		// Calculate score
-		if (!allCorrect) {
-			return { valid: true, status: 'lost', score: 0 }
-		}
-
-		const seconds = Math.floor(submission.timeSpentMs / 1000)
-		const timePenalty = Math.floor(seconds / 2) // -1 point per 2 seconds
-		const errors = data.errors ?? 0
-		const errorPenalty = errors * 25
-		const score = Math.max(100, 500 - timePenalty - errorPenalty)
-
-		return { valid: true, status: 'won', score }
-	},
 }

@@ -19,16 +19,19 @@ import "google/protobuf/cpp_features.proto";
 // from Money, never copied into the client.
 
 message Plan {
-  // Stable plan id: individual_monthly, individual_yearly, family_monthly,
-  // family_yearly.
+  // Stable plan id: individual_monthly, individual_yearly, individual_once,
+  // family_monthly, family_yearly.
   string id = 1;
   bool family = 2;
-  // month | year
+  // month | year; empty for a one-time purchase.
   string interval = 3;
   // Prices per currency, tax included.
   repeated PlanPrice prices = 4;
   // Free trial days before the first charge; 0 when the plan has no trial.
   int32 trial_days = 5;
+  // Days a one-time licence pass grants access; 0 for subscriptions and
+  // unbounded one-time purchases.
+  int32 access_days = 6;
 }
 
 message PlanPrice {

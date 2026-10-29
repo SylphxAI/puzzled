@@ -26,7 +26,7 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 	const pathname = usePathname()
 
 	return (
-		<header className="pt-safe sticky top-0 z-header border-b border-hairline bg-background/80 backdrop-blur-xl backdrop-saturate-150">
+		<header className="pt-safe sticky top-0 z-header border-b border-hairline bg-background">
 			<div className="page-shell-wide flex h-14 items-center gap-2 md:h-16">
 				<Logo size="md" />
 

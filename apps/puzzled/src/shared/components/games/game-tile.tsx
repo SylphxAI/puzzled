@@ -104,7 +104,7 @@ export function GameTile({
 				<p className="mt-1 line-clamp-2 flex-1 text-[13px] leading-snug text-muted-foreground sm:text-sm">
 					{tagline}
 				</p>
-				<p className="mt-2.5 truncate text-xs text-muted-foreground">
+				<p className="mt-2.5 line-clamp-2 text-xs leading-snug text-muted-foreground">
 					{meta}
 					<span className="sr-only"> — {tileLinkHint(status, labels)}</span>
 				</p>

@@ -12,7 +12,7 @@
  * SECURITY ARCHITECTURE:
  * - Client NEVER calculates score
  * - Client sends submission data (moves, final state, etc.)
- * - Server validates AND calculates score via validateAndScore()
+ * - The Rust core validates AND calculates the score
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'

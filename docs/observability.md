@@ -82,6 +82,79 @@ Observability host with `OBSERVABILITY_API_KEY`, which was never set, so they
 never delivered. They, their hooks, the Web Vitals reporter and the game
 analytics batcher are deleted. The SDK has no analytics or replay surface yet.
 
+## First-party funnel counter
+
+Visits, plays, sign-ups and Core Web Vitals are counted in our own database,
+not by a third party. Rows are anonymous (no user id, no IP, no cookie), so the
+counter runs without a consent choice. Google Analytics, when
+`GA_MEASUREMENT_ID` is set, stays opt-in and is separate.
+
+| Event | Written by |
+| --- | --- |
+| `landing` | browser, once per session (`FunnelReporter`) |
+| `game_start` | browser, when a playable board is shown (`GamePageClient`) |
+| `signup` | api, in `RecordSignupAttribution`, once per new account |
+| `web_vitals` | browser, `LCP` `CLS` `INP` `FCP` `TTFB` (`useReportWebVitals`) |
+
+The browser posts same-origin ProtoJSON to the native Connect RPC
+`POST /puzzled.v1.FunnelService/RecordEvent` (api implementation:
+`crates/puzzled-server/src/bootstrap/funnel_event.rs`); the table is
+`funnel_events`. Signup retries are deduplicated atomically by a separate
+`funnel_signup_receipts` table (player id only, erased with the account); event
+rows carry no player id. Web Vitals are document-load metrics, not soft-navigation
+metrics. Only allowlisted public paths are retained, without locale/query/hash;
+game-detail paths use the `/games/:slug` template and private paths are dropped.
+Read it with SQL:
+
+```sql
+SELECT event, count(*) FROM funnel_events
+WHERE occurred_at > now() - interval '1 day' GROUP BY 1;
+SELECT metric, percentile_cont(0.75) WITHIN GROUP (ORDER BY value) AS p75
+FROM funnel_events WHERE event = 'web_vitals' GROUP BY 1;
+```
+
+## Quality signals (owner standards/quality-signals.md)
+
+The api reports its own problems as structured log lines; the platform turns
+them into work items without anyone reading a log. The rule is the platform's
+(`infra/runbooks/product-issues.md`); Puzzled only writes the lines.
+
+| Line | When | Becomes |
+| --- | --- | --- |
+| `event="puzzled.issue.turn_failed.<route>" severity="info"` | any 5xx the caller saw | one work item per fingerprint (`ProductIssueReported` → the desk alert intake); a repeat while it is open is a note, a return after it closed a new item |
+| `event="puzzled.user.write.ok\|failed" severity="info"` | one per finished user-mutating Connect RPC; HTTP 5xx fails it | the shared `product-journey-success` journey SLO in `SylphxAI/infra` (journey `puzzled.user.write`) |
+
+The route subject is the route template with its parameters removed
+(`/v1/puzzles/{game}/…` → `v1_puzzles…`), so no id, game slug or body ever
+enters a line. The code is in
+`crates/puzzled-server/src/shared/signals.rs`; the middleware is layered once
+in `crates/puzzled-server/src/bootstrap/router.rs`.
+
+The user-write journey enumerates submissions, result shares, profile and
+notification changes, account erasure, signup attribution, billing actions
+and streak changes. Connect read-only RPCs also use POST; `GetDaily`,
+`GetPuzzle`, `CheckGuess`, stats and other reads never count as writes.
+Admin, jobs, Compute ticks, guest bootstrap and induction are excluded.
+Client rejections do not count as availability failures. The old
+`puzzled.api.write.*` events are no longer emitted or selected by the SLO.
+Ten failed submissions therefore count ten writes and ten failures (100%),
+regardless of 1,000 successful reads.
+
+The induction handler supplies its nonce subject to the outer observer;
+it does not emit a second route fingerprint. Two calls with the same nonce
+produce two occurrences of one fingerprint and no user-write events.
+
+Read back after a deploy (the same `SYLPHX_API_KEY`):
+
+```bash
+# Induced issue: answers 503 and reports one issue. Call once, then again
+# within the hour, and read one item then one note in the work system.
+curl -X POST https://puzzled.gg/signals:induce \
+  -H "authorization: Bearer $SYLPHX_API_KEY" -d '{"nonce":"qa1"}'
+# The lines themselves:
+kubectl -n puzzled-prod logs <api-pod> -c user-container | grep 'puzzled.issue.'
+```
+
 ## Production check
 
 Both services have a test trigger that fails on purpose with

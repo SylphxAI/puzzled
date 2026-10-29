@@ -277,3 +277,53 @@ async fn an_account_with_old_play_history_is_still_locked_without_plus() {
     assert_eq!(status, StatusCode::FORBIDDEN, "{body}");
     assert!(refused(&body, "plus_required"), "{body}");
 }
+
+#[tokio::test]
+async fn checkout_return_refresh_unlocks_paid_play_only_after_money_confirms() {
+    let _key = crate::capabilities::identity_access::adapters::platform_jwt::test_key_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let fake: Fake = Arc::default();
+    let money = spawn_money(fake.clone()).await;
+    let app = router(AppState::new(Some(pool)).with_money(Some(money)));
+    let bearer = token(UNPAID);
+    let (status, _) = get_daily(&app, json!({"gameSlug": paid_game()}), &bearer).await;
+    assert_eq!(status, StatusCode::FORBIDDEN);
+
+    // A return URL/refresh request is not a grant.
+    async fn refresh(app: &Router, bearer: &str) -> Value {
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/puzzled.v1.BillingService/GetSubscription")
+                    .header("content-type", "application/json")
+                    .header("authorization", format!("Bearer {bearer}"))
+                    .body(Body::from(r#"{"refresh":true}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        serde_json::from_slice(&bytes).unwrap()
+    }
+    assert_ne!(refresh(&app, &bearer).await["entitled"], true);
+    fake.lock().unwrap().paid.push(UNPAID.into());
+    let (status, _) = get_daily(&app, json!({"gameSlug": paid_game()}), &bearer).await;
+    assert_eq!(status, StatusCode::FORBIDDEN, "old denial is cached");
+    assert_eq!(refresh(&app, &bearer).await["entitled"], true);
+    let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &bearer).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    let (status, body) = get_daily(
+        &app,
+        json!({"gameSlug": free_game(), "puzzleDate": "2026-01-01"}),
+        &bearer,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+}

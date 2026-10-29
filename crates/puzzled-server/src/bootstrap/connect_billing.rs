@@ -279,6 +279,7 @@ impl BillingService for BillingConnectService {
                 family: plan.family,
                 interval: plan.interval,
                 trial_days: i32::try_from(plan.trial_days).unwrap_or(0),
+                access_days: i32::try_from(plan.access_days).unwrap_or(0),
                 prices: plan
                     .prices
                     .into_iter()
@@ -298,7 +299,7 @@ impl BillingService for BillingConnectService {
     async fn get_subscription(
         &self,
         ctx: RequestContext,
-        _request: ServiceRequest<'_, GetSubscriptionRequest>,
+        request: ServiceRequest<'_, GetSubscriptionRequest>,
     ) -> ServiceResult<GetSubscriptionResponse> {
         let identity = require_identity(&ctx)?;
         let mut response = GetSubscriptionResponse {
@@ -312,6 +313,9 @@ impl BillingService for BillingConnectService {
         };
         if !service::is_account_id(&identity.user_id) {
             return Response::ok(response);
+        }
+        if request.to_owned_message().refresh {
+            money.refresh_grants(&identity.user_id);
         }
         let entitlement = service::access(pool, Some(money), &identity.user_id)
             .await
@@ -366,6 +370,24 @@ impl BillingService for BillingConnectService {
                 }
             }
         }
+        // An observation is not admission. Never make the response wait on
+        // metric storage or another Money answer; unknown answers are excluded.
+        let observed_pool = pool.clone();
+        let observed_money = money.clone();
+        let observed_user = identity.user_id.clone();
+        let paid = matches!(response.source.as_str(), "plus" | "family");
+        tokio::spawn(async move {
+            if observed_money
+                .try_check(
+                    &observed_user,
+                    crate::capabilities::money::access::FEATURE_PLUS,
+                )
+                .await
+                .is_ok()
+            {
+                crate::capabilities::metrics::audience(&observed_pool, &observed_user, paid).await;
+            }
+        });
         Response::ok(response)
     }
 

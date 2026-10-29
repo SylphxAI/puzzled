@@ -17,6 +17,9 @@
 		"familyBody": "最多 {count} 人使用，各自保留統計和連續紀錄。",
 		"monthly": "按月",
 		"yearly": "按年",
+		"weekendPass": "{days} 日通行證",
+		"oneTime": "一次性付款",
+		"passTerms": "一次付款，可使用 Puzzled Plus {days} 日，不會自動續期。",
 		"perMonth": "每月",
 		"currencyLabel": "貨幣",
 		"perYear": "每年",
@@ -36,7 +39,16 @@
 		"checkoutCancelled": "已取消付款，你沒有被收費。",
 		"alreadySubscribed": "你已訂閱 Puzzled Plus。",
 		"immediateSupplyConsent": "我要即時使用，並明白我會失去 14 日取消權。",
-		"consentRequired": "請剔選方格以繼續。"
+		"consentRequired": "請剔選方格以繼續。",
+		"offerLead": "全部 {count} 款遊戲、每一個往日謎題，以及每款遊戲的統計。",
+		"planChoice": "選擇方案",
+		"monthlyEquivalent": "每月 {price}",
+		"continueToPayment": "繼續付款",
+		"renewsYearly": "每年以 {price} 自動續期，直至你取消。可隨時在「設定」中取消。",
+		"renewsMonthly": "每月以 {price} 自動續期，直至你取消。可隨時在「設定」中取消。",
+		"familyLink": "最多 {count} 人的家庭方案",
+		"notNowPlayFree": "暫時不訂閱，玩今日免費謎題",
+		"choosePlus": "選擇 Puzzled Plus"
 	},
 	"trial": {
 		"endsOn": "你的 Puzzled Plus 免費一星期會在 {date} 結束。不會收取任何費用，你已完成的內容會繼續保留在統計中。",
@@ -63,6 +75,7 @@
 		"description": "你的 Puzzled Plus 方案、付款和家庭成員。",
 		"free": "你正使用免費方案：每天一題今日精選謎題。",
 		"closed": "Puzzled Plus 尚未開售，現時所有遊戲免費。",
+		"checkoutPending": "正在確認你的訂閱。此頁面將自動更新；如等候較久，請重新整理。",
 		"checkoutSuccess": "歡迎加入 Puzzled Plus。全部遊戲和往日題庫已經開放。",
 		"plan": {
 			"individual_monthly": "Puzzled Plus（按月）",

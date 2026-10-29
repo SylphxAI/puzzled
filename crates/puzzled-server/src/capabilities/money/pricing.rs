@@ -3,7 +3,8 @@
 //! amount, a currency or a seat count. A plan is derived from the catalogue:
 //! a product whose `features` contain `plus`, ranked by its `seats` limit
 //! (`1` is individual, above `1` is family), sold at a price picked by
-//! `recurring_interval`. Adding a plan is a catalogue change only.
+//! `recurring_interval` or as a one-time purchase. A licence-backed one-time
+//! pass carries Money's access term as `access_days`. Adding a plan is a catalogue change only.
 
 use super::access::{FEATURE_PLUS, FEATURE_SEATS};
 use super::client::{Catalog, CatalogPrice, CatalogProduct};
@@ -21,6 +22,9 @@ pub struct PlanPrices {
     pub seats: u32,
     /// Free trial days before the first charge; 0 when none.
     pub trial_days: u32,
+    /// Days a one-time licence pass grants access; 0 for subscriptions.
+    /// Unbounded one-time purchases are never exposed as cheap Plus passes.
+    pub access_days: u32,
     /// (lower-case currency, minor units); sorted by code.
     pub prices: Vec<(String, i64)>,
 }
@@ -40,6 +44,7 @@ fn sold(price: &CatalogPrice) -> Option<&'static str> {
     match price.recurring_interval.as_deref() {
         Some("month") => Some("monthly"),
         Some("year") => Some("yearly"),
+        None | Some("") => Some("once"),
         _ => None,
     }
 }
@@ -68,6 +73,16 @@ pub fn plans(catalog: &Catalog) -> Vec<PlanPrices> {
         let family = seats > 1;
         for price in &product.prices {
             let Some(word) = sold(price) else { continue };
+            let access_days = product
+                .licence
+                .as_ref()
+                .filter(|licence| licence.term.unit == "days")
+                .map_or(0, |licence| licence.term.count);
+            // A missing or malformed term must fail closed. Otherwise a cheap
+            // one-time price could become a permanent Plus unlock.
+            if word == "once" && access_days == 0 {
+                continue;
+            }
             let kind = if family { "family" } else { "individual" };
             found.push(PlanPrices {
                 plan_id: format!("{kind}_{word}"),
@@ -76,6 +91,7 @@ pub fn plans(catalog: &Catalog) -> Vec<PlanPrices> {
                 family,
                 seats,
                 trial_days: price.trial_days,
+                access_days,
                 prices: amounts(price),
             });
         }

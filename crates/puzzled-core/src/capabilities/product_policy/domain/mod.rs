@@ -13,3 +13,5 @@ pub mod storage_keys;
 pub mod time_constants;
 pub mod user_profile_limits;
 pub mod validation_limits;
+
+pub mod metrics;

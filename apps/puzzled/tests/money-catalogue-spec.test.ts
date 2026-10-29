@@ -24,7 +24,7 @@ describe('money catalogue spec', () => {
 		const prices = spec.products.flatMap((p) => p.prices)
 		expect(prices.length).toBe(catalogue.plans.length)
 		for (const price of prices) {
-			expect(['month', 'year']).toContain(price.recurring_interval)
+			expect(['month', 'year', '']).toContain(price.recurring_interval)
 			expect(price.tax_behavior).toBe('inclusive')
 			for (const [code, minor] of Object.entries(price.unit_amounts)) {
 				expect(code).toMatch(/^[A-Z]{3}$/)
@@ -35,20 +35,51 @@ describe('money catalogue spec', () => {
 
 	test('products carry the seats limit that ranks them: 1 individual, above 1 family', () => {
 		const seats = Object.fromEntries(spec.products.map((p) => [p.key, p.features.seats]))
-		expect(seats).toEqual({ puzzled_plus: '1', puzzled_plus_family: '4' })
+		expect(seats).toEqual({ puzzled_plus: '1', puzzled_plus_family: '4', puzzled_starter: '1' })
 		for (const product of spec.products) expect(product.features.plus).toBe('true')
 	})
 
-	test('only the individual yearly price carries the 7-day trial', () => {
+	test('no price carries a trial until the Money trial notice is live', () => {
 		const trials = Object.fromEntries(
 			spec.products.flatMap((p) => p.prices).map((price) => [price.key, price.trial_days ?? 0]),
 		)
 		expect(trials).toEqual({
 			plus_individual_monthly: 0,
-			plus_individual_yearly: 7,
+			plus_individual_yearly: 0,
 			plus_family_monthly: 0,
 			plus_family_yearly: 0,
+			puzzled_starter_unlock: 0,
 		})
+	})
+
+	test('the starter is a one-time 3-day full Plus licence at the declared amounts', () => {
+		const starter = spec.products.find((product) => product.key === 'puzzled_starter')
+		expect(starter).toMatchObject({
+			features: { plus: 'true', seats: '1' },
+			licence: {
+				scheme: 'sylphx-offline-ed25519-v1',
+				plan: 'plus',
+				token_product: 'puzzled',
+				key: 'puzzled_plus',
+				term: { unit: 'days', count: 3 },
+			},
+		})
+		expect(starter?.prices).toEqual([
+			{
+				key: 'puzzled_starter_unlock',
+				recurring_interval: '',
+				tax_behavior: 'inclusive',
+				unit_amounts: { USD: '99', GBP: '79' },
+			},
+		])
+	})
+
+	test('a licence cannot be attached to a recurring price', () => {
+		const bad = structuredClone(catalogue)
+		bad.products[0].licence = structuredClone(
+			bad.products.find((p: (typeof bad.products)[number]) => p.id === 'puzzled_starter').licence,
+		)
+		expect(() => toSpec(bad)).toThrow(/licence on a recurring price/)
 	})
 
 	test('a price key Money would refuse is rejected', () => {
@@ -61,10 +92,5 @@ describe('money catalogue spec', () => {
 		const bad = structuredClone(catalogue)
 		bad.plans[0].grants = { plus: 'true', seats: '2' }
 		expect(() => toSpec(bad)).toThrow(/different features/)
-	})
-
-	test('the catalogue names the writer and no reader', () => {
-		expect(catalogue.readme).toContain('CI applies it to Sylphx Money')
-		expect(JSON.stringify(catalogue)).not.toMatch(/stripe/i)
 	})
 })

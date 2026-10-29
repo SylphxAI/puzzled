@@ -1,7 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { sendFunnel } from '@/features/analytics/lib/funnel'
 import { MinimalHeader } from '@/features/daily/components/minimal-header'
 import type { GameSlug } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -42,6 +43,11 @@ export function GamePageClient({
 }: GamePageClientProps) {
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const [helpRequested, setHelpRequested] = useState(false)
+
+	// One first-party funnel count each time a playable board is shown.
+	useEffect(() => {
+		sendFunnel({ event: 'game_start', game_slug: slug })
+	}, [slug])
 
 	return (
 		<div className="flex flex-1 flex-col">
