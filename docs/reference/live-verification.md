@@ -185,3 +185,33 @@ On days whose pick the harness cannot solve (`word-guess`,
 to check and reports `unknown`, so read-only runs are structurally non-green
 on those days. That is by design; run on a solvable day (`sudoku`,
 `crowns`) or accept the `unknown`.
+
+### Daily percentile verification
+
+`GetTodayPercentile` now reads the admitted viewer's **accepted** daily finish,
+not the score/status/counts in the request. Send `gameSlug` and the result's
+`dayKey`; the API checks that day against Asia/Hong_Kong today. Responses are
+private/no-store and contain aggregate counts, never other players' rows.
+
+The denominator includes every accepted, non-excluded daily ritual win/loss
+for that game/day, including the viewer. Wins sort above losses. Within the
+same outcome: Word Hive and Word Groups use higher accepted score; Word Guess,
+Quad Words, Arithmo and Word Box use fewer attempts; Cryptogram uses fewer
+accepted hints then faster elapsed time; other games use faster elapsed time.
+Only strictly worse results are beaten; ties (including self) remain in the
+denominator. Percentile is rounded `100 * beaten / total`, withheld below ten.
+
+`dispatch` distinguishes `empty_cohort`, `insufficient_cohort`,
+`accepted_finish_required`, `different_day`, `unavailable_data` and a real
+`product_db_sessions` percentile. Legacy Cryptogram rows without accepted hint
+metadata yield unavailable data rather than inventing zero hints. No-database
+and failed reads also invent neither a count nor a percentile.
+
+Populated verification belongs in the migrated throwaway database tests
+(`daily_percentile_tests`), never in production. The live harness marks all
+Connect requests with `x-puzzled-verification`; accepted finishes bearing that
+header (or the older harness user agent) are excluded from comparisons. The
+marker can only opt out; it grants no identity, acceptance or ranking authority.
+The read-only harness remains the production default. A fresh production
+percentile read must agree with the serving SHA and these isolated fixtures;
+do not seed or export personal production rows to prove a percentile.

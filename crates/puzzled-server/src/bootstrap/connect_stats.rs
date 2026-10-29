@@ -15,7 +15,7 @@ use crate::capabilities::leaderboard::adapters::leaderboard_db::{
     LeaderboardType as DbType,
 };
 use crate::capabilities::stats::adapters::sessions_stats_db::{
-    today_overview, user_history_on_connection, user_stats_on_connection,
+    today_overview, today_percentile, user_history_on_connection, user_stats_on_connection,
 };
 use crate::proto::puzzled::v1::{
     GetHistoryRequest, GetHistoryResponse, GetLeaderboardRequest, GetLeaderboardResponse,
@@ -158,71 +158,62 @@ impl StatsService for StatsConnectService {
 
     async fn get_today_percentile(
         &self,
-        _ctx: RequestContext,
+        ctx: RequestContext,
         request: ServiceRequest<'_, GetTodayPercentileRequest>,
     ) -> ServiceResult<GetTodayPercentileResponse> {
         let req = request.to_owned_message();
         let slug = req.game_slug.trim();
-        if slug.is_empty() || !is_valid_game_slug(slug) {
-            return Response::ok(GetTodayPercentileResponse {
-                dispatch: "invalid_or_empty".into(),
-                ..Default::default()
-            });
-        }
-        let status = req.status.trim();
-        if status.is_empty() {
-            return Response::ok(GetTodayPercentileResponse {
-                game_slug: slug.into(),
-                dispatch: "status_required".into(),
-                ..Default::default()
-            });
-        }
-
-        // Fixture residual: pure dual-oracle when counts supplied (no invent from empty DB).
-        if let (Some(total), Some(better)) = (req.total_players, req.better_than) {
-            if total <= 0 {
-                return Response::ok(GetTodayPercentileResponse {
-                    game_slug: slug.into(),
-                    status: status.into(),
-                    dispatch: "empty_cohort".into(),
-                    ..Default::default()
-                });
-            }
-            let percentile = ((f64::from(better.max(0)) / f64::from(total)) * 100.0).round() as i32;
-            return Response::ok(GetTodayPercentileResponse {
-                percentile: Some(percentile),
-                total_players: total,
-                game_slug: slug.into(),
-                status: status.into(),
-                score: req.score,
-                attempts: req.attempts,
-                mistakes: req.mistakes,
-                time_spent_ms: req.time_spent_ms,
-                stub: false,
-                dispatch: "product_fixture".into(),
-                ..Default::default()
-            });
-        }
-
-        // Without sessions/DB generated Connect path: honest stub residual (parity with REST null path).
-        Response::ok(GetTodayPercentileResponse {
-            percentile: None,
-            total_players: 0,
+        let day_key = product_day_key_string(Utc::now());
+        let mut result = GetTodayPercentileResponse {
             game_slug: slug.into(),
-            status: status.into(),
-            score: req.score,
-            attempts: req.attempts,
-            mistakes: req.mistakes,
-            time_spent_ms: req.time_spent_ms,
-            stub: true,
-            dispatch: if self.state.pool.is_some() {
-                "product_db_sessions_residual"
-            } else {
-                "pure_residual_no_db"
-            }
-            .into(),
+            day_key: day_key.clone(),
             ..Default::default()
-        })
+        };
+        if slug.is_empty() || !is_valid_game_slug(slug) {
+            result.dispatch = "invalid_or_empty".into();
+        } else if !req.day_key.is_empty() && req.day_key != day_key {
+            result.dispatch = "different_day".into();
+        } else if self.state.pool.is_none() {
+            result.stub = true;
+            result.dispatch = "unavailable_data".into();
+        } else {
+            // This uses the same admitted cookie/account and adoption transaction
+            // as accepted play. Supplied scores, status, and fixture counts are
+            // legacy wire fields only and can never establish a finish.
+            let mut access = self.adopt_guest_progress_if_needed(&ctx).await?;
+            let uid = access.primary().map(|identity| identity.user_id.clone());
+            let read = match access.connection() {
+                Some(connection) => {
+                    today_percentile(connection, &day_key, slug, uid.as_deref()).await
+                }
+                None => {
+                    let pool = self.state.pool.as_ref().ok_or_else(|| {
+                        ConnectError::new(ErrorCode::Internal, "stats_pool_missing")
+                    })?;
+                    let mut connection = pool.acquire().await.map_err(|_| {
+                        ConnectError::new(ErrorCode::Unavailable, "stats_unavailable")
+                    })?;
+                    today_percentile(&mut connection, &day_key, slug, None).await
+                }
+            };
+            match read {
+                Ok(read) => {
+                    result.percentile = read.percentile;
+                    result.total_players = read.total;
+                    result.stub = read.dispatch == "unavailable_data";
+                    result.dispatch = read.dispatch.into();
+                }
+                Err(error) => {
+                    tracing::warn!(%error, game_slug = slug, "today percentile read failed");
+                    result.stub = true;
+                    result.dispatch = "unavailable_data".into();
+                }
+            }
+            access.commit().await?;
+        }
+        Ok(Response::new(result)
+            .with_header("cache-control", "private, no-store, max-age=0")
+            .with_header("cdn-cache-control", "no-store"))
     }
     async fn get_today_overview(
         &self,

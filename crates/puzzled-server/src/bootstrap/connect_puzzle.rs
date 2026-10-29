@@ -164,6 +164,12 @@ impl PuzzleConnectService {
         let (puzzle_data, solution, resolved_id) =
             match (req.puzzle_id.as_deref(), &self.state.pool) {
                 (Some(pid), Some(pool)) => match fetch_puzzle_by_id(pool, pid).await {
+                    Ok(Some(p)) if p.puzzle_date != date => {
+                        return Err(ConnectError::new(
+                            ErrorCode::InvalidArgument,
+                            "puzzle_date_mismatch",
+                        ));
+                    }
                     Ok(Some(p)) if p.game_slug == game_slug => {
                         (p.puzzle_data, p.solution, Some(p.id.to_string()))
                     }
@@ -306,6 +312,23 @@ impl PuzzleConnectService {
                 Some(date),
                 ritual_day_key,
                 now.timestamp_millis(),
+                // Extract only after this exact envelope has passed validation.
+                (game_slug == "cryptogram").then(|| {
+                    envelope
+                        .data
+                        .get("hintsUsed")
+                        .and_then(|v| v.as_u64())
+                        .map(|v| v as i64)
+                        .unwrap_or(0)
+                }),
+                // This header only removes a validated finish from comparisons.
+                // It grants no write/auth authority. Recognize older harnesses too.
+                ctx.headers().contains_key("x-puzzled-verification")
+                    || ctx
+                        .headers()
+                        .get("user-agent")
+                        .and_then(|v| v.to_str().ok())
+                        .is_some_and(|v| v.starts_with("puzzled-verify-live/")),
             )
             .await
             {

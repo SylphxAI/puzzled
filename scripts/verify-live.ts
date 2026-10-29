@@ -529,6 +529,7 @@ async function connectUnary(
 	const headers: Record<string, string> = {
 		'content-type': 'application/json',
 		'connect-protocol-version': '1',
+		'x-puzzled-verification': '1',
 		accept: 'application/json',
 	}
 	if (options.guestId) headers['x-puzzled-guest-id'] = options.guestId

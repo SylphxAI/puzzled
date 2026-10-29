@@ -271,6 +271,11 @@ export const gameSessions = pgTable(
 		/** Number of attempts/guesses */
 		attempts: integer('attempts').default(0).notNull(),
 
+		/** Accepted Cryptogram hints; absent on historical finishes. */
+		hintsUsed: bigint('hints_used', { mode: 'number' }),
+		/** Synthetic verification finishes never enter public comparisons. */
+		comparisonExcluded: boolean('comparison_excluded').default(false).notNull(),
+
 		/** Time spent playing (milliseconds) */
 		timeSpentMs: integer('time_spent_ms'),
 

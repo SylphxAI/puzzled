@@ -1391,3 +1391,6 @@ mod tests {
 
 #[cfg(test)]
 mod billing_cutover_tests;
+
+#[cfg(test)]
+mod daily_percentile_tests;

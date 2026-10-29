@@ -6,6 +6,7 @@ use uuid::Uuid;
 
 type PuzzleRow = (
     Uuid,
+    NaiveDate,
     String,
     serde_json::Value,
     Option<serde_json::Value>,
@@ -16,6 +17,7 @@ type PuzzleRow = (
 #[derive(Debug, Clone)]
 pub struct StoredPuzzle {
     pub id: Uuid,
+    pub puzzle_date: NaiveDate,
     pub game_slug: String,
     pub puzzle_data: serde_json::Value,
     pub solution: Option<serde_json::Value>,
@@ -24,6 +26,7 @@ pub struct StoredPuzzle {
 
 fn row_to_puzzle(
     id: Uuid,
+    puzzle_date: NaiveDate,
     game_slug: String,
     puzzle_data: serde_json::Value,
     solution: Option<serde_json::Value>,
@@ -31,6 +34,7 @@ fn row_to_puzzle(
 ) -> StoredPuzzle {
     StoredPuzzle {
         id,
+        puzzle_date,
         game_slug,
         puzzle_data,
         solution,
@@ -49,7 +53,7 @@ pub async fn fetch_daily_puzzle(
     let row: Option<PuzzleRow> = match difficulty {
         Some(diff) => sqlx::query_as(
             r#"
-                SELECT id, game_slug, puzzle_data, solution, difficulty::text
+                SELECT id, puzzle_date::date, game_slug, puzzle_data, solution, difficulty::text
                 FROM daily_puzzles
                 WHERE game_slug = $1 AND puzzle_date = $2 AND difficulty::text = $3
                 ORDER BY created_at DESC
@@ -64,7 +68,7 @@ pub async fn fetch_daily_puzzle(
         .map_err(|e| format!("daily_puzzles query failed: {e}"))?,
         None => sqlx::query_as(
             r#"
-                SELECT id, game_slug, puzzle_data, solution, difficulty::text
+                SELECT id, puzzle_date::date, game_slug, puzzle_data, solution, difficulty::text
                 FROM daily_puzzles
                 WHERE game_slug = $1 AND puzzle_date = $2
                 ORDER BY created_at DESC
@@ -77,7 +81,7 @@ pub async fn fetch_daily_puzzle(
         .await
         .map_err(|e| format!("daily_puzzles query failed: {e}"))?,
     };
-    Ok(row.map(|(id, slug, data, sol, diff)| row_to_puzzle(id, slug, data, sol, diff)))
+    Ok(row.map(|(id, date, slug, data, sol, diff)| row_to_puzzle(id, date, slug, data, sol, diff)))
 }
 
 /// Fetch a puzzle by id (daily or archive).
@@ -88,7 +92,7 @@ pub async fn fetch_puzzle_by_id(
     let id = Uuid::parse_str(puzzle_id).map_err(|e| format!("invalid puzzle id: {e}"))?;
     let row: Option<PuzzleRow> = sqlx::query_as(
         r#"
-            SELECT id, game_slug, puzzle_data, solution, difficulty::text
+            SELECT id, puzzle_date::date, game_slug, puzzle_data, solution, difficulty::text
             FROM daily_puzzles
             WHERE id = $1
             "#,
@@ -97,5 +101,5 @@ pub async fn fetch_puzzle_by_id(
     .fetch_optional(pool)
     .await
     .map_err(|e| format!("daily_puzzles query failed: {e}"))?;
-    Ok(row.map(|(i, slug, data, sol, diff)| row_to_puzzle(i, slug, data, sol, diff)))
+    Ok(row.map(|(i, date, slug, data, sol, diff)| row_to_puzzle(i, date, slug, data, sol, diff)))
 }

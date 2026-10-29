@@ -163,6 +163,79 @@ pub async fn today_overview(
     Ok((players.0.max(0) as u32, completions))
 }
 
+/// One snapshot: the cohort and viewer metric both come from accepted rows.
+/// Retains the original persisted-cohort implementation's wins-first, strict
+/// ordering and ten-finisher floor. No comparison input comes from the caller.
+#[derive(Debug)]
+pub struct DailyPercentile {
+    pub total: i32,
+    pub percentile: Option<i32>,
+    pub dispatch: &'static str,
+}
+
+pub async fn today_percentile(
+    connection: &mut sqlx::PgConnection,
+    day_key: &str,
+    game_slug: &str,
+    user_id: Option<&str>,
+) -> Result<DailyPercentile, String> {
+    let uid = user_id.map(parse_user_id).transpose()?;
+    let (total, beaten, accepted, complete): (i64, i64, bool, bool) = sqlx::query_as(
+        r#"
+        WITH cohort AS MATERIALIZED (
+            SELECT user_id, status = 'won' AS won,
+                CASE game_slug
+                    WHEN 'word-hive' THEN score::bigint
+                    WHEN 'word-groups' THEN score::bigint
+                    WHEN 'word-guess' THEN -attempts::bigint
+                    WHEN 'quad-words' THEN -attempts::bigint
+                    WHEN 'arithmo' THEN -attempts::bigint
+                    WHEN 'word-box' THEN -attempts::bigint
+                    WHEN 'cryptogram' THEN -hints_used
+                    ELSE -time_spent_ms::bigint
+                END AS metric,
+                CASE WHEN game_slug = 'cryptogram' THEN -time_spent_ms::bigint
+                     ELSE 0::bigint END AS tiebreak
+            FROM game_sessions
+            WHERE day_key = $1 AND game_slug = $2 AND mode = 'daily'
+              AND is_ritual = true AND module_class = 'puzzle_ritual'
+              AND status IN ('won', 'lost') AND NOT comparison_excluded
+        ), viewer AS (SELECT * FROM cohort WHERE user_id = $3)
+        SELECT COUNT(*), COUNT(*) FILTER (
+            WHERE (won, metric, tiebreak) <
+                (SELECT won, metric, tiebreak FROM viewer)
+        ), EXISTS (SELECT 1 FROM viewer),
+        COALESCE(BOOL_AND(metric IS NOT NULL AND tiebreak IS NOT NULL), true)
+        FROM cohort
+        "#,
+    )
+    .bind(day_key)
+    .bind(game_slug)
+    .bind(uid)
+    .fetch_one(connection)
+    .await
+    .map_err(|e| format!("today percentile failed: {e}"))?;
+    let dispatch = if total == 0 {
+        "empty_cohort"
+    } else if !accepted {
+        "accepted_finish_required"
+    } else if !complete {
+        // Historical Cryptogram rows have no accepted hint count. Do not
+        // pretend that missing hints mean zero or silently rank by time alone.
+        "unavailable_data"
+    } else if total < 10 {
+        "insufficient_cohort"
+    } else {
+        "product_db_sessions"
+    };
+    Ok(DailyPercentile {
+        total: i32::try_from(total).map_err(|_| "cohort_count_overflow")?,
+        percentile: (dispatch == "product_db_sessions")
+            .then(|| ((beaten as f64 / total as f64) * 100.0).round() as i32),
+        dispatch,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::parse_user_id;

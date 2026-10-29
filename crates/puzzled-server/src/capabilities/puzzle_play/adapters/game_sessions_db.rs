@@ -562,6 +562,8 @@ pub async fn persist_validated_session(
         puzzle_date,
         day_key,
         at_ms,
+        None,
+        false,
     )
     .await?;
     tx.commit().await.map_err(|e| e.to_string())?;
@@ -582,6 +584,8 @@ pub async fn persist_validated_session_on_connection(
     puzzle_date: Option<chrono::NaiveDate>,
     day_key: Option<chrono::NaiveDate>,
     at_ms: i64,
+    hints_used: Option<i64>,
+    comparison_excluded: bool,
 ) -> Result<String, String> {
     let uid = parse_user_id(user_id)?;
     let pid = match puzzle_id {
@@ -627,7 +631,7 @@ pub async fn persist_validated_session_on_connection(
         INSERT INTO game_sessions (
             user_id, game_slug, puzzle_id, puzzle_date, difficulty, mode, status,
             score, attempts, time_spent_ms, completed_at,
-            day_key, module_class, is_ritual, finish_kind
+            day_key, module_class, is_ritual, finish_kind, hints_used, comparison_excluded
         ) VALUES (
             $1, $2, $3, $4,
             $5::puzzle_difficulty,
@@ -635,7 +639,7 @@ pub async fn persist_validated_session_on_connection(
             $7::game_status,
             $8, $9, $10,
             now(),
-            $11, $12, $13, $14
+            $11, $12, $13, $14, $15, $16
         )
         ON CONFLICT (user_id, puzzle_id) DO NOTHING
         RETURNING id
@@ -655,6 +659,8 @@ pub async fn persist_validated_session_on_connection(
     .bind(module_class)
     .bind(is_ritual)
     .bind(finish_kind)
+    .bind(hints_used)
+    .bind(comparison_excluded)
     .fetch_optional(&mut *connection)
     .await;
 

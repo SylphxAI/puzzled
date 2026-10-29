@@ -36,15 +36,7 @@ export const statsQueryKeys = {
 			input.limit,
 		] as const,
 	todayPercentile: (input: GetTodayPercentileInput) =>
-		[
-			...statsQueryKeys.root,
-			'GetTodayPercentile',
-			input.gameSlug,
-			input.status,
-			input.score ?? null,
-			input.totalPlayers ?? null,
-			input.betterThan ?? null,
-		] as const,
+		[...statsQueryKeys.root, 'GetTodayPercentile', input.gameSlug, input.dayKey] as const,
 }
 
 function toType(t: LeaderboardTypeInput): LeaderboardType {
@@ -103,14 +95,7 @@ export async function getTodayPercentile(
 	return c.getTodayPercentile(
 		create(GetTodayPercentileRequestSchema, {
 			gameSlug: input.gameSlug.trim(),
-			status: input.status.trim(),
-			score: input.score,
-			attempts: input.attempts,
-			mistakes: input.mistakes,
-			timeSpentMs:
-				input.timeSpentMs === undefined ? undefined : BigInt(Math.trunc(input.timeSpentMs)),
-			totalPlayers: input.totalPlayers,
-			betterThan: input.betterThan,
+			dayKey: input.dayKey,
 		}),
 	)
 }
