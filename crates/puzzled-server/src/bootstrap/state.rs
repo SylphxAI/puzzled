@@ -9,7 +9,7 @@ use crate::capabilities::identity_access::adapters::auth_session::AuthSessions;
 use crate::capabilities::money::{pricing, Money};
 use crate::capabilities::preferences::unsubscribe::UnsubscribeTokens;
 use crate::capabilities::tryit_conversions::TryitReporter;
-use crate::shared::tick_receipt::TickVerifier;
+use sylphx::auth::verify::CALLBACK_RECEIPT_JWKS_URL;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -25,8 +25,8 @@ pub struct AppState {
     /// Enable Auth binds the instance keys: account erasure then refuses,
     /// rather than leaving a live sign-in behind.
     pub erasure: Option<AuthErasure>,
-    /// Admission for Compute schedule ticks (signed receipts).
-    pub ticks: TickVerifier,
+    /// Published key endpoint for the SDK's callback verifier.
+    pub tick_jwks_url: String,
     /// Reports Tryit-referred sign-ups and purchases back to Tryit. None
     /// without `SYLPHX_API_KEY`: conversions are then queued and wait.
     pub tryit: Option<TryitReporter>,
@@ -42,14 +42,17 @@ impl AppState {
             erasure: AuthErasure::from_env(),
             pool,
             money: None,
-            ticks: TickVerifier::from_env(),
+            tick_jwks_url: std::env::var("COMPUTE_TICK_RECEIPT_JWKS_URL")
+                .ok()
+                .filter(|url| !url.trim().is_empty())
+                .unwrap_or_else(|| CALLBACK_RECEIPT_JWKS_URL.to_owned()),
             tryit: TryitReporter::from_env(),
         }
     }
 
     #[must_use]
-    pub fn with_ticks(mut self, ticks: TickVerifier) -> Self {
-        self.ticks = ticks;
+    pub fn with_tick_jwks_url(mut self, url: String) -> Self {
+        self.tick_jwks_url = url;
         self
     }
 
