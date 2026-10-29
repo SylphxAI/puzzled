@@ -39,6 +39,7 @@ import {
 } from '@/lib/connect/puzzle-admission'
 import { getTodayPercentile, getUserStats } from '@/lib/connect/stats-client'
 import { withIdempotencyKey } from '@/lib/idempotency-key'
+import { useSafeUser } from '@/lib/identity/react'
 import { servedPuzzleId } from '@/lib/product-day'
 import { mapDailyStatus, mapTodaysPuzzle } from './domain/daily'
 
@@ -243,17 +244,18 @@ export function useSaveResult(
 	const queryClient = useQueryClient()
 
 	const mutation = useMutation({
+		...options,
 		mutationFn: submitSaveResult,
 		onSuccess: (data, variables) => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.userStats() })
 			queryClient.invalidateQueries({ queryKey: queryKeys.streakInfo() })
 			queryClient.invalidateQueries({ queryKey: queryKeys.todayCompletions() })
+			queryClient.invalidateQueries({ queryKey: ['puzzled', 'today-percentile'] })
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.dailyStatus(variables.gameSlug, variables.difficulty),
 			})
 			options?.onSuccess?.(data, variables)
 		},
-		...options,
 	})
 
 	// TD-19: stamp one idempotency key per submission intent BEFORE the mutation
@@ -325,40 +327,42 @@ export function useUserStats(
 export type TodayPercentileResponse = {
 	percentile: number | null
 	totalPlayers: number
+	dispatch: string
+	dayKey: string
 }
 
 export function useTodayPercentile(
 	params: {
 		gameSlug: string
-		status: 'won' | 'lost' | 'abandoned'
-		attempts?: number
-		score?: number
-		mistakes?: number
-		timeSpentMs?: number
+		dayKey: string
 	},
 	options?: Omit<UseQueryOptions<TodayPercentileResponse, ApiError>, 'queryKey' | 'queryFn'>,
 ) {
+	const { user } = useSafeUser()
 	return useQuery({
-		queryKey: queryKeys.todayPercentile(params),
+		queryKey: [...queryKeys.todayPercentile(params), user?.id ?? 'guest'],
 		queryFn: async () => {
 			try {
-				const res = await getTodayPercentile({
-					gameSlug: params.gameSlug,
-					status: params.status,
-					attempts: params.attempts,
-					score: params.score,
-					mistakes: params.mistakes,
-					timeSpentMs: params.timeSpentMs,
-				})
+				const res = await getTodayPercentile(params)
 				return {
-					percentile: res.percentile === undefined ? null : Number(res.percentile),
+					percentile:
+						res.dispatch === 'product_db_sessions' && res.dayKey === params.dayKey
+							? (res.percentile ?? null)
+							: null,
+					dispatch: res.dispatch,
+					dayKey: res.dayKey,
 					totalPlayers: Number(res.totalPlayers),
 				}
 			} catch (e) {
 				throw toApiError(e, 'PERCENTILE_FAILED')
 			}
 		},
-		enabled: !!params.gameSlug && !!params.status,
+		enabled: !!params.gameSlug && !!params.dayKey,
+		// A result screen may open during the accepted-submit round trip.
+		refetchInterval: (query) =>
+			query.state.data?.dispatch === 'accepted_finish_required' && query.state.dataUpdateCount < 10
+				? 1000
+				: false,
 		...options,
 	})
 }

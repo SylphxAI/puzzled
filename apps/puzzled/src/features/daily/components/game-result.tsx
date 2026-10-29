@@ -145,18 +145,13 @@ export function GameResultCard({
 		}
 	}
 
-	// Fetch percentile for daily mode wins
+	// Only the server-accepted finish can establish a comparison. A past daily
+	// screen supplies its served day so it cannot borrow today's result.
 	const { data: percentileData } = useTodayPercentile(
+		{ gameSlug: gameType, dayKey: puzzleDate ?? '' },
 		{
-			gameSlug: gameType,
-			status,
-			attempts: stats.attempts,
-			score: stats.score,
-			mistakes: stats.mistakes,
-		},
-		{
-			enabled: mode === 'daily' && isWin,
-			staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+			enabled: mode === 'daily' && isWin && !!puzzleDate,
+			staleTime: 0,
 		},
 	)
 
@@ -248,20 +243,14 @@ export function GameResultCard({
 									{t('perfectGame')}
 								</span>
 							)}
+							{percentileData && percentileData.percentile != null && (
+								<span className="flex items-center gap-1.5 text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-700">
+									<Trophy className="h-3.5 w-3.5 text-accent-warm-foreground" />
+									{t('beatPercent', { percent: percentileData.percentile })}
+								</span>
+							)}
 							{percentileData &&
 								percentileData.percentile != null &&
-								percentileData.percentile > 0 && (
-									<span className="flex items-center gap-1.5 text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-700">
-										<Trophy className="h-3.5 w-3.5 text-accent-warm-foreground" />
-										{percentileData.percentile >= 50
-											? t('beatPercent', { percent: percentileData.percentile })
-											: t('topPercent', {
-													percent: 100 - percentileData.percentile,
-												})}
-									</span>
-								)}
-							{percentileData &&
-								percentileData.totalPlayers != null &&
 								percentileData.totalPlayers >= 10 && (
 									<span className="flex items-center gap-1 text-xs text-muted-foreground/70">
 										<Users className="h-3 w-3" />

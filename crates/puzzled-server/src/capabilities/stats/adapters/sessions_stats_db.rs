@@ -163,46 +163,77 @@ pub async fn today_overview(
     Ok((players.0.max(0) as u32, completions))
 }
 
-/// Rank a finish against the same ritual cohort used by today's overview.
-/// Metrics are larger-is-better, after wins have been ordered above losses.
-/// Word Groups stores its mistake count in the authoritative score (100 - 25 * mistakes).
-/// The current percentile wire has no hintsUsed; Cryptogram compares time, as
-/// its client comparator does when hintsUsed is absent on both results.
+/// One snapshot: the cohort and viewer metric both come from accepted rows.
+/// Retains the original persisted-cohort implementation's wins-first, strict
+/// ordering and ten-finisher floor. No comparison input comes from the caller.
+#[derive(Debug)]
+pub struct DailyPercentile {
+    pub total: i32,
+    pub percentile: Option<i32>,
+    pub dispatch: &'static str,
+}
+
 pub async fn today_percentile(
-    pool: &PgPool,
+    connection: &mut sqlx::PgConnection,
     day_key: &str,
     game_slug: &str,
-    won: bool,
-    metric: i64,
-) -> Result<(Option<i32>, i32), String> {
-    let (total, beaten): (i64, i64) = sqlx::query_as(
+    user_id: Option<&str>,
+) -> Result<DailyPercentile, String> {
+    let uid = user_id.map(parse_user_id).transpose()?;
+    let (total, beaten, accepted, complete): (i64, i64, bool, bool) = sqlx::query_as(
         r#"
+        WITH cohort AS MATERIALIZED (
+            SELECT user_id, status = 'won' AS won,
+                CASE game_slug
+                    WHEN 'word-hive' THEN score::bigint
+                    WHEN 'word-groups' THEN score::bigint
+                    WHEN 'word-guess' THEN -attempts::bigint
+                    WHEN 'quad-words' THEN -attempts::bigint
+                    WHEN 'arithmo' THEN -attempts::bigint
+                    WHEN 'word-box' THEN -attempts::bigint
+                    WHEN 'cryptogram' THEN -hints_used
+                    ELSE -time_spent_ms::bigint
+                END AS metric,
+                CASE WHEN game_slug = 'cryptogram' THEN -time_spent_ms::bigint
+                     ELSE 0::bigint END AS tiebreak
+            FROM game_sessions
+            WHERE day_key = $1 AND game_slug = $2 AND mode = 'daily'
+              AND is_ritual = true AND module_class = 'puzzle_ritual'
+              AND status IN ('won', 'lost') AND NOT comparison_excluded
+        ), viewer AS (SELECT * FROM cohort WHERE user_id = $3)
         SELECT COUNT(*), COUNT(*) FILTER (
-            WHERE (status = 'won', CASE game_slug
-                WHEN 'word-hive' THEN COALESCE(score, 0)::bigint
-                WHEN 'word-groups' THEN -COALESCE((100 - score) / 25, 4)::bigint
-                WHEN 'word-guess' THEN -COALESCE(attempts, 6)::bigint
-                WHEN 'quad-words' THEN -COALESCE(attempts::bigint, 9223372036854775807)
-                WHEN 'arithmo' THEN -COALESCE(attempts::bigint, 9223372036854775807)
-                WHEN 'word-box' THEN -COALESCE(attempts::bigint, 9223372036854775807)
-                ELSE -COALESCE(time_spent_ms::bigint, 9223372036854775807)
-            END) < ($3, $4)
-        )
-        FROM game_sessions
-        WHERE day_key = $1 AND game_slug = $2
-          AND is_ritual = true AND module_class = 'puzzle_ritual'
-          AND status IN ('won', 'lost')
+            WHERE (won, metric, tiebreak) <
+                (SELECT won, metric, tiebreak FROM viewer)
+        ), EXISTS (SELECT 1 FROM viewer),
+        COALESCE(BOOL_AND(metric IS NOT NULL AND tiebreak IS NOT NULL), true)
+        FROM cohort
         "#,
     )
     .bind(day_key)
     .bind(game_slug)
-    .bind(won)
-    .bind(metric)
-    .fetch_one(pool)
+    .bind(uid)
+    .fetch_one(connection)
     .await
     .map_err(|e| format!("today percentile failed: {e}"))?;
-    let percentile = (total >= 10).then(|| ((beaten as f64 / total as f64) * 100.0).round() as i32);
-    Ok((percentile, total as i32))
+    let dispatch = if total == 0 {
+        "empty_cohort"
+    } else if !accepted {
+        "accepted_finish_required"
+    } else if !complete {
+        // Historical Cryptogram rows have no accepted hint count. Do not
+        // pretend that missing hints mean zero or silently rank by time alone.
+        "unavailable_data"
+    } else if total < 10 {
+        "insufficient_cohort"
+    } else {
+        "product_db_sessions"
+    };
+    Ok(DailyPercentile {
+        total: i32::try_from(total).map_err(|_| "cohort_count_overflow")?,
+        percentile: (dispatch == "product_db_sessions")
+            .then(|| ((beaten as f64 / total as f64) * 100.0).round() as i32),
+        dispatch,
+    })
 }
 
 #[cfg(test)]
