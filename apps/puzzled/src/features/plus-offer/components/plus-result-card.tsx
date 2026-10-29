@@ -14,14 +14,16 @@ import { usePlusOffer } from './plus-offer-context'
 export function PlusResultCard({
 	gameSlug,
 	mode,
+	puzzleDate,
 }: {
 	gameSlug: string
 	mode: 'daily' | 'archive'
+	puzzleDate?: string
 }) {
 	const t = useTranslations('plus.offer')
 	const tUnlock = useTranslations('plus.unlock')
 	const offer = usePlusOffer()
-	if (!offer || !showResultPlusCard(offer, { mode, gameSlug })) return null
+	if (!offer || !showResultPlusCard(offer, { mode, gameSlug, puzzleDate })) return null
 	return (
 		<section
 			aria-labelledby="plus-result-title"

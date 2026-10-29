@@ -17,6 +17,9 @@ export type PlusOffer = {
 	freeSlug: string
 }
 
+/** The server pins result offers to its Hong Kong product day, not the browser clock. */
+export type ResultPlusOffer = PlusOffer & { dayKey: string }
+
 /** Sold and not owned: the only state in which any Plus prompt may show. */
 export function plusOfferOpen(access: PlusAccess): boolean {
 	return access.salesOpen && !access.entitled
@@ -29,10 +32,15 @@ export function plusOfferFor(access: PlusAccess, input: PlusOffer): PlusOffer | 
 
 /** The result-screen card follows today's free game, never an archive run or a paid game. */
 export function showResultPlusCard(
-	offer: PlusOffer | null,
-	run: { mode: 'daily' | 'archive'; gameSlug: string },
+	offer: ResultPlusOffer | null,
+	run: { mode: 'daily' | 'archive'; gameSlug: string; puzzleDate?: string },
 ): boolean {
-	return offer !== null && run.mode === 'daily' && run.gameSlug === offer.freeSlug
+	return (
+		offer !== null &&
+		run.mode === 'daily' &&
+		run.gameSlug === offer.freeSlug &&
+		run.puzzleDate === offer.dayKey
+	)
 }
 
 /**

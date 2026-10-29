@@ -93,6 +93,7 @@ export function GameDailyFallback({
 	if (snapshot?.kind === 'completed') {
 		return (
 			<AlreadyCompletedView
+				mode={mode}
 				gameSlug={slug}
 				gameName={gameName}
 				puzzleDate={snapshot.puzzleDate}

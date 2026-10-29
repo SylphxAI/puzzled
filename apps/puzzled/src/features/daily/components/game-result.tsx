@@ -361,7 +361,7 @@ export function GameResultCard({
 				)}
 
 				{/* Plus card: free players on today's free game only, never a member. */}
-				<PlusResultCard gameSlug={gameType} mode={mode} />
+				<PlusResultCard gameSlug={gameType} mode={mode} puzzleDate={puzzleDate} />
 
 				{/* After the finish only; renders nothing for Plus or while ads are off. */}
 				<div className="mt-4">
