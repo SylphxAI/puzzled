@@ -256,7 +256,7 @@ async fn accepted_cohort_percentile_excludes_wrong_cohorts_and_orders_losses() {
         rpc(Some(&pool), Some(me), body.clone()).await["percentile"],
         0
     );
-    sqlx::query("UPDATE game_sessions SET status='won',time_spent_ms=6000 WHERE game_slug='sudoku' AND NOT comparison_excluded AND is_ritual AND mode='daily' AND day_key=$1 AND module_class='puzzle_ritual'")
+    sqlx::query("UPDATE game_sessions SET status='won',time_spent_ms=6000 WHERE game_slug='sudoku' AND NOT comparison_excluded AND is_ritual AND mode='daily' AND day_key=$1 AND module_class='puzzle_ritual' AND status IN ('won','lost')")
         .bind(&day).execute(&pool).await.unwrap();
     assert_eq!(
         rpc(Some(&pool), Some(me), body.clone()).await["percentile"],
@@ -376,5 +376,69 @@ async fn accepted_cohort_percentile_submission_persists_hints_and_verification_e
             },
         );
     }
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn accepted_cohort_percentile_archive_id_cannot_masquerade_as_today() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let yesterday = puzzled_core::puzzle_play::daily_time::product_day_key(Utc::now())
+        .pred_opt()
+        .unwrap();
+    let puzzle = Uuid::now_v7();
+    sqlx::query("INSERT INTO daily_puzzles (id,game_slug,puzzle_date,puzzle_data,solution) VALUES ($1,'cryptogram',$2,'{\"encryptedText\":\"AB\"}'::jsonb,'{\"reverseCipher\":{\"A\":\"C\",\"B\":\"D\"}}'::jsonb)")
+        .bind(puzzle).bind(yesterday.and_hms_opt(0,0,0).unwrap()).execute(&pool).await.unwrap();
+    let me = Uuid::now_v7();
+    for is_archive in [false, true] {
+        let mut body = json!({"gameSlug":"cryptogram", "puzzleId":puzzle.to_string(),
+            "status":"won", "attempts":1, "timeSpentMs":"5000",
+            "submissionJson":json!({"guesses":{"A":"C","B":"D"},"hintsUsed":0}).to_string()});
+        if is_archive {
+            body["puzzleDate"] = json!(yesterday.to_string());
+            body["mode"] = json!("archive");
+        }
+        let request = Request::builder()
+            .method("POST")
+            .uri("/puzzled.v1.PuzzleService/SubmitGuess")
+            .header("content-type", "application/json")
+            .header(
+                "authorization",
+                format!("Bearer {}", token(&me.to_string())),
+            )
+            .body(Body::from(body.to_string()))
+            .unwrap();
+        let response = router(AppState::new(Some(pool.clone())))
+            .oneshot(request)
+            .await
+            .unwrap();
+        assert_eq!(
+            response.status(),
+            if is_archive {
+                StatusCode::OK
+            } else {
+                StatusCode::BAD_REQUEST
+            }
+        );
+        if is_archive {
+            let accepted: Value =
+                serde_json::from_slice(&to_bytes(response.into_body(), usize::MAX).await.unwrap())
+                    .unwrap();
+            assert_eq!(accepted["valid"], true, "{accepted}");
+        }
+        absent_percentile(
+            &rpc(Some(&pool), Some(me), json!({"gameSlug":"cryptogram"})).await,
+            "empty_cohort",
+        );
+    }
+    let count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM game_sessions WHERE user_id=$1 AND mode='archive' AND NOT is_ritual",
+    )
+    .bind(me)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(count, 1);
     pool.close().await;
 }
