@@ -10,18 +10,15 @@ use serde_json::{json, Value};
 use sylphx::auth::verify::{CALLBACK_RECEIPT_ISSUER, CALLBACK_RECEIPT_TYP};
 use tower::ServiceExt;
 
-use crate::bootstrap::compute_ticks::{
-    AUDIT_RETENTION_PATH, DAILY_PUZZLES_PATH, DAILY_REMINDERS_PATH, METRICS_PATH,
-    TRYIT_CONVERSIONS_PATH,
-};
 use crate::{router, AppState};
 
+const TRYIT_CONVERSIONS_PATH: &str = "/internal/compute/tryit-conversions";
 const COMPUTE_PATHS: [&str; 5] = [
-    DAILY_PUZZLES_PATH,
-    AUDIT_RETENTION_PATH,
-    DAILY_REMINDERS_PATH,
+    "/internal/compute/daily-puzzles",
+    "/internal/compute/audit-log-retention",
+    "/internal/compute/daily-reminders",
     TRYIT_CONVERSIONS_PATH,
-    METRICS_PATH,
+    "/internal/compute/product-metrics",
 ];
 const JOBS_PATH: &str = "/puzzled.v1.JobsService/RunRetentionJob";
 
