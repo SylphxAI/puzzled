@@ -520,6 +520,11 @@ jobs:
 
   # The full suite on a ready pull request; never in a merge group or a draft.
   suite:
+    permissions:
+      contents: read
+      actions: read
+      checks: read
+      id-token: write
     name: Suite
     if: github.event_name == 'pull_request' && !github.event.pull_request.draft
     uses: ./.github/workflows/verify.yml
