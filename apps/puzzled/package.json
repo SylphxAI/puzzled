@@ -8,6 +8,7 @@
 		"build:with-migrate": "atlas migrate apply --env production && next build",
 		"start": "next start",
 		"verify:seo": "bun run scripts/seo-verify.ts",
+		"verify:locale": "bun run scripts/locale-verify.ts",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write .",

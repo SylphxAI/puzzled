@@ -326,6 +326,12 @@ jobs:
         working-directory: apps/puzzled
         run: bun run verify:seo --base http://localhost:3014
 
+      # Every public page, every served locale: no raw message key and the html
+      # lang the URL names. The catalogue guards read files; this reads pages.
+      - name: Locale harness (bun run verify:locale)
+        working-directory: apps/puzzled
+        run: bun run verify:locale --base http://localhost:3014
+
       - name: Show the server log
         if: failure()
         run: cat "$RUNNER_TEMP/serve-seo.log" || true
