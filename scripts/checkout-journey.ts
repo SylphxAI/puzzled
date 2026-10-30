@@ -200,7 +200,11 @@ export async function run(
 		const amount = offer.unit_amounts[config.currency]
 		await step('public-pricing', async () => {
 			const page = await ports.pricing(`${config.baseUrl}/pricing`)
-			const plans = await rpc('ListPlans')
+			const plans = await ports.read(
+				`${config.baseUrl}/puzzled.v1.BillingService/ListPlans`,
+				{ 'User-Agent': config.userAgent },
+				{},
+			)
 			assert(plans.salesOpen === true, 'sales_closed')
 			const plan = array(plans.plans).find((plan) => plan.id === offer.plan_id)
 			assert(plan && !plan.interval && plan.accessDays === accessDays, 'public_offer_mismatch')

@@ -74,14 +74,14 @@ function fixture() {
 	let clock = 0
 	let loseReply = false
 	let hosted = true
-	const calls: { url: string; body?: Json }[] = []
+	const calls: { url: string; body?: Json; headers?: Record<string, string> }[] = []
 	const ports: Ports = {
 		now: () => clock,
 		requestId: requestIdentity,
 		pricing: async () => '3-day pass $0.99',
 		hosted: async () => hosted,
 		read: async (url, _headers, body) => {
-			calls.push({ url, body })
+			calls.push({ url, body, headers: _headers })
 			if (url.endsWith('/ListPlans'))
 				return {
 					salesOpen: true,
@@ -152,6 +152,9 @@ describe('unpaid checkout bundle source contract (no processor receipt)', () => 
 			'hosted-form',
 		])
 		expect(f.creates()).toHaveLength(1)
+		expect(f.calls.find((call) => call.url.endsWith('/ListPlans'))?.headers).not.toHaveProperty(
+			'Authorization',
+		)
 		expect(f.creates()[0].body).toMatchObject({
 			requestId: expect.stringMatching(/^[0-9a-f-]{36}$/),
 			immediateSupplyConsent: true,
