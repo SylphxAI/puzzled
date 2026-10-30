@@ -24,12 +24,14 @@ use crate::capabilities::money::{
 };
 use crate::capabilities::preferences::adapters::attribution_db::attribution_for_user;
 use crate::proto::puzzled::v1::{
-    BillingService, CancelSubscriptionRequest, CancelSubscriptionResponse, CreateCheckoutRequest,
+    BillingService, CancelSubscriptionRequest, CancelSubscriptionResponse,
+    CreateCheckoutAttemptRequest, CreateCheckoutAttemptResponse, CreateCheckoutRequest,
     CreateCheckoutResponse, CreatePortalRequest, CreatePortalResponse, Family, FamilyMember,
-    GetSubscriptionRequest, GetSubscriptionResponse, JoinFamilyRequest, JoinFamilyResponse,
-    LeaveFamilyRequest, LeaveFamilyResponse, ListPlansRequest, ListPlansResponse, Plan, PlanPrice,
-    RemoveFamilyMemberRequest, RemoveFamilyMemberResponse, ResetFamilyInviteRequest,
-    ResetFamilyInviteResponse, ResumeSubscriptionRequest, ResumeSubscriptionResponse,
+    GetCheckoutRequest, GetCheckoutResponse, GetSubscriptionRequest, GetSubscriptionResponse,
+    JoinFamilyRequest, JoinFamilyResponse, LeaveFamilyRequest, LeaveFamilyResponse,
+    ListPlansRequest, ListPlansResponse, Plan, PlanPrice, RemoveFamilyMemberRequest,
+    RemoveFamilyMemberResponse, ResetFamilyInviteRequest, ResetFamilyInviteResponse,
+    ResumeSubscriptionRequest, ResumeSubscriptionResponse,
 };
 use puzzled_core::attribution::Attribution;
 
@@ -148,6 +150,7 @@ impl BillingConnectService {
         identity: &VerifiedIdentity,
         req: &CreateCheckoutRequest,
         landing: Option<&Attribution>,
+        request_id: Option<&str>,
     ) -> Result<String, CheckoutError> {
         let consent = money_checkout::Consent::require(req.immediate_supply_consent)?;
         let pool = self
@@ -168,6 +171,21 @@ impl BillingConnectService {
         consent_db::record(pool, &identity.user_id, plan_id, &plan.price_key, locale)
             .await
             .map_err(CheckoutError::Failed)?;
+        if let Some(request_id) = request_id {
+            return money_checkout::create_retained_session(
+                pool,
+                money,
+                &catalog,
+                &identity.user_id,
+                request_id,
+                plan_id,
+                locale,
+                &req.currency,
+                Attribution::for_checkout(stored.as_ref(), landing).as_ref(),
+                consent,
+            )
+            .await;
+        }
         money_checkout::create_session(
             money,
             &catalog,
@@ -179,6 +197,54 @@ impl BillingConnectService {
             consent,
         )
         .await
+    }
+
+    async fn checkout_url(
+        &self,
+        ctx: RequestContext,
+        req: CreateCheckoutRequest,
+        request_id: Option<&str>,
+    ) -> Result<String, ConnectError> {
+        let identity = Self::account(&ctx)?;
+        require_purchase_allowed(&identity)?;
+        let landing = ctx
+            .headers()
+            .get_all(axum::http::header::COOKIE)
+            .iter()
+            .filter_map(|value| value.to_str().ok())
+            .find_map(puzzled_core::attribution::from_cookie_header);
+        let (_, money) = self.store()?;
+        let started = self
+            .money_checkout(money, &identity, &req, landing.as_ref(), request_id)
+            .await;
+        match started {
+            Ok(url) => Ok(url),
+            Err(CheckoutError::ConsentRequired) => Err(ConnectError::new(
+                ErrorCode::FailedPrecondition,
+                "consent_required",
+            )),
+            Err(CheckoutError::PlanNotOnSale) => Err(ConnectError::new(
+                ErrorCode::FailedPrecondition,
+                "plan_not_on_sale",
+            )),
+            Err(CheckoutError::AlreadySubscribed) => Err(ConnectError::new(
+                ErrorCode::AlreadyExists,
+                "already_subscribed",
+            )),
+            Err(CheckoutError::InvalidRequest) => Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "request_id_invalid",
+            )),
+            Err(CheckoutError::AttemptChanged) => Err(ConnectError::new(
+                ErrorCode::AlreadyExists,
+                "checkout_request_changed",
+            )),
+            Err(CheckoutError::AttemptPending) => Err(ConnectError::new(
+                ErrorCode::Unavailable,
+                "checkout_pending",
+            )),
+            Err(CheckoutError::Failed(error)) => Err(internal("checkout_unavailable")(error)),
+        }
     }
 
     /// A Platform account; a guest-day id cannot hold a subscription.
@@ -396,38 +462,103 @@ impl BillingService for BillingConnectService {
         ctx: RequestContext,
         request: ServiceRequest<'_, CreateCheckoutRequest>,
     ) -> ServiceResult<CreateCheckoutResponse> {
-        let identity = Self::account(&ctx)?;
-        require_purchase_allowed(&identity)?;
+        let url = self
+            .checkout_url(ctx, request.to_owned_message(), None)
+            .await?;
+        Response::ok(CreateCheckoutResponse {
+            url,
+            ..Default::default()
+        })
+    }
+
+    async fn create_checkout_attempt(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, CreateCheckoutAttemptRequest>,
+    ) -> ServiceResult<CreateCheckoutAttemptResponse> {
         let req = request.to_owned_message();
-        let landing = ctx
-            .headers()
-            .get_all(axum::http::header::COOKIE)
-            .iter()
-            .filter_map(|value| value.to_str().ok())
-            .find_map(puzzled_core::attribution::from_cookie_header);
-        let (_, money) = self.store()?;
-        let started = self
-            .money_checkout(money, &identity, &req, landing.as_ref())
-            .await;
-        match started {
-            Ok(url) => Response::ok(CreateCheckoutResponse {
-                url,
-                ..Default::default()
-            }),
-            Err(CheckoutError::ConsentRequired) => Err(ConnectError::new(
-                ErrorCode::FailedPrecondition,
-                "consent_required",
-            )),
-            Err(CheckoutError::PlanNotOnSale) => Err(ConnectError::new(
-                ErrorCode::FailedPrecondition,
-                "plan_not_on_sale",
-            )),
-            Err(CheckoutError::AlreadySubscribed) => Err(ConnectError::new(
-                ErrorCode::AlreadyExists,
-                "already_subscribed",
-            )),
-            Err(CheckoutError::Failed(error)) => Err(internal("checkout_unavailable")(error)),
+        if uuid::Uuid::parse_str(&req.request_id).is_err() {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "request_id_invalid",
+            ));
         }
+        let url = self
+            .checkout_url(
+                ctx,
+                CreateCheckoutRequest {
+                    plan_id: req.plan_id,
+                    locale: req.locale,
+                    currency: req.currency,
+                    immediate_supply_consent: req.immediate_supply_consent,
+                    ..Default::default()
+                },
+                Some(&req.request_id),
+            )
+            .await?;
+        Response::ok(CreateCheckoutAttemptResponse {
+            url,
+            ..Default::default()
+        })
+    }
+
+    async fn get_checkout(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, GetCheckoutRequest>,
+    ) -> ServiceResult<GetCheckoutResponse> {
+        let identity = Self::account(&ctx)?;
+        let (pool, money) = self.store()?;
+        let req = request.to_owned_message();
+        let fixture: Option<String> =
+            sqlx::query_scalar("SELECT fixture_key FROM synthetic_fixtures WHERE user_id=$1::uuid")
+                .bind(&identity.user_id)
+                .fetch_optional(pool)
+                .await
+                .map_err(|_| ConnectError::new(ErrorCode::Unavailable, "checkout_unavailable"))?;
+        let attempt = crate::capabilities::money::attempts::get(
+            pool,
+            money,
+            &identity.user_id,
+            (!req.request_id.is_empty()).then_some(req.request_id.as_str()),
+        )
+        .await
+        .map_err(|error| {
+            ConnectError::new(
+                if matches!(
+                    error,
+                    crate::capabilities::money::attempts::Error::InvalidRequest
+                ) {
+                    ErrorCode::InvalidArgument
+                } else {
+                    ErrorCode::Unavailable
+                },
+                "checkout_unavailable",
+            )
+        })?;
+        let mut response = GetCheckoutResponse {
+            state: "absent".into(),
+            synthetic_fixture: fixture.unwrap_or_default(),
+            ..Default::default()
+        };
+        if let Some(attempt) = attempt {
+            response.request_id = attempt.request_id;
+            response.state = attempt.state;
+            if let Some(session) = attempt.session {
+                let text = |key| {
+                    session
+                        .get(key)
+                        .and_then(serde_json::Value::as_str)
+                        .unwrap_or_default()
+                        .to_owned()
+                };
+                response.money_session_name = text("name");
+                response.url = text("url");
+                response.processor_session_id = text("processor_session_id");
+                response.session_state = text("state");
+            }
+        }
+        Response::ok(response)
     }
 
     async fn create_portal(

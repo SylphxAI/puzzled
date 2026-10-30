@@ -31,6 +31,7 @@
 		"@commitlint/config-conventional": "20.5.3",
 		"@types/node": "26.6.5",
 		"lefthook": "2.2.2",
+		"playwright": "^1.58.0",
 		"turbo": "2.11.10"
 	},
 	"overrides": {},

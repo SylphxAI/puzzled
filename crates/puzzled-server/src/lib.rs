@@ -29,6 +29,8 @@ mod announcements_tests;
 #[cfg(test)]
 mod auth_session_tests;
 #[cfg(test)]
+mod checkout_attempt_tests;
+#[cfg(test)]
 mod compute_tick_tests;
 #[cfg(test)]
 mod daily_pipeline_tests;

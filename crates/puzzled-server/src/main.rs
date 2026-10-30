@@ -19,6 +19,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Operator commands run in the api's own environment (sylphx.toml
     // `[[jobs]]`), with its bindings, and exit instead of serving.
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().map(String::as_str) == Some("register-checkout-fixture") {
+        std::process::exit(puzzled_server::capabilities::money::fixtures::main().await);
+    }
     if args.first().map(String::as_str) == Some("erase-player") {
         std::process::exit(
             puzzled_server::capabilities::preferences::erase_player::main(&args[1..]).await,

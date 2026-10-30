@@ -112,6 +112,37 @@ message CreateCheckoutResponse {
   string url = 1;
 }
 
+message CreateCheckoutAttemptRequest {
+  string plan_id = 1;
+  string locale = 2;
+  string currency = 3;
+  bool immediate_supply_consent = 4;
+  // Required UUID, retained across an uncertain response.
+  string request_id = 5;
+}
+
+message CreateCheckoutAttemptResponse {
+  string url = 1;
+}
+
+message GetCheckoutRequest {
+  // Empty reads this buyer's latest retained checkout attempt.
+  string request_id = 1;
+}
+
+message GetCheckoutResponse {
+  string request_id = 1;
+  // absent | pending | ready | refused. Pending never authorizes a new call.
+  string state = 2;
+  // The supported Money resource for mode, amount, currency and payment reads.
+  string money_session_name = 3;
+  string url = 4;
+  string processor_session_id = 5;
+  string session_state = 6;
+  // A registered born-synthetic fixture owned by this buyer; empty otherwise.
+  string synthetic_fixture = 7;
+}
+
 message CreatePortalRequest {
   string locale = 1;
 }
@@ -159,6 +190,10 @@ service BillingService {
   rpc ListPlans(ListPlansRequest) returns (ListPlansResponse);
   rpc GetSubscription(GetSubscriptionRequest) returns (GetSubscriptionResponse);
   rpc CreateCheckout(CreateCheckoutRequest) returns (CreateCheckoutResponse);
+  // The same normal checkout action with mandatory durable request identity.
+  // An older server without this method refuses before creating a session.
+  rpc CreateCheckoutAttempt(CreateCheckoutAttemptRequest) returns (CreateCheckoutAttemptResponse);
+  rpc GetCheckout(GetCheckoutRequest) returns (GetCheckoutResponse);
   rpc CreatePortal(CreatePortalRequest) returns (CreatePortalResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
   rpc ResumeSubscription(ResumeSubscriptionRequest) returns (ResumeSubscriptionResponse);
