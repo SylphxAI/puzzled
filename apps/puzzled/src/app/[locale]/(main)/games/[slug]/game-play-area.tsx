@@ -75,7 +75,11 @@ export async function GamePlayArea(props: GamePlayAreaProps) {
 		gameCount: props.gameCount,
 		freeSlug: props.freeGameSlug,
 	})
-	return <PlusOfferProvider offer={offer}>{await renderPlayArea(props, access)}</PlusOfferProvider>
+	return (
+		<PlusOfferProvider offer={offer} dayKey={productDayKey()}>
+			{await renderPlayArea(props, access)}
+		</PlusOfferProvider>
+	)
 }
 
 async function renderPlayArea(
@@ -155,6 +159,7 @@ async function renderPlayArea(
 			return (
 				<AdsProvider config={ads}>
 					<AlreadyCompletedView
+						mode={mode}
 						gameSlug={slug}
 						gameName={gameName}
 						puzzleDate={finished.puzzleDate}
@@ -285,6 +290,7 @@ async function renderPlayArea(
 			<PlusTrialProvider endsMs={access.trialEndsMs}>
 				<AdsProvider config={ads}>
 					<AlreadyCompletedView
+						mode={mode}
 						gameSlug={slug}
 						gameName={gameName}
 						puzzleDate={puzzleDate}
