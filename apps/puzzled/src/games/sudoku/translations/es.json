@@ -27,5 +27,6 @@
 		"easy": "49 casillas rellenas: un inicio fácil",
 		"medium": "39 casillas rellenas: una cuadrícula equilibrada",
 		"hard": "Solo 29 casillas rellenas: pocos sitios por donde empezar"
-	}
+	},
+	"undo": "Deshacer"
 }

@@ -40,6 +40,11 @@ export type SudokuState = {
 	// Grid state
 	userGrid: SudokuCell[][] // 9x9 grid with user entries
 	selectedCell: { row: number; col: number } | null
+	/** Only cells changed by a real edit; selection and mode switches are not edits. */
+	history: {
+		selectedCell: { row: number; col: number } | null
+		cells: { row: number; col: number; before: SudokuCell }[]
+	}[]
 
 	// Game progress
 	isComplete: boolean
