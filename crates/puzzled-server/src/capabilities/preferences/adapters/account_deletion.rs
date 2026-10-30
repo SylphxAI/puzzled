@@ -23,6 +23,16 @@ use crate::capabilities::identity_access::adapters::{auth_subjects, guest_creden
 /// erased account.
 pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
+        "checkout_attempts",
+        "user_id",
+        "DELETE FROM checkout_attempts WHERE user_id=$1",
+    ),
+    (
+        "synthetic_fixtures",
+        "user_id",
+        "DELETE FROM synthetic_fixtures WHERE user_id=$1",
+    ),
+    (
         "share_landings",
         "user_id",
         r#"DELETE FROM "share_landings" WHERE "user_id" = $1"#,
@@ -349,7 +359,7 @@ pub async fn erase_player(
                     filed: state.filed,
                     absent: state.absent,
                     attempts: attempt,
-                })
+                });
             }
             Err(Failure::SignIn(AuthError::Refused(error))) => {
                 // Refused before anything was accepted: nothing changed.

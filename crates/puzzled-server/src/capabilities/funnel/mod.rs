@@ -150,7 +150,7 @@ pub async fn record_signup(pool: &PgPool, user_id: &str) -> Result<(), String> {
     // cannot inflate signup counts and a failed insert leaves the call retryable.
     sqlx::query(
         r#"WITH first_signup AS (
-            INSERT INTO funnel_signup_receipts (user_id) VALUES ($1)
+            INSERT INTO funnel_signup_receipts (user_id) SELECT $1 WHERE NOT EXISTS (SELECT 1 FROM synthetic_fixtures WHERE user_id=$1)
             ON CONFLICT DO NOTHING RETURNING user_id
         ) INSERT INTO funnel_events (id, event) SELECT $2, 'signup' FROM first_signup"#,
     )
@@ -207,23 +207,29 @@ mod tests {
         assert!(
             validate_browser(&incoming(r#"{"event":"game_start","game_slug":"A b"}"#)).is_none()
         );
-        assert!(validate_browser(&incoming(
-            r#"{"event":"game_start","game_slug":"word-guess"}"#
-        ))
-        .is_some());
+        assert!(
+            validate_browser(&incoming(
+                r#"{"event":"game_start","game_slug":"word-guess"}"#
+            ))
+            .is_some()
+        );
     }
 
     #[test]
     fn web_vitals_need_a_known_metric_and_a_finite_value() {
         let ok = r#"{"event":"web_vitals","metric":"LCP","value":1200.5,"rating":"good"}"#;
         assert_eq!(validate_browser(&incoming(ok)).unwrap().metric, Some("LCP"));
-        assert!(validate_browser(&incoming(
-            r#"{"event":"web_vitals","metric":"FOO","value":1}"#
-        ))
-        .is_none());
-        assert!(validate_browser(&incoming(
-            r#"{"event":"web_vitals","metric":"CLS","value":-1}"#
-        ))
-        .is_none());
+        assert!(
+            validate_browser(&incoming(
+                r#"{"event":"web_vitals","metric":"FOO","value":1}"#
+            ))
+            .is_none()
+        );
+        assert!(
+            validate_browser(&incoming(
+                r#"{"event":"web_vitals","metric":"CLS","value":-1}"#
+            ))
+            .is_none()
+        );
     }
 }

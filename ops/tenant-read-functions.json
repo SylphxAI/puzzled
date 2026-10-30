@@ -1,0 +1,3 @@
+{
+	"deskReportFunctions": [{ "name": "activity_summary", "args": "timestamp with time zone" }]
+}

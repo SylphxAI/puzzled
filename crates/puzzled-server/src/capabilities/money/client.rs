@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Longest a positive entitlement answer is reused (Money integration rule).
 pub const GRANT_CACHE_TTL: Duration = Duration::from_secs(60);
@@ -25,7 +25,7 @@ pub const FAILED_CACHE_TTL: Duration = Duration::from_secs(5);
 /// How long a read catalogue is reused.
 pub const CATALOG_CACHE_TTL: Duration = Duration::from_secs(300);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(8);
-use crate::shared::public_origin::{parse_public_origin, DEFAULT_PUBLIC_URL};
+use crate::shared::public_origin::{DEFAULT_PUBLIC_URL, parse_public_origin};
 const DEFAULT_API_URL: &str = "https://api.sylphx.com";
 
 /// Log-only text from a Money problem body (`message` = its `detail` string,
@@ -395,6 +395,14 @@ impl Money {
             .map(String::as_str)
     }
 
+    pub async fn environment_resource(&self) -> Result<String, MoneyError> {
+        self.env_url()
+            .await?
+            .split_once("/v1/")
+            .map(|(_, name)| name.to_owned())
+            .ok_or_else(|| MoneyError::Unavailable("environment binding unavailable".into()))
+    }
+
     /// Resolve the environment now (at start-up), so a bad key shows in the
     /// log rather than on the first request. Failure is retried on use.
     pub async fn warm(&self) -> Result<(), MoneyError> {
@@ -483,7 +491,7 @@ impl Money {
                 match cached {
                     None => return Err(MoneyError::Unavailable("recent check failed".into())),
                     Some(grant) if grant.ends_at.is_none_or(|end| end > Utc::now()) => {
-                        return Ok(grant)
+                        return Ok(grant);
                     }
                     Some(_) => {}
                 }
@@ -685,5 +693,32 @@ impl Money {
             .filter(|url| !url.is_empty())
             .map(str::to_string)
             .ok_or_else(|| MoneyError::Unavailable("checkout session has no url".into()))
+    }
+
+    /// The ordinary Money create route with a retained resource identity.
+    /// Both the body and this id are fixed before the first call.
+    pub async fn create_retained_checkout(
+        &self,
+        id: &str,
+        session: &Value,
+    ) -> Result<Value, MoneyError> {
+        self.call(
+            self.http
+                .post(format!("{}/checkout_sessions", self.env_url().await?))
+                .query(&[("checkout_session_id", id)])
+                .header("Idempotency-Key", format!("puzzled-checkout-{id}"))
+                .json(session),
+        )
+        .await
+    }
+
+    /// Authoritative one-time session readback, reconciled by Money.
+    pub async fn checkout_session(&self, id: &str) -> Result<Value, MoneyError> {
+        self.call(self.http.get(format!(
+            "{}/checkout_sessions/{}",
+            self.env_url().await?,
+            segment(id)
+        )))
+        .await
     }
 }
