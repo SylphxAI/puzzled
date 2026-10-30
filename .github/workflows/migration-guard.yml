@@ -1,0 +1,29 @@
+name: Migration Guard
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || format('{0}-run-{1}', github.workflow, github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  migration-guard:
+    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: SylphxAI/.github/.github/actions/migration-guard@007762c9d6ca92cc836f520c9411ec2299045b7b # main
+        with:
+          dialect: postgres
+          migration-directories: |
+            apps/puzzled/atlas/migrations
