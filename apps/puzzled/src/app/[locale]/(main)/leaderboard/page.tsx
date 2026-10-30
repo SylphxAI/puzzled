@@ -9,9 +9,10 @@ import {
 } from '@/features/console/components/console-chrome'
 import { type BoardEntry, LeaderboardBoard } from '@/features/console/components/leaderboard-board'
 import { LeaderboardControls } from '@/features/console/components/leaderboard-controls'
-import { toLeaderboardPeriod } from '@/features/console/lib/leaderboard-period'
+import { toLeaderboardModule, toLeaderboardPeriod } from '@/features/console/lib/leaderboard-period'
 import { getAllGameMetadata } from '@/games/registry'
 import { getServerLeaderboard } from '@/lib/api/server'
+import { getTodaysFreeGame } from '@/lib/free-rotation'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
 import { auth } from '@/lib/identity/server'
@@ -67,7 +68,7 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 		name: tGames(`${slugToCamelCase(game.slug)}.name`, { defaultValue: game.name }),
 	}))
 	const period = toLeaderboardPeriod(periodParam)
-	const selected = modules.find((module) => module.slug === moduleParam) ?? modules[0]
+	const selected = toLeaderboardModule(moduleParam, modules, getTodaysFreeGame())
 	const moduleSlug = selected?.slug ?? ''
 	const moduleName = selected?.name ?? ''
 
