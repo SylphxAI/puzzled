@@ -74,5 +74,9 @@
 	"help": "遊び方",
 	"menu": "その他",
 	"reset": "最初からやり直す",
-	"advertisement": "広告"
+	"advertisement": "広告",
+	"clipboard": {
+		"pending": "コピー中…",
+		"failed": "コピーできませんでした。選択したテキストを手動でコピーするか、もう一度お試しください。"
+	}
 }

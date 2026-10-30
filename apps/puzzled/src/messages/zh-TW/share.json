@@ -5,7 +5,8 @@
 		"timeUnder5m": "1-5 分鐘",
 		"timeOver5m": "超過 5 分鐘",
 		"streakDays": "連續 {days} 天",
-		"altLinkTemplate": " 一起玩：{link}"
+		"altLinkTemplate": " 一起玩：{link}",
+		"unavailable": "無法自動分享。"
 	},
 	"landing": {
 		"metaTitle": "分享的謎題成績",

@@ -1,16 +1,23 @@
 import { describe, expect, test } from 'bun:test'
+import { NextIntlClientProvider } from 'next-intl'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import common from '@/messages/en-US/common.json'
 import { AccountId } from './account-id'
 
 const render = (id: string) =>
 	renderToStaticMarkup(
-		createElement(AccountId, {
-			id,
-			label: 'Account ID',
-			hint: 'Quote this to support.',
-			copyLabel: 'Copy ID',
-			copiedLabel: 'Copied',
+		createElement(NextIntlClientProvider, {
+			locale: 'en-US',
+			messages: { common },
+			// biome-ignore lint/correctness/noChildrenProp: the provider requires children in its typed props.
+			children: createElement(AccountId, {
+				id,
+				label: 'Account ID',
+				hint: 'Quote this to support.',
+				copyLabel: 'Copy ID',
+				copiedLabel: 'Copied',
+			}),
 		}),
 	)
 

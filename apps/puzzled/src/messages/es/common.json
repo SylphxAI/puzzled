@@ -74,5 +74,9 @@
 	"help": "Cómo jugar",
 	"menu": "Más",
 	"reset": "Empezar de nuevo",
-	"advertisement": "Publicidad"
+	"advertisement": "Publicidad",
+	"clipboard": {
+		"pending": "Copiando…",
+		"failed": "No se pudo copiar. El texto está seleccionado; cópialo manualmente o inténtalo de nuevo."
+	}
 }
