@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { AdSlot } from '@/features/ads/components/ad-slot'
 import { ChallengeComparison } from '@/features/daily/components/challenge-comparison'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
+import { ResultShareRecovery } from '@/features/daily/components/result-share-recovery'
 import { TomorrowGameLine } from '@/features/daily/components/tomorrow-game-line'
 import { readGuestFinishedToday } from '@/features/daily/hooks/use-guest-game-state'
 import { countShareTap, knownShareId, useWarmShareId } from '@/features/daily/hooks/use-share-id'
@@ -81,6 +82,7 @@ export function GameResultCard({
 	useWarmShareId(gameType, puzzleDate, mode === 'daily')
 	const [cardBusy, setCardBusy] = useState(false)
 	const [cardNotice, setCardNotice] = useState<string | null>(null)
+	const [cardRecovery, setCardRecovery] = useState<string | null>(null)
 	const [nextGame, setNextGame] = useState<string | null>(null)
 	// Guests keep today's finishes on this device; the next suggestion skips them.
 	useEffect(() => {
@@ -128,18 +130,27 @@ export function GameResultCard({
 		if (cardBusy) return
 		setCardBusy(true)
 		setCardNotice(null)
+		setCardRecovery(null)
 		try {
 			// The id was created when this screen showed, so the link is the share landing.
 			const shareId = mode === 'daily' ? knownShareId(gameType, puzzleDate) : undefined
 			if (mode === 'daily') countShareTap(gameType, puzzleDate)
+			const model = buildCard(shareId)
 			const result = await shareRitualResultCard({
-				model: buildCard(shareId),
+				model,
 				strings: cardStrings,
 				title: tShare('card.title'),
 			})
-			if (result.outcome === 'downloaded') setCardNotice(tShare('card.downloaded'))
+			if (result.outcome === 'downloaded')
+				setCardNotice(result.captionCopied ? tShare('card.downloaded') : tShare('card.saved'))
 			else if (result.outcome === 'copied') setCardNotice(tShare('card.copied'))
 			else if (result.outcome === 'unavailable') setCardNotice(tShare('card.unavailable'))
+			if (
+				(result.outcome === 'downloaded' && !result.captionCopied) ||
+				result.outcome === 'unavailable'
+			) {
+				setCardRecovery(resultCardTextAlternative(model, cardStrings))
+			}
 		} finally {
 			setCardBusy(false)
 		}
@@ -323,6 +334,7 @@ export function GameResultCard({
 						</output>
 					)}
 					<p className="sr-only">{cardAltText}</p>
+					{cardRecovery && <ResultShareRecovery key={cardRecovery} text={cardRecovery} />}
 
 					<Link
 						href="/"

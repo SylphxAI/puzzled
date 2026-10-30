@@ -7,7 +7,7 @@
 		"title": "Puzzled 成绩卡",
 		"downloaded": "成绩卡已保存，说明文字已复制到剪贴板。",
 		"copied": "说明文字已复制；此浏览器无法生成图片。",
-		"unavailable": "此浏览器不支持分享功能。",
+		"unavailable": "无法自动分享。",
 		"statusWon": "完成！",
 		"statusLost": "这次没成功",
 		"attemptsLabel": "尝试次数",
@@ -27,7 +27,9 @@
 		"altTemplate": "Puzzled 成绩 — {game}{day}。{result}",
 		"altDetailsTemplate": " {details}。",
 		"altLinkTemplate": " 一起玩：{link}",
-		"detailSeparator": "、"
+		"detailSeparator": "、",
+		"saved": "成绩卡已保存。",
+		"caption": "成绩说明文字"
 	},
 	"challenge": {
 		"title": "并排比较",
