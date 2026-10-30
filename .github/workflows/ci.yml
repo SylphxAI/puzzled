@@ -556,7 +556,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@000d98547b68d07c4da1c62f534da85f1bd4001b # main
+      - uses: SylphxAI/.github/.github/actions/needs-pass@96195d86b550ab1205159acb1ae0d75b1fbed47f # main
         with:
           needs: ${{ toJSON(needs) }}
-          required: plan,chat-senders
+          required: >-
+            plan,chat-senders,
+            ${{ (github.event_name == 'merge_group') && 'main-state' || '' }},
+            ${{ (needs.plan.result == 'success') && 'identifiers,lint-and-typecheck,security' || '' }},
+            ${{ (needs.plan.result == 'success' && fromJSON(needs.plan.outputs.run).web) && 'unit-tests' || '' }},
+            ${{ (needs.plan.result == 'success' && fromJSON(needs.plan.outputs.run).build) && 'build' || '' }},
+            ${{ (needs.plan.result == 'success' && fromJSON(needs.plan.outputs.run).rust) && 'rust-api' || '' }},
+            ${{ (needs.plan.result == 'success' && fromJSON(needs.plan.outputs.run).migrations) && 'migrations' || '' }},
+            ${{ (github.event_name == 'pull_request' && !github.event.pull_request.draft) && 'suite' || '' }}
