@@ -25,12 +25,12 @@ pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
         "checkout_attempts",
         "user_id",
-        "DELETE FROM checkout_attempts WHERE user_id=$1",
+        r#"DELETE FROM "checkout_attempts" WHERE "user_id" = $1"#,
     ),
     (
         "synthetic_fixtures",
         "user_id",
-        "DELETE FROM synthetic_fixtures WHERE user_id=$1",
+        r#"DELETE FROM "synthetic_fixtures" WHERE "user_id" = $1"#,
     ),
     (
         "share_landings",

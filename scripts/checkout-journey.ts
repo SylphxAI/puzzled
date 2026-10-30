@@ -359,7 +359,9 @@ export async function run(
 			)
 			const items = array(current.line_items)
 			assert(
-				items.length === 1 && items[0].price === offer.price_key && minor(items[0].quantity) === 1n,
+				items.length === 1 &&
+					items[0].price === offer.price_key &&
+					minor(items[0].quantity) === BigInt(1),
 				'session_offer_mismatch',
 			)
 			assert(

@@ -1,7 +1,7 @@
 -- A buyer's retained checkout request. An ambiguous processor call remains
 -- pending; reading the request never submits another checkout.
-CREATE TABLE checkout_attempts (
-    user_id uuid NOT NULL,
+CREATE TABLE "checkout_attempts" (
+    "user_id" uuid NOT NULL,
     request_id uuid NOT NULL,
     money_session_id text NOT NULL UNIQUE,
     request jsonb NOT NULL,
@@ -13,8 +13,8 @@ CREATE INDEX checkout_attempts_latest ON checkout_attempts (user_id, created_at 
 
 -- Registered only after Auth's supported end-user read confirms a
 -- born-synthetic subject. Registration precedes the first product session.
-CREATE TABLE synthetic_fixtures (
-    user_id uuid PRIMARY KEY,
+CREATE TABLE "synthetic_fixtures" (
+    "user_id" uuid PRIMARY KEY,
     fixture_key text NOT NULL UNIQUE,
     auth_subject text NOT NULL UNIQUE,
     synthetic_time timestamptz NOT NULL,
