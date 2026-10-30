@@ -207,29 +207,23 @@ mod tests {
         assert!(
             validate_browser(&incoming(r#"{"event":"game_start","game_slug":"A b"}"#)).is_none()
         );
-        assert!(
-            validate_browser(&incoming(
-                r#"{"event":"game_start","game_slug":"word-guess"}"#
-            ))
-            .is_some()
-        );
+        assert!(validate_browser(&incoming(
+            r#"{"event":"game_start","game_slug":"word-guess"}"#
+        ))
+        .is_some());
     }
 
     #[test]
     fn web_vitals_need_a_known_metric_and_a_finite_value() {
         let ok = r#"{"event":"web_vitals","metric":"LCP","value":1200.5,"rating":"good"}"#;
         assert_eq!(validate_browser(&incoming(ok)).unwrap().metric, Some("LCP"));
-        assert!(
-            validate_browser(&incoming(
-                r#"{"event":"web_vitals","metric":"FOO","value":1}"#
-            ))
-            .is_none()
-        );
-        assert!(
-            validate_browser(&incoming(
-                r#"{"event":"web_vitals","metric":"CLS","value":-1}"#
-            ))
-            .is_none()
-        );
+        assert!(validate_browser(&incoming(
+            r#"{"event":"web_vitals","metric":"FOO","value":1}"#
+        ))
+        .is_none());
+        assert!(validate_browser(&incoming(
+            r#"{"event":"web_vitals","metric":"CLS","value":-1}"#
+        ))
+        .is_none());
     }
 }

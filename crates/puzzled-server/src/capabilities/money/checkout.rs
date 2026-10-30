@@ -3,7 +3,7 @@
 //! arrives through Money's entitlement check once the processor confirms.
 
 use puzzled_core::attribution::Attribution;
-use serde_json::{Map, Value, json};
+use serde_json::{json, Map, Value};
 
 use super::access::{FEATURE_FAMILY, FEATURE_PLUS};
 use super::client::{Catalog, Money, MoneyError};

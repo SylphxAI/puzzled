@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 use puzzled_server::shared::db_config::{select_database_url, writer_pool_options};
-use puzzled_server::{AppState, http_port, router, shutdown_signal};
+use puzzled_server::{http_port, router, shutdown_signal, AppState};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use tracing::info;

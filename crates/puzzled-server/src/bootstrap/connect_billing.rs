@@ -20,7 +20,7 @@ use crate::capabilities::billing::adapters::billing_db::{self, JoinRefused};
 use crate::capabilities::billing::service;
 use crate::capabilities::identity_access::adapters::platform_jwt::VerifiedIdentity;
 use crate::capabilities::money::{
-    CheckoutError, Money, access as money_access, checkout as money_checkout, consent_db, pricing,
+    access as money_access, checkout as money_checkout, consent_db, pricing, CheckoutError, Money,
 };
 use crate::capabilities::preferences::adapters::attribution_db::attribution_for_user;
 use crate::proto::puzzled::v1::{
@@ -774,10 +774,9 @@ mod tests {
     fn invite_codes_are_ten_unambiguous_characters() {
         let code = new_invite_code();
         assert_eq!(code.len(), 10);
-        assert!(
-            code.chars()
-                .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit())
-        );
+        assert!(code
+            .chars()
+            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()));
         assert!(!code.contains(['O', '0', 'I', '1']));
         assert_ne!(code, new_invite_code());
     }
@@ -787,8 +786,8 @@ mod tests {
 mod family_reference_tests {
     use super::*;
     #[test]
-    fn family_references_are_scoped_and_actions_accept_only_owned_handles()
-    -> Result<(), ConnectError> {
+    fn family_references_are_scoped_and_actions_accept_only_owned_handles(
+    ) -> Result<(), ConnectError> {
         let rows = vec![("member-a".into(), Some("Player".into()), 0)];
         let handle = family_handle("test-key", "owner-a", "member-a")?;
         assert!(!handle.contains("member-a"));

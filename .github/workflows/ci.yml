@@ -489,6 +489,11 @@ jobs:
           set -euo pipefail
           LOG="${RUNNER_TEMP}/puzzled-migration-backed-tests.log"
           CARGO_TERM_COLOR=never cargo test -p puzzled-server --lib -- checkout_attempt_tests metrics_tests billing_flow_tests billing_cutover_tests money_access_tests result_shares_tests account_erasure_tests account_deletion retention_push_tests guest_ownership_tests today_progress_tests | tee "$LOG"
+          grep -Eq '^test checkout_attempt_tests::concurrent_requests_submit_once_and_a_lost_reply_recovers_the_named_resource \.\.\. ok$' "$LOG"
+          grep -Eq '^test checkout_attempt_tests::a_crash_before_the_network_call_remains_pending_without_replay \.\.\. ok$' "$LOG"
+          grep -Eq '^test checkout_attempt_tests::fixture_registration_is_atomic_idempotent_and_cannot_reclassify_a_player \.\.\. ok$' "$LOG"
+          grep -Eq '^test checkout_attempt_tests::registered_synthetic_activity_is_excluded_from_canonical_and_product_reports \.\.\. ok$' "$LOG"
+          grep -Eq '^test checkout_attempt_tests::authentication_and_throttling_remain_unknown_without_replaying \.\.\. ok$' "$LOG"
           # Fail closed if a renamed filter selects nothing, or if the actual
           # two-user HTTP ownership regression was not exercised.
           grep -Eq '^test guest_ownership_tests::unsigned_ids_and_forged_internal_headers_cannot_read_or_adopt \.\.\. ok$' "$LOG"

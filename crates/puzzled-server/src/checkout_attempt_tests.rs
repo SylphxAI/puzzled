@@ -3,15 +3,15 @@
 use std::sync::{Arc, Mutex};
 
 use axum::{
-    Json, Router,
     extract::{Path, Query, State},
     http::StatusCode,
     routing::{get, post},
+    Json, Router,
 };
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use uuid::Uuid;
 
-use crate::capabilities::money::{Money, attempts, fixtures};
+use crate::capabilities::money::{attempts, fixtures, Money};
 use crate::test_support::fresh_database;
 
 #[derive(Default)]
@@ -19,6 +19,7 @@ struct Remote {
     posts: usize,
     session: Option<Value>,
     lost_reply: bool,
+    rejection: Option<StatusCode>,
 }
 type Shared = Arc<Mutex<Remote>>;
 
@@ -30,6 +31,9 @@ async fn create(
 ) -> (StatusCode, Json<Value>) {
     let mut state = state.lock().unwrap();
     state.posts += 1;
+    if let Some(status) = state.rejection {
+        return (status, Json(json!({})));
+    }
     let id = query.get("checkout_session_id").unwrap();
     assert_eq!(
         headers.get("idempotency-key").unwrap(),
@@ -128,11 +132,9 @@ async fn concurrent_requests_submit_once_and_a_lost_reply_recovers_the_named_res
             .is_none()
     );
     shared.lock().unwrap().session.as_mut().unwrap()["subject"]["end_user"] = json!(Uuid::now_v7());
-    assert!(
-        attempts::get(&pool, &money, &user, Some(&request))
-            .await
-            .is_err()
-    );
+    assert!(attempts::get(&pool, &money, &user, Some(&request))
+        .await
+        .is_err());
     assert_eq!(shared.lock().unwrap().posts, 1);
 }
 
@@ -228,6 +230,15 @@ async fn fixture_registration_is_atomic_idempotent_and_cannot_reclassify_a_playe
     crate::capabilities::metrics::audience(&pool, &player.to_string(), true).await;
     let observed: i64 = sqlx::query_scalar("SELECT (SELECT count(*) FROM funnel_signup_receipts)+(SELECT count(*) FROM metric_audiences)").fetch_one(&pool).await.unwrap();
     assert_eq!(observed, 0);
+    sqlx::query("DELETE FROM auth_subjects WHERE subject='example-synthetic'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    assert!(
+        fixtures::register_proven(&pool, "example-synthetic", "checkout-owned", stamp)
+            .await
+            .is_err()
+    );
 }
 
 #[tokio::test]
@@ -274,4 +285,39 @@ async fn registered_synthetic_activity_is_excluded_from_canonical_and_product_re
     assert_eq!(report["signed_in_completers"], 1);
     assert_eq!(report["paid_active"], 1);
     assert_eq!(report["paid_completers"], 1);
+}
+
+#[tokio::test]
+async fn authentication_and_throttling_remain_unknown_without_replaying() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let shared = Shared::default();
+    let money = remote(shared.clone()).await;
+    let user = Uuid::now_v7().to_string();
+    let body = json!({"subject":{"end_user":user}});
+    for status in [401, 403, 429, 400, 422] {
+        shared.lock().unwrap().rejection = Some(StatusCode::from_u16(status).unwrap());
+        let request = Uuid::now_v7().to_string();
+        let before = shared.lock().unwrap().posts;
+        assert!(attempts::create(&pool, &money, &user, &request, &body)
+            .await
+            .is_err());
+        let held = attempts::get(&pool, &money, &user, Some(&request))
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            held.state,
+            if status == 400 || status == 422 {
+                "refused"
+            } else {
+                "pending"
+            }
+        );
+        assert!(attempts::create(&pool, &money, &user, &request, &body)
+            .await
+            .is_err());
+        assert_eq!(shared.lock().unwrap().posts, before + 1);
+    }
 }

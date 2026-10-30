@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 /// Longest a positive entitlement answer is reused (Money integration rule).
 pub const GRANT_CACHE_TTL: Duration = Duration::from_secs(60);
@@ -25,7 +25,7 @@ pub const FAILED_CACHE_TTL: Duration = Duration::from_secs(5);
 /// How long a read catalogue is reused.
 pub const CATALOG_CACHE_TTL: Duration = Duration::from_secs(300);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(8);
-use crate::shared::public_origin::{DEFAULT_PUBLIC_URL, parse_public_origin};
+use crate::shared::public_origin::{parse_public_origin, DEFAULT_PUBLIC_URL};
 const DEFAULT_API_URL: &str = "https://api.sylphx.com";
 
 /// Log-only text from a Money problem body (`message` = its `detail` string,

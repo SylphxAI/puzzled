@@ -8,7 +8,7 @@ use serde_json::Value;
 use sqlx::postgres::PgPoolOptions;
 use uuid::Uuid;
 
-use super::client::{Money, resolve_env_url};
+use super::client::{resolve_env_url, Money};
 
 fn setting(name: &str) -> Result<String, ()> {
     std::env::var(name)
@@ -95,7 +95,7 @@ pub(crate) async fn register_proven(
         .await
         .map_err(|_| ())?;
     let existing: Option<(String, String)> = sqlx::query_as(
-        "SELECT fixture_key,auth_subject FROM synthetic_fixtures WHERE auth_subject=$1 OR fixture_key=$2",
+        "SELECT f.fixture_key,f.auth_subject FROM synthetic_fixtures f JOIN auth_subjects a ON a.subject=f.auth_subject AND a.user_id=f.user_id WHERE f.auth_subject=$1 OR f.fixture_key=$2",
     ).bind(subject).bind(fixture).fetch_optional(&mut *tx).await.map_err(|_| ())?;
     if let Some((known_key, known_subject)) = existing {
         if known_key != fixture || known_subject != subject {
@@ -137,13 +137,11 @@ mod tests {
     #[test]
     fn a_stamp_requires_the_exact_supported_resource() {
         let name = "orgs/example/projects/example/envs/example/end_users/example";
-        assert!(
-            proof_time(
-                &json!({"name":name,"synthetic_time":"2026-10-30T12:00:00Z"}),
-                name
-            )
-            .is_some()
-        );
+        assert!(proof_time(
+            &json!({"name":name,"synthetic_time":"2026-10-30T12:00:00Z"}),
+            name
+        )
+        .is_some());
         for body in [
             json!({"name":name}),
             json!({"name":name,"synthetic_time":"true"}),
