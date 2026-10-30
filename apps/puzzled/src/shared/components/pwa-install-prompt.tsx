@@ -14,7 +14,12 @@ import {
 	getInstallPrompt,
 	onInstallPrompt,
 } from '@/shared/components/pwa-install-event'
-import { isInstallOfferEligible, readFirstFinishDay } from './pwa-install-policy'
+import {
+	DAY_PRIMARY_ACTION_ATTR,
+	isInstallOfferEligible,
+	readFirstFinishDay,
+	shouldShowInstallOffer,
+} from './pwa-install-policy'
 
 export function PWAInstallPrompt() {
 	const t = useTranslations('pwa')
@@ -25,6 +30,7 @@ export function PWAInstallPrompt() {
 	const [isStandalone, setIsStandalone] = useState(false)
 	const pathname = usePathname()
 	const [eligible, setEligible] = useState(false)
+	const [primaryActionVisible, setPrimaryActionVisible] = useState(false)
 
 	// Re-checked on every navigation: a game page can never show the offer.
 	useEffect(() => {
@@ -35,6 +41,22 @@ export function PWAInstallPrompt() {
 				pathname,
 			}),
 		)
+	}, [pathname])
+
+	// The offer is docked above the tab bar; on a screen that carries the day's
+	// play button that would cover it, so it waits until the button leaves the
+	// viewport. A page with no marked action never holds the offer back.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: pathname dep is intentional: the marked action is re-queried on every navigation
+	useEffect(() => {
+		const target = document.querySelector(`[${DAY_PRIMARY_ACTION_ATTR}]`)
+		setPrimaryActionVisible(Boolean(target))
+		if (!target || typeof IntersectionObserver === 'undefined') return
+
+		const observer = new IntersectionObserver((entries) => {
+			for (const entry of entries) setPrimaryActionVisible(entry.isIntersecting)
+		})
+		observer.observe(target)
+		return () => observer.disconnect()
 	}, [pathname])
 
 	useEffect(() => {
@@ -119,8 +141,17 @@ export function PWAInstallPrompt() {
 		return () => window.removeEventListener('keydown', handleKeyDown)
 	}, [showPrompt, handleDismiss])
 
-	// Don't show if already installed or prompt not ready
-	if (isStandalone || !showPrompt || !eligible) return null
+	// Don't show if already installed, the prompt is not ready, or the day's
+	// primary action is still on screen.
+	if (
+		!shouldShowInstallOffer({
+			eligible,
+			standalone: isStandalone,
+			requested: showPrompt,
+			primaryActionVisible,
+		})
+	)
+		return null
 
 	return (
 		// `<output>` is the native status region: the prompt is announced when it
