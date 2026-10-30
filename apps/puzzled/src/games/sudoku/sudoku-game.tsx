@@ -169,6 +169,8 @@ export function SudokuGame({
 				<SudokuNumberPad
 					onNumberPress={game.inputNumber}
 					onDelete={game.clearCell}
+					onUndo={game.undo}
+					canUndo={game.canUndo}
 					onToggleNotes={game.toggleNotesMode}
 					isNotesMode={game.state.isNotesMode}
 					disabled={game.state.isComplete}
