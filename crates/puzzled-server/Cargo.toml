@@ -47,7 +47,7 @@ connectrpc-build = { workspace = true }
 
 [dev-dependencies]
 # Mint schedule receipts in router tests; production verification is SDK-owned.
-ed25519-dalek = "2"
+ed25519-dalek = "3"
 axum = "0.8"
 puzzled-core = { path = "../puzzled-core" }
 rand = "0.10"
