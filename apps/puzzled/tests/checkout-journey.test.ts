@@ -271,6 +271,26 @@ describe('unpaid checkout bundle source contract (no processor receipt)', () => 
 		expect(result.receipt.steps.at(-1)?.code).toBe('test_acceptance_unavailable')
 		expect(f.creates()).toHaveLength(0)
 	})
+	test('connected Test Connect with omitted booleans reaches Test acceptance, not a live capability refusal', async () => {
+		const f = fixture()
+		f.config.mode = 'test-payment'
+		f.merchant.credential = 'connect'
+		delete f.merchant.livemode
+		delete f.merchant.charges_enabled
+		const result = await run(f.config, f.ports)
+		expect(result.exit).toBe(2)
+		expect(result.receipt.steps.at(-1)?.code).toBe('test_acceptance_unavailable')
+		expect(f.creates()).toHaveLength(0)
+	})
+	test('live Connect without charges enabled remains refused before checkout', async () => {
+		const f = fixture()
+		f.merchant.credential = 'connect'
+		delete f.merchant.charges_enabled
+		const result = await run(f.config, f.ports)
+		expect(result.exit).toBe(42)
+		expect(result.receipt.steps.at(-1)?.code).toBe('merchant_unavailable')
+		expect(f.creates()).toHaveLength(0)
+	})
 	test('an uncertain request that never reached admission keeps its exact identity', async () => {
 		const f = fixture()
 		const original = f.ports.read

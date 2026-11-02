@@ -88,8 +88,11 @@ individual log entries as authoritative step results.
 `test-payment` currently performs isolated preflight and exits UNKNOWN with
 `test_acceptance_unavailable`. It does **not** claim payment, webhook, grant or
 expiry verification. Those require a separate actual Stripe Test Mode receipt,
-simulated methods, negative cases and later natural-expiry readback. No local
-clock, shortened licence or fake processor test can supply that receipt.
+simulated methods and negative cases. Expiry must exercise the actual entitlement
+check against the unmodified term of the source-joined paid grant. An isolated
+process-only verification clock may evaluate that same grant before, at and
+after its expiry; never mutate a grant, shorten a term or advance a shared clock.
+A fake processor response cannot supply the payment or webhook receipt.
 
 Primary-source contract read on 2026-10-30 at 13:42:55–13:42:57Z:
 [Stripe testing](https://docs.stripe.com/testing) permits simulated transactions
@@ -99,3 +102,23 @@ defines mode and payment state. [Stripe idempotency](https://docs.stripe.com/api
 permits pruning keys after 24 hours and requires matching parameters; this is
 why the product retains its own resource identity and never treats elapsed
 time as permission to repeat an ambiguous Money POST.
+
+
+## Connected merchant guard
+
+Catalogue CI reads the existing merchant and never onboards it or handles a
+Stripe restricted key. Preview requires Stripe Test Mode (including protobuf's
+omitted `livemode=false`), `state=connected` and a valid `acct_` binding. A
+`credential=connect` Test merchant need not expose `charges_enabled`; other
+credentials still require it. Production always requires explicit
+`livemode=true` and `charges_enabled=true`. Both apply jobs fail closed on a
+missing merchant or any sync failure; production waits for preview.
+
+Primary source read 2026-11-02 21:59–22:01 UTC:
+[Stripe Connect testing](https://docs.stripe.com/connect/testing) documents Test
+OAuth access and notes test capabilities are not necessarily enforced. This is
+not evidence that an arbitrary merchant accepts payments. The independently
+read Puzzled preview merchant was `acct_1UVxqCRqPnxGtdCe`, `credential=connect`,
+`state=connected`, with omitted false `livemode` and omitted `charges_enabled`.
+Its catalogue was `Synced=true`, observed generation 2, with all five prices.
+Only an actual simulated Test payment supplies fulfillment acceptance.
