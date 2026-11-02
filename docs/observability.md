@@ -177,3 +177,9 @@ import { Sylphx } from '@sylphx/sdk'
 const sx = new Sylphx()
 await sx.observability.errorGroups.list({ parent: 'orgs/-/projects/-/envs/-', pageSize: 50 })
 ```
+
+## Overview latency
+
+The today-overview database and outer request phase timings, fixed-cohort
+baseline and all-status follow-up method are documented in
+[today-overview-performance.md](reference/today-overview-performance.md).

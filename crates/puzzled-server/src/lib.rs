@@ -53,6 +53,8 @@ mod streak_freeze_tests;
 #[cfg(test)]
 mod test_support;
 #[cfg(test)]
+mod today_overview_tests;
+#[cfg(test)]
 mod today_progress_tests;
 #[cfg(test)]
 mod tryit_conversions_tests;
