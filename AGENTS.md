@@ -25,6 +25,8 @@ atlas migrate hash --dir file://apps/puzzled/atlas/migrations   # after touching
 ```
 
 Run the narrowest affected check first; the full workspace is for the end.
+The web test scripts use Bun file isolation: module mocks must not leak from
+one test file into another. Keep `--isolate` in both test scripts.
 
 ## Architecture in brief
 
