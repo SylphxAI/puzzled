@@ -21,7 +21,7 @@ COPY apps/puzzled ./apps/puzzled
 # The brand home: globals.css imports brand/tokens.css.
 COPY brand ./brand
 # Package the one-shot checkout verifier in the ordinary web image build.
-COPY scripts/checkout-journey.ts ./scripts/checkout-journey.ts
+COPY scripts/checkout-journey.ts scripts/money-merchant.ts ./scripts/
 COPY config/commercial/catalogue.json ./config/commercial/catalogue.json
 RUN bun build ./scripts/checkout-journey.ts --target=node --external=playwright --outfile=/app/checkout-journey.mjs
 RUN cd apps/puzzled && bun -e 'const fs = require("node:fs"); const path = require("node:path"); const {createRequire} = require("node:module"); const resolve = createRequire(require.resolve("playwright/package.json")); const target = "/app/checkout-deps/node_modules"; fs.mkdirSync(target, { recursive: true }); for (const name of ["playwright", "playwright-core"]) fs.cpSync(path.dirname(resolve.resolve(name + "/package.json")), target + "/" + name, { recursive: true, dereference: true });'
