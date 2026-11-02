@@ -1,6 +1,5 @@
-import { env } from '../env'
 import { destAiCredential } from './credentials'
-import { DEST_PEELS, destJson, destPeelOrigin } from './dest'
+import { DEST_PEELS, destJson } from './dest'
 
 /**
  * Models door AI client — official OpenAI Responses document.
@@ -113,7 +112,7 @@ export type AIModelList = {
 }
 
 export function getAI() {
-	const origin = destPeelOrigin(DEST_PEELS.ai, env.AI_API_ORIGIN)
+	const origin = DEST_PEELS.ai
 	const key = destAiCredential() ?? ''
 	const createResponse = async (body: AIResponsesRequest) => {
 		return destJson<AIResponse>(origin, '/responses', {

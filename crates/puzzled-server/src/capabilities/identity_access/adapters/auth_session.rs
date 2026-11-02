@@ -29,6 +29,8 @@ use serde_json::Value;
 
 use sqlx::PgPool;
 
+use crate::shared::dest_http::DEST_IDENTITY_ORIGIN;
+
 use super::auth_subjects;
 use super::platform_jwt::{actor_from_claim, VerifiedIdentity};
 
@@ -40,7 +42,6 @@ pub const SESSION_COOKIE: &str = "puzzled_session";
 // TODO(2026-10-31): drop LEGACY_SESSION_COOKIE and its read in `session_token`.
 pub const LEGACY_SESSION_COOKIE: &str = "sylphx_identity_session";
 const SESSION_PREFIX: &str = "identity_org_session_";
-const DEFAULT_AUTH_URL: &str = "https://api.sylphx.com";
 const POSITIVE_TTL: Duration = Duration::from_secs(60);
 const NEGATIVE_TTL: Duration = Duration::from_secs(10);
 const CACHE_LIMIT: usize = 10_000;
@@ -114,8 +115,8 @@ impl AuthSessions {
         self
     }
 
-    /// `SYLPHX_AUTH_URL` (bound by Enable Auth), else `https://api.sylphx.com`,
-    /// and the instance's own id, `SYLPHX_AUTH_ORGANIZATION_ID`.
+    /// The canonical Auth gateway and the instance's own id and publishable key
+    /// (bound by Enable Auth).
     #[must_use]
     pub fn from_env() -> Self {
         let read = |name: &str| {
@@ -124,7 +125,6 @@ impl AuthSessions {
                 .map(|v| v.trim().to_string())
                 .filter(|v| !v.is_empty())
         };
-        let url = read("SYLPHX_AUTH_URL").unwrap_or_else(|| DEFAULT_AUTH_URL.to_string());
         let organization_id = read("SYLPHX_AUTH_ORGANIZATION_ID").unwrap_or_else(|| {
             tracing::warn!("SYLPHX_AUTH_ORGANIZATION_ID is unset: no Auth session is accepted");
             String::new()
@@ -137,7 +137,12 @@ impl AuthSessions {
         });
         // Read once at startup; never logged (WORKAROUND, see `parse_admin_principals`).
         let admin_principals = std::env::var("PUZZLED_ADMIN_PRINCIPALS").unwrap_or_default();
-        Self::new(url, organization_id, caller_key).with_admin_principals(&admin_principals)
+        Self::new(
+            DEST_IDENTITY_ORIGIN.to_string(),
+            organization_id,
+            caller_key,
+        )
+        .with_admin_principals(&admin_principals)
     }
 
     /// The end user behind a session bearer; None when Auth refuses it or is
@@ -415,6 +420,14 @@ pub async fn attach_auth_session(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn runtime_auth_uses_the_canonical_gateway() {
+        assert_eq!(
+            super::AuthSessions::from_env().auth_url,
+            "https://api.sylphx.com"
+        );
+    }
 
     const ORG: &str = "organization-0199aa10-7b2c-7d3e-8f00-00000000c0de";
 

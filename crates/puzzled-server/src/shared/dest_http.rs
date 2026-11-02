@@ -7,6 +7,11 @@ use std::time::Duration;
 use reqwest::header::{HeaderMap as ReqHeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{json, Value};
 
+// Auth always uses the canonical gateway. Tests inject local URLs in constructors.
+pub(crate) const DEST_IDENTITY_ORIGIN: &str = "https://api.sylphx.com";
+
+// Keep Events until canonical Notify serves devices/inbox/deliveries. The gateway
+// owns different /v1/devices and /v1/inbox routes; see docs/capabilities.md.
 pub(crate) const DEST_EVENTS_ORIGIN: &str = "https://api.events.sylphx.com";
 const DEST_DELIVERIES: &str = "/v1/deliveries";
 
