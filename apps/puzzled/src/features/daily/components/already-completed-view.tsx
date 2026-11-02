@@ -10,6 +10,7 @@ import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useWarmShareId } from '@/features/daily/hooks/use-share-id'
 import { buildResultCard, resultCardStringsFrom } from '@/features/daily/lib/result-card'
 import { TrialEndsLine } from '@/features/plus/components/trial-ends-line'
+import { PlusResultCard } from '@/features/plus-offer/components/plus-result-card'
 import { seasonGreeting } from '@/features/seasons/lib/seasons'
 import { getHowToPlayConfig } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -45,6 +46,7 @@ type AlreadyCompletedViewProps = {
 	gameName: string
 	/** Puzzle date in YYYY-MM-DD format */
 	puzzleDate: string
+	mode: 'daily' | 'archive'
 	session: Session
 	currentStreak?: number
 	locale?: string
@@ -69,6 +71,7 @@ export function AlreadyCompletedView({
 	gameSlug,
 	gameName,
 	puzzleDate,
+	mode,
 	session,
 	currentStreak = 0,
 	locale = 'en',
@@ -267,6 +270,8 @@ export function AlreadyCompletedView({
 					<p className="mt-1 text-xs text-muted-foreground">{t('comeBackTomorrow')}</p>
 				</CardContent>
 			</Card>
+
+			<PlusResultCard gameSlug={gameSlug} mode={mode} puzzleDate={puzzleDate} />
 
 			{/* Free viewers only; the server hands the slot no config for Plus or when ads are off. */}
 			<TrialEndsLine />

@@ -78,43 +78,17 @@ call_with_retry() {
 # 3. Convert the declaration into Money's spec.
 bun scripts/money-catalogue-spec.ts config/commercial/catalogue.json > "$work/catalog.json"
 
-# 4. A preview may opt into a Stripe test-mode connection. Read before and after:
-# an already connected account is reused, a missing one is connected once with the
-# test restricted key. Production has no test key and never takes this path.
-require_test_merchant() {
-  if ! jq -e '(.livemode // false) == false and .state == "connected" and .charges_enabled == true' "$1" >/dev/null; then
-    echo "::error::merchant account is not a connected, charges-enabled Stripe test account"; exit 1
-  fi
-}
-ensure_merchant_connection() {
-  if [ -z "${STRIPE_TEST_RESTRICTED_KEY:-}" ]; then return 0; fi
-  case "$STRIPE_TEST_RESTRICTED_KEY" in
-    rk_test_*) ;;
-    *) echo "::error::STRIPE_TEST_RESTRICTED_KEY must start with rk_test_"; exit 1 ;;
-  esac
-  local url code
-  url="https://api.sylphx.com/v1/${resource}/merchant_accounts/default"
-  code=$(call_with_retry GET "$url" "$work/merchant-get.out")
-  if [ "$code" = 200 ]; then
-    require_test_merchant "$work/merchant-get.out"
-    return 0
-  fi
-  if [ "$code" != 404 ]; then
-    echo "::error::GET merchant account answered ${code}"; cat "$work/merchant-get.out"; exit 1
-  fi
-  code=$(call_with_retry POST "https://api.sylphx.com/v1/${resource}/merchant_accounts:connect" \
-    "$work/merchant-connect.out" --data "$(jq -cn --arg key "$STRIPE_TEST_RESTRICTED_KEY" '{restricted_key:$key}')")
-  if [ "$code" -ge 300 ]; then
-    # Do not print a processor response on this secret-bearing route.
-    echo "::error::POST merchant_accounts:connect answered ${code}"; exit 1
-  fi
-  code=$(call_with_retry GET "$url" "$work/merchant-readback.out")
-  if [ "$code" != 200 ]; then
-    echo "::error::merchant account readback answered ${code}"; cat "$work/merchant-readback.out"; exit 1
-  fi
-  require_test_merchant "$work/merchant-readback.out"
-}
-ensure_merchant_connection
+# 4. Onboarding belongs to Money's ordinary Connect flow, never to catalogue CI.
+# Both environments must already be connected in their declared mode.
+case "${MONEY_MODE:-}" in
+  test|live) ;;
+  *) echo "::error::MONEY_MODE must be test or live"; exit 1 ;;
+esac
+code=$(call_with_retry GET "https://api.sylphx.com/v1/${resource}/merchant_accounts/default" "$work/merchant-get.out")
+if [ "$code" != 200 ]; then
+  echo "::error::GET merchant account answered ${code}; connect it through Money before applying the catalogue"; exit 1
+fi
+bun scripts/money-merchant.ts "$work/merchant-get.out" "$MONEY_MODE"
 
 # 5. Ensure every declared licence key exists before the catalogue references it.
 # Existing keys are reused. Only a 404 generates; a concurrent creator's 409 is
@@ -158,14 +132,6 @@ fi
 
 code=$(call_with_retry POST "${base}:sync" "$work/sync.out" --data '{}')
 if [ "$code" -ge 300 ]; then
-  # Only a preview with no test-mode Stripe connection may continue to
-  # production. Every other sync failure, and every production failure, is fatal.
-  if [ "${SYNC_FAILURE_NONFATAL:-}" = "1" ] && [ -z "${STRIPE_TEST_RESTRICTED_KEY:-}" ] \
-    && [ "$code" = 400 ] && grep -q 'merchant_not_connected' "$work/sync.out"; then
-    echo "::warning::price_catalogs/default:sync answered 400 merchant_not_connected; the preview has no Stripe test-mode connection, so it is not blocking production"
-    echo "catalogue patched on ${resource##*/}, not synced"
-    exit 0
-  fi
   echo "::error::POST price_catalogs/default:sync answered ${code}"; cat "$work/sync.out"; exit 1
 fi
 echo "catalogue applied to ${resource##*/}"

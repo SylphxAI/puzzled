@@ -1,6 +1,7 @@
 /** One invocation of the product checkout check; scheduling belongs to Observability. */
 import { createHash } from 'node:crypto'
 import declaration from '../config/commercial/catalogue.json'
+import { merchantAvailable, merchantModeMatches } from './money-merchant'
 
 export type Mode = 'prod-unpaid' | 'test-payment'
 export type Json = Record<string, unknown>
@@ -284,11 +285,8 @@ export async function run(
 					merchant.processor === 'stripe',
 				'merchant_binding_mismatch',
 			)
-			assert(
-				merchant.state === 'connected' && merchant.charges_enabled === true,
-				'merchant_unavailable',
-			)
-			assert(merchant.livemode === (config.mode === 'prod-unpaid'), 'merchant_mode_mismatch')
+			assert(merchantAvailable(merchant, config.mode === 'prod-unpaid'), 'merchant_unavailable')
+			assert(merchantModeMatches(merchant, config.mode === 'prod-unpaid'), 'merchant_mode_mismatch')
 		})
 		let attempt = await step('fixture', async () => {
 			const attempt = await rpc('GetCheckout')
