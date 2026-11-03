@@ -7,7 +7,7 @@
 		"title": "Puzzled result card",
 		"downloaded": "Card image saved; caption copied to the clipboard.",
 		"copied": "Caption copied to the clipboard; this browser could not build the image.",
-		"unavailable": "Sharing is not available in this browser.",
+		"unavailable": "Could not share automatically.",
 		"statusWon": "Solved!",
 		"statusLost": "Not this time",
 		"attemptsLabel": "Attempts",
@@ -27,7 +27,9 @@
 		"altTemplate": "Puzzled - {game}{day}. {result}",
 		"altDetailsTemplate": " {details}.",
 		"altLinkTemplate": " Play: {link}",
-		"detailSeparator": ", "
+		"detailSeparator": ", ",
+		"saved": "Card image saved.",
+		"caption": "Result caption"
 	},
 	"challenge": {
 		"title": "Side by side",

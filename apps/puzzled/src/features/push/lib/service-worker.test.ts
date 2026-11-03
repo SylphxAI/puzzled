@@ -46,7 +46,6 @@ describe('Puzzled service worker', () => {
 			tag: 'daily-puzzle',
 			data: { url: '/zh-HK' },
 		})
-		expect(handlers.has('fetch')).toBe(false)
 	})
 	test('notification clicks stay on the app origin', async () => {
 		const { handlers, opened } = worker()

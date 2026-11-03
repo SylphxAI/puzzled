@@ -3,24 +3,23 @@
 // ============================================
 
 import { getGameConfig } from '@/games/registry'
-
-// Default launch date for games without explicit launchDate in config
-const DEFAULT_LAUNCH_DATE = new Date('2024-01-01')
+import { DEFAULT_LAUNCH_DATE } from '@/games/types'
+import { productDayKey } from '@/lib/product-day'
 
 /**
- * Get puzzle number for a specific date and game
- * Puzzle #1 = launch date, increments by 1 each day
- * Uses registry-driven launchDate from GameConfig
+ * Present the puzzle number for the server's product day at `now`.
+ * Puzzle #1 = launch date, increments by 1 each Asia/Hong_Kong day.
+ * Uses registry-driven launchDate from GameConfig.
  *
- * IMPORTANT: Uses UTC to ensure consistent puzzle numbers across all timezones.
- * A user in Tokyo and a user in New York see the same puzzle number.
+ * The server caller supplies one captured instant for rotation, number and
+ * date label. UTC is only the arithmetic representation of the civil dates,
+ * never the clock that chooses today's puzzle; GetDaily owns play authority.
  */
-export function getPuzzleNumber(gameSlug: string, date: Date = new Date()): number {
+export function getPuzzleNumber(gameSlug: string, now: Date): number {
 	// Registry-driven launch date lookup
 	const config = getGameConfig(gameSlug)
 	const launchDate = config?.launchDate ?? DEFAULT_LAUNCH_DATE
-	// Use UTC to ensure consistent puzzle numbers globally
-	const today = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+	const today = new Date(`${productDayKey(now)}T00:00:00Z`)
 	const launch = new Date(
 		Date.UTC(launchDate.getUTCFullYear(), launchDate.getUTCMonth(), launchDate.getUTCDate()),
 	)

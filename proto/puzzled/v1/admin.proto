@@ -198,6 +198,7 @@ message GetGameAnalyticsResponse {
 }
 
 service AdminService {
+  rpc GetMetricsReport(GetMetricsReportRequest) returns (GetMetricsReportResponse);
   rpc ListAnnouncements(ListAnnouncementsRequest) returns (ListAnnouncementsResponse);
   rpc CreateAnnouncement(CreateAnnouncementRequest) returns (CreateAnnouncementResponse);
   rpc UpdateAnnouncement(UpdateAnnouncementRequest) returns (UpdateAnnouncementResponse);
@@ -213,4 +214,34 @@ service AdminService {
   rpc GamesOverview(GamesOverviewRequest) returns (GamesOverviewResponse);
   rpc SystemHealth(SystemHealthRequest) returns (SystemHealthResponse);
   rpc GetGameAnalytics(GetGameAnalyticsRequest) returns (GetGameAnalyticsResponse);
+}
+
+// Persisted aggregates only; never player ids or ad-hoc database queries.
+message GetMetricsReportRequest {}
+message MetricDay {
+  string day_key = 1;
+  bool complete = 2;
+  uint32 daily_puzzle_completers = 3;
+  uint32 signed_in_completers = 4;
+  uint32 daily_entertainment_completers = 5;
+  uint32 weekly_ritualists = 6;
+  uint32 d7_cohort = 7;
+  uint32 d7_returned = 8;
+  uint32 share_landings = 9;
+  uint32 share_landing_completers = 10;
+  uint32 shares = 11;
+  uint32 free_finish_ok = 12;
+  uint32 free_finish_failed = 13;
+  uint32 paid_active = 14;
+  uint32 paid_completers = 15;
+  uint32 free_active = 16;
+  uint32 free_completers = 17;
+  uint32 catalog_size = 18;
+  string release = 19;
+  repeated string alerts = 20;
+  string generated_at = 21;
+}
+message GetMetricsReportResponse {
+  repeated MetricDay days = 1;
+  bool stale = 2;
 }

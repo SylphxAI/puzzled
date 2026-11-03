@@ -17,6 +17,8 @@ type Props = {
 	signedIn: boolean
 	subscribed: boolean
 	label: string
+	/** What the buyer is agreeing to renew at, shown between the consent tick and the button. */
+	renewalNote?: string
 }
 
 /** Starts checkout for one plan once the buyer has consented to immediate supply; guests are sent to sign in first. */
@@ -28,6 +30,7 @@ export function SubscribeButton({
 	signedIn,
 	subscribed,
 	label,
+	renewalNote,
 }: Props) {
 	const t = useTranslations('plus.pricing')
 	const [busy, setBusy] = useState(false)
@@ -73,6 +76,7 @@ export function SubscribeButton({
 					特定商取引法に基づく表記
 				</Link>
 			)}
+			{renewalNote ? <p className="mb-3 text-sm text-muted-foreground">{renewalNote}</p> : null}
 			<button
 				type="button"
 				className={buttonClass}

@@ -2,7 +2,7 @@
 	"privacy": {
 		"title": "Política de Privacidade",
 		"lastUpdated": "Última atualização",
-		"revision": "2026-10-01",
+		"revision": "2026-10-26",
 		"eyebrow": "Legal",
 		"lead": "Esta política explica quais dados o Puzzled coleta, por que são coletados e como falar conosco sobre eles.",
 		"toc": {
@@ -31,7 +31,7 @@
 					"payment": "Informações de pagamento: a Sylphx Money, o serviço de pagamentos da Sylphx Limited, e seu processador de pagamentos, a Stripe, coletam os dados do seu cartão; nós recebemos o status da sua assinatura, os valores, as datas e as referências de pagamento",
 					"technical": "Dados técnicos: endereço IP, tipo de navegador e informações do dispositivo",
 					"errors": "Relatórios de erro: quando uma página ou o nosso servidor falha, registramos a mensagem de erro, o stack trace e o caminho da página (nunca a query string, endereços de e-mail ou qualquer coisa que você tenha digitado) em nosso próprio serviço de monitoramento de erros, para encontrar e corrigir a falha",
-					"referral": "Tags de indicação e de anúncios: se você chegar por um link com tags de campanha (parâmetros utm_ ou um ID de indicação, por exemplo vindo de outro produto da Sylphx) e tiver aceitado os cookies de análise, guardamos essas tags por 30 dias em um cookie próprio e as armazenamos junto com a sua conta se você se cadastrar. Se você chegar por um anúncio do Google e tiver ativado os cookies de publicidade, guardamos o ID de clique do anúncio por 90 dias no mesmo cookie e o repassamos apenas ao registro de pagamento de uma assinatura que você iniciar, não à sua conta. Usamos essas informações para saber qual link ou anúncio trouxe você, e não as vendemos."
+					"referral": "Tags de indicação e de anúncios: se você chegar por um link com tags de campanha (parâmetros utm_ ou um ID de indicação, por exemplo vindo de outro produto da Sylphx) e tiver aceitado os cookies de análise, guardamos essas tags por 30 dias em um cookie próprio e as armazenamos junto com a sua conta se você se cadastrar. Se você chegar por um anúncio do Google e tiver ativado os cookies de publicidade, guardamos o ID de clique do anúncio por 90 dias no mesmo cookie e o repassamos apenas ao registro de pagamento de uma assinatura que você iniciar, não à sua conta. Usamos essas informações para saber qual link ou anúncio trouxe você, e não as vendemos. Com seu consentimento para análise, também vinculamos a visita a um resultado compartilhado ao seu identificador de jogador visitante ou de conta por até 41 dias do produto, para medir se você conclui seu primeiro quebra-cabeça diário. Excluir sua conta apaga esses registros vinculados; os relatórios agregados não contêm identificadores de jogadores."
 				}
 			},
 			"dataUse": {

@@ -9,7 +9,7 @@ import type { SudokuCell, SudokuState } from './types'
 import { GRID_SIZE, isGridSolved } from './types'
 
 // Actions for the reducer
-type SudokuAction =
+export type SudokuAction =
 	| { type: 'SELECT_CELL'; row: number; col: number }
 	| { type: 'INPUT_NUMBER'; value: number }
 	| { type: 'CLEAR_CELL' }
@@ -18,9 +18,10 @@ type SudokuAction =
 	| { type: 'REMOVE_NOTE'; value: number }
 	| { type: 'MOVE'; direction: 'up' | 'down' | 'left' | 'right' }
 	| { type: 'CHECK_COMPLETION' }
+	| { type: 'UNDO' }
 	| { type: 'RESET' }
 
-function createInitialState(puzzleData: SudokuPuzzleClientData): SudokuState {
+export function createInitialState(puzzleData: SudokuPuzzleClientData): SudokuState {
 	// Create user grid from puzzle
 	const userGrid: SudokuCell[][] = []
 	for (let row = 0; row < GRID_SIZE; row++) {
@@ -38,6 +39,7 @@ function createInitialState(puzzleData: SudokuPuzzleClientData): SudokuState {
 	return {
 		userGrid,
 		selectedCell: null,
+		history: [],
 		isComplete: false,
 		errors: 0,
 		startTime: null,
@@ -46,7 +48,7 @@ function createInitialState(puzzleData: SudokuPuzzleClientData): SudokuState {
 	}
 }
 
-function sudokuReducer(
+function applySudokuAction(
 	state: SudokuState,
 	action: SudokuAction,
 	puzzleData: SudokuPuzzleClientData,
@@ -243,11 +245,54 @@ function sudokuReducer(
 	}
 }
 
+/** Restore the whole edit, including notes pruned from the edited cell's peers. */
+export function sudokuReducer(
+	state: SudokuState,
+	action: SudokuAction,
+	puzzleData: SudokuPuzzleClientData,
+): SudokuState {
+	if (action.type === 'UNDO') {
+		const edit = state.history.at(-1)
+		// A terminal board stays terminal while the existing server submission settles.
+		if (state.isComplete || !edit) return state
+		const userGrid = state.userGrid.map((row) => [...row])
+		for (const cell of edit.cells) userGrid[cell.row][cell.col] = cell.before
+		return {
+			...state,
+			userGrid,
+			selectedCell: edit.selectedCell,
+			history: state.history.slice(0, -1),
+		}
+	}
+
+	const next = applySudokuAction(state, action, puzzleData)
+	if (action.type === 'RESET' || next.userGrid === state.userGrid) return next
+	const cells: SudokuState['history'][number]['cells'] = []
+	for (let row = 0; row < GRID_SIZE; row++) {
+		for (let col = 0; col < GRID_SIZE; col++) {
+			const before = state.userGrid[row][col]
+			const after = next.userGrid[row][col]
+			if (
+				before.value !== after.value ||
+				before.notes.size !== after.notes.size ||
+				[...before.notes].some((note) => !after.notes.has(note))
+			) {
+				cells.push({ row, col, before })
+			}
+		}
+	}
+	// Re-entering a value or erasing an empty cell must not hide the last real edit.
+	if (cells.length === 0) return state
+	return { ...next, history: [...state.history, { selectedCell: state.selectedCell, cells }] }
+}
+
 export type UseSudokuReturn = {
 	state: SudokuState
 	selectCell: (row: number, col: number) => void
 	inputNumber: (value: number) => void
 	clearCell: () => void
+	undo: () => void
+	canUndo: boolean
 	toggleNotesMode: () => void
 	move: (direction: 'up' | 'down' | 'left' | 'right') => void
 	checkCompletion: () => void
@@ -266,7 +311,19 @@ export function useSudoku(puzzleData: SudokuPuzzleClientData): UseSudokuReturn {
 	useEffect(() => {
 		function handleKeyDown(e: KeyboardEvent) {
 			// Ignore if typing in input or textarea
-			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+			if (
+				e.target instanceof HTMLInputElement ||
+				e.target instanceof HTMLTextAreaElement ||
+				(e.target instanceof HTMLElement && e.target.isContentEditable)
+			) {
+				return
+			}
+
+			if (e.ctrlKey || e.metaKey) {
+				if (e.key.toLowerCase() === 'z' && !e.shiftKey && !e.altKey) {
+					e.preventDefault()
+					dispatch({ type: 'UNDO' })
+				}
 				return
 			}
 
@@ -311,6 +368,10 @@ export function useSudoku(puzzleData: SudokuPuzzleClientData): UseSudokuReturn {
 
 	const clearCell = useCallback(() => {
 		dispatch({ type: 'CLEAR_CELL' })
+	}, [])
+
+	const undo = useCallback(() => {
+		dispatch({ type: 'UNDO' })
 	}, [])
 
 	const toggleNotesMode = useCallback(() => {
@@ -377,6 +438,8 @@ export function useSudoku(puzzleData: SudokuPuzzleClientData): UseSudokuReturn {
 		selectCell,
 		inputNumber,
 		clearCell,
+		undo,
+		canUndo: !state.isComplete && state.history.length > 0,
 		toggleNotesMode,
 		move,
 		checkCompletion,

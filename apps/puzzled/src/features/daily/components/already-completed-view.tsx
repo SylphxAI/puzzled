@@ -5,10 +5,12 @@ import { Check, Clock, Flame, Share2, Target, Trophy, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { AdSlot } from '@/features/ads/components/ad-slot'
+import { OwnProductCard } from '@/features/cross-promo/components/own-product-card'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useWarmShareId } from '@/features/daily/hooks/use-share-id'
 import { buildResultCard, resultCardStringsFrom } from '@/features/daily/lib/result-card'
 import { TrialEndsLine } from '@/features/plus/components/trial-ends-line'
+import { PlusResultCard } from '@/features/plus-offer/components/plus-result-card'
 import { seasonGreeting } from '@/features/seasons/lib/seasons'
 import { getHowToPlayConfig } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -44,6 +46,7 @@ type AlreadyCompletedViewProps = {
 	gameName: string
 	/** Puzzle date in YYYY-MM-DD format */
 	puzzleDate: string
+	mode: 'daily' | 'archive'
 	session: Session
 	currentStreak?: number
 	locale?: string
@@ -68,6 +71,7 @@ export function AlreadyCompletedView({
 	gameSlug,
 	gameName,
 	puzzleDate,
+	mode,
 	session,
 	currentStreak = 0,
 	locale = 'en',
@@ -267,9 +271,14 @@ export function AlreadyCompletedView({
 				</CardContent>
 			</Card>
 
+			<PlusResultCard gameSlug={gameSlug} mode={mode} puzzleDate={puzzleDate} />
+
 			{/* Free viewers only; the server hands the slot no config for Plus or when ads are off. */}
 			<TrialEndsLine />
 			<AdSlot />
+
+			{/* One other product a day. This view is a return visit, so the card never shows during the free finish. */}
+			<OwnProductCard dayKey={puzzleDate} />
 
 			{/* Back to Home */}
 			<Link

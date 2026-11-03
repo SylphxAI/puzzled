@@ -54,7 +54,8 @@ message GetLeaderboardResponse {
 }
 
 
-// Today percentile generated Connect path — parity with GET /api/v1/stats/today-percentile.
+// Daily comparison of the admitted viewer's accepted finish. Legacy result and
+// fixture fields (2-8) are ignored; they never establish comparison authority.
 message GetTodayPercentileRequest {
   string game_slug = 1;
   string status = 2;
@@ -62,9 +63,11 @@ message GetTodayPercentileRequest {
   int32 attempts = 4 [features.field_presence = EXPLICIT];
   int32 mistakes = 5 [features.field_presence = EXPLICIT];
   int64 time_spent_ms = 6 [features.field_presence = EXPLICIT];
-  // Fixture residual for pure dual-oracle (no DB).
+  // Legacy fixture fields, ignored on all serving paths.
   int32 total_players = 7 [features.field_presence = EXPLICIT];
   int32 better_than = 8 [features.field_presence = EXPLICIT];
+  // Optional result day; a non-today day returns no comparison.
+  string day_key = 9;
 }
 
 message GetTodayPercentileResponse {
@@ -77,7 +80,11 @@ message GetTodayPercentileResponse {
   int32 mistakes = 7 [features.field_presence = EXPLICIT];
   int64 time_spent_ms = 8 [features.field_presence = EXPLICIT];
   bool stub = 9;
+  // empty_cohort | accepted_finish_required | insufficient_cohort |
+  // unavailable_data | different_day | invalid_or_empty | product_db_sessions
   string dispatch = 10;
+  // Server-computed Asia/Hong_Kong product day, not a client clock.
+  string day_key = 11;
 }
 
 service StatsService {

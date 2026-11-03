@@ -4,8 +4,8 @@
 # workflow is the ONLY writer of the catalogue: no manual catalogue writes.
 # Change the catalogue by PR to that file.
 #
-# No stored secret: after supported Access admission, each job trades a GitHub OIDC token
-# (audience sylphx-access) for a 15-minute billing:write key bound to this
+# No stored Sylphx key: after supported Access admission, each job trades a GitHub OIDC
+# token (audience sylphx-access) for a 15-minute billing:write key bound to this
 # repository, this file's path and refs/heads/main
 # (kernel/access/tenant-manifest.toml, cloud#10444). The key's own name gives
 # the org, project and env it belongs to, so none is written here. The path of
@@ -21,6 +21,7 @@ on:
       - 'config/commercial/catalogue.json'
       - 'scripts/money-catalogue-spec.ts'
       - 'scripts/money-catalogue-apply.sh'
+      - 'scripts/money-merchant.ts'
       - '.github/workflows/money-catalogue.yml'
   workflow_dispatch:
 
@@ -36,35 +37,37 @@ concurrency:
 jobs:
   preview:
     name: Apply to preview
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event.repository.private == false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       ACCESS_NAME: puzzled-money-catalogue-preview
+      MONEY_MODE: test
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: '1.4.0'
+          bun-version: '1.4.4'
       - name: Apply the catalogue
         run: bash scripts/money-catalogue-apply.sh
 
   production:
     name: Apply to production
     needs: preview
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event.repository.private == false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       ACCESS_NAME: puzzled-money-catalogue-production
+      MONEY_MODE: live
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: '1.4.0'
+          bun-version: '1.4.4'
       - name: Apply the catalogue
         run: bash scripts/money-catalogue-apply.sh

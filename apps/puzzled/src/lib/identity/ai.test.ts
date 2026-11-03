@@ -3,7 +3,7 @@ import { type AIResponse, aiResponseText, getAI } from './ai'
 
 const originalFetch = globalThis.fetch
 
-const MODELS_DOOR = 'https://api.models.sylphx.ai/v1'
+const MODEL_GATEWAY = 'https://api.sylphx.ai/v1'
 const SERVICE_KEY = 'sk-sx-test-puzzled'
 
 function stubFetch(status: number, body: unknown) {
@@ -19,15 +19,14 @@ function stubFetch(status: number, body: unknown) {
 	return calls
 }
 
-describe('Models door AI client (official Responses document)', () => {
+describe('Model gateway AI client (official Responses document)', () => {
 	afterEach(() => {
 		globalThis.fetch = originalFetch
-		delete process.env.AI_API_ORIGIN
 		delete process.env.AI_API_KEY
+		delete process.env.AI_API_ORIGIN
 	})
 
-	test('posts the official Responses document to {origin}/responses', async () => {
-		process.env.AI_API_ORIGIN = MODELS_DOOR
+	test('posts the official Responses document to the canonical gateway by default', async () => {
 		process.env.AI_API_KEY = SERVICE_KEY
 		const calls = stubFetch(200, {
 			id: 'resp_a',
@@ -47,7 +46,7 @@ describe('Models door AI client (official Responses document)', () => {
 
 		expect(calls).toHaveLength(1)
 		const [call] = calls
-		expect(call!.url).toBe(`${MODELS_DOOR}/responses`)
+		expect(call!.url).toBe(`${MODEL_GATEWAY}/responses`)
 		expect(call!.init.method).toBe('POST')
 		const headers = call!.init.headers as Record<string, string>
 		expect(headers.Authorization).toBe(`Bearer ${SERVICE_KEY}`)
@@ -64,8 +63,15 @@ describe('Models door AI client (official Responses document)', () => {
 		})
 	})
 
+	test('ignores retired model origin overrides', async () => {
+		process.env.AI_API_KEY = SERVICE_KEY
+		process.env.AI_API_ORIGIN = 'https://retired.example/v1'
+		const calls = stubFetch(200, { data: [] })
+		await getAI().listModels()
+		expect(calls[0]!.url).toBe(`${MODEL_GATEWAY}/models`)
+	})
+
 	test('accepts message-item input and posts it unchanged', async () => {
-		process.env.AI_API_ORIGIN = MODELS_DOOR
 		process.env.AI_API_KEY = SERVICE_KEY
 		const calls = stubFetch(200, { id: 'resp_b', output: [] })
 
@@ -100,7 +106,6 @@ describe('Models door AI client (official Responses document)', () => {
 			usage: { input_tokens: 42, output_tokens: 17, total_tokens: 59 },
 		}
 		const calls = stubFetch(200, response)
-		process.env.AI_API_ORIGIN = MODELS_DOOR
 		process.env.AI_API_KEY = SERVICE_KEY
 
 		const returned = await getAI().createResponse({
@@ -121,7 +126,6 @@ describe('Models door AI client (official Responses document)', () => {
 	})
 
 	test('surfaces the door error envelope and never falls back to a retired path', async () => {
-		process.env.AI_API_ORIGIN = MODELS_DOOR
 		process.env.AI_API_KEY = SERVICE_KEY
 		const calls = stubFetch(404, {
 			error: { code: 'chat_completions_retired', message: 'Use POST /v1/responses.' },
@@ -133,8 +137,7 @@ describe('Models door AI client (official Responses document)', () => {
 		expect(calls.map((call) => new URL(call.url).pathname)).toEqual(['/v1/responses'])
 	})
 
-	test('lists models from GET {origin}/models with the product credential', async () => {
-		process.env.AI_API_ORIGIN = MODELS_DOOR
+	test('lists models from the canonical gateway by default with the product credential', async () => {
 		process.env.AI_API_KEY = SERVICE_KEY
 		// Door document: {object:"list", data:[row...], models:[codex rows]}
 		const calls = stubFetch(200, {
@@ -160,7 +163,7 @@ describe('Models door AI client (official Responses document)', () => {
 
 		const listed = await getAI().listModels()
 
-		expect(calls[0]!.url).toBe(`${MODELS_DOOR}/models`)
+		expect(calls[0]!.url).toBe(`${MODEL_GATEWAY}/models`)
 		expect((calls[0]!.init.headers as Record<string, string>).Authorization).toBe(
 			`Bearer ${SERVICE_KEY}`,
 		)

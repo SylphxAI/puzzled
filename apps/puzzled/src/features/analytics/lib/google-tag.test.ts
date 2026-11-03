@@ -146,6 +146,7 @@ describe('page views and addresses', () => {
 	test('only public paths are reported, with no query, id or locale-private part', () => {
 		expect(trackablePath('/')).toBe('/')
 		expect(trackablePath('/en-GB/pricing')).toBe('/pricing')
+		expect(trackablePath('/delete-account')).toBe('/delete-account')
 		expect(trackablePath('/zh-HK/')).toBe('/')
 		expect(trackablePath('/games/sudoku')).toBeNull()
 		expect(trackablePath('/share/abc123')).toBeNull()

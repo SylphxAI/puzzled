@@ -97,21 +97,11 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		required: false,
 		description: 'Listen port for the local dev site-origin fallback',
 	},
-	// Dest peels (platform-injected origins)
-	{
-		name: 'SYLPHX_AUTH_URL',
-		required: false,
-		description: 'Sylphx Auth origin (Enable Auth binding); defaults to https://api.sylphx.com',
-	},
+	// Events origin (pending canonical Notify data-plane support)
 	{
 		name: 'EVENTS_API_ORIGIN',
 		required: false,
 		description: 'Events dest origin override',
-	},
-	{
-		name: 'AI_API_ORIGIN',
-		required: false,
-		description: 'Models dest origin override',
 	},
 	// Product credentials (read through lib/identity/credentials.ts)
 	{
@@ -250,17 +240,9 @@ export const env = {
 	get PORT(): string | undefined {
 		return process.env.PORT
 	},
-	/** Sylphx Auth origin (Enable Auth binding) */
-	get SYLPHX_AUTH_URL(): string | undefined {
-		return process.env.SYLPHX_AUTH_URL
-	},
 	/** Events dest origin override */
 	get EVENTS_API_ORIGIN(): string | undefined {
 		return process.env.EVENTS_API_ORIGIN
-	},
-	/** Models dest origin override */
-	get AI_API_ORIGIN(): string | undefined {
-		return process.env.AI_API_ORIGIN
 	},
 	/** Sylphx Auth instance secret key */
 	get SYLPHX_AUTH_SECRET_KEY(): string | undefined {

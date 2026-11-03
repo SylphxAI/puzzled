@@ -32,7 +32,6 @@ const originalFetch = globalThis.fetch
 const envKeys = [
 	'SYLPHX_AUTH_SECRET_KEY',
 	'SYLPHX_AUTH_ORGANIZATION_ID',
-	'SYLPHX_AUTH_URL',
 	'SYLPHX_PUBLISHABLE_KEY',
 	'SYLPHX_PUBLIC_URL',
 ] as const
@@ -52,7 +51,6 @@ beforeEach(() => {
 	process.env.SYLPHX_AUTH_ORGANIZATION_ID = 'organization-00000000-0000-7000-8000-000000000001'
 	process.env.SYLPHX_PUBLISHABLE_KEY = 'sylphx_pk_test_public'
 	process.env.SYLPHX_PUBLIC_URL = 'https://puzzled.gg'
-	delete process.env.SYLPHX_AUTH_URL
 	calls = []
 	deleted.length = 0
 	cookieValues = {}
