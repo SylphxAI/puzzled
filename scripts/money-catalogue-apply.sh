@@ -55,8 +55,72 @@ if [ "$active_after_ms" -gt 0 ]; then
   sleep "$(awk -v ms="$active_after_ms" 'BEGIN { printf "%.3f", ms / 1000 }')"
 fi
 
-# 3. Convert the declaration into Money's spec, patch, and sync.
+# Retry only the bounded case where a freshly minted key is not visible to one
+# verifier replica yet. Every other response returns immediately.
+call_with_retry() {
+  local method="$1" url="$2" out="$3"; shift 3
+  local attempt=1 code
+  while :; do
+    code=$(curl -sS -o "$out" -w '%{http_code}' -X "$method" "$url" \
+      -H "Authorization: Bearer ${key}" -H 'Content-Type: application/json' "$@")
+    if [ "$code" = "401" ] && grep -q 'not_yet_propagated' "$out" \
+      && [ "$attempt" -lt 8 ]; then
+      attempt=$((attempt + 1))
+      echo "::warning::$method ${url##*/} answered 401 not_yet_propagated; retry ${attempt}/8 after 15 s" >&2
+      sleep 15
+      continue
+    fi
+    printf '%s' "$code"
+    return 0
+  done
+}
+
+# 3. Convert the declaration into Money's spec.
 bun scripts/money-catalogue-spec.ts config/commercial/catalogue.json > "$work/catalog.json"
+
+# 4. Onboarding belongs to Money's ordinary Connect flow, never to catalogue CI.
+# Both environments must already be connected in their declared mode.
+case "${MONEY_MODE:-}" in
+  test|live) ;;
+  *) echo "::error::MONEY_MODE must be test or live"; exit 1 ;;
+esac
+code=$(call_with_retry GET "https://api.sylphx.com/v1/${resource}/merchant_accounts/default" "$work/merchant-get.out")
+if [ "$code" != 200 ]; then
+  echo "::error::GET merchant account answered ${code}; connect it through Money before applying the catalogue"; exit 1
+fi
+bun scripts/money-merchant.ts "$work/merchant-get.out" "$MONEY_MODE"
+
+# 5. Ensure every declared licence key exists before the catalogue references it.
+# Existing keys are reused. Only a 404 generates; a concurrent creator's 409 is
+# settled by a readback, never by replaying the create request.
+ensure_licence_keys() {
+  local catalogue="$1" key_id url code
+  while IFS= read -r key_id; do
+    if [[ ! "$key_id" =~ ^[a-z][a-z0-9_-]{0,62}$ ]] || [[ "$key_id" == *- ]] || [[ "$key_id" == *_ ]]; then
+      echo "::error::invalid licence key id in catalogue"; exit 1
+    fi
+    url="https://api.sylphx.com/v1/${resource}/licence_keys/${key_id}"
+    code=$(call_with_retry GET "$url" "$work/licence-get.out")
+    if [ "$code" = 200 ]; then
+      continue
+    fi
+    if [ "$code" != 404 ]; then
+      echo "::error::GET licence key ${key_id} answered ${code}"; cat "$work/licence-get.out"; exit 1
+    fi
+    code=$(call_with_retry POST "https://api.sylphx.com/v1/${resource}/licence_keys:generate" \
+      "$work/licence-generate.out" --data "$(jq -cn --arg id "$key_id" '{licence_key_id: $id}')")
+    if [ "$code" -ge 300 ] && [ "$code" != 409 ]; then
+      echo "::error::POST licence_keys:generate for ${key_id} answered ${code}"; cat "$work/licence-generate.out"; exit 1
+    fi
+    code=$(call_with_retry GET "$url" "$work/licence-readback.out")
+    if [ "$code" != 200 ]; then
+      echo "::error::licence key ${key_id} readback answered ${code}"; cat "$work/licence-readback.out"; exit 1
+    fi
+  done < <(jq -r '.spec.products[]?.licence?.key // empty' "$catalogue" | sort -u)
+}
+ensure_licence_keys "$work/catalog.json"
+
+# 6. Patch and sync the catalogue.
 base="https://api.sylphx.com/v1/${resource}/price_catalogs/default"
 
 code=$(curl -sS -o "$work/patch.out" -w '%{http_code}' -X PATCH "${base}?allow_missing=true" \
@@ -66,8 +130,7 @@ if [ "$code" -ge 300 ]; then
   echo "::error::PATCH price_catalogs/default answered ${code}"; cat "$work/patch.out"; exit 1
 fi
 
-code=$(curl -sS -o "$work/sync.out" -w '%{http_code}' -X POST "${base}:sync" \
-  -H "Authorization: Bearer ${key}" -H 'Content-Type: application/json' --data '{}')
+code=$(call_with_retry POST "${base}:sync" "$work/sync.out" --data '{}')
 if [ "$code" -ge 300 ]; then
   echo "::error::POST price_catalogs/default:sync answered ${code}"; cat "$work/sync.out"; exit 1
 fi

@@ -17,6 +17,9 @@
 		"familyBody": "Até {count} pessoas, cada uma com suas próprias estatísticas e sequências.",
 		"monthly": "Mensal",
 		"yearly": "Anual",
+		"weekendPass": "Passe de {days} dias",
+		"oneTime": "pagamento único",
+		"passTerms": "Um pagamento por {days} dias de Puzzled Plus. Sem renovação.",
 		"perMonth": "por mês",
 		"currencyLabel": "Moeda",
 		"perYear": "por ano",
@@ -36,7 +39,16 @@
 		"checkoutCancelled": "O pagamento foi cancelado. Você não foi cobrado.",
 		"alreadySubscribed": "Você já tem o Puzzled Plus.",
 		"immediateSupplyConsent": "Quero acesso imediato e entendo que perco o direito de arrependimento de 14 dias.",
-		"consentRequired": "Marque a caixa para continuar."
+		"consentRequired": "Marque a caixa para continuar.",
+		"offerLead": "Todos os {count} jogos, todos os dias passados e estatísticas de cada um.",
+		"planChoice": "Escolha um plano",
+		"monthlyEquivalent": "{price} por mês",
+		"continueToPayment": "Continuar para o pagamento",
+		"renewsYearly": "Renova todo ano por {price} até você cancelar. Cancele quando quiser em Configurações.",
+		"renewsMonthly": "Renova todo mês por {price} até você cancelar. Cancele quando quiser em Configurações.",
+		"familyLink": "Plano família para até {count} jogadores",
+		"notNowPlayFree": "Agora não, jogar o desafio grátis de hoje",
+		"choosePlus": "Escolher o Puzzled Plus"
 	},
 	"trial": {
 		"endsOn": "Sua semana grátis do Puzzled Plus termina em {date}. Nada será cobrado, e tudo o que você concluiu continua nas suas estatísticas.",
@@ -63,6 +75,7 @@
 		"description": "Seu plano Puzzled Plus, pagamentos e família.",
 		"free": "Você está no plano grátis: o desafio em destaque de hoje, todos os dias.",
 		"closed": "O Puzzled Plus ainda não está à venda. Por enquanto, todos os jogos são grátis.",
+		"checkoutPending": "Estamos confirmando sua assinatura. Esta página será atualizada automaticamente. Se demorar mais, atualize a página.",
 		"checkoutSuccess": "Boas-vindas ao Puzzled Plus. Todos os jogos e o arquivo estão liberados.",
 		"plan": {
 			"individual_monthly": "Puzzled Plus, mensal",

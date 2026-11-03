@@ -17,7 +17,11 @@ import { cache } from 'react'
 import { createActiveAnnouncementsCache } from '@/features/announcements/lib/active-cache'
 import { type SharedResult, toSharedResult } from '@/features/daily/lib/challenge'
 import { offerAccess } from '@/features/plus-offer/lib/plus-offer'
-import { AdminService, GetSettingsRequestSchema } from '@/gen/connect/puzzled/v1/admin_pb'
+import {
+	AdminService,
+	GetMetricsReportRequestSchema,
+	GetSettingsRequestSchema,
+} from '@/gen/connect/puzzled/v1/admin_pb'
 import {
 	AnnouncementService,
 	ListActiveAnnouncementsRequestSchema,
@@ -479,3 +483,11 @@ export const getServerPlusAccess = cache(async (signedIn: boolean): Promise<Plus
 		return OPEN_ACCESS
 	}
 })
+
+/** Reads the scheduled aggregates; never recomputes in a web request. */
+export async function getServerMetricsReport() {
+	const transport = await getServerTransport()
+	return createClient(AdminService, transport).getMetricsReport(
+		create(GetMetricsReportRequestSchema, {}),
+	)
+}

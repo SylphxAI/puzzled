@@ -4,8 +4,8 @@ import { destEventsCredential, destIdentityProjectId } from './credentials'
 import {
 	authIdValue,
 	DEST_PEELS,
+	destEventsOrigin,
 	destIdentityJson,
-	destIdentityOrigin,
 	destIdentityPrincipal,
 	destJson,
 } from './dest'
@@ -20,7 +20,6 @@ mock.module('next/cache', () => ({ unstable_cache: <T>(load: T) => load }))
 describe('Identity dest HTTP', () => {
 	afterEach(() => {
 		globalThis.fetch = originalFetch
-		delete process.env.SYLPHX_AUTH_URL
 		delete process.env.SYLPHX_AUTH_SECRET_KEY
 		delete process.env.SYLPHX_PUBLISHABLE_KEY
 		delete process.env.EVENTS_API_KEY
@@ -123,8 +122,13 @@ describe('Identity dest HTTP', () => {
 		expect(destIdentityPrincipal(session(legacy), 'org_puzzled')).toBeNull()
 	})
 
-	test('rejects suite-door {project}.api.sylphx.com as dest origin', () => {
-		expect(destIdentityOrigin('https://puzzled.api.sylphx.com')).toBe('https://api.sylphx.com')
+	test('uses canonical Auth and model gateways', () => {
+		expect(DEST_PEELS.identity).toBe('https://api.sylphx.com')
+		expect(DEST_PEELS.ai).toBe('https://api.sylphx.ai/v1')
+	})
+
+	test('rejects suite-door {project}.api.sylphx.com as an Events origin', () => {
+		expect(destEventsOrigin('https://puzzled.api.sylphx.com')).toBe(DEST_PEELS.events)
 	})
 
 	test('never sends Binding on dest Identity', async () => {

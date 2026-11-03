@@ -13,14 +13,8 @@ export type GetLeaderboardInput = {
 
 export type GetTodayPercentileInput = {
 	gameSlug: string
-	status: string
-	score?: number
-	attempts?: number
-	mistakes?: number
-	timeSpentMs?: number
-	/** Fixture residual for pure dual-oracle (no DB). */
-	totalPlayers?: number
-	betterThan?: number
+	/** Day the displayed result was served for; checked against the server day. */
+	dayKey: string
 }
 
 /** Dual-oracle with server limit clamps. */
@@ -39,7 +33,7 @@ export function validateGetLeaderboardInput(input: GetLeaderboardInput): string 
 export function validateGetTodayPercentileInput(input: GetTodayPercentileInput): string | null {
 	if (!input.gameSlug.trim()) return 'game_slug_required'
 	if (input.gameSlug.length > 64) return 'game_slug_too_long'
-	if (!input.status.trim()) return 'status_required'
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(input.dayKey)) return 'day_key_required'
 	return null
 }
 

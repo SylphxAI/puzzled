@@ -1,7 +1,7 @@
 //! SQL adapters for user stats and history (server-authoritative sessions).
 
 use puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid;
-use puzzled_core::puzzle_play::ritual_completion::{DRC_MODULE_COMPLETIONS_SQL, DRC_RECOMPUTE_SQL};
+use puzzled_core::puzzle_play::ritual_completion::{TodayOverview, TODAY_OVERVIEW_SQL};
 use serde_json::Value;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -142,25 +142,114 @@ pub async fn user_history_on_connection(
 
 /// Public today overview: daily puzzle completers + qualifying ritual
 /// finishes for the bound product `day_key`. Same authority as `compute_drc`.
-pub async fn today_overview(
-    pool: &PgPool,
+pub async fn today_overview(pool: &PgPool, day_key: &str) -> Result<TodayOverview, String> {
+    let started = std::time::Instant::now();
+    let mut connection = pool.acquire().await.map_err(|e| {
+        tracing::info!(
+            event = "puzzled.stats.today_overview.db",
+            phase = "acquire_failed",
+            acquire_ms = started.elapsed().as_secs_f64() * 1000.0,
+            "today overview database timing"
+        );
+        format!("today overview acquire failed: {e}")
+    })?;
+    let acquired = std::time::Instant::now();
+    let rows = sqlx::query_as::<_, (Option<String>, i64)>(TODAY_OVERVIEW_SQL)
+        .bind(day_key)
+        .fetch_all(&mut *connection)
+        .await;
+    tracing::info!(
+        event = "puzzled.stats.today_overview.db",
+        phase = if rows.is_ok() { "ok" } else { "query_failed" },
+        acquire_ms = acquired.duration_since(started).as_secs_f64() * 1000.0,
+        query_ms = acquired.elapsed().as_secs_f64() * 1000.0,
+        "today overview database timing"
+    );
+    let rows = rows.map_err(|e| format!("today overview query failed: {e}"))?;
+    let mut overview = TodayOverview {
+        player_count: 0,
+        completions: Vec::with_capacity(rows.len().saturating_sub(1)),
+    };
+    for (slug, count) in rows {
+        match slug {
+            Some(slug) => overview.completions.push((slug, count.max(0) as u64)),
+            None => overview.player_count = count.max(0) as u64,
+        }
+    }
+    Ok(overview)
+}
+
+/// One snapshot: the cohort and viewer metric both come from accepted rows.
+/// Retains the original persisted-cohort implementation's wins-first, strict
+/// ordering and ten-finisher floor. No comparison input comes from the caller.
+#[derive(Debug)]
+pub struct DailyPercentile {
+    pub total: i32,
+    pub percentile: Option<i32>,
+    pub dispatch: &'static str,
+}
+
+pub async fn today_percentile(
+    connection: &mut sqlx::PgConnection,
     day_key: &str,
-) -> Result<(u32, Vec<serde_json::Value>), String> {
-    let players: (i64,) = sqlx::query_as(DRC_RECOMPUTE_SQL)
-        .bind(day_key)
-        .fetch_one(pool)
-        .await
-        .map_err(|e| format!("today players failed: {e}"))?;
-    let rows: Vec<(String, i64)> = sqlx::query_as(DRC_MODULE_COMPLETIONS_SQL)
-        .bind(day_key)
-        .fetch_all(pool)
-        .await
-        .map_err(|e| format!("today completions failed: {e}"))?;
-    let completions = rows
-        .into_iter()
-        .map(|(slug, count)| serde_json::json!({ "gameSlug": slug, "count": count }))
-        .collect();
-    Ok((players.0.max(0) as u32, completions))
+    game_slug: &str,
+    user_id: Option<&str>,
+) -> Result<DailyPercentile, String> {
+    let uid = user_id.map(parse_user_id).transpose()?;
+    let (total, beaten, accepted, complete): (i64, i64, bool, bool) = sqlx::query_as(
+        r#"
+        WITH cohort AS MATERIALIZED (
+            SELECT user_id, status = 'won' AS won,
+                CASE game_slug
+                    WHEN 'word-hive' THEN score::bigint
+                    WHEN 'word-groups' THEN score::bigint
+                    WHEN 'word-guess' THEN -attempts::bigint
+                    WHEN 'quad-words' THEN -attempts::bigint
+                    WHEN 'arithmo' THEN -attempts::bigint
+                    WHEN 'word-box' THEN -attempts::bigint
+                    WHEN 'cryptogram' THEN -hints_used
+                    ELSE -time_spent_ms::bigint
+                END AS metric,
+                CASE WHEN game_slug = 'cryptogram' THEN -time_spent_ms::bigint
+                     ELSE 0::bigint END AS tiebreak
+            FROM game_sessions
+            WHERE day_key = $1 AND game_slug = $2 AND mode = 'daily'
+              AND is_ritual = true AND module_class = 'puzzle_ritual'
+              AND status IN ('won', 'lost') AND NOT comparison_excluded
+        ), viewer AS (SELECT * FROM cohort WHERE user_id = $3)
+        SELECT COUNT(*), COUNT(*) FILTER (
+            WHERE (won, metric, tiebreak) <
+                (SELECT won, metric, tiebreak FROM viewer)
+        ), EXISTS (SELECT 1 FROM viewer),
+        COALESCE(BOOL_AND(metric IS NOT NULL AND tiebreak IS NOT NULL), true)
+        FROM cohort
+        "#,
+    )
+    .bind(day_key)
+    .bind(game_slug)
+    .bind(uid)
+    .fetch_one(connection)
+    .await
+    .map_err(|e| format!("today percentile failed: {e}"))?;
+    let dispatch = if total == 0 {
+        "empty_cohort"
+    } else if !accepted {
+        "accepted_finish_required"
+    } else if !complete {
+        // Historical Cryptogram rows have no accepted hint count. Do not
+        // pretend that missing hints mean zero or silently rank by time alone.
+        "unavailable_data"
+    } else if total < 10 {
+        "insufficient_cohort"
+    } else {
+        "product_db_sessions"
+    };
+    Ok(DailyPercentile {
+        total: i32::try_from(total).map_err(|_| "cohort_count_overflow")?,
+        percentile: (dispatch == "product_db_sessions")
+            .then(|| ((beaten as f64 / total as f64) * 100.0).round() as i32),
+        dispatch,
+    })
 }
 
 #[cfg(test)]

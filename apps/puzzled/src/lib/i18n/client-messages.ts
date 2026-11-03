@@ -16,6 +16,7 @@ export const CLIENT_NAMESPACES = [
 	'auth',
 	'common',
 	'consent',
+	'crossPromo',
 	'daily',
 	'gameResult',
 	'games',

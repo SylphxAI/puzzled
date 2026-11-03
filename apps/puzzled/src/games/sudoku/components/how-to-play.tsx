@@ -47,7 +47,7 @@ export function SudokuHowToPlay() {
 				<p className="text-sm font-medium">Tips</p>
 				<ul className="space-y-1 text-xs text-muted-foreground">
 					<li>• Use notes to track possible numbers</li>
-					<li>• Press N to toggle notes mode</li>
+					<li className="hidden pointer-fine:block">• Press N to toggle notes mode</li>
 					<li>• Look for cells with only one possibility</li>
 				</ul>
 			</div>
