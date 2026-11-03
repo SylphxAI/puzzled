@@ -7,18 +7,16 @@ export function observeDayPrimaryActions(
 ): () => void {
 	const actions = new Map<Element, boolean>()
 	const publish = () =>
-		onVisibility(
-			(actions.size === 0 && waitForAction) || [...actions.values()].some(Boolean),
-		)
+		onVisibility((actions.size === 0 && waitForAction) || [...actions.values()].some(Boolean))
 	const intersections =
 		typeof IntersectionObserver === 'undefined'
 			? null
 			: new IntersectionObserver((entries) => {
-				for (const entry of entries) {
-					if (actions.has(entry.target)) actions.set(entry.target, entry.isIntersecting)
-				}
-				publish()
-			})
+					for (const entry of entries) {
+						if (actions.has(entry.target)) actions.set(entry.target, entry.isIntersecting)
+					}
+					publish()
+				})
 	const sync = () => {
 		const current = new Set(document.querySelectorAll(`[${DAY_PRIMARY_ACTION_ATTR}]`))
 		for (const action of actions.keys()) {
