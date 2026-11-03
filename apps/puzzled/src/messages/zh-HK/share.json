@@ -7,7 +7,7 @@
 		"title": "Puzzled 成績卡",
 		"downloaded": "成績卡已儲存，說明文字已複製到剪貼簿。",
 		"copied": "說明文字已複製；此瀏覽器未能產生圖片。",
-		"unavailable": "此瀏覽器不支援分享功能。",
+		"unavailable": "未能自動分享。",
 		"statusWon": "完成！",
 		"statusLost": "今次唔得",
 		"attemptsLabel": "嘗試次數",
@@ -27,7 +27,9 @@
 		"altTemplate": "Puzzled 成績 — {game}{day}。{result}",
 		"altDetailsTemplate": " {details}。",
 		"altLinkTemplate": " 一齊玩：{link}",
-		"detailSeparator": "、"
+		"detailSeparator": "、",
+		"saved": "成績卡已儲存。",
+		"caption": "成績說明文字"
 	},
 	"challenge": {
 		"title": "並排比較",

@@ -7,7 +7,7 @@
 		"title": "Cartão de resultado do Puzzled",
 		"downloaded": "Imagem do cartão salva; legenda copiada para a área de transferência.",
 		"copied": "Legenda copiada para a área de transferência; este navegador não conseguiu gerar a imagem.",
-		"unavailable": "O compartilhamento não está disponível neste navegador.",
+		"unavailable": "Não foi possível compartilhar automaticamente.",
 		"statusWon": "Resolvido!",
 		"statusLost": "Dessa vez não",
 		"attemptsLabel": "Tentativas",
@@ -27,7 +27,9 @@
 		"altTemplate": "Puzzled - {game}{day}. {result}",
 		"altDetailsTemplate": " {details}.",
 		"altLinkTemplate": " Jogue: {link}",
-		"detailSeparator": ", "
+		"detailSeparator": ", ",
+		"saved": "Imagem do cartão salva.",
+		"caption": "Texto do resultado"
 	},
 	"challenge": {
 		"title": "Lado a lado",

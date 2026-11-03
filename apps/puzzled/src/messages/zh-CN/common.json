@@ -74,5 +74,9 @@
 	"help": "玩法",
 	"menu": "更多",
 	"reset": "重新开始",
-	"advertisement": "广告"
+	"advertisement": "广告",
+	"clipboard": {
+		"pending": "正在复制…",
+		"failed": "无法复制。文字已选中，请手动复制或重试。"
+	}
 }

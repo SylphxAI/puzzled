@@ -213,6 +213,17 @@ pub struct CatalogPrice {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct CatalogLicence {
+    pub term: CatalogLicenceTerm,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct CatalogLicenceTerm {
+    pub unit: String,
+    pub count: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CatalogProduct {
     pub key: String,
     /// Feature grants: `plus`/`family` are `"true"`, `seats` a decimal string.
@@ -220,6 +231,8 @@ pub struct CatalogProduct {
     pub features: std::collections::BTreeMap<String, String>,
     #[serde(default)]
     pub prices: Vec<CatalogPrice>,
+    #[serde(default)]
+    pub licence: Option<CatalogLicence>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Deserialize)]
@@ -382,6 +395,14 @@ impl Money {
             .map(String::as_str)
     }
 
+    pub async fn environment_resource(&self) -> Result<String, MoneyError> {
+        self.env_url()
+            .await?
+            .split_once("/v1/")
+            .map(|(_, name)| name.to_owned())
+            .ok_or_else(|| MoneyError::Unavailable("environment binding unavailable".into()))
+    }
+
     /// Resolve the environment now (at start-up), so a bad key shows in the
     /// log rather than on the first request. Failure is retried on use.
     pub async fn warm(&self) -> Result<(), MoneyError> {
@@ -448,6 +469,15 @@ impl Money {
         })
     }
 
+    /// Forget this account's cached answers on checkout return. This does not
+    /// grant access: the next read must still be confirmed by Money. Clones
+    /// share the cache, so paid play sees the same fresh answer as Settings.
+    pub fn refresh_grants(&self, user_id: &str) {
+        if let Ok(mut cache) = self.grants.lock() {
+            cache.retain(|(subject, _), _| subject != user_id);
+        }
+    }
+
     /// The entitlement answer for `feature`, from the cache when it is fresh
     /// and otherwise from Money. A Money error is an `Err`, remembered for 5
     /// seconds so an outage is not retried per request; callers that must tell
@@ -461,7 +491,7 @@ impl Money {
                 match cached {
                     None => return Err(MoneyError::Unavailable("recent check failed".into())),
                     Some(grant) if grant.ends_at.is_none_or(|end| end > Utc::now()) => {
-                        return Ok(grant)
+                        return Ok(grant);
                     }
                     Some(_) => {}
                 }
@@ -663,5 +693,32 @@ impl Money {
             .filter(|url| !url.is_empty())
             .map(str::to_string)
             .ok_or_else(|| MoneyError::Unavailable("checkout session has no url".into()))
+    }
+
+    /// The ordinary Money create route with a retained resource identity.
+    /// Both the body and this id are fixed before the first call.
+    pub async fn create_retained_checkout(
+        &self,
+        id: &str,
+        session: &Value,
+    ) -> Result<Value, MoneyError> {
+        self.call(
+            self.http
+                .post(format!("{}/checkout_sessions", self.env_url().await?))
+                .query(&[("checkout_session_id", id)])
+                .header("Idempotency-Key", format!("puzzled-checkout-{id}"))
+                .json(session),
+        )
+        .await
+    }
+
+    /// Authoritative one-time session readback, reconciled by Money.
+    pub async fn checkout_session(&self, id: &str) -> Result<Value, MoneyError> {
+        self.call(self.http.get(format!(
+            "{}/checkout_sessions/{}",
+            self.env_url().await?,
+            segment(id)
+        )))
+        .await
     }
 }

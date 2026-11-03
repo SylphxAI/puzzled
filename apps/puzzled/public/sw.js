@@ -1,7 +1,39 @@
 // Never cache puzzle RPCs, account pages or credentials. The network remains
 // authoritative for the product day and accepted finishes.
-self.addEventListener('install', () => self.skipWaiting())
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
+// Only this public, self-contained document is cached — never visited pages.
+const OFFLINE_CACHE = 'puzzled-offline-v1'
+const OFFLINE_URL = '/offline.html'
+self.addEventListener('install', (event) => {
+	event.waitUntil(
+		caches.open(OFFLINE_CACHE).then(async (cache) => {
+			await cache.add(new Request(OFFLINE_URL, { cache: 'reload', credentials: 'omit' }))
+			await self.skipWaiting()
+		}),
+	)
+})
+self.addEventListener('activate', (event) => {
+	event.waitUntil(
+		caches.keys().then(async (keys) => {
+			await Promise.all(
+				keys
+					.filter((key) => key.startsWith('puzzled-offline-') && key !== OFFLINE_CACHE)
+					.map((key) => caches.delete(key)),
+			)
+			await self.clients.claim()
+		}),
+	)
+})
+self.addEventListener('fetch', (event) => {
+	if (event.request.mode !== 'navigate' || event.request.method !== 'GET') return
+	if (new URL(event.request.url).origin !== self.location.origin) return
+
+	event.respondWith(
+		fetch(event.request).catch(async () => {
+			const cache = await caches.open(OFFLINE_CACHE)
+			return (await cache.match(OFFLINE_URL)) || Response.error()
+		}),
+	)
+})
 self.addEventListener('push', (event) => {
 	if (!event.data) return
 	let payload

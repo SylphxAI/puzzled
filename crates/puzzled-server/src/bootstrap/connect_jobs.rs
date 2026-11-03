@@ -1,6 +1,6 @@
 //! Native Connect JobsService — the app's sole scheduled-work executor.
 //!
-//! Inbound: dest Events product credential (`Authorization: Bearer`).
+//! Inbound: SDK-verified Compute callback receipt (`Authorization: Bearer`).
 //! Effects: dest Events `POST /v1/deliveries` (push + email).
 
 use std::sync::Arc;
@@ -10,11 +10,11 @@ use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
 
+use super::compute_ticks::{admit_tick, TickError};
 use super::state::AppState;
 use crate::capabilities::jobs::adapters::jobs_db;
 use crate::proto::puzzled::v1::{JobsService, RunRetentionJobRequest, RunRetentionJobResponse};
 use crate::shared::dest_http::{dest_email_connector_id, dest_email_delivery, dest_events_deliver};
-use crate::shared::tick_receipt::TickError;
 use puzzled_core::puzzle_play::daily_time::product_day_key;
 
 /// Send the daily reminders due at `now`, each at the player's own reminder
@@ -147,16 +147,27 @@ impl JobsConnectService {
     /// URL. The Events product key used before was never set in production,
     /// so every call was refused; a shared bearer is not an admission.
     async fn admit_tick(&self, ctx: &RequestContext) -> Result<(), ConnectError> {
-        self.state
-            .ticks
-            .admit(ctx.headers(), "/puzzled.v1.JobsService/RunRetentionJob")
-            .await
-            .map_err(|error| match error {
-                TickError::Unavailable => {
-                    ConnectError::new(ErrorCode::Unavailable, "tick_receipt_unavailable")
-                }
-                _ => ConnectError::new(ErrorCode::Unauthenticated, "tick_receipt_invalid"),
-            })
+        // The procedure path alone drops the query. Axum preserves the exact
+        // original URI in extensions before Connect dispatches the request.
+        let uri = &ctx
+            .extensions()
+            .get::<axum::extract::OriginalUri>()
+            .ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "tick_receipt_invalid"))?
+            .0;
+        admit_tick(
+            &self.state.tick_jwks_url,
+            ctx.headers(),
+            uri.path_and_query()
+                .map(|p| p.as_str())
+                .unwrap_or(uri.path()),
+        )
+        .await
+        .map_err(|error| match error {
+            TickError::Unavailable => {
+                ConnectError::new(ErrorCode::Unavailable, "tick_receipt_unavailable")
+            }
+            _ => ConnectError::new(ErrorCode::Unauthenticated, "tick_receipt_invalid"),
+        })
     }
 
     async fn run_daily_reminder(&self) -> Result<u32, Vec<String>> {

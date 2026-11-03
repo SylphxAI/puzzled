@@ -19,6 +19,12 @@ unsafe_code = "forbid"
 [workspace.lints.clippy]
 unwrap_used = "deny"
 expect_used = "warn"
+
+# Keep file:line backtraces with smaller development/test artifacts.
+# Full variable/type debugging: docs/reference/rust-debugging.md.
+[profile.dev]
+debug = "line-tables-only"
+
 # The daily-puzzle generators and uniqueness solvers are search-heavy
 # (block-slide, killer-sudoku); unoptimised they take minutes in tests.
 [profile.dev.package.puzzled-core]

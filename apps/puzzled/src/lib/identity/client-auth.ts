@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { authIdValue } from './dest'
+import { authIdValue, DEST_PEELS } from './dest'
 
 /**
  * Puzzled's players are end users of its own Sylphx Auth instance, reached
@@ -16,10 +16,8 @@ import { authIdValue } from './dest'
  *
  * Auth binds a session to the browser's User-Agent, so every call made on a
  * player's behalf forwards it. Keys come from the Enable Auth binding:
- * `SYLPHX_AUTH_URL`, `SYLPHX_PUBLISHABLE_KEY`, `SYLPHX_AUTH_SECRET_KEY`.
+ * `SYLPHX_PUBLISHABLE_KEY`, `SYLPHX_AUTH_SECRET_KEY`. The gateway is canonical.
  */
-
-const DEFAULT_AUTH_URL = 'https://api.sylphx.com'
 
 /** How long after an account is created a first sign-in still counts as new. */
 export const NEW_USER_WINDOW_SECONDS = 600
@@ -41,8 +39,7 @@ export function authConfig(
 	const publishableKey = envValue(['SYLPHX_PUBLISHABLE_KEY'], env)
 	const secretKey = envValue(['SYLPHX_AUTH_SECRET_KEY'], env)
 	if (!publishableKey || !secretKey) return null
-	const url = (envValue(['SYLPHX_AUTH_URL'], env) ?? DEFAULT_AUTH_URL).replace(/\/+$/, '')
-	return { url, publishableKey, secretKey }
+	return { url: DEST_PEELS.identity, publishableKey, secretKey }
 }
 
 export class AuthCallError extends Error {

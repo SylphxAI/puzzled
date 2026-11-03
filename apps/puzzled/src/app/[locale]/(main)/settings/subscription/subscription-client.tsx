@@ -2,10 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { TrialEndingBanner } from '@/features/plus/components/trial-ending-banner'
 import type { SubscriptionView } from '@/lib/billing/plus'
-import { trialBannerEndMs } from '@/lib/billing/plus'
+import { checkoutConfirmed, trialBannerEndMs } from '@/lib/billing/plus'
 import {
 	cancelSubscription,
 	leaveFamily,
@@ -16,6 +16,7 @@ import {
 } from '@/lib/connect/billing-client'
 import { Link, useRouter } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
+import { useClipboardCopy } from '@/shared/hooks/use-clipboard-copy'
 
 type Props = {
 	view: SubscriptionView | null
@@ -34,14 +35,31 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 	const tFamily = useTranslations('plus.family')
 	const tUnlock = useTranslations('plus.unlock')
 	const tTrial = useTranslations('plus.trial')
+	const tCopy = useTranslations('common.clipboard')
 	const router = useRouter()
 	const [busy, setBusy] = useState(false)
 	const [confirming, setConfirming] = useState<'cancel' | 'leave' | null>(null)
-	const [message, setMessage] = useState<string | null>(
-		fromCheckout && view?.entitled ? t('checkoutSuccess') : null,
-	)
-	const [inviteCode, setInviteCode] = useState(view?.family?.inviteCode ?? null)
-	const [copied, setCopied] = useState(false)
+	const [message, setMessage] = useState<string | null>(null)
+	const confirmed = checkoutConfirmed(view)
+	// The processor may confirm just after the redirect. Re-read the server's
+	// Money answer for a bounded period; neither the URL nor polling grants Plus.
+	useEffect(() => {
+		if (!fromCheckout || confirmed) return
+		let attempts = 0
+		const timer = setInterval(() => {
+			router.refresh()
+			if (++attempts >= 15) clearInterval(timer)
+		}, 2000)
+		return () => clearInterval(timer)
+	}, [fromCheckout, confirmed, router])
+	const notice =
+		message ?? (fromCheckout ? t(confirmed ? 'checkoutSuccess' : 'checkoutPending') : null)
+	const [newInviteCode, setInviteCode] = useState<string | null>(null)
+	const inviteCode = newInviteCode ?? view?.family?.inviteCode ?? null
+	const origin = typeof window === 'undefined' ? '' : window.location.origin
+	const inviteUrl = inviteCode ? `${origin}/family/join?code=${inviteCode}` : null
+	const inviteRef = useRef<HTMLParagraphElement>(null)
+	const { status: copyStatus, copy } = useClipboardCopy(inviteUrl ?? '', inviteRef)
 	const [nowMs] = useState(() => Date.now())
 
 	const date = (ms: number | null) =>
@@ -70,8 +88,6 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 		return <p role="alert">{t('error')}</p>
 	}
 
-	const origin = typeof window === 'undefined' ? '' : window.location.origin
-	const inviteUrl = inviteCode ? `${origin}/family/join?code=${inviteCode}` : null
 	const statusKey =
 		view.status === 'trialing'
 			? 'active'
@@ -84,8 +100,8 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 	return (
 		<div className="space-y-6">
 			{trialEndMs ? <TrialEndingBanner endMs={trialEndMs} /> : null}
-			{message ? (
-				<output className="block rounded-xl bg-muted px-4 py-3 text-sm">{message}</output>
+			{notice ? (
+				<output className="block rounded-xl bg-muted px-4 py-3 text-sm">{notice}</output>
 			) : null}
 
 			<Card>
@@ -200,19 +216,28 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 						{view.family.role === 'owner' && inviteUrl ? (
 							<div className="space-y-2">
 								<p>{tFamily('inviteBody', { count: view.family.maxMembers })}</p>
-								<p className="break-all rounded-lg bg-muted px-3 py-2 font-mono text-xs">
+								<p
+									ref={inviteRef}
+									tabIndex={-1}
+									className="select-all break-all rounded-lg bg-muted px-3 py-2 font-mono text-xs"
+								>
 									{inviteUrl}
 								</p>
 								<div className="flex flex-wrap gap-2">
 									<button
 										type="button"
 										className={secondary}
-										onClick={async () => {
-											await navigator.clipboard.writeText(inviteUrl)
-											setCopied(true)
-										}}
+										onClick={copy}
+										disabled={copyStatus === 'pending'}
+										aria-busy={copyStatus === 'pending'}
 									>
-										{copied ? tFamily('copied') : tFamily('copy')}
+										<span aria-live="polite">
+											{copyStatus === 'pending'
+												? tCopy('pending')
+												: copyStatus === 'copied'
+													? tFamily('copied')
+													: tFamily('copy')}
+										</span>
 									</button>
 									<button
 										type="button"
@@ -222,7 +247,6 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 										onClick={() =>
 											run(async () => {
 												setInviteCode(await resetFamilyInvite())
-												setCopied(false)
 												return tFamily('newLinkHelp')
 											})
 										}
@@ -230,6 +254,11 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 										{tFamily('newLink')}
 									</button>
 								</div>
+								{copyStatus === 'failed' && (
+									<p role="alert" className="text-destructive">
+										{tCopy('failed')}
+									</p>
+								)}
 							</div>
 						) : null}
 

@@ -4,17 +4,10 @@
  */
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
-import {
-	DEFAULT_LAUNCH_DATE,
-	type DifficultyLevelConfig,
-	type GameConfig,
-	type GameResult,
-	type GameSubmission,
-} from '../types'
+import { DEFAULT_LAUNCH_DATE, type DifficultyLevelConfig, type GameConfig } from '../types'
 import { QueensHowToPlay } from './components/how-to-play'
 import { QueensIcon } from './icon'
 import type { QueensGuess, QueensGuessResult, QueensPuzzleData, QueensSolution } from './types'
-import { getConflicts, isSolved } from './types'
 
 export type { QueensPuzzleData, QueensSolution }
 
@@ -74,86 +67,4 @@ export const queensConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	/**
-	 * Validate a single move
-	 */
-	validateGuess(
-		_solution: QueensSolution,
-		guess: QueensGuess,
-		puzzleData?: QueensPuzzleData,
-	): QueensGuessResult {
-		if (!puzzleData) {
-			return { valid: true }
-		}
-
-		// Create a temporary grid with the new queen
-		const size = puzzleData.size
-		const tempGrid: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false))
-
-		// This is just validation of a single move
-		// In practice, the game component handles full state
-		if (guess.place) {
-			tempGrid[guess.row][guess.col] = true
-			const conflicts = getConflicts(tempGrid, puzzleData.regions, guess.row, guess.col)
-			return {
-				valid: conflicts.length === 0,
-				conflicts: conflicts.length > 0 ? conflicts : undefined,
-			}
-		}
-
-		return { valid: true }
-	},
-
-	/**
-	 * CORE VALIDATION - Validates submission AND calculates score
-	 *
-	 * Scoring: Time-based
-	 * - Base: 500 points
-	 * - Time penalty: -1 point per 2 seconds
-	 * - Minimum: 100 points for a win
-	 */
-	validateAndScore(
-		_solution: QueensSolution,
-		puzzleData: QueensPuzzleData,
-		submission: GameSubmission,
-	): GameResult {
-		const data = submission.data as { finalGrid?: boolean[][] } | undefined
-
-		// Must have final grid to validate
-		if (!data?.finalGrid) {
-			return { valid: false, error: 'Missing final grid data' }
-		}
-
-		const finalGrid = data.finalGrid
-		const { regions, size } = puzzleData
-
-		// Verify the solution is correct using puzzle's regions
-		const won = isSolved(finalGrid, regions, size)
-
-		// Verify claimed status
-		if (submission.status === 'won' && !won) {
-			return {
-				valid: false,
-				error: 'Invalid win claim - puzzle not solved correctly',
-			}
-		}
-		if (submission.status === 'lost' && won) {
-			return {
-				valid: false,
-				error: 'Invalid loss claim - puzzle is solved correctly',
-			}
-		}
-
-		// Calculate score
-		if (!won) {
-			return { valid: true, status: 'lost', score: 0 }
-		}
-
-		const seconds = Math.floor(submission.timeSpentMs / 1000)
-		const timePenalty = Math.floor(seconds / 2) // -1 point per 2 seconds
-		const score = Math.max(100, 500 - timePenalty)
-
-		return { valid: true, status: 'won', score }
-	},
 }

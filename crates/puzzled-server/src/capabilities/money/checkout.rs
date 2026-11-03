@@ -16,6 +16,9 @@ pub enum CheckoutError {
     ConsentRequired,
     PlanNotOnSale,
     AlreadySubscribed,
+    AttemptPending,
+    AttemptChanged,
+    InvalidRequest,
     Failed(String),
 }
 
@@ -121,6 +124,70 @@ pub async fn create_session(
     attribution: Option<&Attribution>,
     _consent: Consent,
 ) -> Result<String, CheckoutError> {
+    let body = prepare_session(
+        money,
+        catalog,
+        user_id,
+        plan_id,
+        locale,
+        currency,
+        attribution,
+    )
+    .await?;
+    money
+        .create_checkout_session(&body)
+        .await
+        .map_err(|e: MoneyError| CheckoutError::Failed(e.to_string()))
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn create_retained_session(
+    pool: &sqlx::PgPool,
+    money: &Money,
+    catalog: &Catalog,
+    user_id: &str,
+    request_id: &str,
+    plan_id: &str,
+    locale: &str,
+    currency: &str,
+    attribution: Option<&Attribution>,
+    _consent: Consent,
+) -> Result<String, CheckoutError> {
+    let body = prepare_session(
+        money,
+        catalog,
+        user_id,
+        plan_id,
+        locale,
+        currency,
+        attribution,
+    )
+    .await?;
+    let session = super::attempts::create(pool, money, user_id, request_id, &body)
+        .await
+        .map_err(|error| match error {
+            super::attempts::Error::InvalidRequest => CheckoutError::InvalidRequest,
+            super::attempts::Error::RequestChanged => CheckoutError::AttemptChanged,
+            super::attempts::Error::Pending => CheckoutError::AttemptPending,
+            _ => CheckoutError::Failed("checkout_unavailable".into()),
+        })?;
+    session
+        .get("url")
+        .and_then(Value::as_str)
+        .filter(|url| !url.is_empty())
+        .map(str::to_owned)
+        .ok_or_else(|| CheckoutError::Failed("checkout_unavailable".into()))
+}
+
+async fn prepare_session(
+    money: &Money,
+    catalog: &Catalog,
+    user_id: &str,
+    plan_id: &str,
+    locale: &str,
+    currency: &str,
+    attribution: Option<&Attribution>,
+) -> Result<Value, CheckoutError> {
     let plan = plan(catalog, plan_id).ok_or(CheckoutError::PlanNotOnSale)?;
     let price = price_of(catalog, &plan).ok_or(CheckoutError::PlanNotOnSale)?;
     let feature = if plan.family {
@@ -136,7 +203,7 @@ pub async fn create_session(
         .unit_amounts
         .contains_key(&currency)
         .then_some(currency);
-    let body = session_body(
+    Ok(session_body(
         money,
         user_id,
         plan_id,
@@ -144,9 +211,5 @@ pub async fn create_session(
         locale,
         currency.as_deref(),
         attribution,
-    );
-    money
-        .create_checkout_session(&body)
-        .await
-        .map_err(|e: MoneyError| CheckoutError::Failed(e.to_string()))
+    ))
 }

@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { requireMember } from '@/features/console/lib/require-member'
 import { getServerSubscription } from '@/lib/api/server'
-import { subscriptionView } from '@/lib/billing/plus'
+import { checkoutConfirmed, subscriptionView } from '@/lib/billing/plus'
 import { logger } from '@/lib/logger'
 import { buildPageMetadata } from '@/lib/seo/metadata'
 import { CheckoutReturnTracker } from './checkout-return-tracker'
@@ -44,10 +44,10 @@ export default async function SubscriptionSettingsPage({ params, searchParams }:
 
 	// A confirmed subscription coming back from Money checkout is a conversion.
 	const conversion =
-		fromCheckout && checkoutSession && view?.entitled
-			? view.status === 'trialing'
+		fromCheckout && checkoutSession && checkoutConfirmed(view)
+			? view?.status === 'trialing'
 				? 'trialing'
-				: view.status === 'active'
+				: view?.status === 'active'
 					? 'paid'
 					: null
 			: null

@@ -27,5 +27,6 @@
 		"easy": "49 células preenchidas — um começo fácil",
 		"medium": "39 células preenchidas — uma grade equilibrada",
 		"hard": "Só 29 células preenchidas — poucos pontos de partida"
-	}
+	},
+	"undo": "Desfazer"
 }

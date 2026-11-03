@@ -13,5 +13,9 @@
 		"easyDescription": "適合暖身",
 		"mediumDescription": "難度適中",
 		"hardDescription": "挑戰你的極限"
+	},
+	"clipboard": {
+		"pending": "正在複製…",
+		"failed": "無法複製。文字已選取，請手動複製或再試一次。"
 	}
 }

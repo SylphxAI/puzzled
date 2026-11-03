@@ -51,7 +51,8 @@ use crate::proto::puzzled::v1::{
     CheckGuessRequest, CheckGuessResponse, DailyCompletion, GameProgress, GetDailyRequest,
     GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse, GetSharedResultRequest,
     GetSharedResultResponse, GetTodayProgressRequest, GetTodayProgressResponse, PuzzleService,
-    ShareResultRequest, ShareResultResponse, SubmitGuessRequest, SubmitGuessResponse,
+    RecordShareLandingRequest, RecordShareLandingResponse, ShareResultRequest, ShareResultResponse,
+    SubmitGuessRequest, SubmitGuessResponse,
 };
 
 const SLICE_PUZZLE: &str = "S2-puzzle-connect";
@@ -89,6 +90,277 @@ impl PuzzleConnectService {
         }
         *used += 1;
         true
+    }
+
+    async fn submit_guess_inner(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, SubmitGuessRequest>,
+    ) -> ServiceResult<SubmitGuessResponse> {
+        let req = request.to_owned_message();
+        let game_slug = canonicalize_game_slug(req.game_slug.trim());
+        if game_slug.is_empty() {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "game_slug_required",
+            ));
+        }
+        if !is_valid_game_slug(game_slug) {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "unknown_game",
+            ));
+        }
+        let Some(status) = parse_status(&req.status) else {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "status_required_won_or_lost",
+            ));
+        };
+        // Platform auth **or** stable guest-day id (free-ritual protocol default).
+        let platform = crate::bootstrap::identity::require_identity(&ctx).ok();
+        if platform.is_none() && crate::bootstrap::identity::guest_credential_hash(&ctx).is_none() {
+            return Err(ConnectError::new(
+                ErrorCode::Unauthenticated,
+                "identity_required_for_submit",
+            ));
+        }
+
+        let data: Value = if req.submission_json.trim().is_empty() {
+            Value::Null
+        } else {
+            match serde_json::from_str(&req.submission_json) {
+                Ok(v) => v,
+                Err(_) => {
+                    return Err(ConnectError::new(
+                        ErrorCode::InvalidArgument,
+                        "invalid_submission_json",
+                    ));
+                }
+            }
+        };
+
+        let now = Utc::now();
+        let today = product_day_key(now);
+        let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
+        self.enforce_play_access(
+            platform.as_ref().map(|identity| identity.user_id.as_str()),
+            game_slug,
+            date,
+        )
+        .await?;
+        let difficulty = {
+            let d = req.difficulty.trim();
+            if d.is_empty() {
+                None
+            } else {
+                Some(d.to_string())
+            }
+        };
+
+        // The served puzzle: the stored row by id, else the day's stored
+        // puzzle (generated and stored on a miss). The client's seed is never
+        // authority.
+        let (puzzle_data, solution, resolved_id) =
+            match (req.puzzle_id.as_deref(), &self.state.pool) {
+                (Some(pid), Some(pool)) => match fetch_puzzle_by_id(pool, pid).await {
+                    Ok(Some(p)) if p.puzzle_date != date => {
+                        return Err(ConnectError::new(
+                            ErrorCode::InvalidArgument,
+                            "puzzle_date_mismatch",
+                        ));
+                    }
+                    Ok(Some(p)) if p.game_slug == game_slug => {
+                        (p.puzzle_data, p.solution, Some(p.id.to_string()))
+                    }
+                    Ok(Some(_)) => {
+                        return Err(ConnectError::new(
+                            ErrorCode::InvalidArgument,
+                            "puzzle_game_slug_mismatch",
+                        ));
+                    }
+                    Ok(None) => {
+                        return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
+                    }
+                    Err(error) => {
+                        warn!(%error, "submit puzzle lookup failed");
+                        return Err(ConnectError::new(
+                            ErrorCode::Internal,
+                            "puzzle_lookup_failed",
+                        ));
+                    }
+                },
+                _ => match daily_pipeline::resolve(
+                    self.state.pool.as_ref(),
+                    game_slug,
+                    date,
+                    difficulty.as_deref(),
+                )
+                .await
+                {
+                    Ok(found) => (found.puzzle_data, Some(found.solution), found.id),
+                    Err(error) => {
+                        warn!(%error, "submit puzzle unavailable");
+                        return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
+                    }
+                },
+            };
+
+        let Some(solution) = solution else {
+            return Err(ConnectError::new(
+                ErrorCode::Unavailable,
+                "puzzle_solution_unavailable",
+            ));
+        };
+
+        let mut access = self.adopt_guest_progress_if_needed(&ctx, true).await?;
+        let uid = access
+            .primary()
+            .map(|identity| identity.user_id.clone())
+            .ok_or_else(|| {
+                ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
+            })?;
+        // One verified finish per served puzzle **and** per free-daily
+        // (user, game_slug, product day). Must not require resolved puzzle_id:
+        // deterministic sudoku has no store row and sessions may store null
+        // puzzle_id — dogfood residual double-finish when guard was pid-only.
+        if let Some(connection) = access.connection() {
+            let already = match has_completed_session_on_connection(
+                &mut *connection,
+                &uid,
+                game_slug,
+                Some(date),
+                resolved_id.as_deref(),
+            )
+            .await
+            {
+                Ok(v) => v,
+                Err(error) => {
+                    warn!(%error, "submit completion lookup failed");
+                    return Err(ConnectError::new(
+                        ErrorCode::Internal,
+                        "session_lookup_failed",
+                    ));
+                }
+            };
+            // Ritual path: also key on day_key so a prior null-puzzle_id win
+            // blocks re-submit even if puzzle_date/id wiring diverges.
+            let already_ritual = if date == today {
+                match has_ritual_completion_on_connection(&mut *connection, &uid, game_slug, today)
+                    .await
+                {
+                    Ok(v) => v,
+                    Err(error) => {
+                        warn!(%error, "submit ritual completion lookup failed");
+                        return Err(ConnectError::new(
+                            ErrorCode::Internal,
+                            "session_lookup_failed",
+                        ));
+                    }
+                }
+            } else {
+                false
+            };
+            if already || already_ritual {
+                return Err(ConnectError::new(
+                    ErrorCode::AlreadyExists,
+                    "already_played",
+                ));
+            }
+        }
+
+        let envelope = SubmissionEnvelope {
+            status,
+            attempts: req.attempts,
+            time_spent_ms: req.time_spent_ms,
+            data,
+        };
+        let verdict = validate_submission(game_slug, &puzzle_data, &solution, &envelope);
+
+        if !verdict.valid {
+            // Dropping access rolls back any first-write allocation or adoption.
+            return Response::ok(SubmitGuessResponse {
+                valid: false,
+                status: String::new(),
+                score: None,
+                game_slug: game_slug.to_string(),
+                error: verdict
+                    .error
+                    .clone()
+                    .or_else(|| Some("invalid_submission".to_string())),
+                slice: SLICE_SUBMIT.to_string(),
+                ..Default::default()
+            });
+        }
+
+        let score = verdict.score.unwrap_or(0);
+        let mode = if date == today { "daily" } else { "archive" };
+        // Ritual day_key: for daily mode use product day key; archive is not ritual.
+        let ritual_day_key = if mode == "daily" { Some(today) } else { None };
+        if let Some(connection) = access.connection() {
+            match persist_validated_session_on_connection(
+                connection,
+                &uid,
+                game_slug,
+                difficulty.as_deref(),
+                mode,
+                status_label(verdict.status.unwrap_or(status)),
+                Some(i32::try_from(score).unwrap_or(i32::MAX)),
+                req.attempts,
+                req.time_spent_ms,
+                resolved_id.as_deref(),
+                Some(date),
+                ritual_day_key,
+                now.timestamp_millis(),
+                // Extract only after this exact envelope has passed validation.
+                (game_slug == "cryptogram").then(|| {
+                    envelope
+                        .data
+                        .get("hintsUsed")
+                        .and_then(|v| v.as_u64())
+                        .map(|v| v as i64)
+                        .unwrap_or(0)
+                }),
+                // This header only removes a validated finish from comparisons.
+                // It grants no write/auth authority. Recognize older harnesses too.
+                ctx.headers().contains_key("x-puzzled-verification")
+                    || ctx
+                        .headers()
+                        .get("user-agent")
+                        .and_then(|v| v.to_str().ok())
+                        .is_some_and(|v| v.starts_with("puzzled-verify-live/")),
+            )
+            .await
+            {
+                Ok(_) => {}
+                Err(error) if error == "already_played" => {
+                    return Err(ConnectError::new(
+                        ErrorCode::AlreadyExists,
+                        "already_played",
+                    ));
+                }
+                Err(error) => {
+                    warn!(%error, "submit session persist failed");
+                    return Err(ConnectError::new(
+                        ErrorCode::Internal,
+                        "session_persist_failed",
+                    ));
+                }
+            }
+        }
+
+        access.commit().await?;
+        Response::ok(SubmitGuessResponse {
+            valid: true,
+            status: status_label(verdict.status.unwrap_or(status)).to_string(),
+            score: Some(score),
+            game_slug: game_slug.to_string(),
+            error: None,
+            slice: SLICE_SUBMIT.to_string(),
+            // The finish is accepted, so the answer may be shown now.
+            reveal_json: Some(solution.to_string()),
+            ..Default::default()
+        })
     }
 
     /// Reassign accepted guest rows onto the Platform account before a personal
@@ -281,6 +553,42 @@ fn date_from_string(raw: Option<&str>) -> Option<NaiveDate> {
 
 #[allow(refining_impl_trait_internal, refining_impl_trait_reachable)]
 impl PuzzleService for PuzzleConnectService {
+    async fn record_share_landing(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, RecordShareLandingRequest>,
+    ) -> ServiceResult<RecordShareLandingResponse> {
+        let origin = crate::shared::public_origin::public_origin()
+            .map_err(|_| ConnectError::new(ErrorCode::Unavailable, "public_origin_unavailable"))?;
+        if !crate::shared::public_origin::admits_browser(ctx.headers(), &origin) {
+            return Err(ConnectError::new(
+                ErrorCode::PermissionDenied,
+                "same_origin_required",
+            ));
+        }
+        let input = request.to_owned_message();
+        if !input.analytics_consent {
+            return Response::ok(RecordShareLandingResponse::default());
+        }
+        let share = uuid::Uuid::parse_str(input.share_id.trim())
+            .map_err(|_| ConnectError::new(ErrorCode::InvalidArgument, "invalid_share"))?;
+        let mut access = self.adopt_guest_progress_if_needed(&ctx, true).await?;
+        let uid = access
+            .primary()
+            .and_then(|i| {
+                puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid(&i.user_id)
+            })
+            .ok_or_else(|| ConnectError::new(ErrorCode::Unauthenticated, "identity_required"))?;
+        let connection = access
+            .connection()
+            .ok_or_else(|| ConnectError::new(ErrorCode::Unavailable, "database_unavailable"))?;
+        crate::capabilities::metrics::landing_on(connection, uid, share)
+            .await
+            .map_err(|_| ConnectError::new(ErrorCode::Unavailable, "landing_unavailable"))?;
+        access.commit().await?;
+        Response::ok(RecordShareLandingResponse::default())
+    }
+
     async fn get_puzzle(
         &self,
         _ctx: RequestContext,
@@ -505,247 +813,36 @@ impl PuzzleService for PuzzleConnectService {
         ctx: RequestContext,
         request: ServiceRequest<'_, SubmitGuessRequest>,
     ) -> ServiceResult<SubmitGuessResponse> {
-        let req = request.to_owned_message();
-        let game_slug = canonicalize_game_slug(req.game_slug.trim());
-        if game_slug.is_empty() {
-            return Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "game_slug_required",
-            ));
-        }
-        if !is_valid_game_slug(game_slug) {
-            return Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "unknown_game",
-            ));
-        }
-        let Some(status) = parse_status(&req.status) else {
-            return Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "status_required_won_or_lost",
-            ));
-        };
-        // Platform auth **or** stable guest-day id (free-ritual protocol default).
-        let platform = crate::bootstrap::identity::require_identity(&ctx).ok();
-        if platform.is_none() && crate::bootstrap::identity::guest_credential_hash(&ctx).is_none() {
-            return Err(ConnectError::new(
-                ErrorCode::Unauthenticated,
-                "identity_required_for_submit",
-            ));
-        }
-
-        let data: Value = if req.submission_json.trim().is_empty() {
-            Value::Null
-        } else {
-            match serde_json::from_str(&req.submission_json) {
-                Ok(v) => v,
-                Err(_) => {
-                    return Err(ConnectError::new(
-                        ErrorCode::InvalidArgument,
-                        "invalid_submission_json",
-                    ));
-                }
-            }
-        };
-
-        let now = Utc::now();
-        let today = product_day_key(now);
-        let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
-        self.enforce_play_access(
-            platform.as_ref().map(|identity| identity.user_id.as_str()),
-            game_slug,
-            date,
-        )
-        .await?;
-        let difficulty = {
-            let d = req.difficulty.trim();
-            if d.is_empty() {
-                None
-            } else {
-                Some(d.to_string())
-            }
-        };
-
-        // The served puzzle: the stored row by id, else the day's stored
-        // puzzle (generated and stored on a miss). The client's seed is never
-        // authority.
-        let (puzzle_data, solution, resolved_id) =
-            match (req.puzzle_id.as_deref(), &self.state.pool) {
-                (Some(pid), Some(pool)) => match fetch_puzzle_by_id(pool, pid).await {
-                    Ok(Some(p)) if p.game_slug == game_slug => {
-                        (p.puzzle_data, p.solution, Some(p.id.to_string()))
-                    }
-                    Ok(Some(_)) => {
-                        return Err(ConnectError::new(
-                            ErrorCode::InvalidArgument,
-                            "puzzle_game_slug_mismatch",
-                        ));
-                    }
-                    Ok(None) => {
-                        return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
-                    }
-                    Err(error) => {
-                        warn!(%error, "submit puzzle lookup failed");
-                        return Err(ConnectError::new(
-                            ErrorCode::Internal,
-                            "puzzle_lookup_failed",
-                        ));
-                    }
-                },
-                _ => match daily_pipeline::resolve(
-                    self.state.pool.as_ref(),
-                    game_slug,
-                    date,
-                    difficulty.as_deref(),
-                )
-                .await
-                {
-                    Ok(found) => (found.puzzle_data, Some(found.solution), found.id),
-                    Err(error) => {
-                        warn!(%error, "submit puzzle unavailable");
-                        return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
-                    }
-                },
-            };
-
-        let Some(solution) = solution else {
-            return Err(ConnectError::new(
-                ErrorCode::Unavailable,
-                "puzzle_solution_unavailable",
-            ));
-        };
-
-        let mut access = self.adopt_guest_progress_if_needed(&ctx, true).await?;
-        let uid = access
-            .primary()
-            .map(|identity| identity.user_id.clone())
-            .ok_or_else(|| {
-                ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
-            })?;
-        // One verified finish per served puzzle **and** per free-daily
-        // (user, game_slug, product day). Must not require resolved puzzle_id:
-        // deterministic sudoku has no store row and sessions may store null
-        // puzzle_id — dogfood residual double-finish when guard was pid-only.
-        if let Some(connection) = access.connection() {
-            let already = match has_completed_session_on_connection(
-                &mut *connection,
-                &uid,
-                game_slug,
-                Some(date),
-                resolved_id.as_deref(),
-            )
-            .await
-            {
-                Ok(v) => v,
-                Err(error) => {
-                    warn!(%error, "submit completion lookup failed");
-                    return Err(ConnectError::new(
-                        ErrorCode::Internal,
-                        "session_lookup_failed",
-                    ));
-                }
-            };
-            // Ritual path: also key on day_key so a prior null-puzzle_id win
-            // blocks re-submit even if puzzle_date/id wiring diverges.
-            let already_ritual = if date == today {
-                match has_ritual_completion_on_connection(&mut *connection, &uid, game_slug, today)
-                    .await
-                {
-                    Ok(v) => v,
-                    Err(error) => {
-                        warn!(%error, "submit ritual completion lookup failed");
-                        return Err(ConnectError::new(
-                            ErrorCode::Internal,
-                            "session_lookup_failed",
-                        ));
-                    }
-                }
-            } else {
-                false
-            };
-            if already || already_ritual {
-                return Err(ConnectError::new(
-                    ErrorCode::AlreadyExists,
-                    "already_played",
-                ));
+        let input = request.to_owned_message();
+        let today = product_day_key(Utc::now());
+        let free = date_from_string(input.puzzle_date.as_deref()).unwrap_or(today) == today
+            && is_game_free_today(canonicalize_game_slug(input.game_slug.trim()), today);
+        let result = self.submit_guess_inner(ctx, request).await;
+        if free {
+            if let Some(pool) = self.state.pool.clone() {
+                let failed = result.as_ref().err().is_some_and(|e| {
+                    matches!(
+                        e.code,
+                        ErrorCode::Internal
+                            | ErrorCode::Unavailable
+                            | ErrorCode::Unknown
+                            | ErrorCode::DeadlineExceeded
+                    )
+                });
+                tokio::spawn(async move {
+                    crate::capabilities::metrics::count(
+                        &pool,
+                        if failed {
+                            "free_finish_failed"
+                        } else {
+                            "free_finish_ok"
+                        },
+                    )
+                    .await;
+                });
             }
         }
-
-        let envelope = SubmissionEnvelope {
-            status,
-            attempts: req.attempts,
-            time_spent_ms: req.time_spent_ms,
-            data,
-        };
-        let verdict = validate_submission(game_slug, &puzzle_data, &solution, &envelope);
-
-        if !verdict.valid {
-            // Dropping access rolls back any first-write allocation or adoption.
-            return Response::ok(SubmitGuessResponse {
-                valid: false,
-                status: String::new(),
-                score: None,
-                game_slug: game_slug.to_string(),
-                error: verdict
-                    .error
-                    .clone()
-                    .or_else(|| Some("invalid_submission".to_string())),
-                slice: SLICE_SUBMIT.to_string(),
-                ..Default::default()
-            });
-        }
-
-        let score = verdict.score.unwrap_or(0);
-        let mode = if date == today { "daily" } else { "archive" };
-        // Ritual day_key: for daily mode use product day key; archive is not ritual.
-        let ritual_day_key = if mode == "daily" { Some(today) } else { None };
-        if let Some(connection) = access.connection() {
-            match persist_validated_session_on_connection(
-                connection,
-                &uid,
-                game_slug,
-                difficulty.as_deref(),
-                mode,
-                status_label(verdict.status.unwrap_or(status)),
-                Some(i32::try_from(score).unwrap_or(i32::MAX)),
-                req.attempts,
-                req.time_spent_ms,
-                resolved_id.as_deref(),
-                Some(date),
-                ritual_day_key,
-                now.timestamp_millis(),
-            )
-            .await
-            {
-                Ok(_) => {}
-                Err(error) if error == "already_played" => {
-                    return Err(ConnectError::new(
-                        ErrorCode::AlreadyExists,
-                        "already_played",
-                    ));
-                }
-                Err(error) => {
-                    warn!(%error, "submit session persist failed");
-                    return Err(ConnectError::new(
-                        ErrorCode::Internal,
-                        "session_persist_failed",
-                    ));
-                }
-            }
-        }
-
-        access.commit().await?;
-        Response::ok(SubmitGuessResponse {
-            valid: true,
-            status: status_label(verdict.status.unwrap_or(status)).to_string(),
-            score: Some(score),
-            game_slug: game_slug.to_string(),
-            error: None,
-            slice: SLICE_SUBMIT.to_string(),
-            // The finish is accepted, so the answer may be shown now.
-            reveal_json: Some(solution.to_string()),
-            ..Default::default()
-        })
+        result
     }
 
     async fn check_guess(
