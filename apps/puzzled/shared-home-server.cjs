@@ -4,6 +4,7 @@ const { createHash } = require('node:crypto')
 const fs = require('node:fs')
 const http = require('node:http')
 const path = require('node:path')
+const zlib = require('node:zlib')
 const { isSharedHomeRequest, SHARED_HOME_HEADER } = require('./shared-home-policy.cjs')
 const { retainedAssets } = require('./public-assets.cjs')
 
@@ -77,7 +78,9 @@ function sharedCacheControl(html, now) {
  * streaming, redirects, cookies and nonce policy. A partial/error render is private.
  */
 function captureSharedHome(req, res, { staticDir, digestCache, now, retention, assetPrefix }) {
-	// Hash uncompressed UTF-8; the CDN can compress the completed representation.
+	// Hash uncompressed UTF-8; re-compress with gzip when the client accepts it.
+	const clientAcceptEncoding = String(req.headers['accept-encoding'] ?? '')
+	const acceptsGzip = /\bgzip\b/i.test(clientAcceptEncoding)
 	req.headers['accept-encoding'] = 'identity'
 	const original = {
 		writeHead: res.writeHead,
@@ -119,13 +122,20 @@ function captureSharedHome(req, res, { staticDir, digestCache, now, retention, a
 				if (!/\bscript-src [^;]+/.test(policy)) throw new Error('missing_shared_csp')
 				this.setHeader('Content-Security-Policy', policy.replace(/\bscript-src [^;]+/, `script-src 'self' 'strict-dynamic' ${secured.scriptSources}`))
 				this.setHeader('Cache-Control', retention && this.statusCode === 200 && !this.hasHeader('set-cookie') ? sharedCacheControl(html, now()) : PRIVATE)
-				// Browsers must distinguish the subsequent signed-in/guest request too.
-				this.setHeader('Vary', [...new Set(`${this.getHeader('vary') ?? ''}, Cookie, Authorization`.split(',').map((v) => v.trim()).filter(Boolean))].join(', '))
+				// Browsers and CDNs must distinguish encoding as well as signed-in/guest traffic.
+				this.setHeader('Vary', [...new Set(`${this.getHeader('vary') ?? ''}, Accept-Encoding, Cookie, Authorization`.split(',').map((v) => v.trim()).filter(Boolean))].join(', '))
 				this.removeHeader('etag')
 				body = Buffer.from(secured.body)
+				if (acceptsGzip) {
+					body = zlib.gzipSync(body)
+					this.setHeader('Content-Encoding', 'gzip')
+				} else {
+					this.removeHeader('Content-Encoding')
+				}
 			} catch (error) {
 				console.error('[puzzled-web] shared home refused:', error.message)
 				this.statusCode = 503
+				this.removeHeader('Content-Encoding')
 				this.setHeader('Cache-Control', PRIVATE)
 				this.setHeader('Content-Type', 'text/plain; charset=utf-8')
 				body = Buffer.from('This page is temporarily unavailable. Please reload.')

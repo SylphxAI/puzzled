@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import { headers } from 'next/headers'
 import { cache, Suspense } from 'react'
 import { AttributionCapture } from '@/features/analytics/components/attribution-capture'
 import { AnnouncementBannerChrome } from '@/features/announcements/components/announcement-banner-chrome'
@@ -11,6 +12,7 @@ import { BottomNav } from '@/shared/components/layout'
 import { AccountSavedNote } from '@/shared/components/layout/account-saved-note'
 import { ConsentBanner } from '@/shared/components/layout/consent-banner'
 import { Footer } from '@/shared/components/layout/footer'
+import { SHARED_HOME_HEADER } from '../../../../shared-home-policy.cjs'
 import { LayoutTopNav } from './layout-nav'
 import { LayoutOverlays } from './layout-overlays'
 
@@ -94,7 +96,8 @@ async function OverlaysChrome() {
 	return <LayoutOverlays maxStreak={maxStreak} />
 }
 
-export default function MainLayout({ children }: Props) {
+export default async function MainLayout({ children }: Props) {
+	const sharedHome = (await headers()).get(SHARED_HOME_HEADER) === '1'
 	return (
 		<div className="relative flex min-h-screen flex-col">
 			<GuestIdentityBootstrap />
@@ -115,9 +118,13 @@ export default function MainLayout({ children }: Props) {
 			<ConsentBanner />
 
 			{/* Desktop: Top navigation */}
-			<Suspense fallback={<TopNavSkeleton />}>
-				<TopNavChrome />
-			</Suspense>
+			{sharedHome ? (
+				<LayoutTopNav currentStreak={null} />
+			) : (
+				<Suspense fallback={<TopNavSkeleton />}>
+					<TopNavChrome />
+				</Suspense>
+			)}
 
 			{/* Main scrollable content */}
 			{/* pb-nav on mobile only (bottom nav), md:pb-0 on desktop */}
@@ -134,9 +141,13 @@ export default function MainLayout({ children }: Props) {
 			<AttributionCapture />
 
 			{/* Fixed overlays - proper z-index stacking */}
-			<Suspense fallback={null}>
-				<OverlaysChrome />
-			</Suspense>
+			{sharedHome ? (
+				<LayoutOverlays maxStreak={null} />
+			) : (
+				<Suspense fallback={null}>
+					<OverlaysChrome />
+				</Suspense>
+			)}
 
 			{/* Mobile: Bottom navigation */}
 			<BottomNav />

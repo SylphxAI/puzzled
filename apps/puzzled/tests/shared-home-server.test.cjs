@@ -6,6 +6,7 @@ const fs = require('node:fs')
 const http = require('node:http')
 const os = require('node:os')
 const path = require('node:path')
+const zlib = require('node:zlib')
 const { after, before, test } = require('node:test')
 const { installSharedHome, secureDocument, sharedCacheControl, PRIVATE } = require('../shared-home-server.cjs')
 const { isSharedHomeRequest, SHARED_HOME_HEADER } = require('../shared-home-policy.cjs')
@@ -79,10 +80,13 @@ test('freshness plus SWR cannot cross the authoritative product-day boundary', (
 
 async function request(headers = {}, url = '/') {
 	return new Promise((resolve, reject) => {
-		http.get({ host: '127.0.0.1', port, path: url, headers }, (res) => {
+		http.get({ host: '127.0.0.1', port, path: url, headers: { 'accept-encoding': 'identity', ...headers } }, (res) => {
 			const chunks = []
 			res.on('data', (chunk) => chunks.push(chunk))
-			res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body: Buffer.concat(chunks).toString() }))
+			res.on('end', () => {
+				const raw = Buffer.concat(chunks)
+				resolve({ status: res.statusCode, headers: res.headers, raw, body: raw.toString() })
+			})
 		}).on('error', reject)
 	})
 }
@@ -93,9 +97,15 @@ test('native Node completes the representation before shared headers, preserving
 	assert.equal(success.status, 200)
 	assert.equal(success.headers['cache-control'], 'public, max-age=10, stale-while-revalidate=0, stale-if-error=0')
 	assert.match(success.headers['content-security-policy'], /sha256-/)
-	assert.match(success.headers.vary, /Cookie, Authorization/)
+	assert.match(success.headers.vary, /Accept-Encoding, Cookie, Authorization/)
 	assert.equal(success.headers['content-length'], String(Buffer.byteLength(success.body)))
 	assert.equal(success.headers[SHARED_HOME_HEADER], undefined)
+
+	const gzipped = await request({ 'accept-encoding': 'gzip, deflate, br' })
+	assert.equal(gzipped.status, 200)
+	assert.equal(gzipped.headers['content-encoding'], 'gzip')
+	assert.equal(gzipped.headers['content-length'], String(gzipped.raw.length))
+	assert.equal(zlib.gunzipSync(gzipped.raw).toString('utf8'), success.body)
 
 	for (const failure of [
 		{ body: '<html><body>Redirecting</body></html>', status: 307, cookie: false },
