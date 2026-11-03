@@ -6,6 +6,7 @@ import { readMessage, relatedCatalogSlugs } from '@/features/catalog/lib/catalog
 import { gameMetaDescription, gameMetaTitle } from '@/features/catalog/lib/game-meta'
 import { parseGameFaq, parseGameTips, requireGamePage } from '@/features/catalog/lib/game-page'
 import { resolveGameDayRequest } from '@/features/daily/lib/day-request'
+import { todayPlayPath } from '@/features/daily/lib/today-play-path'
 import { gameSupportsDifficulty, getAllGameMetadata, getGameSlugs } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
@@ -16,7 +17,7 @@ import { canonicalizeGameSlug, playerTitle, slugToCamelCase } from '@/lib/game-s
 import { difficultyLabelKey } from '@/lib/i18n/difficulty'
 import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
-import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
+import { buildPageMetadata, localizedPath, ogImagePath } from '@/lib/seo/metadata'
 import { GamePlayArea } from './game-play-area'
 import { GamePlaySkeleton } from './game-play-skeleton'
 
@@ -180,6 +181,14 @@ export default async function GamePage({ params, searchParams }: Props) {
 				freeToday={canonicalSlug === todaysFreeGame}
 				isGuest={!user}
 				locked={locked}
+				playHref={
+					// Today: one tap opens the started board (the chosen level, else the
+					// default), as the home play button does. An archive day stays on
+					// this page and scrolls to its board.
+					mode === 'daily'
+						? localizedPath(locale, todayPlayPath(canonicalSlug, difficulty))
+						: '#play'
+				}
 			/>
 
 			{/*
