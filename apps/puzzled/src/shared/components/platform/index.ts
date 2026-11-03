@@ -1,1 +1,1 @@
-export { PlatformProvider } from './sylphx-provider'
+export { SylphxProvider as PlatformProvider } from '@/lib/identity/react'

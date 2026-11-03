@@ -1144,3 +1144,32 @@ export const metricAlertOutbox = pgTable(
 	},
 	(t) => [primaryKey({ name: 'metric_alert_outbox_pkey', columns: [t.dayKey, t.signal] })],
 )
+
+/** Retained normal checkout requests; ambiguous calls are recovered by named read. */
+export const checkoutAttempts = pgTable(
+	'checkout_attempts',
+	{
+		userId: uuid('user_id').notNull(),
+		requestId: uuid('request_id').notNull(),
+		moneySessionId: text('money_session_id')
+			.notNull()
+			.unique('checkout_attempts_money_session_id_key'),
+		request: jsonb('request').notNull(),
+		state: text('state').notNull().default('pending'),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		primaryKey({ name: 'checkout_attempts_pkey', columns: [table.userId, table.requestId] }),
+		index('checkout_attempts_latest').on(table.userId, table.createdAt.desc().nullsFirst()),
+		check('checkout_attempts_state_check', sql`${table.state} IN ('pending', 'ready', 'refused')`),
+	],
+)
+
+/** Auth-attested synthetic buyers, registered before their first product sign-in. */
+export const syntheticFixtures = pgTable('synthetic_fixtures', {
+	userId: uuid('user_id').primaryKey(),
+	fixtureKey: text('fixture_key').notNull().unique('synthetic_fixtures_fixture_key_key'),
+	authSubject: text('auth_subject').notNull().unique('synthetic_fixtures_auth_subject_key'),
+	syntheticTime: timestamp('synthetic_time', { withTimezone: true }).notNull(),
+	registeredAt: timestamp('registered_at', { withTimezone: true }).notNull().defaultNow(),
+})

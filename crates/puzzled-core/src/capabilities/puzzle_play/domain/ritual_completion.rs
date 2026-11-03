@@ -173,18 +173,23 @@ WHERE day_key = $1
   AND status IN ('won', 'lost')
 "#;
 
-/// Per-module qualifying ritual finish counts for a product day.
+/// One-snapshot overview: distinct completers and per-module ritual finish counts.
 ///
 /// Bound `$1` = day_key `YYYY-MM-DD`. Same qualification as [`DRC_RECOMPUTE_SQL`].
-pub const DRC_MODULE_COMPLETIONS_SQL: &str = r#"
-SELECT game_slug, COUNT(*)::bigint AS count
+/// The grand-total grouping has a NULL slug, including on an empty day. Game
+/// slugs are non-null in storage. One grouping-set scan avoids a second query,
+/// pool acquisition, and potentially different READ COMMITTED snapshot.
+pub const TODAY_OVERVIEW_SQL: &str = r#"
+SELECT game_slug,
+       CASE WHEN GROUPING(game_slug) = 1 THEN COUNT(DISTINCT user_id)
+            ELSE COUNT(*) END::bigint AS count
 FROM game_sessions
 WHERE day_key = $1
   AND is_ritual = true
   AND module_class = 'puzzle_ritual'
   AND status IN ('won', 'lost')
-GROUP BY game_slug
-ORDER BY game_slug
+GROUP BY GROUPING SETS ((), (game_slug))
+ORDER BY game_slug NULLS FIRST
 "#;
 
 /// Compact row shape for the product-day overview read model.

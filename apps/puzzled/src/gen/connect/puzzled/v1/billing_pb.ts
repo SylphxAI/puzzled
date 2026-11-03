@@ -19,7 +19,7 @@ import { file_google_protobuf_cpp_features } from '@bufbuild/protobuf/wkt'
 export const file_puzzled_v1_billing: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		'ChhwdXp6bGVkL3YxL2JpbGxpbmcucHJvdG8SCnB1enpsZWQudjEihAEKBFBsYW4SCgoCaWQYASABKAkSDgoGZmFtaWx5GAIgASgIEhAKCGludGVydmFsGAMgASgJEiUKBnByaWNlcxgEIAMoCzIVLnB1enpsZWQudjEuUGxhblByaWNlEhIKCnRyaWFsX2RheXMYBSABKAUSEwoLYWNjZXNzX2RheXMYBiABKAUiOAoJUGxhblByaWNlEhAKCGN1cnJlbmN5GAEgASgJEhkKEXVuaXRfYW1vdW50X21pbm9yGAIgASgDIhIKEExpc3RQbGFuc1JlcXVlc3QifQoRTGlzdFBsYW5zUmVzcG9uc2USEgoKc2FsZXNfb3BlbhgBIAEoCBIfCgVwbGFucxgCIAMoCzIQLnB1enpsZWQudjEuUGxhbhIaChJmYW1pbHlfbWF4X21lbWJlcnMYAyABKA1KBAgEEAVSEWNhbmNlbGxhdGlvbl9kYXlzIloKDEZhbWlseU1lbWJlchIPCgd1c2VyX2lkGAEgASgJEhQKDGRpc3BsYXlfbmFtZRgCIAEoCRINCgVvd25lchgDIAEoCBIUCgxqb2luZWRfYXRfbXMYBCABKAMicgoGRmFtaWx5EgwKBHJvbGUYASABKAkSKQoHbWVtYmVycxgCIAMoCzIYLnB1enpsZWQudjEuRmFtaWx5TWVtYmVyEhMKC21heF9tZW1iZXJzGAMgASgNEhoKC2ludml0ZV9jb2RlGAQgASgJQgWqAQIIASIpChZHZXRTdWJzY3JpcHRpb25SZXF1ZXN0Eg8KB3JlZnJlc2gYASABKAgixQIKF0dldFN1YnNjcmlwdGlvblJlc3BvbnNlEhIKCnNhbGVzX29wZW4YASABKAgSEAoIZW50aXRsZWQYAiABKAgSDgoGc291cmNlGAMgASgJEhYKB3BsYW5faWQYBCABKAlCBaoBAggBEhUKBnN0YXR1cxgFIAEoCUIFqgECCAESJAoVY3VycmVudF9wZXJpb2RfZW5kX21zGAYgASgDQgWqAQIIARIcChRjYW5jZWxfYXRfcGVyaW9kX2VuZBgHIAEoCBIiCgZmYW1pbHkYCSABKAsyEi5wdXp6bGVkLnYxLkZhbWlseRIcCg10cmlhbF9lbmRzX21zGAogASgDQgWqAQIIARIoChlzdWJzY3JpcHRpb25fdHJpYWxfZW5kX21zGAsgASgDQgWqAQIIAUoECAgQCVIPcmVmdW5kX3VudGlsX21zImwKFUNyZWF0ZUNoZWNrb3V0UmVxdWVzdBIPCgdwbGFuX2lkGAEgASgJEg4KBmxvY2FsZRgCIAEoCRIQCghjdXJyZW5jeRgDIAEoCRIgChhpbW1lZGlhdGVfc3VwcGx5X2NvbnNlbnQYBCABKAgiJQoWQ3JlYXRlQ2hlY2tvdXRSZXNwb25zZRILCgN1cmwYASABKAkiJQoTQ3JlYXRlUG9ydGFsUmVxdWVzdBIOCgZsb2NhbGUYASABKAkiIwoUQ3JlYXRlUG9ydGFsUmVzcG9uc2USCwoDdXJsGAEgASgJIhsKGUNhbmNlbFN1YnNjcmlwdGlvblJlcXVlc3QiRwoaQ2FuY2VsU3Vic2NyaXB0aW9uUmVzcG9uc2USGQoRYWNjZXNzX2VuZHNfYXRfbXMYAiABKANKBAgBEAJSCHJlZnVuZGVkIhsKGVJlc3VtZVN1YnNjcmlwdGlvblJlcXVlc3QiHAoaUmVzdW1lU3Vic2NyaXB0aW9uUmVzcG9uc2UiKAoRSm9pbkZhbWlseVJlcXVlc3QSEwoLaW52aXRlX2NvZGUYASABKAkiFAoSSm9pbkZhbWlseVJlc3BvbnNlIhQKEkxlYXZlRmFtaWx5UmVxdWVzdCIVChNMZWF2ZUZhbWlseVJlc3BvbnNlIiwKGVJlbW92ZUZhbWlseU1lbWJlclJlcXVlc3QSDwoHdXNlcl9pZBgBIAEoCSIcChpSZW1vdmVGYW1pbHlNZW1iZXJSZXNwb25zZSIaChhSZXNldEZhbWlseUludml0ZVJlcXVlc3QiMAoZUmVzZXRGYW1pbHlJbnZpdGVSZXNwb25zZRITCgtpbnZpdGVfY29kZRgBIAEoCTKQBwoOQmlsbGluZ1NlcnZpY2USSAoJTGlzdFBsYW5zEhwucHV6emxlZC52MS5MaXN0UGxhbnNSZXF1ZXN0Gh0ucHV6emxlZC52MS5MaXN0UGxhbnNSZXNwb25zZRJaCg9HZXRTdWJzY3JpcHRpb24SIi5wdXp6bGVkLnYxLkdldFN1YnNjcmlwdGlvblJlcXVlc3QaIy5wdXp6bGVkLnYxLkdldFN1YnNjcmlwdGlvblJlc3BvbnNlElcKDkNyZWF0ZUNoZWNrb3V0EiEucHV6emxlZC52MS5DcmVhdGVDaGVja291dFJlcXVlc3QaIi5wdXp6bGVkLnYxLkNyZWF0ZUNoZWNrb3V0UmVzcG9uc2USUQoMQ3JlYXRlUG9ydGFsEh8ucHV6emxlZC52MS5DcmVhdGVQb3J0YWxSZXF1ZXN0GiAucHV6emxlZC52MS5DcmVhdGVQb3J0YWxSZXNwb25zZRJjChJDYW5jZWxTdWJzY3JpcHRpb24SJS5wdXp6bGVkLnYxLkNhbmNlbFN1YnNjcmlwdGlvblJlcXVlc3QaJi5wdXp6bGVkLnYxLkNhbmNlbFN1YnNjcmlwdGlvblJlc3BvbnNlEmMKElJlc3VtZVN1YnNjcmlwdGlvbhIlLnB1enpsZWQudjEuUmVzdW1lU3Vic2NyaXB0aW9uUmVxdWVzdBomLnB1enpsZWQudjEuUmVzdW1lU3Vic2NyaXB0aW9uUmVzcG9uc2USSwoKSm9pbkZhbWlseRIdLnB1enpsZWQudjEuSm9pbkZhbWlseVJlcXVlc3QaHi5wdXp6bGVkLnYxLkpvaW5GYW1pbHlSZXNwb25zZRJOCgtMZWF2ZUZhbWlseRIeLnB1enpsZWQudjEuTGVhdmVGYW1pbHlSZXF1ZXN0Gh8ucHV6emxlZC52MS5MZWF2ZUZhbWlseVJlc3BvbnNlEmMKElJlbW92ZUZhbWlseU1lbWJlchIlLnB1enpsZWQudjEuUmVtb3ZlRmFtaWx5TWVtYmVyUmVxdWVzdBomLnB1enpsZWQudjEuUmVtb3ZlRmFtaWx5TWVtYmVyUmVzcG9uc2USYAoRUmVzZXRGYW1pbHlJbnZpdGUSJC5wdXp6bGVkLnYxLlJlc2V0RmFtaWx5SW52aXRlUmVxdWVzdBolLnB1enpsZWQudjEuUmVzZXRGYW1pbHlJbnZpdGVSZXNwb25zZUIUkgMRCAIQARgBIAIoATABwj4CEANiCGVkaXRpb25zcOkH',
+		'ChhwdXp6bGVkL3YxL2JpbGxpbmcucHJvdG8SCnB1enpsZWQudjEihAEKBFBsYW4SCgoCaWQYASABKAkSDgoGZmFtaWx5GAIgASgIEhAKCGludGVydmFsGAMgASgJEiUKBnByaWNlcxgEIAMoCzIVLnB1enpsZWQudjEuUGxhblByaWNlEhIKCnRyaWFsX2RheXMYBSABKAUSEwoLYWNjZXNzX2RheXMYBiABKAUiOAoJUGxhblByaWNlEhAKCGN1cnJlbmN5GAEgASgJEhkKEXVuaXRfYW1vdW50X21pbm9yGAIgASgDIhIKEExpc3RQbGFuc1JlcXVlc3QifQoRTGlzdFBsYW5zUmVzcG9uc2USEgoKc2FsZXNfb3BlbhgBIAEoCBIfCgVwbGFucxgCIAMoCzIQLnB1enpsZWQudjEuUGxhbhIaChJmYW1pbHlfbWF4X21lbWJlcnMYAyABKA1KBAgEEAVSEWNhbmNlbGxhdGlvbl9kYXlzIloKDEZhbWlseU1lbWJlchIPCgd1c2VyX2lkGAEgASgJEhQKDGRpc3BsYXlfbmFtZRgCIAEoCRINCgVvd25lchgDIAEoCBIUCgxqb2luZWRfYXRfbXMYBCABKAMicgoGRmFtaWx5EgwKBHJvbGUYASABKAkSKQoHbWVtYmVycxgCIAMoCzIYLnB1enpsZWQudjEuRmFtaWx5TWVtYmVyEhMKC21heF9tZW1iZXJzGAMgASgNEhoKC2ludml0ZV9jb2RlGAQgASgJQgWqAQIIASIpChZHZXRTdWJzY3JpcHRpb25SZXF1ZXN0Eg8KB3JlZnJlc2gYASABKAgixQIKF0dldFN1YnNjcmlwdGlvblJlc3BvbnNlEhIKCnNhbGVzX29wZW4YASABKAgSEAoIZW50aXRsZWQYAiABKAgSDgoGc291cmNlGAMgASgJEhYKB3BsYW5faWQYBCABKAlCBaoBAggBEhUKBnN0YXR1cxgFIAEoCUIFqgECCAESJAoVY3VycmVudF9wZXJpb2RfZW5kX21zGAYgASgDQgWqAQIIARIcChRjYW5jZWxfYXRfcGVyaW9kX2VuZBgHIAEoCBIiCgZmYW1pbHkYCSABKAsyEi5wdXp6bGVkLnYxLkZhbWlseRIcCg10cmlhbF9lbmRzX21zGAogASgDQgWqAQIIARIoChlzdWJzY3JpcHRpb25fdHJpYWxfZW5kX21zGAsgASgDQgWqAQIIAUoECAgQCVIPcmVmdW5kX3VudGlsX21zImwKFUNyZWF0ZUNoZWNrb3V0UmVxdWVzdBIPCgdwbGFuX2lkGAEgASgJEg4KBmxvY2FsZRgCIAEoCRIQCghjdXJyZW5jeRgDIAEoCRIgChhpbW1lZGlhdGVfc3VwcGx5X2NvbnNlbnQYBCABKAgiJQoWQ3JlYXRlQ2hlY2tvdXRSZXNwb25zZRILCgN1cmwYASABKAkihwEKHENyZWF0ZUNoZWNrb3V0QXR0ZW1wdFJlcXVlc3QSDwoHcGxhbl9pZBgBIAEoCRIOCgZsb2NhbGUYAiABKAkSEAoIY3VycmVuY3kYAyABKAkSIAoYaW1tZWRpYXRlX3N1cHBseV9jb25zZW50GAQgASgIEhIKCnJlcXVlc3RfaWQYBSABKAkiLAodQ3JlYXRlQ2hlY2tvdXRBdHRlbXB0UmVzcG9uc2USCwoDdXJsGAEgASgJIigKEkdldENoZWNrb3V0UmVxdWVzdBISCgpyZXF1ZXN0X2lkGAEgASgJIrEBChNHZXRDaGVja291dFJlc3BvbnNlEhIKCnJlcXVlc3RfaWQYASABKAkSDQoFc3RhdGUYAiABKAkSGgoSbW9uZXlfc2Vzc2lvbl9uYW1lGAMgASgJEgsKA3VybBgEIAEoCRIcChRwcm9jZXNzb3Jfc2Vzc2lvbl9pZBgFIAEoCRIVCg1zZXNzaW9uX3N0YXRlGAYgASgJEhkKEXN5bnRoZXRpY19maXh0dXJlGAcgASgJIiUKE0NyZWF0ZVBvcnRhbFJlcXVlc3QSDgoGbG9jYWxlGAEgASgJIiMKFENyZWF0ZVBvcnRhbFJlc3BvbnNlEgsKA3VybBgBIAEoCSIbChlDYW5jZWxTdWJzY3JpcHRpb25SZXF1ZXN0IkcKGkNhbmNlbFN1YnNjcmlwdGlvblJlc3BvbnNlEhkKEWFjY2Vzc19lbmRzX2F0X21zGAIgASgDSgQIARACUghyZWZ1bmRlZCIbChlSZXN1bWVTdWJzY3JpcHRpb25SZXF1ZXN0IhwKGlJlc3VtZVN1YnNjcmlwdGlvblJlc3BvbnNlIigKEUpvaW5GYW1pbHlSZXF1ZXN0EhMKC2ludml0ZV9jb2RlGAEgASgJIhQKEkpvaW5GYW1pbHlSZXNwb25zZSIUChJMZWF2ZUZhbWlseVJlcXVlc3QiFQoTTGVhdmVGYW1pbHlSZXNwb25zZSIsChlSZW1vdmVGYW1pbHlNZW1iZXJSZXF1ZXN0Eg8KB3VzZXJfaWQYASABKAkiHAoaUmVtb3ZlRmFtaWx5TWVtYmVyUmVzcG9uc2UiGgoYUmVzZXRGYW1pbHlJbnZpdGVSZXF1ZXN0IjAKGVJlc2V0RmFtaWx5SW52aXRlUmVzcG9uc2USEwoLaW52aXRlX2NvZGUYASABKAkyzggKDkJpbGxpbmdTZXJ2aWNlEkgKCUxpc3RQbGFucxIcLnB1enpsZWQudjEuTGlzdFBsYW5zUmVxdWVzdBodLnB1enpsZWQudjEuTGlzdFBsYW5zUmVzcG9uc2USWgoPR2V0U3Vic2NyaXB0aW9uEiIucHV6emxlZC52MS5HZXRTdWJzY3JpcHRpb25SZXF1ZXN0GiMucHV6emxlZC52MS5HZXRTdWJzY3JpcHRpb25SZXNwb25zZRJXCg5DcmVhdGVDaGVja291dBIhLnB1enpsZWQudjEuQ3JlYXRlQ2hlY2tvdXRSZXF1ZXN0GiIucHV6emxlZC52MS5DcmVhdGVDaGVja291dFJlc3BvbnNlEmwKFUNyZWF0ZUNoZWNrb3V0QXR0ZW1wdBIoLnB1enpsZWQudjEuQ3JlYXRlQ2hlY2tvdXRBdHRlbXB0UmVxdWVzdBopLnB1enpsZWQudjEuQ3JlYXRlQ2hlY2tvdXRBdHRlbXB0UmVzcG9uc2USTgoLR2V0Q2hlY2tvdXQSHi5wdXp6bGVkLnYxLkdldENoZWNrb3V0UmVxdWVzdBofLnB1enpsZWQudjEuR2V0Q2hlY2tvdXRSZXNwb25zZRJRCgxDcmVhdGVQb3J0YWwSHy5wdXp6bGVkLnYxLkNyZWF0ZVBvcnRhbFJlcXVlc3QaIC5wdXp6bGVkLnYxLkNyZWF0ZVBvcnRhbFJlc3BvbnNlEmMKEkNhbmNlbFN1YnNjcmlwdGlvbhIlLnB1enpsZWQudjEuQ2FuY2VsU3Vic2NyaXB0aW9uUmVxdWVzdBomLnB1enpsZWQudjEuQ2FuY2VsU3Vic2NyaXB0aW9uUmVzcG9uc2USYwoSUmVzdW1lU3Vic2NyaXB0aW9uEiUucHV6emxlZC52MS5SZXN1bWVTdWJzY3JpcHRpb25SZXF1ZXN0GiYucHV6emxlZC52MS5SZXN1bWVTdWJzY3JpcHRpb25SZXNwb25zZRJLCgpKb2luRmFtaWx5Eh0ucHV6emxlZC52MS5Kb2luRmFtaWx5UmVxdWVzdBoeLnB1enpsZWQudjEuSm9pbkZhbWlseVJlc3BvbnNlEk4KC0xlYXZlRmFtaWx5Eh4ucHV6emxlZC52MS5MZWF2ZUZhbWlseVJlcXVlc3QaHy5wdXp6bGVkLnYxLkxlYXZlRmFtaWx5UmVzcG9uc2USYwoSUmVtb3ZlRmFtaWx5TWVtYmVyEiUucHV6emxlZC52MS5SZW1vdmVGYW1pbHlNZW1iZXJSZXF1ZXN0GiYucHV6emxlZC52MS5SZW1vdmVGYW1pbHlNZW1iZXJSZXNwb25zZRJgChFSZXNldEZhbWlseUludml0ZRIkLnB1enpsZWQudjEuUmVzZXRGYW1pbHlJbnZpdGVSZXF1ZXN0GiUucHV6emxlZC52MS5SZXNldEZhbWlseUludml0ZVJlc3BvbnNlQhSSAxEIAhABGAEgAigBMAHCPgIQA2IIZWRpdGlvbnNw6Qc',
 		[file_google_protobuf_cpp_features],
 	)
 
@@ -369,6 +369,138 @@ export const CreateCheckoutResponseSchema: GenMessage<CreateCheckoutResponse> =
 	messageDesc(file_puzzled_v1_billing, 9)
 
 /**
+ * @generated from message puzzled.v1.CreateCheckoutAttemptRequest
+ */
+export type CreateCheckoutAttemptRequest = Message<'puzzled.v1.CreateCheckoutAttemptRequest'> & {
+	/**
+	 * @generated from field: string plan_id = 1;
+	 */
+	planId: string
+
+	/**
+	 * @generated from field: string locale = 2;
+	 */
+	locale: string
+
+	/**
+	 * @generated from field: string currency = 3;
+	 */
+	currency: string
+
+	/**
+	 * @generated from field: bool immediate_supply_consent = 4;
+	 */
+	immediateSupplyConsent: boolean
+
+	/**
+	 * Required UUID, retained across an uncertain response.
+	 *
+	 * @generated from field: string request_id = 5;
+	 */
+	requestId: string
+}
+
+/**
+ * Describes the message puzzled.v1.CreateCheckoutAttemptRequest.
+ * Use `create(CreateCheckoutAttemptRequestSchema)` to create a new message.
+ */
+export const CreateCheckoutAttemptRequestSchema: GenMessage<CreateCheckoutAttemptRequest> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_billing, 10)
+
+/**
+ * @generated from message puzzled.v1.CreateCheckoutAttemptResponse
+ */
+export type CreateCheckoutAttemptResponse = Message<'puzzled.v1.CreateCheckoutAttemptResponse'> & {
+	/**
+	 * @generated from field: string url = 1;
+	 */
+	url: string
+}
+
+/**
+ * Describes the message puzzled.v1.CreateCheckoutAttemptResponse.
+ * Use `create(CreateCheckoutAttemptResponseSchema)` to create a new message.
+ */
+export const CreateCheckoutAttemptResponseSchema: GenMessage<CreateCheckoutAttemptResponse> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_billing, 11)
+
+/**
+ * @generated from message puzzled.v1.GetCheckoutRequest
+ */
+export type GetCheckoutRequest = Message<'puzzled.v1.GetCheckoutRequest'> & {
+	/**
+	 * Empty reads this buyer's latest retained checkout attempt.
+	 *
+	 * @generated from field: string request_id = 1;
+	 */
+	requestId: string
+}
+
+/**
+ * Describes the message puzzled.v1.GetCheckoutRequest.
+ * Use `create(GetCheckoutRequestSchema)` to create a new message.
+ */
+export const GetCheckoutRequestSchema: GenMessage<GetCheckoutRequest> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_billing, 12)
+
+/**
+ * @generated from message puzzled.v1.GetCheckoutResponse
+ */
+export type GetCheckoutResponse = Message<'puzzled.v1.GetCheckoutResponse'> & {
+	/**
+	 * @generated from field: string request_id = 1;
+	 */
+	requestId: string
+
+	/**
+	 * absent | pending | ready | refused. Pending never authorizes a new call.
+	 *
+	 * @generated from field: string state = 2;
+	 */
+	state: string
+
+	/**
+	 * The supported Money resource for mode, amount, currency and payment reads.
+	 *
+	 * @generated from field: string money_session_name = 3;
+	 */
+	moneySessionName: string
+
+	/**
+	 * @generated from field: string url = 4;
+	 */
+	url: string
+
+	/**
+	 * @generated from field: string processor_session_id = 5;
+	 */
+	processorSessionId: string
+
+	/**
+	 * @generated from field: string session_state = 6;
+	 */
+	sessionState: string
+
+	/**
+	 * A registered born-synthetic fixture owned by this buyer; empty otherwise.
+	 *
+	 * @generated from field: string synthetic_fixture = 7;
+	 */
+	syntheticFixture: string
+}
+
+/**
+ * Describes the message puzzled.v1.GetCheckoutResponse.
+ * Use `create(GetCheckoutResponseSchema)` to create a new message.
+ */
+export const GetCheckoutResponseSchema: GenMessage<GetCheckoutResponse> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_billing, 13)
+
+/**
  * @generated from message puzzled.v1.CreatePortalRequest
  */
 export type CreatePortalRequest = Message<'puzzled.v1.CreatePortalRequest'> & {
@@ -384,7 +516,7 @@ export type CreatePortalRequest = Message<'puzzled.v1.CreatePortalRequest'> & {
  */
 export const CreatePortalRequestSchema: GenMessage<CreatePortalRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 10)
+	messageDesc(file_puzzled_v1_billing, 14)
 
 /**
  * @generated from message puzzled.v1.CreatePortalResponse
@@ -402,7 +534,7 @@ export type CreatePortalResponse = Message<'puzzled.v1.CreatePortalResponse'> & 
  */
 export const CreatePortalResponseSchema: GenMessage<CreatePortalResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 11)
+	messageDesc(file_puzzled_v1_billing, 15)
 
 /**
  * @generated from message puzzled.v1.CancelSubscriptionRequest
@@ -415,7 +547,7 @@ export type CancelSubscriptionRequest = Message<'puzzled.v1.CancelSubscriptionRe
  */
 export const CancelSubscriptionRequestSchema: GenMessage<CancelSubscriptionRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 12)
+	messageDesc(file_puzzled_v1_billing, 16)
 
 /**
  * @generated from message puzzled.v1.CancelSubscriptionResponse
@@ -433,7 +565,7 @@ export type CancelSubscriptionResponse = Message<'puzzled.v1.CancelSubscriptionR
  */
 export const CancelSubscriptionResponseSchema: GenMessage<CancelSubscriptionResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 13)
+	messageDesc(file_puzzled_v1_billing, 17)
 
 /**
  * @generated from message puzzled.v1.ResumeSubscriptionRequest
@@ -446,7 +578,7 @@ export type ResumeSubscriptionRequest = Message<'puzzled.v1.ResumeSubscriptionRe
  */
 export const ResumeSubscriptionRequestSchema: GenMessage<ResumeSubscriptionRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 14)
+	messageDesc(file_puzzled_v1_billing, 18)
 
 /**
  * @generated from message puzzled.v1.ResumeSubscriptionResponse
@@ -459,7 +591,7 @@ export type ResumeSubscriptionResponse = Message<'puzzled.v1.ResumeSubscriptionR
  */
 export const ResumeSubscriptionResponseSchema: GenMessage<ResumeSubscriptionResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 15)
+	messageDesc(file_puzzled_v1_billing, 19)
 
 /**
  * @generated from message puzzled.v1.JoinFamilyRequest
@@ -477,7 +609,7 @@ export type JoinFamilyRequest = Message<'puzzled.v1.JoinFamilyRequest'> & {
  */
 export const JoinFamilyRequestSchema: GenMessage<JoinFamilyRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 16)
+	messageDesc(file_puzzled_v1_billing, 20)
 
 /**
  * @generated from message puzzled.v1.JoinFamilyResponse
@@ -490,7 +622,7 @@ export type JoinFamilyResponse = Message<'puzzled.v1.JoinFamilyResponse'> & {}
  */
 export const JoinFamilyResponseSchema: GenMessage<JoinFamilyResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 17)
+	messageDesc(file_puzzled_v1_billing, 21)
 
 /**
  * @generated from message puzzled.v1.LeaveFamilyRequest
@@ -503,7 +635,7 @@ export type LeaveFamilyRequest = Message<'puzzled.v1.LeaveFamilyRequest'> & {}
  */
 export const LeaveFamilyRequestSchema: GenMessage<LeaveFamilyRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 18)
+	messageDesc(file_puzzled_v1_billing, 22)
 
 /**
  * @generated from message puzzled.v1.LeaveFamilyResponse
@@ -516,7 +648,7 @@ export type LeaveFamilyResponse = Message<'puzzled.v1.LeaveFamilyResponse'> & {}
  */
 export const LeaveFamilyResponseSchema: GenMessage<LeaveFamilyResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 19)
+	messageDesc(file_puzzled_v1_billing, 23)
 
 /**
  * @generated from message puzzled.v1.RemoveFamilyMemberRequest
@@ -534,7 +666,7 @@ export type RemoveFamilyMemberRequest = Message<'puzzled.v1.RemoveFamilyMemberRe
  */
 export const RemoveFamilyMemberRequestSchema: GenMessage<RemoveFamilyMemberRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 20)
+	messageDesc(file_puzzled_v1_billing, 24)
 
 /**
  * @generated from message puzzled.v1.RemoveFamilyMemberResponse
@@ -547,7 +679,7 @@ export type RemoveFamilyMemberResponse = Message<'puzzled.v1.RemoveFamilyMemberR
  */
 export const RemoveFamilyMemberResponseSchema: GenMessage<RemoveFamilyMemberResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 21)
+	messageDesc(file_puzzled_v1_billing, 25)
 
 /**
  * @generated from message puzzled.v1.ResetFamilyInviteRequest
@@ -560,7 +692,7 @@ export type ResetFamilyInviteRequest = Message<'puzzled.v1.ResetFamilyInviteRequ
  */
 export const ResetFamilyInviteRequestSchema: GenMessage<ResetFamilyInviteRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 22)
+	messageDesc(file_puzzled_v1_billing, 26)
 
 /**
  * @generated from message puzzled.v1.ResetFamilyInviteResponse
@@ -578,7 +710,7 @@ export type ResetFamilyInviteResponse = Message<'puzzled.v1.ResetFamilyInviteRes
  */
 export const ResetFamilyInviteResponseSchema: GenMessage<ResetFamilyInviteResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_billing, 23)
+	messageDesc(file_puzzled_v1_billing, 27)
 
 /**
  * @generated from service puzzled.v1.BillingService
@@ -607,6 +739,25 @@ export const BillingService: GenService<{
 		methodKind: 'unary'
 		input: typeof CreateCheckoutRequestSchema
 		output: typeof CreateCheckoutResponseSchema
+	}
+	/**
+	 * The same normal checkout action with mandatory durable request identity.
+	 * An older server without this method refuses before creating a session.
+	 *
+	 * @generated from rpc puzzled.v1.BillingService.CreateCheckoutAttempt
+	 */
+	createCheckoutAttempt: {
+		methodKind: 'unary'
+		input: typeof CreateCheckoutAttemptRequestSchema
+		output: typeof CreateCheckoutAttemptResponseSchema
+	}
+	/**
+	 * @generated from rpc puzzled.v1.BillingService.GetCheckout
+	 */
+	getCheckout: {
+		methodKind: 'unary'
+		input: typeof GetCheckoutRequestSchema
+		output: typeof GetCheckoutResponseSchema
 	}
 	/**
 	 * @generated from rpc puzzled.v1.BillingService.CreatePortal

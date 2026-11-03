@@ -221,27 +221,29 @@ impl StatsService for StatsConnectService {
         _request: ServiceRequest<'_, GetTodayOverviewRequest>,
     ) -> ServiceResult<GetTodayOverviewResponse> {
         let day_key = product_day_key_string(Utc::now());
-        let (player_count, completions) = match &self.state.pool {
+        let overview = match &self.state.pool {
             Some(pool) => today_overview(pool, &day_key).await.map_err(|e| {
                 tracing::warn!(%e, "today overview failed");
                 ConnectError::new(ErrorCode::Internal, "today_overview_failed")
             })?,
-            None => (0, Vec::new()),
+            None => puzzled_core::puzzle_play::ritual_completion::TodayOverview {
+                player_count: 0,
+                completions: Vec::new(),
+            },
         };
-        let completions_proto = completions
-            .iter()
-            .map(|c| crate::proto::puzzled::v1::GameCompletionCount {
-                game_slug: c
-                    .get("gameSlug")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or_default()
-                    .to_string(),
-                count: c.get("count").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
-                ..Default::default()
-            })
+        let completions_proto = overview
+            .completions
+            .into_iter()
+            .map(
+                |(slug, count)| crate::proto::puzzled::v1::GameCompletionCount {
+                    game_slug: slug,
+                    count: count as u32,
+                    ..Default::default()
+                },
+            )
             .collect();
         Response::ok(GetTodayOverviewResponse {
-            player_count,
+            player_count: overview.player_count as u32,
             completions: completions_proto,
             ..Default::default()
         })

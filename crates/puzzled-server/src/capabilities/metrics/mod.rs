@@ -46,7 +46,7 @@ pub async fn audience(pool: &PgPool, user_id: &str, paid: bool) {
         crate::capabilities::identity_access::adapters::guest_credentials::lock_players(
             &mut tx, vec![uid],
         ).await?;
-        sqlx::query("INSERT INTO metric_audiences (user_id, day_key, paid) SELECT $1,$2,$3 WHERE EXISTS (SELECT 1 FROM auth_subjects WHERE user_id=$1) ON CONFLICT (user_id,day_key) DO UPDATE SET paid = metric_audiences.paid OR excluded.paid")
+        sqlx::query("INSERT INTO metric_audiences (user_id, day_key, paid) SELECT $1,$2,$3 WHERE EXISTS (SELECT 1 FROM auth_subjects WHERE user_id=$1) AND NOT EXISTS (SELECT 1 FROM synthetic_fixtures WHERE user_id=$1) ON CONFLICT (user_id,day_key) DO UPDATE SET paid = metric_audiences.paid OR excluded.paid")
             .bind(uid).bind(day).bind(paid).execute(&mut *tx).await?;
         tx.commit().await
     }.await;

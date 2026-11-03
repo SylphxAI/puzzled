@@ -215,3 +215,7 @@ marker can only opt out; it grants no identity, acceptance or ranking authority.
 The read-only harness remains the production default. A fresh production
 percentile read must agree with the serving SHA and these isolated fixtures;
 do not seed or export personal production rows to prove a percentile.
+
+The separate [retained checkout check](checkout-journey.md) verifies unpaid
+production checkout. It has its own synthetic fixture and does not imply a
+Stripe Test Mode payment receipt.
