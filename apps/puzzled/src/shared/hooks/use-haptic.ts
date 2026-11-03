@@ -1,16 +1,13 @@
 /**
- * Haptic Feedback Hook
+ * Haptic Feedback
  *
  * Provides haptic feedback for mobile devices using the Vibration API.
  * Falls back gracefully on devices that don't support vibration.
  *
  * Usage:
- *   const { vibrate, vibratePattern, isSupported } = useHaptic()
- *   vibrate('light') // Single vibration
- *   vibratePattern('success') // Pattern vibration
+ *   triggerHaptic('light') // Single vibration
+ *   triggerHaptic('success') // Pattern vibration
  */
-
-import { useCallback, useMemo } from 'react'
 
 // Vibration patterns (in milliseconds)
 // Format: [vibrate, pause, vibrate, pause, ...]
@@ -41,74 +38,8 @@ const HAPTIC_PATTERNS = {
 
 export type HapticPattern = keyof typeof HAPTIC_PATTERNS
 
-type HapticIntensity = 'light' | 'medium' | 'heavy'
-
-function _useHaptic() {
-	// Check if Vibration API is supported
-	const isSupported = useMemo(() => {
-		if (typeof window === 'undefined') return false
-		return 'vibrate' in navigator
-	}, [])
-
-	/**
-	 * Trigger a single vibration
-	 * @param intensity - The intensity of the vibration
-	 */
-	const vibrate = useCallback(
-		(intensity: HapticIntensity = 'medium') => {
-			if (!isSupported) return false
-
-			try {
-				const duration = intensity === 'light' ? 10 : intensity === 'medium' ? 25 : 50
-				return navigator.vibrate(duration)
-			} catch {
-				return false
-			}
-		},
-		[isSupported],
-	)
-
-	/**
-	 * Trigger a pattern vibration
-	 * @param pattern - The pattern name or custom pattern array
-	 */
-	const vibratePattern = useCallback(
-		(pattern: HapticPattern | number[]) => {
-			if (!isSupported) return false
-
-			try {
-				const patternArray = Array.isArray(pattern) ? pattern : HAPTIC_PATTERNS[pattern]
-				return navigator.vibrate(patternArray)
-			} catch {
-				return false
-			}
-		},
-		[isSupported],
-	)
-
-	/**
-	 * Stop any ongoing vibration
-	 */
-	const cancel = useCallback(() => {
-		if (!isSupported) return
-
-		try {
-			navigator.vibrate(0)
-		} catch {
-			// Silently fail if vibration isn't supported
-		}
-	}, [isSupported])
-
-	return {
-		isSupported,
-		vibrate,
-		vibratePattern,
-		cancel,
-	}
-}
-
 /**
- * Simple function to trigger haptic feedback without using the hook
+ * Trigger haptic feedback from event handlers
  * Useful for one-off vibrations in event handlers
  */
 export function triggerHaptic(pattern: HapticPattern = 'medium'): boolean {

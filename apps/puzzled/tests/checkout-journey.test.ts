@@ -215,16 +215,14 @@ describe('unpaid checkout bundle source contract (no processor receipt)', () => 
 		expect((await run(f.config, f.ports)).exit).toBe(42)
 		expect(f.creates()).toHaveLength(0)
 	})
-	test.each([
-		'livemode',
-		'amount_total',
-		'currency_code',
-		'payment_status',
-	])('rejects wrong session %s', async (field) => {
-		const f = fixture()
-		f.session[field] = field === 'livemode' ? false : 'wrong'
-		expect((await run(f.config, f.ports)).exit).not.toBe(0)
-	})
+	test.each(['livemode', 'amount_total', 'currency_code', 'payment_status'])(
+		'rejects wrong session %s',
+		async (field) => {
+			const f = fixture()
+			f.session[field] = field === 'livemode' ? false : 'wrong'
+			expect((await run(f.config, f.ports)).exit).not.toBe(0)
+		},
+	)
 	test('fixture identity drift refuses before creating', async () => {
 		const f = fixture()
 		f.config.fixtureKey = 'another-fixture'

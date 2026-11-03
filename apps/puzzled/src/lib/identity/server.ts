@@ -16,8 +16,8 @@ import {
 	sessionCookieOptions,
 } from './session-cookie'
 
-export { SESSION_COOKIE }
 export type { IdentityUser }
+export { SESSION_COOKIE }
 
 export async function sessionToken(): Promise<string | undefined> {
 	return readSessionToken(await cookies())

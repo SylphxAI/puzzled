@@ -60,7 +60,7 @@ function sdk(env: Env): Sylphx {
 	return client
 }
 
-function describe(error: unknown): { type: string; message: string; stack?: string } {
+function describeError(error: unknown): { type: string; message: string; stack?: string } {
 	if (error instanceof Error) {
 		return { type: error.name || 'Error', message: error.message || error.name, stack: error.stack }
 	}
@@ -82,7 +82,7 @@ export function buildErrorEvent(
 	context: CaptureContext = {},
 	env: Env = process.env,
 ): CaptureEvent {
-	const described = describe(error)
+	const described = describeError(error)
 	const tags: Record<string, string> = {}
 	for (const [key, value] of Object.entries(context.tags ?? {})) {
 		if (value !== undefined) tags[key] = String(value)

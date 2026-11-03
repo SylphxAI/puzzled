@@ -66,6 +66,7 @@ const GAME_ICONS: Record<string, IconComponent> = {
 }
 
 // Re-export individual icons from their game modules
+// Familiar name aliases (our games are inspired by these popular puzzles)
 export {
 	ArithmoIcon,
 	BlockSlideIcon,
@@ -82,16 +83,14 @@ export {
 	TangoIcon,
 	WordBoxIcon,
 	WordGroupsIcon,
+	WordGroupsIcon as ConnectionsIcon,
 	WordGuessIcon,
+	WordGuessIcon as WordleIcon,
 	WordHiveIcon,
+	WordHiveIcon as SpellingBeeIcon,
 	WordLadderIcon,
 	WordSearchIcon,
 }
-
-// Familiar name aliases (our games are inspired by these popular puzzles)
-export { WordGroupsIcon as ConnectionsIcon }
-export { WordGuessIcon as WordleIcon }
-export { WordHiveIcon as SpellingBeeIcon }
 
 /**
  * Universal GameIcon component
