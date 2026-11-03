@@ -7,15 +7,17 @@ type HeroPlayActionProps = {
 	 */
 	locked: boolean
 	label: string
+	/** Today's started board (one tap to play), or `#play` for an archive day. */
+	href: string
 }
 
-/** The hero's jump-to-board button, absent when the board is locked. */
-export function HeroPlayAction({ locked, label }: HeroPlayActionProps) {
+/** The hero's play button: opens the board, absent when the board is locked. */
+export function HeroPlayAction({ locked, label, href }: HeroPlayActionProps) {
 	if (locked) return null
 	return (
 		<div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
 			<a
-				href="#play"
+				href={href}
 				className="pressable inline-flex h-12 items-center gap-2 rounded-full bg-[#1a1712] px-7 text-[16px] font-semibold text-[#fbf9f4] transition-opacity hover:opacity-90"
 			>
 				<Play className="h-4 w-4" fill="currentColor" aria-hidden="true" />
