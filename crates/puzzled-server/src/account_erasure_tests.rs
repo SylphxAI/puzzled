@@ -772,7 +772,7 @@ async fn a_404_that_is_not_auths_own_keeps_the_rows_and_says_run_erase_player() 
     let Some(pool) = fresh_database().await else {
         return;
     };
-    // A misrouted SYLPHX_AUTH_URL answers 404 at a proxy: nothing says the
+    // A misrouted gateway answers 404 at a proxy: nothing says the
     // sign-in is gone, so the rows must not go either.
     let stub = StubAuth::answering(404, json!({"error": "not_found"}));
     let base = spawn_auth(stub.clone()).await;

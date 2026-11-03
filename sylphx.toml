@@ -200,6 +200,27 @@ timeout = "10m"
 retries = 0
 concurrency = "forbid"
 
+# One-time, explicitly invoked enrollment, using the api's own database and
+# Money binding plus a separately scoped Auth read key. No account is created
+# by this command; Auth must already attest a born-synthetic subject.
+[[jobs]]
+name = "register-checkout-fixture"
+service = "api"
+command = ["puzzled-server", "register-checkout-fixture"]
+timeout = "1m"
+retries = 0
+concurrency = "forbid"
+
+# Explicit one-shot invocation only. Product-owned scoped secrets are bound
+# before enablement; Observability consumes a digest-pinned published Job.
+[[jobs]]
+name = "verify-unpaid-checkout"
+service = "web"
+command = ["node", "/app/checkout-journey.mjs"]
+timeout = "1m"
+retries = 0
+concurrency = "forbid"
+
 # Persist product-day aggregates and evaluate stop-the-line alerts, at most
 # 15 minutes behind. Closed days have a 15-minute late-event allowance.
 [[compute.schedules]]

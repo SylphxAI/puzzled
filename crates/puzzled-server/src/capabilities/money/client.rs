@@ -395,6 +395,14 @@ impl Money {
             .map(String::as_str)
     }
 
+    pub async fn environment_resource(&self) -> Result<String, MoneyError> {
+        self.env_url()
+            .await?
+            .split_once("/v1/")
+            .map(|(_, name)| name.to_owned())
+            .ok_or_else(|| MoneyError::Unavailable("environment binding unavailable".into()))
+    }
+
     /// Resolve the environment now (at start-up), so a bad key shows in the
     /// log rather than on the first request. Failure is retried on use.
     pub async fn warm(&self) -> Result<(), MoneyError> {
@@ -483,7 +491,7 @@ impl Money {
                 match cached {
                     None => return Err(MoneyError::Unavailable("recent check failed".into())),
                     Some(grant) if grant.ends_at.is_none_or(|end| end > Utc::now()) => {
-                        return Ok(grant)
+                        return Ok(grant);
                     }
                     Some(_) => {}
                 }
@@ -685,5 +693,32 @@ impl Money {
             .filter(|url| !url.is_empty())
             .map(str::to_string)
             .ok_or_else(|| MoneyError::Unavailable("checkout session has no url".into()))
+    }
+
+    /// The ordinary Money create route with a retained resource identity.
+    /// Both the body and this id are fixed before the first call.
+    pub async fn create_retained_checkout(
+        &self,
+        id: &str,
+        session: &Value,
+    ) -> Result<Value, MoneyError> {
+        self.call(
+            self.http
+                .post(format!("{}/checkout_sessions", self.env_url().await?))
+                .query(&[("checkout_session_id", id)])
+                .header("Idempotency-Key", format!("puzzled-checkout-{id}"))
+                .json(session),
+        )
+        .await
+    }
+
+    /// Authoritative one-time session readback, reconciled by Money.
+    pub async fn checkout_session(&self, id: &str) -> Result<Value, MoneyError> {
+        self.call(self.http.get(format!(
+            "{}/checkout_sessions/{}",
+            self.env_url().await?,
+            segment(id)
+        )))
+        .await
     }
 }

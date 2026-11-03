@@ -7,7 +7,7 @@
 		"title": "Puzzled結果カード",
 		"downloaded": "カード画像を保存し、キャプションをクリップボードにコピーしました。",
 		"copied": "キャプションをクリップボードにコピーしました。このブラウザでは画像を作成できませんでした。",
-		"unavailable": "このブラウザではシェアを利用できません。",
+		"unavailable": "自動でシェアできませんでした。",
 		"statusWon": "クリア!",
 		"statusLost": "今回は惜しくも失敗",
 		"attemptsLabel": "挑戦回数",
@@ -27,7 +27,9 @@
 		"altTemplate": "Puzzled - {game}{day}。{result}",
 		"altDetailsTemplate": " {details}。",
 		"altLinkTemplate": " 遊ぶ: {link}",
-		"detailSeparator": "、"
+		"detailSeparator": "、",
+		"saved": "カード画像を保存しました。",
+		"caption": "結果の説明文"
 	},
 	"challenge": {
 		"title": "結果を並べて比較",

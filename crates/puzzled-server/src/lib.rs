@@ -29,6 +29,8 @@ mod announcements_tests;
 #[cfg(test)]
 mod auth_session_tests;
 #[cfg(test)]
+mod checkout_attempt_tests;
+#[cfg(test)]
 mod compute_tick_tests;
 #[cfg(test)]
 mod daily_pipeline_tests;
@@ -50,6 +52,8 @@ mod retention_push_tests;
 mod streak_freeze_tests;
 #[cfg(test)]
 mod test_support;
+#[cfg(test)]
+mod today_overview_tests;
 #[cfg(test)]
 mod today_progress_tests;
 #[cfg(test)]

@@ -5,10 +5,11 @@ const inboundPublicRoutes = new Set(inboundModulePublicRoutes(locales))
 
 /**
  * Documents the app serves at the root, outside locale routing.
- * `next.config.ts` declares no rewrites for them; the metadata routes own them.
+ * `next.config.ts` declares no rewrites for them; their root routes own them.
  */
 const STATIC_DOCUMENT_PATHS = new Set([
 	'/robots.txt',
+	'/llms.txt',
 	'/sitemap.xml',
 	'/manifest.webmanifest',
 	'/offline.html',

@@ -1,11 +1,10 @@
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
-import { env } from '../env'
 import { getRequestSiteOrigin } from '../site-origin.server'
 import {
+	DEST_PEELS,
 	DestHttpError,
 	destIdentityJson,
-	destIdentityOrigin,
 	destSessionAccessToken,
 	destSessionChallengeId,
 } from './dest'
@@ -16,7 +15,7 @@ export function identityFail(status: number, error: string) {
 }
 
 export function identityOrigin(): string {
-	return destIdentityOrigin(env.SYLPHX_AUTH_URL)
+	return DEST_PEELS.identity
 }
 
 export function destDevice(request: Request) {

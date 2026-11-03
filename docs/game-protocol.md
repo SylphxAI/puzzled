@@ -82,11 +82,24 @@ outcome), card, re-entry (results and review, already played).
 
 The viral unit. Prefer it non-spoiler, readable at a glance in a feed (pattern,
 score, streak or time band), labelled with day and game so friends know which
-puzzle, shareable in one tap (Web Share or clipboard text), and linking to the
-same game and day (`?date=`). Give every game the same chrome so the brand is
-recognisable, and a text alternative for visual grids. Avoid sharing the answer
-as a flex, or any share that needs an install before playing. The card and its
-image must never contain the solution.
+puzzle, and shareable in one tap (Web Share or clipboard text).
+
+A server-issued share id links to `/daily?ref=<share id>`. That landing shows
+the original result's game and day and offers today's featured free puzzle.
+A comparison with the shared result is available when its game and day match
+today's free puzzle; older or non-featured results still lead to today's free
+game. Without a share id, a dated module link uses
+`/games/<slug>?mode=archive&date=YYYY-MM-DD`: both `mode=archive` and a valid
+`date` select the archived day. An undated link opens `/games/<slug>`.
+The link forms are defined in
+[`share-text.ts`](../apps/puzzled/src/features/daily/lib/share-text.ts), and the
+landing's play target in
+[`challenge.ts`](../apps/puzzled/src/features/daily/lib/challenge.ts).
+
+Give every game the same chrome so the brand is recognisable, and a text
+alternative for visual grids. Avoid sharing the answer as a flex, or any share
+that needs an install before playing. The card and its image must never contain
+the solution.
 
 ## Entitlement
 
@@ -128,7 +141,7 @@ the live subset):
 | ID | Journey |
 | --- | --- |
 | P1 | Free today's puzzle, play, terminal, result card |
-| P2 | Open a shared card as a new guest and play the same day |
+| P2 | Open a shared card as a new guest, see its original game and day, and play today's free puzzle; compare results when the shared puzzle is today's featured game |
 | P3 | Second game the same day |
 | P4 | Sign in and see streak and history |
 | P5 | Archive: a past day is served with Plus (or while Plus is not on sale) and refused with an unlock path otherwise; a future day is refused |

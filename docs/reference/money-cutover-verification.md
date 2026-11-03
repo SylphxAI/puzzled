@@ -1,8 +1,9 @@
 # Money checkout cutover: rollout and evidence
 
 Do not confuse a public price list, hosted payment page, or a local fake-Money
-test with a completed production purchase. Money is the sole billing authority;
-no browser return parameter or manual entitlement grant proves a sale.
+test with verified payment, webhook and entitlement delivery. Money is the sole
+billing authority; no browser return parameter or manual entitlement grant
+proves a sale.
 
 ## Ordered rollout
 
@@ -14,12 +15,17 @@ no browser return parameter or manual entitlement grant proves a sale.
    to make the guard pass.
 2. Wait for the new API revision to be serving and the previous instances to
    finish draining. Run the existing live verifier against that revision.
-3. Complete a purchase through `/pricing` and the ordinary hosted Money checkout
-   with a human-owned test account and an authorized payment method. Delegated
-   sessions cannot purchase; do not bypass that guard. Confirm the return page
-   reads `source=plus`, `entitled=true` and `status=active` (or the actual Money
-   trial status). A reverse trial or family membership is not purchase evidence.
-4. With that same account, open a non-featured game and an archive day. Both
+3. Keep two separate checkout receipts. In production, use an owned registered
+   synthetic buyer through the ordinary product checkout, require current synced
+   prices and an unpaid `cs_live_` session, then stop before payment details or
+   confirmation. Complete payment only in the isolated Stripe Test environment
+   (`livemode=false`, `cs_test_`) with simulated methods. Delegated sessions
+   cannot purchase. Confirm Test payment, webhook, `source=plus` and
+   `entitled=true` through Money and the product. A reverse trial or family
+   membership is not purchase evidence. Follow the
+   [retained checkout contract](checkout-journey.md) for fixture custody,
+   readback, negative cases and natural expiry.
+4. With that same Test account, open a non-featured game and an archive day. Both
    must be playable immediately. Check an existing subscriber still has access
    and that an unpaid account remains blocked from paid play while the featured
    daily puzzle stays free. A forged success URL must not unlock Plus.
@@ -30,14 +36,15 @@ no browser return parameter or manual entitlement grant proves a sale.
    migrations run **before** writers roll, and the previous API still queries
    those tables in its guest-account guard.
 
-## Production receipt
+## Separate production and Test receipts
 
 Record UTC timestamps, serving API revision, ordinary checkout/subscription
-receipt references, the confirmed subscription response, paid-game and archive
-results, the existing-subscriber continuity check, and the unpaid/free-floor
-checks. Keep account identifiers, payment details and private receipts out of
-public pull requests. Cancelling a test subscription is a separate, deliberate
-account action, not a refund or payment-record deletion.
+receipt references and the unpaid session's mode, amount, currency and state.
+Record actual Stripe Test payment, webhook, grant, paid-game/archive, negative
+cases and natural-expiry readback separately. Preserve the existing-subscriber
+continuity and unpaid/free-floor checks. Keep account identifiers, payment
+details and private receipts out of public pull requests. A Test subscription
+cancellation is a separate account action, never a payment-record deletion.
 
 ## Checkout convergence
 

@@ -21,6 +21,7 @@ on:
       - 'config/commercial/catalogue.json'
       - 'scripts/money-catalogue-spec.ts'
       - 'scripts/money-catalogue-apply.sh'
+      - 'scripts/money-merchant.ts'
       - '.github/workflows/money-catalogue.yml'
   workflow_dispatch:
 
@@ -36,15 +37,12 @@ concurrency:
 jobs:
   preview:
     name: Apply to preview
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event.repository.private == false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       ACCESS_NAME: puzzled-money-catalogue-preview
-      # Without the optional test key, only merchant_not_connected is nonfatal.
-      # Every other preview failure still blocks production.
-      SYNC_FAILURE_NONFATAL: '1'
-      STRIPE_TEST_RESTRICTED_KEY: ${{ secrets.STRIPE_TEST_RESTRICTED_KEY }}
+      MONEY_MODE: test
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -58,11 +56,12 @@ jobs:
   production:
     name: Apply to production
     needs: preview
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event.repository.private == false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       ACCESS_NAME: puzzled-money-catalogue-production
+      MONEY_MODE: live
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

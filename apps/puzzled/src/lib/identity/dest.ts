@@ -1,11 +1,9 @@
-const IDENTITY_API_ORIGIN = 'https://api.sylphx.com'
-const EVENTS_API_ORIGIN = 'https://api.events.sylphx.com'
-const AI_API_ORIGIN = 'https://api.models.sylphx.ai/v1'
-
 export const DEST_PEELS = {
-	identity: IDENTITY_API_ORIGIN,
-	events: EVENTS_API_ORIGIN,
-	ai: AI_API_ORIGIN,
+	identity: 'https://api.sylphx.com',
+	// Keep Events until canonical Notify serves devices/inbox/deliveries. The
+	// gateway's /v1/devices is Compute; /v1/inbox is not Events. See docs/capabilities.md.
+	events: 'https://api.events.sylphx.com',
+	ai: 'https://api.sylphx.ai/v1',
 } as const
 
 export const DEST_CONSENT_PURPOSES = [
@@ -74,12 +72,8 @@ export function destPeelOrigin(fallback: string, raw?: string | null): string {
 	return trimSlash(value)
 }
 
-export function destIdentityOrigin(raw?: string | null): string {
-	return destPeelOrigin(IDENTITY_API_ORIGIN, raw)
-}
-
 export function destEventsOrigin(raw?: string | null): string {
-	return destPeelOrigin(EVENTS_API_ORIGIN, raw)
+	return destPeelOrigin(DEST_PEELS.events, raw)
 }
 
 function readText(value: unknown, keys: string[]): string | undefined {
