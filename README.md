@@ -75,6 +75,8 @@ merged commit that passes is deployed by the platform from `sylphx.toml`, with
 schema migrations applied by an Atlas job first. After a deploy, run
 `bun run verify:live` to check production
 ([docs/reference/live-verification.md](docs/reference/live-verification.md)).
+The [public landing delivery contract](docs/reference/public-page-delivery.md)
+records locale-cookie, private HTML and cold-start verification boundaries.
 
 ### Daily Web Push configuration
 

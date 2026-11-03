@@ -34,6 +34,11 @@ import { isInboundPublicPath, isProxySkippedPath } from '@/lib/proxy-paths'
 // =============================================================================
 
 const intlMiddleware = createMiddleware(routing)
+// With locale detection disabled, an unprefixed landing always uses en-US.
+// next-intl still writes NEXT_LOCALE when Accept-Language is absent or differs.
+// That is not a language choice: keep first visits free of that cookie while
+// retaining the ordinary middleware for explicit or remembered preferences.
+const landingIntlMiddleware = createMiddleware({ ...routing, localeCookie: false })
 
 /**
  * Locale prefix match, case-insensitive and tolerant of a locale root URL.
@@ -155,7 +160,10 @@ async function route(request: NextRequest): Promise<NextResponse> {
 	// Auth Routes: Let Sylphx handle /auth/*
 	// =========================================================================
 
-	return intlMiddleware(request)
+	const defaultLanding = pathname === '/' || pathname === '/pricing'
+	return defaultLanding && !request.cookies.has('NEXT_LOCALE')
+		? landingIntlMiddleware(request)
+		: intlMiddleware(request)
 }
 
 export const config = {
