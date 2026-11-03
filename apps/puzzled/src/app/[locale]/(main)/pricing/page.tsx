@@ -275,6 +275,17 @@ export default async function PricingPage({ params, searchParams }: Props) {
 											) : null}
 										</div>
 									) : null}
+									{!group.family && plusOnce ? (
+										<div className="flex flex-wrap items-baseline gap-1.5 text-sm">
+											<dt className="sr-only">
+												{t('weekendPass', { days: plusOnce.accessDays || 3 })}
+											</dt>
+											<dd className="font-semibold tnum">{priceLine(plusOnce)}</dd>
+											<dd className="text-muted-foreground">
+												{t('weekendPass', { days: plusOnce.accessDays || 3 })} · {t('oneTime')}
+											</dd>
+										</div>
+									) : null}
 									{group.family && year && year.trialDays > 0 ? (
 										<TrialChargeLine days={year.trialDays} price={priceLine(year) ?? ''} />
 									) : null}

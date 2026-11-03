@@ -43,6 +43,11 @@ export type PlanId =
 	| 'family_monthly'
 	| 'family_yearly'
 
+/** Does this plan grant a one-time non-renewing pass rather than a recurring subscription? */
+export function isOneTimePassPlan(planId: PlanId | null | undefined): boolean {
+	return planId === 'individual_once'
+}
+
 /** Currency shown for a locale: pounds for en-GB, US dollars otherwise. */
 export function currencyForLocale(locale: string): 'gbp' | 'usd' {
 	return locale.toLowerCase() === 'en-gb' ? 'gbp' : 'usd'
