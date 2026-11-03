@@ -21,6 +21,9 @@
 	},
 	"subscription": {
 		"free": "你正在使用免費方案：每天一款精選謎題。",
+		"plan": {
+			"individual_once": "Puzzled Plus（3 天通行證）"
+		},
 		"renews": "將於 {date} 續訂",
 		"resumed": "你的訂閱會如常續訂。"
 	}
