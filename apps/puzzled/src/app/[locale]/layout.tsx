@@ -13,9 +13,6 @@ import { NONCE_HEADER } from '@/lib/csp'
 import { env } from '@/lib/env'
 import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
 import { routing } from '@/lib/i18n/routing'
-import { getAppConfig } from '@/lib/identity/app-config'
-import { EMPTY_APP_CONFIG } from '@/lib/identity/dest'
-import { withPresentationDeadline } from '@/lib/presentation-document'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 import { DeferredToaster } from '@/shared/components/deferred-shell'
 import { PlatformProvider } from '@/shared/components/platform'
@@ -93,9 +90,8 @@ export const viewport: Viewport = {
 }
 
 /**
- * Dynamic rendering: the layout reads the request (origin headers). The app
- * config it also reads is cached for five
- * minutes in `getAppConfig`, so a render does not wait on identity.
+ * Dynamic rendering: origin and CSP nonce are request-scoped. Social-provider
+ * discovery belongs to the sign-in pages; the shared shell does not use it.
  *
  * The proxy.ts handles i18n routing, so generateStaticParams is not needed.
  */
@@ -166,10 +162,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 	// Enable static rendering
 	setRequestLocale(locale)
 
-	const [messages, config] = await Promise.all([
-		getMessages(),
-		withPresentationDeadline(getAppConfig({}), EMPTY_APP_CONFIG),
-	])
+	const messages = await getMessages()
 
 	return (
 		<html lang={locale} suppressHydrationWarning className={fraunces.variable}>
@@ -257,7 +250,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 				{/* At first paint, outside the providers, so early errors are captured too. */}
 				<ErrorCapture />
 				<ThemeProvider nonce={nonce}>
-					<PlatformProvider appId={config.app.id} config={config}>
+					<PlatformProvider>
 						{/* Before the children so its effects register first. */}
 						<FunnelReporter />
 						{googleTag ? <GoogleTag ids={googleTag} /> : null}

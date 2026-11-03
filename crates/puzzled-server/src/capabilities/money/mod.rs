@@ -5,9 +5,11 @@
 //! Money's `price_catalogs/default`.
 
 pub mod access;
+pub mod attempts;
 pub mod checkout;
 pub mod client;
 pub mod consent_db;
+pub mod fixtures;
 pub mod pricing;
 
 #[cfg(test)]

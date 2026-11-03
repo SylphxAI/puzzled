@@ -8,9 +8,9 @@ const env = {
 }
 
 describe('Sylphx Auth client', () => {
-	test('config needs both keys; the URL defaults to the platform', () => {
+	test('config needs both keys and ignores retired URL overrides', () => {
 		expect(authConfig(env)).toEqual({
-			url: 'https://auth.example',
+			url: 'https://api.sylphx.com',
 			publishableKey: 'sylphx_pk_test_1',
 			secretKey: 'identity_org_key_1',
 		})
@@ -38,7 +38,7 @@ describe('Sylphx Auth client', () => {
 		const url = new URL(
 			googleStartUrl(config, 'https://puzzled.gg/api/identity/oauth/callback?next=%2F'),
 		)
-		expect(url.origin + url.pathname).toBe('https://auth.example/v1/client/oauth/google/start')
+		expect(url.origin + url.pathname).toBe('https://api.sylphx.com/v1/client/oauth/google/start')
 		expect(url.searchParams.get('publishable_key')).toBe('sylphx_pk_test_1')
 		expect(url.searchParams.get('session_mode')).toBe('server')
 		expect(url.searchParams.get('redirect_url')).toBe(

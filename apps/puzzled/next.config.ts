@@ -209,6 +209,9 @@ const nextConfig: NextConfig = {
 
 	// Experimental features
 	experimental: {
+		// Scale-to-zero: load the requested route, rather than every route during
+		// the first health probe. Modules stay cached after their first use.
+		preloadEntriesOnStart: false,
 		// Enable server actions
 		serverActions: {
 			bodySizeLimit: '2mb',

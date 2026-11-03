@@ -1,7 +1,7 @@
 //! SQL adapters for user stats and history (server-authoritative sessions).
 
 use puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid;
-use puzzled_core::puzzle_play::ritual_completion::{DRC_MODULE_COMPLETIONS_SQL, DRC_RECOMPUTE_SQL};
+use puzzled_core::puzzle_play::ritual_completion::{TodayOverview, TODAY_OVERVIEW_SQL};
 use serde_json::Value;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -142,25 +142,41 @@ pub async fn user_history_on_connection(
 
 /// Public today overview: daily puzzle completers + qualifying ritual
 /// finishes for the bound product `day_key`. Same authority as `compute_drc`.
-pub async fn today_overview(
-    pool: &PgPool,
-    day_key: &str,
-) -> Result<(u32, Vec<serde_json::Value>), String> {
-    let players: (i64,) = sqlx::query_as(DRC_RECOMPUTE_SQL)
+pub async fn today_overview(pool: &PgPool, day_key: &str) -> Result<TodayOverview, String> {
+    let started = std::time::Instant::now();
+    let mut connection = pool.acquire().await.map_err(|e| {
+        tracing::info!(
+            event = "puzzled.stats.today_overview.db",
+            phase = "acquire_failed",
+            acquire_ms = started.elapsed().as_secs_f64() * 1000.0,
+            "today overview database timing"
+        );
+        format!("today overview acquire failed: {e}")
+    })?;
+    let acquired = std::time::Instant::now();
+    let rows = sqlx::query_as::<_, (Option<String>, i64)>(TODAY_OVERVIEW_SQL)
         .bind(day_key)
-        .fetch_one(pool)
-        .await
-        .map_err(|e| format!("today players failed: {e}"))?;
-    let rows: Vec<(String, i64)> = sqlx::query_as(DRC_MODULE_COMPLETIONS_SQL)
-        .bind(day_key)
-        .fetch_all(pool)
-        .await
-        .map_err(|e| format!("today completions failed: {e}"))?;
-    let completions = rows
-        .into_iter()
-        .map(|(slug, count)| serde_json::json!({ "gameSlug": slug, "count": count }))
-        .collect();
-    Ok((players.0.max(0) as u32, completions))
+        .fetch_all(&mut *connection)
+        .await;
+    tracing::info!(
+        event = "puzzled.stats.today_overview.db",
+        phase = if rows.is_ok() { "ok" } else { "query_failed" },
+        acquire_ms = acquired.duration_since(started).as_secs_f64() * 1000.0,
+        query_ms = acquired.elapsed().as_secs_f64() * 1000.0,
+        "today overview database timing"
+    );
+    let rows = rows.map_err(|e| format!("today overview query failed: {e}"))?;
+    let mut overview = TodayOverview {
+        player_count: 0,
+        completions: Vec::with_capacity(rows.len().saturating_sub(1)),
+    };
+    for (slug, count) in rows {
+        match slug {
+            Some(slug) => overview.completions.push((slug, count.max(0) as u64)),
+            None => overview.player_count = count.max(0) as u64,
+        }
+    }
+    Ok(overview)
 }
 
 /// One snapshot: the cohort and viewer metric both come from accepted rows.

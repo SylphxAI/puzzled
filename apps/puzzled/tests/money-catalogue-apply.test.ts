@@ -38,24 +38,10 @@ answer() { # body code
 case "$url" in
   *audience=sylphx-access*) answer '{"value":"jwt-fixture"}' 200 ;;
   */v1/access/github/token) answer "$FAKE_EXCHANGE_BODY" "$FAKE_EXCHANGE_CODE" ;;
-  */merchant_accounts:connect)
-    printf '%s' "$data" > "$RUNNER_TEMP/merchant-connect.json"
-    if [ "\${FAKE_MERCHANT_CONNECT_CODE:-200}" -lt 300 ]; then touch "$RUNNER_TEMP/connected-merchant"; fi
-    answer "\${FAKE_MERCHANT_CONNECT_BODY:-{}}" "\${FAKE_MERCHANT_CONNECT_CODE:-200}" ;;
   */merchant_accounts/default)
-    body='{"state":"connected","charges_enabled":true}'
-    if [ -f "$RUNNER_TEMP/connected-merchant" ]; then
-      if [ -n "$FAKE_CONNECTED_MERCHANT_BODY" ]; then body="$FAKE_CONNECTED_MERCHANT_BODY"; fi
-      answer "$body" "\${FAKE_CONNECTED_MERCHANT_CODE:-200}"
-    elif [ -n "$FAKE_MERCHANT_GET_CODE" ]; then
-      if [ -n "$FAKE_MERCHANT_GET_BODY" ]; then body="$FAKE_MERCHANT_GET_BODY"; fi
-      answer "$body" "$FAKE_MERCHANT_GET_CODE"
-    elif [ -n "$FAKE_MERCHANT_EXISTS" ]; then
-      if [ -n "$FAKE_MERCHANT_BODY" ]; then body="$FAKE_MERCHANT_BODY"; fi
-      answer "$body" 200
-    else
-      answer '{"error":"not found"}' 404
-    fi ;;
+    body='{"processor":"stripe","account_id":"acct_fixture","state":"connected","credential":"connect"}'
+    if [ -n "$FAKE_MERCHANT_BODY" ]; then body="$FAKE_MERCHANT_BODY"; fi
+    answer "$body" "\${FAKE_MERCHANT_GET_CODE:-200}" ;;
   */licence_keys:generate) touch "$RUNNER_TEMP/generated-licence-key"; answer '{}' 200 ;;
   */licence_keys/*)
     if [ -n "$FAKE_KEY_EXISTS" ] || [ -f "$RUNNER_TEMP/generated-licence-key" ]; then
@@ -99,6 +85,7 @@ function run(env: Record<string, string>) {
 				.filter(Boolean)
 				.join(delimiter),
 			ACCESS_NAME: 'puzzled-money-catalogue-preview',
+			MONEY_MODE: 'test',
 			ACTIONS_ID_TOKEN_REQUEST_URL: 'https://token.invalid/request?x=1',
 			ACTIONS_ID_TOKEN_REQUEST_TOKEN: 'request-fixture',
 			RUNNER_TEMP: dir,
@@ -128,7 +115,9 @@ describe('money catalogue apply script', () => {
 		])
 		expect(result.calls.filter((c) => c.includes('licence_keys:generate'))).toHaveLength(1)
 		expect(result.calls.some((c) => c.includes('/catalogs/default'))).toBe(false)
-		expect(result.calls.some((c) => c.includes('merchant_accounts'))).toBe(false)
+		expect(result.calls.filter((c) => c.includes('merchant_accounts'))).toEqual([
+			'GET https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/merchant_accounts/default',
+		])
 	})
 
 	test('an existing licence key is reused without a generate call', () => {
@@ -142,98 +131,86 @@ describe('money catalogue apply script', () => {
 		expect(result.calls.filter((c) => c.includes('/licence_keys/puzzled_plus'))).toHaveLength(1)
 	})
 
-	test('a missing preview merchant is connected once with the test key and read back', () => {
-		const result = run({
-			FAKE_EXCHANGE_BODY: GRANTED,
-			FAKE_EXCHANGE_CODE: '200',
-			STRIPE_TEST_RESTRICTED_KEY: 'rk_test_fixture',
-		})
-		expect(result.status).toBe(0)
-		expect(result.merchantConnect).toEqual({ restricted_key: 'rk_test_fixture' })
-		expect(result.calls.filter((c) => c.includes('merchant_accounts'))).toEqual([
-			'GET https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/merchant_accounts/default',
-			'POST https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/merchant_accounts:connect',
-			'GET https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/merchant_accounts/default',
-		])
-		const readback = result.calls.findLastIndex((c) => c.includes('/merchant_accounts/default'))
-		const patch = result.calls.findIndex((c) => c.startsWith('PATCH'))
-		expect(readback).toBeGreaterThan(-1)
-		expect(readback).toBeLessThan(patch)
-	})
-
-	test('an existing connected test merchant is reused with omitted or explicit false livemode', () => {
-		for (const body of [
-			'{"state":"connected","charges_enabled":true}',
-			'{"livemode":false,"state":"connected","charges_enabled":true}',
-		]) {
+	test('Connect test accounts accept omitted false fields without onboarding credentials', () => {
+		for (const flags of [{}, { livemode: false }, { charges_enabled: false }]) {
 			const result = run({
 				FAKE_EXCHANGE_BODY: GRANTED,
 				FAKE_EXCHANGE_CODE: '200',
-				FAKE_MERCHANT_EXISTS: '1',
-				FAKE_MERCHANT_BODY: body,
-				STRIPE_TEST_RESTRICTED_KEY: 'rk_test_fixture',
+				FAKE_MERCHANT_BODY: JSON.stringify({
+					processor: 'stripe',
+					account_id: 'acct_fixture',
+					state: 'connected',
+					credential: 'connect',
+					...flags,
+				}),
 			})
 			expect(result.status).toBe(0)
 			expect(result.merchantConnect).toBeUndefined()
-			expect(result.calls.filter((c) => c.includes('merchant_accounts'))).toEqual([
-				'GET https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/merchant_accounts/default',
-			])
+			expect(result.calls.filter((c) => c.includes('merchant_accounts'))).toHaveLength(1)
 		}
 	})
 
-	test('a live, disconnected or charge-disabled merchant is never reused', () => {
-		for (const body of [
-			'{"livemode":true,"state":"connected","charges_enabled":true}',
-			'{"livemode":false,"state":"disconnected","charges_enabled":true}',
-			'{"state":"disconnected","charges_enabled":true}',
-			'{"livemode":false,"state":"connected","charges_enabled":false}',
-			'{"state":"connected","charges_enabled":false}',
+	test('wrong mode, disconnected, unknown credential without charges, or malformed merchant stops before writes', () => {
+		for (const flags of [
+			{ livemode: true },
+			{ state: 'disconnected' },
+			{ credential: 'restricted_key' },
+			{ processor: 'other' },
+			{ account_id: '' },
+			{ livemode: 'false' },
 		]) {
 			const result = run({
 				FAKE_EXCHANGE_BODY: GRANTED,
 				FAKE_EXCHANGE_CODE: '200',
-				FAKE_MERCHANT_EXISTS: '1',
-				FAKE_MERCHANT_BODY: body,
-				STRIPE_TEST_RESTRICTED_KEY: 'rk_test_fixture',
+				FAKE_MERCHANT_BODY: JSON.stringify({
+					processor: 'stripe',
+					account_id: 'acct_fixture',
+					state: 'connected',
+					credential: 'connect',
+					...flags,
+				}),
 			})
 			expect(result.status).not.toBe(0)
-			expect(result.calls.some((c) => c.includes('merchant_accounts:connect'))).toBe(false)
 			expect(
 				result.calls.some((c) => c.includes('price_catalogs') || c.includes('licence_keys')),
 			).toBe(false)
 		}
 	})
 
-	test('a non-test key is refused before any Money call', () => {
-		const result = run({
-			FAKE_EXCHANGE_BODY: GRANTED,
-			FAKE_EXCHANGE_CODE: '200',
-			STRIPE_TEST_RESTRICTED_KEY: 'rk_live_fixture',
-		})
-		expect(result.status).not.toBe(0)
-		expect(result.calls.some((c) => c.includes('/v1/orgs/'))).toBe(false)
-	})
-
-	test('merchant read, connect and readback failures stop before catalogue writes', () => {
-		for (const env of [
-			{ FAKE_MERCHANT_GET_CODE: '500' },
-			{ FAKE_MERCHANT_CONNECT_CODE: '500' },
-			{ FAKE_CONNECTED_MERCHANT_CODE: '500' },
-			{
-				FAKE_CONNECTED_MERCHANT_BODY:
-					'{"livemode":true,"state":"connected","charges_enabled":true}',
-			},
-		] as Record<string, string>[]) {
+	test('production requires explicit live mode and charges enabled, even for Connect', () => {
+		for (const flags of [
+			{},
+			{ livemode: true },
+			{ livemode: true, charges_enabled: false },
+			{ livemode: true, charges_enabled: true },
+		]) {
 			const result = run({
 				FAKE_EXCHANGE_BODY: GRANTED,
 				FAKE_EXCHANGE_CODE: '200',
-				STRIPE_TEST_RESTRICTED_KEY: 'rk_test_fixture',
-				...env,
+				MONEY_MODE: 'live',
+				FAKE_MERCHANT_BODY: JSON.stringify({
+					processor: 'stripe',
+					account_id: 'acct_fixture',
+					state: 'connected',
+					credential: 'connect',
+					...flags,
+				}),
+			})
+			expect(result.status).toBe(
+				'charges_enabled' in flags && flags.charges_enabled === true ? 0 : 1,
+			)
+		}
+	})
+
+	test('a missing or unreadable merchant never triggers onboarding or catalogue writes', () => {
+		for (const code of ['404', '500']) {
+			const result = run({
+				FAKE_EXCHANGE_BODY: GRANTED,
+				FAKE_EXCHANGE_CODE: '200',
+				FAKE_MERCHANT_GET_CODE: code,
 			})
 			expect(result.status).not.toBe(0)
-			expect(result.calls.filter((c) => c.includes('merchant_accounts:connect'))).toHaveLength(
-				env.FAKE_MERCHANT_GET_CODE ? 0 : 1,
-			)
+			expect(result.merchantConnect).toBeUndefined()
 			expect(
 				result.calls.some((c) => c.includes('price_catalogs') || c.includes('licence_keys')),
 			).toBe(false)
@@ -273,48 +250,16 @@ describe('money catalogue apply script', () => {
 		expect(result.calls.filter((c) => c.includes(':sync'))).toEqual([])
 	})
 
-	test('only an unconnected preview may continue to production', () => {
-		const merchantMissing = JSON.stringify({
-			code: 'INVALID_STATE',
-			details: [{ reason: 'merchant_not_connected' }],
-		})
-		const result = run({
-			FAKE_EXCHANGE_BODY: GRANTED,
-			FAKE_EXCHANGE_CODE: '200',
-			FAKE_SYNC_BODY: merchantMissing,
-			FAKE_SYNC_CODE: '400',
-			SYNC_FAILURE_NONFATAL: '1',
-		})
-		expect(result.status).toBe(0)
-		expect(result.stdout).toContain('catalogue patched on e, not synced')
-		expect(result.stdout).toContain('merchant_not_connected')
-	})
-
-	test('a merchant connection failure without the preview flag or any other sync failure is fatal', () => {
-		const merchantMissing = JSON.stringify({
-			code: 'INVALID_STATE',
-			details: [{ reason: 'merchant_not_connected' }],
-		})
-		for (const env of [
-			{ FAKE_SYNC_BODY: merchantMissing, FAKE_SYNC_CODE: '400' },
-			{
-				FAKE_SYNC_BODY: '{"code":"INVALID_STATE","details":[{"reason":"different_failure"}]}',
-				FAKE_SYNC_CODE: '400',
-				SYNC_FAILURE_NONFATAL: '1',
-			},
-			{ FAKE_SYNC_BODY: '{"code":"INTERNAL"}', FAKE_SYNC_CODE: '500', SYNC_FAILURE_NONFATAL: '1' },
-			{
-				FAKE_SYNC_BODY: merchantMissing,
-				FAKE_SYNC_CODE: '400',
-				SYNC_FAILURE_NONFATAL: '1',
-				STRIPE_TEST_RESTRICTED_KEY: 'rk_test_fixture',
-				FAKE_MERCHANT_EXISTS: '1',
-			},
-		] as Record<string, string>[]) {
+	test('every sync failure is fatal, including a missing test merchant', () => {
+		for (const [code, body] of [
+			['400', '{"details":[{"reason":"merchant_not_connected"}]}'],
+			['500', '{"code":"INTERNAL"}'],
+		]) {
 			const result = run({
 				FAKE_EXCHANGE_BODY: GRANTED,
 				FAKE_EXCHANGE_CODE: '200',
-				...env,
+				FAKE_SYNC_CODE: code,
+				FAKE_SYNC_BODY: body,
 			})
 			expect(result.status).not.toBe(0)
 		}
@@ -340,20 +285,24 @@ describe('money catalogue workflow and reader', () => {
 
 	test('a change to the apply script triggers the workflow', () => {
 		expect(workflow.on.push.paths).toContain('scripts/money-catalogue-apply.sh')
+		expect(workflow.on.push.paths).toContain('scripts/money-merchant.ts')
 		expect(workflow.on.push.branches).toEqual(['main'])
 	})
 
-	test('production stays gated on preview except the declared merchant-connection miss', () => {
+	test('production stays gated on a successful connected test catalogue', () => {
 		expect(workflow.jobs.production.needs).toBe('preview')
-		expect(workflow.jobs.preview.env?.SYNC_FAILURE_NONFATAL).toBe('1')
-		expect(workflow.jobs.production.env?.SYNC_FAILURE_NONFATAL).toBeUndefined()
-		expect(workflow.jobs.preview.env?.STRIPE_TEST_RESTRICTED_KEY).toBe(
-			`\${{ secrets.STRIPE_TEST_RESTRICTED_KEY }}`,
-		)
-		expect(workflow.jobs.production.env?.STRIPE_TEST_RESTRICTED_KEY).toBeUndefined()
+		expect(workflow.jobs.preview.env?.MONEY_MODE).toBe('test')
+		expect(workflow.jobs.production.env?.MONEY_MODE).toBe('live')
+		for (const job of [workflow.jobs.preview, workflow.jobs.production]) {
+			expect(job.env?.STRIPE_TEST_RESTRICTED_KEY).toBeUndefined()
+			expect(job.env?.SYNC_FAILURE_NONFATAL).toBeUndefined()
+		}
+
 		for (const job of [workflow.jobs.preview, workflow.jobs.production]) {
 			// GitHub adds success() to this condition: a failed prerequisite skips production.
-			expect(job.if).toBe("github.ref == 'refs/heads/main'")
+			expect(job.if).toBe(
+				"github.ref == 'refs/heads/main' && github.event.repository.private == false",
+			)
 			expect(job['continue-on-error']).not.toBe(true)
 			const apply = job.steps.filter((step) => step.run)
 			expect(apply.map((step) => step.run)).toEqual(['bash scripts/money-catalogue-apply.sh'])

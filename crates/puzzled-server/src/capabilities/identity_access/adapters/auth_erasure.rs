@@ -10,8 +10,8 @@
 //! and ends every session it had. The idempotency key is fixed per subject,
 //! so a retried erasure repeats the same request instead of filing a second.
 //!
-//! Credentials come from the Enable Auth binding (`SYLPHX_AUTH_URL`,
-//! `SYLPHX_AUTH_ORGANIZATION_ID`, `SYLPHX_AUTH_SECRET_KEY`); they are bound at
+//! Credentials come from the Enable Auth binding
+//! (`SYLPHX_AUTH_ORGANIZATION_ID`, `SYLPHX_AUTH_SECRET_KEY`); they are bound at
 //! the environment level, so this service receives them. [`AuthErasure::from_env`]
 //! is `None` until they are set, and the api then refuses erasure rather than
 //! leaving a live sign-in behind.
@@ -20,7 +20,7 @@ use std::time::Duration;
 
 use serde_json::{json, Value};
 
-const DEFAULT_AUTH_URL: &str = "https://api.sylphx.com";
+use crate::shared::dest_http::DEST_IDENTITY_ORIGIN;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 /// Auth's own reason, kept short in logs and error text.
 const DETAIL_LIMIT: usize = 240;
@@ -68,10 +68,13 @@ impl AuthErasure {
                 .map(|value| value.trim().to_string())
                 .filter(|value| !value.is_empty())
         };
-        let url = read("SYLPHX_AUTH_URL").unwrap_or_else(|| DEFAULT_AUTH_URL.to_string());
         let organization_id = read("SYLPHX_AUTH_ORGANIZATION_ID")?;
         let secret_key = read("SYLPHX_AUTH_SECRET_KEY")?;
-        Some(Self::new(url, organization_id, secret_key))
+        Some(Self::new(
+            DEST_IDENTITY_ORIGIN.to_string(),
+            organization_id,
+            secret_key,
+        ))
     }
 
     /// File the deletion of one Auth subject. `Ok(Some(request id))` when Auth
@@ -112,7 +115,7 @@ impl AuthErasure {
         }
         // No such account of this instance: nothing left to delete. Only
         // Auth's own structured answer says so; any other 404 (a misrouted
-        // `SYLPHX_AUTH_URL`, a proxy, an HTML page) says nothing about the
+        // gateway, a proxy, an HTML page) says nothing about the
         // sign-in, and trusting it would erase the rows of every player while
         // their sign-ins stay live.
         if status == reqwest::StatusCode::NOT_FOUND && is_principal_not_found(payload.as_ref()) {
@@ -296,7 +299,7 @@ mod tests {
 
     #[tokio::test]
     async fn a_404_that_is_not_auths_user_not_found_is_ambiguous() {
-        // A misrouted SYLPHX_AUTH_URL or a proxy: never proof the sign-in is
+        // A misrouted gateway or a proxy: never proof the sign-in is
         // gone, or the rows would go while the sign-in stays live.
         for (content_type, body) in [
             (

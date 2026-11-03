@@ -1,8 +1,58 @@
 import { describe, expect, test } from 'bun:test'
+import { NextRequest } from 'next/server'
 import { locales } from './lib/i18n/config'
 import { inboundModulePublicRoutes } from './lib/module-routes'
 import { isInboundPublicPath, isProxySkippedPath } from './lib/proxy-paths'
-import { localeFromPathname, rememberedLocaleRedirect } from './proxy'
+import { localeFromPathname, proxy, rememberedLocaleRedirect } from './proxy'
+
+describe('public landing locale cookies', () => {
+	for (const path of ['/', '/pricing']) {
+		for (const language of [undefined, 'zh-HK', 'en-US']) {
+			test(`${path} needs no locale cookie for a first visit (${language ?? 'no language'})`, async () => {
+				const response = await proxy(
+					new NextRequest(`https://puzzled.gg${path}`, {
+						headers: language ? { 'accept-language': language } : undefined,
+					}),
+				)
+				expect(response.cookies.getAll()).toEqual([])
+				expect(response.headers.get('x-middleware-rewrite')).toBe(
+					`https://puzzled.gg/en-US${path === '/' ? '' : path}`,
+				)
+				expect(response.headers.get('content-security-policy')).toContain("'strict-dynamic'")
+			})
+		}
+	}
+
+	test('a remembered preference still redirects the landing', async () => {
+		const response = await proxy(
+			new NextRequest('https://puzzled.gg/pricing', {
+				headers: { cookie: 'NEXT_LOCALE=zh-HK' },
+			}),
+		)
+		expect(response.headers.get('location')).toBe('https://puzzled.gg/zh-HK/pricing')
+	})
+
+	test('an explicit locale still becomes the remembered preference', async () => {
+		const response = await proxy(new NextRequest('https://puzzled.gg/zh-HK/pricing'))
+		expect(response.cookies.get('NEXT_LOCALE')?.value).toBe('zh-HK')
+	})
+
+	test('other routes retain their existing locale-cookie behaviour', async () => {
+		const response = await proxy(new NextRequest('https://puzzled.gg/login'))
+		expect(response.cookies.get('NEXT_LOCALE')?.value).toBe('en-US')
+	})
+
+	test('legacy sign-in migration is preserved on a first landing', async () => {
+		const response = await proxy(
+			new NextRequest('https://puzzled.gg/', {
+				headers: { cookie: 'sylphx_identity_session=existing-session' },
+			}),
+		)
+		expect(response.cookies.get('puzzled_session')?.value).toBe('existing-session')
+		expect(response.cookies.get('sylphx_identity_session')?.value).toBe('')
+		expect(response.cookies.has('NEXT_LOCALE')).toBe(false)
+	})
+})
 
 describe('dest proxy inbound public routes', () => {
 	test('alias table feeds public /crowns and /duo', () => {

@@ -7,7 +7,7 @@
 		"title": "Tarjeta de resultado de Puzzled",
 		"downloaded": "Imagen de la tarjeta guardada; texto copiado al portapapeles.",
 		"copied": "Texto copiado al portapapeles; este navegador no pudo generar la imagen.",
-		"unavailable": "Compartir no está disponible en este navegador.",
+		"unavailable": "No se pudo compartir automáticamente.",
 		"statusWon": "¡Resuelto!",
 		"statusLost": "Esta vez no",
 		"attemptsLabel": "Intentos",
@@ -27,7 +27,9 @@
 		"altTemplate": "Puzzled - {game}{day}. {result}",
 		"altDetailsTemplate": " {details}.",
 		"altLinkTemplate": " Juega: {link}",
-		"detailSeparator": ", "
+		"detailSeparator": ", ",
+		"saved": "Imagen de la tarjeta guardada.",
+		"caption": "Texto del resultado"
 	},
 	"challenge": {
 		"title": "Cara a cara",
