@@ -29,11 +29,19 @@ mod announcements_tests;
 #[cfg(test)]
 mod auth_session_tests;
 #[cfg(test)]
+mod checkout_attempt_tests;
+#[cfg(test)]
+mod compute_tick_tests;
+#[cfg(test)]
 mod daily_pipeline_tests;
 #[cfg(test)]
 mod daily_reminder_tests;
 #[cfg(test)]
+mod funnel_tests;
+#[cfg(test)]
 mod guest_ownership_tests;
+#[cfg(test)]
+mod metrics_tests;
 #[cfg(test)]
 mod money_access_tests;
 #[cfg(test)]
@@ -44,6 +52,8 @@ mod retention_push_tests;
 mod streak_freeze_tests;
 #[cfg(test)]
 mod test_support;
+#[cfg(test)]
+mod today_overview_tests;
 #[cfg(test)]
 mod today_progress_tests;
 #[cfg(test)]
@@ -1192,82 +1202,6 @@ mod tests {
         assert_ne!(response.status(), StatusCode::OK);
     }
 
-    fn tick_state() -> AppState {
-        use crate::shared::tick_receipt::{test_signing, KeySet, TickVerifier};
-        let keys = KeySet::from_json(&test_signing::jwks(&test_signing::key()))
-            .unwrap_or_else(|_| panic!("test keys"));
-        AppState::new(None).with_ticks(TickVerifier::with_keys(keys))
-    }
-
-    fn tick_request(path: &str, body: &str, bearer: Option<&str>) -> Request<Body> {
-        let mut builder = Request::builder()
-            .method(Method::POST)
-            .uri(path)
-            .header("host", "puzzled.test")
-            .header(axum::http::header::CONTENT_TYPE, "application/json");
-        if let Some(bearer) = bearer {
-            builder = builder.header(
-                axum::http::header::AUTHORIZATION,
-                format!("Bearer {bearer}"),
-            );
-        }
-        builder
-            .body(Body::from(body.to_string()))
-            .unwrap_or_else(|e| panic!("tick request: {e}"))
-    }
-
-    fn receipt_for(path: &str) -> String {
-        use crate::shared::tick_receipt::test_signing;
-        test_signing::mint(
-            &test_signing::key(),
-            &format!("https://puzzled.test{path}"),
-            chrono::Utc::now().timestamp(),
-        )
-    }
-
-    #[tokio::test]
-    async fn jobs_and_ticks_admit_only_computes_signed_receipt() {
-        let jobs = "/puzzled.v1.JobsService/RunRetentionJob";
-        let body = r#"{"name":"audit-log-retention"}"#;
-        // No receipt, a bare shared secret, or another URL's receipt: refused.
-        for bearer in [
-            None,
-            Some("issued-events-credential".to_string()),
-            Some(receipt_for("/other")),
-        ] {
-            let response = router(tick_state())
-                .oneshot(tick_request(jobs, body, bearer.as_deref()))
-                .await
-                .unwrap_or_else(|e| panic!("jobs: {e}"));
-            assert_eq!(response.status(), StatusCode::UNAUTHORIZED, "{bearer:?}");
-        }
-        // A receipt for this exact URL is admitted (no database here, so the
-        // job itself then reports it cannot run).
-        let admitted = router(tick_state())
-            .oneshot(tick_request(jobs, body, Some(&receipt_for(jobs))))
-            .await
-            .unwrap_or_else(|e| panic!("jobs admitted: {e}"));
-        assert_ne!(admitted.status(), StatusCode::UNAUTHORIZED);
-
-        for path in [
-            "/internal/compute/daily-puzzles",
-            "/internal/compute/audit-log-retention",
-            "/internal/compute/tryit-conversions",
-        ] {
-            let refused = router(tick_state())
-                .oneshot(tick_request(path, "{}", None))
-                .await
-                .unwrap_or_else(|e| panic!("{path}: {e}"));
-            assert_eq!(refused.status(), StatusCode::UNAUTHORIZED, "{path}");
-            let admitted = router(tick_state())
-                .oneshot(tick_request(path, "{}", Some(&receipt_for(path))))
-                .await
-                .unwrap_or_else(|e| panic!("{path}: {e}"));
-            // Admitted; without a database the tick answers 503 so Compute retries.
-            assert_eq!(admitted.status(), StatusCode::SERVICE_UNAVAILABLE, "{path}");
-        }
-    }
-
     #[tokio::test]
     async fn admin_requires_product_admin_scope() {
         let anonymous = match router(AppState::new(None))
@@ -1344,3 +1278,9 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+mod billing_cutover_tests;
+
+#[cfg(test)]
+mod daily_percentile_tests;

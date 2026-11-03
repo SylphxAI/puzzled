@@ -16,8 +16,9 @@ option features.(pb.cpp).string_type = STRING;
 import "google/protobuf/cpp_features.proto";
 
 // JobsService: scheduled retention jobs executed by the api service.
-// Authenticated with the platform app secret (x-app-secret header); effects
-// (email/push) are delivered through the Platform BaaS HTTP API.
+// Authenticated with Compute's signed callback receipt (Authorization: Bearer),
+// verified by the published SDK for the exact request URL. Effects (email/push)
+// are delivered through the Platform BaaS HTTP API.
 
 message RunRetentionJobRequest {
   // daily-reminder | win-back-emails | audit-log-retention

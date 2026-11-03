@@ -14,8 +14,8 @@
  * SECURITY ARCHITECTURE:
  * - Client NEVER calculates score
  * - Client sends submission data (moves, final state, etc.)
- * - Server validates AND calculates score using validateAndScore()
- * - This prevents score manipulation attacks
+ * - The Rust core (`crates/puzzled-core` `validate_and_score`) validates and
+ *   scores every submission; this package renders and captures input only
  */
 
 import type { ComponentType } from 'react'
@@ -275,18 +275,17 @@ export interface GameDisplayMeta {
  * Each game implements this interface to be registered in the system
  *
  * PLUG-AND-PLAY: Games are self-contained modules that define their own:
- * - Validation AND scoring (validateAndScore) <- Server-side score calculation
  * - UI components (HowToPlayContent)
  * - Translations (in translations/ folder)
  *
- * SECURITY: The validateAndScore function runs on SERVER only.
- * Client sends submission data, server validates AND calculates score.
+ * Grading is not a game module concern: the Rust core owns validation and
+ * scoring for every game, so a client cannot assert a finish or a score.
  */
 export interface GameConfig<
-	TPuzzleData = unknown,
-	TSolution = unknown,
-	TGuess = unknown,
-	TGuessResult = unknown,
+	_TPuzzleData = unknown,
+	_TSolution = unknown,
+	_TGuess = unknown,
+	_TGuessResult = unknown,
 > {
 	// ==========================================
 	// Metadata
@@ -366,49 +365,6 @@ export interface GameConfig<
 	 * - 'llm': Uses LLM to generate (requires semantic understanding) - NO fallback
 	 */
 	generationStrategy: PuzzleGenerationStrategy
-
-	// ==========================================
-	// Validation & Scoring (SERVER-SIDE)
-	// ==========================================
-
-	/**
-	 * Validate a single guess/move (real-time validation)
-	 * Used for games that need feedback on each guess (e.g., Wordle)
-	 *
-	 * @param solution - The stored solution
-	 * @param guess - User's guess
-	 * @param puzzleData - Optional puzzle context
-	 * @returns Validation result with feedback
-	 */
-	validateGuess?(solution: TSolution, guess: TGuess, puzzleData?: TPuzzleData): TGuessResult
-
-	/**
-	 * CORE VALIDATION FUNCTION - RUNS ON SERVER ONLY
-	 *
-	 * Validates the submission AND calculates the score.
-	 * This is the single source of truth for game results.
-	 *
-	 * Security: Client sends moves/final state, server validates everything.
-	 * The client NEVER calculates score - this function does.
-	 *
-	 * Scoring Guidelines (implement per-game):
-	 * - Wordle: 100 - (attempts-1)*15, 0 for loss
-	 * - Sudoku: 1000 - mistakes*50 - seconds, min 100
-	 * - Queens: 500 - seconds, min 100
-	 * - Nonogram: 500 - errors*25 - seconds/2, min 100
-	 * - Connections: 100 - mistakes*20
-	 * - Block Slide: 200 - moves + par bonus
-	 *
-	 * @param solution - The stored solution
-	 * @param puzzleData - The puzzle configuration
-	 * @param submission - User's submission with game-specific data
-	 * @returns Validation result with server-calculated score
-	 */
-	validateAndScore(
-		solution: TSolution,
-		puzzleData: TPuzzleData,
-		submission: GameSubmission,
-	): GameResult
 
 	// ==========================================
 	// Game Lifecycle (optional)

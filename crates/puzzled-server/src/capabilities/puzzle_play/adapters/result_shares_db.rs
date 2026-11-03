@@ -87,6 +87,9 @@ pub async fn record_share_on_connection(
         .execute(&mut *connection)
         .await
         .map_err(|e| format!("result share count failed: {e}"))?;
+        crate::capabilities::metrics::count_on(connection, "share")
+            .await
+            .map_err(|e| e.to_string())?;
     }
     Ok(id)
 }

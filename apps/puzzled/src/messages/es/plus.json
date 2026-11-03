@@ -17,6 +17,9 @@
 		"familyBody": "Hasta {count} personas, cada una con sus propias estadísticas y rachas.",
 		"monthly": "Mensual",
 		"yearly": "Anual",
+		"weekendPass": "Pase de {days} días",
+		"oneTime": "pago único",
+		"passTerms": "Un pago por {days} días de Puzzled Plus. Sin renovación.",
 		"perMonth": "al mes",
 		"currencyLabel": "Moneda",
 		"perYear": "al año",
@@ -36,7 +39,16 @@
 		"checkoutCancelled": "Se canceló el pago. No se te ha cobrado nada.",
 		"alreadySubscribed": "Ya tienes Puzzled Plus.",
 		"immediateSupplyConsent": "Quiero acceder ahora y entiendo que pierdo el derecho de desistimiento de 14 días.",
-		"consentRequired": "Marca la casilla para continuar."
+		"consentRequired": "Marca la casilla para continuar.",
+		"offerLead": "Los {count} juegos, todos los días anteriores y estadísticas de cada uno.",
+		"planChoice": "Elige un plan",
+		"monthlyEquivalent": "{price} al mes",
+		"continueToPayment": "Continuar al pago",
+		"renewsYearly": "Se renueva cada año por {price} hasta que lo canceles. Cancela cuando quieras en Ajustes.",
+		"renewsMonthly": "Se renueva cada mes por {price} hasta que lo canceles. Cancela cuando quieras en Ajustes.",
+		"familyLink": "Plan familiar para hasta {count} jugadores",
+		"notNowPlayFree": "Ahora no, jugar el puzzle gratis de hoy",
+		"choosePlus": "Elegir Puzzled Plus"
 	},
 	"trial": {
 		"endsOn": "Tu semana gratis de Puzzled Plus termina el {date}. No se cobra nada y todo lo que hayas completado se queda en tus estadísticas.",
@@ -63,6 +75,7 @@
 		"description": "Tu plan de Puzzled Plus, pagos y familia.",
 		"free": "Estás en el plan gratuito: el puzzle destacado de hoy, todos los días.",
 		"closed": "Puzzled Plus todavía no está a la venta. Por ahora todos los juegos son gratis.",
+		"checkoutPending": "Estamos confirmando tu suscripción. Esta página se actualizará automáticamente. Si tarda más, actualiza la página.",
 		"checkoutSuccess": "Te damos la bienvenida a Puzzled Plus. Todos los juegos y el archivo están abiertos.",
 		"plan": {
 			"individual_monthly": "Puzzled Plus, mensual",

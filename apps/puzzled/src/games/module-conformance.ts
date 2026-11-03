@@ -9,7 +9,7 @@
 import { formatRitualShareText, shareTextLooksNonSpoiler } from '@/features/daily/lib/share-text'
 import { canonicalizeGameSlug } from '@/lib/game-slug'
 import { hasPlayableInteraction } from './interaction-slugs'
-import { getGameConfig, getGameMetadata, isValidGameSlug } from './registry'
+import { getGameMetadata, isValidGameSlug } from './registry'
 
 export const MODULE_SURFACES = [
 	'metadata',
@@ -89,14 +89,15 @@ export function collectClientModuleEvidence(
 	slug: string,
 	serverValidator: boolean,
 ): ModuleSurfaceEvidence {
-	const config = getGameConfig(slug)
 	const metadata = getGameMetadata(slug)
 	const registered = isValidGameSlug(slug)
 	return {
 		metadata: Boolean(metadata?.slug && metadata.name && metadata.description),
 		content_source: serverValidator, // content comes from the Rust daily pipeline
 		interaction: hasPlayableInteraction(slug),
-		terminal_contract: typeof config?.validateAndScore === 'function',
+		// Every game finishes through the shared session, which submits the
+		// terminal state to the server grader; the client holds no rules.
+		terminal_contract: registered && hasPlayableInteraction(slug),
 		server_validator: serverValidator,
 		canonical_record: registered,
 		reentry: registered,

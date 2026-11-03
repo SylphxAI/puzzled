@@ -5,18 +5,10 @@
  */
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
-import { MINUTE_MS } from '@/lib/constants/time'
-import {
-	DEFAULT_LAUNCH_DATE,
-	type DifficultyLevelConfig,
-	type GameConfig,
-	type GameResult,
-	type GameSubmission,
-} from '../types'
+import { DEFAULT_LAUNCH_DATE, type DifficultyLevelConfig, type GameConfig } from '../types'
 import { BlockSlideHowToPlay } from './components/how-to-play'
 import { BlockSlideIcon } from './icon'
 import type { Block, BlockSlidePuzzle, BlockSlideSolution, Direction } from './types'
-import { canMove, isWin, moveBlock } from './types'
 
 /**
  * Difficulty level configurations for Block Slide
@@ -109,100 +101,4 @@ export const blockSlideConfig: GameConfig<
 	isPerfectGame,
 	formatScoreDisplay: formatTimeScore,
 	compareForPercentile: compareByTime,
-
-	/**
-	 * Validate a single move (real-time feedback)
-	 */
-	validateGuess(
-		_solution: BlockSlideSolution,
-		guess: BlockSlideGuess,
-		puzzleData?: BlockSlideClientData,
-	): BlockSlideGuessResult {
-		const { blockId, direction, currentBlocks } = guess
-
-		// Validate input
-		if (!blockId || !direction || !currentBlocks) {
-			return { valid: false, isCorrect: false, error: 'Invalid move data' }
-		}
-
-		// Validate direction
-		const validDirections: Direction[] = ['up', 'down', 'left', 'right']
-		if (!validDirections.includes(direction)) {
-			return { valid: false, isCorrect: false, error: 'Invalid direction' }
-		}
-
-		// Get puzzle dimensions
-		if (!puzzleData) {
-			return { valid: false, isCorrect: false, error: 'Puzzle data required' }
-		}
-
-		// Check if move is legal
-		const isLegalMove = canMove(
-			currentBlocks,
-			blockId,
-			direction,
-			puzzleData.gridWidth,
-			puzzleData.gridHeight,
-		)
-
-		if (!isLegalMove) {
-			return { valid: true, isCorrect: false, error: 'Invalid move' }
-		}
-
-		// Apply move and check for win
-		const newBlocks = moveBlock(currentBlocks, blockId, direction)
-		const hasWon = isWin(newBlocks, puzzleData.exitX, puzzleData.exitY)
-
-		return {
-			valid: true,
-			isCorrect: true,
-			isWin: hasWon,
-			newBlocks,
-		}
-	},
-
-	/**
-	 * CORE VALIDATION - Validates submission AND calculates score
-	 *
-	 * Scoring: Move-based with time bonus
-	 * - Base: 500 points for optimal solution
-	 * - Move penalty: -5 points per extra move
-	 * - Time bonus: +50 points for solving under 60 seconds
-	 * - Minimum: 100 points for a win
-	 */
-	validateAndScore(
-		solution: BlockSlideSolution,
-		_puzzleData: BlockSlideClientData,
-		submission: GameSubmission,
-	): GameResult {
-		const data = submission.data as { moveCount?: number } | undefined
-
-		// If lost, no validation needed
-		if (submission.status === 'lost') {
-			return { valid: true, status: 'lost', score: 0 }
-		}
-
-		// Must have move count for a win
-		if (data?.moveCount === undefined) {
-			return { valid: false, error: 'Missing move count data' }
-		}
-
-		const moveCount = data.moveCount
-
-		// Verify move count is at least the minimum
-		if (moveCount < solution.minMoves) {
-			return {
-				valid: false,
-				error: `Impossible: solved in ${moveCount} moves, minimum is ${solution.minMoves}`,
-			}
-		}
-
-		// Calculate score
-		const extraMoves = moveCount - solution.minMoves
-		const movePenalty = extraMoves * 5
-		const timeBonus = submission.timeSpentMs < MINUTE_MS ? 50 : 0
-		const score = Math.max(100, 500 - movePenalty + timeBonus)
-
-		return { valid: true, status: 'won', score }
-	},
 }

@@ -32,7 +32,7 @@ type HomeDayProps = {
 	locale: string
 	/** Product day (Asia/Hong_Kong) formatted for the viewer's locale. */
 	dateLabel: string
-	/** `getPuzzleNumber` for today's module. */
+	/** `getPuzzleNumber` for the server-rendered product day and module. */
 	puzzleNumber: number
 	freeGame: HomeDayGame
 	isMember: boolean

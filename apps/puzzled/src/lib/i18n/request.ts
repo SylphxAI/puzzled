@@ -24,6 +24,7 @@ import enUSCatalog from '@/messages/en-US/catalog.json'
 // en-US namespaces
 import enUSCommon from '@/messages/en-US/common.json'
 import enUSConsent from '@/messages/en-US/consent.json'
+import enUSCrossPromo from '@/messages/en-US/cross-promo.json'
 import enUSDaily from '@/messages/en-US/daily.json'
 import enUSFooter from '@/messages/en-US/footer.json'
 import enUSGameResult from '@/messages/en-US/game-result.json'
@@ -51,6 +52,7 @@ import esCalendar from '@/messages/es/calendar.json'
 import esCatalog from '@/messages/es/catalog.json'
 import esCommon from '@/messages/es/common.json'
 import esConsent from '@/messages/es/consent.json'
+import esCrossPromo from '@/messages/es/cross-promo.json'
 import esDaily from '@/messages/es/daily.json'
 import esFooter from '@/messages/es/footer.json'
 import esGameResult from '@/messages/es/game-result.json'
@@ -78,6 +80,7 @@ import jaCalendar from '@/messages/ja/calendar.json'
 import jaCatalog from '@/messages/ja/catalog.json'
 import jaCommon from '@/messages/ja/common.json'
 import jaConsent from '@/messages/ja/consent.json'
+import jaCrossPromo from '@/messages/ja/cross-promo.json'
 import jaDaily from '@/messages/ja/daily.json'
 import jaFooter from '@/messages/ja/footer.json'
 import jaGameResult from '@/messages/ja/game-result.json'
@@ -105,6 +108,7 @@ import ptBRCalendar from '@/messages/pt-BR/calendar.json'
 import ptBRCatalog from '@/messages/pt-BR/catalog.json'
 import ptBRCommon from '@/messages/pt-BR/common.json'
 import ptBRConsent from '@/messages/pt-BR/consent.json'
+import ptBRCrossPromo from '@/messages/pt-BR/cross-promo.json'
 import ptBRDaily from '@/messages/pt-BR/daily.json'
 import ptBRFooter from '@/messages/pt-BR/footer.json'
 import ptBRGameResult from '@/messages/pt-BR/game-result.json'
@@ -133,6 +137,7 @@ import zhCNCatalog from '@/messages/zh-CN/catalog.json'
 // zh-CN namespaces
 import zhCNCommon from '@/messages/zh-CN/common.json'
 import zhCNConsent from '@/messages/zh-CN/consent.json'
+import zhCNCrossPromo from '@/messages/zh-CN/cross-promo.json'
 import zhCNDaily from '@/messages/zh-CN/daily.json'
 import zhCNFooter from '@/messages/zh-CN/footer.json'
 import zhCNGameResult from '@/messages/zh-CN/game-result.json'
@@ -161,6 +166,7 @@ import zhHKCatalog from '@/messages/zh-HK/catalog.json'
 // zh-HK namespaces
 import zhHKCommon from '@/messages/zh-HK/common.json'
 import zhHKConsent from '@/messages/zh-HK/consent.json'
+import zhHKCrossPromo from '@/messages/zh-HK/cross-promo.json'
 import zhHKDaily from '@/messages/zh-HK/daily.json'
 import zhHKFooter from '@/messages/zh-HK/footer.json'
 import zhHKGameResult from '@/messages/zh-HK/game-result.json'
@@ -223,6 +229,7 @@ interface LocaleMessages {
 	calendar: Messages
 	catalog: Messages
 	consent: Messages
+	crossPromo: Messages
 	daily: Messages
 	footer: Messages
 	gameResult: Messages
@@ -260,6 +267,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		calendar: enUSCalendar,
 		catalog: enUSCatalog,
 		consent: enUSConsent,
+		crossPromo: enUSCrossPromo,
 		daily: enUSDaily,
 		footer: enUSFooter,
 		gameResult: enUSGameResult,
@@ -297,6 +305,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		calendar: zhHKCalendar,
 		catalog: zhHKCatalog,
 		consent: zhHKConsent,
+		crossPromo: zhHKCrossPromo,
 		daily: zhHKDaily,
 		footer: zhHKFooter,
 		gameResult: zhHKGameResult,
@@ -348,6 +357,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		calendar: zhCNCalendar,
 		catalog: zhCNCatalog,
 		consent: zhCNConsent,
+		crossPromo: zhCNCrossPromo,
 		daily: zhCNDaily,
 		footer: zhCNFooter,
 		gameResult: zhCNGameResult,
@@ -371,6 +381,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		catalog: jaCatalog,
 		common: jaCommon,
 		consent: jaConsent,
+		crossPromo: jaCrossPromo,
 		daily: jaDaily,
 		footer: jaFooter,
 		gameResult: jaGameResult,
@@ -400,6 +411,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		catalog: esCatalog,
 		common: esCommon,
 		consent: esConsent,
+		crossPromo: esCrossPromo,
 		daily: esDaily,
 		footer: esFooter,
 		gameResult: esGameResult,
@@ -429,6 +441,7 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		catalog: ptBRCatalog,
 		common: ptBRCommon,
 		consent: ptBRConsent,
+		crossPromo: ptBRCrossPromo,
 		daily: ptBRDaily,
 		footer: ptBRFooter,
 		gameResult: ptBRGameResult,

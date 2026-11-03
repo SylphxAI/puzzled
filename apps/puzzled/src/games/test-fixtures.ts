@@ -20,7 +20,7 @@ interface FrozenCase {
 }
 
 export function frozenPuzzle<TPuzzleData, TSolution>(
-	config: Pick<GameConfig<TPuzzleData, TSolution>, 'slug' | 'validateAndScore'>,
+	config: Pick<GameConfig<TPuzzleData, TSolution>, 'slug'>,
 	difficulty?: PuzzleDifficulty,
 ): { puzzleData: TPuzzleData; solution: TSolution } {
 	const slug = CANONICAL[config.slug] ?? config.slug

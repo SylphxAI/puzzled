@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, type Locator, type Page, test } from '@playwright/test'
 import { GUEST_GAMES_KEY } from '../src/lib/storage-keys'
 
 // The dev transport uses :3001 while production is same-origin. Only local
@@ -188,3 +188,105 @@ for (const slug of ['nonogram', 'crowns'] as const) {
 		expect(submissions).toBe(2)
 	})
 }
+
+const undoGrid = Array.from({ length: 9 }, (_, row) =>
+	Array.from({ length: 9 }, (_, col) => (row === 8 && col === 8 ? 9 : null)),
+)
+
+async function openBoard(page: Page) {
+	await page.route('**/v1/guest/session', (route) => route.fulfill({ json: { issued: false } }))
+	await page.route('**/puzzled.v1.PuzzleService/GetDaily', (route) =>
+		route.fulfill({
+			json: {
+				gameSlug: 'sudoku',
+				difficulty: 'hard',
+				canPlay: true,
+				mode: 'daily',
+				puzzleDate: '2026-10-30',
+				puzzleDataJson: JSON.stringify({ grid: undoGrid, difficulty: 'hard' }),
+			},
+		}),
+	)
+	await page.goto('/en-US/games/sudoku?difficulty=hard')
+	await page.getByRole('button', { name: /start game/i }).click({ timeout: 60_000 })
+	return page.getByRole('group', { name: 'Sudoku', exact: true })
+}
+
+const cell = (board: Locator, row: number, col: number) =>
+	board.getByRole('button', { name: new RegExp(`^Row ${row}, Column ${col}(,|$)`) })
+
+async function boardState(board: Locator) {
+	return board.locator('button').evaluateAll((cells) =>
+		cells.map((button) => ({
+			label: button.getAttribute('aria-label'),
+			notes: [...button.querySelectorAll('span.grid > span')]
+				.filter((note) => getComputedStyle(note).opacity !== '0')
+				.map((note) => note.textContent),
+		})),
+	)
+}
+
+for (const viewport of [
+	{ width: 1280, height: 900 },
+	{ width: 390, height: 844 },
+]) {
+	test(`Sudoku undo restores pruned notes in one action at ${viewport.width}px`, async ({
+		page,
+	}) => {
+		await page.setViewportSize(viewport)
+		let submissions = 0
+		await page.route('**/puzzled.v1.PuzzleService/SubmitGuess', (route) => {
+			submissions++
+			return route.fulfill({ json: { valid: false } })
+		})
+		const board = await openBoard(page)
+		const undo = page.getByRole('button', { name: 'Undo', exact: true })
+		await expect(undo).toBeDisabled()
+		await page.getByRole('button', { name: 'Notes', exact: true }).click()
+		for (const [row, col] of [
+			[1, 5],
+			[5, 1],
+			[2, 2],
+		]) {
+			await cell(board, row, col).click()
+			await page.keyboard.press('5')
+		}
+		await page.getByRole('button', { name: 'Notes Mode', exact: true }).click()
+		await cell(board, 1, 1).click()
+		const before = await boardState(board)
+		expect(before).toHaveLength(81)
+		await page.keyboard.press('5')
+		expect((await boardState(board)).filter((c) => c.notes.includes('5'))).toHaveLength(0)
+		await undo.click()
+		expect(await boardState(board)).toEqual(before)
+		expect(submissions).toBe(0)
+
+		// A selection and a no-op given-cell edit must not hide the last real edit.
+		await cell(board, 9, 9).click()
+		await page.keyboard.press('1')
+		await page.keyboard.press('Control+z')
+		expect((await boardState(board)).filter((c) => c.notes.includes('5'))).toHaveLength(2)
+		await expect(cell(board, 9, 9)).toHaveAttribute('aria-label', 'Row 9, Column 9, 9')
+		expect(submissions).toBe(0)
+		await page.screenshot({ path: test.info().outputPath(`sudoku-undo-${viewport.width}.png`) })
+	})
+}
+
+test('Undo keyboard shortcut leaves text-field editing to the browser', async ({ page }) => {
+	const board = await openBoard(page)
+	await cell(board, 1, 1).click()
+	await page.keyboard.press('2')
+	await page.evaluate(() => {
+		const input = document.createElement('input')
+		input.setAttribute('aria-label', 'Undo test text field')
+		document.querySelector('main')?.prepend(input)
+	})
+	const input = page.getByRole('textbox', { name: 'Undo test text field' })
+	await input.pressSequentially('hello')
+	await page.keyboard.press('Control+z')
+	await expect(input).toHaveValue('')
+	await expect(cell(board, 1, 1)).toHaveAttribute('aria-label', 'Row 1, Column 1, 2')
+	await cell(board, 1, 1).click()
+	await page.keyboard.press('Meta+z')
+	await expect(cell(board, 1, 1)).toHaveAttribute('aria-label', 'Row 1, Column 1')
+})
