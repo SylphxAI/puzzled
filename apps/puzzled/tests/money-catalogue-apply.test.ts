@@ -6,7 +6,7 @@
  */
 
 import { afterEach, describe, expect, test } from 'bun:test'
-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, join } from 'node:path'
 
@@ -18,13 +18,14 @@ afterEach(() => {
 })
 
 const FAKE_CURL = `#!/usr/bin/env bash
-out=""; fmt=""; method="GET"; url=""
+out=""; fmt=""; method="GET"; url=""; data=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
     -o) out="$2"; shift 2 ;;
     -w) fmt="$2"; shift 2 ;;
     -X) method="$2"; shift 2 ;;
-    -H|--data|-d) shift 2 ;;
+    -H|-d) shift 2 ;;
+    --data) data="$2"; shift 2 ;;
     -sS|--fail-with-body) shift ;;
     *) url="$1"; shift ;;
   esac
@@ -37,7 +38,19 @@ answer() { # body code
 case "$url" in
   *audience=sylphx-access*) answer '{"value":"jwt-fixture"}' 200 ;;
   */v1/access/github/token) answer "$FAKE_EXCHANGE_BODY" "$FAKE_EXCHANGE_CODE" ;;
-  */price_catalogs/default*) answer '{}' "\${FAKE_MONEY_CODE:-200}" ;;
+  */merchant_accounts/default)
+    body='{"processor":"stripe","account_id":"acct_fixture","state":"connected","credential":"connect"}'
+    if [ -n "$FAKE_MERCHANT_BODY" ]; then body="$FAKE_MERCHANT_BODY"; fi
+    answer "$body" "\${FAKE_MERCHANT_GET_CODE:-200}" ;;
+  */licence_keys:generate) touch "$RUNNER_TEMP/generated-licence-key"; answer '{}' 200 ;;
+  */licence_keys/*)
+    if [ -n "$FAKE_KEY_EXISTS" ] || [ -f "$RUNNER_TEMP/generated-licence-key" ]; then
+      answer '{}' 200
+    else
+      answer '{"error":"not found"}' 404
+    fi ;;
+  */price_catalogs/default:sync) answer "\${FAKE_SYNC_BODY:-{}}" "\${FAKE_SYNC_CODE:-200}" ;;
+  */price_catalogs/default*) answer "\${FAKE_MONEY_BODY:-{}}" "\${FAKE_MONEY_CODE:-200}" ;;
   *) answer '{"unexpected":true}' 404 ;;
 esac
 `
@@ -56,6 +69,7 @@ function run(env: Record<string, string>) {
 	chmodSync(curl, 0o755)
 	const log = join(dir, 'calls.log')
 	writeFileSync(log, '')
+	const merchantConnect = join(dir, 'merchant-connect.json')
 	const bunDir = process.execPath.replace(/\/[^/]+$/, '')
 	const result = Bun.spawnSync(['bash', 'scripts/money-catalogue-apply.sh'], {
 		cwd: root,
@@ -71,6 +85,7 @@ function run(env: Record<string, string>) {
 				.filter(Boolean)
 				.join(delimiter),
 			ACCESS_NAME: 'puzzled-money-catalogue-preview',
+			MONEY_MODE: 'test',
 			ACTIONS_ID_TOKEN_REQUEST_URL: 'https://token.invalid/request?x=1',
 			ACTIONS_ID_TOKEN_REQUEST_TOKEN: 'request-fixture',
 			RUNNER_TEMP: dir,
@@ -83,6 +98,9 @@ function run(env: Record<string, string>) {
 		stderr: result.stderr.toString(),
 		stdout: result.stdout.toString(),
 		calls: readFileSync(log, 'utf8').split('\n').filter(Boolean),
+		merchantConnect: existsSync(merchantConnect)
+			? JSON.parse(readFileSync(merchantConnect, 'utf8'))
+			: undefined,
 	}
 }
 
@@ -95,7 +113,108 @@ describe('money catalogue apply script', () => {
 			'PATCH https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/price_catalogs/default?allow_missing=true',
 			'POST https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/price_catalogs/default:sync',
 		])
+		expect(result.calls.filter((c) => c.includes('licence_keys:generate'))).toHaveLength(1)
 		expect(result.calls.some((c) => c.includes('/catalogs/default'))).toBe(false)
+		expect(result.calls.filter((c) => c.includes('merchant_accounts'))).toEqual([
+			'GET https://api.sylphx.com/v1/orgs/o/projects/p/envs/e/merchant_accounts/default',
+		])
+	})
+
+	test('an existing licence key is reused without a generate call', () => {
+		const result = run({
+			FAKE_EXCHANGE_BODY: GRANTED,
+			FAKE_EXCHANGE_CODE: '200',
+			FAKE_KEY_EXISTS: '1',
+		})
+		expect(result.status).toBe(0)
+		expect(result.calls.filter((c) => c.includes('licence_keys:generate'))).toEqual([])
+		expect(result.calls.filter((c) => c.includes('/licence_keys/puzzled_plus'))).toHaveLength(1)
+	})
+
+	test('Connect test accounts accept omitted false fields without onboarding credentials', () => {
+		for (const flags of [{}, { livemode: false }, { charges_enabled: false }]) {
+			const result = run({
+				FAKE_EXCHANGE_BODY: GRANTED,
+				FAKE_EXCHANGE_CODE: '200',
+				FAKE_MERCHANT_BODY: JSON.stringify({
+					processor: 'stripe',
+					account_id: 'acct_fixture',
+					state: 'connected',
+					credential: 'connect',
+					...flags,
+				}),
+			})
+			expect(result.status).toBe(0)
+			expect(result.merchantConnect).toBeUndefined()
+			expect(result.calls.filter((c) => c.includes('merchant_accounts'))).toHaveLength(1)
+		}
+	})
+
+	test('wrong mode, disconnected, unknown credential without charges, or malformed merchant stops before writes', () => {
+		for (const flags of [
+			{ livemode: true },
+			{ state: 'disconnected' },
+			{ credential: 'restricted_key' },
+			{ processor: 'other' },
+			{ account_id: '' },
+			{ livemode: 'false' },
+		]) {
+			const result = run({
+				FAKE_EXCHANGE_BODY: GRANTED,
+				FAKE_EXCHANGE_CODE: '200',
+				FAKE_MERCHANT_BODY: JSON.stringify({
+					processor: 'stripe',
+					account_id: 'acct_fixture',
+					state: 'connected',
+					credential: 'connect',
+					...flags,
+				}),
+			})
+			expect(result.status).not.toBe(0)
+			expect(
+				result.calls.some((c) => c.includes('price_catalogs') || c.includes('licence_keys')),
+			).toBe(false)
+		}
+	})
+
+	test('production requires explicit live mode and charges enabled, even for Connect', () => {
+		for (const flags of [
+			{},
+			{ livemode: true },
+			{ livemode: true, charges_enabled: false },
+			{ livemode: true, charges_enabled: true },
+		]) {
+			const result = run({
+				FAKE_EXCHANGE_BODY: GRANTED,
+				FAKE_EXCHANGE_CODE: '200',
+				MONEY_MODE: 'live',
+				FAKE_MERCHANT_BODY: JSON.stringify({
+					processor: 'stripe',
+					account_id: 'acct_fixture',
+					state: 'connected',
+					credential: 'connect',
+					...flags,
+				}),
+			})
+			expect(result.status).toBe(
+				'charges_enabled' in flags && flags.charges_enabled === true ? 0 : 1,
+			)
+		}
+	})
+
+	test('a missing or unreadable merchant never triggers onboarding or catalogue writes', () => {
+		for (const code of ['404', '500']) {
+			const result = run({
+				FAKE_EXCHANGE_BODY: GRANTED,
+				FAKE_EXCHANGE_CODE: '200',
+				FAKE_MERCHANT_GET_CODE: code,
+			})
+			expect(result.status).not.toBe(0)
+			expect(result.merchantConnect).toBeUndefined()
+			expect(
+				result.calls.some((c) => c.includes('price_catalogs') || c.includes('licence_keys')),
+			).toBe(false)
+		}
 	})
 
 	test('a refused exchange stops before any Money write', () => {
@@ -130,6 +249,21 @@ describe('money catalogue apply script', () => {
 		expect(result.status).not.toBe(0)
 		expect(result.calls.filter((c) => c.includes(':sync'))).toEqual([])
 	})
+
+	test('every sync failure is fatal, including a missing test merchant', () => {
+		for (const [code, body] of [
+			['400', '{"details":[{"reason":"merchant_not_connected"}]}'],
+			['500', '{"code":"INTERNAL"}'],
+		]) {
+			const result = run({
+				FAKE_EXCHANGE_BODY: GRANTED,
+				FAKE_EXCHANGE_CODE: '200',
+				FAKE_SYNC_CODE: code,
+				FAKE_SYNC_BODY: body,
+			})
+			expect(result.status).not.toBe(0)
+		}
+	})
 })
 
 describe('money catalogue workflow and reader', () => {
@@ -143,6 +277,7 @@ describe('money catalogue workflow and reader', () => {
 				needs?: string
 				if: string
 				'continue-on-error'?: boolean
+				env?: Record<string, string>
 				steps: { run?: string; 'continue-on-error'?: boolean }[]
 			}
 		>
@@ -150,14 +285,24 @@ describe('money catalogue workflow and reader', () => {
 
 	test('a change to the apply script triggers the workflow', () => {
 		expect(workflow.on.push.paths).toContain('scripts/money-catalogue-apply.sh')
+		expect(workflow.on.push.paths).toContain('scripts/money-merchant.ts')
 		expect(workflow.on.push.branches).toEqual(['main'])
 	})
 
-	test('preview failure blocks production without an always or continue-on-error bypass', () => {
+	test('production stays gated on a successful connected test catalogue', () => {
 		expect(workflow.jobs.production.needs).toBe('preview')
+		expect(workflow.jobs.preview.env?.MONEY_MODE).toBe('test')
+		expect(workflow.jobs.production.env?.MONEY_MODE).toBe('live')
+		for (const job of [workflow.jobs.preview, workflow.jobs.production]) {
+			expect(job.env?.STRIPE_TEST_RESTRICTED_KEY).toBeUndefined()
+			expect(job.env?.SYNC_FAILURE_NONFATAL).toBeUndefined()
+		}
+
 		for (const job of [workflow.jobs.preview, workflow.jobs.production]) {
 			// GitHub adds success() to this condition: a failed prerequisite skips production.
-			expect(job.if).toBe("github.ref == 'refs/heads/main'")
+			expect(job.if).toBe(
+				"github.ref == 'refs/heads/main' && github.event.repository.private == false",
+			)
 			expect(job['continue-on-error']).not.toBe(true)
 			const apply = job.steps.filter((step) => step.run)
 			expect(apply.map((step) => step.run)).toEqual(['bash scripts/money-catalogue-apply.sh'])

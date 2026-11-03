@@ -25,7 +25,7 @@ import {
 } from '@/gen/connect/puzzled/v1/gamification_pb'
 import { getConnectTransport } from '@/lib/connect/transport'
 import { recordConsent } from './consent-client'
-import { type AppConfig, DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type IdentityUser } from './dest'
+import { DEST_CONSENT_PURPOSES, type IdentityUser } from './dest'
 import { MIN_PASSWORD_LENGTH } from './password-policy'
 
 type AuthState = {
@@ -50,22 +50,11 @@ const SERVER_AUTH_STATE: AuthState = {
 
 const AuthContext = createContext<AuthState>(SERVER_AUTH_STATE)
 
-const AppConfigContext = createContext<AppConfig>(EMPTY_APP_CONFIG)
-
 async function readJson(response: Response): Promise<Record<string, unknown>> {
 	return ((await response.json().catch(() => null)) as Record<string, unknown> | null) ?? {}
 }
 
-export function SylphxProvider({
-	children,
-	config,
-}: {
-	children: ReactNode
-	appId?: string
-	config?: AppConfig
-	platformUrl?: string
-	afterSignOutUrl?: string
-}) {
+export function SylphxProvider({ children }: { children: ReactNode }) {
 	const [user, setUser] = useState<IdentityUser | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
 	const [isLoaded, setIsLoaded] = useState(false)
@@ -154,20 +143,7 @@ export function SylphxProvider({
 		}),
 		[user, isLoading, isLoaded, signOut, signInWithOAuth],
 	)
-	return (
-		<AppConfigContext.Provider value={config ?? EMPTY_APP_CONFIG}>
-			<AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-		</AppConfigContext.Provider>
-	)
-}
-
-export function PlatformProvider(props: {
-	children: ReactNode
-	appId?: string
-	config?: AppConfig
-	platformUrl?: string
-}) {
-	return <SylphxProvider {...props}>{props.children}</SylphxProvider>
+	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 const noSubscription = () => () => undefined
@@ -771,4 +747,3 @@ export const OAuthIcons: Record<string, (props: { className?: string }) => React
 	},
 )
 export type OAuthProvider = string
-export type { AppConfig }

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { AdSlot } from '@/features/ads/components/ad-slot'
 import { ChallengeComparison } from '@/features/daily/components/challenge-comparison'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
+import { ResultShareRecovery } from '@/features/daily/components/result-share-recovery'
 import { TomorrowGameLine } from '@/features/daily/components/tomorrow-game-line'
 import { readGuestFinishedToday } from '@/features/daily/hooks/use-guest-game-state'
 import { countShareTap, knownShareId, useWarmShareId } from '@/features/daily/hooks/use-share-id'
@@ -81,6 +82,7 @@ export function GameResultCard({
 	useWarmShareId(gameType, puzzleDate, mode === 'daily')
 	const [cardBusy, setCardBusy] = useState(false)
 	const [cardNotice, setCardNotice] = useState<string | null>(null)
+	const [cardRecovery, setCardRecovery] = useState<string | null>(null)
 	const [nextGame, setNextGame] = useState<string | null>(null)
 	// Guests keep today's finishes on this device; the next suggestion skips them.
 	useEffect(() => {
@@ -128,35 +130,39 @@ export function GameResultCard({
 		if (cardBusy) return
 		setCardBusy(true)
 		setCardNotice(null)
+		setCardRecovery(null)
 		try {
 			// The id was created when this screen showed, so the link is the share landing.
 			const shareId = mode === 'daily' ? knownShareId(gameType, puzzleDate) : undefined
 			if (mode === 'daily') countShareTap(gameType, puzzleDate)
+			const model = buildCard(shareId)
 			const result = await shareRitualResultCard({
-				model: buildCard(shareId),
+				model,
 				strings: cardStrings,
 				title: tShare('card.title'),
 			})
-			if (result.outcome === 'downloaded') setCardNotice(tShare('card.downloaded'))
+			if (result.outcome === 'downloaded')
+				setCardNotice(result.captionCopied ? tShare('card.downloaded') : tShare('card.saved'))
 			else if (result.outcome === 'copied') setCardNotice(tShare('card.copied'))
 			else if (result.outcome === 'unavailable') setCardNotice(tShare('card.unavailable'))
+			if (
+				(result.outcome === 'downloaded' && !result.captionCopied) ||
+				result.outcome === 'unavailable'
+			) {
+				setCardRecovery(resultCardTextAlternative(model, cardStrings))
+			}
 		} finally {
 			setCardBusy(false)
 		}
 	}
 
-	// Fetch percentile for daily mode wins
+	// Only the server-accepted finish can establish a comparison. A past daily
+	// screen supplies its served day so it cannot borrow today's result.
 	const { data: percentileData } = useTodayPercentile(
+		{ gameSlug: gameType, dayKey: puzzleDate ?? '' },
 		{
-			gameSlug: gameType,
-			status,
-			attempts: stats.attempts,
-			score: stats.score,
-			mistakes: stats.mistakes,
-		},
-		{
-			enabled: mode === 'daily' && isWin,
-			staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+			enabled: mode === 'daily' && isWin && !!puzzleDate,
+			staleTime: 0,
 		},
 	)
 
@@ -248,20 +254,14 @@ export function GameResultCard({
 									{t('perfectGame')}
 								</span>
 							)}
+							{percentileData && percentileData.percentile != null && (
+								<span className="flex items-center gap-1.5 text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-700">
+									<Trophy className="h-3.5 w-3.5 text-accent-warm-foreground" />
+									{t('beatPercent', { percent: percentileData.percentile })}
+								</span>
+							)}
 							{percentileData &&
 								percentileData.percentile != null &&
-								percentileData.percentile > 0 && (
-									<span className="flex items-center gap-1.5 text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-700">
-										<Trophy className="h-3.5 w-3.5 text-accent-warm-foreground" />
-										{percentileData.percentile >= 50
-											? t('beatPercent', { percent: percentileData.percentile })
-											: t('topPercent', {
-													percent: 100 - percentileData.percentile,
-												})}
-									</span>
-								)}
-							{percentileData &&
-								percentileData.totalPlayers != null &&
 								percentileData.totalPlayers >= 10 && (
 									<span className="flex items-center gap-1 text-xs text-muted-foreground/70">
 										<Users className="h-3 w-3" />
@@ -334,6 +334,7 @@ export function GameResultCard({
 						</output>
 					)}
 					<p className="sr-only">{cardAltText}</p>
+					{cardRecovery && <ResultShareRecovery key={cardRecovery} text={cardRecovery} />}
 
 					<Link
 						href="/"
@@ -361,7 +362,7 @@ export function GameResultCard({
 				)}
 
 				{/* Plus card: free players on today's free game only, never a member. */}
-				<PlusResultCard gameSlug={gameType} mode={mode} />
+				<PlusResultCard gameSlug={gameType} mode={mode} puzzleDate={puzzleDate} />
 
 				{/* After the finish only; renders nothing for Plus or while ads are off. */}
 				<div className="mt-4">

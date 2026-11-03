@@ -39,6 +39,11 @@ function limited(client: string, now = Date.now()): boolean {
 	return entry.count > PER_WINDOW
 }
 
+/** Clears the per-client window so each test starts from an empty limiter. */
+export function resetRelayLimiter(): void {
+	recent.clear()
+}
+
 function text(value: unknown, max: number): string | undefined {
 	return typeof value === 'string' && value.trim() ? value.slice(0, max) : undefined
 }

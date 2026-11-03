@@ -10,8 +10,9 @@ use axum::routing::{get, post};
 use axum::Router;
 
 use super::compute_ticks::{
-    audit_retention_tick, daily_puzzles_tick, daily_reminders_tick, tryit_conversions_tick,
-    AUDIT_RETENTION_PATH, DAILY_PUZZLES_PATH, DAILY_REMINDERS_PATH, TRYIT_CONVERSIONS_PATH,
+    audit_retention_tick, daily_puzzles_tick, daily_reminders_tick, metrics_tick,
+    tryit_conversions_tick, AUDIT_RETENTION_PATH, DAILY_PUZZLES_PATH, DAILY_REMINDERS_PATH,
+    METRICS_PATH, TRYIT_CONVERSIONS_PATH,
 };
 use super::connect_admin::admin_connect_service;
 use super::connect_announcements::announcement_connect_service;
@@ -22,6 +23,7 @@ use super::connect_jobs::jobs_connect_service;
 use super::connect_preferences::preferences_connect_service;
 use super::connect_puzzle::puzzle_connect_service;
 use super::connect_stats::stats_connect_service;
+use super::funnel_event::funnel_connect_service;
 use super::health::{healthz, readyz};
 use super::observability_test::observability_test;
 use super::state::AppState;
@@ -34,6 +36,7 @@ pub fn router(state: AppState) -> Router {
         .add_service(billing_connect_service(state.clone()))
         .add_service(gamification_connect_service(state.clone()))
         .add_service(health_connect_service(state.clone()))
+        .add_service(funnel_connect_service(state.clone()))
         .add_service(jobs_connect_service(state.clone()))
         .add_service(preferences_connect_service(state.clone()))
         .add_service(puzzle_connect_service(state.clone()))
@@ -48,6 +51,7 @@ pub fn router(state: AppState) -> Router {
         )
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
+        .route(METRICS_PATH, post(metrics_tick))
         .route(DAILY_PUZZLES_PATH, post(daily_puzzles_tick))
         .route(AUDIT_RETENTION_PATH, post(audit_retention_tick))
         .route(DAILY_REMINDERS_PATH, post(daily_reminders_tick))

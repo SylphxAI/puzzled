@@ -39,6 +39,22 @@ Cite the ID column.
 
 ## Boundaries
 
+- **Platform gateways (2026-11-02):** Auth uses `https://api.sylphx.com` and
+  models use `https://api.sylphx.ai/v1` (`/responses`, `/models`). Credentials
+  remain product-scoped; old Auth/model URL environment overrides are ignored.
+  Events alone still uses its service origin and `EVENTS_API_ORIGIN`: replacing
+  its host would send device, inbox and delivery calls to different APIs.
+  Read at 21:53–21:56 UTC: the model gateway returned its `invalid_api_key`
+  envelope; the canonical Events paths were absent from `/openapi.json`.
+  Source at [cloud `3d80320`](https://github.com/SylphxAI/cloud/tree/3d8032081c73cd91949b438e8b0c39d089d75eee):
+  `crates/sylphx-apps-api/src/routing/inventory.rs` routes `/v1/devices` to
+  Compute device sessions, `routing/commercial_roots.rs` routes `/v1/inbox`
+  to a different notification API, and `services/notify/README.md` explicitly
+  marks push, inbox items and broadcasts `UNIMPLEMENTED`. A canonical gateway
+  401 alone proves only its catch-all auth, not that Events is served. Remove
+  the Events origin/override only when the platform serves these contracts and
+  their product credentials through the canonical gateway.
+
 - **Guest cookie:** `__Host-puzzled_guest` is strictly necessary for functional browser progress continuity, not advertising or analytics. It is HttpOnly, Secure and SameSite=Lax, with a 400-day lifetime refreshed by bootstrap. Only its SHA-256 hash is stored after the first guest write; linked identifiers and hashes may be pseudonymous personal data. Account erasure removes the account and all linked adopted source guests, including retained collisions and source provenance.
 
 - **Auth post-deploy check** ([owner standard](https://github.com/SylphxAI/owner/blob/main/standards/auth.md#how-a-product-proves-it)):
@@ -67,6 +83,15 @@ Cite the ID column.
   `usr_...` form (Auth's move, cloud#10008) reach the same player; never decode
   the new form. Compute's signed tick receipts (EdDSA JWT, `aud` equal to the
   exact URL) are the only admission for JobsService and `/internal/compute/*`.
+  The published `sylphx` Rust SDK's `Expect::callback` and `Verifier::verify`
+  own receipt verification and published-key handling. Puzzled only extracts
+  the bearer and public HTTPS host plus original path and query, then maps
+  invalid or missing receipts to 401 and key-provider failures to 503. The
+  existing `COMPUTE_TICK_RECEIPT_JWKS_URL` override changes the SDK's key URL,
+  not the required issuer or audience. Router tests use a local JWKS server
+  through this same SDK path; no copied verifier or injected product key set
+  remains. Schedule IDs, targets, calendars, retries and overlap policies are
+  unchanged by this integration.
 - **Never:** a second play authority (REST `/api/v1`, Hono, client
   `isComplete`); another publisher's daily grid; third-party marks as titles;
   kube, route or deployment-spec writes; `{project}.api.sylphx.com` or a

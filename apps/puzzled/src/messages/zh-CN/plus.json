@@ -17,6 +17,9 @@
 		"familyBody": "最多 {count} 人使用，各自保留统计和连续记录。",
 		"monthly": "按月",
 		"yearly": "按年",
+		"weekendPass": "{days} 天通行证",
+		"oneTime": "一次性付款",
+		"passTerms": "一次付款，可使用 Puzzled Plus {days} 天，不会自动续期。",
 		"perMonth": "每月",
 		"currencyLabel": "货币",
 		"perYear": "每年",
@@ -72,6 +75,7 @@
 		"description": "你的 Puzzled Plus 方案、付款和家庭成员。",
 		"free": "你正在使用免费方案：每天一道今日精选谜题。",
 		"closed": "Puzzled Plus 尚未开售，目前所有游戏免费。",
+		"checkoutPending": "正在确认你的订阅。此页面将自动更新；如等待较久，请刷新页面。",
 		"checkoutSuccess": "欢迎加入 Puzzled Plus。全部游戏和往日题库已开放。",
 		"plan": {
 			"individual_monthly": "Puzzled Plus（按月）",

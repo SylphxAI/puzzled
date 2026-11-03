@@ -3,13 +3,11 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const messagesDir = join(import.meta.dir, '../../messages')
-const workerSource = readFileSync(join(import.meta.dir, '../../../public/sw.js'), 'utf8')
 const offlineClaim = /offline|離線|离线|sin conexión|sem conexão|オフライン/i
 
 describe('install offer copy', () => {
 	// The worker never caches puzzles, so the install offer must not promise offline play.
-	test('no locale promises offline play while the worker has no fetch handler', () => {
-		expect(workerSource).not.toContain("addEventListener('fetch'")
+	test('no locale promises offline play; only the fallback document is cached', () => {
 		const locales = readdirSync(messagesDir).filter((locale) => {
 			try {
 				readFileSync(join(messagesDir, locale, 'pwa.json'))

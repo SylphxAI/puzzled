@@ -62,6 +62,11 @@ jobs:
             build: apps/* packages/* proto/* crates/* brand/* package.json bun.lock bunfig.toml turbo.json Cargo.toml Cargo.lock
 
   build:
+    permissions:
+      contents: read
+      actions: read
+      checks: read
+      id-token: write
     name: Build (Next.js + release binary)
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -73,7 +78,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: "1.4.3"
+          bun-version: "1.4.4"
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -116,13 +121,20 @@ jobs:
       - name: Pack the web build
         run: tar -C apps/puzzled --exclude=.next/cache --exclude=.next/standalone -cf web-build.tar .next
 
-      - name: Share the web build
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      - name: Checksum the web build
+        run: sha256sum web-build.tar > web-build.tar.sha256
+
+      - name: Stage the web build handoff
+        run: |
+          mkdir web-build-handoff
+          mv web-build.tar web-build.tar.sha256 web-build-handoff/
+
+      - name: run-store put web-build
+        uses: SylphxAI/.github/.github/actions/run-store@90d88da2d60dcd6a3884899c273dd3a7f975be17
         with:
+          mode: put
           name: web-build
-          path: web-build.tar
-          if-no-files-found: error
-          retention-days: 1
+          path: web-build-handoff
 
       - name: GET / document returns HTML while Connect hangs
         run: node scripts/assert-document-route.mjs
@@ -230,6 +242,11 @@ jobs:
           cargo test -p puzzled-core -p puzzled-server
 
   seo-contract:
+    permissions:
+      contents: read
+      actions: read
+      checks: read
+      id-token: write
     name: SEO Contract
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -241,7 +258,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: "1.4.3"
+          bun-version: "1.4.4"
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -268,10 +285,15 @@ jobs:
           echo "bun install failed after retries"
           exit 1
 
-      - name: Download the web build
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      - name: run-store get web-build
+        uses: SylphxAI/.github/.github/actions/run-store@90d88da2d60dcd6a3884899c273dd3a7f975be17
         with:
+          mode: get
           name: web-build
+          path: .
+
+      - name: Verify the web build checksum
+        run: sha256sum -c web-build.tar.sha256
 
       - name: Unpack the web build
         run: tar -C apps/puzzled -xf web-build.tar
@@ -320,6 +342,11 @@ jobs:
           if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
 
   a11y:
+    permissions:
+      contents: read
+      actions: read
+      checks: read
+      id-token: write
     name: Accessibility (WCAG 2.2 AA)
     # Trunk push, nightly and manual only: a full browser suite on every PR push
     # costs more than it catches before it lands.
@@ -333,7 +360,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: "1.4.3"
+          bun-version: "1.4.4"
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -366,10 +393,15 @@ jobs:
         working-directory: apps/puzzled
         run: bunx playwright install --with-deps chromium
 
-      - name: Download the web build
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      - name: run-store get web-build
+        uses: SylphxAI/.github/.github/actions/run-store@90d88da2d60dcd6a3884899c273dd3a7f975be17
         with:
+          mode: get
           name: web-build
+          path: .
+
+      - name: Verify the web build checksum
+        run: sha256sum -c web-build.tar.sha256
 
       - name: Unpack the web build
         run: tar -C apps/puzzled -xf web-build.tar
@@ -413,6 +445,7 @@ jobs:
         run: bun run test:e2e e2e-tests/sudoku-terminal.e2e.ts e2e-tests/result-modal-consent.e2e.ts --workers=1 --retries=0
 
       - name: Upload the Playwright report
+        continue-on-error: true
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -428,6 +461,11 @@ jobs:
           if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
 
   lighthouse:
+    permissions:
+      contents: read
+      actions: read
+      checks: read
+      id-token: write
     name: Lighthouse Budgets
     # Trunk push, nightly and manual only, like the a11y suite.
     if: github.event_name != 'pull_request' && fromJSON(needs.plan.outputs.run).build
@@ -447,7 +485,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: "1.4.3"
+          bun-version: "1.4.4"
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -495,10 +533,15 @@ jobs:
           "$bin" --version
           echo "CHROME_PATH=$bin" >> "$GITHUB_ENV"
 
-      - name: Download the web build
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      - name: run-store get web-build
+        uses: SylphxAI/.github/.github/actions/run-store@90d88da2d60dcd6a3884899c273dd3a7f975be17
         with:
+          mode: get
           name: web-build
+          path: .
+
+      - name: Verify the web build checksum
+        run: sha256sum -c web-build.tar.sha256
 
       - name: Unpack the web build
         run: tar -C apps/puzzled -xf web-build.tar
@@ -513,6 +556,31 @@ jobs:
       # CLS <= 0.1, TBT <= 300 ms, FCP <= 2500 ms (raised from 2000 ms: under
       # applied throttling FCP and LCP land on the same banner paint at ~2.0 s,
       # inside run-to-run noise) and speed index <= 3000 ms, all at error.
+      # Both browser harnesses need a real board, not the API-error fallback.
+      # Serve the same frozen boards as the unit fixtures; no account or write.
+      - name: Start fixture GetDaily API
+        if: always()
+        working-directory: apps/puzzled
+        run: |
+          set -euo pipefail
+          bun scripts/serve-puzzle-fixture.ts > "$RUNNER_TEMP/puzzle-fixture.log" 2>&1 &
+          echo "FIXTURE_API_PID=$!" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 30); do
+            if curl -fsS --max-time 5 -X POST \
+              -H 'content-type: application/json' -H 'connect-protocol-version: 1' \
+              --data '{"gameSlug":"word-search","difficulty":""}' \
+              http://127.0.0.1:8787/puzzled.v1.PuzzleService/GetDaily \
+              > "$RUNNER_TEMP/puzzle-fixture-ready.json" 2>/dev/null; then
+              node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(d.gameSlug!=="word-search"||d.canPlay!==true||typeof d.puzzleDataJson!=="string"||d.puzzleDataJson.length<10)process.exit(1)' \
+                "$RUNNER_TEMP/puzzle-fixture-ready.json"
+              echo "API_INTERNAL_URL=http://127.0.0.1:8787" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/puzzle-fixture.log"
+          exit 1
+
       # lhci starts `bun run start` itself on port 3000.
       - name: Lighthouse budget (bun run lighthouse)
         working-directory: apps/puzzled
@@ -528,6 +596,7 @@ jobs:
       # budgets (LCP 2500 ms, INP 600 ms ratcheting to 200 ms) and written to the
       # job summary. Lighthouse only estimates INP (as TBT); this measures it.
       - name: Serve the build on :3016
+        if: always()
         working-directory: apps/puzzled
         env:
           SKIP_ENV_VALIDATION: 'true'
@@ -557,11 +626,13 @@ jobs:
         if: always()
         run: |
           if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
+          if [ -n "${FIXTURE_API_PID:-}" ]; then kill "$FIXTURE_API_PID" 2>/dev/null || true; fi
 
       # After the server is stopped, so a failed vitals run still publishes
       # the table. A missing report is not a failure: the test writes it only
       # when it reaches the assertion.
       - name: Upload the web vitals report
+        continue-on-error: true
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -570,6 +641,7 @@ jobs:
           retention-days: 7
 
       - name: Upload the Lighthouse report
+        continue-on-error: true
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:

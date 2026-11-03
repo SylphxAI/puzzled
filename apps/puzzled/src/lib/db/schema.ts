@@ -14,6 +14,7 @@ import {
 	boolean,
 	check,
 	date,
+	doublePrecision,
 	index,
 	integer,
 	jsonb,
@@ -270,6 +271,11 @@ export const gameSessions = pgTable(
 		/** Number of attempts/guesses */
 		attempts: integer('attempts').default(0).notNull(),
 
+		/** Accepted Cryptogram hints; absent on historical finishes. */
+		hintsUsed: bigint('hints_used', { mode: 'number' }),
+		/** Synthetic verification finishes never enter public comparisons. */
+		comparisonExcluded: boolean('comparison_excluded').default(false).notNull(),
+
 		/** Time spent playing (milliseconds) */
 		timeSpentMs: integer('time_spent_ms'),
 
@@ -314,6 +320,11 @@ export const gameSessions = pgTable(
 		index('game_sessions_game_slug_completed_idx').on(table.gameSlug, table.completedAt),
 		// daily puzzle completers recompute: day_key + is_ritual + module_class
 		index('game_sessions_drc_day_key_idx').on(table.dayKey, table.isRitual, table.moduleClass),
+		index('game_sessions_metric_cohort_idx')
+			.on(table.userId, table.dayKey)
+			.where(
+				sql`${table.isRitual} = true AND ${table.moduleClass} = 'puzzle_ritual' AND ${table.status} IN ('won', 'lost')`,
+			),
 		// One ritual finish per user/module/product day (null puzzle_id safe)
 		uniqueIndex('game_sessions_ritual_user_game_day_uidx')
 			.on(table.userId, table.gameSlug, table.dayKey)
@@ -1050,3 +1061,115 @@ export const guestCredentials = pgTable(
 		),
 	],
 )
+
+/** Anonymous first-party event rows; no player identity or browser cookie. */
+export const funnelEvents = pgTable(
+	'funnel_events',
+	{
+		id: uuid('id').primaryKey(),
+		occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
+		event: text('event').notNull(),
+		path: text('path'),
+		gameSlug: text('game_slug'),
+		metric: text('metric'),
+		value: doublePrecision('value'),
+		rating: text('rating'),
+	},
+	(table) => [
+		index('funnel_events_event_time_idx').on(table.event, table.occurredAt),
+		check(
+			'funnel_events_event_check',
+			sql`${table.event} IN ('landing', 'game_start', 'signup', 'web_vitals', 'share_landing')`,
+		),
+	],
+)
+
+/** Retry deduplication only; erased with the account, not linked from event rows. */
+export const funnelSignupReceipts = pgTable('funnel_signup_receipts', {
+	userId: uuid('user_id').primaryKey(),
+})
+
+// Scheduled aggregate reports (read by the api; no player ids in these reports).
+export const metricDays = pgTable('metric_days', {
+	id: uuid('id').primaryKey().notNull(),
+	dayKey: text('day_key').unique().notNull(),
+	report: jsonb('report').notNull(),
+	generatedAt: timestamp('generated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+export const metricCounters = pgTable(
+	'metric_counters',
+	{
+		dayKey: text('day_key').notNull(),
+		event: text('event').notNull(),
+		count: bigint('count', { mode: 'number' }).default(0).notNull(),
+	},
+	(t) => [
+		primaryKey({ name: 'metric_counters_pkey', columns: [t.dayKey, t.event] }),
+		check(
+			'metric_counters_event_check',
+			sql`${t.event} IN ('share', 'free_finish_ok', 'free_finish_failed')`,
+		),
+	],
+)
+export const shareLandings = pgTable(
+	'share_landings',
+	{
+		userId: uuid('user_id').notNull(),
+		shareId: uuid('share_id')
+			.notNull()
+			.references(() => resultShares.id, { onDelete: 'cascade' }),
+		dayKey: text('day_key').notNull(),
+		landedAt: timestamp('landed_at', { withTimezone: true }).defaultNow().notNull(),
+	},
+	(t) => [
+		primaryKey({ name: 'share_landings_pkey', columns: [t.userId, t.shareId, t.dayKey] }),
+		index('share_landings_day_idx').on(t.dayKey),
+	],
+)
+export const metricAudiences = pgTable(
+	'metric_audiences',
+	{
+		userId: uuid('user_id').notNull(),
+		dayKey: text('day_key').notNull(),
+		paid: boolean('paid').notNull(),
+	},
+	(t) => [primaryKey({ name: 'metric_audiences_pkey', columns: [t.userId, t.dayKey] })],
+)
+export const metricAlertOutbox = pgTable(
+	'metric_alert_outbox',
+	{
+		dayKey: text('day_key').notNull(),
+		signal: text('signal').notNull(),
+		emittedAt: timestamp('emitted_at', { withTimezone: true }),
+	},
+	(t) => [primaryKey({ name: 'metric_alert_outbox_pkey', columns: [t.dayKey, t.signal] })],
+)
+
+/** Retained normal checkout requests; ambiguous calls are recovered by named read. */
+export const checkoutAttempts = pgTable(
+	'checkout_attempts',
+	{
+		userId: uuid('user_id').notNull(),
+		requestId: uuid('request_id').notNull(),
+		moneySessionId: text('money_session_id')
+			.notNull()
+			.unique('checkout_attempts_money_session_id_key'),
+		request: jsonb('request').notNull(),
+		state: text('state').notNull().default('pending'),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		primaryKey({ name: 'checkout_attempts_pkey', columns: [table.userId, table.requestId] }),
+		index('checkout_attempts_latest').on(table.userId, table.createdAt.desc().nullsFirst()),
+		check('checkout_attempts_state_check', sql`${table.state} IN ('pending', 'ready', 'refused')`),
+	],
+)
+
+/** Auth-attested synthetic buyers, registered before their first product sign-in. */
+export const syntheticFixtures = pgTable('synthetic_fixtures', {
+	userId: uuid('user_id').primaryKey(),
+	fixtureKey: text('fixture_key').notNull().unique('synthetic_fixtures_fixture_key_key'),
+	authSubject: text('auth_subject').notNull().unique('synthetic_fixtures_auth_subject_key'),
+	syntheticTime: timestamp('synthetic_time', { withTimezone: true }).notNull(),
+	registeredAt: timestamp('registered_at', { withTimezone: true }).notNull().defaultNow(),
+})

@@ -2,7 +2,7 @@
 	"privacy": {
 		"title": "Privacy Policy",
 		"lastUpdated": "Last Updated",
-		"revision": "2026-10-01",
+		"revision": "2026-10-26",
 		"eyebrow": "Legal",
 		"lead": "This policy explains what data Puzzled collects, why it is collected, and how to contact us about it.",
 		"toc": {
@@ -31,7 +31,7 @@
 					"payment": "Payment information: Sylphx Money, the payments service of Sylphx Limited, and its payment processor Stripe collect your card details; we receive your subscription status, amounts, dates and payment references",
 					"technical": "Technical data: IP address, browser type, and device information",
 					"errors": "Error reports: when a page or our server fails, we record the error message, stack trace and page path (never the query string, email addresses or anything you typed) in our own error-monitoring service, to find and fix the fault",
-					"referral": "Referral and ad tags: if you arrive through a link that carries campaign tags (utm_ parameters or a referral id, for example from another Sylphx product), and you have accepted analytics cookies, we keep those tags for 30 days in a first-party cookie and store them with your account if you sign up. If you arrive from a Google ad and have turned on advertising cookies, we keep the ad click id for 90 days in the same cookie and pass it only to the payment record of a subscription you start, not to your account. We use them to know which link or ad brought you, and we do not sell them."
+					"referral": "Referral and ad tags: if you arrive through a link that carries campaign tags (utm_ parameters or a referral id, for example from another Sylphx product), and you have accepted analytics cookies, we keep those tags for 30 days in a first-party cookie and store them with your account if you sign up. If you arrive from a Google ad and have turned on advertising cookies, we keep the ad click id for 90 days in the same cookie and pass it only to the payment record of a subscription you start, not to your account. We use them to know which link or ad brought you, and we do not sell them. With analytics consent, we also link a visit to a shared result to your guest or account player ID for up to 41 product days to measure whether you finish your first daily puzzle. Deleting your account erases these linked receipts; aggregate reports contain no player IDs."
 				}
 			},
 			"dataUse": {

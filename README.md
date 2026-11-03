@@ -13,6 +13,10 @@ that opens every other game, the archive of past days and a family plan, is buil
 but not on sale until payments run through Sylphx Money, the platform's payments
 service ([pricing and policy](docs/monetization.md)).
 
+A public product overview and curated page links are available at
+[`/llms.txt`](https://puzzled.gg/llms.txt). The plain-text route keeps the
+Puzzled name separate from its publisher attribution.
+
 - Goal, users and what we will not do: [docs/vision.md](docs/vision.md)
 - Capabilities and their status: [docs/capabilities.md](docs/capabilities.md)
 - Metrics, game rules, growth, design: [docs/](docs) (index in [AGENTS.md](AGENTS.md#where-things-live))
@@ -74,6 +78,8 @@ schema migrations applied by an Atlas job first. After a deploy, run
 `bun run verify:locale` reads every public page in every locale and fails on a
 raw message key or a wrong `<html lang>`
 ([docs/reference/locale-verification.md](docs/reference/locale-verification.md)).
+The [public landing delivery contract](docs/reference/public-page-delivery.md)
+records locale-cookie, private HTML and cold-start verification boundaries.
 
 ### Daily Web Push configuration
 

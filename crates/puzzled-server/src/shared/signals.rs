@@ -31,6 +31,8 @@ const MAX_EVENT: usize = 64;
 pub enum Kind {
     /// A dependency the request or job needed failed (database, Auth, Money).
     ToolFailed,
+    /// A scheduled product metric crossed a stop-the-line threshold.
+    MetricRegression,
     /// A request ended in an error the caller saw (a 5xx).
     TurnFailed,
 }
@@ -39,6 +41,7 @@ impl Kind {
     fn name(self) -> &'static str {
         match self {
             Kind::ToolFailed => "tool_failed",
+            Kind::MetricRegression => "metric_regression",
             Kind::TurnFailed => "turn_failed",
         }
     }
@@ -151,6 +154,9 @@ fn is_user_write(path: &str) -> bool {
 /// URI matching works for Connect fallback services without MatchedPath.
 pub async fn observe(req: Request, next: Next) -> Response {
     let write = req.method() == Method::POST && is_user_write(req.uri().path());
+    let overview_started = (req.method() == Method::POST
+        && req.uri().path() == "/puzzled.v1.StatsService/GetTodayOverview")
+        .then(std::time::Instant::now);
     let subject = req
         .extensions()
         .get::<MatchedPath>()
@@ -158,6 +164,15 @@ pub async fn observe(req: Request, next: Next) -> Response {
         .unwrap_or_default();
     let r = next.run(req).await;
     let status = r.status().as_u16();
+    if let Some(started) = overview_started {
+        tracing::info!(
+            event = "puzzled.stats.today_overview.request",
+            status,
+            elapsed_ms = started.elapsed().as_secs_f64() * 1000.0,
+            release = release(),
+            "today overview request timing"
+        );
+    }
     let failed = status >= 500;
     if failed {
         let subject = r
@@ -304,6 +319,48 @@ mod tests {
         );
         assert!(
             out.lines().all(|l| l.contains("severity=\"info\"")),
+            "{out}"
+        );
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn overview_timing_observes_rejections_without_logging_request_data() {
+        use axum::http::StatusCode;
+        use tower::ServiceExt;
+
+        let cap = Capture::default();
+        let w = cap.clone();
+        let _g = tracing::subscriber::set_default(
+            tracing_subscriber::fmt()
+                .with_ansi(false)
+                .with_writer(move || w.clone())
+                .finish(),
+        );
+        let app = axum::Router::new()
+            .fallback(|| async { StatusCode::UNAUTHORIZED })
+            .layer(axum::middleware::from_fn(observe));
+        let request = axum::http::Request::builder()
+            .method("POST")
+            .uri("/puzzled.v1.StatsService/GetTodayOverview?private-query")
+            .header("authorization", "Bearer private-token")
+            .body(axum::body::Body::from("private-body"))
+            .unwrap();
+        assert_eq!(
+            app.oneshot(request).await.unwrap().status(),
+            StatusCode::UNAUTHORIZED
+        );
+        let out = String::from_utf8(cap.0.lock().unwrap().clone()).unwrap();
+        assert_eq!(out.lines().count(), 1, "{out}");
+        assert!(
+            out.contains("puzzled.stats.today_overview.request"),
+            "{out}"
+        );
+        assert!(
+            out.contains("status=401") && out.contains("elapsed_ms="),
+            "{out}"
+        );
+        assert!(
+            !out.contains("private-") && !out.contains("puzzled.user.write"),
             "{out}"
         );
     }

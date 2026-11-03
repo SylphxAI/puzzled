@@ -6,7 +6,7 @@
 'use client'
 
 import { Button } from '@sylphx/ui'
-import { Delete, PencilLine } from 'lucide-react'
+import { Delete, PencilLine, Undo2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { memo, useCallback } from 'react'
 import { cn } from '@/lib/utils'
@@ -49,6 +49,8 @@ const NumberButton = memo(function NumberButton({
 type Props = {
 	onNumberPress: (value: number) => void
 	onDelete: () => void
+	onUndo: () => void
+	canUndo: boolean
 	onToggleNotes: () => void
 	isNotesMode: boolean
 	disabled?: boolean
@@ -57,6 +59,8 @@ type Props = {
 export function SudokuNumberPad({
 	onNumberPress,
 	onDelete,
+	onUndo,
+	canUndo,
 	onToggleNotes,
 	isNotesMode,
 	disabled = false,
@@ -90,16 +94,27 @@ export function SudokuNumberPad({
 				</button>
 			</div>
 
-			<Button
-				variant={isNotesMode ? 'default' : 'secondary'}
-				disabled={disabled}
-				onClick={onToggleNotes}
-				aria-pressed={isNotesMode}
-				className="w-full gap-2"
-			>
-				<PencilLine className="h-4 w-4" aria-hidden="true" />
-				{isNotesMode ? t('notesMode') : t('notes')}
-			</Button>
+			<div className="flex gap-2">
+				<Button
+					variant="secondary"
+					disabled={disabled || !canUndo}
+					onClick={onUndo}
+					className="flex-1 gap-2"
+				>
+					<Undo2 className="h-4 w-4" aria-hidden="true" />
+					{t('undo')}
+				</Button>
+				<Button
+					variant={isNotesMode ? 'default' : 'secondary'}
+					disabled={disabled}
+					onClick={onToggleNotes}
+					aria-pressed={isNotesMode}
+					className="flex-1 gap-2"
+				>
+					<PencilLine className="h-4 w-4" aria-hidden="true" />
+					{isNotesMode ? t('notesMode') : t('notes')}
+				</Button>
+			</div>
 		</div>
 	)
 }
