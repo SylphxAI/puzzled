@@ -1,44 +1,68 @@
 /**
- * A served page, in the shape a locale check reads it: the text a visitor sees,
- * the labelled attributes and the hydration payload, never the markup plumbing
- * (`id`, `href`, `class`) where a route name can share a key's dotted shape.
- *
- * One copy of this parsing serves both the live harness
- * (`scripts/locale-verify.ts`) and its tests, so the test pins exactly what the
- * harness does.
+ * Read server-rendered text, labelled attributes and script payloads. This is
+ * not browser interaction coverage: lazy client modules need their own tests.
+ * Use the existing inert HTML parser so entities and quoted attributes have the
+ * same meaning as HTML, instead of treating markup as plain text.
  */
+import { type Node, Window } from 'happy-dom'
 
-/** Text a visitor reads: markup and scripts removed. */
-export function visibleText(html: string): string {
-	return html
-		.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
-		.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
-		.replace(/<!--[\s\S]*?-->/g, ' ')
-		.replace(/<[^>]+>/g, ' ')
-		.replace(/\s+/g, ' ')
-		.trim()
+const window = new Window({
+	settings: {
+		enableJavaScriptEvaluation: false,
+		disableJavaScriptFileLoading: true,
+		disableCSSFileLoading: true,
+		enableImageFileLoading: false,
+	},
+})
+
+function textNodes(node: Node): string[] {
+	if (node.nodeType === 3) return [node.textContent ?? '']
+	return [...node.childNodes].flatMap(textNodes)
 }
 
-/** Everywhere a message key can leak into on a served page: the text a reader
- * sees, the labelled attributes and the hydration payload - but never the markup
- * plumbing (`id`, `href`, `class`), where a route name shares a key's dotted
- * shape. */
+/** Parses only; no scripts execute and no subresources are loaded. */
+export function readServedPage(html: string): {
+	lang: string | null
+	text: string
+	readerVisible: string
+} {
+	const document = new window.DOMParser().parseFromString(html, 'text/html')
+	const lang = document.documentElement.getAttribute('lang')
+	const attributes = [...document.querySelectorAll('*')].flatMap((element) =>
+		['aria-label', 'title', 'alt', 'placeholder', 'content'].map(
+			(name) => element.getAttribute(name) ?? '',
+		),
+	)
+	const buttonValues = [...document.querySelectorAll('input')]
+		.filter((element) => ['button', 'submit', 'reset'].includes(element.type))
+		.map((element) => element.value)
+	const payload = [...document.querySelectorAll('script')].map((script) => script.textContent)
+	for (const element of document.querySelectorAll('script, style')) element.remove()
+	const text = textNodes(document).join(' ').replace(/\s+/g, ' ').trim()
+	return {
+		lang,
+		text,
+		readerVisible: [text, ...attributes, ...buttonValues, ...payload].join('\n'),
+	}
+}
+
+/** Server-rendered text, with scripts, styles and comments removed. */
+export function visibleText(html: string): string {
+	return readServedPage(html).text
+}
+
+/** Text, labelled attributes, button values and script payloads; not id/href/class. */
 export function readerVisible(html: string): string {
-	const attributes = [...html.matchAll(/\s(?:aria-label|title|alt|placeholder|content)="([^"]*)"/gi)]
-		.map((match) => match[1] ?? '')
-		.join('\n')
-	const payload = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)]
-		.map((match) => match[1] ?? '')
-		.join('\n')
-	return [visibleText(html), attributes, payload].join('\n')
+	return readServedPage(html).readerVisible
 }
 
 /** The `lang` attribute of a served page, or `null` when it has none. */
 export function htmlLang(html: string): string | null {
-	return /<html\b[^>]*\blang="([^"]*)"/i.exec(html)?.[1] ?? null
+	return readServedPage(html).lang
 }
 
-/** Share of `text`'s words that also occur on the English page (multiset match). */
+/** Diagnostic share of words also on the English page (multiset match).
+ * Shared vocabulary does not prove a page is untranslated. */
 export function englishShareOf(text: string, english: readonly string[]): number {
 	const words = (value: string) => value.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []
 	const pool = new Map<string, number>()

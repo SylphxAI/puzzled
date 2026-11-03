@@ -1,7 +1,8 @@
 # Native-speaker review of the ja, es and pt-BR copy
 
 The machine checks (`bun run verify:locale`, the message-catalogue guards) prove
-that no raw key reaches a page and that each locale resolves every key. They
+that inspected server responses contain no known catalogue key leaks and that
+each locale resolves every key. They
 cannot prove the copy reads naturally to a player. This file is that record.
 
 ## What was reviewed

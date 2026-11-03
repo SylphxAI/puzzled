@@ -19,10 +19,25 @@ describe('rawKeyLeaks', () => {
 		expect(rawKeyLeaks(readerVisible(html))).toContain('plus.name')
 	})
 
-	test('a path that ends in a namespace name is not reported', () => {
-		// `settings` and `games` are namespace names, and a page may show either word
-		// as copy, so such a path is not a reliable leak.
-		expect(rawKeyLeaks(visibleText('<a href="/es/settings">Ajustes</a>'))).toEqual([])
+	test('namespace suffixes and punctuation-valued messages are still raw keys', () => {
+		expect(rawKeyLeaks('common.settings stats.unknownValue')).toEqual([
+			'common.settings',
+			'stats.unknownValue',
+		])
+	})
+
+	test('sentence punctuation is not part of a key, but longer paths are', () => {
+		expect(rawKeyLeaks('common.cancel.')).toEqual(['common.cancel'])
+		expect(rawKeyLeaks('common.cancelled common.cancel.more')).toEqual([])
+	})
+
+	test('HTML entities, single-quoted attributes and visible button values are read', () => {
+		const html = `<p>gameResult&#46;status</p><img alt='common.cancel'><input type="submit" value="common.share">`
+		expect(rawKeyLeaks(readerVisible(html))).toEqual([
+			'gameResult.status',
+			'common.cancel',
+			'common.share',
+		])
 	})
 
 	test('a leak is found on a real page shape', () => {
@@ -73,6 +88,8 @@ describe('htmlLang', () => {
 	test('reads the attribute whatever else the tag carries', () => {
 		expect(htmlLang('<html class="x" lang="pt-BR" dir="ltr">')).toBe('pt-BR')
 		expect(htmlLang('<html>')).toBeNull()
+		expect(htmlLang("<html data-lang='en-US' lang='es'>")).toBe('es')
+		expect(htmlLang('<html data-lang="ja">')).toBeNull()
 	})
 })
 
