@@ -16,3 +16,22 @@ export function toLeaderboardPeriod(value: string | undefined): LeaderboardPerio
 		? (value as LeaderboardPeriod)
 		: 'all'
 }
+
+/**
+ * Pick the board's module from an untrusted query value.
+ *
+ * With no valid choice in the URL the board opens on today's free module, so
+ * its Play link leads every visitor, signed in or not, to a board they can
+ * play rather than to the Plus paywall.
+ */
+export function toLeaderboardModule<T extends { slug: string }>(
+	value: string | undefined,
+	modules: readonly T[],
+	freeSlug: string,
+): T | undefined {
+	return (
+		modules.find((module) => module.slug === value) ??
+		modules.find((module) => module.slug === freeSlug) ??
+		modules[0]
+	)
+}
