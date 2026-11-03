@@ -14,7 +14,12 @@ import {
 	getInstallPrompt,
 	onInstallPrompt,
 } from '@/shared/components/pwa-install-event'
-import { isInstallOfferEligible, readFirstFinishDay } from './pwa-install-policy'
+import { observeDayPrimaryActions } from './observe-day-primary-actions'
+import {
+	isInstallOfferEligible,
+	readFirstFinishDay,
+	shouldShowInstallOffer,
+} from './pwa-install-policy'
 
 export function PWAInstallPrompt() {
 	const t = useTranslations('pwa')
@@ -25,6 +30,7 @@ export function PWAInstallPrompt() {
 	const [isStandalone, setIsStandalone] = useState(false)
 	const pathname = usePathname()
 	const [eligible, setEligible] = useState(false)
+	const [primaryAction, setPrimaryAction] = useState({ pathname, visible: true })
 
 	// Re-checked on every navigation: a game page can never show the offer.
 	useEffect(() => {
@@ -34,6 +40,15 @@ export function PWAInstallPrompt() {
 				today: productDayKey(),
 				pathname,
 			}),
+		)
+	}, [pathname])
+
+	// Home streams its primary action after a skeleton. Hold the offer while
+	// it is pending, and keep following action insertions/replacements.
+	useEffect(() => {
+		return observeDayPrimaryActions(
+			(visible) => setPrimaryAction({ pathname, visible }),
+			pathname === '/',
 		)
 	}, [pathname])
 
@@ -119,8 +134,17 @@ export function PWAInstallPrompt() {
 		return () => window.removeEventListener('keydown', handleKeyDown)
 	}, [showPrompt, handleDismiss])
 
-	// Don't show if already installed or prompt not ready
-	if (isStandalone || !showPrompt || !eligible) return null
+	// Don't show if already installed, the prompt is not ready, or the day's
+	// primary action is still on screen.
+	if (
+		!shouldShowInstallOffer({
+			eligible,
+			standalone: isStandalone,
+			requested: showPrompt,
+			primaryActionVisible: primaryAction.pathname !== pathname || primaryAction.visible,
+		})
+	)
+		return null
 
 	return (
 		// `<output>` is the native status region: the prompt is announced when it
