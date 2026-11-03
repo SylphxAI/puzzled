@@ -48,23 +48,33 @@ afterAll(async () => {
 	await GlobalRegistrator.unregister()
 })
 
+function Probe({
+	holder,
+	requireServerAccept,
+	resetBoard,
+}: {
+	holder: Harness
+	requireServerAccept: boolean
+	resetBoard: () => void
+}) {
+	holder.session = useGameSession({
+		gameSlug: 'tango',
+		resultModalDelay: DELAY,
+		requireServerAccept,
+	})
+	holder.startOver = useStartOver(holder.session.resetSession, resetBoard)
+	return null
+}
+
 async function mount(requireServerAccept = false) {
 	const holder = { boardResets: 0 } as Harness
 	const resetBoard = () => {
 		holder.boardResets += 1
 	}
-	function Probe() {
-		holder.session = useGameSession({
-			gameSlug: 'tango',
-			resultModalDelay: DELAY,
-			requireServerAccept,
-		})
-		holder.startOver = useStartOver(holder.session.resetSession, resetBoard)
-		return null
-	}
+
 	const root = createRoot(document.createElement('div'))
 	await React.act(async () => {
-		root.render(React.createElement(Probe))
+		root.render(React.createElement(Probe, { holder, requireServerAccept, resetBoard }))
 	})
 	return { holder, root }
 }

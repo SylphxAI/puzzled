@@ -189,7 +189,7 @@ describe('Identity dest HTTP', () => {
 		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
 			'https://api.events.sylphx.com/v1/devices',
 		])
-		expect((fetchMock.mock.calls[0]?.[1] as RequestInit).headers).toEqual(
+		expect((fetchMock.mock.calls[0]?.[1] as RequestInit | undefined)?.headers).toEqual(
 			expect.objectContaining({ Authorization: 'Bearer events_key_a' }),
 		)
 	})
