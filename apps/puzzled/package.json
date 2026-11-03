@@ -6,7 +6,7 @@
 		"dev": "next dev --turbopack",
 		"build": "next build",
 		"build:with-migrate": "atlas migrate apply --env production && next build",
-		"start": "next start",
+		"start": "node --require ./shared-home-register.cjs ./node_modules/next/dist/bin/next start",
 		"verify:seo": "bun run scripts/seo-verify.ts",
 		"verify:locale": "bun run scripts/locale-verify.ts",
 		"lint": "biome check .",
