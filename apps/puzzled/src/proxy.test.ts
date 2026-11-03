@@ -5,6 +5,36 @@ import { inboundModulePublicRoutes } from './lib/module-routes'
 import { isInboundPublicPath, isProxySkippedPath } from './lib/proxy-paths'
 import { localeFromPathname, proxy, rememberedLocaleRedirect } from './proxy'
 
+test('production shared home has no nonce, and forged profile headers never admit a cookie request', async () => {
+	const previous = process.env.NODE_ENV
+	Object.assign(process.env, { NODE_ENV: 'production' })
+	try {
+		const response = await proxy(new NextRequest('https://puzzled.gg/'))
+		expect(response.headers.get('x-puzzled-shared-home')).toBe('1')
+		expect(response.headers.get('content-security-policy')).not.toContain('nonce-')
+		for (const [url, headers] of [
+			[
+				'https://puzzled.gg/',
+				{ cookie: 'guest=owned', 'x-puzzled-shared-home': '1', 'x-nonce': 'forged' },
+			],
+			['https://puzzled.gg/', { authorization: 'Bearer owned', 'x-puzzled-shared-home': '1' }],
+			['https://puzzled.gg/?checkout=cancelled', {}],
+			['https://puzzled.gg/pricing', {}],
+		] as const) {
+			const privateResponse = await proxy(new NextRequest(url, { headers }))
+			expect(privateResponse.headers.get('x-puzzled-shared-home')).toBeNull()
+			expect(privateResponse.headers.get('x-middleware-request-x-puzzled-shared-home')).not.toBe(
+				'1',
+			)
+			expect(privateResponse.headers.get('content-security-policy')).toContain('nonce-')
+			expect(privateResponse.headers.get('content-security-policy')).not.toContain('forged')
+		}
+	} finally {
+		if (previous === undefined) Reflect.deleteProperty(process.env, 'NODE_ENV')
+		else Object.assign(process.env, { NODE_ENV: previous })
+	}
+})
+
 describe('public landing locale cookies', () => {
 	for (const path of ['/', '/pricing']) {
 		for (const language of [undefined, 'zh-HK', 'en-US']) {

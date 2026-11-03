@@ -46,7 +46,8 @@ ops     -> /observability/test              -> api (Rust)
 
 Server and browser errors go to Sylphx Observability through the Sylphx SDK,
 with no third-party error service; see [docs/observability.md](docs/observability.md). Every
-page is served with a strict, nonce-based Content Security Policy
+page is served with a strict Content Security Policy (fresh nonces for private
+documents, exact script hashes for the anonymous shared home)
 ([docs/reference/csp.md](docs/reference/csp.md)). CI runs on our own runners.
 
 Every game follows one protocol: a daily puzzle keyed to the date in Hong Kong
