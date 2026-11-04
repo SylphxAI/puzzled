@@ -64,9 +64,13 @@ for (const answer of [
 		await expect(page.locator('#name')).toHaveValue('Synthetic player')
 		const retry = page.getByRole('button', { name: retryLabel })
 		await expect(retry).toBeEnabled()
-		await retry.click()
+		await expect(retry).toBeInViewport({ ratio: 1 })
+		await expect(page.getByRole('status')).toBeInViewport({ ratio: 1 })
+		await retry.tap()
 		await expect(page.getByRole('status')).toContainText(/Check your email.*password/)
-		await retry.click()
+		await expect(retry).toBeInViewport({ ratio: 1 })
+		await expect(page.getByRole('status')).toBeInViewport({ ratio: 1 })
+		await retry.tap()
 		await expect(page).toHaveURL(/\/games\/sudoku(?:\?|$)/)
 		expect(signups).toBe(1)
 		expect(logins).toBe(2)
@@ -108,3 +112,38 @@ test('changing address allows a new signup, returning to the accepted address st
 	expect(signups).toBe(2)
 	expect(logins).toBe(1)
 })
+
+for (const height of [600, 844]) {
+	test(`phone ${height}px: returned error and retry stay in view without another scroll`, async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 390, height })
+		let signups = 0
+		let logins = 0
+		await page.route('**/api/identity/signup', (route) => {
+			signups++
+			return route.fulfill({
+				status: 502,
+				json: { error: 'signup_signin_failed', retrySignIn: true },
+			})
+		})
+		await page.route('**/api/identity/login', (route) => {
+			logins++
+			return route.fulfill({ status: 401, json: { error: 'identity_rejected' } })
+		})
+		await page.locator('button[type="submit"]').tap()
+		const retry = page.getByRole('button', { name: retryLabel })
+		await expect(page.getByRole('status')).toContainText("couldn't sign you in")
+		await expect(retry).toBeInViewport({ ratio: 1 })
+		await expect(page.getByRole('status')).toBeInViewport({ ratio: 1 })
+		await retry.tap()
+		await expect(page.getByRole('status')).toContainText(/Check your email.*password/)
+		await expect(retry).toBeInViewport({ ratio: 1 })
+		await expect(page.getByRole('status')).toBeInViewport({ ratio: 1 })
+		await expect(page.locator('#email')).toHaveValue(email)
+		await expect(page.locator('#password')).toHaveValue(password)
+		await expect(page.locator('#name')).toHaveValue('Synthetic player')
+		expect(signups).toBe(1)
+		expect(logins).toBe(1)
+	})
+}
