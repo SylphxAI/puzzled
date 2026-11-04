@@ -561,7 +561,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@96195d86b550ab1205159acb1ae0d75b1fbed47f # main
+      - uses: SylphxAI/.github/.github/actions/needs-pass@0546ef1e30776427b845d068895f7737eee43f84 # reviewed squash allowlist support
         with:
           needs: ${{ toJSON(needs) }}
           required: >-

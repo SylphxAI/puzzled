@@ -259,3 +259,21 @@ and an irreducible latency floor are **not established**. Keep the correct
 one-query implementation; do not declare the broader performance outcome
 complete or add speculative caching, warm replicas, indexes or shared-database
 changes from this sample.
+
+### Receipt delivery checks
+
+The required secret scan initially classified a public deployed Git revision in
+the aggregate JSON as a credential. The exact introducing commit, file, line
+and complete-line SHA-256 were reviewed and recorded in the supported
+`.desk-secret-allowlist.json`; no credential exception or scanner bypass was
+added. The pull-request check passed, but merge-group run `41747599894`
+rejected the same line after the queue attributed it to its synthetic
+single-parent squash commit.
+
+A fresh source read on 2026-11-04 found that the consumer's `needs-pass` pin
+predated the already-merged shared squash support
+([shared delivery #375](https://github.com/SylphxAI/.github/pull/375)). The
+receipt updates only that required action pin to the immutable existing fix,
+`0546ef1e30776427b845d068895f7737eee43f84`, rather than adding a product
+exception or changing the shared scanner. The failed jobs remain part of the
+delivery record; a passing pull-request job is not a merge-group verdict.
