@@ -206,7 +206,7 @@ The follow-up Chrome/Macintosh group has **2 of 19** records above 202ms,
 full-baseline weight alone gives:
 
 ```text
-(964 / 1930) × (2 / 19) = 5.2576% above each threshold
+(964 / 1930) × (2 / 19) = 5.2577% above each threshold
 ```
 
 This is already above 5%, before any contribution from other groups. Over the
