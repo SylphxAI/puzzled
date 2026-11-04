@@ -83,8 +83,10 @@ describe('CookieBanner (mobile compact)', () => {
 		expect(link).not.toMatch(/\b(inline-block|inline-flex|block|relative|absolute|fixed)\b/)
 	})
 
-	test('sits above the bottom bar and stays slim on mobile', () => {
-		expect(html).toContain('bottom-[calc(var(--spacing-bottom-nav-height)')
+	test('owns page space on mobile rather than covering the puzzle or bottom bar', () => {
+		expect(html).toContain('relative z-toast')
+		expect(html).toContain('md:fixed md:inset-x-0 md:bottom-0')
+		expect(html).not.toContain('bottom-[calc(var(--spacing-bottom-nav-height)')
 		expect(html).toContain('text-xs')
 		expect(html).toContain('min-h-11')
 		expect(html).not.toContain('min-h-9')
