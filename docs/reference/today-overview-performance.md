@@ -218,8 +218,9 @@ replacement cohort or a second acceptance window.
 
 Consequently, the observed raw pass **does not establish the half-P95 outcome
 at a stable baseline client mixture**. The 19-record conditional sample is
-small: this is an empirical falsifier of a composition-robust pass claim, not
-a confidence bound, proof of a caused regression, or an irreducible floor.
+small: this is a plug-in baseline-standardized diagnostic that does not support
+a composition-robust pass claim, not a confidence bound, proof of a caused
+regression, or an irreducible floor.
 Time mixture also changed: UTC hour 02 supplies 52/156 (33.3%) follow-up
 records, versus 94/1,930 (4.9%) in the retained baseline; hour 23 supplies
 29/156 (18.6%) versus 29/1,930 (1.5%). Ordinary-UA automation remains possible.
