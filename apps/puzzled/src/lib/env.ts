@@ -105,6 +105,11 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 	},
 	// Product credentials (read through lib/identity/credentials.ts)
 	{
+		name: 'SYLPHX_AUTH_URL',
+		required: false,
+		description: 'Enable Auth service origin for end-user authentication',
+	},
+	{
 		name: 'SYLPHX_AUTH_SECRET_KEY',
 		required: false,
 		description: 'Sylphx Auth instance secret key (Enable Auth binding); redeems sign-in tickets',
@@ -243,6 +248,10 @@ export const env = {
 	/** Events dest origin override */
 	get EVENTS_API_ORIGIN(): string | undefined {
 		return process.env.EVENTS_API_ORIGIN
+	},
+	/** Enable Auth service origin */
+	get SYLPHX_AUTH_URL(): string | undefined {
+		return process.env.SYLPHX_AUTH_URL
 	},
 	/** Sylphx Auth instance secret key */
 	get SYLPHX_AUTH_SECRET_KEY(): string | undefined {

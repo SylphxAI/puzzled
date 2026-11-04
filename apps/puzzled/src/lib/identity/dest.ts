@@ -1,5 +1,5 @@
 export const DEST_PEELS = {
-	identity: 'https://api.sylphx.com',
+	identity: 'https://api.identity.sylphx.com',
 	// Keep Events until canonical Notify serves devices/inbox/deliveries. The
 	// gateway's /v1/devices is Compute; /v1/inbox is not Events. See docs/capabilities.md.
 	events: 'https://api.events.sylphx.com',
@@ -70,6 +70,11 @@ export function destPeelOrigin(fallback: string, raw?: string | null): string {
 		return fallback
 	}
 	return trimSlash(value)
+}
+
+/** Enable Auth's runtime binding is the authority for end-user Auth calls. */
+export function destIdentityOrigin(raw?: string | null): string {
+	return destPeelOrigin(DEST_PEELS.identity, raw)
 }
 
 export function destEventsOrigin(raw?: string | null): string {

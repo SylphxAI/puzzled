@@ -29,7 +29,7 @@ use serde_json::Value;
 
 use sqlx::PgPool;
 
-use crate::shared::dest_http::DEST_IDENTITY_ORIGIN;
+use crate::shared::dest_http::dest_identity_origin;
 
 use super::auth_subjects;
 use super::platform_jwt::{actor_from_claim, VerifiedIdentity};
@@ -115,16 +115,19 @@ impl AuthSessions {
         self
     }
 
-    /// The canonical Auth gateway and the instance's own id and publishable key
+    /// The bound Auth service and the instance's own id and publishable key
     /// (bound by Enable Auth).
     #[must_use]
     pub fn from_env() -> Self {
-        let read = |name: &str| {
+        Self::from_settings(|name| {
             std::env::var(name)
                 .ok()
                 .map(|v| v.trim().to_string())
                 .filter(|v| !v.is_empty())
-        };
+        })
+    }
+
+    fn from_settings(read: impl Fn(&str) -> Option<String>) -> Self {
         let organization_id = read("SYLPHX_AUTH_ORGANIZATION_ID").unwrap_or_else(|| {
             tracing::warn!("SYLPHX_AUTH_ORGANIZATION_ID is unset: no Auth session is accepted");
             String::new()
@@ -136,9 +139,9 @@ impl AuthSessions {
             String::new()
         });
         // Read once at startup; never logged (WORKAROUND, see `parse_admin_principals`).
-        let admin_principals = std::env::var("PUZZLED_ADMIN_PRINCIPALS").unwrap_or_default();
+        let admin_principals = read("PUZZLED_ADMIN_PRINCIPALS").unwrap_or_default();
         Self::new(
-            DEST_IDENTITY_ORIGIN.to_string(),
+            dest_identity_origin(read("SYLPHX_AUTH_URL").as_deref()),
             organization_id,
             caller_key,
         )
@@ -422,10 +425,17 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn runtime_auth_uses_the_canonical_gateway() {
+    fn runtime_auth_honors_the_bound_origin() {
+        let auth = AuthSessions::from_settings(|name| match name {
+            "SYLPHX_AUTH_URL" => Some(" https://bound-auth.example/// ".to_string()),
+            "SYLPHX_AUTH_ORGANIZATION_ID" => Some(ORG.to_string()),
+            "SYLPHX_PUBLISHABLE_KEY" => Some("pk-test".to_string()),
+            _ => None,
+        });
+        assert_eq!(auth.auth_url, "https://bound-auth.example");
         assert_eq!(
-            super::AuthSessions::from_env().auth_url,
-            "https://api.sylphx.com"
+            AuthSessions::from_settings(|_| None).auth_url,
+            "https://api.identity.sylphx.com"
         );
     }
 
