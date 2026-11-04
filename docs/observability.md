@@ -183,3 +183,22 @@ await sx.observability.errorGroups.list({ parent: 'orgs/-/projects/-/envs/-', pa
 The today-overview database and outer request phase timings, fixed-cohort
 baseline and all-status follow-up method are documented in
 [today-overview-performance.md](reference/today-overview-performance.md).
+
+## Signup session completion
+
+`POST /api/identity/signup` acknowledges success only after password sign-in and
+session completion (`signedIn: true`). If Auth accepted the signup request but
+password proof or session completion fails, the route returns HTTP 502 with
+`signup_signin_failed` and `retrySignIn: true`. This is not a request to verify
+email. The form keeps the entered fields and retries the existing sign-in door,
+not signup. An unreadable successful response or lost response uses the same
+sign-in recovery rather than repeating an uncertain signup write.
+
+Each completion failure writes one `signup.signin-failed` warning through
+`lib/logger.ts`, with only `stage` (`password_ticket` or `session_completion`),
+`reason` (`auth_call_failed` or `unexpected_error`) and `upstreamStatus` (HTTP
+status or null). No address, password, ticket, session, upstream code or error
+text is attached. Count these events for post-release failures; they are not
+unique-account counts. Before this event was added, handled completion failures
+left no specific trace, so their historical incidence is not measurable from
+the application logs. A missing historical event is not evidence of zero failures.
