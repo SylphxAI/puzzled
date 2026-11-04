@@ -7,13 +7,18 @@ import { afterAll, afterEach, beforeEach, describe, expect, mock, test } from 'b
  */
 
 const deleted: string[] = []
+const written: string[] = []
+let cookieFailure = false
 let requestHeaders: Record<string, string> = {}
 let cookieValues: Record<string, string> = {}
 
 mock.module('next/headers', () => ({
 	cookies: async () => ({
 		get: (name: string) => (cookieValues[name] ? { value: cookieValues[name] } : undefined),
-		set: () => undefined,
+		set: (name: string) => {
+			if (cookieFailure) throw new Error('private session cookie failure new@x.test')
+			written.push(name)
+		},
 		delete: (name: string) => {
 			deleted.push(name)
 		},
@@ -57,6 +62,8 @@ beforeEach(() => {
 	process.env.SYLPHX_PUBLIC_URL = 'https://puzzled.gg'
 	calls = []
 	deleted.length = 0
+	written.length = 0
+	cookieFailure = false
 	cookieValues = {}
 	requestHeaders = { host: 'puzzled.gg', 'user-agent': 'TestBrowser/1.0' }
 	upstream = () => new Response('{}', { status: 200 })
@@ -473,6 +480,65 @@ describe('sign out', () => {
 })
 
 describe('sign up', () => {
+	test('returns signedIn only after password proof and session cookie completion', async () => {
+		mockUpstream((call) => {
+			if (call.url.endsWith('/v1/client/sign-up')) return new Response('{}', { status: 202 })
+			if (call.url.endsWith('/v1/client/sign-in/password'))
+				return Response.json({ ticket: 'private-ticket' })
+			return Response.json({ session: { token: 'private-session' }, is_new_user: false })
+		})
+		const response = await signup(
+			jsonPost('/api/identity/signup', { email: 'new@x.test', password: GOOD_PASSWORD }),
+		)
+		expect(response.status).toBe(200)
+		expect(await response.json()).toEqual({ signedIn: true })
+		expect(written).toEqual(['puzzled_session'])
+		expect(calls).toHaveLength(3)
+	})
+
+	test('makes completion failures explicit and logs only fixed stage, reason and status', async () => {
+		const warn = console.warn
+		const records: unknown[][] = []
+		console.warn = (...args: unknown[]) => {
+			records.push(args)
+		}
+		try {
+			for (const stage of ['password_ticket', 'session_completion', 'cookie'] as const) {
+				calls = []
+				written.length = 0
+				cookieFailure = stage === 'cookie'
+				mockUpstream((call) => {
+					if (call.url.endsWith('/v1/client/sign-up')) return new Response('{}', { status: 202 })
+					if (call.url.endsWith('/v1/client/sign-in/password') && stage !== 'password_ticket')
+						return Response.json({ ticket: 'private-ticket' })
+					if (stage === 'cookie')
+						return Response.json({ session: { token: 'private-session' }, is_new_user: false })
+					return Response.json(
+						{ code: 'private-code-new@x.test', error: 'private-password-ticket-session' },
+						{ status: 503 },
+					)
+				})
+				const response = await signup(
+					jsonPost('/api/identity/signup', { email: 'new@x.test', password: GOOD_PASSWORD }),
+				)
+				expect(response.status).toBe(502)
+				expect(await response.json()).toEqual({ error: 'signup_signin_failed', retrySignIn: true })
+				expect(written).toHaveLength(0)
+				expect(records.at(-1)).toEqual([
+					'[warn] signup.signin-failed',
+					{
+						stage: stage === 'password_ticket' ? 'password_ticket' : 'session_completion',
+						reason: stage === 'cookie' ? 'unexpected_error' : 'auth_call_failed',
+						upstreamStatus: stage === 'cookie' ? null : 503,
+					},
+				])
+			}
+			expect(JSON.stringify(records)).not.toMatch(/new@x|private|ticket-session/)
+		} finally {
+			console.warn = warn
+		}
+	})
+
 	test('asks Auth to mail a link that lands on the real verify-email page', async () => {
 		mockUpstream((call) =>
 			call.url.endsWith('/v1/client/sign-up')
