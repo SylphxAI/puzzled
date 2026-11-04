@@ -616,11 +616,11 @@ export function CookieBanner(props: {
 			// in app/[locale]/layout.tsx marks <html> and globals.css hides this
 			// node, so a visitor who already decided never sees a flash.
 			data-consent-banner=""
-			// Sits above the mobile bottom bar: overlapping it made the navigation
-			// unusable until consent was given.
+			// On phones the choice owns space in the page, never over the puzzle
+			// or its Play action. The desktop bar keeps its existing placement.
 			className={
 				props.position === 'bottom'
-					? 'fixed inset-x-0 z-toast px-2 pb-1.5 sm:p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
+					? 'relative z-toast px-2 py-1.5 sm:p-4 md:fixed md:inset-x-0 md:bottom-0'
 					: undefined
 			}
 		>
