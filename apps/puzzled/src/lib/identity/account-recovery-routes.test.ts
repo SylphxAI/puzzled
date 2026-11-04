@@ -325,17 +325,60 @@ describe('reset password (recovery complete)', () => {
 })
 
 describe('verify email', () => {
-	test('confirms on the public completion door with the mailed challenge and secret, no credential', async () => {
+	test('confirms without a session on the public door, forwarding the browser User-Agent', async () => {
 		const response = await verifyEmail(
-			jsonPost('/api/identity/verify-email', { challengeId: 'chal_v', secret: 'mailed' }),
+			jsonPost(
+				'/api/identity/verify-email',
+				{ challengeId: 'chal_v', secret: 'mailed', credential: 'untrusted-body-token' },
+				{ 'user-agent': 'ProofBrowser/2.0' },
+			),
 		)
 		expect(response.status).toBe(200)
 		expect(await response.json()).toEqual({ verified: true })
 		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/signup/email-verification/complete')
+		expect(calls).toHaveLength(1)
 		expect(calls[0]?.headers.get('authorization')).toBeNull()
+		expect(calls[0]?.headers.get('user-agent')).toBe('ProofBrowser/2.0')
 		const { idempotency_key, ...rest } = calls[0]?.body ?? {}
 		expect(typeof idempotency_key).toBe('string')
 		expect(rest).toEqual({ challenge_id: 'chal_v', secret: 'mailed' })
+	})
+
+	test('forwards the existing cookie bearer and original User-Agent for Auth to assess same-holder proof', async () => {
+		for (const cookie of ['puzzled_session', 'sylphx_identity_session']) {
+			calls = []
+			cookieValues = { [cookie]: 'identity_org_session_sameholder' }
+			const response = await verifyEmail(
+				jsonPost(
+					'/api/identity/verify-email',
+					{ challenge_id: 'chal_v', secret: 'mailed', credential: 'untrusted-body-token' },
+					{ 'user-agent': 'SignupBrowser/3.0', 'x-forwarded-for': '203.0.113.9' },
+				),
+			)
+			expect(response.status).toBe(200)
+			expect(await response.json()).toEqual({ verified: true })
+			expect(calls).toHaveLength(1)
+			expect(calls[0]?.headers.get('authorization')).toBe('Bearer identity_org_session_sameholder')
+			expect(calls[0]?.headers.get('user-agent')).toBe('SignupBrowser/3.0')
+			expect(calls[0]?.headers.get('x-forwarded-for')).toBeNull()
+			const { idempotency_key, ...rest } = calls[0]?.body ?? {}
+			expect(typeof idempotency_key).toBe('string')
+			expect(rest).toEqual({ challenge_id: 'chal_v', secret: 'mailed' })
+			expect(deleted).toHaveLength(0)
+		}
+	})
+
+	test('refuses cross-site proof before forwarding ambient credentials', async () => {
+		cookieValues = { puzzled_session: 'identity_org_session_sameholder' }
+		const response = await verifyEmail(
+			jsonPost(
+				'/api/identity/verify-email',
+				{ challengeId: 'chal_v', secret: 'mailed' },
+				{ origin: 'https://other.example' },
+			),
+		)
+		expect(response.status).toBe(403)
+		expect(calls).toHaveLength(0)
 	})
 
 	test('needs both link fields and maps refusals to a fixed answer', async () => {
