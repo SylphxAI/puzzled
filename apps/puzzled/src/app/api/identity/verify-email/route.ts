@@ -6,14 +6,18 @@ import {
 	destIdentityCall,
 	identityFail,
 	rateLimitedResponse,
+	requestUserAgent,
 } from '@/lib/identity/http'
+import { sessionToken } from '@/lib/identity/server'
 
 /**
  * Confirm an email address with the mailed `challenge_id` and secret (the
  * link's `token`), on Auth's public `/v1/signup/email-verification/complete`:
- * the secret is the proof, so no session is needed and the link works on
- * another device. The page calls this only from an explicit button, so a mail
- * scanner that opens the link spends nothing.
+ * the secret is the proof, so the link also works without a session. When
+ * present, forward the existing bearer and its browser User-Agent so Auth can
+ * preserve same-holder credentials without weakening its first-proof guard.
+ * The page calls this only from an explicit button, so a mail scanner that
+ * opens the link spends nothing.
  */
 export async function POST(request: Request) {
 	const refused = await admitJsonPost(request)
@@ -30,6 +34,8 @@ export async function POST(request: Request) {
 	try {
 		await destIdentityCall('/v1/signup/email-verification/complete', {
 			method: 'POST',
+			credential: await sessionToken(),
+			headers: { 'user-agent': requestUserAgent(request) },
 			body: {
 				idempotency_key: derivedIdempotencyKey('email-verification', challengeId, secret),
 				challenge_id: challengeId,
