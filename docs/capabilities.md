@@ -39,10 +39,22 @@ Cite the ID column.
 
 ## Boundaries
 
-- **Platform gateways (2026-11-02):** Auth uses `https://api.sylphx.com` and
-  models use `https://api.sylphx.ai/v1` (`/responses`, `/models`). Credentials
-  remain product-scoped; old Auth/model URL environment overrides are ignored.
-  Events alone still uses its service origin and `EVENTS_API_ORIGIN`: replacing
+- **Auth service binding (2026-11-04):** every end-user Auth caller in web and
+  api uses the existing Enable Auth `SYLPHX_AUTH_URL` binding, with
+  `https://api.identity.sylphx.com` as the unbound default. A same-session,
+  same-caller-key, same-User-Agent read from the live web pod at 12:13:20–24 UTC
+  returned 401 `unsupported_credential` from the canonical gateway's
+  `/v1/sessions/current`, but 200 with the same principal from the bound Auth
+  service. Login alone had returned 200 while the app session and profile
+  remained signed out. The earlier canonical-Auth rule was incorrect: its
+  management session route does not establish end-user Auth admission.
+  Product-scoped credentials, instance checks, subject mapping and cookies
+  are unchanged; this is not an Auth organization or configuration migration.
+
+- **Model and Events gateways (2026-11-02):** models use
+  `https://api.sylphx.ai/v1` (`/responses`, `/models`); retired model URL
+  overrides are ignored. Events still uses its service origin and
+  `EVENTS_API_ORIGIN`: replacing
   its host would send device, inbox and delivery calls to different APIs.
   Read at 21:53–21:56 UTC: the model gateway returned its `invalid_api_key`
   envelope; the canonical Events paths were absent from `/openapi.json`.
@@ -64,7 +76,7 @@ Cite the ID column.
   header), and confirm a browser still holding `sylphx_identity_session` stays
   signed in and receives `puzzled_session`. The passkey, code, agent and
   accessibility lines are blocked on the platform items above and do not pass
-  yet. Still platform-blocked for names: the Auth origin `api.sylphx.com`
+  yet. Still platform-blocked for names: the bound Auth origin `api.identity.sylphx.com`
   (server-side only) and the Google consent and email branding, until the
   same-origin Auth proxy ships.
 

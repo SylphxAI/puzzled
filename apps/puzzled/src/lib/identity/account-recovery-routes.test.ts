@@ -28,8 +28,11 @@ const { POST: resendVerification } = await import('@/app/api/identity/verify-ema
 const { POST: logout } = await import('@/app/api/identity/logout/route')
 const { POST: signup } = await import('@/app/api/identity/signup/route')
 
+const { currentUser } = await import('./server')
+
 const originalFetch = globalThis.fetch
 const envKeys = [
+	'SYLPHX_AUTH_URL',
 	'SYLPHX_AUTH_SECRET_KEY',
 	'SYLPHX_AUTH_ORGANIZATION_ID',
 	'SYLPHX_PUBLISHABLE_KEY',
@@ -47,6 +50,7 @@ function mockUpstream(handler: (call: Call) => Response) {
 
 beforeEach(() => {
 	for (const key of envKeys) savedEnv[key] = process.env[key]
+	process.env.SYLPHX_AUTH_URL = 'https://bound-auth.example/'
 	process.env.SYLPHX_AUTH_SECRET_KEY = 'sylphx_sk_test_secret'
 	process.env.SYLPHX_AUTH_ORGANIZATION_ID = 'organization-00000000-0000-7000-8000-000000000001'
 	process.env.SYLPHX_PUBLISHABLE_KEY = 'sylphx_pk_test_public'
@@ -90,6 +94,43 @@ function jsonPost(path: string, body: unknown, headers: Record<string, string> =
 
 const GOOD_PASSWORD = 'a-long-new-password'
 
+describe('current signed-in player', () => {
+	test('reads the bound Auth service with the same session, caller key and browser User-Agent', async () => {
+		cookieValues = { puzzled_session: 'identity_org_session_test' }
+		mockUpstream(() =>
+			Response.json({
+				session: {
+					principal: {
+						principal_id: 'principal-own',
+						project_id: process.env.SYLPHX_AUTH_ORGANIZATION_ID,
+					},
+				},
+			}),
+		)
+		expect((await currentUser())?.id).toBe('principal-own')
+		expect(calls).toHaveLength(1)
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/sessions/current')
+		expect(calls[0]?.headers.get('authorization')).toBe('Bearer identity_org_session_test')
+		expect(calls[0]?.headers.get('x-sylphx-caller-key')).toBe('sylphx_pk_test_public')
+		expect(calls[0]?.headers.get('user-agent')).toBe('TestBrowser/1.0')
+	})
+
+	test('still refuses a session belonging to a different Auth instance', async () => {
+		cookieValues = { puzzled_session: 'identity_org_session_test' }
+		mockUpstream(() =>
+			Response.json({
+				session: {
+					principal: {
+						principal_id: 'principal-other',
+						project_id: 'organization-00000000-0000-7000-8000-000000000002',
+					},
+				},
+			}),
+		)
+		expect(await currentUser()).toBeNull()
+	})
+})
+
 describe('forgot password (recovery start)', () => {
 	test('starts recovery with the product key, the site reset URL, and no client address', async () => {
 		const response = await startRecovery(
@@ -102,7 +143,7 @@ describe('forgot password (recovery start)', () => {
 		expect(response.status).toBe(200)
 		expect(await response.json()).toEqual({ accepted: true })
 		expect(calls).toHaveLength(1)
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/account-recovery/start')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/account-recovery/start')
 		expect(calls[0]?.headers.get('authorization')).toBe('Bearer sylphx_sk_test_secret')
 		expect(calls[0]?.headers.get('x-forwarded-for')).toBeNull()
 		expect(calls[0]?.body).toEqual({
@@ -187,7 +228,7 @@ describe('reset password (recovery complete)', () => {
 		expect(response.status).toBe(200)
 		expect(await response.json()).toEqual({ accepted: true })
 		expect(calls).toHaveLength(1)
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/account-recovery/complete')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/account-recovery/complete')
 		expect(calls[0]?.headers.get('authorization')).toBe('Bearer sylphx_sk_test_secret')
 		const { idempotency_key, ...rest } = calls[0]?.body ?? {}
 		expect(typeof idempotency_key).toBe('string')
@@ -290,7 +331,7 @@ describe('verify email', () => {
 		)
 		expect(response.status).toBe(200)
 		expect(await response.json()).toEqual({ verified: true })
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/signup/email-verification/complete')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/signup/email-verification/complete')
 		expect(calls[0]?.headers.get('authorization')).toBeNull()
 		const { idempotency_key, ...rest } = calls[0]?.body ?? {}
 		expect(typeof idempotency_key).toBe('string')
@@ -337,7 +378,7 @@ describe('resend verification', () => {
 			}),
 		)
 		expect(response.status).toBe(200)
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/email-verification/start')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/email-verification/start')
 		expect(calls[0]?.headers.get('authorization')).toBe('Bearer identity_org_session_abc')
 		expect(calls[0]?.headers.get('user-agent')).toBe('TestBrowser/1.0')
 		const { idempotency_key, ...rest } = calls[0]?.body ?? {}
@@ -371,7 +412,7 @@ describe('sign out', () => {
 		)
 		expect(response.status).toBe(200)
 		expect(calls).toHaveLength(1)
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/client/sign-out')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/client/sign-out')
 		expect(calls[0]?.headers.get('authorization')).toBe('Bearer identity_org_session_abc')
 		expect(calls[0]?.headers.get('user-agent')).toBe('TestBrowser/1.0')
 		expect(deleted.sort()).toEqual(['puzzled_session', 'sylphx_identity_session'])
@@ -402,7 +443,7 @@ describe('sign up', () => {
 				name: 'New',
 			}),
 		)
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/client/sign-up')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/client/sign-up')
 		expect(calls[0]?.body?.redirect_url).toBe('https://puzzled.gg/verify-email')
 	})
 })

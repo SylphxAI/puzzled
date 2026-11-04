@@ -20,7 +20,7 @@ use std::time::Duration;
 
 use serde_json::{json, Value};
 
-use crate::shared::dest_http::DEST_IDENTITY_ORIGIN;
+use crate::shared::dest_http::dest_identity_origin;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 /// Auth's own reason, kept short in logs and error text.
 const DETAIL_LIMIT: usize = 240;
@@ -62,16 +62,19 @@ impl AuthErasure {
     /// The credential Enable Auth binds, when every part is set.
     #[must_use]
     pub fn from_env() -> Option<Self> {
-        let read = |name: &str| {
+        Self::from_settings(|name| {
             std::env::var(name)
                 .ok()
                 .map(|value| value.trim().to_string())
                 .filter(|value| !value.is_empty())
-        };
+        })
+    }
+
+    fn from_settings(read: impl Fn(&str) -> Option<String>) -> Option<Self> {
         let organization_id = read("SYLPHX_AUTH_ORGANIZATION_ID")?;
         let secret_key = read("SYLPHX_AUTH_SECRET_KEY")?;
         Some(Self::new(
-            DEST_IDENTITY_ORIGIN.to_string(),
+            dest_identity_origin(read("SYLPHX_AUTH_URL").as_deref()),
             organization_id,
             secret_key,
         ))
@@ -153,7 +156,7 @@ impl AuthErasure {
 /// `StoreError::NotFound("user not found")` (`src/privacy.rs`,
 /// `dest_create_privacy_request`), which `map_error` (`src/lib.rs`) renders
 /// as 404 `{"code":"not_found","error":"user not found","authority":"identity"}`.
-/// `api.sylphx.com` forwards that body unchanged. Every field must match: a
+/// Every field must match: a
 /// bare `not_found` can also mean the organization or the route is unknown.
 fn is_principal_not_found(payload: Option<&Value>) -> bool {
     let field = |name: &str| {
@@ -191,6 +194,19 @@ impl std::fmt::Display for AuthError {
 mod tests {
     use super::*;
     use std::sync::{Arc, Mutex};
+
+    #[test]
+    fn erasure_uses_the_same_bound_auth_origin() {
+        let auth = AuthErasure::from_settings(|name| match name {
+            "SYLPHX_AUTH_URL" => Some("https://bound-auth.example///".to_string()),
+            "SYLPHX_AUTH_ORGANIZATION_ID" => Some("org-test".to_string()),
+            "SYLPHX_AUTH_SECRET_KEY" => Some("sk-test".to_string()),
+            _ => None,
+        })
+        .expect("configured Auth");
+        assert_eq!(auth.auth_url, "https://bound-auth.example");
+        assert!(AuthErasure::from_settings(|_| None).is_none());
+    }
 
     /// What the fake Auth received: one record per request.
     type Seen = Arc<Mutex<Vec<Value>>>;
