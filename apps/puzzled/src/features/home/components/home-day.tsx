@@ -95,13 +95,15 @@ export async function HomeDay({
 		<section className="day-surface relative">
 			<div className="home-day-shell page-shell-wide pt-5 md:pt-8">
 				{/* Masthead: the day has an identity. */}
-				<div className="home-day-masthead flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-foreground/80 pb-2.5 text-[13px] text-muted-foreground">
-					<p className="flex items-center gap-2">
-						<span className="font-semibold text-foreground">{dateLabel}</span>
+				<div className="home-day-masthead flex items-center justify-between gap-x-2 border-b border-foreground/80 pb-2.5 text-xs text-muted-foreground sm:gap-x-4 sm:text-[13px]">
+					<p className="flex min-w-0 items-center gap-1.5 truncate sm:gap-2">
+						<span className="truncate font-semibold text-foreground">{dateLabel}</span>
 						<span aria-hidden="true">·</span>
-						<span className="day-numeral">{t('day.puzzleNumber', { number: puzzleNumber })}</span>
+						<span className="day-numeral shrink-0">
+							{t('day.puzzleNumber', { number: puzzleNumber })}
+						</span>
 					</p>
-					<p className="flex items-center gap-1.5">
+					<p className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
 						<span>{t('day.resetsIn')}</span>
 						<DayCountdown className="font-semibold text-foreground" />
 					</p>
