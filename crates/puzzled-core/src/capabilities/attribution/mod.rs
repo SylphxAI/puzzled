@@ -26,10 +26,11 @@ pub struct Attribution {
     pub landing_path: Option<String>,
     /// Landing time, Unix milliseconds.
     pub landed_at_ms: Option<i64>,
-    /// Google Ads click ids; present only after marketing consent.
+    /// Ad click ids; present only after marketing consent.
     pub gclid: Option<String>,
     pub gbraid: Option<String>,
     pub wbraid: Option<String>,
+    pub fbclid: Option<String>,
 }
 
 /// A Google Ads click id is 1-100 of letters, digits, `-` and `_`. Anything
@@ -109,6 +110,7 @@ impl Attribution {
                 "g" => out.gclid = percent_decode(raw).and_then(|v| click_id(&v)),
                 "gb" => out.gbraid = percent_decode(raw).and_then(|v| click_id(&v)),
                 "wb" => out.wbraid = percent_decode(raw).and_then(|v| click_id(&v)),
+                "fb" => out.fbclid = percent_decode(raw).and_then(|v| click_id(&v)),
                 _ => {}
             }
         }
@@ -127,7 +129,10 @@ impl Attribution {
 
     #[must_use]
     pub fn has_click_id(&self) -> bool {
-        self.gclid.is_some() || self.gbraid.is_some() || self.wbraid.is_some()
+        self.gclid.is_some()
+            || self.gbraid.is_some()
+            || self.wbraid.is_some()
+            || self.fbclid.is_some()
     }
 
     /// Click ids as they are named in Money checkout metadata (Money has no
@@ -138,6 +143,7 @@ impl Attribution {
             ("gclid", &self.gclid),
             ("gbraid", &self.gbraid),
             ("wbraid", &self.wbraid),
+            ("fbclid", &self.fbclid),
         ]
         .into_iter()
         .filter_map(|(k, v)| v.as_deref().map(|v| (k, v)))
@@ -154,6 +160,7 @@ impl Attribution {
             base.gclid.clone_from(&landing.gclid);
             base.gbraid.clone_from(&landing.gbraid);
             base.wbraid.clone_from(&landing.wbraid);
+            base.fbclid.clone_from(&landing.fbclid);
         }
         out
     }
@@ -231,12 +238,18 @@ mod tests {
 
     #[test]
     fn click_ids_are_parsed_and_validated() {
-        let found = Attribution::from_cookie("g=Cj0KCQ_abc-123&wb=ok").expect("click id only");
+        let found = Attribution::from_cookie("g=Cj0KCQ_abc-123&wb=ok&fb=IwAR_meta-1")
+            .expect("click id only");
         assert!(!found.has_tag());
         assert_eq!(found.gclid.as_deref(), Some("Cj0KCQ_abc-123"));
+        assert_eq!(found.fbclid.as_deref(), Some("IwAR_meta-1"));
         assert_eq!(
             found.click_id_pairs(),
-            vec![("gclid", "Cj0KCQ_abc-123"), ("wbraid", "ok")]
+            vec![
+                ("gclid", "Cj0KCQ_abc-123"),
+                ("wbraid", "ok"),
+                ("fbclid", "IwAR_meta-1")
+            ]
         );
         // Spaces, punctuation and over-long values are dropped.
         assert_eq!(Attribution::from_cookie("g=a%20b"), None);

@@ -72,5 +72,6 @@ pub async fn attribution_for_user(
         gclid: None,
         gbraid: None,
         wbraid: None,
+        fbclid: None,
     }))
 }
