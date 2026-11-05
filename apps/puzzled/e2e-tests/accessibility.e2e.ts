@@ -278,7 +278,10 @@ test.describe('Reduced motion', () => {
 		await settle(page)
 
 		const samples = await samplePopupTransform(page, () =>
-			page.getByRole('button', { name: /change language/i }).first().click(),
+			page
+				.getByRole('button', { name: /change language/i })
+				.first()
+				.click(),
 		)
 		expect(
 			new Set(samples).size,
@@ -299,7 +302,10 @@ test.describe('Motion for users without the preference', () => {
 		await settle(page)
 
 		const samples = await samplePopupTransform(page, () =>
-			page.getByRole('button', { name: /change language/i }).first().click(),
+			page
+				.getByRole('button', { name: /change language/i })
+				.first()
+				.click(),
 		)
 		expect(
 			new Set(samples).size,
@@ -307,13 +313,17 @@ test.describe('Motion for users without the preference', () => {
 		).toBeGreaterThan(1)
 	})
 
-	test('rejects a popup with transform animation removed', async ({ page }) => {
-		await page.goto('/', { waitUntil: 'domcontentloaded' })
-		await settle(page)
-		await page.addStyleTag({ content: '[role="menu"] > * { transform: none !important; }' })
-		const samples = await samplePopupTransform(page, () =>
-			page.getByRole('button', { name: /change language/i }).first().click(),
-		)
+	test('rejects a popup with no animation', async ({ page }) => {
+		await page.setContent('<button>Open menu</button>')
+		await page.getByRole('button').evaluate((button) => {
+			button.addEventListener('click', () => {
+				const menu = document.createElement('div')
+				menu.setAttribute('role', 'menu')
+				menu.innerHTML = '<div>Static popup</div>'
+				document.body.append(menu)
+			})
+		})
+		const samples = await samplePopupTransform(page, () => page.getByRole('button').click())
 		expect(new Set(samples).size).toBe(1)
 	})
 })
