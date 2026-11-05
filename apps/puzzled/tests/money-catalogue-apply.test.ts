@@ -323,8 +323,8 @@ describe('money catalogue workflow and reader', () => {
 				)
 				expect(source).not.toContain('format!("{}/catalogs/default"')
 			} else {
-				expect(source).toContain('.route("/env/price_catalogs/default", get(catalog))')
-				expect(source).not.toContain('.route("/env/catalogs/default"')
+				expect(source).toContain('"/v1/orgs/o/projects/p/envs/e/price_catalogs/default"')
+				expect(source).not.toContain('/env/catalogs/default')
 			}
 		}
 	})
