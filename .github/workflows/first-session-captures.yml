@@ -1,0 +1,46 @@
+name: First-session captures
+on:
+  pull_request:
+    paths:
+      - scripts/capture-first-session.ts
+      - .github/workflows/first-session-captures.yml
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Served before origin
+        default: https://puzzled.gg
+        type: string
+      preview_url:
+        description: Optional public HTTPS preview origin
+        type: string
+      capture_nyt:
+        description: Include NYT reference entry pages
+        type: boolean
+        default: true
+permissions:
+  contents: read
+jobs:
+  capture:
+    # Standard hosted minutes are free only for a public repository.
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: "1.4.4"
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - run: bun scripts/capture-first-session.ts
+        env:
+          BASE_URL: ${{ inputs.base_url || 'https://puzzled.gg' }}
+          PREVIEW_URL: ${{ inputs.preview_url }}
+          CAPTURE_NYT: ${{ github.event_name == 'pull_request' || inputs.capture_nyt }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: first-session-${{ github.run_id }}
+          path: artifacts/first-session
+          if-no-files-found: error
+          retention-days: 14
