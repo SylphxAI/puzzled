@@ -306,6 +306,7 @@ fn redact_error(message: &str, secret_key: &str) -> String {
     }
 }
 
+#[allow(clippy::expect_used)]
 pub(super) fn sdk(origin: &str, secret_key: &str) -> Arc<sylphx::Client> {
     let mut builder = sylphx::HttpTransport::builder()
         .base_url(origin.trim_end_matches('/'))
