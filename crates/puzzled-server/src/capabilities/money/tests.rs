@@ -89,7 +89,7 @@ async fn fake_money(status: u16, answer: Value) -> (Money, Fake) {
     tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
     (
         Money::new(
-            &format!("http://{addr}/env"),
+            &format!("http://{addr}/v1/orgs/o/projects/p/envs/e"),
             "sk_test",
             "https://puzzled.test",
         ),
@@ -99,12 +99,27 @@ async fn fake_money(status: u16, answer: Value) -> (Money, Fake) {
 
 fn fake_money_router(fake: Fake) -> Router {
     Router::new()
-        .route("/env/entitlement_grants:check", post(check))
-        .route("/env/checkout_sessions", post(session))
-        .route("/env/price_catalogs/default", get(catalog))
-        .route("/env/customer_subscriptions", get(subscriptions))
-        .route("/env/customer_subscriptions/{*rest}", post(action))
-        .route("/env/portal_sessions", post(portal))
+        .route(
+            "/v1/orgs/o/projects/p/envs/e/entitlement_grants:check",
+            post(check),
+        )
+        .route(
+            "/v1/orgs/o/projects/p/envs/e/checkout_sessions",
+            post(session),
+        )
+        .route(
+            "/v1/orgs/o/projects/p/envs/e/price_catalogs/default",
+            get(catalog),
+        )
+        .route(
+            "/v1/orgs/o/projects/p/envs/e/customer_subscriptions",
+            get(subscriptions),
+        )
+        .route(
+            "/v1/orgs/o/projects/p/envs/e/customer_subscriptions/{*rest}",
+            post(action),
+        )
+        .route("/v1/orgs/o/projects/p/envs/e/portal_sessions", post(portal))
         .with_state(fake)
 }
 
@@ -117,8 +132,14 @@ async fn catalogue_reader_and_fixture_use_price_catalogs_and_refuse_old_route() 
     );
     let app = fake_money_router(fake);
     for (path, expected) in [
-        ("/env/price_catalogs/default", StatusCode::OK),
-        ("/env/catalogs/default", StatusCode::NOT_FOUND),
+        (
+            "/v1/orgs/o/projects/p/envs/e/price_catalogs/default",
+            StatusCode::OK,
+        ),
+        (
+            "/v1/orgs/o/projects/p/envs/e/catalogs/default",
+            StatusCode::NOT_FOUND,
+        ),
     ] {
         let response = app
             .clone()
@@ -812,12 +833,15 @@ async fn money_calls_carry_the_money_key() {
         let auth = headers.get("authorization").and_then(|v| v.to_str().ok());
         Json(json!({"entitled": auth == Some("Bearer sk_money"), "entitlement_grant": "g1"}))
     }
-    let app = Router::new().route("/env/entitlement_grants:check", post(echo));
+    let app = Router::new().route(
+        "/v1/orgs/o/projects/p/envs/e/entitlement_grants:check",
+        post(echo),
+    );
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
     tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
     let money = Money::new(
-        &format!("http://{addr}/env"),
+        &format!("http://{addr}/v1/orgs/o/projects/p/envs/e"),
         "sk_money",
         "https://puzzled.test",
     );

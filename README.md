@@ -46,7 +46,8 @@ ops     -> /observability/test              -> api (Rust)
 
 Server and browser errors go to Sylphx Observability through the Sylphx SDK,
 with no third-party error service; see [docs/observability.md](docs/observability.md). Every
-page is served with a strict, nonce-based Content Security Policy
+page is served with a strict Content Security Policy (fresh nonces for private
+documents, exact script hashes for the anonymous shared home)
 ([docs/reference/csp.md](docs/reference/csp.md)). CI runs on our own runners.
 
 Every game follows one protocol: a daily puzzle keyed to the date in Hong Kong
@@ -75,6 +76,9 @@ merged commit that passes is deployed by the platform from `sylphx.toml`, with
 schema migrations applied by an Atlas job first. After a deploy, run
 `bun run verify:live` to check production
 ([docs/reference/live-verification.md](docs/reference/live-verification.md)).
+`bun run verify:locale` reads every public page in every locale and fails on a
+raw message key or a wrong `<html lang>`
+([docs/reference/locale-verification.md](docs/reference/locale-verification.md)).
 The [public landing delivery contract](docs/reference/public-page-delivery.md)
 records locale-cookie, private HTML and cold-start verification boundaries.
 

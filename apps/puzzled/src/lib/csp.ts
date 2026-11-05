@@ -1,9 +1,10 @@
 /**
- * Content Security Policy: a strict, nonce-based policy built per request in
+ * Content Security Policy: a strict policy built per request in
  * `proxy.ts` (docs/reference/csp.md).
  *
- * - Scripts run only with this request's nonce. `'strict-dynamic'` lets a
- *   nonced script load the chunks it needs, and makes browsers ignore host
+ * - Private scripts require this request's nonce; shared home scripts get exact
+ *   hashes/SRI after completion. `'strict-dynamic'` lets an authorized
+ *   script load the chunks it needs, and makes browsers ignore host
  *   allowlists, so none are listed. No `'unsafe-inline'`, no `'unsafe-eval'`.
  * - Next.js reads the nonce from the `Content-Security-Policy` request header
  *   and puts it on its own inline and chunk scripts; the layout reads
@@ -40,13 +41,15 @@ export const GOOGLE_TAG_CONNECT_HOSTS = [
 export const GOOGLE_TAG_FRAME_HOSTS = ['https://td.doubleclick.net'] as const
 
 export function buildCsp(
-	nonce: string,
+	nonce: string | undefined,
 	{
 		dev = false,
 		ads = false,
 		googleTag = false,
-	}: { dev?: boolean; ads?: boolean; googleTag?: boolean } = {},
+		assetPrefix = process.env.NEXT_PUBLIC_PUZZLED_ASSET_PREFIX,
+	}: { dev?: boolean; ads?: boolean; googleTag?: boolean; assetPrefix?: string } = {},
 ): string {
+	const assets = assetPrefix ? ` ${new URL(assetPrefix).origin}` : ''
 	const tagFrames = googleTag ? ` ${GOOGLE_TAG_FRAME_HOSTS.join(' ')}` : ''
 	const tagConnect = googleTag ? ` ${GOOGLE_TAG_CONNECT_HOSTS.join(' ')}` : ''
 	const adFrames = ads ? ` ${AD_CSP_HOSTS.frame.join(' ')}` : ''
@@ -54,13 +57,13 @@ export function buildCsp(
 	return [
 		"default-src 'self'",
 		// Dev only: React's development build and Turbopack HMR use eval.
-		`script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ''}`,
-		"style-src 'self' 'unsafe-inline'",
+		`script-src 'self'${nonce ? ` 'nonce-${nonce}'` : ''} 'strict-dynamic'${dev ? " 'unsafe-eval'" : ''}`,
+		`style-src 'self' 'unsafe-inline'${assets}`,
 		"img-src 'self' data: blob: https:",
-		"font-src 'self' data:",
+		`font-src 'self' data:${assets}`,
 		// The browser talks only to this origin (identity, events and errors are
 		// same-origin routes) and to the Iconify icon APIs.
-		`connect-src 'self' https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com${adConnect}${tagConnect}`,
+		`connect-src 'self' https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com${assets}${adConnect}${tagConnect}`,
 		`frame-src 'self'${adFrames}${tagFrames}`,
 		"worker-src 'self'",
 		"object-src 'none'",

@@ -1,0 +1,646 @@
+{
+	"schema_version": 1,
+	"read_at": "2026-11-04T00:17:41.192594+00:00",
+	"instrument": "VictoriaLogs /select/logsql/query; Envoy access-log duration in milliseconds",
+	"count_unit": "distinct selected-edge access records, not logical calls or human actions",
+	"boundary": "server-side exact _msg deduplication before parsing; retain selected outer boundary, including missing upstream and every status",
+	"route": {
+		"method": "POST",
+		"path": "/puzzled.v1.StatsService/GetTodayOverview"
+	},
+	"cohorts": {
+		"all-mozilla": "agent:~\"Mozilla\"",
+		"refined": "agent:~\"^Mozilla/\" AND agent:~\"(Chrome|Firefox|Safari|CriOS|FxiOS|Edg)/\" AND NOT agent:~\"(?i)(bot|crawl|spider|headless|scan|checker|assetnote|externalagent|monitor)\""
+	},
+	"baseline": {
+		"start": "2026-10-26T22:18:00Z",
+		"end": "2026-11-02T22:18:00Z",
+		"coverage": "First 1h42 of requested168h lacks Contour logs; at most166.3h observed. Retained corrected read2026-11-03, not a later historical requery.",
+		"broad": {
+			"n": "2637",
+			"p50": "91",
+			"p95": "428",
+			"p99": "974",
+			"http4xx": "0",
+			"http5xx": "0",
+			"no_http_response": "38",
+			"first": "2026-10-27T00:00:46.864543884Z",
+			"last": "2026-11-02T22:14:31.122035622Z"
+		},
+		"refined": {
+			"n": "1930",
+			"p50": "88",
+			"p95": "416",
+			"p99": "970",
+			"http4xx": "0",
+			"http5xx": "0",
+			"no_http_response": "24",
+			"first": "2026-10-27T00:00:46.864543884Z",
+			"last": "2026-11-02T22:14:31.122035622Z"
+		},
+		"refined_clients": [
+			{
+				"browser_family": "Chrome",
+				"device_family": "Macintosh",
+				"n": "964",
+				"p50": "103",
+				"p95": "435",
+				"p99": "978",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "17",
+				"first": "2026-10-27T00:00:46.864543884Z",
+				"last": "2026-11-02T20:16:02.890855417Z"
+			},
+			{
+				"browser_family": "Chrome",
+				"device_family": "Windows",
+				"n": "521",
+				"p50": "62",
+				"p95": "281",
+				"p99": "515",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "1",
+				"first": "2026-10-27T02:40:47.812802319Z",
+				"last": "2026-11-02T12:48:38.027518428Z"
+			},
+			{
+				"browser_family": "Chrome",
+				"n": "2",
+				"p50": "420",
+				"p95": "420",
+				"p99": "420",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-10-31T02:17:51.690806816Z",
+				"last": "2026-10-31T02:17:52.052945597Z"
+			},
+			{
+				"browser_family": "Safari",
+				"device_family": "iPhone",
+				"n": "102",
+				"p50": "140",
+				"p95": "683",
+				"p99": "970",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "3",
+				"first": "2026-10-27T00:02:07.405327759Z",
+				"last": "2026-11-02T21:04:28.651518541Z"
+			},
+			{
+				"browser_family": "Firefox",
+				"device_family": "Windows",
+				"n": "17",
+				"p50": "162",
+				"p95": "979",
+				"p99": "979",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "1",
+				"first": "2026-10-28T06:54:09.653320825Z",
+				"last": "2026-11-02T13:11:51.112587044Z"
+			},
+			{
+				"browser_family": "Chrome",
+				"device_family": "Linux",
+				"n": "290",
+				"p50": "87",
+				"p95": "345",
+				"p99": "558",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "1",
+				"first": "2026-10-27T02:40:58.06755006Z",
+				"last": "2026-11-02T22:14:31.122035622Z"
+			},
+			{
+				"browser_family": "Safari",
+				"device_family": "Macintosh",
+				"n": "19",
+				"p50": "117",
+				"p95": "464",
+				"p99": "464",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-10-28T02:37:43.799888938Z",
+				"last": "2026-11-02T09:22:47.682319999Z"
+			},
+			{
+				"browser_family": "Firefox",
+				"device_family": "Macintosh",
+				"n": "5",
+				"p50": "102",
+				"p95": "351",
+				"p99": "351",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-10-28T07:29:19.265234232Z",
+				"last": "2026-11-01T15:09:14.281598838Z"
+			},
+			{
+				"browser_family": "Firefox",
+				"device_family": "Linux",
+				"n": "10",
+				"p50": "141",
+				"p95": "971",
+				"p99": "971",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "1",
+				"first": "2026-10-27T01:39:19.42815348Z",
+				"last": "2026-11-02T19:05:39.797381926Z"
+			}
+		],
+		"refined_utc_hour_counts": {
+			"00": 71,
+			"01": 102,
+			"02": 94,
+			"03": 74,
+			"04": 166,
+			"05": 110,
+			"06": 94,
+			"07": 238,
+			"08": 94,
+			"09": 44,
+			"10": 60,
+			"11": 55,
+			"12": 62,
+			"13": 65,
+			"14": 66,
+			"15": 65,
+			"16": 51,
+			"17": 54,
+			"18": 43,
+			"19": 101,
+			"20": 93,
+			"21": 63,
+			"22": 36,
+			"23": 29
+		}
+	},
+	"follow_up": {
+		"start": "2026-11-03T00:15:09Z",
+		"end": "2026-11-04T00:15:09Z",
+		"broad": {
+			"n": "195",
+			"p50": "25",
+			"p95": "147",
+			"p99": "511",
+			"http4xx": "0",
+			"http5xx": "0",
+			"no_http_response": "1",
+			"first": "2026-11-03T00:15:23.609013788Z",
+			"last": "2026-11-03T23:47:15.3164983Z"
+		},
+		"refined": {
+			"n": "156",
+			"p50": "24",
+			"p95": "147",
+			"p99": "511",
+			"http4xx": "0",
+			"http5xx": "0",
+			"no_http_response": "1",
+			"first": "2026-11-03T00:15:23.609013788Z",
+			"last": "2026-11-03T23:42:13.417445125Z"
+		},
+		"broad_status_flags": [
+			{
+				"status": "200",
+				"flags": "-",
+				"n": "194",
+				"p50": "25",
+				"p95": "142",
+				"p99": "274",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-11-03T00:15:23.609013788Z",
+				"last": "2026-11-03T23:47:15.3164983Z"
+			},
+			{
+				"status": "0",
+				"flags": "DC",
+				"n": "1",
+				"p50": "984",
+				"p95": "984",
+				"p99": "984",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "1",
+				"first": "2026-11-03T02:06:34.871670105Z",
+				"last": "2026-11-03T02:06:34.871670105Z"
+			}
+		],
+		"refined_status_flags": [
+			{
+				"status": "0",
+				"flags": "DC",
+				"n": "1",
+				"p50": "984",
+				"p95": "984",
+				"p99": "984",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "1",
+				"first": "2026-11-03T02:06:34.871670105Z",
+				"last": "2026-11-03T02:06:34.871670105Z"
+			},
+			{
+				"status": "200",
+				"flags": "-",
+				"n": "155",
+				"p50": "24",
+				"p95": "116",
+				"p99": "194",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-11-03T00:15:23.609013788Z",
+				"last": "2026-11-03T23:42:13.417445125Z"
+			}
+		],
+		"refined_clients": [
+			{
+				"browser_family": "Safari",
+				"device_family": "iPhone",
+				"n": "29",
+				"p50": "25",
+				"p95": "99",
+				"p99": "194",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-11-03T01:56:02.176473466Z",
+				"last": "2026-11-03T23:42:13.417445125Z"
+			},
+			{
+				"browser_family": "Chrome",
+				"device_family": "Macintosh",
+				"n": "19",
+				"p50": "39",
+				"p95": "984",
+				"p99": "984",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "1",
+				"first": "2026-11-03T00:15:23.609013788Z",
+				"last": "2026-11-03T23:30:14.863884465Z"
+			},
+			{
+				"browser_family": "Chrome",
+				"device_family": "Windows",
+				"n": "75",
+				"p50": "21",
+				"p95": "113",
+				"p99": "161",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-11-03T01:26:12.001032325Z",
+				"last": "2026-11-03T23:31:38.094564094Z"
+			},
+			{
+				"browser_family": "Chrome",
+				"device_family": "Linux",
+				"n": "22",
+				"p50": "24",
+				"p95": "73",
+				"p99": "187",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-11-03T00:57:06.647011284Z",
+				"last": "2026-11-03T23:28:59.690330448Z"
+			},
+			{
+				"browser_family": "Safari",
+				"device_family": "Macintosh",
+				"n": "5",
+				"p50": "27",
+				"p95": "178",
+				"p99": "178",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-11-03T04:54:30.205271991Z",
+				"last": "2026-11-03T23:29:53.217824514Z"
+			},
+			{
+				"browser_family": "Firefox",
+				"device_family": "Windows",
+				"n": "2",
+				"p50": "60",
+				"p95": "60",
+				"p99": "60",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-11-03T12:34:23.06000445Z",
+				"last": "2026-11-03T23:30:11.213029855Z"
+			},
+			{
+				"browser_family": "Firefox",
+				"device_family": "Linux",
+				"n": "3",
+				"p50": "51",
+				"p95": "110",
+				"p99": "110",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-11-03T23:03:49.911023752Z",
+				"last": "2026-11-03T23:40:53.413588411Z"
+			},
+			{
+				"browser_family": "Firefox",
+				"device_family": "Macintosh",
+				"n": "1",
+				"p50": "50",
+				"p95": "50",
+				"p99": "50",
+				"http4xx": "0",
+				"http5xx": "0",
+				"no_http_response": "0",
+				"first": "2026-11-03T02:02:20.555391506Z",
+				"last": "2026-11-03T02:02:20.555391506Z"
+			}
+		],
+		"refined_utc_hour_counts": {
+			"00": 9,
+			"01": 3,
+			"02": 52,
+			"03": 1,
+			"04": 16,
+			"05": 1,
+			"06": 1,
+			"07": 1,
+			"08": 1,
+			"09": 2,
+			"10": 1,
+			"11": 1,
+			"12": 4,
+			"15": 1,
+			"16": 1,
+			"17": 1,
+			"18": 3,
+			"19": 2,
+			"20": 8,
+			"21": 15,
+			"22": 3,
+			"23": 29
+		},
+		"controls": {
+			"independent_broad_count": {
+				"independent_count": "195"
+			},
+			"independent_refined_count": {
+				"independent_count": "156"
+			},
+			"parser": {
+				"scope_records": "10945",
+				"missing_method": "0",
+				"missing_path": "0",
+				"missing_agent": "0",
+				"missing_authority": "0",
+				"missing_duration": "0"
+			},
+			"all_route_browser_shaped_upstream_ports": [
+				{
+					"upstream_port": "8012",
+					"n": "522",
+					"first": "2026-11-03T00:15:19.821915104Z",
+					"last": "2026-11-03T23:47:20.750696973Z"
+				},
+				{
+					"upstream_port": "80",
+					"n": "522",
+					"first": "2026-11-03T00:15:18.520512323Z",
+					"last": "2026-11-03T23:47:16.487381879Z"
+				}
+			],
+			"coverage_5m": {
+				"read_at": "2026-11-04T00:23:15.763469+00:00",
+				"bins": 289,
+				"missing_bins": 0,
+				"rows": 2646626,
+				"first": "2026-11-03T00:15:09.706969392Z",
+				"last": "2026-11-04T00:15:06.505698779Z",
+				"scope": "all contour-internal/envoy raw logrows, positive control not lossless census"
+			},
+			"output_limit": 500,
+			"largest_main_query_output_rows": 25,
+			"coverage_5m_output_rows": 289,
+			"count_control_scope": "same-pipeline count-only internal consistency, not independent source validation",
+			"parser_scope": "multi-environment initial search, pre-agent-filter; not a census of excluded records"
+		}
+	},
+	"mixture_diagnostic": {
+		"declared_after_follow_up_read": true,
+		"not_replacement_for_frozen_raw_metric": true,
+		"refined_post_threshold_counts": [
+			{
+				"browser_family": "Chrome",
+				"device_family": "Macintosh",
+				"n": "19",
+				"above202": "2",
+				"above208": "2",
+				"above416": "2",
+				"max_ms": "984"
+			},
+			{
+				"browser_family": "Chrome",
+				"device_family": "Windows",
+				"n": "75",
+				"above202": "0",
+				"above208": "0",
+				"above416": "0",
+				"max_ms": "161"
+			},
+			{
+				"browser_family": "Safari",
+				"device_family": "iPhone",
+				"n": "29",
+				"above202": "0",
+				"above208": "0",
+				"above416": "0",
+				"max_ms": "194"
+			},
+			{
+				"browser_family": "Safari",
+				"device_family": "Macintosh",
+				"n": "5",
+				"above202": "0",
+				"above208": "0",
+				"above416": "0",
+				"max_ms": "178"
+			},
+			{
+				"browser_family": "Firefox",
+				"device_family": "Windows",
+				"n": "2",
+				"above202": "0",
+				"above208": "0",
+				"above416": "0",
+				"max_ms": "60"
+			},
+			{
+				"browser_family": "Chrome",
+				"device_family": "Linux",
+				"n": "22",
+				"above202": "0",
+				"above208": "0",
+				"above416": "0",
+				"max_ms": "187"
+			},
+			{
+				"browser_family": "Firefox",
+				"device_family": "Macintosh",
+				"n": "1",
+				"above202": "0",
+				"above208": "0",
+				"above416": "0",
+				"max_ms": "50"
+			},
+			{
+				"browser_family": "Firefox",
+				"device_family": "Linux",
+				"n": "3",
+				"above202": "0",
+				"above208": "0",
+				"above416": "0",
+				"max_ms": "110"
+			}
+		],
+		"baseline_n": 1930,
+		"post_n": 156,
+		"common_strata_baseline_n": 1928,
+		"unsupported_baseline_n": 2,
+		"mac_alone_full_baseline_weighted_exceedance_fraction": 0.052577038451049905,
+		"common_strata_renormalized_above202_fraction": 0.05263157894736842,
+		"interpretation": "Raw P95 target met; stable-mixture half-P95 not demonstrated. Mac alone exceeds5% above202,208 and416 under retained full-baseline weights. Small conditional sample, not a confidence bound or proof of causal regression.",
+		"client_bucket_semantics": "first matching browser/device regex token, not authoritative browser identity; Edge wrappers may classify as Chrome"
+	},
+	"source_lineage": {
+		"read_at": "2026-11-04T00:24:58.901967+00:00",
+		"optimization_ancestor_of_all_observed_releases": true,
+		"core_and_server_src_diff_empty": true,
+		"blobs": {
+			"06ed26dbb96f02a73179543cc84de4ee570f44c3": {
+				"crates/puzzled-core/src/capabilities/puzzle_play/domain/ritual_completion.rs": "fbd257617d0e22b410c8be4b6fcf1534743659bd",
+				"crates/puzzled-server/src/bootstrap/connect_stats.rs": "c03267df5bbbbdbd871d48f700d8e80875d91dbf",
+				"crates/puzzled-server/src/capabilities/stats/adapters/sessions_stats_db.rs": "58507e1dd0ac05a195415fec8c2f16d967a42f21",
+				"crates/puzzled-server/src/shared/signals.rs": "f85704748db200e98bca66b246f1abfc1a3842fe"
+			},
+			"46b56d59f9f207bacc65c3a23da33438d94fa6f3": {
+				"crates/puzzled-core/src/capabilities/puzzle_play/domain/ritual_completion.rs": "fbd257617d0e22b410c8be4b6fcf1534743659bd",
+				"crates/puzzled-server/src/bootstrap/connect_stats.rs": "c03267df5bbbbdbd871d48f700d8e80875d91dbf",
+				"crates/puzzled-server/src/capabilities/stats/adapters/sessions_stats_db.rs": "58507e1dd0ac05a195415fec8c2f16d967a42f21",
+				"crates/puzzled-server/src/shared/signals.rs": "f85704748db200e98bca66b246f1abfc1a3842fe"
+			},
+			"b849fb80d96be2d2ede1584434f4ef2c646941a2": {
+				"crates/puzzled-core/src/capabilities/puzzle_play/domain/ritual_completion.rs": "fbd257617d0e22b410c8be4b6fcf1534743659bd",
+				"crates/puzzled-server/src/bootstrap/connect_stats.rs": "c03267df5bbbbdbd871d48f700d8e80875d91dbf",
+				"crates/puzzled-server/src/capabilities/stats/adapters/sessions_stats_db.rs": "58507e1dd0ac05a195415fec8c2f16d967a42f21",
+				"crates/puzzled-server/src/shared/signals.rs": "f85704748db200e98bca66b246f1abfc1a3842fe"
+			}
+		},
+		"other_runtime_change": "jsonwebtoken10.3->11.0; dev-only ed25519-dalek2->3. Web changes also occurred; runtime and traffic are not controlled."
+	},
+	"phase_diagnostic_not_cohort_or_ingress_join": {
+		"requests": [
+			{
+				"status": "200",
+				"release": "46b56d59f9f207bacc65c3a23da33438d94fa6f3",
+				"n": "86",
+				"p50": "9.246294",
+				"p95": "125.72170999999999",
+				"p99": "491.64346",
+				"first": "2026-11-03T17:17:57.088102713Z",
+				"last": "2026-11-04T00:14:34.537296285Z"
+			},
+			{
+				"status": "200",
+				"release": "b849fb80d96be2d2ede1584434f4ef2c646941a2",
+				"n": "4",
+				"p50": "22.656651",
+				"p95": "37.009344",
+				"p99": "37.009344",
+				"first": "2026-11-03T20:56:47.03517484Z",
+				"last": "2026-11-03T23:04:25.648655868Z"
+			},
+			{
+				"status": "200",
+				"release": "06ed26dbb96f02a73179543cc84de4ee570f44c3",
+				"n": "224",
+				"p50": "16.305449",
+				"p95": "122.00271699999999",
+				"p99": "193.22539",
+				"first": "2026-11-03T00:15:18.161012805Z",
+				"last": "2026-11-03T17:33:59.384465569Z"
+			}
+		],
+		"database": [
+			{
+				"phase": "ok",
+				"n": "314",
+				"acquire_p50": "5.5578270000000005",
+				"acquire_p95": "96.387641",
+				"acquire_p99": "135.88780500000001",
+				"query_p50": "6.91287",
+				"query_p95": "39.917557",
+				"query_p99": "63.763372",
+				"first": "2026-11-03T00:15:18.160969025Z",
+				"last": "2026-11-04T00:14:34.537257357Z"
+			}
+		]
+	},
+	"live_functional_receipt": {
+		"observed_at": "2026-11-04T00:19:02.715Z",
+		"api_sha": "46b56d59f9f207bacc65c3a23da33438d94fa6f3",
+		"ksvc_serving_read_at": "2026-11-04T00:17:24Z",
+		"serving_percent": 100,
+		"harness": "bun scripts/verify-live.ts --expected-sha 46b56d59f9f207bacc65c3a23da33438d94fa6f3",
+		"mode": "read-only",
+		"exit": 0,
+		"passed": 8,
+		"failed": 0,
+		"not_attempted": [
+			"guest finish (no production writes authorized)"
+		],
+		"product_day": "2026-11-04",
+		"free_game": "crowns",
+		"answer_key_leaks": 0,
+		"solved_signatures_checked": 2,
+		"solved_signature_hits": 0,
+		"paid_module_status": 403,
+		"archive_status": 403,
+		"future_status": 400
+	},
+	"query_sha256": {
+		"all-mozilla": "e312b704ab01d95a4bde371e7988ed4fdfcd9f697209a43b98f8f6c7d5531e50",
+		"all-mozilla-count": "4382998414104c261da60d9056390b998e7fbd6fda78d200047782fa3473eaca",
+		"all-mozilla-flags": "9b9c113eb88d6a5496be5cfe9a16de0444429f5cfc0c6acec63097687fbaf4ba",
+		"all-mozilla-hours": "5c86788f18d57b4dfab2d3529a9b50992db40885a828f063fd41a7908766f0ca",
+		"all-mozilla-client": "ab0725287d01cdbcd622e2f9de61e509bb82fd96cec48618a35cd43e7bcd37ff",
+		"refined": "d55e1e2d1adf409474922e0cf7c136dffab8cb9dcaa56443e4c5fc59802a77fd",
+		"refined-count": "e917a358d2428d8c015849352311fb98d56d4f258c35994446007a87a79f68c6",
+		"refined-flags": "2f879c2d24e6198f7f55e68f3e1d9deb73c468e46ee0087f2d4ec0f029e659a6",
+		"refined-hours": "9bb58ab00c0f587d9302348f8874c45496a9bdc1367d2ec9e26739525e0d8635",
+		"refined-client": "46ed46c8c601c8c6a648326775b84e8cd7d64705d4247ef46d421f452a6b7b18",
+		"topology": "fddbfcfae257d9a1b976c2ecdb77ff6a2d9fa08c1700cd6d95e904a1f465d41a",
+		"parser-control": "f392068b3899b2ed6df7842e3396f9f3f648d989096b4423993a70e50acba6d2",
+		"coverage-hours": "e400fcb76e3ce5b268fa140fef64f9347cc40934d16bd277f80fb7ab8a2f33bd",
+		"db-phases": "69589b5a389bf25247897d8c730bcbbc366678a2423e419a530d2129fb8439fe",
+		"request-phases": "9fa118c16a2fc260b2e75a1df2ea968d493704bc2e133ecaa1aa3f199154a5cb"
+	},
+	"frozen_source_query_file_sha256": {
+		"all-mozilla-GetTodayOverview-postdeploy-24h.logsql": "27e01156921e394b4990383434051862a32ce7db70ba1ed33c4a5f3405aea83a",
+		"browserlike-no-explicit-bots-GetTodayOverview-postdeploy-24h.logsql": "9554928f24b8b22a505ba1be13db9fbadfaeab9e50471cc9f873bea606285f6f"
+	},
+	"verdict": "Raw fixed-cohort P95 met; composition-robust tail reduction and an irreducible floor are not established. Retain the correct uncached one-query implementation; do not claim causal or universal tail acceptance."
+}

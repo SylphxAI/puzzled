@@ -23,6 +23,36 @@ interface NotificationPreferencesProps {
 const PUSH_HEADING_ID = 'push-notifications-heading'
 const PUSH_DESCRIPTION_ID = 'push-notifications-description'
 
+function PreferenceItem({
+	label,
+	description,
+	checked,
+	onChange,
+	disabled,
+}: {
+	label: string
+	description: string
+	checked: boolean
+	onChange: () => void
+	disabled?: boolean
+}) {
+	return (
+		<label className="flex items-start gap-3 py-3 cursor-pointer">
+			<input
+				type="checkbox"
+				checked={checked}
+				onChange={onChange}
+				disabled={disabled}
+				className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary disabled:opacity-50"
+			/>
+			<div className="flex-1">
+				<p className="text-sm font-medium">{label}</p>
+				<p className="text-xs text-muted-foreground">{description}</p>
+			</div>
+		</label>
+	)
+}
+
 /**
  * Notification preferences UI
  *
@@ -94,34 +124,6 @@ export function NotificationPreferences({
 			</div>
 		)
 	}
-
-	const PreferenceItem = ({
-		label,
-		description,
-		checked,
-		onChange,
-		disabled,
-	}: {
-		label: string
-		description: string
-		checked: boolean
-		onChange: () => void
-		disabled?: boolean
-	}) => (
-		<label className="flex items-start gap-3 py-3 cursor-pointer">
-			<input
-				type="checkbox"
-				checked={checked}
-				onChange={onChange}
-				disabled={disabled}
-				className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary disabled:opacity-50"
-			/>
-			<div className="flex-1">
-				<p className="text-sm font-medium">{label}</p>
-				<p className="text-xs text-muted-foreground">{description}</p>
-			</div>
-		</label>
-	)
 
 	if (variant === 'inline') {
 		return (

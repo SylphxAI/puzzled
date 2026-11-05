@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
 import { TrialEndingBanner } from '@/features/plus/components/trial-ending-banner'
 import type { SubscriptionView } from '@/lib/billing/plus'
-import { checkoutConfirmed, trialBannerEndMs } from '@/lib/billing/plus'
+import { checkoutConfirmed, isOneTimePassPlan, trialBannerEndMs } from '@/lib/billing/plus'
 import {
 	cancelSubscription,
 	leaveFamily,
@@ -134,12 +134,12 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 							</p>
 							<p>{t(`status.${statusKey}`)}</p>
 							<p className="text-muted-foreground">
-								{view.cancelAtPeriodEnd
+								{view.cancelAtPeriodEnd || isOneTimePassPlan(view.planId)
 									? t('ends', { date: date(view.periodEndMs) })
 									: t('renews', { date: date(view.periodEndMs) })}
 							</p>
 
-							{confirming === 'cancel' ? (
+							{confirming === 'cancel' && !isOneTimePassPlan(view.planId) ? (
 								<div className="space-y-3 rounded-xl border border-border p-4">
 									<p>{t('cancelPeriodConfirm', { date: date(view.periodEndMs) })}</p>
 									<div className="flex flex-wrap gap-2">
@@ -176,7 +176,7 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 									>
 										{t('manage')}
 									</button>
-									{view.cancelAtPeriodEnd ? (
+									{isOneTimePassPlan(view.planId) ? null : view.cancelAtPeriodEnd ? (
 										<button
 											type="button"
 											className={primary}

@@ -214,6 +214,7 @@ function renderShape(shape: GameIconShape, key: string) {
  * caps, `aria-hidden` unless the caller overrides it.
  */
 export function createGameIcon(shapes: readonly GameIconShape[]) {
+	// biome-ignore lint/correctness/noComponentHookFactories: Every caller creates its icon once at module initialization, never during render.
 	function GameIcon({ size = 24, className, ...props }: GameIconProps) {
 		return (
 			<svg

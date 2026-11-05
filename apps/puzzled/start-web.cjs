@@ -43,6 +43,7 @@ function resolveStandaloneServer(rootDir, exists = fs.existsSync) {
 
 if (require.main === module) {
 	applyListenEnv(process.env)
+	require('./shared-home-register.cjs')
 	const server = resolveStandaloneServer(__dirname)
 	if (!server) {
 		console.error('[puzzled-web] standalone server.js not found under', __dirname)

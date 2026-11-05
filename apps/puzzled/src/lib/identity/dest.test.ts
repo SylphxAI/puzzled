@@ -6,6 +6,7 @@ import {
 	DEST_PEELS,
 	destEventsOrigin,
 	destIdentityJson,
+	destIdentityOrigin,
 	destIdentityPrincipal,
 	destJson,
 } from './dest'
@@ -20,6 +21,7 @@ mock.module('next/cache', () => ({ unstable_cache: <T>(load: T) => load }))
 describe('Identity dest HTTP', () => {
 	afterEach(() => {
 		globalThis.fetch = originalFetch
+		delete process.env.SYLPHX_AUTH_URL
 		delete process.env.SYLPHX_AUTH_SECRET_KEY
 		delete process.env.SYLPHX_PUBLISHABLE_KEY
 		delete process.env.EVENTS_API_KEY
@@ -122,9 +124,16 @@ describe('Identity dest HTTP', () => {
 		expect(destIdentityPrincipal(session(legacy), 'org_puzzled')).toBeNull()
 	})
 
-	test('uses canonical Auth and model gateways', () => {
-		expect(DEST_PEELS.identity).toBe('https://api.sylphx.com')
+	test('defaults to the Auth service and model gateway', () => {
+		expect(DEST_PEELS.identity).toBe('https://api.identity.sylphx.com')
 		expect(DEST_PEELS.ai).toBe('https://api.sylphx.ai/v1')
+	})
+
+	test('uses the bound Auth origin, trimming trailing slashes and rejecting invalid doors', () => {
+		expect(destIdentityOrigin(' https://auth.example/// ')).toBe('https://auth.example')
+		for (const raw of [undefined, null, '', ' ', 'invalid', 'https://puzzled.api.sylphx.com']) {
+			expect(destIdentityOrigin(raw)).toBe(DEST_PEELS.identity)
+		}
 	})
 
 	test('rejects suite-door {project}.api.sylphx.com as an Events origin', () => {
@@ -157,6 +166,7 @@ describe('Identity dest HTTP', () => {
 	})
 
 	test("getAppConfig lists the social providers from Auth's client config", async () => {
+		process.env.SYLPHX_AUTH_URL = 'https://bound-auth.example/'
 		process.env.SYLPHX_AUTH_SECRET_KEY = 'identity_org_key_a'
 		process.env.SYLPHX_PUBLISHABLE_KEY = 'sylphx_pk_test_a'
 		const fetchMock = mockFetch({
@@ -166,7 +176,7 @@ describe('Identity dest HTTP', () => {
 		const config = await getAppConfig()
 		// Auth's client config is the only config read.
 		expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
-			'https://api.sylphx.com/v1/client/config?publishable_key=sylphx_pk_test_a',
+			'https://bound-auth.example/v1/client/config?publishable_key=sylphx_pk_test_a',
 		])
 		expect(config.oauthProviders).toEqual(['google'])
 		expect(config.consentTypes).toContain('analytics')
@@ -189,7 +199,7 @@ describe('Identity dest HTTP', () => {
 		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
 			'https://api.events.sylphx.com/v1/devices',
 		])
-		expect((fetchMock.mock.calls[0]?.[1] as RequestInit).headers).toEqual(
+		expect((fetchMock.mock.calls[0]?.[1] as RequestInit | undefined)?.headers).toEqual(
 			expect.objectContaining({ Authorization: 'Bearer events_key_a' }),
 		)
 	})

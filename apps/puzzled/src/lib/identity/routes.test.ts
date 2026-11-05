@@ -91,6 +91,8 @@ describe('Identity dest login and recovery doors', () => {
 			},
 		})
 		expect(calls[0]?.[0]).toBe('https://identity.test/v1/signup')
-		expect((calls[0]?.[1].headers as Record<string, string>).Authorization).toBeUndefined()
+		expect(
+			(calls[0]?.[1].headers as Record<string, string> | undefined)?.Authorization,
+		).toBeUndefined()
 	})
 })

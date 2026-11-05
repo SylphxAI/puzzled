@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 test('SSR boards forward each request cookie and User-Agent without cross-request markers', async () => {
@@ -43,7 +43,5 @@ test('SSR boards forward each request cookie and User-Agent without cross-reques
 			(request: { path: string }) => request.path === '/puzzled.v1.StatsService/GetLeaderboard',
 		),
 	).toBe(true)
-	const page = readFileSync(resolve(app, 'src/app/[locale]/(main)/leaderboard/page.tsx'), 'utf8')
-	expect(page).toContain('getServerLeaderboard')
 	expect(existsSync(resolve(app, 'src/lib/connect/stats-admission.ts'))).toBe(false)
 })

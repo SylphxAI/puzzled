@@ -30,7 +30,7 @@ const fraunces = localFont({
 	weight: '500 700',
 	display: 'swap',
 	preload: true,
-	adjustFontFallback: 'Times New Roman',
+	adjustFontFallback: false,
 })
 
 const SITE_DESCRIPTION =

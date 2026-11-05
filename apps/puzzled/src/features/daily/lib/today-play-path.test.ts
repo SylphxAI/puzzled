@@ -11,6 +11,10 @@ describe('todayPlayPath', () => {
 		)
 	})
 
+	it('opens a chosen level started, so the chooser lands on its board', () => {
+		expect(todayPlayPath('sudoku', 'hard')).toBe('/games/sudoku?difficulty=hard&start=1#play')
+	})
+
 	it('goes to the play area for a game without levels', () => {
 		const without = getAllGameMetadata().find((game) => !game.supportsDifficulty)
 		expect(without).toBeDefined()

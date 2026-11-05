@@ -78,6 +78,7 @@
 		"checkoutPending": "サブスクリプションを確認しています。このページは自動更新されます。時間がかかる場合は再読み込みしてください。",
 		"checkoutSuccess": "Puzzled Plusへようこそ。すべてのゲームとアーカイブをご利用いただけます。",
 		"plan": {
+			"individual_once": "Puzzled Plus（3日間パス）",
 			"individual_monthly": "Puzzled Plus（月額）",
 			"individual_yearly": "Puzzled Plus（年額）",
 			"family_monthly": "Puzzled Plus ファミリー（月額）",

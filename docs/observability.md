@@ -183,3 +183,37 @@ await sx.observability.errorGroups.list({ parent: 'orgs/-/projects/-/envs/-', pa
 The today-overview database and outer request phase timings, fixed-cohort
 baseline and all-status follow-up method are documented in
 [today-overview-performance.md](reference/today-overview-performance.md).
+
+## Signup session completion
+
+`POST /api/identity/signup` acknowledges success only after password sign-in and
+session completion (`signedIn: true`). If Auth accepted the signup request but
+password proof or session completion fails, the route returns HTTP 502 with
+`signup_signin_failed` and `retrySignIn: true`. This is not a request to verify
+email. The form keeps the entered fields and retries the existing sign-in door,
+not signup. An unreadable successful response or lost response uses the same
+sign-in recovery rather than repeating an uncertain signup write.
+
+Each completion failure writes one `signup.signin-failed` warning through
+`lib/logger.ts`, with only `stage` (`password_ticket` or `session_completion`),
+`reason` (`auth_call_failed` or `unexpected_error`) and `upstreamStatus` (HTTP
+status or null). No address, password, ticket, session, upstream code or error
+text is attached. Count these events for post-release failures; they are not
+unique-account counts. Before this event was added, handled completion failures
+left no specific trace, so their historical incidence is not measurable from
+the application logs. A missing historical event is not evidence of zero failures.
+
+### Signup recovery visibility
+
+A returned signup/sign-in failure keeps the status and retry action together in
+view, including when configured social providers make a phone form taller. It
+does not move input focus, discard fields, or create another signup on retry.
+Phone browser checks require both the status and complete retry target to remain
+in the viewport after each refused attempt, at 390×600 and 390×844.
+
+On 2026-11-04 at 15:55 UTC, the public f632a6a1 build failed this check with a
+synthetic completion refusal: its 48px retry target began at y=853.75 in an
+844px viewport. This was a frontend recovery-layout failure, not evidence of a
+real signup failure rate. The earlier unconfigured local-provider fixture did
+not establish the configured production layout. Acceptance must exercise the
+configured provider panel as well as provider-free forms.

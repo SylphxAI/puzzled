@@ -123,10 +123,9 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 				signInClassName,
 			)}
 		>
-			<LogIn className="h-4 w-4" />
-			{/* Keeps an accessible name on mobile, where the label is hidden. */}
-			{size === 'md' && t('common.signIn')}
-			{size === 'sm' && <span className="sr-only sm:not-sr-only">{t('common.signIn')}</span>}
+			<LogIn className="h-4 w-4" aria-hidden="true" />
+			{/* Visible at every width: the drawer's full-width button has room for it. */}
+			{t('common.signIn')}
 		</Link>
 	)
 }

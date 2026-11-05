@@ -78,6 +78,7 @@
 		"checkoutPending": "正在確認你的訂閱。此頁面將自動更新；如等候較久，請重新整理。",
 		"checkoutSuccess": "歡迎加入 Puzzled Plus。全部遊戲和往日題庫已經開放。",
 		"plan": {
+			"individual_once": "Puzzled Plus（3 日通行證）",
 			"individual_monthly": "Puzzled Plus（按月）",
 			"individual_yearly": "Puzzled Plus（按年）",
 			"family_monthly": "Puzzled Plus 家庭方案（按月）",

@@ -2,9 +2,9 @@
 
 import { Button, GamepadIcon } from '@sylphx/ui'
 import { CheckCircle, Loader2, Mail, XCircle } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Suspense, useState } from 'react'
+import { Suspense, useRef, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
 import { useSafeAuth, useSafeUser } from '@/lib/identity/react'
 
@@ -27,7 +27,6 @@ export default function VerifyEmailPage() {
 function VerifyEmailContent() {
 	const t = useTranslations('auth')
 	const tCommon = useTranslations('common')
-	const router = useRouter()
 	const searchParams = useSearchParams()
 	const { verifyEmail, resendVerificationEmail } = useSafeAuth()
 	const { isSignedIn } = useSafeUser()
@@ -42,17 +41,20 @@ function VerifyEmailContent() {
 	const [error, setError] = useState('')
 	const [resending, setResending] = useState(false)
 	const [resent, setResent] = useState(false)
+	const confirming = useRef(false)
 
 	const handleConfirm = async () => {
-		if (!challengeId || !token) return
+		if (!challengeId || !token || confirming.current) return
+		confirming.current = true
 		setState('verifying')
 		try {
 			await verifyEmail({ challengeId, secret: token })
 			setState('success')
-			setTimeout(() => router.push('/'), 2000)
 		} catch {
 			setState('error')
 			setError(t('verificationLinkInvalid'))
+		} finally {
+			confirming.current = false
 		}
 	}
 
@@ -106,7 +108,29 @@ function VerifyEmailContent() {
 						<CheckCircle className="mx-auto h-12 w-12 text-correct" />
 						<div>
 							<h2 className="text-xl font-semibold">{t('emailVerified')}</h2>
-							<p className="text-muted-foreground">{t('redirecting')}</p>
+							<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+								{t('verifiedSignInGuidance')}
+							</p>
+						</div>
+						<div className="space-y-2">
+							<Link
+								href="/forgot-password"
+								className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+							>
+								{t('setNewPassword')}
+							</Link>
+							<Link
+								href="/login"
+								className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-border px-4 py-3 text-sm font-semibold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+							>
+								{tCommon('signIn')}
+							</Link>
+							<Link
+								href="/"
+								className="inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+							>
+								{t('backToPlay')}
+							</Link>
 						</div>
 					</div>
 				)}

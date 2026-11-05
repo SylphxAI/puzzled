@@ -3,8 +3,8 @@ import { env } from '../env'
 import { destIdentityCredential, destIdentityProjectId, destProductCredential } from './credentials'
 import {
 	type AppConfig,
-	DEST_PEELS,
 	destIdentityJson,
+	destIdentityOrigin,
 	destIdentityUser,
 	type IdentityUser,
 } from './dest'
@@ -16,8 +16,8 @@ import {
 	sessionCookieOptions,
 } from './session-cookie'
 
-export { SESSION_COOKIE }
 export type { IdentityUser }
+export { SESSION_COOKIE }
 
 export async function sessionToken(): Promise<string | undefined> {
 	return readSessionToken(await cookies())
@@ -36,10 +36,14 @@ export async function currentUser(): Promise<IdentityUser | null> {
 	const callerKey = destProductCredential(['SYLPHX_PUBLISHABLE_KEY'])
 	if (!callerKey) return null
 	try {
-		const current = await destIdentityJson(DEST_PEELS.identity, '/v1/sessions/current', {
-			credential: token,
-			headers: { 'user-agent': await browserUserAgent(), 'x-sylphx-caller-key': callerKey },
-		})
+		const current = await destIdentityJson(
+			destIdentityOrigin(env.SYLPHX_AUTH_URL),
+			'/v1/sessions/current',
+			{
+				credential: token,
+				headers: { 'user-agent': await browserUserAgent(), 'x-sylphx-caller-key': callerKey },
+			},
+		)
 		return destIdentityUser(current, destIdentityProjectId())
 	} catch {
 		return null
@@ -81,7 +85,7 @@ export async function revokeCurrentSessions(userAgent?: string): Promise<void> {
 		return
 	}
 	try {
-		await destIdentityJson(DEST_PEELS.identity, '/v1/client/sign-out', {
+		await destIdentityJson(destIdentityOrigin(env.SYLPHX_AUTH_URL), '/v1/client/sign-out', {
 			method: 'POST',
 			credential: token,
 			headers: { 'user-agent': userAgent ?? (await browserUserAgent()) },
@@ -121,7 +125,7 @@ export function identityDestAdmission(): {
 	if (!projectId) {
 		throw new Error('identity_project_unconfigured')
 	}
-	return { origin: DEST_PEELS.identity, credential, projectId }
+	return { origin: destIdentityOrigin(env.SYLPHX_AUTH_URL), credential, projectId }
 }
 
 export type OAuthProvider = string

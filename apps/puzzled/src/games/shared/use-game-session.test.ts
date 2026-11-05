@@ -37,19 +37,20 @@ afterAll(async () => {
 	await GlobalRegistrator.unregister()
 })
 
+function Probe({ holder, requireServerAccept }: { holder: Harness; requireServerAccept: boolean }) {
+	holder.current = useGameSession({
+		gameSlug: 'sudoku',
+		resultModalDelay: DELAY,
+		requireServerAccept,
+	})
+	return null
+}
+
 async function mount(requireServerAccept: boolean) {
 	const holder = {} as Harness
-	function Probe() {
-		holder.current = useGameSession({
-			gameSlug: 'sudoku',
-			resultModalDelay: DELAY,
-			requireServerAccept,
-		})
-		return null
-	}
 	const root = createRoot(document.createElement('div'))
 	await React.act(async () => {
-		root.render(React.createElement(Probe))
+		root.render(React.createElement(Probe, { holder, requireServerAccept }))
 	})
 	return { holder, root }
 }

@@ -52,6 +52,14 @@ describe('puzzled web listen bind', () => {
 				'process.stdout.write(process.env.HOSTNAME + "\\n" + process.env.PORT)\n',
 			)
 			copyFileSync(startWebPath, join(root, 'start-web.cjs'))
+			for (const file of [
+				'shared-home-register.cjs',
+				'shared-home-server.cjs',
+				'shared-home-policy.cjs',
+				'public-assets.cjs',
+			]) {
+				copyFileSync(new URL(`../../${file}`, import.meta.url), join(root, file))
+			}
 			const result = spawnSync(process.execPath, ['start-web.cjs'], {
 				cwd: root,
 				env: {

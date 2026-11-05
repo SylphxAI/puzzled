@@ -1,9 +1,9 @@
 # Content Security Policy
 
-Every response from the web app carries a strict, per-request Content
-Security Policy. `src/proxy.ts` creates a fresh nonce for each request and
-builds the policy with `buildCsp` in `src/lib/csp.ts`. The static policy in
-`next.config.ts` is gone.
+Every response from the web app carries a strict Content Security Policy.
+`src/proxy.ts` creates fresh nonces for private documents and builds the policy
+with `buildCsp` in `src/lib/csp.ts`. The anonymous shared home uses hashes of
+its complete representation, described below.
 
 ## The policy
 
@@ -27,8 +27,7 @@ form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   chunk scripts) and as `x-nonce`. The locale layout reads `x-nonce` for the
   theme and consent-settle scripts and passes it to next-themes. JSON-LD
   blocks (`type="application/ld+json"`) are data, not script, and need none.
-- **Pages are dynamic.** Every page was already rendered per request
-  (`force-dynamic`, `private, no-store`), so the nonce costs no caching.
+- **Private pages are dynamic.** They render per request with `private, no-store`.
 - **`worker-src 'self'`** is explicit because `'strict-dynamic'` ignores
   `'self'` in `script-src`, which is the service worker's fallback.
 - **Ads (only when configured).** With `ADS_ADSENSE_CLIENT_ID` and `ADS_SLOT_ID` set, `buildCsp`
@@ -42,6 +41,28 @@ form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 - **No other third-party scripts.** Checkout is a redirect to a hosted checkout page, and
   analytics and replays are gone, so Stripe, PostHog, Vercel, GTM, Neon and
   Cloudflare hosts are no longer listed.
+
+## Anonymous shared home
+
+Only `GET /` with no query and no Cookie, Authorization, RSC, router or action
+selector gets this profile. The proxy strips any incoming profile/nonce headers
+before making that decision. Other pages, including `/pricing`, keep their nonce.
+
+`shared-home-server.cjs` buffers this response until completion, hashes the exact
+inline script bytes, and gives each external Next entry script and script preload
+its exact SHA-256 integrity and anonymous CORS attributes. `script-src` keeps
+`strict-dynamic` with those hashes; it adds no script origin allowance. The same
+policy authorizes runtime-created lazy chunks. A missing script, unexpected nonce
+or failed transformation returns a private 503.
+
+Public cache admission additionally requires a matching, complete public asset
+publication receipt, successful complete HTML, no render error and no Set-Cookie.
+Redirects and private traffic keep their existing response behavior. See
+[public landing delivery](public-page-delivery.md) for identity and freshness.
+
+Production uses the configured public Data asset origin for CSS, fonts and chunk
+fetches. It adds no script host authority: scripts still require a nonce or an
+exact hash with SRI.
 
 ## Exception: `style-src 'unsafe-inline'`
 

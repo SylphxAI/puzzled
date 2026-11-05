@@ -142,3 +142,138 @@ client/time mixture. Require an independent count, full output cardinality,
 logging coverage and topology controls. With n=0, report no eligible demand,
 not a latency pass. Synthetic reads and local tests are separate evidence;
 shipping a one-query read does not itself prove the production target.
+
+## Full 24-hour result: raw target met, stable-mixture outcome not established
+
+The frozen follow-up above was read on **2026-11-04 at 00:17:32–00:17:41
+UTC**, without moving its start/end or dropping errors. The aggregate receipt,
+query hashes, client/hour strata, source lineage and functional checks are in
+[`today-overview-2026-11-04.json`](today-overview-2026-11-04.json). The broad
+executable predicate is `agent:~"Mozilla"` (contains Mozilla); only the narrower
+predicate is anchored to `^Mozilla/`.
+
+| Cohort | Distinct selected-edge n | P50 / P95 / P99 (ms) | HTTP 4xx / 5xx / status 0 |
+| --- | ---: | ---: | ---: |
+| Broad follow-up | 195 | 25 / 147 / 511 | 0 / 0 / 1 |
+| Narrower follow-up | 156 | 24 / 147 / 511 | 0 / 0 / 1 |
+
+Raw P95 is 64.7% below the narrower 416ms baseline and 65.7% below the broad
+428ms baseline. Thus the observed raw metric meets the corrected half-baseline
+thresholds, **208ms narrower / 214ms broad**, and the separately retained,
+stricter 202ms goal. These figures are not a composition-controlled or causal
+estimate of the optimization's benefit.
+
+Both populations retain the same one status-0 `DC` access record: **984ms** at
+2026-11-03 02:06:34.871670105 UTC. The other records are HTTP 200 with flag `-`
+(narrower 155, broad 194). It is not removed or replaced by a successful-only
+percentile. P99 is particularly sparse: 156 observations leave roughly two
+records in the upper 1%; this does not establish a stable population P99.
+
+### Measurement controls
+
+- Separate count-only queries agree at 195 and 156. They share the selection
+  pipeline, so this is internal denominator consistency, not independent source
+  validation. No result reaches the 500-row output limit; the largest main-query
+  output is 25 rows and the five-minute control returns 289.
+- Parser control finds 10,945 records in the multi-environment, pre-agent-filter
+  search scope and zero missing method, path, agent, authority or duration
+  captures. It cannot validate records excluded by the initial search.
+- The all-route Puzzled Mozilla-shaped upstream census contains only the same
+  two ports: outer 80, n=522; inner 8012, n=522. These aggregate equal totals
+  still do not prove request-by-request pairing.
+- The Contour positive control contains 2,646,626 log rows across every one of
+  the 289 intersecting five-minute bins, from 00:15:09.706 UTC on November 3
+  through 00:15:06.505 UTC on November 4. No whole five-minute logging gap is
+  observed. Positive controls are not proof of lossless logging, nor a repair
+  of the baseline's missing first 1h42.
+
+### Disconfirming client/time-mixture check
+
+The cohorts have the same UA rules, but their composition changed materially.
+These groups are first-matching UA regex tokens, not authoritative browser
+identities: for example, an Edge UA containing `Chrome/` before `Edg/` falls in
+the Chrome bucket.
+
+| Narrower browser/device group | Retained baseline n / share | Follow-up n / share | Baseline / follow-up P95 (ms) |
+| --- | ---: | ---: | ---: |
+| Chrome / Macintosh | 964 / 49.9% | 19 / 12.2% | 435 / 984 |
+| Chrome / Windows | 521 / 27.0% | 75 / 48.1% | 281 / 113 |
+| Chrome / Linux | 290 / 15.0% | 22 / 14.1% | 345 / 73 |
+| Safari / iPhone | 102 / 5.3% | 29 / 18.6% | 683 / 99 |
+
+The follow-up Chrome/Macintosh group has **2 of 19** records above 202ms,
+208ms **and 416ms**. Applying that conditional exceedance rate to its retained
+full-baseline weight alone gives:
+
+```text
+(964 / 1930) × (2 / 19) = 5.2577% above each threshold
+```
+
+This is already above 5%, before any contribution from other groups. Over the
+common strata, whose baseline denominator is 1,928 rather than 1,930, the
+renormalized point estimate is 5.2632%. The unsupported two baseline records
+are Chrome with no extracted device family. Neither calculation averages
+percentiles. The diagnostic was added after the frozen raw read; it is not a
+replacement cohort or a second acceptance window.
+
+Consequently, the observed raw pass **does not establish the half-P95 outcome
+at a stable baseline client mixture**. The 19-record conditional sample is
+small: this is a plug-in baseline-standardized diagnostic that does not support
+a composition-robust pass claim, not a confidence bound, proof of a caused
+regression, or an irreducible floor.
+Time mixture also changed: UTC hour 02 supplies 52/156 (33.3%) follow-up
+records, versus 94/1,930 (4.9%) in the retained baseline; hour 23 supplies
+29/156 (18.6%) versus 29/1,930 (1.5%). Ordinary-UA automation remains possible.
+
+The weights above come from the retained corrected November 3 baseline, whose
+counts agree with its 1,930-record denominator. A later historical query
+returned fewer records and was not substituted for those frozen weights;
+continued historical availability has not been proved.
+
+### Source lineage and fresh functional receipt
+
+The window contains completed request-phase events from `06ed26` (224),
+`46b56d` (86), and `b849fb` (4), all HTTP 200. These events include non-cohort
+traffic and are not joined to the ingress sample; cancelled requests may have
+no completed event. Their phase percentiles are diagnostic, not a substitute
+for the all-status acceptance instrument.
+
+Both later source revisions descend from `06ed26`, and their entire
+`puzzled-core/src` and `puzzled-server/src` trees are unchanged relative to it.
+The overview, SQL and timing-observer blob identities are recorded in the
+receipt. Dependencies did change (`jsonwebtoken` 10.3 to 11.0; test-only
+`ed25519-dalek` 2 to 3), and web changes also shipped. This is not a controlled
+single-release experiment.
+
+At 2026-11-04 00:17 UTC, public health and the 100% serving API revision both
+reported `46b56d59f9f207bacc65c3a23da33438d94fa6f3`. The read-only live harness
+at 00:19:02 UTC exited **0: eight passed, zero failed**, with only the guest
+finish intentionally not attempted. It verified that SHA, PostgreSQL
+readiness, Hong Kong day `2026-11-04`, the free `crowns` puzzle, no answer keys,
+two solved signatures absent from the share page, paid/archive refusals and
+future-date rejection. No guest finish or production record was written.
+
+**Verdict:** the uncached one-query implementation is shipped and its raw
+24-hour P95 target is met. Composition-robust tail reduction, a causal saving
+and an irreducible latency floor are **not established**. Keep the correct
+one-query implementation; do not declare the broader performance outcome
+complete or add speculative caching, warm replicas, indexes or shared-database
+changes from this sample.
+
+### Receipt delivery checks
+
+The required secret scan initially classified a public deployed Git revision in
+the aggregate JSON as a credential. The exact introducing commit, file, line
+and complete-line SHA-256 were reviewed and recorded in the supported
+`.desk-secret-allowlist.json`; no credential exception or scanner bypass was
+added. The pull-request check passed, but merge-group run `41747599894`
+rejected the same line after the queue attributed it to its synthetic
+single-parent squash commit.
+
+A fresh source read on 2026-11-04 found that the consumer's `needs-pass` pin
+predated the already-merged shared squash support
+([shared delivery #375](https://github.com/SylphxAI/.github/pull/375)). The
+receipt updates only that required action pin to the immutable existing fix,
+`0546ef1e30776427b845d068895f7737eee43f84`, rather than adding a product
+exception or changing the shared scanner. The failed jobs remain part of the
+delivery record; a passing pull-request job is not a merge-group verdict.

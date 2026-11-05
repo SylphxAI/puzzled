@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { cache, Suspense } from 'react'
 import { DISMISSED_COOKIE } from '@/features/announcements/lib/dismissed'
@@ -51,8 +51,9 @@ import { slugToCamelCase } from '@/lib/game-slug'
 import { currentUser, type IdentityUser } from '@/lib/identity/server'
 import { logger } from '@/lib/logger'
 import { withPresentationDeadline } from '@/lib/presentation-document'
-import { PRODUCT_DAY_TZ, productDayKey } from '@/lib/product-day'
+import { nextProductDayStart, PRODUCT_DAY_TZ, productDayKey } from '@/lib/product-day'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
+import { SHARED_HOME_HEADER } from '../../../../shared-home-policy.cjs'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -317,9 +318,10 @@ export default async function HomePage({ params }: Props) {
 	// identity/Connect reads land in the islands below.
 	const t = await getTranslations()
 	const tHome = await getTranslations('home')
+	const sharedHome = (await headers()).get(SHARED_HOME_HEADER) === '1'
 	// Cookie-only read (no network): does this viewer have progress we owe them a
 	// placeholder for, rather than guest copy that may be wrong for a member?
-	const hasProgressIdentity = await hasServerProgressIdentity()
+	const hasProgressIdentity = !sharedHome && (await hasServerProgressIdentity())
 	// One server instant keeps the rotation, puzzle number and both streamed
 	// date labels on the same product day even while a request crosses midnight.
 	const now = new Date()
@@ -366,41 +368,60 @@ export default async function HomePage({ params }: Props) {
 		: tomorrowsFreeGame
 
 	return (
-		<main className="flex-1">
+		<main
+			className="flex-1"
+			data-puzzled-shared-home-until={sharedHome ? nextProductDayStart(now).getTime() : undefined}
+		>
 			<SeasonalBanner />
-			<Suspense
-				fallback={
-					hasProgressIdentity ? (
-						// Personal numbers are owed but unread: claim nothing, keep the
-						// geometry (`HomeDaySkeleton`).
-						<HomeDaySkeleton />
-					) : (
-						// A first-time visitor sees the real visitor day immediately —
-						// the same thing the island below renders, so nothing swaps.
-						<HomeDayFallback
-							locale={locale}
-							dateLabel={formatProductDay(now, locale)}
-							puzzleNumber={puzzleNumber}
-							freeGame={freeGame}
-						/>
-					)
-				}
-			>
-				<HomeDayIsland
+			{sharedHome ? (
+				<HomeDayFallback
 					locale={locale}
 					dateLabel={formatProductDay(now, locale)}
 					puzzleNumber={puzzleNumber}
 					freeGame={freeGame}
 				/>
-			</Suspense>
+			) : (
+				<Suspense
+					fallback={
+						hasProgressIdentity ? (
+							// Personal numbers are owed but unread: claim nothing, keep the
+							// geometry (`HomeDaySkeleton`).
+							<HomeDaySkeleton />
+						) : (
+							// A first-time visitor sees the real visitor day immediately —
+							// the same thing the island below renders, so nothing swaps.
+							<HomeDayFallback
+								locale={locale}
+								dateLabel={formatProductDay(now, locale)}
+								puzzleNumber={puzzleNumber}
+								freeGame={freeGame}
+							/>
+						)
+					}
+				>
+					<HomeDayIsland
+						locale={locale}
+						dateLabel={formatProductDay(now, locale)}
+						puzzleNumber={puzzleNumber}
+						freeGame={freeGame}
+					/>
+				</Suspense>
+			)}
 
-			<Suspense
-				fallback={
-					hasProgressIdentity ? <TodayLineupSkeleton /> : <TodayLineup games={rotationLineup} />
-				}
-			>
-				<HomeLineupIsland freeGameSlug={todaysFreeGame} metadataBySlug={metadataBySlug} />
-			</Suspense>
+			{sharedHome ? (
+				<>
+					<TodayLineup games={rotationLineup} />
+					<ValueStrip />
+				</>
+			) : (
+				<Suspense
+					fallback={
+						hasProgressIdentity ? <TodayLineupSkeleton /> : <TodayLineup games={rotationLineup} />
+					}
+				>
+					<HomeLineupIsland freeGameSlug={todaysFreeGame} metadataBySlug={metadataBySlug} />
+				</Suspense>
+			)}
 			<TomorrowBand gameName={tomorrowsFreeGameName} />
 			<MarketingFaq
 				id="home-faq"
