@@ -57,8 +57,14 @@ async fn read(State(state): State<Shared>, Path(id): Path<String>) -> (StatusCod
 }
 async fn remote(state: Shared) -> Money {
     let app = Router::new()
-        .route("/env/checkout_sessions", post(create))
-        .route("/env/checkout_sessions/{id}", get(read))
+        .route(
+            "/v1/orgs/o/projects/p/envs/e/checkout_sessions",
+            post(create),
+        )
+        .route(
+            "/v1/orgs/o/projects/p/envs/e/checkout_sessions/{id}",
+            get(read),
+        )
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
@@ -66,7 +72,7 @@ async fn remote(state: Shared) -> Money {
         axum::serve(listener, app).await.unwrap();
     });
     Money::new(
-        &format!("http://{address}/env"),
+        &format!("http://{address}/v1/orgs/o/projects/p/envs/e"),
         "example-key",
         "https://product.example",
     )
