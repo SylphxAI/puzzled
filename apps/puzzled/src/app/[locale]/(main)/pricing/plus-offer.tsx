@@ -14,6 +14,7 @@ type Props = {
 	monthly: PlanCard | undefined
 	locale: string
 	signedIn: boolean
+	initialPlanId?: string
 }
 
 /**
@@ -22,10 +23,11 @@ type Props = {
  * `SubscribeButton`, so checkout is wired exactly as before; this only chooses
  * which plan it starts.
  */
-export function PlusOffer({ once, yearly, monthly, locale, signedIn }: Props) {
+export function PlusOffer({ once, yearly, monthly, locale, signedIn, initialPlanId }: Props) {
 	const t = useTranslations('plus.pricing')
 	const [interval, setInterval] = useState<'once' | 'year' | 'month'>(
-		yearly ? 'year' : monthly ? 'month' : 'once',
+		[once, yearly, monthly].find((card) => card?.id === initialPlanId)?.interval ??
+			(yearly ? 'year' : monthly ? 'month' : 'once'),
 	)
 	const selected = interval === 'once' ? once : interval === 'year' ? yearly : monthly
 	if (!selected) return null
@@ -95,6 +97,7 @@ export function PlusOffer({ once, yearly, monthly, locale, signedIn }: Props) {
 			) : null}
 			<div className="mt-4">
 				<SubscribeButton
+					key={`${selected.id}:${selected.currency}`}
 					planId={selected.id}
 					currency={selected.currency}
 					amountMinor={selected.amountMinor}

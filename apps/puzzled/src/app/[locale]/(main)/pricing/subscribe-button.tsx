@@ -42,7 +42,10 @@ export function SubscribeButton({
 	if (!signedIn) {
 		return (
 			<Link
-				href={{ pathname: '/login', query: { callbackUrl: '/pricing' } }}
+				href={{
+					pathname: '/login',
+					query: { callbackUrl: `/pricing?plan=${encodeURIComponent(planId)}#plus` },
+				}}
 				className={buttonClass}
 			>
 				{t('signInToSubscribe')}
