@@ -319,9 +319,9 @@ describe('money catalogue workflow and reader', () => {
 			const source = readFileSync(join(root, file), 'utf8')
 			if (file.endsWith('/client.rs')) {
 				expect(source).toContain(
-					'.get(format!("{}/price_catalogs/default", self.env_url().await?))',
+					'format!("{}/price_catalogs/default", self.environment_resource().await?)',
 				)
-				expect(source).not.toContain('.get(format!("{}/catalogs/default"')
+				expect(source).not.toContain('format!("{}/catalogs/default"')
 			} else {
 				expect(source).toContain('.route("/env/price_catalogs/default", get(catalog))')
 				expect(source).not.toContain('.route("/env/catalogs/default"')
