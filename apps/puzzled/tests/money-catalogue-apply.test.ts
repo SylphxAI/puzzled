@@ -323,10 +323,11 @@ describe('money catalogue workflow and reader', () => {
 					'"name": format!("{}/price_catalogs/default", self.environment_resource().await?)',
 				)
 				expect(source).not.toContain('"money.catalogs.get"')
+				expect(source).not.toContain('"{}/catalogs/default"')
 			} else {
 				expect(source).toContain('"/v1/orgs/o/projects/p/envs/e/price_catalogs/default"')
-				// One fixture deliberately exposes the obsolete route to prove it is never called.
-				expect(source).not.toContain('.route("/env/catalogs/default"')
+				// The obsolete full route is a negative fixture, never the reader target.
+				expect(source).not.toContain('/env/catalogs/default')
 			}
 		}
 	})

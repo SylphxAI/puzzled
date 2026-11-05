@@ -30,7 +30,22 @@ const CLICK_PARAMS = [
 	['gclid', 'g'],
 	['gbraid', 'gb'],
 	['wbraid', 'wb'],
+	['fbclid', 'fb'],
 ] as const
+
+const REDIRECT_PARAMS = ['next', 'nextUrl', 'redirect', 'returnTo', 'callbackUrl'] as const
+
+function embeddedRedirectSearch(params: URLSearchParams): URLSearchParams | null {
+	for (const key of REDIRECT_PARAMS) {
+		const raw = params.get(key)?.trim()
+		if (!raw) continue
+		const qIndex = raw.indexOf('?')
+		if (qIndex === -1) continue
+		const query = raw.slice(qIndex + 1).split('#')[0]
+		if (query) return new URLSearchParams(query)
+	}
+	return null
+}
 
 /** A click id is 1-100 of letters, digits, `-` and `_`; anything else is dropped. */
 export function cleanClickId(value: string | null): string | null {
@@ -60,16 +75,18 @@ export function attributionCookieValue(
 	allow: { tags?: boolean; clickId?: boolean } = { tags: true },
 ): string | null {
 	const params = new URLSearchParams(search)
+	const embedded = embeddedRedirectSearch(params)
+	const readParam = (name: string): string | null => params.get(name) ?? embedded?.get(name) ?? null
 	const out = new URLSearchParams()
 	if (allow.tags) {
 		for (const [name, key] of PARAMS) {
-			const value = clean(params.get(name))
+			const value = clean(readParam(name))
 			if (value) out.set(key, value)
 		}
 	}
 	if (allow.clickId) {
 		for (const [name, key] of CLICK_PARAMS) {
-			const value = cleanClickId(params.get(name))
+			const value = cleanClickId(readParam(name))
 			if (value) out.set(key, value)
 		}
 	}

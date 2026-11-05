@@ -14,8 +14,12 @@ but not on sale until payments run through Sylphx Money, the platform's payments
 service ([pricing and policy](docs/monetization.md)).
 
 A public product overview and curated page links are available at
-[`/llms.txt`](https://puzzled.gg/llms.txt). The plain-text route keeps the
-Puzzled name separate from its publisher attribution.
+[`/llms.txt`](https://puzzled.gg/llms.txt), with every game drawn from the game
+registry and the public contact address. Homepage JSON-LD describes the web app
+and its free daily offer and Plus subscriptions using the commercial catalogue;
+the organization identifies the legal operator separately from the Puzzled brand.
+Browser coverage for discovery and statutory disclosures lives in
+`apps/puzzled/e2e-tests/discovery.e2e.ts` and `llms.e2e.ts`.
 
 - Goal, users and what we will not do: [docs/vision.md](docs/vision.md)
 - Capabilities and their status: [docs/capabilities.md](docs/capabilities.md)
