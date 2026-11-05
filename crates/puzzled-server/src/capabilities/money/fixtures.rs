@@ -47,9 +47,7 @@ async fn register() -> Result<(), ()> {
         .timeout(Duration::from_secs(10))
         .build()
         .map_err(|_| ())?;
-    let auth_url = resolve_env_url(&origin, &key)
-        .await
-        .map_err(|_| ())?;
+    let auth_url = resolve_env_url(&origin, &key).await.map_err(|_| ())?;
     let money = Money::from_env().ok_or(())?;
     if auth_url != format!("{}/v1/{expected}", origin.trim_end_matches('/'))
         || money.environment_resource().await.map_err(|_| ())? != expected

@@ -284,7 +284,9 @@ impl sylphx::Transport for WithHeaders<'_> {
         &self,
         request: sylphx::HttpRequest,
     ) -> Result<sylphx::HttpResponse, sylphx::Error> {
-        self.transport.send_with_headers(request, self.headers).await
+        self.transport
+            .send_with_headers(request, self.headers)
+            .await
     }
 }
 
@@ -410,9 +412,10 @@ impl Money {
     #[must_use]
     pub fn new(env_url: &str, secret_key: &str, public_url: &str) -> Self {
         let trimmed_env = env_url.trim_end_matches('/').to_string();
-        let origin = trimmed_env
-            .split_once("/v1/")
-            .map_or_else(|| DEFAULT_API_URL.to_string(), |(origin, _)| origin.to_string());
+        let origin = trimmed_env.split_once("/v1/").map_or_else(
+            || DEFAULT_API_URL.to_string(),
+            |(origin, _)| origin.to_string(),
+        );
         let sdk = sdk(&origin, secret_key);
         let base = Arc::new(tokio::sync::OnceCell::new());
         if !trimmed_env.is_empty() {
@@ -780,7 +783,10 @@ impl Money {
         id: &str,
         session: &Value,
     ) -> Result<Value, MoneyError> {
-        let headers = [("Idempotency-Key".to_string(), format!("puzzled-checkout-{id}"))];
+        let headers = [(
+            "Idempotency-Key".to_string(),
+            format!("puzzled-checkout-{id}"),
+        )];
         sylphx::Client::new(WithHeaders {
             transport: self.sdk.transport(),
             headers: &headers,
