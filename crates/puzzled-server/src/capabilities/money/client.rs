@@ -260,7 +260,7 @@ type CatalogSlot = Option<(Instant, Arc<Catalog>)>;
 
 #[derive(Clone)]
 pub struct Money {
-    http: reqwest::Client,
+    sdk: Arc<sylphx::Client>,
     /// `https://api.sylphx.com`.
     origin: String,
     /// The environment's resource URL,
@@ -274,11 +274,50 @@ pub struct Money {
     catalog: Arc<Mutex<CatalogSlot>>,
 }
 
+struct WithHeaders<'a> {
+    transport: &'a sylphx::HttpTransport,
+    headers: &'a [(String, String)],
+}
+
+impl sylphx::Transport for WithHeaders<'_> {
+    async fn send(
+        &self,
+        request: sylphx::HttpRequest,
+    ) -> Result<sylphx::HttpResponse, sylphx::Error> {
+        self.transport.send_with_headers(request, self.headers).await
+    }
+}
+
 fn env_value(name: &str) -> Option<String> {
     std::env::var(name)
         .ok()
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
+}
+
+fn redact_error(message: &str, secret_key: &str) -> String {
+    let trimmed = secret_key.trim();
+    if trimmed.is_empty() {
+        message.to_string()
+    } else {
+        message.replace(trimmed, "[redacted]")
+    }
+}
+
+pub(super) fn sdk(origin: &str, secret_key: &str) -> Arc<sylphx::Client> {
+    let mut builder = sylphx::HttpTransport::builder()
+        .base_url(origin.trim_end_matches('/'))
+        .timeout(REQUEST_TIMEOUT)
+        .max_retries(0);
+    let key = secret_key.trim();
+    if !key.is_empty() {
+        builder = builder.api_key(key);
+    }
+    Arc::new(sylphx::Client::new(
+        builder
+            .build()
+            .expect("valid Money transport configuration"),
+    ))
 }
 
 /// The environment URL from a `whoami` body. `env` is the environment's full
@@ -308,27 +347,27 @@ pub(super) fn env_url(origin: &str, whoami: &Value) -> Result<String, MoneyError
 /// The environment resource URL a key belongs to, from its `whoami`:
 /// `{origin}/v1/orgs/{org}/projects/{project}/envs/{env}`. The key must be
 /// scoped to an environment.
-pub async fn resolve_env_url(
-    http: &reqwest::Client,
+pub async fn resolve_env_url(origin: &str, key: &str) -> Result<String, MoneyError> {
+    resolve_env_url_with(&sdk(origin, key), origin, key).await
+}
+
+async fn resolve_env_url_with(
+    sdk: &sylphx::Client,
     origin: &str,
     key: &str,
 ) -> Result<String, MoneyError> {
-    let response = http
-        .get(format!("{origin}/v1/whoami"))
-        .bearer_auth(key)
-        .send()
-        .await
-        .map_err(|e| MoneyError::Unavailable(format!("whoami failed: {e}")))?;
-    if !response.status().is_success() {
-        return Err(MoneyError::Unavailable(format!(
-            "whoami answered {}",
-            response.status()
-        )));
-    }
-    let body: Value = response
-        .json()
-        .await
-        .map_err(|e| MoneyError::Unavailable(format!("whoami unreadable: {e}")))?;
+    let me = sdk.access().whoami(Default::default()).await.map_err(|e| {
+        MoneyError::Unavailable(format!(
+            "whoami failed: {}",
+            redact_error(&e.to_string(), key)
+        ))
+    })?;
+    let body = serde_json::to_value(me).map_err(|e| {
+        MoneyError::Unavailable(format!(
+            "whoami unreadable: {}",
+            redact_error(&e.to_string(), key)
+        ))
+    })?;
     env_url(origin, &body)
 }
 
@@ -358,8 +397,10 @@ impl Money {
     /// A client whose environment URL is read from the key on first use.
     #[must_use]
     pub fn discovering(origin: &str, secret_key: &str, public_url: &str) -> Self {
+        let origin = origin.trim_end_matches('/').to_string();
         let mut money = Self::new("", secret_key, public_url);
-        money.origin = origin.trim_end_matches('/').to_string();
+        money.origin.clone_from(&origin);
+        money.sdk = sdk(&origin, secret_key);
         money.base = Arc::default();
         money
     }
@@ -368,17 +409,18 @@ impl Money {
     /// resolved it).
     #[must_use]
     pub fn new(env_url: &str, secret_key: &str, public_url: &str) -> Self {
-        let http = reqwest::Client::builder()
-            .timeout(REQUEST_TIMEOUT)
-            .build()
-            .unwrap_or_default();
+        let trimmed_env = env_url.trim_end_matches('/').to_string();
+        let origin = trimmed_env
+            .split_once("/v1/")
+            .map_or_else(|| DEFAULT_API_URL.to_string(), |(origin, _)| origin.to_string());
+        let sdk = sdk(&origin, secret_key);
         let base = Arc::new(tokio::sync::OnceCell::new());
-        if !env_url.is_empty() {
-            let _ = base.set(env_url.trim_end_matches('/').to_string());
+        if !trimmed_env.is_empty() {
+            let _ = base.set(trimmed_env);
         }
         Self {
-            http,
-            origin: DEFAULT_API_URL.to_string(),
+            sdk,
+            origin,
             base,
             secret_key: secret_key.to_string(),
             public_url: public_url.trim_end_matches('/').to_string(),
@@ -390,7 +432,7 @@ impl Money {
     /// The environment resource URL, discovered once and kept.
     async fn env_url(&self) -> Result<&str, MoneyError> {
         self.base
-            .get_or_try_init(|| resolve_env_url(&self.http, &self.origin, &self.secret_key))
+            .get_or_try_init(|| resolve_env_url_with(&self.sdk, &self.origin, &self.secret_key))
             .await
             .map(String::as_str)
     }
@@ -414,46 +456,55 @@ impl Money {
         &self.public_url
     }
 
-    async fn call(&self, request: reqwest::RequestBuilder) -> Result<Value, MoneyError> {
-        let response = request
-            .bearer_auth(&self.secret_key)
-            .send()
-            .await
-            .map_err(|e| MoneyError::Unavailable(e.to_string()))?;
-        let status = response.status();
-        let body: Value = response.json().await.unwrap_or(Value::Null);
-        if status.is_success() {
-            return Ok(body);
+    fn map_sdk_error(&self, error: sylphx::Error) -> MoneyError {
+        match error {
+            sylphx::Error::Api {
+                status,
+                code,
+                detail,
+                problem,
+                ..
+            } if (400..500).contains(&status) && status != 408 && status != 429 => {
+                let raw_code = [
+                    problem.code.as_str(),
+                    code.as_str(),
+                    problem.title.as_str(),
+                    detail.as_str(),
+                ]
+                .into_iter()
+                .find(|s| !s.is_empty())
+                .unwrap_or("refused");
+                let problem_value = serde_json::to_value(&*problem).unwrap_or(Value::Null);
+                MoneyError::Refused {
+                    status,
+                    code: redact_error(raw_code, &self.secret_key),
+                    note: redact_error(&problem_note(&problem_value), &self.secret_key),
+                }
+            }
+            other => MoneyError::Unavailable(redact_error(&other.to_string(), &self.secret_key)),
         }
-        if status.is_server_error() {
-            return Err(MoneyError::Unavailable(format!("status {status}")));
-        }
-        let code = ["code", "title", "detail"]
-            .iter()
-            .find_map(|key| body.get(key).and_then(Value::as_str))
-            .unwrap_or("refused")
-            .to_string();
-        Err(MoneyError::Refused {
-            status: status.as_u16(),
-            code,
-            note: problem_note(&body),
-        })
     }
 
     /// One entitlement check, uncached. `feature` is a catalogue feature key.
     pub async fn check_uncached(&self, user_id: &str, feature: &str) -> Result<Grant, MoneyError> {
         let body = self
-            .call(
-                self.http
-                    .post(format!(
-                        "{}/entitlement_grants:check",
-                        self.env_url().await?
-                    ))
-                    .json(&json!({"subject": {"end_user": user_id}, "feature": feature})),
+            .sdk
+            .invoke(
+                "money.entitlement_grants.check",
+                json!({
+                    "parent": self.environment_resource().await?,
+                    "subject": {"end_user": user_id},
+                    "feature": feature,
+                }),
             )
-            .await?;
-        let parsed: CheckResponse = serde_json::from_value(body)
-            .map_err(|e| MoneyError::Unavailable(format!("unreadable answer: {e}")))?;
+            .await
+            .map_err(|e| self.map_sdk_error(e))?;
+        let parsed: CheckResponse = serde_json::from_value(body).map_err(|e| {
+            MoneyError::Unavailable(format!(
+                "unreadable answer: {}",
+                redact_error(&e.to_string(), &self.secret_key)
+            ))
+        })?;
         let ends = parsed
             .expire_time
             .as_deref()
@@ -540,15 +591,21 @@ impl Money {
             }
         }
         let body = self
-            .call(
-                self.http
-                    .get(format!("{}/price_catalogs/default", self.env_url().await?)),
+            .sdk
+            .invoke(
+                "money.price_catalogs.get",
+                json!({
+                    "name": format!("{}/price_catalogs/default", self.environment_resource().await?),
+                }),
             )
-            .await?;
-        let catalog: Arc<Catalog> = Arc::new(
-            serde_json::from_value(body)
-                .map_err(|e| MoneyError::Unavailable(format!("unreadable catalogue: {e}")))?,
-        );
+            .await
+            .map_err(|e| self.map_sdk_error(e))?;
+        let catalog: Arc<Catalog> = Arc::new(serde_json::from_value(body).map_err(|e| {
+            MoneyError::Unavailable(format!(
+                "unreadable catalogue: {}",
+                redact_error(&e.to_string(), &self.secret_key)
+            ))
+        })?);
         if let Ok(mut slot) = self.catalog.lock() {
             *slot = Some((Instant::now(), catalog.clone()));
         }
@@ -560,21 +617,24 @@ impl Money {
     /// filter Money ignores cannot hide or invent a match. Any error is
     /// returned: the caller must fail closed rather than assume "none".
     pub async fn subscriptions(&self, user_id: &str) -> Result<Vec<Subscription>, MoneyError> {
+        let parent = self.environment_resource().await?;
         let filter = format!("subject.end_user = \"{}\"", user_id.replace('"', ""));
         let mut token = String::new();
         let mut found = Vec::new();
         loop {
-            let mut query = vec![("filter", filter.as_str()), ("page_size", "100")];
-            if !token.is_empty() {
-                query.push(("page_token", token.as_str()));
-            }
             let body = self
-                .call(
-                    self.http
-                        .get(format!("{}/customer_subscriptions", self.env_url().await?))
-                        .query(&query),
+                .sdk
+                .invoke(
+                    "money.customer_subscriptions.list",
+                    json!({
+                        "parent": parent,
+                        "filter": filter,
+                        "page_size": 100,
+                        "page_token": token,
+                    }),
                 )
-                .await?;
+                .await
+                .map_err(|e| self.map_sdk_error(e))?;
             for sub in body
                 .get("customer_subscriptions")
                 .and_then(Value::as_array)
@@ -636,12 +696,19 @@ impl Money {
     /// A hosted billing-portal page for `user_id` (payment method, invoices).
     pub async fn portal_url(&self, user_id: &str, return_url: &str) -> Result<String, MoneyError> {
         let body = self
-            .call(
-                self.http
-                    .post(format!("{}/portal_sessions", self.env_url().await?))
-                    .json(&json!({"subject": {"end_user": user_id}, "return_url": return_url})),
+            .sdk
+            .invoke(
+                "money.portal_sessions.create",
+                json!({
+                    "parent": self.environment_resource().await?,
+                    "portal_session": {
+                        "subject": {"end_user": user_id},
+                        "return_url": return_url,
+                    },
+                }),
             )
-            .await?;
+            .await
+            .map_err(|e| self.map_sdk_error(e))?;
         body.get("url")
             .and_then(Value::as_str)
             .filter(|url| !url.is_empty())
@@ -651,43 +718,54 @@ impl Money {
 
     /// End a subscription at its period end (no refund: owner#779).
     pub async fn cancel_at_period_end(&self, id: &str) -> Result<(), MoneyError> {
-        self.call(
-            self.http
-                .post(format!(
-                    "{}/customer_subscriptions/{}:cancel",
-                    self.env_url().await?,
-                    segment(id)
-                ))
-                .json(&json!({"at_period_end": true})),
-        )
-        .await
-        .map(|_| ())
+        let sub_id = segment(id);
+        if sub_id.is_empty() {
+            return Err(MoneyError::Unavailable("bad subscription name".into()));
+        }
+        self.sdk
+            .invoke(
+                "money.customer_subscriptions.cancel",
+                json!({
+                    "name": format!("{}/customer_subscriptions/{sub_id}", self.environment_resource().await?),
+                    "at_period_end": true,
+                }),
+            )
+            .await
+            .map(|_| ())
+            .map_err(|e| self.map_sdk_error(e))
     }
 
     /// Undo a pending cancellation.
     pub async fn resume(&self, id: &str) -> Result<(), MoneyError> {
-        self.call(
-            self.http
-                .post(format!(
-                    "{}/customer_subscriptions/{}:resume",
-                    self.env_url().await?,
-                    segment(id)
-                ))
-                .json(&json!({})),
-        )
-        .await
-        .map(|_| ())
+        let sub_id = segment(id);
+        if sub_id.is_empty() {
+            return Err(MoneyError::Unavailable("bad subscription name".into()));
+        }
+        self.sdk
+            .invoke(
+                "money.customer_subscriptions.resume",
+                json!({
+                    "name": format!("{}/customer_subscriptions/{sub_id}", self.environment_resource().await?),
+                }),
+            )
+            .await
+            .map(|_| ())
+            .map_err(|e| self.map_sdk_error(e))
     }
 
     /// Create a checkout session; returns the hosted page's URL.
     pub async fn create_checkout_session(&self, session: &Value) -> Result<String, MoneyError> {
         let body = self
-            .call(
-                self.http
-                    .post(format!("{}/checkout_sessions", self.env_url().await?))
-                    .json(session),
+            .sdk
+            .invoke(
+                "money.checkout_sessions.create",
+                json!({
+                    "parent": self.environment_resource().await?,
+                    "checkout_session": session,
+                }),
             )
-            .await?;
+            .await
+            .map_err(|e| self.map_sdk_error(e))?;
         body.get("url")
             .and_then(Value::as_str)
             .filter(|url| !url.is_empty())
@@ -702,23 +780,37 @@ impl Money {
         id: &str,
         session: &Value,
     ) -> Result<Value, MoneyError> {
-        self.call(
-            self.http
-                .post(format!("{}/checkout_sessions", self.env_url().await?))
-                .query(&[("checkout_session_id", id)])
-                .header("Idempotency-Key", format!("puzzled-checkout-{id}"))
-                .json(session),
+        let headers = [("Idempotency-Key".to_string(), format!("puzzled-checkout-{id}"))];
+        sylphx::Client::new(WithHeaders {
+            transport: self.sdk.transport(),
+            headers: &headers,
+        })
+        .invoke(
+            "money.checkout_sessions.create",
+            json!({
+                "parent": self.environment_resource().await?,
+                "checkout_session_id": id,
+                "checkout_session": session,
+            }),
         )
         .await
+        .map_err(|e| self.map_sdk_error(e))
     }
 
     /// Authoritative one-time session readback, reconciled by Money.
     pub async fn checkout_session(&self, id: &str) -> Result<Value, MoneyError> {
-        self.call(self.http.get(format!(
-            "{}/checkout_sessions/{}",
-            self.env_url().await?,
-            segment(id)
-        )))
-        .await
+        let session_id = segment(id);
+        if session_id.is_empty() {
+            return Err(MoneyError::Unavailable("bad checkout session id".into()));
+        }
+        self.sdk
+            .invoke(
+                "money.checkout_sessions.get",
+                json!({
+                    "name": format!("{}/checkout_sessions/{session_id}", self.environment_resource().await?),
+                }),
+            )
+            .await
+            .map_err(|e| self.map_sdk_error(e))
     }
 }
