@@ -34,3 +34,18 @@ workflow dispatch accepts `base_url` and optional `preview_url` to capture befor
 and after with the same harness. Preview must be a publicly reachable trusted
 HTTPS deployment. The capture route must be accompanied by manual play of the
 finish and checkout; screenshots alone do not prove either works.
+
+## Capture receipt and disconfirming check
+
+Run [42054639733](https://github.com/SylphxAI/puzzled/actions/runs/42054639733)
+succeeded at 2026-11-05T15:25:43Z; artifact `first-session-42054639733`
+contains both exact viewports. Its phone Sudoku text has no digits or Undo,
+whereas desktop does. That establishes a missing board **at capture time**,
+not a phone-specific defect. The harness now waits up to 30 seconds for the
+81st visible button in the Sudoku group, records a readiness failure and fails
+the run if it never appears. This distinguishes slow lazy loading from a
+persistent blank game. No application fix is justified until that result.
+
+The same PR's unrelated unit-test job failed the existing Money catalogue
+reader/fixture assertion (1357 pass, one failure); the capture succeeded.
+Neither CI acceptance nor merge readiness is claimed.

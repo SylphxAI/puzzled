@@ -32,7 +32,22 @@ try {
 					} catch (e) {
 						navigationError = String(e)
 					}
-				await page.waitForTimeout(2500)
+				let readinessError: string | undefined
+				if (name === '02-today' && new URL(page.url()).pathname.endsWith('/sudoku')) {
+					// Lazy-loaded shell is not proof of a playable board.
+					try {
+						await page
+							.getByRole('group', { name: 'Sudoku', exact: true })
+							.locator('button')
+							.nth(80)
+							.waitFor({ state: 'visible', timeout: 30000 })
+					} catch (error) {
+						readinessError = String(error)
+						process.exitCode = 1
+					}
+				} else {
+					await page.waitForTimeout(2500)
+				}
 				await page.screenshot({ path: `${dir}/${name}.png` })
 				await writeFile(
 					`${dir}/${name}.json`,
@@ -42,6 +57,7 @@ try {
 							url: page.url(),
 							viewport,
 							navigationError,
+							readinessError,
 							errors: [...errors],
 							text: await page.locator('body').innerText(),
 						},
