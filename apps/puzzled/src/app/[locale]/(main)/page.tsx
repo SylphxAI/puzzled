@@ -23,6 +23,7 @@ import {
 	TodayLineup,
 	TodayLineupSkeleton,
 } from '@/features/home/components/today-lineup'
+import { WebApplicationJsonLd } from '@/features/home/components/web-application-json-ld'
 import { lineupStatus } from '@/features/home/lib/home-day-copy'
 import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from '@/features/home/lib/home-faq'
 import { MarketingFaq } from '@/features/marketing/components'
@@ -372,6 +373,7 @@ export default async function HomePage({ params }: Props) {
 			className="flex-1"
 			data-puzzled-shared-home-until={sharedHome ? nextProductDayStart(now).getTime() : undefined}
 		>
+			<WebApplicationJsonLd locale={locale} />
 			<SeasonalBanner />
 			{sharedHome ? (
 				<HomeDayFallback
