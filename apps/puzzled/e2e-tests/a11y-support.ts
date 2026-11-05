@@ -199,3 +199,53 @@ export async function sampleTransform(page: Page, selector: string, frames = 14,
 
 	return samples
 }
+
+/**
+ * Arm before opening a one-shot popup. Mutation records retain old inline
+ * transforms even if the entire animation finishes before Playwright returns
+ * from click()/waitFor(). Frame sampling alone starts too late in that case.
+ */
+export async function samplePopupTransform(page: Page, open: () => Promise<unknown>) {
+	const recording = await page.evaluateHandle(() => {
+		const selector = '[role="menu"] > *'
+		const samples: string[] = []
+		const normalize = (transform: string) =>
+			new DOMMatrix(transform === 'none' || !transform ? undefined : transform).toString()
+		const record = (records: MutationRecord[]) => {
+			const element = document.querySelector(selector)
+			if (!element) return
+			for (const mutation of records) {
+				if (mutation.target !== element || mutation.attributeName !== 'style') continue
+				const style = document.createElement('div').style
+				style.cssText = mutation.oldValue ?? ''
+				// An absent old style is not a rendered animation frame.
+				if (style.transform) samples.push(normalize(style.transform))
+			}
+			samples.push(normalize(getComputedStyle(element).transform))
+		}
+		const observer = new MutationObserver(record)
+		observer.observe(document.documentElement, {
+			subtree: true,
+			childList: true,
+			attributes: true,
+			attributeFilter: ['style'],
+			attributeOldValue: true,
+		})
+		return {
+			stop() {
+				record(observer.takeRecords())
+				observer.disconnect()
+				return samples
+			},
+		}
+	})
+	try {
+		await open()
+		// Keep the same observation window, including the settled endpoint.
+		await sampleTransform(page, '[role="menu"] > *')
+		return await recording.evaluate((recorder) => recorder.stop())
+	} finally {
+		await recording.evaluate((recorder) => recorder.stop())
+		await recording.dispose()
+	}
+}
