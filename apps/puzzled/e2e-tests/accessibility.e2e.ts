@@ -300,7 +300,9 @@ test.describe('Motion for users without the preference', () => {
 		contextOptions: { reducedMotion: 'no-preference' },
 	})
 
-	test('keeps the language menu popup animation', async ({ page }, testInfo) => {
+	// Quarantine: owner Puzzled accessibility; expires 2026-11-07.
+	// Late sampling can miss the entire 100ms entrance (Verify 41961264370).
+	test.skip('keeps the language menu popup animation', async ({ page }, testInfo) => {
 		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
