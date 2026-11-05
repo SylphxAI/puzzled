@@ -1,5 +1,11 @@
-// Based on en-US/home.json, the public catalogue and legal/support pages.
-// Public links verified with HTTP GET on 2026-11-02 (UTC).
+import { getAllGameMetadata } from '@/games/registry'
+import { CONTACT_EMAIL } from '@/lib/config/app'
+
+// Keep discovery in step with the same registry that supplies the game catalogue.
+const games = getAllGameMetadata()
+	.map((game) => `- [${game.name}](https://puzzled.gg/games/${game.slug}): ${game.description}.`)
+	.join('\n')
+
 const document = `# Puzzled
 
 > Puzzled is a daily set of word, logic and number puzzles, published by Sylphx.
@@ -11,15 +17,15 @@ revealing the solution. An account keeps streaks, results and stats across devic
 ## Play
 - [Home](https://puzzled.gg/): Today's featured puzzle and daily lineup.
 - [All games](https://puzzled.gg/games): Browse the puzzle catalogue.
-- [Sudoku](https://puzzled.gg/games/sudoku): Number-placement puzzle.
-- [Five](https://puzzled.gg/games/word-guess): Daily word-guessing puzzle.
-- [Threads](https://puzzled.gg/games/word-groups): Find four groups of four.
+${games}
 - [Leaderboard](https://puzzled.gg/leaderboard): Daily results and rankings.
 
 ## Help and policies
 - [Support](https://puzzled.gg/support): Product help and contact information.
 - [Privacy policy](https://puzzled.gg/privacy): Data use and privacy rights.
 - [Terms of service](https://puzzled.gg/terms): Terms for using Puzzled.
+
+Contact: ${CONTACT_EMAIL}.
 `
 
 export function GET() {
