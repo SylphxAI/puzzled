@@ -31,7 +31,7 @@ import { SubscribeButton } from './subscribe-button'
 
 type Props = {
 	params: Promise<{ locale: string }>
-	searchParams: Promise<{ checkout?: string }>
+	searchParams: Promise<{ checkout?: string; plan?: string }>
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: Props) {
  */
 export default async function PricingPage({ params, searchParams }: Props) {
 	const { locale } = await params
-	const { checkout } = await searchParams
+	const { checkout, plan } = await searchParams
 	setRequestLocale(locale)
 
 	const t = await getTranslations('plus.pricing')
@@ -195,6 +195,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 						</ul>
 					</div>
 					<div>
+						<CurrencySwitcher currencies={currencies} current={currency} />
 						{plusMember ? (
 							<div className="surface-card border-2 border-foreground p-5 shadow-lg">
 								<p className="font-display text-xl">{t('currentPlan')}</p>
@@ -204,6 +205,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 							</div>
 						) : (
 							<PlusOffer
+								initialPlan={plan}
 								once={plusOnce}
 								yearly={plusYear}
 								monthly={plusMonth}
@@ -224,7 +226,6 @@ export default async function PricingPage({ params, searchParams }: Props) {
 			</section>
 
 			<MarketingSection id="plans" className="pt-0 md:pt-0">
-				<CurrencySwitcher currencies={currencies} current={currency} />
 				<ul className="grid gap-4 lg:grid-cols-3">
 					<li className="flex flex-col rounded-2xl border border-border p-5 sm:p-6">
 						<h2 className="font-display text-xl">{t('freeTitle')}</h2>
