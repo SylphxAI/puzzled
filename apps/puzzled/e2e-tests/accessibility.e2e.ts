@@ -5,7 +5,7 @@ import {
 	readActiveElement,
 	SHELL_TARGET_SELECTOR,
 	type Stop,
-	sampleTransform,
+	samplePopupTransform,
 	settle,
 	targetOffenders,
 } from './a11y-support'
@@ -273,19 +273,16 @@ test.describe('Reduced motion', () => {
 		expect(running, 'transform animations running under reduced motion').toEqual([])
 	})
 
-	test('keeps the language menu popup static', async ({ page }, testInfo) => {
+	test('keeps the language menu popup static', async ({ page }) => {
 		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
-		const trigger = await openPopup(page, /change language/i, page.getByRole('menu'), (reason) =>
-			testInfo.skip(true, reason),
+		const samples = await samplePopupTransform(page, () =>
+			page
+				.getByRole('button', { name: /change language/i })
+				.first()
+				.click(),
 		)
-		if (!trigger) return
-
-		// The motion lives on the popup's content wrapper; the Base UI Popup element
-		// that carries role="menu" never transforms, so sampling it would pass
-		// vacuously. Sample the wrapper the animation is on.
-		const samples = await sampleTransform(page, '[role="menu"] > *')
 		expect(
 			new Set(samples).size,
 			`popup transform changed: ${samples.join(' ')}`,
@@ -300,23 +297,33 @@ test.describe('Motion for users without the preference', () => {
 		contextOptions: { reducedMotion: 'no-preference' },
 	})
 
-	// Quarantine: owner Puzzled accessibility; expires 2026-11-07.
-	// Late sampling can miss the entire 100ms entrance (Verify 41961264370).
-	test.skip('keeps the language menu popup animation', async ({ page }, testInfo) => {
+	test('keeps the language menu popup animation', async ({ page }) => {
 		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
-		const trigger = await openPopup(page, /change language/i, page.getByRole('menu'), (reason) =>
-			testInfo.skip(true, reason),
+		const samples = await samplePopupTransform(page, () =>
+			page
+				.getByRole('button', { name: /change language/i })
+				.first()
+				.click(),
 		)
-		if (!trigger) return
-
-		// See the reduced-motion case above: the animated node is the popup's content
-		// wrapper, not the role="menu" element itself.
-		const samples = await sampleTransform(page, '[role="menu"] > *')
 		expect(
 			new Set(samples).size,
 			`expected the popup to animate, saw: ${samples.join(' ')}`,
 		).toBeGreaterThan(1)
+	})
+
+	test('rejects a popup with no animation', async ({ page }) => {
+		await page.setContent('<button>Open menu</button>')
+		await page.getByRole('button').evaluate((button) => {
+			button.addEventListener('click', () => {
+				const menu = document.createElement('div')
+				menu.setAttribute('role', 'menu')
+				menu.innerHTML = '<div>Static popup</div>'
+				document.body.append(menu)
+			})
+		})
+		const samples = await samplePopupTransform(page, () => page.getByRole('button').click())
+		expect(new Set(samples).size).toBe(1)
 	})
 })
