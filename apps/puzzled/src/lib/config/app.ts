@@ -23,7 +23,7 @@ export const LEGAL_EMAIL = CONTACT_EMAIL
 export const PRIVACY_EMAIL = CONTACT_EMAIL
 
 /** Company telephone (Sylphx Limited), shown in the footer and legal pages. */
-export const COMPANY_PHONE = '+44 333 335 7935'
+export const COMPANY_PHONE = '+44 7537 188 188'
 
 /** Default from email (fallback when env not set) */
 const _DEFAULT_FROM_EMAIL = `hello@${APP_DOMAIN}`
