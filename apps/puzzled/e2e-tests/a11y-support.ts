@@ -169,33 +169,38 @@ export const SHELL_TARGET_SELECTOR =
 	'header a[href], header button, nav[aria-label] a[href], nav[aria-label] button, footer a[href]'
 
 /**
- * Sample an element's computed transform on consecutive frames, so a CSS or
- * WAAPI animation shows up as more than one distinct value. Used to prove that
- * `prefers-reduced-motion` stops transform animation.
+ * Drive the popup's JavaScript transform animation one frame at a time. Arm
+ * before clicking and wait for the lazy content while advancing only 1ms per
+ * turn, so network/CPU latency cannot consume its 100ms entrance. Sample after
+ * the first rendered frame: reduced motion may jump directly to its endpoint
+ * during mount, which is not an animated frame.
  */
-export async function sampleTransform(page: Page, selector: string, frames = 14, delayMs = 12) {
-	const samples = await page.evaluate(
-		async ({ selector, frames, delayMs }) => {
-			const samples: string[] = []
-			const element = document.querySelector(selector)
-			// A missing element is a failure, not "no animation": returning an
-			// empty list would make every transform assertion pass vacuously.
-			if (!element) return null
-			for (let frame = 0; frame < frames; frame += 1) {
-				await new Promise((resolve) => {
-					requestAnimationFrame(() => resolve(null))
-				})
-				samples.push(getComputedStyle(element).transform)
-				await new Promise((resolve) => setTimeout(resolve, delayMs))
-			}
-			return samples
-		},
-		{ selector, frames, delayMs },
-	)
-
-	if (samples === null) {
-		throw new Error(`sampleTransform: no element matches "${selector}"`)
+export async function samplePopupTransform(
+	page: Page,
+	open: () => Promise<unknown>,
+	mountTimeoutMs = 8000,
+) {
+	await page.clock.install({ time: 0 })
+	await page.clock.pauseAt(await page.evaluate(() => Date.now() + 10_000))
+	try {
+		await open()
+		const content = page.locator('[role="menu"] > *')
+		const deadline = Date.now() + mountTimeoutMs
+		while ((await content.count()) === 0 && Date.now() < deadline) {
+			await page.clock.runFor(1)
+			await new Promise((resolve) => setTimeout(resolve, 10))
+		}
+		if ((await content.count()) !== 1) {
+			throw new Error('samplePopupTransform: expected one mounted popup content')
+		}
+		const samples: string[] = []
+		for (let frame = 0; frame < 14; frame += 1) {
+			await page.clock.runFor(16)
+			samples.push(await content.evaluate((element) => getComputedStyle(element).transform))
+		}
+		await content.waitFor({ state: 'visible' })
+		return samples
+	} finally {
+		await page.clock.resume()
 	}
-
-	return samples
 }

@@ -29,6 +29,20 @@ deterministic regression, restore normal title enforcement, and verify full
 merged-main accessibility, CSP terminal tests and production readback. Do not
 retry the flaky assertion or broaden this quarantine.
 
+The language-popup motion quarantine from #547 is removed. `test:a11y` includes
+`language-menu.e2e.ts`: it holds first-visit guest admission, opens the menu,
+then releases the cookie response and verifies that the header and open menu
+survive the RSC refresh. The shared and private layouts keep the same Suspense
+boundaries so React preserves client state. Before hydration, language triggers
+are disabled and show a loading spinner with `aria-busy`.
+
+Popup motion checks drive the browser clock before opening and wait explicitly
+for lazy content. Both motion preferences are checked on the first entrance and
+after reopening; a static popup and an absent popup validate the measurement.
+The first reduced-motion entrance may jump directly from its mount style to
+the settled endpoint, but must not interpolate or move repeatedly. Reopened
+reduced-motion popups must keep one transform throughout the measurement.
+
 ## Commands
 
 ```bash
