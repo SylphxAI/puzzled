@@ -122,7 +122,7 @@ function JsonLd({ baseUrl }: { baseUrl: string }) {
 		contactPoint: {
 			'@type': 'ContactPoint',
 			email: CONTACT_EMAIL,
-			telephone: COMPANY_PHONE,
+			telephone: COMPANY_PHONE.replace(/\s/g, ''),
 			contactType: 'customer support',
 		},
 	}

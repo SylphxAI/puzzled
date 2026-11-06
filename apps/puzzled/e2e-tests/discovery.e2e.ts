@@ -68,10 +68,11 @@ for (const { path, locale, currency } of [
 			contactPoint: {
 				'@type': 'ContactPoint',
 				email: 'hi@puzzled.gg',
-				telephone: '+44 7537 188 188',
+				telephone: '+447537188188',
 				contactType: 'customer support',
 			},
 		})
+		expect(organization.contactPoint.telephone).toMatch(/^\+[1-9]\d{1,14}$/)
 		expect(JSON.stringify(schemas)).not.toMatch(/16686526|Shelton Street/)
 	})
 }
