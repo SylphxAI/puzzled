@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 /**
  * Intent-driven loading for a dropdown menu.
@@ -14,12 +14,18 @@ import { useState } from 'react'
  * module is fetched once and every later call resolves from the cache.
  */
 export function useLazyMenu(load: () => Promise<unknown>) {
+	const [ready, setReady] = useState(false)
 	const [opened, setOpened] = useState(false)
+	useEffect(() => setReady(true), [])
 	const fetchMenu = () => void load().catch(() => undefined)
 	return {
+		ready,
 		opened,
 		/** Spread on the plain trigger shown until the menu is requested. */
 		triggerProps: {
+			// Server-rendered controls must not invite a press before handlers exist.
+			disabled: !ready,
+			'aria-busy': !ready,
 			'aria-haspopup': 'menu' as const,
 			'aria-expanded': false,
 			onPointerEnter: fetchMenu,

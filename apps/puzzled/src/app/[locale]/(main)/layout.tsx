@@ -104,13 +104,11 @@ export default async function MainLayout({ children }: Props) {
 			<SkipNavigation />
 
 			{/* Desktop: Top navigation */}
-			{sharedHome ? (
-				<LayoutTopNav currentStreak={null} />
-			) : (
-				<Suspense fallback={<TopNavSkeleton />}>
-					<TopNavChrome />
-				</Suspense>
-			)}
+			{/* Guest admission refreshes the shared home with a cookie. Keep the
+			    boundary in both payloads so that refresh preserves open nav controls. */}
+			<Suspense fallback={<TopNavSkeleton />}>
+				{sharedHome ? <LayoutTopNav currentStreak={null} /> : <TopNavChrome />}
+			</Suspense>
 
 			{/* First-visit choice is in flow on phones: it cannot cover a puzzle or Play.
 			    Settled visitors remain hidden before paint by the locale layout script. */}
@@ -131,13 +129,9 @@ export default async function MainLayout({ children }: Props) {
 			<AttributionCapture />
 
 			{/* Fixed overlays - proper z-index stacking */}
-			{sharedHome ? (
-				<LayoutOverlays maxStreak={null} />
-			) : (
-				<Suspense fallback={null}>
-					<OverlaysChrome />
-				</Suspense>
-			)}
+			<Suspense fallback={null}>
+				{sharedHome ? <LayoutOverlays maxStreak={null} /> : <OverlaysChrome />}
+			</Suspense>
 
 			{/* Mobile: Bottom navigation */}
 			<BottomNav />
