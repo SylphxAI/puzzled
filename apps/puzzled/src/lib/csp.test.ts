@@ -23,6 +23,16 @@ describe('content security policy', () => {
 		expect(directive(buildCsp('abc'), 'worker-src')).toBe("worker-src 'self'")
 	})
 
+	test('public static CSS, fonts and chunk fetches use the configured asset origin', () => {
+		const csp = buildCsp('abc', {
+			assetPrefix: 'https://data.example/v1/public/objects/env_production/web-static',
+		})
+		for (const name of ['style-src', 'font-src', 'connect-src'])
+			expect(directive(csp, name)).toContain('https://data.example')
+		expect(directive(csp, 'script-src')).toBe("script-src 'self' 'nonce-abc' 'strict-dynamic'")
+		expect(directive(csp, 'worker-src')).toBe("worker-src 'self'")
+	})
+
 	test('Google hosts are allowed only while the tag is configured', () => {
 		expect(buildCsp('abc')).not.toContain('google')
 		const connect = directive(buildCsp('abc', { googleTag: true }), 'connect-src')

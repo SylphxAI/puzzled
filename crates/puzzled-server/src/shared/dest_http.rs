@@ -7,8 +7,8 @@ use std::time::Duration;
 use reqwest::header::{HeaderMap as ReqHeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{json, Value};
 
-// Auth always uses the canonical gateway. Tests inject local URLs in constructors.
-pub(crate) const DEST_IDENTITY_ORIGIN: &str = "https://api.sylphx.com";
+// Enable Auth binds the end-user service origin; this is the unbound default.
+pub(crate) const DEST_IDENTITY_ORIGIN: &str = "https://api.identity.sylphx.com";
 
 // Keep Events until canonical Notify serves devices/inbox/deliveries. The gateway
 // owns different /v1/devices and /v1/inbox routes; see docs/capabilities.md.
@@ -32,6 +32,10 @@ pub(crate) fn dest_peel_origin(fallback: &str, raw: Option<&str>) -> String {
         }
         Err(_) => fallback.to_string(),
     }
+}
+
+pub(crate) fn dest_identity_origin(raw: Option<&str>) -> String {
+    dest_peel_origin(DEST_IDENTITY_ORIGIN, raw)
 }
 
 pub(crate) fn dest_events_origin() -> String {
@@ -160,6 +164,23 @@ pub(crate) async fn dest_events_deliver(body: Value) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn auth_origin_honors_binding_and_defaults_to_the_auth_service() {
+        assert_eq!(
+            dest_identity_origin(Some(" https://bound-auth.example/// ")),
+            "https://bound-auth.example"
+        );
+        for raw in [
+            None,
+            Some(""),
+            Some(" "),
+            Some("invalid"),
+            Some("https://puzzled.api.sylphx.com"),
+        ] {
+            assert_eq!(dest_identity_origin(raw), DEST_IDENTITY_ORIGIN);
+        }
+    }
 
     #[test]
     fn dest_events_origin_rejects_suite_door() {

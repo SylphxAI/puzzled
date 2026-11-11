@@ -444,6 +444,12 @@ jobs:
           BASE_URL: http://localhost:3015
         run: bun run test:e2e e2e-tests/sudoku-terminal.e2e.ts e2e-tests/result-modal-consent.e2e.ts --workers=1 --retries=0
 
+      - name: Discovery structured data, catalog and statutory disclosures
+        working-directory: apps/puzzled
+        env:
+          BASE_URL: http://localhost:3015
+        run: bun run test:e2e e2e-tests/discovery.e2e.ts e2e-tests/llms.e2e.ts --workers=1 --retries=0
+
       - name: Upload the Playwright report
         continue-on-error: true
         if: always()

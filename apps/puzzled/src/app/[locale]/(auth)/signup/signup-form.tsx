@@ -1,10 +1,10 @@
 'use client'
 
-import { Check, MailCheck } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { FormEvent } from 'react'
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
 import { afterSignUpDestination, safeCallbackPath } from '@/lib/identity/after-sign-up'
 import { type OAuthProvider, useSafeAuth, useSignUpForm } from '@/lib/identity/react'
@@ -38,6 +38,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 	// only flips after a re-render, so the ref is what actually blocks the
 	// second submit while the first request is in flight.
 	const submittingRef = useRef(false)
+	const recoveryRef = useRef<HTMLDivElement>(null)
 	const { signInWithOAuth } = useSafeAuth()
 	// Back to the game that asked for the account (safe same-origin path only).
 	const callbackUrl = safeCallbackPath(useSearchParams().get('callbackUrl'))
@@ -48,7 +49,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		setName,
 		setEmail,
 		setPassword,
-		step,
+		isSignInRetry,
 		isLoading,
 		loadingProvider,
 		error,
@@ -67,31 +68,21 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		},
 	})
 
+	// A returned error can make a phone form taller after the submit tap. Keep
+	// its status and next action together in view without moving input focus.
+	useLayoutEffect(() => {
+		if (error && isSignInRetry && !isLoading) {
+			recoveryRef.current?.scrollIntoView({
+				block: 'nearest',
+				inline: 'nearest',
+				behavior: 'instant',
+			})
+		}
+	}, [error, isSignInRetry, isLoading])
+
 	const nameIssue = form.name.trim() ? null : 'nameRequired'
 	const emailIssue = emailProblem(form.email)
 	const passwordIssue = passwordProblem(form.password)
-
-	// The account exists but still needs its email confirmed: say exactly that.
-	if (step === 'verify-email') {
-		return (
-			<div className="surface-card p-6 text-center sm:p-8">
-				<span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-					<MailCheck className="h-7 w-7 text-primary" aria-hidden="true" />
-				</span>
-				<h1 className="mt-4 font-display text-2xl">{t('checkYourEmail')}</h1>
-				<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-					{t('verificationSent')}
-				</p>
-				{form.email ? <p className="mt-2 text-sm font-semibold">{form.email}</p> : null}
-				<Link
-					href="/login"
-					className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-semibold transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-				>
-					{t('backToLogin')}
-				</Link>
-			</div>
-		)
-	}
 
 	// The server's own refusal of a short password shows under the field too,
 	// not as a generic failure banner.
@@ -173,7 +164,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 					value={form.password}
 					onChange={setPassword}
 					onBlur={() => setTouched((state) => ({ ...state, password: true }))}
-					autoComplete="new-password"
+					autoComplete={isSignInRetry ? 'current-password' : 'new-password'}
 					disabled={isLoading}
 					hint={t('passwordHint', { min: MIN_PASSWORD_LENGTH })}
 					error={passwordError}
@@ -182,14 +173,28 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 					enterKeyHint="done"
 				/>
 
-				<FormAlert message={error && !serverSaysTooShort ? t('signUpError') : null} />
+				<div ref={recoveryRef} className="scroll-m-4 space-y-4">
+					<FormAlert
+						message={
+							error && !serverSaysTooShort
+								? t(
+										error.message === 'signup_signin_failed'
+											? 'signUpSignInError'
+											: isSignInRetry
+												? 'signInError'
+												: 'signUpError',
+									)
+								: null
+						}
+					/>
 
-				<AuthSubmit
-					pending={isLoading}
-					pendingLabel={t('signingUp')}
-					label={tCommon('signUp')}
-					disabled={!passwordValid}
-				/>
+					<AuthSubmit
+						pending={isLoading}
+						pendingLabel={t(isSignInRetry ? 'signingIn' : 'signingUp')}
+						label={isSignInRetry ? t('retrySignIn') : tCommon('signUp')}
+						disabled={!passwordValid}
+					/>
+				</div>
 
 				<p className="text-center text-xs leading-relaxed text-muted-foreground">
 					{t.rich('termsAgree', {

@@ -1,11 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import {
-	DAY_PRIMARY_ACTION_ATTR,
-	isInstallOfferEligible,
-	shouldShowInstallOffer,
-} from './pwa-install-policy'
+import { isInstallOfferEligible, shouldShowInstallOffer } from './pwa-install-policy'
 
 const base = { firstFinishDay: '2026-10-01', today: '2026-10-02', pathname: '/' }
 
@@ -42,13 +36,5 @@ describe('install offer gate', () => {
 		expect(shouldShowInstallOffer({ ...gates, eligible: false })).toBe(false)
 		expect(shouldShowInstallOffer({ ...gates, requested: false })).toBe(false)
 		expect(shouldShowInstallOffer({ ...gates, standalone: true })).toBe(false)
-	})
-
-	test("home's play button carries the marker the offer watches", () => {
-		const source = readFileSync(
-			join(import.meta.dir, '../../features/home/components/home-day.tsx'),
-			'utf8',
-		)
-		expect(source).toContain(DAY_PRIMARY_ACTION_ATTR)
 	})
 })

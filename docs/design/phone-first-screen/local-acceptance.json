@@ -1,0 +1,1576 @@
+{
+	"base": "596d9c1c301cd2d2328f00a14d2b80fb70f1e280",
+	"sourceSha256": {
+		"apps/puzzled/src/app/[locale]/(main)/layout.tsx": "c257b892f4a8c1229fbef9c8adb468e2715d33c3506e5d44c8f0b448bbf9397f",
+		"apps/puzzled/src/app/globals.css": "86e0e90632969289861c638d5bd5b52b9e2165b6fff73e55e6bccf5576e978f0",
+		"apps/puzzled/src/features/home/components/home-day.tsx": "d0f28578f6dbacd405962199bdc1e9c6efca1d31bb3fae25376880434bffcc90",
+		"apps/puzzled/src/lib/identity/cookie-banner.test.ts": "48d75ca6a9f00463ad342145f55c62c15977b62db5e9c317cdb0ee5eaed808e4",
+		"apps/puzzled/src/lib/identity/react.tsx": "b758d30a3281a5f3541ef69ce7cf2ac69205fe0eaaaae2e9549db37418a325fb",
+		"apps/puzzled/e2e-tests/phone-first.e2e.ts": "3a398004b2ee29090dc3565370565c44019ce4caaaaac7d133cb388a2c2f2388"
+	},
+	"screens": [
+		{
+			"phase": "before",
+			"name": "puzzled",
+			"url": "https://puzzled.gg",
+			"w": 390,
+			"h": 844,
+			"utc": "2026-11-03T23:36:00.148Z",
+			"status": 200,
+			"geometry": {
+				"title": "Free Daily Brain Games & Puzzles | Puzzled",
+				"ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+				"html": "<html lang=\"en-US\" class=\"_3Vrn7W_variable light\" style=\"--scrollbar-width: 0px; color-scheme: light;\"><head><link rel=\"stylesheet\" href=\"/_next/static/chunks/08ovrjkcrb38z.css\" nonce=\"\" data-precedence=\"next\"><link rel=\"stylesheet\" href=\"/_next/static/chunks/3xvbz-rh7myut.css\" nonce=\"\" data-precedence=\"next\"><link rel=\"preload\" as=\"script\" fetchpriority=\"low\" nonce=\"\" href=\"/_next/static/chunks/0gl0h45z69ioy.js\"><script src=\"/_next/static/chunks/3ds-2pfa73int.js\" async=\"\" nonce=\"\"></script><script src=\"/_next/static/chunks/2dglk0pdlqorq.js\" async=\"\" nonce=\"\"></script><script src=\"/_next/static/chunks/turbopack-18hpueb50ebbw.js\" async=\"\" nonce=\"\"></script><script src=\"/_next/static/chunks/3x",
+				"scroll": [390, 844, 390],
+				"header": [
+					{
+						"text": "",
+						"x": 0,
+						"y": 0,
+						"w": 390,
+						"h": 57,
+						"href": null,
+						"position": "sticky",
+						"cls": "pt-safe sticky top-0 z-header border-b border-hairline bg-background"
+					}
+				],
+				"h1": [
+					{
+						"text": "Play today's Crowns, free",
+						"x": 16,
+						"y": 173,
+						"w": 358,
+						"h": 79.03125,
+						"href": null,
+						"position": "static",
+						"cls": "mt-2 font-display text-[2.375rem] leading-[1.04] text-balance sm:text-5xl lg:text-[4rem]"
+					}
+				],
+				"[data-hero]": [],
+				"[data-compare]": [],
+				"[data-hero-drop]": [],
+				"[data-cookie-banner]": [],
+				"[data-consent-banner]": [
+					{
+						"text": "We count visits and plays anonymously without cookies; optional cookies stay off until you accept. P",
+						"x": 0,
+						"y": 688,
+						"w": 390,
+						"h": 98,
+						"href": null,
+						"position": "fixed",
+						"cls": "fixed inset-x-0 z-toast px-2 pb-1.5 sm:p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0"
+					}
+				],
+				"main": [
+					{
+						"text": "Wednesday, November 4\n\u00b7\nPuzzle #1039\n\nResets in\n16:23:56\n\nFREE TODAY\n\nPlay today's Crowns, free\n\nPuz",
+						"x": 0,
+						"y": 57,
+						"w": 390,
+						"h": 2678.65625,
+						"href": null,
+						"position": "static",
+						"cls": "flex-1"
+					}
+				],
+				"nav": [
+					{
+						"text": "PLAY\nFive\nThreads\nHive\nMini Grid\nSudoku\nPaint\nRungs\nArithmo\nAll games \u2192",
+						"x": 16,
+						"y": 2970.15625,
+						"w": 358,
+						"h": 421.140625,
+						"href": null,
+						"position": "static",
+						"cls": "text-sm"
+					},
+					{
+						"text": "PRODUCT\nPuzzled Plus\nArchive\nStats\nLeaderboard\nSupport",
+						"x": 16,
+						"y": 3423.296875,
+						"w": 358,
+						"h": 245.140625,
+						"href": null,
+						"position": "static",
+						"cls": "text-sm"
+					},
+					{
+						"text": "LEGAL\nPrivacy Policy\nDelete account\nTerms of Service\nCookies\nCookie settings\nContact",
+						"x": 16,
+						"y": 3700.4375,
+						"w": 358,
+						"h": 289.140625,
+						"href": null,
+						"position": "static",
+						"cls": "text-sm"
+					},
+					{
+						"text": "Today\nGames\nArchive\nStats\nAccount",
+						"x": 0,
+						"y": 785,
+						"w": 390,
+						"h": 59,
+						"href": null,
+						"position": "fixed",
+						"cls": "fixed inset-x-0 bottom-0 z-bottom-nav border-t border-hairline bg-background pb-safe md:hidden"
+					}
+				],
+				"a": [
+					{
+						"text": "Skip to main content",
+						"x": -1,
+						"y": -1,
+						"w": 1,
+						"h": 1,
+						"href": "#main-content",
+						"position": "absolute",
+						"cls": "sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+					},
+					{
+						"text": "Privacy policy",
+						"x": 192.890625,
+						"y": 694,
+						"w": 73.359375,
+						"h": 46,
+						"href": "/privacy",
+						"position": "static",
+						"cls": "py-4 font-medium text-primary underline underline-offset-4"
+					},
+					{
+						"text": "Puzzled - Home",
+						"x": 16,
+						"y": 6,
+						"w": 124,
+						"h": 44,
+						"href": "/",
+						"position": "static",
+						"cls": "group pressable flex min-h-11 items-center gap-2 rounded-xl outline-offset-4 text-foreground"
+					},
+					{
+						"text": "Play today's Crowns",
+						"x": 37,
+						"y": 644.40625,
+						"w": 316,
+						"h": 48,
+						"href": "/games/crowns?difficulty=medium&start=1#play",
+						"position": "static",
+						"cls": "pressable mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary px-6 text-[16px] font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+					},
+					{
+						"text": "Browse all games",
+						"x": 16,
+						"y": 773.40625,
+						"w": 138.390625,
+						"h": 44,
+						"href": "/games",
+						"position": "static",
+						"cls": "mt-3 inline-flex min-h-11 items-center gap-1 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "See all games",
+						"x": 261.375,
+						"y": 909.90625,
+						"w": 112.625,
+						"h": 44,
+						"href": "/games",
+						"position": "static",
+						"cls": "inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
+					},
+					{
+						"text": "Crowns",
+						"x": 31,
+						"y": 1108.78125,
+						"w": 52.65625,
+						"h": 21,
+						"href": "/games/crowns",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Match",
+						"x": 216,
+						"y": 1108.78125,
+						"w": 42.71875,
+						"h": 21,
+						"href": "/games/pattern-match",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Paint",
+						"x": 31,
+						"y": 1361.65625,
+						"w": 36.046875,
+						"h": 21,
+						"href": "/games/nonogram",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Rungs",
+						"x": 216,
+						"y": 1361.65625,
+						"w": 43.40625,
+						"h": 21,
+						"href": "/games/word-ladder",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Quad",
+						"x": 31,
+						"y": 1598.03125,
+						"w": 37.28125,
+						"h": 21,
+						"href": "/games/quad-words",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Threads",
+						"x": 216,
+						"y": 1598.03125,
+						"w": 56,
+						"h": 21,
+						"href": "/games/word-groups",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Puzzled - Home",
+						"x": 16,
+						"y": 2776.65625,
+						"w": 358,
+						"h": 44,
+						"href": "/",
+						"position": "static",
+						"cls": "group pressable flex min-h-11 items-center gap-2 rounded-xl outline-offset-4 text-foreground"
+					},
+					{
+						"text": "Five",
+						"x": 8,
+						"y": 2995.296875,
+						"w": 44,
+						"h": 44,
+						"href": "/games/word-guess",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Threads",
+						"x": 8,
+						"y": 3039.296875,
+						"w": 67.359375,
+						"h": 44,
+						"href": "/games/word-groups",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Hive",
+						"x": 8,
+						"y": 3083.296875,
+						"w": 44.015625,
+						"h": 44,
+						"href": "/games/word-hive",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Mini Grid",
+						"x": 8,
+						"y": 3127.296875,
+						"w": 72.015625,
+						"h": 44,
+						"href": "/games/crossword",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Sudoku",
+						"x": 8,
+						"y": 3171.296875,
+						"w": 63.484375,
+						"h": 44,
+						"href": "/games/sudoku",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Paint",
+						"x": 8,
+						"y": 3215.296875,
+						"w": 47.921875,
+						"h": 44,
+						"href": "/games/nonogram",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Rungs",
+						"x": 8,
+						"y": 3259.296875,
+						"w": 56.46875,
+						"h": 44,
+						"href": "/games/word-ladder",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Arithmo",
+						"x": 8,
+						"y": 3303.296875,
+						"w": 64.234375,
+						"h": 44,
+						"href": "/games/arithmo",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "All games \u2192",
+						"x": 8,
+						"y": 3347.296875,
+						"w": 100.03125,
+						"h": 44,
+						"href": "/games",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground font-semibold text-foreground"
+					},
+					{
+						"text": "Puzzled Plus",
+						"x": 8,
+						"y": 3448.4375,
+						"w": 96.9375,
+						"h": 44,
+						"href": "/pricing",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Archive",
+						"x": 8,
+						"y": 3492.4375,
+						"w": 62.6875,
+						"h": 44,
+						"href": "/archive",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Stats",
+						"x": 8,
+						"y": 3536.4375,
+						"w": 47.90625,
+						"h": 44,
+						"href": "/stats",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Leaderboard",
+						"x": 8,
+						"y": 3580.4375,
+						"w": 95.40625,
+						"h": 44,
+						"href": "/leaderboard",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Support",
+						"x": 8,
+						"y": 3624.4375,
+						"w": 65.046875,
+						"h": 44,
+						"href": "/support",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Privacy Policy",
+						"x": 8,
+						"y": 3725.578125,
+						"w": 103.140625,
+						"h": 44,
+						"href": "/privacy",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Delete account",
+						"x": 8,
+						"y": 3769.578125,
+						"w": 109.40625,
+						"h": 44,
+						"href": "/delete-account",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Terms of Service",
+						"x": 8,
+						"y": 3813.578125,
+						"w": 120.25,
+						"h": 44,
+						"href": "/terms",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Cookies",
+						"x": 8,
+						"y": 3857.578125,
+						"w": 66.59375,
+						"h": 44,
+						"href": "/privacy#cookies",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Contact",
+						"x": 8,
+						"y": 3945.578125,
+						"w": 64.25,
+						"h": 44,
+						"href": "mailto:hi@puzzled.gg",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "+44 333 335 7935",
+						"x": 80.703125,
+						"y": 4086.578125,
+						"w": 97.109375,
+						"h": 44,
+						"href": "tel:+443333357935",
+						"position": "static",
+						"cls": "inline-flex min-h-11 items-center whitespace-nowrap hover:text-foreground"
+					},
+					{
+						"text": "Today",
+						"x": 0,
+						"y": 786,
+						"w": 78,
+						"h": 58,
+						"href": "/",
+						"position": "static",
+						"cls": "pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium tracking-tight transition-colors text-foreground"
+					},
+					{
+						"text": "Games",
+						"x": 78,
+						"y": 786,
+						"w": 78,
+						"h": 58,
+						"href": "/games",
+						"position": "static",
+						"cls": "pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium tracking-tight transition-colors text-muted-foreground"
+					},
+					{
+						"text": "Archive",
+						"x": 156,
+						"y": 786,
+						"w": 78,
+						"h": 58,
+						"href": "/archive",
+						"position": "static",
+						"cls": "pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium tracking-tight transition-colors text-muted-foreground"
+					},
+					{
+						"text": "Stats",
+						"x": 234,
+						"y": 786,
+						"w": 78,
+						"h": 58,
+						"href": "/stats",
+						"position": "static",
+						"cls": "pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium tracking-tight transition-colors text-muted-foreground"
+					},
+					{
+						"text": "Account",
+						"x": 312,
+						"y": 786,
+						"w": 78,
+						"h": 58,
+						"href": "/profile",
+						"position": "static",
+						"cls": "pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium tracking-tight transition-colors text-muted-foreground"
+					}
+				],
+				"button": [
+					{
+						"text": "Decline",
+						"x": 17,
+						"y": 729,
+						"w": 113.328125,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 font-medium text-foreground sm:rounded-xl sm:px-4 transition-colors hover:bg-muted sm:flex-none"
+					},
+					{
+						"text": "Settings",
+						"x": 138.328125,
+						"y": 729,
+						"w": 113.34375,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 font-medium text-foreground sm:rounded-xl sm:px-4 transition-colors hover:bg-muted sm:flex-none"
+					},
+					{
+						"text": "Accept",
+						"x": 259.671875,
+						"y": 729,
+						"w": 113.328125,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 font-medium text-foreground sm:rounded-xl sm:px-4 transition-colors hover:bg-muted sm:flex-none"
+					},
+					{
+						"text": "Open navigation menu",
+						"x": 330,
+						"y": 6,
+						"w": 44,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:hidden"
+					},
+					{
+						"text": "English (US)",
+						"x": 16,
+						"y": 2894.15625,
+						"w": 183.171875,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "inline-flex select-none items-center whitespace-nowrap rounded-full font-semibold transition-[transform,background-color,border-color,opacity] duration-150 ease-out [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 border border-border bg-card text-foreground hover:bg-muted text-[15px] h-11 min-w-[180px] justify-between gap-3 px-4"
+					},
+					{
+						"text": "Cookie settings",
+						"x": 8,
+						"y": 3901.578125,
+						"w": 111.71875,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					}
+				]
+			},
+			"screenshot": "before-390x844.png"
+		},
+		{
+			"phase": "local-after",
+			"name": "puzzled",
+			"url": "http://127.0.0.1:3195",
+			"width": 390,
+			"height": 844,
+			"mobile": true,
+			"utc": "2026-11-03T23:49:14.174Z",
+			"assets": [
+				{
+					"url": "http://127.0.0.1:3195/_next/static/media/fraunces_display.p.1j8v7qgv8o-s7.woff2",
+					"status": 200,
+					"type": "font",
+					"sha256": "3f10433fd38a79f10d5135067ad7a78f3890428ade86f46b50a6edd3bafa374a"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/30om9-h9hvb_4.css",
+					"status": 200,
+					"type": "stylesheet",
+					"sha256": "83814793c99d567fe7d18e7edd2740c0f8cf706389af9029fb59b4b0ab7ede84"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/0gl0h45z69ioy.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "09441f9db17178e3552618b836008a3ce625e3618cc746db6560cfc2b76cfe5e"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/3ds-2pfa73int.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "03658945391b593ace875b689b8ae5f5c01e2ae4bf91fd96dd75b0eb29ac5a3d"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2dglk0pdlqorq.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "25bbab6c9392834bc7d486186d2f30dca0ea3a6d5621ecb0012668bbef423a92"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/turbopack-0va-aqz4w0po7.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "55d67c76ef5eb9af7b8d01b70b62e038d6d11fcbaaffdd5b3d85adc1862fa099"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/3xpfi2yxtz6u_.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "bb4b441d9605c937539f2237f66dc379e062450460ec976cd31b368211f422d1"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/3q957km9of-y9.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "2b4ffdc74226237f40b69fa147b9d15fe2931b01d158493f9e7802a1003f7d15"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2svupx42qg5zq.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "8da69522e97c2977c83264766768faf22446f56a001b7a1a7920a037571217db"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2u-svif_va1vy.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "c81ba8b25858a49002d1cce8d3a696094eef56b8350beabfd0d0ee09bd317124"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/15j_7cn2qp-t9.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "19fa885b8558765ef1bd7ecf5cea4a3f48cd55e1566fc6b59d02c40cc1bb6bb3"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/3wl4lhav2ebdu.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "de23ba1e95e6718de8664542234e92ff69fef73e3830987db24f2804bc2c0e8c"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/364wjirz4m_35.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "fcd9aa87ad27191cd84b2c03bebe34610b2bc60135005fb20fa0c232ff542227"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2-h_uvrzfrynf.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "a38dcfa7ca7c36f52e6a4e4feb46637609a9499cdc33daa5e6aeeb74f822db56"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/1cw6njhgki0ry.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "29c1d5f16a3290f5910fc1bcda52d389e294848fda9eaa92e261c192901cc923"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/14ph2z03spufd.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "d907c7a332bce3cf8ebb8bbb33df64fc6a09215cee074e03d0c31a270f299ef7"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2iimy71r8m4jn.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "e64bb0accddaf0986eb2eeb5a0cd4a934573dd61c6deaa6ad7ae8e606840b12d"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/3hcoq74yu_izu.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "0ba497110b6cbacf65b2a5f340055e4c5039b24672f848c16dff9e95178ce296"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/251ppyoi6wrvy.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "f09ddead2a6b3b9990b814929d5fb88a35c31a2bfbec12d699ec3bbae5bb67d1"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/11orof1qmf9uk.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "1e77c2f3a2808e43ac5293a57cabbbab563ee58685ea2dcbef8e9f3c413a3ee4"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/0sunv7x7pkez1.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "95d623b3999eaf00ca9d0e343aecfc56fa9e8f252808bf8eb559a28929ac32c1"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2qiibli7l-05u.css",
+					"status": 200,
+					"type": "stylesheet",
+					"sha256": "d0345b3cc6c31062c8931f6309c57c7bb5900522a56a3cbe84a4f7e16ab1e58c"
+				}
+			],
+			"status": 200,
+			"documentSha": "455df1944483fc137d2ce6faf8312b675f4c4f2cca524ee0d15284ac927fa104",
+			"finalURL": "http://127.0.0.1:3195/",
+			"geometry": {
+				"proof": {
+					"x": 16,
+					"y": 474.90625,
+					"w": 358,
+					"h": 166.5,
+					"bottom": 641.40625,
+					"position": "static",
+					"opacity": "1"
+				},
+				"action": {
+					"x": 109,
+					"y": 556.40625,
+					"w": 252,
+					"h": 48,
+					"bottom": 604.40625,
+					"position": "static",
+					"opacity": "1",
+					"hit": true
+				},
+				"consent": {
+					"x": 0,
+					"y": 57,
+					"w": 390,
+					"h": 104,
+					"bottom": 161,
+					"position": "relative",
+					"opacity": "1"
+				},
+				"nav": {
+					"x": 0,
+					"y": 785,
+					"w": 390,
+					"h": 59,
+					"bottom": 844,
+					"position": "fixed",
+					"opacity": "1"
+				},
+				"viewport": {
+					"w": 390,
+					"h": 844,
+					"scrollWidth": 390
+				}
+			},
+			"screenshot": "local-after-390x844.png",
+			"verdict": "PASS"
+		},
+		{
+			"phase": "before",
+			"name": "puzzled",
+			"url": "https://puzzled.gg",
+			"w": 360,
+			"h": 640,
+			"utc": "2026-11-03T23:36:04.107Z",
+			"status": 200,
+			"geometry": {
+				"title": "Free Daily Brain Games & Puzzles | Puzzled",
+				"ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+				"html": "<html lang=\"en-US\" class=\"_3Vrn7W_variable light\" style=\"--scrollbar-width: 0px; color-scheme: light;\"><head><link rel=\"stylesheet\" href=\"/_next/static/chunks/08ovrjkcrb38z.css\" nonce=\"\" data-precedence=\"next\"><link rel=\"stylesheet\" href=\"/_next/static/chunks/3xvbz-rh7myut.css\" nonce=\"\" data-precedence=\"next\"><link rel=\"preload\" as=\"script\" fetchpriority=\"low\" nonce=\"\" href=\"/_next/static/chunks/0gl0h45z69ioy.js\"><script src=\"/_next/static/chunks/3ds-2pfa73int.js\" async=\"\" nonce=\"\"></script><script src=\"/_next/static/chunks/2dglk0pdlqorq.js\" async=\"\" nonce=\"\"></script><script src=\"/_next/static/chunks/turbopack-18hpueb50ebbw.js\" async=\"\" nonce=\"\"></script><script src=\"/_next/static/chunks/3x",
+				"scroll": [360, 640, 360],
+				"header": [
+					{
+						"text": "",
+						"x": 0,
+						"y": 0,
+						"w": 360,
+						"h": 57,
+						"href": null,
+						"position": "sticky",
+						"cls": "pt-safe sticky top-0 z-header border-b border-hairline bg-background"
+					}
+				],
+				"h1": [
+					{
+						"text": "Play today's Crowns, free",
+						"x": 16,
+						"y": 173,
+						"w": 328,
+						"h": 79.03125,
+						"href": null,
+						"position": "static",
+						"cls": "mt-2 font-display text-[2.375rem] leading-[1.04] text-balance sm:text-5xl lg:text-[4rem]"
+					}
+				],
+				"[data-hero]": [],
+				"[data-compare]": [],
+				"[data-hero-drop]": [],
+				"[data-cookie-banner]": [],
+				"[data-consent-banner]": [
+					{
+						"text": "We count visits and plays anonymously without cookies; optional cookies stay off until you accept. P",
+						"x": 0,
+						"y": 484,
+						"w": 360,
+						"h": 98,
+						"href": null,
+						"position": "fixed",
+						"cls": "fixed inset-x-0 z-toast px-2 pb-1.5 sm:p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0"
+					}
+				],
+				"main": [
+					{
+						"text": "Wednesday, November 4\n\u00b7\nPuzzle #1039\n\nResets in\n16:23:52\n\nFREE TODAY\n\nPlay today's Crowns, free\n\nPuz",
+						"x": 0,
+						"y": 57,
+						"w": 360,
+						"h": 2696.03125,
+						"href": null,
+						"position": "static",
+						"cls": "flex-1"
+					}
+				],
+				"nav": [
+					{
+						"text": "PLAY\nFive\nThreads\nHive\nMini Grid\nSudoku\nPaint\nRungs\nArithmo\nAll games \u2192",
+						"x": 16,
+						"y": 2987.53125,
+						"w": 328,
+						"h": 421.140625,
+						"href": null,
+						"position": "static",
+						"cls": "text-sm"
+					},
+					{
+						"text": "PRODUCT\nPuzzled Plus\nArchive\nStats\nLeaderboard\nSupport",
+						"x": 16,
+						"y": 3440.671875,
+						"w": 328,
+						"h": 245.140625,
+						"href": null,
+						"position": "static",
+						"cls": "text-sm"
+					},
+					{
+						"text": "LEGAL\nPrivacy Policy\nDelete account\nTerms of Service\nCookies\nCookie settings\nContact",
+						"x": 16,
+						"y": 3717.8125,
+						"w": 328,
+						"h": 289.140625,
+						"href": null,
+						"position": "static",
+						"cls": "text-sm"
+					},
+					{
+						"text": "Today\nGames\nArchive\nStats\nAccount",
+						"x": 0,
+						"y": 581,
+						"w": 360,
+						"h": 59,
+						"href": null,
+						"position": "fixed",
+						"cls": "fixed inset-x-0 bottom-0 z-bottom-nav border-t border-hairline bg-background pb-safe md:hidden"
+					}
+				],
+				"a": [
+					{
+						"text": "Skip to main content",
+						"x": -1,
+						"y": -1,
+						"w": 1,
+						"h": 1,
+						"href": "#main-content",
+						"position": "absolute",
+						"cls": "sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+					},
+					{
+						"text": "Privacy policy",
+						"x": 238.265625,
+						"y": 490,
+						"w": 73.359375,
+						"h": 46,
+						"href": "/privacy",
+						"position": "static",
+						"cls": "py-4 font-medium text-primary underline underline-offset-4"
+					},
+					{
+						"text": "Puzzled - Home",
+						"x": 16,
+						"y": 6,
+						"w": 124,
+						"h": 44,
+						"href": "/",
+						"position": "static",
+						"cls": "group pressable flex min-h-11 items-center gap-2 rounded-xl outline-offset-4 text-foreground"
+					},
+					{
+						"text": "Play today's Crowns",
+						"x": 37,
+						"y": 644.40625,
+						"w": 286,
+						"h": 48,
+						"href": "/games/crowns?difficulty=medium&start=1#play",
+						"position": "static",
+						"cls": "pressable mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary px-6 text-[16px] font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+					},
+					{
+						"text": "Browse all games",
+						"x": 16,
+						"y": 773.40625,
+						"w": 138.390625,
+						"h": 44,
+						"href": "/games",
+						"position": "static",
+						"cls": "mt-3 inline-flex min-h-11 items-center gap-1 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "See all games",
+						"x": 231.375,
+						"y": 909.90625,
+						"w": 112.625,
+						"h": 44,
+						"href": "/games",
+						"position": "static",
+						"cls": "inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
+					},
+					{
+						"text": "Crowns",
+						"x": 31,
+						"y": 1099.40625,
+						"w": 52.65625,
+						"h": 21,
+						"href": "/games/crowns",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Match",
+						"x": 201,
+						"y": 1099.40625,
+						"w": 42.71875,
+						"h": 21,
+						"href": "/games/pattern-match",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Paint",
+						"x": 31,
+						"y": 1342.90625,
+						"w": 36.046875,
+						"h": 21,
+						"href": "/games/nonogram",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Rungs",
+						"x": 201,
+						"y": 1342.90625,
+						"w": 43.40625,
+						"h": 21,
+						"href": "/games/word-ladder",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Quad",
+						"x": 31,
+						"y": 1569.90625,
+						"w": 37.28125,
+						"h": 21,
+						"href": "/games/quad-words",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Threads",
+						"x": 201,
+						"y": 1569.90625,
+						"w": 56,
+						"h": 21,
+						"href": "/games/word-groups",
+						"position": "static",
+						"cls": "outline-none after:absolute after:inset-0"
+					},
+					{
+						"text": "Puzzled - Home",
+						"x": 16,
+						"y": 2794.03125,
+						"w": 328,
+						"h": 44,
+						"href": "/",
+						"position": "static",
+						"cls": "group pressable flex min-h-11 items-center gap-2 rounded-xl outline-offset-4 text-foreground"
+					},
+					{
+						"text": "Five",
+						"x": 8,
+						"y": 3012.671875,
+						"w": 44,
+						"h": 44,
+						"href": "/games/word-guess",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Threads",
+						"x": 8,
+						"y": 3056.671875,
+						"w": 67.359375,
+						"h": 44,
+						"href": "/games/word-groups",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Hive",
+						"x": 8,
+						"y": 3100.671875,
+						"w": 44.015625,
+						"h": 44,
+						"href": "/games/word-hive",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Mini Grid",
+						"x": 8,
+						"y": 3144.671875,
+						"w": 72.015625,
+						"h": 44,
+						"href": "/games/crossword",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Sudoku",
+						"x": 8,
+						"y": 3188.671875,
+						"w": 63.484375,
+						"h": 44,
+						"href": "/games/sudoku",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Paint",
+						"x": 8,
+						"y": 3232.671875,
+						"w": 47.921875,
+						"h": 44,
+						"href": "/games/nonogram",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Rungs",
+						"x": 8,
+						"y": 3276.671875,
+						"w": 56.46875,
+						"h": 44,
+						"href": "/games/word-ladder",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Arithmo",
+						"x": 8,
+						"y": 3320.671875,
+						"w": 64.234375,
+						"h": 44,
+						"href": "/games/arithmo",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "All games \u2192",
+						"x": 8,
+						"y": 3364.671875,
+						"w": 100.03125,
+						"h": 44,
+						"href": "/games",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground font-semibold text-foreground"
+					},
+					{
+						"text": "Puzzled Plus",
+						"x": 8,
+						"y": 3465.8125,
+						"w": 96.9375,
+						"h": 44,
+						"href": "/pricing",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Archive",
+						"x": 8,
+						"y": 3509.8125,
+						"w": 62.6875,
+						"h": 44,
+						"href": "/archive",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Stats",
+						"x": 8,
+						"y": 3553.8125,
+						"w": 47.90625,
+						"h": 44,
+						"href": "/stats",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Leaderboard",
+						"x": 8,
+						"y": 3597.8125,
+						"w": 95.40625,
+						"h": 44,
+						"href": "/leaderboard",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Support",
+						"x": 8,
+						"y": 3641.8125,
+						"w": 65.046875,
+						"h": 44,
+						"href": "/support",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Privacy Policy",
+						"x": 8,
+						"y": 3742.953125,
+						"w": 103.140625,
+						"h": 44,
+						"href": "/privacy",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Delete account",
+						"x": 8,
+						"y": 3786.953125,
+						"w": 109.40625,
+						"h": 44,
+						"href": "/delete-account",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Terms of Service",
+						"x": 8,
+						"y": 3830.953125,
+						"w": 120.25,
+						"h": 44,
+						"href": "/terms",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Cookies",
+						"x": 8,
+						"y": 3874.953125,
+						"w": 66.59375,
+						"h": 44,
+						"href": "/privacy#cookies",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "Contact",
+						"x": 8,
+						"y": 3962.953125,
+						"w": 64.25,
+						"h": 44,
+						"href": "mailto:hi@puzzled.gg",
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					},
+					{
+						"text": "+44 333 335 7935",
+						"x": 124.09375,
+						"y": 4103.953125,
+						"w": 97.109375,
+						"h": 44,
+						"href": "tel:+443333357935",
+						"position": "static",
+						"cls": "inline-flex min-h-11 items-center whitespace-nowrap hover:text-foreground"
+					},
+					{
+						"text": "Today",
+						"x": 0,
+						"y": 582,
+						"w": 72,
+						"h": 58,
+						"href": "/",
+						"position": "static",
+						"cls": "pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium tracking-tight transition-colors text-foreground"
+					},
+					{
+						"text": "Games",
+						"x": 72,
+						"y": 582,
+						"w": 72,
+						"h": 58,
+						"href": "/games",
+						"position": "static",
+						"cls": "pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium tracking-tight transition-colors text-muted-foreground"
+					},
+					{
+						"text": "Archive",
+						"x": 144,
+						"y": 582,
+						"w": 72,
+						"h": 58,
+						"href": "/archive",
+						"position": "static",
+						"cls": "pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium tracking-tight transition-colors text-muted-foreground"
+					},
+					{
+						"text": "Stats",
+						"x": 216,
+						"y": 582,
+						"w": 72,
+						"h": 58,
+						"href": "/stats",
+						"position": "static",
+						"cls": "pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium tracking-tight transition-colors text-muted-foreground"
+					},
+					{
+						"text": "Account",
+						"x": 288,
+						"y": 582,
+						"w": 72,
+						"h": 58,
+						"href": "/profile",
+						"position": "static",
+						"cls": "pressable flex min-h-11 flex-col items-center justify-center gap-0.5 text-xs font-medium tracking-tight transition-colors text-muted-foreground"
+					}
+				],
+				"button": [
+					{
+						"text": "Decline",
+						"x": 17,
+						"y": 525,
+						"w": 103.328125,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 font-medium text-foreground sm:rounded-xl sm:px-4 transition-colors hover:bg-muted sm:flex-none"
+					},
+					{
+						"text": "Settings",
+						"x": 128.328125,
+						"y": 525,
+						"w": 103.34375,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 font-medium text-foreground sm:rounded-xl sm:px-4 transition-colors hover:bg-muted sm:flex-none"
+					},
+					{
+						"text": "Accept",
+						"x": 239.671875,
+						"y": 525,
+						"w": 103.328125,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 font-medium text-foreground sm:rounded-xl sm:px-4 transition-colors hover:bg-muted sm:flex-none"
+					},
+					{
+						"text": "Open navigation menu",
+						"x": 300,
+						"y": 6,
+						"w": 44,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:hidden"
+					},
+					{
+						"text": "English (US)",
+						"x": 16,
+						"y": 2911.53125,
+						"w": 183.171875,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "inline-flex select-none items-center whitespace-nowrap rounded-full font-semibold transition-[transform,background-color,border-color,opacity] duration-150 ease-out [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 border border-border bg-card text-foreground hover:bg-muted text-[15px] h-11 min-w-[180px] justify-between gap-3 px-4"
+					},
+					{
+						"text": "Cookie settings",
+						"x": 8,
+						"y": 3918.953125,
+						"w": 111.71875,
+						"h": 44,
+						"href": null,
+						"position": "static",
+						"cls": "-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground"
+					}
+				]
+			},
+			"screenshot": "before-360x640.png"
+		},
+		{
+			"phase": "local-after",
+			"name": "puzzled",
+			"url": "http://127.0.0.1:3195",
+			"width": 360,
+			"height": 640,
+			"mobile": true,
+			"utc": "2026-11-03T23:49:22.387Z",
+			"assets": [
+				{
+					"url": "http://127.0.0.1:3195/_next/static/media/fraunces_display.p.1j8v7qgv8o-s7.woff2",
+					"status": 200,
+					"type": "font",
+					"sha256": "3f10433fd38a79f10d5135067ad7a78f3890428ade86f46b50a6edd3bafa374a"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2qiibli7l-05u.css",
+					"status": 200,
+					"type": "stylesheet",
+					"sha256": "d0345b3cc6c31062c8931f6309c57c7bb5900522a56a3cbe84a4f7e16ab1e58c"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/30om9-h9hvb_4.css",
+					"status": 200,
+					"type": "stylesheet",
+					"sha256": "83814793c99d567fe7d18e7edd2740c0f8cf706389af9029fb59b4b0ab7ede84"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/0gl0h45z69ioy.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "09441f9db17178e3552618b836008a3ce625e3618cc746db6560cfc2b76cfe5e"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/3ds-2pfa73int.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "03658945391b593ace875b689b8ae5f5c01e2ae4bf91fd96dd75b0eb29ac5a3d"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/turbopack-0va-aqz4w0po7.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "55d67c76ef5eb9af7b8d01b70b62e038d6d11fcbaaffdd5b3d85adc1862fa099"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2u-svif_va1vy.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "c81ba8b25858a49002d1cce8d3a696094eef56b8350beabfd0d0ee09bd317124"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2dglk0pdlqorq.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "25bbab6c9392834bc7d486186d2f30dca0ea3a6d5621ecb0012668bbef423a92"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2svupx42qg5zq.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "8da69522e97c2977c83264766768faf22446f56a001b7a1a7920a037571217db"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/3xpfi2yxtz6u_.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "bb4b441d9605c937539f2237f66dc379e062450460ec976cd31b368211f422d1"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/3q957km9of-y9.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "2b4ffdc74226237f40b69fa147b9d15fe2931b01d158493f9e7802a1003f7d15"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/15j_7cn2qp-t9.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "19fa885b8558765ef1bd7ecf5cea4a3f48cd55e1566fc6b59d02c40cc1bb6bb3"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/3wl4lhav2ebdu.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "de23ba1e95e6718de8664542234e92ff69fef73e3830987db24f2804bc2c0e8c"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/14ph2z03spufd.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "d907c7a332bce3cf8ebb8bbb33df64fc6a09215cee074e03d0c31a270f299ef7"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/1cw6njhgki0ry.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "29c1d5f16a3290f5910fc1bcda52d389e294848fda9eaa92e261c192901cc923"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2iimy71r8m4jn.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "e64bb0accddaf0986eb2eeb5a0cd4a934573dd61c6deaa6ad7ae8e606840b12d"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/364wjirz4m_35.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "fcd9aa87ad27191cd84b2c03bebe34610b2bc60135005fb20fa0c232ff542227"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/3hcoq74yu_izu.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "0ba497110b6cbacf65b2a5f340055e4c5039b24672f848c16dff9e95178ce296"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/251ppyoi6wrvy.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "f09ddead2a6b3b9990b814929d5fb88a35c31a2bfbec12d699ec3bbae5bb67d1"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/0sunv7x7pkez1.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "95d623b3999eaf00ca9d0e343aecfc56fa9e8f252808bf8eb559a28929ac32c1"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2-h_uvrzfrynf.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "a38dcfa7ca7c36f52e6a4e4feb46637609a9499cdc33daa5e6aeeb74f822db56"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/11orof1qmf9uk.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "1e77c2f3a2808e43ac5293a57cabbbab563ee58685ea2dcbef8e9f3c413a3ee4"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2mhgq0fno0xu7.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "25ddbe9d32d40d0289eaad618593b358024dec92decf8c3689918dde216c2222"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/0havwhkfnmnm-.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "5ab52516f9aa87d113e33cf99b8da07c124281d256befe1b42585e2b12a0059a"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/2vnsv30dfdasz.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "b68f74660203e7a6b527297ef116610df66db440ab10114cfaaf9fadda5bdd3e"
+				},
+				{
+					"url": "http://127.0.0.1:3195/_next/static/chunks/01dcmzu28y-10.js",
+					"status": 200,
+					"type": "script",
+					"sha256": "c25eab08dabe8180ba0554397d8c4d9fba75aa49125f8604fac1e67e68641e6f"
+				}
+			],
+			"status": 200,
+			"documentSha": "3dc347b99d1bafd73c14d3dab76269ba0bea5daaa7c6ccda6434e62b593dfb55",
+			"finalURL": "http://127.0.0.1:3195/",
+			"geometry": {
+				"proof": {
+					"x": 16,
+					"y": 279.765625,
+					"w": 328,
+					"h": 205,
+					"bottom": 484.765625,
+					"position": "static",
+					"opacity": "1"
+				},
+				"action": {
+					"x": 109,
+					"y": 383.765625,
+					"w": 222,
+					"h": 48,
+					"bottom": 431.765625,
+					"position": "static",
+					"opacity": "1",
+					"hit": true
+				},
+				"consent": {
+					"x": 0,
+					"y": 57,
+					"w": 360,
+					"h": 104,
+					"bottom": 161,
+					"position": "relative",
+					"opacity": "1"
+				},
+				"nav": {
+					"x": 0,
+					"y": 581,
+					"w": 360,
+					"h": 59,
+					"bottom": 640,
+					"position": "fixed",
+					"opacity": "1"
+				},
+				"viewport": {
+					"w": 360,
+					"h": 640,
+					"scrollWidth": 360
+				}
+			},
+			"screenshot": "local-after-360x640.png",
+			"verdict": "PASS"
+		}
+	],
+	"scope": "Headed Chromium 156, iPhone user-agent/touch emulation, DPR 1. Public baseline; local candidate. Not physical-device, WebKit, public deployment or performance acceptance.",
+	"afterConsent": [
+		{
+			"name": "puzzled",
+			"url": "http://127.0.0.1:3195/",
+			"utc": "2026-11-04T00:07:33.022Z",
+			"width": 360,
+			"height": 640,
+			"before": {
+				"x": 16,
+				"y": 279.765625,
+				"width": 328,
+				"height": 205
+			},
+			"after": {
+				"x": 16,
+				"y": 175.765625,
+				"width": 328,
+				"height": 205
+			},
+			"reserved": 104,
+			"gapError": 0,
+			"verdict": "PASS"
+		},
+		{
+			"name": "puzzled",
+			"url": "http://127.0.0.1:3195/",
+			"utc": "2026-11-04T00:07:32.327Z",
+			"width": 390,
+			"height": 844,
+			"before": {
+				"x": 16,
+				"y": 474.90625,
+				"width": 358,
+				"height": 166.5
+			},
+			"after": {
+				"x": 16,
+				"y": 370.90625,
+				"width": 358,
+				"height": 166.5
+			},
+			"reserved": 104,
+			"gapError": 0,
+			"verdict": "PASS"
+		}
+	]
+}

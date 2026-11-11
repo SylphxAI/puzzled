@@ -9,6 +9,9 @@ const tracingRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '../
 
 const nextConfig: NextConfig = {
 	output: 'standalone',
+	// Production browser bytes have durable, public custody outside each image.
+	assetPrefix: process.env.NEXT_PUBLIC_PUZZLED_ASSET_PREFIX || undefined,
+	crossOrigin: 'anonymous',
 	// Pin monorepo tracing so standalone server.js is apps/puzzled/server.js.
 	outputFileTracingRoot: tracingRoot,
 	transpilePackages: [],

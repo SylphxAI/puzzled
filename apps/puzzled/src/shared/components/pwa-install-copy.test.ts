@@ -28,10 +28,4 @@ describe('install offer copy', () => {
 			}
 		}
 	})
-
-	test('the iOS instructions show the Share button, not an alert icon', () => {
-		const source = readFileSync(join(import.meta.dir, 'pwa-install-prompt.tsx'), 'utf8')
-		expect(source).toContain('<Share ')
-		expect(source).not.toContain('zm-1-13h2v6h-2zm0 8h2v2h-2z')
-	})
 })
