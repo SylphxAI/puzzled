@@ -14,6 +14,7 @@ type Props = {
 	monthly: PlanCard | undefined
 	locale: string
 	signedIn: boolean
+	initialPlan?: string
 }
 
 /**
@@ -22,10 +23,12 @@ type Props = {
  * `SubscribeButton`, so checkout is wired exactly as before; this only chooses
  * which plan it starts.
  */
-export function PlusOffer({ once, yearly, monthly, locale, signedIn }: Props) {
+export function PlusOffer({ once, yearly, monthly, locale, signedIn, initialPlan }: Props) {
 	const t = useTranslations('plus.pricing')
+	const options = [once, yearly, monthly].filter((card): card is PlanCard => Boolean(card))
 	const [interval, setInterval] = useState<'once' | 'year' | 'month'>(
-		yearly ? 'year' : monthly ? 'month' : 'once',
+		options.find((card) => card.id === initialPlan)?.interval ??
+			(yearly ? 'year' : monthly ? 'month' : 'once'),
 	)
 	const selected = interval === 'once' ? once : interval === 'year' ? yearly : monthly
 	if (!selected) return null
@@ -33,7 +36,10 @@ export function PlusOffer({ once, yearly, monthly, locale, signedIn }: Props) {
 	const price = (card: PlanCard) => formatPrice(card.amountMinor, card.currency, locale)
 	const saving =
 		yearly && monthly ? yearlySavingPercent(monthly.amountMinor, yearly.amountMinor) : null
-	const options = [once, yearly, monthly].filter((card): card is PlanCard => Boolean(card))
+	const selectedName =
+		selected.interval === 'once'
+			? t('weekendPass', { days: selected.accessDays })
+			: t(selected.interval === 'year' ? 'yearly' : 'monthly')
 
 	return (
 		<div className="surface-card border-2 border-foreground p-4 shadow-lg sm:p-5">
@@ -94,7 +100,20 @@ export function PlusOffer({ once, yearly, monthly, locale, signedIn }: Props) {
 				<TrialChargeLine days={selected.trialDays} price={price(selected)} />
 			) : null}
 			<div className="mt-4">
+				<output aria-live="polite" className="mb-3 block text-center text-sm font-semibold tnum">
+					{selectedName} · {price(selected)}{' '}
+					{t(
+						selected.interval === 'once'
+							? 'oneTime'
+							: selected.interval === 'year'
+								? 'perYear'
+								: 'perMonth',
+					)}
+				</output>
 				<SubscribeButton
+					key={selected.id}
+					loginReturnTo={`/pricing?plan=${encodeURIComponent(selected.id)}#plus`}
+					guestLabel={`${t('signInToSubscribe')} · ${selectedName}`}
 					planId={selected.id}
 					currency={selected.currency}
 					amountMinor={selected.amountMinor}

@@ -17,6 +17,8 @@ type Props = {
 	signedIn: boolean
 	subscribed: boolean
 	label: string
+	loginReturnTo?: string
+	guestLabel?: string
 	/** What the buyer is agreeing to renew at, shown between the consent tick and the button. */
 	renewalNote?: string
 }
@@ -30,6 +32,8 @@ export function SubscribeButton({
 	signedIn,
 	subscribed,
 	label,
+	loginReturnTo = '/pricing',
+	guestLabel,
 	renewalNote,
 }: Props) {
 	const t = useTranslations('plus.pricing')
@@ -42,10 +46,10 @@ export function SubscribeButton({
 	if (!signedIn) {
 		return (
 			<Link
-				href={{ pathname: '/login', query: { callbackUrl: '/pricing' } }}
+				href={{ pathname: '/login', query: { callbackUrl: loginReturnTo } }}
 				className={buttonClass}
 			>
-				{t('signInToSubscribe')}
+				{guestLabel ?? t('signInToSubscribe')}
 			</Link>
 		)
 	}
