@@ -68,10 +68,11 @@ for (const { path, locale, currency } of [
 			contactPoint: {
 				'@type': 'ContactPoint',
 				email: 'hi@puzzled.gg',
-				telephone: '+44 333 335 7935',
+				telephone: '+447537188188',
 				contactType: 'customer support',
 			},
 		})
+		expect(organization.contactPoint.telephone).toMatch(/^\+[1-9]\d{1,14}$/)
 		expect(JSON.stringify(schemas)).not.toMatch(/16686526|Shelton Street/)
 	})
 }
@@ -89,6 +90,6 @@ for (const path of ['/terms', '/privacy']) {
 		expect(text).toContain('128 City Road, London EC1V 2NX, United Kingdom')
 		expect(text).not.toMatch(/16686526|Shelton Street/)
 		await expect(main.locator('a[href="mailto:hi@puzzled.gg"]')).toHaveText('hi@puzzled.gg')
-		await expect(main.locator('a[href="tel:+443333357935"]')).toHaveText('+44 333 335 7935')
+		await expect(main.locator('a[href="tel:+447537188188"]')).toHaveText('+44 7537 188 188')
 	})
 }
