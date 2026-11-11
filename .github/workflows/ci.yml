@@ -271,6 +271,9 @@ jobs:
           echo "bun install failed after retries"
           exit 1
 
+      - name: Strict Turbo preserves desk controls
+        run: bun test scripts/turbo-desk-env.test.ts
+
       # bun test has no affected mode: the lane is path-selected (web paths)
       # and runs the whole unit suite when it runs.
       - name: Run unit tests
@@ -561,7 +564,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@96195d86b550ab1205159acb1ae0d75b1fbed47f # main
+      - uses: SylphxAI/.github/.github/actions/needs-pass@0546ef1e30776427b845d068895f7737eee43f84 # reviewed squash allowlist support
         with:
           needs: ${{ toJSON(needs) }}
           required: >-

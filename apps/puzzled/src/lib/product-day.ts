@@ -99,6 +99,13 @@ export function nextProductDayKey(now: Date = new Date()): string {
 	return productDayKey(new Date(now.getTime() + DAY_MS))
 }
 
+/** Shared daily HTML expires before the free rotation changes. */
+export function nextProductDayStart(now: Date = new Date()): Date {
+	return new Date(
+		(Math.floor((now.getTime() + HKT_OFFSET_MS) / DAY_MS) + 1) * DAY_MS - HKT_OFFSET_MS,
+	)
+}
+
 /** 0-based day-of-year for a `YYYY-MM-DD` civil date (Jan 1 = 0). */
 export function ordinal0FromDayKey(dayKey: string): number {
 	const parts = parseDayKey(dayKey)

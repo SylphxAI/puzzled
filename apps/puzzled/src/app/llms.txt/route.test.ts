@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { getAllGameMetadata } from '@/games/registry'
 import { GET } from './route'
 
 describe('/llms.txt', () => {
@@ -19,13 +20,18 @@ describe('/llms.txt', () => {
 		expect(urls).toEqual([
 			'https://puzzled.gg/',
 			'https://puzzled.gg/games',
-			'https://puzzled.gg/games/sudoku',
-			'https://puzzled.gg/games/word-guess',
-			'https://puzzled.gg/games/word-groups',
+			...getAllGameMetadata().map((game) => `https://puzzled.gg/games/${game.slug}`),
 			'https://puzzled.gg/leaderboard',
 			'https://puzzled.gg/support',
 			'https://puzzled.gg/privacy',
 			'https://puzzled.gg/terms',
 		])
+		expect(new Set(urls).size).toBe(urls.length)
+		for (const game of getAllGameMetadata()) {
+			expect(body).toContain(
+				`[${game.name}](https://puzzled.gg/games/${game.slug}): ${game.description}`,
+			)
+		}
+		expect(body.trimEnd().endsWith('Contact: hi@puzzled.gg.')).toBe(true)
 	})
 })

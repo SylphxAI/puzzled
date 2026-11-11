@@ -78,6 +78,7 @@
 		"checkoutPending": "Estamos confirmando tu suscripción. Esta página se actualizará automáticamente. Si tarda más, actualiza la página.",
 		"checkoutSuccess": "Te damos la bienvenida a Puzzled Plus. Todos los juegos y el archivo están abiertos.",
 		"plan": {
+			"individual_once": "Puzzled Plus, pase de 3 días",
 			"individual_monthly": "Puzzled Plus, mensual",
 			"individual_yearly": "Puzzled Plus, anual",
 			"family_monthly": "Puzzled Plus Familia, mensual",

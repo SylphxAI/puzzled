@@ -9,6 +9,7 @@ import {
 	currencyForLocale,
 	formatPrice,
 	formatTrialEnd,
+	isOneTimePassPlan,
 	isPlayLocked,
 	isPlusRequiredError,
 	planCards,
@@ -93,6 +94,12 @@ describe('Puzzled Plus presentation', () => {
 			accessDays: 3,
 			amountMinor: 99,
 		})
+		expect(isOneTimePassPlan('individual_once')).toBe(true)
+		expect(isOneTimePassPlan('individual_monthly')).toBe(false)
+		expect(isOneTimePassPlan('individual_yearly')).toBe(false)
+		expect(isOneTimePassPlan('family_monthly')).toBe(false)
+		expect(isOneTimePassPlan('family_yearly')).toBe(false)
+		expect(isOneTimePassPlan(null)).toBe(false)
 	})
 
 	test('a reverse-trial viewer still sees the buy button; a subscriber sees the current plan', () => {

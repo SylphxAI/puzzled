@@ -38,7 +38,20 @@ export function LanguageSwitcher({
 	const router = useRouter()
 	const pathname = usePathname()
 	const [isPending, startTransition] = useTransition()
-	const { opened, triggerProps } = useLazyMenu(loadMenu)
+	const { ready, opened, triggerProps } = useLazyMenu(loadMenu)
+	const languageIcon = (className: string) =>
+		ready ? (
+			<Languages className={className} aria-hidden="true" />
+		) : (
+			<span
+				role="status"
+				aria-label={t('loading')}
+				className={cn(
+					'animate-spin rounded-full border-2 border-current border-t-transparent',
+					className,
+				)}
+			/>
+		)
 
 	const handleLocaleChange = (newLocale: Locale) => {
 		if (newLocale === locale) return
@@ -69,7 +82,7 @@ export function LanguageSwitcher({
 					aria-label={t('changeLanguage')}
 					{...extra}
 				>
-					<Languages className="h-5 w-5" aria-hidden="true" />
+					{languageIcon('h-5 w-5')}
 					{isPending && (
 						<span className="absolute inset-0 flex items-center justify-center">
 							<span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -96,7 +109,7 @@ export function LanguageSwitcher({
 					{...extra}
 				>
 					<span className="flex items-center gap-3">
-						<Languages className="h-5 w-5 shrink-0" aria-hidden="true" />
+						{languageIcon('h-5 w-5 shrink-0')}
 						<span className="truncate">{localeNames[locale]}</span>
 					</span>
 					<ChevronDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
@@ -118,7 +131,7 @@ export function LanguageSwitcher({
 				aria-label={`${localeShortNames[locale]}, ${t('changeLanguage')}`}
 				{...extra}
 			>
-				<Languages className="h-4 w-4" aria-hidden="true" />
+				{languageIcon('h-4 w-4')}
 				<span>{localeShortNames[locale]}</span>
 			</button>
 		)

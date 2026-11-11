@@ -5,7 +5,7 @@ import {
 	readActiveElement,
 	SHELL_TARGET_SELECTOR,
 	type Stop,
-	sampleTransform,
+	samplePopupTransform,
 	settle,
 	targetOffenders,
 } from './a11y-support'
@@ -252,8 +252,36 @@ test.describe('Company target size (44px effective hit area)', () => {
 	})
 })
 
+/** Load the popup once so its media-preference effect is settled before time is frozen. */
+async function prepareLanguagePopup(page: Page) {
+	const trigger = page.getByRole('button', { name: /change language/i }).first()
+	await trigger.click()
+	await expect(page.getByRole('menu')).toBeVisible()
+	await page.keyboard.press('Escape')
+	await expect(page.getByRole('menu')).toBeHidden()
+	return trigger
+}
+
+function transformChanges(samples: string[]) {
+	return samples.slice(1).filter((value, index) => value !== samples[index]).length
+}
+
 test.describe('Reduced motion', () => {
 	test.use({ viewport: DESKTOP, colorScheme: 'light', contextOptions: { reducedMotion: 'reduce' } })
+
+	test('does not interpolate the first language menu entrance', async ({ page }) => {
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		const trigger = page.getByRole('button', { name: /change language/i }).first()
+		await expect(trigger).toBeEnabled()
+		const samples = await samplePopupTransform(page, () => trigger.click({ force: true }))
+		// Reduced motion may jump from the initial mount style to its endpoint;
+		// interpolation or repeated movement would require further frame changes.
+		expect(
+			transformChanges(samples),
+			`first entrance moved: ${samples.join(' ')}`,
+		).toBeLessThanOrEqual(1)
+		expect(samples.at(-1)).toBe('none')
+	})
 
 	test('stops transform animation on shell surfaces', async ({ page }) => {
 		await page.goto('/', { waitUntil: 'domcontentloaded' })
@@ -273,23 +301,11 @@ test.describe('Reduced motion', () => {
 		expect(running, 'transform animations running under reduced motion').toEqual([])
 	})
 
-	test('keeps the language menu popup static', async ({ page }, testInfo) => {
+	test('keeps the language menu popup static', async ({ page }) => {
 		await page.goto('/', { waitUntil: 'domcontentloaded' })
-		await settle(page)
-
-		const trigger = await openPopup(page, /change language/i, page.getByRole('menu'), (reason) =>
-			testInfo.skip(true, reason),
-		)
-		if (!trigger) return
-
-		// The motion lives on the popup's content wrapper; the Base UI Popup element
-		// that carries role="menu" never transforms, so sampling it would pass
-		// vacuously. Sample the wrapper the animation is on.
-		const samples = await sampleTransform(page, '[role="menu"] > *')
-		expect(
-			new Set(samples).size,
-			`popup transform changed: ${samples.join(' ')}`,
-		).toBeLessThanOrEqual(1)
+		const trigger = await prepareLanguagePopup(page)
+		const samples = await samplePopupTransform(page, () => trigger.click({ force: true }))
+		expect(new Set(samples).size, `popup transform changed: ${samples.join(' ')}`).toBe(1)
 	})
 })
 
@@ -300,21 +316,41 @@ test.describe('Motion for users without the preference', () => {
 		contextOptions: { reducedMotion: 'no-preference' },
 	})
 
-	test('keeps the language menu popup animation', async ({ page }, testInfo) => {
+	test('animates the first language menu entrance', async ({ page }) => {
 		await page.goto('/', { waitUntil: 'domcontentloaded' })
-		await settle(page)
-
-		const trigger = await openPopup(page, /change language/i, page.getByRole('menu'), (reason) =>
-			testInfo.skip(true, reason),
-		)
-		if (!trigger) return
-
-		// See the reduced-motion case above: the animated node is the popup's content
-		// wrapper, not the role="menu" element itself.
-		const samples = await sampleTransform(page, '[role="menu"] > *')
+		const trigger = page.getByRole('button', { name: /change language/i }).first()
+		await expect(trigger).toBeEnabled()
+		const samples = await samplePopupTransform(page, () => trigger.click({ force: true }))
 		expect(
-			new Set(samples).size,
+			transformChanges(samples),
+			`first entrance stayed static: ${samples.join(' ')}`,
+		).toBeGreaterThan(1)
+	})
+
+	test('keeps the language menu popup animation', async ({ page }) => {
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		const trigger = await prepareLanguagePopup(page)
+		const samples = await samplePopupTransform(page, () => trigger.click({ force: true }))
+		expect(
+			transformChanges(samples),
 			`expected the popup to animate, saw: ${samples.join(' ')}`,
 		).toBeGreaterThan(1)
+	})
+
+	test('the recorder does not mistake a static popup for motion', async ({ page }) => {
+		await page.setContent('<button>Open</button>')
+		const samples = await samplePopupTransform(page, () =>
+			page.evaluate(() => {
+				document.body.insertAdjacentHTML('beforeend', '<div role="menu"><div>Static</div></div>')
+			}),
+		)
+		expect(new Set(samples).size).toBe(1)
+	})
+
+	test('a missing popup fails motion measurement', async ({ page }) => {
+		await page.setContent('<button>Open</button>')
+		await expect(samplePopupTransform(page, async () => {}, 50)).rejects.toThrow(
+			'expected one mounted popup content',
+		)
 	})
 })

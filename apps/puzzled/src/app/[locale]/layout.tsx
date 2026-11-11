@@ -9,6 +9,7 @@ import { GoogleTag } from '@/features/analytics/components/google-tag'
 import { CONSENT_DEFAULT_SCRIPT, googleTagIds } from '@/features/analytics/lib/google-tag'
 import { ErrorCapture } from '@/features/monitoring/components/error-capture'
 import { ApiProvider } from '@/lib/api/provider'
+import { COMPANY_PHONE, CONTACT_EMAIL } from '@/lib/config/app'
 import { NONCE_HEADER } from '@/lib/csp'
 import { env } from '@/lib/env'
 import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
@@ -17,6 +18,7 @@ import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 import { DeferredToaster } from '@/shared/components/deferred-shell'
 import { PlatformProvider } from '@/shared/components/platform'
 import { ThemeProvider } from '@/shared/components/theme'
+import catalogue from '../../../../../config/commercial/catalogue.json'
 import '../globals.css'
 
 /**
@@ -30,7 +32,7 @@ const fraunces = localFont({
 	weight: '500 700',
 	display: 'swap',
 	preload: true,
-	adjustFontFallback: 'Times New Roman',
+	adjustFontFallback: false,
 })
 
 const SITE_DESCRIPTION =
@@ -111,6 +113,18 @@ function JsonLd({ baseUrl }: { baseUrl: string }) {
 		url: baseUrl,
 		logo: `${baseUrl}/icons/icon-512.png`,
 		description: SITE_DESCRIPTION,
+		parentOrganization: {
+			'@type': 'Organization',
+			name: catalogue.seller.legal_name,
+			url: 'https://sylphx.com',
+			identifier: catalogue.seller.company_number,
+		},
+		contactPoint: {
+			'@type': 'ContactPoint',
+			email: CONTACT_EMAIL,
+			telephone: COMPANY_PHONE.replace(/\s/g, ''),
+			contactType: 'customer support',
+		},
 	}
 
 	const websiteSchema = {

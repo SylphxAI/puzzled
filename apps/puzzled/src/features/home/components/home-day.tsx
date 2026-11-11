@@ -93,21 +93,23 @@ export async function HomeDay({
 
 	return (
 		<section className="day-surface relative">
-			<div className="page-shell-wide pt-5 md:pt-8">
+			<div className="home-day-shell page-shell-wide pt-5 md:pt-8">
 				{/* Masthead: the day has an identity. */}
-				<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-foreground/80 pb-2.5 text-[13px] text-muted-foreground">
-					<p className="flex items-center gap-2">
-						<span className="font-semibold text-foreground">{dateLabel}</span>
+				<div className="home-day-masthead flex items-center justify-between gap-x-2 border-b border-foreground/80 pb-2.5 text-xs text-muted-foreground sm:gap-x-4 sm:text-[13px]">
+					<p className="flex min-w-0 items-center gap-1.5 truncate sm:gap-2">
+						<span className="truncate font-semibold text-foreground">{dateLabel}</span>
 						<span aria-hidden="true">·</span>
-						<span className="day-numeral">{t('day.puzzleNumber', { number: puzzleNumber })}</span>
+						<span className="day-numeral shrink-0">
+							{t('day.puzzleNumber', { number: puzzleNumber })}
+						</span>
 					</p>
-					<p className="flex items-center gap-1.5">
+					<p className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
 						<span>{t('day.resetsIn')}</span>
 						<DayCountdown className="font-semibold text-foreground" />
 					</p>
 				</div>
 
-				<div className="grid items-center gap-5 pb-10 pt-4 md:gap-10 md:pb-14 md:pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+				<div className="home-day-grid grid items-center gap-5 pb-10 pt-4 md:gap-10 md:pb-14 md:pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
 					<div>
 						{isMember && currentStreak > 0 ? (
 							<p className="eyebrow flex items-center gap-1.5 text-stat-streak">
@@ -122,7 +124,7 @@ export async function HomeDay({
 							{headline}
 						</h1>
 
-						<p className="mt-4 max-w-lg text-[17px] leading-relaxed text-muted-foreground">
+						<p className="home-day-description mt-4 max-w-lg text-[17px] leading-relaxed text-muted-foreground">
 							{isMember ? t('day.bodyMember') : t('day.bodyGuest')}
 						</p>
 
@@ -241,10 +243,13 @@ function FeaturedCard({
 }) {
 	const colors = getGameColors(game.theme)
 	return (
-		<div className="animate-enter overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
+		<div
+			data-day-puzzle-card=""
+			className="grid grid-cols-[80px_minmax(0,1fr)] overflow-hidden rounded-3xl border border-border bg-card shadow-lg sm:block"
+		>
 			<div
 				className={cn(
-					'relative flex h-44 items-center justify-center sm:h-56',
+					'relative flex items-center justify-center sm:h-56',
 					colors.bg,
 					colors.onField,
 				)}
@@ -253,16 +258,16 @@ function FeaturedCard({
 				<GameIcon
 					slug={game.slug}
 					size={96}
-					className="drop-shadow-[0_1px_0_rgb(255_255_255/0.4)]"
+					className="h-14 w-14 drop-shadow-[0_1px_0_rgb(255_255_255/0.4)] sm:h-24 sm:w-24"
 				/>
-				<span className="absolute left-4 top-4 rounded-full bg-[#1a1712] px-2.5 py-1 text-xs font-semibold text-[#fbf9f4]">
+				<span className="absolute left-4 top-4 hidden rounded-full sm:block bg-[#1a1712] px-2.5 py-1 text-xs font-semibold text-[#fbf9f4]">
 					{label}
 				</span>
-				<span className="numeral absolute right-4 top-4 text-xs font-semibold opacity-70">
+				<span className="numeral absolute right-4 top-4 hidden text-xs sm:block font-semibold opacity-70">
 					{numberLabel}
 				</span>
 			</div>
-			<div className="p-5 sm:p-6">
+			<div className="p-3 sm:p-6">
 				<p className="font-display text-2xl leading-tight">{game.name}</p>
 				{game.tagline ? (
 					<p className="mt-1 text-[15px] text-muted-foreground">
@@ -274,11 +279,15 @@ function FeaturedCard({
 					href={href}
 					// The day's primary action: the install offer stays off it.
 					data-day-primary-action=""
-					className="pressable mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary px-6 text-[16px] font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+					className="pressable mt-3 flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-6 text-[16px] font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
 				>
 					{cta}
 				</Link>
-				{note ? <p className="mt-3 text-center text-sm text-muted-foreground">{note}</p> : null}
+				{note ? (
+					<p className="mt-2 text-center text-xs text-muted-foreground sm:mt-3 sm:text-sm">
+						{note}
+					</p>
+				) : null}
 			</div>
 		</div>
 	)

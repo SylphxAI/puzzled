@@ -152,4 +152,18 @@ describe('ad click id capture', () => {
 		expect(decoded.get('p')).toBe('/pricing')
 		expect(decoded.get('at')).toBe('5')
 	})
+
+	test('captures fbclid and extracts tags and click ids from auth redirect parameters', () => {
+		const redirectSearch = '?next=%2Fplus%3Futm_source%3Dmeta%26fbclid%3Dfb_1'
+		const out = decoded(
+			nextAttributionCookie({
+				...base,
+				search: redirectSearch,
+				analytics: true,
+				marketing: true,
+			}),
+		)
+		expect(out?.get('s')).toBe('meta')
+		expect(out?.get('fb')).toBe('fb_1')
+	})
 })

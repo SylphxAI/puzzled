@@ -28,6 +28,7 @@ import {
 	sessionCookieOptions,
 } from '@/lib/identity/session-cookie'
 import { isInboundPublicPath, isProxySkippedPath } from '@/lib/proxy-paths'
+import { isSharedHomeRequest, SHARED_HOME_HEADER } from '../shared-home-policy.cjs'
 
 // =============================================================================
 // i18n Middleware
@@ -87,22 +88,29 @@ export function rememberedLocaleRedirect(
 // =============================================================================
 
 /**
- * Every response carries a fresh nonce CSP. The request is rebuilt with the
- * nonce so Next.js and the layout can put it on the page's scripts.
+ * Private responses carry a fresh nonce CSP. Anonymous root scripts are hashed
+ * by the native HTTP wrapper after the representation has finished.
  */
 export async function proxy(incoming: NextRequest) {
-	const nonce = createNonce()
+	const sharedHome =
+		process.env.NODE_ENV === 'production' &&
+		isSharedHomeRequest(incoming.method, incoming.url, Object.fromEntries(incoming.headers))
+	const nonce = sharedHome ? undefined : createNonce()
 	const csp = buildCsp(nonce, {
 		dev: process.env.NODE_ENV === 'development',
 		ads: adsConfig(env) !== null,
 		googleTag: googleTagIds(env) !== null,
 	})
 	const headers = new Headers(incoming.headers)
-	headers.set(NONCE_HEADER, nonce)
+	headers.delete(SHARED_HOME_HEADER)
+	headers.delete(NONCE_HEADER)
+	if (sharedHome) headers.set(SHARED_HOME_HEADER, '1')
+	if (nonce) headers.set(NONCE_HEADER, nonce)
 	headers.set('Content-Security-Policy', csp)
 	const request = new NextRequest(incoming, { headers })
 	const response = await route(request)
 	response.headers.set('Content-Security-Policy', csp)
+	if (sharedHome) response.headers.set(SHARED_HOME_HEADER, '1')
 	migrateSessionCookie(request, response)
 	return response
 }

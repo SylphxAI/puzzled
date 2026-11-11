@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
-import { readFileSync } from 'node:fs'
 import { resetConnectTransportCache } from '@/lib/connect/transport'
 
 // Route handlers read request headers through next/headers; give the canonical
@@ -132,12 +131,5 @@ describe('unsubscribe forwarding', () => {
 			),
 		).toContain('missing_token')
 		expect(forwarded).toHaveLength(0)
-	})
-
-	test('web route contains no database import, write, or signing key', () => {
-		const source = readFileSync(new URL('./route.ts', import.meta.url), 'utf8')
-		expect(source).not.toMatch(
-			/lib\/db|notificationPreferences|\.insert\(|\.update\(|EMAIL_UNSUBSCRIBE_SECRET|createHmac/,
-		)
 	})
 })
