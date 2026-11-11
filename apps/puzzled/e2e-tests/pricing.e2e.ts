@@ -39,7 +39,7 @@ for (const viewport of VIEWPORTS) {
 			// Signed in: the unticked consent box and the one payment button. Guest: the sign-in link.
 			const consent = offer.getByRole('checkbox')
 			const payment = offer.getByRole('button', { name: 'Continue to payment' })
-			const signIn = offer.getByRole('link', { name: 'Sign in to subscribe' })
+			const signIn = offer.getByRole('link', { name: /^Sign in to subscribe/ })
 			if ((await payment.count()) > 0) {
 				await expect(consent).not.toBeChecked()
 				await expect(consent).toBeInViewport({ ratio: 1 })
@@ -73,6 +73,41 @@ for (const viewport of VIEWPORTS) {
 			const freeTop = (await freeCard.boundingBox())?.y ?? 0
 			const linkBottom = await freePlay.evaluate((el) => el.getBoundingClientRect().bottom)
 			expect(freeTop, 'the Free card sits below the free-play link').toBeGreaterThan(linkBottom)
+		})
+
+		test('keeps the selected plan through the sign-in return', async ({ page }) => {
+			await openPricing(page)
+			const offer = page.locator('#plus')
+			test.skip((await offer.getByRole('radio').count()) === 0, 'sales are closed')
+			const signIn = offer.getByRole('link', { name: /^Sign in to subscribe/ })
+			test.skip((await signIn.count()) === 0, 'guest return-path test')
+			for (const [interval, plan, name] of [
+				['month', 'individual_monthly', 'Monthly'],
+				['once', 'individual_once', '3-day pass'],
+				['year', 'individual_yearly', 'Yearly'],
+			]) {
+				const radio = offer.locator(`input[value="${interval}"]`)
+				if ((await radio.count()) === 0) continue
+				await radio.check()
+				await expect(signIn).toContainText(name)
+				const href = await signIn.getAttribute('href')
+				const callback = new URL(href ?? '', page.url()).searchParams.get('callbackUrl')
+				expect(callback).toBe(`/pricing?plan=${plan}#plus`)
+				// Follow only the local return URL; never sign in or create a checkout.
+				await page.goto(callback ?? '/pricing')
+				await expect(radio).toBeChecked()
+			}
+		})
+
+		test('puts currency beside the offer and ignores unknown plan requests', async ({ page }) => {
+			await page.goto('/pricing?plan=not-a-plan')
+			await settle(page)
+			const offer = page.locator('#plus')
+			const yearly = offer.locator('input[value="year"]')
+			test.skip((await yearly.count()) === 0, 'sales are closed')
+			await expect(yearly).toBeChecked()
+			const currency = offer.getByRole('group', { name: 'Currency', exact: true })
+			if ((await currency.count()) > 0) await expect(currency).toBeInViewport({ ratio: 1 })
 		})
 
 		test('has no horizontal overflow', async ({ page }) => {
