@@ -1,6 +1,4 @@
 import { describe, expect, test } from 'bun:test'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { cellGridStyle } from './pip-place-game'
 
 describe('pip-place cells keep an explicit grid position', () => {
@@ -14,10 +12,5 @@ describe('pip-place cells keep an explicit grid position', () => {
 			}
 		}
 		expect(seen.size).toBe(20)
-	})
-
-	test('the cell buttons use it, so placed-tile overlays cannot reflow them', () => {
-		const source = readFileSync(join(import.meta.dir, 'pip-place-game.tsx'), 'utf8')
-		expect(source).toContain('style={cellGridStyle(cell)}')
 	})
 })

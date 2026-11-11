@@ -15,6 +15,14 @@ preview_deploys = true
 merge = "optimistic"
 on_red = "revert"
 
+# Only production publishes retained browser assets. Preview admission never
+# requests this credential and keeps HTML private without a publication receipt.
+[environments.production.build.secrets]
+public_assets = { from_secret = "PUZZLED_PUBLIC_ASSETS_KEY" }
+
+[environments.production.env.NEXT_PUBLIC_PUZZLED_ASSET_PREFIX]
+value = "https://api.data.sylphx.com/v1/public/objects/env_fs01jp34p38ahpzfskjywcp271j5gq/web-static"
+
 # Project-level schema gate (ADR-089 / DEPLOY-GUIDE). Ephemeral Job runs once
 # per push BEFORE writer services roll. Supersedes web-only release_command:
 # web runtime image has no atlas binary, so api-only crate deploys left

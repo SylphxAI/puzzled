@@ -1,4 +1,7 @@
 import { describe, expect, test } from 'bun:test'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { DayCountdown } from '../components/day-countdown'
 import { formatCountdown, msUntilNextProductDay } from './day-boundary'
 
 /**
@@ -29,5 +32,14 @@ describe('day boundary clock', () => {
 		expect(formatCountdown(86_399_000)).toBe('23:59:59')
 		// A clock that reads a negative delta renders the boundary, not "-1".
 		expect(formatCountdown(-5000)).toBe('00:00:00')
+	})
+
+	test('the countdown span reserves a fixed width so proportional font digits never wrap the masthead', () => {
+		const html = renderToStaticMarkup(createElement(DayCountdown, { className: 'font-semibold' }))
+		expect(html).toContain('inline-block')
+		expect(html).toContain('w-[7.5ch]')
+		expect(html).toContain('text-right')
+		expect(html).toContain('tabular-nums')
+		expect(html).toMatch(/>\d{2}:\d{2}:\d{2}<\/span>$/)
 	})
 })

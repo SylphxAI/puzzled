@@ -279,16 +279,22 @@ export function useSignUpForm(
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [name, setName] = useState('')
-	const [step, setStep] = useState<number | 'verify-email'>(1)
+	// Remember accepted/uncertain attempts only for this mounted form, never resend signup.
+	const [retryEmails, setRetryEmails] = useState<string[]>([])
+	const normalizedEmail = email.trim().toLowerCase()
+	const isSignInRetry = retryEmails.includes(normalizedEmail)
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const minLength = opts.minPasswordLength ?? MIN_PASSWORD_LENGTH
 	return {
 		form: { email, password, name },
-		setEmail,
+		setEmail: (value: string) => {
+			setEmail(value)
+			setError(null)
+		},
 		setPassword,
 		setName,
-		step,
+		isSignInRetry,
 		isLoading,
 		loadingProvider: null as string | null,
 		error: error ? { message: error } : null,
@@ -297,24 +303,42 @@ export function useSignUpForm(
 			event?.preventDefault?.()
 			setIsLoading(true)
 			setError(null)
+			const rememberAttempt = () => {
+				setRetryEmails((previous) =>
+					previous.includes(normalizedEmail) ? previous : [...previous, normalizedEmail],
+				)
+			}
+			let receivedResponse = false
 			try {
-				const response = await fetch('/api/identity/signup', {
-					method: 'POST',
-					headers: { 'content-type': 'application/json' },
-					credentials: 'same-origin',
-					body: JSON.stringify({ email, password, name }),
-				})
+				const response = await fetch(
+					isSignInRetry ? '/api/identity/login' : '/api/identity/signup',
+					{
+						method: 'POST',
+						headers: { 'content-type': 'application/json' },
+						credentials: 'same-origin',
+						body: JSON.stringify({ email, password, ...(isSignInRetry ? {} : { name }) }),
+					},
+				)
+				receivedResponse = true
 				const result = await readJson(response)
+				// A successful signup response without signedIn is ambiguous, not verification.
+				if (!isSignInRetry && (response.ok || result.retrySignIn === true)) rememberAttempt()
 				if (!response.ok) {
 					throw new Error(typeof result.error === 'string' ? result.error : 'sign-up failed')
 				}
-				if (result.signedIn === true) {
+				if (isSignInRetry || result.signedIn === true) {
 					window.location.assign(opts.afterSignUpUrl ?? '/')
 					return
 				}
-				setStep('verify-email')
+				throw new Error('signup_signin_failed')
 			} catch (err) {
-				setError(err instanceof Error ? err.message : 'sign-up failed')
+				// A lost response may follow an accepted write. Recover through sign-in, not signup.
+				if (!isSignInRetry && !receivedResponse) {
+					rememberAttempt()
+					setError('signup_signin_failed')
+				} else {
+					setError(err instanceof Error ? err.message : 'sign-up failed')
+				}
 			} finally {
 				setIsLoading(false)
 			}
@@ -616,11 +640,11 @@ export function CookieBanner(props: {
 			// in app/[locale]/layout.tsx marks <html> and globals.css hides this
 			// node, so a visitor who already decided never sees a flash.
 			data-consent-banner=""
-			// Sits above the mobile bottom bar: overlapping it made the navigation
-			// unusable until consent was given.
+			// On phones the choice owns space in the page, never over the puzzle
+			// or its Play action. The desktop bar keeps its existing placement.
 			className={
 				props.position === 'bottom'
-					? 'fixed inset-x-0 z-toast px-2 pb-1.5 sm:p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
+					? 'relative z-toast px-2 py-1.5 sm:p-4 md:fixed md:inset-x-0 md:bottom-0'
 					: undefined
 			}
 		>

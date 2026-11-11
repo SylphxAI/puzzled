@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import {
 	isServedPuzzleId,
 	isValidDayKey,
+	nextProductDayStart,
 	ordinal0FromDayKey,
 	PRODUCT_DAY_TZ,
 	parseDayKey,
@@ -25,6 +26,15 @@ describe('productDayKey', () => {
 		expect(productDayKey(new Date('2026-08-12T16:00:00Z'))).toBe('2026-08-13')
 		expect(productDayKey(new Date('2026-08-12T20:07:00Z'))).toBe('2026-08-13')
 		expect(productDayKey(new Date('2026-08-13T00:00:00Z'))).toBe('2026-08-13')
+	})
+
+	test('next start follows HKT midnight through the year boundary', () => {
+		for (const [instant, expected] of [
+			['2026-12-31T15:59:59.999Z', '2026-12-31T16:00:00.000Z'],
+			['2026-12-31T16:00:00.000Z', '2027-01-01T16:00:00.000Z'],
+		]) {
+			expect(nextProductDayStart(new Date(instant)).toISOString()).toBe(expected)
+		}
 	})
 })
 

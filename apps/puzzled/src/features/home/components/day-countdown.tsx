@@ -25,7 +25,10 @@ export function DayCountdown({ className }: { className?: string }) {
 	}, [])
 
 	return (
-		<span className={cn('day-numeral tabular-nums', className)} suppressHydrationWarning>
+		<span
+			className={cn('day-numeral inline-block w-[7.5ch] text-right tabular-nums', className)}
+			suppressHydrationWarning
+		>
 			{label}
 		</span>
 	)

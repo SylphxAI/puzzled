@@ -65,14 +65,20 @@ async fn catalog() -> Json<Value> {
 
 async fn spawn_money(fake: Fake) -> Money {
     let app = Router::new()
-        .route("/env/entitlement_grants:check", post(check))
-        .route("/env/price_catalogs/default", get(catalog))
+        .route(
+            "/v1/orgs/o/projects/p/envs/e/entitlement_grants:check",
+            post(check),
+        )
+        .route(
+            "/v1/orgs/o/projects/p/envs/e/price_catalogs/default",
+            get(catalog),
+        )
         .with_state(fake);
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
     tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
     Money::new(
-        &format!("http://{addr}/env"),
+        &format!("http://{addr}/v1/orgs/o/projects/p/envs/e"),
         "sk_test",
         "https://puzzled.test",
     )

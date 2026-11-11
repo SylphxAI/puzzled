@@ -14,8 +14,12 @@ but not on sale until payments run through Sylphx Money, the platform's payments
 service ([pricing and policy](docs/monetization.md)).
 
 A public product overview and curated page links are available at
-[`/llms.txt`](https://puzzled.gg/llms.txt). The plain-text route keeps the
-Puzzled name separate from its publisher attribution.
+[`/llms.txt`](https://puzzled.gg/llms.txt), with every game drawn from the game
+registry and the public contact address. Homepage JSON-LD describes the web app
+and its free daily offer and Plus subscriptions using the commercial catalogue;
+the organization identifies the legal operator separately from the Puzzled brand.
+Browser coverage for discovery and statutory disclosures lives in
+`apps/puzzled/e2e-tests/discovery.e2e.ts` and `llms.e2e.ts`.
 
 - Goal, users and what we will not do: [docs/vision.md](docs/vision.md)
 - Capabilities and their status: [docs/capabilities.md](docs/capabilities.md)
@@ -46,7 +50,8 @@ ops     -> /observability/test              -> api (Rust)
 
 Server and browser errors go to Sylphx Observability through the Sylphx SDK,
 with no third-party error service; see [docs/observability.md](docs/observability.md). Every
-page is served with a strict, nonce-based Content Security Policy
+page is served with a strict Content Security Policy (fresh nonces for private
+documents, exact script hashes for the anonymous shared home)
 ([docs/reference/csp.md](docs/reference/csp.md)). CI runs on our own runners.
 
 Every game follows one protocol: a daily puzzle keyed to the date in Hong Kong

@@ -7,13 +7,18 @@ import { afterAll, afterEach, beforeEach, describe, expect, mock, test } from 'b
  */
 
 const deleted: string[] = []
+const written: string[] = []
+let cookieFailure = false
 let requestHeaders: Record<string, string> = {}
 let cookieValues: Record<string, string> = {}
 
 mock.module('next/headers', () => ({
 	cookies: async () => ({
 		get: (name: string) => (cookieValues[name] ? { value: cookieValues[name] } : undefined),
-		set: () => undefined,
+		set: (name: string) => {
+			if (cookieFailure) throw new Error('private session cookie failure new@x.test')
+			written.push(name)
+		},
 		delete: (name: string) => {
 			deleted.push(name)
 		},
@@ -28,8 +33,11 @@ const { POST: resendVerification } = await import('@/app/api/identity/verify-ema
 const { POST: logout } = await import('@/app/api/identity/logout/route')
 const { POST: signup } = await import('@/app/api/identity/signup/route')
 
+const { currentUser } = await import('./server')
+
 const originalFetch = globalThis.fetch
 const envKeys = [
+	'SYLPHX_AUTH_URL',
 	'SYLPHX_AUTH_SECRET_KEY',
 	'SYLPHX_AUTH_ORGANIZATION_ID',
 	'SYLPHX_PUBLISHABLE_KEY',
@@ -47,12 +55,15 @@ function mockUpstream(handler: (call: Call) => Response) {
 
 beforeEach(() => {
 	for (const key of envKeys) savedEnv[key] = process.env[key]
+	process.env.SYLPHX_AUTH_URL = 'https://bound-auth.example/'
 	process.env.SYLPHX_AUTH_SECRET_KEY = 'sylphx_sk_test_secret'
 	process.env.SYLPHX_AUTH_ORGANIZATION_ID = 'organization-00000000-0000-7000-8000-000000000001'
 	process.env.SYLPHX_PUBLISHABLE_KEY = 'sylphx_pk_test_public'
 	process.env.SYLPHX_PUBLIC_URL = 'https://puzzled.gg'
 	calls = []
 	deleted.length = 0
+	written.length = 0
+	cookieFailure = false
 	cookieValues = {}
 	requestHeaders = { host: 'puzzled.gg', 'user-agent': 'TestBrowser/1.0' }
 	upstream = () => new Response('{}', { status: 200 })
@@ -90,6 +101,43 @@ function jsonPost(path: string, body: unknown, headers: Record<string, string> =
 
 const GOOD_PASSWORD = 'a-long-new-password'
 
+describe('current signed-in player', () => {
+	test('reads the bound Auth service with the same session, caller key and browser User-Agent', async () => {
+		cookieValues = { puzzled_session: 'identity_org_session_test' }
+		mockUpstream(() =>
+			Response.json({
+				session: {
+					principal: {
+						principal_id: 'principal-own',
+						project_id: process.env.SYLPHX_AUTH_ORGANIZATION_ID,
+					},
+				},
+			}),
+		)
+		expect((await currentUser())?.id).toBe('principal-own')
+		expect(calls).toHaveLength(1)
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/sessions/current')
+		expect(calls[0]?.headers.get('authorization')).toBe('Bearer identity_org_session_test')
+		expect(calls[0]?.headers.get('x-sylphx-caller-key')).toBe('sylphx_pk_test_public')
+		expect(calls[0]?.headers.get('user-agent')).toBe('TestBrowser/1.0')
+	})
+
+	test('still refuses a session belonging to a different Auth instance', async () => {
+		cookieValues = { puzzled_session: 'identity_org_session_test' }
+		mockUpstream(() =>
+			Response.json({
+				session: {
+					principal: {
+						principal_id: 'principal-other',
+						project_id: 'organization-00000000-0000-7000-8000-000000000002',
+					},
+				},
+			}),
+		)
+		expect(await currentUser()).toBeNull()
+	})
+})
+
 describe('forgot password (recovery start)', () => {
 	test('starts recovery with the product key, the site reset URL, and no client address', async () => {
 		const response = await startRecovery(
@@ -102,7 +150,7 @@ describe('forgot password (recovery start)', () => {
 		expect(response.status).toBe(200)
 		expect(await response.json()).toEqual({ accepted: true })
 		expect(calls).toHaveLength(1)
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/account-recovery/start')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/account-recovery/start')
 		expect(calls[0]?.headers.get('authorization')).toBe('Bearer sylphx_sk_test_secret')
 		expect(calls[0]?.headers.get('x-forwarded-for')).toBeNull()
 		expect(calls[0]?.body).toEqual({
@@ -187,7 +235,7 @@ describe('reset password (recovery complete)', () => {
 		expect(response.status).toBe(200)
 		expect(await response.json()).toEqual({ accepted: true })
 		expect(calls).toHaveLength(1)
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/account-recovery/complete')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/account-recovery/complete')
 		expect(calls[0]?.headers.get('authorization')).toBe('Bearer sylphx_sk_test_secret')
 		const { idempotency_key, ...rest } = calls[0]?.body ?? {}
 		expect(typeof idempotency_key).toBe('string')
@@ -284,17 +332,60 @@ describe('reset password (recovery complete)', () => {
 })
 
 describe('verify email', () => {
-	test('confirms on the public completion door with the mailed challenge and secret, no credential', async () => {
+	test('confirms without a session on the public door, forwarding the browser User-Agent', async () => {
 		const response = await verifyEmail(
-			jsonPost('/api/identity/verify-email', { challengeId: 'chal_v', secret: 'mailed' }),
+			jsonPost(
+				'/api/identity/verify-email',
+				{ challengeId: 'chal_v', secret: 'mailed', credential: 'untrusted-body-token' },
+				{ 'user-agent': 'ProofBrowser/2.0' },
+			),
 		)
 		expect(response.status).toBe(200)
 		expect(await response.json()).toEqual({ verified: true })
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/signup/email-verification/complete')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/signup/email-verification/complete')
+		expect(calls).toHaveLength(1)
 		expect(calls[0]?.headers.get('authorization')).toBeNull()
+		expect(calls[0]?.headers.get('user-agent')).toBe('ProofBrowser/2.0')
 		const { idempotency_key, ...rest } = calls[0]?.body ?? {}
 		expect(typeof idempotency_key).toBe('string')
 		expect(rest).toEqual({ challenge_id: 'chal_v', secret: 'mailed' })
+	})
+
+	test('forwards the existing cookie bearer and original User-Agent for Auth to assess same-holder proof', async () => {
+		for (const cookie of ['puzzled_session', 'sylphx_identity_session']) {
+			calls = []
+			cookieValues = { [cookie]: 'identity_org_session_sameholder' }
+			const response = await verifyEmail(
+				jsonPost(
+					'/api/identity/verify-email',
+					{ challenge_id: 'chal_v', secret: 'mailed', credential: 'untrusted-body-token' },
+					{ 'user-agent': 'SignupBrowser/3.0', 'x-forwarded-for': '203.0.113.9' },
+				),
+			)
+			expect(response.status).toBe(200)
+			expect(await response.json()).toEqual({ verified: true })
+			expect(calls).toHaveLength(1)
+			expect(calls[0]?.headers.get('authorization')).toBe('Bearer identity_org_session_sameholder')
+			expect(calls[0]?.headers.get('user-agent')).toBe('SignupBrowser/3.0')
+			expect(calls[0]?.headers.get('x-forwarded-for')).toBeNull()
+			const { idempotency_key, ...rest } = calls[0]?.body ?? {}
+			expect(typeof idempotency_key).toBe('string')
+			expect(rest).toEqual({ challenge_id: 'chal_v', secret: 'mailed' })
+			expect(deleted).toHaveLength(0)
+		}
+	})
+
+	test('refuses cross-site proof before forwarding ambient credentials', async () => {
+		cookieValues = { puzzled_session: 'identity_org_session_sameholder' }
+		const response = await verifyEmail(
+			jsonPost(
+				'/api/identity/verify-email',
+				{ challengeId: 'chal_v', secret: 'mailed' },
+				{ origin: 'https://other.example' },
+			),
+		)
+		expect(response.status).toBe(403)
+		expect(calls).toHaveLength(0)
 	})
 
 	test('needs both link fields and maps refusals to a fixed answer', async () => {
@@ -337,7 +428,7 @@ describe('resend verification', () => {
 			}),
 		)
 		expect(response.status).toBe(200)
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/email-verification/start')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/email-verification/start')
 		expect(calls[0]?.headers.get('authorization')).toBe('Bearer identity_org_session_abc')
 		expect(calls[0]?.headers.get('user-agent')).toBe('TestBrowser/1.0')
 		const { idempotency_key, ...rest } = calls[0]?.body ?? {}
@@ -371,7 +462,7 @@ describe('sign out', () => {
 		)
 		expect(response.status).toBe(200)
 		expect(calls).toHaveLength(1)
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/client/sign-out')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/client/sign-out')
 		expect(calls[0]?.headers.get('authorization')).toBe('Bearer identity_org_session_abc')
 		expect(calls[0]?.headers.get('user-agent')).toBe('TestBrowser/1.0')
 		expect(deleted.sort()).toEqual(['puzzled_session', 'sylphx_identity_session'])
@@ -389,6 +480,65 @@ describe('sign out', () => {
 })
 
 describe('sign up', () => {
+	test('returns signedIn only after password proof and session cookie completion', async () => {
+		mockUpstream((call) => {
+			if (call.url.endsWith('/v1/client/sign-up')) return new Response('{}', { status: 202 })
+			if (call.url.endsWith('/v1/client/sign-in/password'))
+				return Response.json({ ticket: 'private-ticket' })
+			return Response.json({ session: { token: 'private-session' }, is_new_user: false })
+		})
+		const response = await signup(
+			jsonPost('/api/identity/signup', { email: 'new@x.test', password: GOOD_PASSWORD }),
+		)
+		expect(response.status).toBe(200)
+		expect(await response.json()).toEqual({ signedIn: true })
+		expect(written).toEqual(['puzzled_session'])
+		expect(calls).toHaveLength(3)
+	})
+
+	test('makes completion failures explicit and logs only fixed stage, reason and status', async () => {
+		const warn = console.warn
+		const records: unknown[][] = []
+		console.warn = (...args: unknown[]) => {
+			records.push(args)
+		}
+		try {
+			for (const stage of ['password_ticket', 'session_completion', 'cookie'] as const) {
+				calls = []
+				written.length = 0
+				cookieFailure = stage === 'cookie'
+				mockUpstream((call) => {
+					if (call.url.endsWith('/v1/client/sign-up')) return new Response('{}', { status: 202 })
+					if (call.url.endsWith('/v1/client/sign-in/password') && stage !== 'password_ticket')
+						return Response.json({ ticket: 'private-ticket' })
+					if (stage === 'cookie')
+						return Response.json({ session: { token: 'private-session' }, is_new_user: false })
+					return Response.json(
+						{ code: 'private-code-new@x.test', error: 'private-password-ticket-session' },
+						{ status: 503 },
+					)
+				})
+				const response = await signup(
+					jsonPost('/api/identity/signup', { email: 'new@x.test', password: GOOD_PASSWORD }),
+				)
+				expect(response.status).toBe(502)
+				expect(await response.json()).toEqual({ error: 'signup_signin_failed', retrySignIn: true })
+				expect(written).toHaveLength(0)
+				expect(records.at(-1)).toEqual([
+					'[warn] signup.signin-failed',
+					{
+						stage: stage === 'password_ticket' ? 'password_ticket' : 'session_completion',
+						reason: stage === 'cookie' ? 'unexpected_error' : 'auth_call_failed',
+						upstreamStatus: stage === 'cookie' ? null : 503,
+					},
+				])
+			}
+			expect(JSON.stringify(records)).not.toMatch(/new@x|private|ticket-session/)
+		} finally {
+			console.warn = warn
+		}
+	})
+
 	test('asks Auth to mail a link that lands on the real verify-email page', async () => {
 		mockUpstream((call) =>
 			call.url.endsWith('/v1/client/sign-up')
@@ -402,7 +552,7 @@ describe('sign up', () => {
 				name: 'New',
 			}),
 		)
-		expect(calls[0]?.url).toBe('https://api.sylphx.com/v1/client/sign-up')
+		expect(calls[0]?.url).toBe('https://bound-auth.example/v1/client/sign-up')
 		expect(calls[0]?.body?.redirect_url).toBe('https://puzzled.gg/verify-email')
 	})
 })
