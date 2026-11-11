@@ -2,7 +2,8 @@
 
 Daily light brain games: nineteen puzzles, one always free. Owner: SylphxAI
 (Sylphx Apps). Start with [README.md](README.md), then [docs/vision.md](docs/vision.md)
-for the goal and what we will not do.
+for the goal and what we will not do. Read [DESIGN.md](DESIGN.md) before any
+visual work: screens, images, social posts or marketing.
 
 ## What to optimise
 
