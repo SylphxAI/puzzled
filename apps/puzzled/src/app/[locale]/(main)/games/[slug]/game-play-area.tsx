@@ -1,3 +1,4 @@
+import { cookies, headers } from 'next/headers'
 import { getTranslations } from 'next-intl/server'
 import { AdsProvider } from '@/features/ads/components/ad-context'
 import { GameUnlockPanel } from '@/features/catalog/components/game-unlock-panel'
@@ -16,17 +17,25 @@ import { adsConfig, adsFor } from '@/lib/ads'
 import {
 	type DailyStatus,
 	getServerDailyStatus,
+	getServerPlans,
 	getServerPlusAccess,
 	getServerPlusOfferAccess,
 	getServerStreakInfo,
 	hasServerProgressIdentity,
 	type StreakInfo,
 } from '@/lib/api/server'
-import { isPlayLocked, type PlusAccess } from '@/lib/billing/plus'
+import {
+	availableCurrencies,
+	COUNTRY_HEADER,
+	CURRENCY_COOKIE,
+	chooseCurrency,
+} from '@/lib/billing/currency'
+import { formatPrice, isPlayLocked, type PlusAccess, planCards } from '@/lib/billing/plus'
 import type { GameMode } from '@/lib/db/schema'
 import { env } from '@/lib/env'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
+import { withPresentationDeadline } from '@/lib/presentation-document'
 import { productDayKey } from '@/lib/product-day'
 import { DifficultySelectionView } from './difficulty-selection-view'
 import { GameDailyFallback } from './game-daily-fallback'
@@ -75,11 +84,33 @@ export async function GamePlayArea(props: GamePlayAreaProps) {
 		gameCount: props.gameCount,
 		freeSlug: props.freeGameSlug,
 	})
+	const yearlyPrice = offer ? await plusYearlyPrice(props.locale) : undefined
 	return (
-		<PlusOfferProvider offer={offer} dayKey={productDayKey()}>
+		<PlusOfferProvider offer={offer && { ...offer, yearlyPrice }} dayKey={productDayKey()}>
 			{await renderPlayArea(props, access)}
 		</PlusOfferProvider>
 	)
+}
+
+/**
+ * The individual yearly Plus price in the visitor's currency, chosen and
+ * formatted exactly as the pricing page does. Undefined when the catalogue is
+ * unreadable, not on sale or has no yearly plan, so the card shows no price.
+ */
+async function plusYearlyPrice(locale: string): Promise<string | undefined> {
+	const plans = await withPresentationDeadline(getServerPlans(), null)
+	if (!plans?.salesOpen) return undefined
+	const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()])
+	const currency = chooseCurrency({
+		cookie: cookieStore.get(CURRENCY_COOKIE)?.value,
+		country: requestHeaders.get(COUNTRY_HEADER),
+		locale,
+		available: availableCurrencies(plans.plans),
+	})
+	const year = planCards(plans.plans, currency).find(
+		(card) => !card.family && card.interval === 'year',
+	)
+	return year ? formatPrice(year.amountMinor, year.currency, locale) : undefined
 }
 
 async function renderPlayArea(
