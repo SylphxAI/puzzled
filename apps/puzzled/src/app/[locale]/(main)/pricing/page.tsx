@@ -242,8 +242,10 @@ export default async function PricingPage({ params, searchParams }: Props) {
 								key={group.title}
 								id={group.family ? 'family' : undefined}
 								className={cn(
-									'surface-card flex scroll-mt-24 flex-col p-5 sm:p-6',
-									!group.family && 'border-2 border-foreground shadow-lg',
+									'surface-card scroll-mt-24 flex-col p-5 sm:p-6',
+									// On a phone the plan picker above is the Plus offer; this card would
+									// repeat it, so it joins the side-by-side comparison from lg up only.
+									group.family ? 'flex' : 'hidden border-2 border-foreground shadow-lg lg:flex',
 								)}
 							>
 								<h2 className="flex items-center gap-2 font-display text-xl">
@@ -308,7 +310,9 @@ export default async function PricingPage({ params, searchParams }: Props) {
 											{t('choosePlus')}
 										</a>
 									) : (
-										[year, month].map((card) =>
+										// Signed out, both intervals lead to the same sign-in, so one button
+										// (yearly first, as in the plan picker) stands for them.
+										(user ? [year, month] : [year ?? month]).map((card) =>
 											card ? (
 												<SubscribeButton
 													key={card.id}
