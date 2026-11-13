@@ -169,38 +169,65 @@ export const SHELL_TARGET_SELECTOR =
 	'header a[href], header button, nav[aria-label] a[href], nav[aria-label] button, footer a[href]'
 
 /**
- * Drive the popup's JavaScript transform animation one frame at a time. Arm
- * before clicking and wait for the lazy content while advancing only 1ms per
- * turn, so network/CPU latency cannot consume its 100ms entrance. Sample after
- * the first rendered frame: reduced motion may jump directly to its endpoint
- * during mount, which is not an animated frame.
+ * Record the CSS-animated popup itself, not its implementation-specific children.
+ * Arm in the browser before opening: lazy loading and test-runner round trips
+ * must not consume the entrance. CSS transitions use the browser's animation
+ * timeline, not Playwright's JavaScript clock. Include individual transform
+ * properties (Tailwind 4 uses translate/scale instead of transform).
  */
 export async function samplePopupTransform(
 	page: Page,
 	open: () => Promise<unknown>,
 	mountTimeoutMs = 8000,
 ) {
-	await page.clock.install({ time: 0 })
-	await page.clock.pauseAt(await page.evaluate(() => Date.now() + 10_000))
+	const recorder = await page.evaluateHandle((timeout) => {
+		let frame = 0
+		let timer: ReturnType<typeof setTimeout>
+		let complete: (result: { samples: string[]; error?: string }) => void
+		const result = new Promise<{ samples: string[]; error?: string }>((resolve) => {
+			complete = resolve
+		})
+		const samples: string[] = []
+		const stop = () => {
+			observer.disconnect()
+			clearTimeout(timer)
+			cancelAnimationFrame(frame)
+		}
+		const observePopup = () => {
+			const popups = document.querySelectorAll('[role="menu"]')
+			if (popups.length !== 1) return
+			const popup = popups[0]
+			if (!popup || popup.hasAttribute('data-starting-style')) return
+			observer.disconnect()
+			clearTimeout(timer)
+			const sample = () => {
+				const style = getComputedStyle(popup)
+				samples.push(`${style.transform};translate:${style.translate};scale:${style.scale}`)
+				if (samples.length === 14) {
+					complete({ samples })
+					return
+				}
+				frame = requestAnimationFrame(sample)
+			}
+			frame = requestAnimationFrame(sample)
+		}
+		const observer = new MutationObserver(observePopup)
+		observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true })
+		timer = setTimeout(() => {
+			stop()
+			complete({ samples, error: 'samplePopupTransform: expected one mounted popup content' })
+		}, timeout)
+		observePopup()
+		return { result, stop }
+	}, mountTimeoutMs)
 	try {
 		await open()
-		const content = page.locator('[role="menu"] > *')
-		const deadline = Date.now() + mountTimeoutMs
-		while ((await content.count()) === 0 && Date.now() < deadline) {
-			await page.clock.runFor(1)
-			await new Promise((resolve) => setTimeout(resolve, 10))
-		}
-		if ((await content.count()) !== 1) {
-			throw new Error('samplePopupTransform: expected one mounted popup content')
-		}
-		const samples: string[] = []
-		for (let frame = 0; frame < 14; frame += 1) {
-			await page.clock.runFor(16)
-			samples.push(await content.evaluate((element) => getComputedStyle(element).transform))
-		}
-		await content.waitFor({ state: 'visible' })
+		const { samples, error } = await recorder.evaluate((recording) => recording.result)
+		if (error) throw new Error(error)
+		await page.getByRole('menu').waitFor({ state: 'visible' })
 		return samples
 	} finally {
-		await page.clock.resume()
+		await recorder.evaluate((recording) => recording.stop())
+		await recorder.dispose()
 	}
 }

@@ -219,7 +219,7 @@ const DropdownMenuContent = forwardRef<HTMLDivElement, DropdownMenuContentProps>
 				<BaseMenu.Popup
 					ref={ref}
 					className={cn(
-						'z-popover min-w-[8rem] overflow-hidden rounded-lg border bg-card p-1 text-card-foreground shadow-lg transition-[opacity,transform] duration-100 ease-out data-[starting-style]:-translate-y-1 data-[starting-style]:scale-95 data-[starting-style]:opacity-0 data-[ending-style]:-translate-y-1 data-[ending-style]:scale-95 data-[ending-style]:opacity-0',
+						'z-popover min-w-[8rem] overflow-hidden rounded-lg border bg-card p-1 text-card-foreground shadow-lg transition-[opacity,transform,translate,scale] duration-100 ease-out motion-safe:data-[starting-style]:-translate-y-1 motion-safe:data-[starting-style]:scale-95 data-[starting-style]:opacity-0 motion-safe:data-[ending-style]:-translate-y-1 motion-safe:data-[ending-style]:scale-95 data-[ending-style]:opacity-0',
 						className,
 					)}
 				>

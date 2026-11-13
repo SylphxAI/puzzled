@@ -11,13 +11,13 @@ import {
 } from '@sylphx/ui'
 import { Check, Languages } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import type { ReactElement } from 'react'
+import { type ReactElement, useEffect, useState } from 'react'
 import { type Locale, localeBadges, localeGroups, localeNames } from '@/lib/i18n/config'
 import { cn } from '@/lib/utils'
 
 /**
  * The language menu itself. Kept out of the switcher so the dropdown runtime
- * (Base UI, floating-ui, motion) is fetched when a visitor reaches for the
+ * (Base UI and floating-ui) is fetched when a visitor reaches for the
  * menu, not with every page: see `language-switcher.tsx`.
  */
 export default function LanguageMenu({
@@ -31,8 +31,12 @@ export default function LanguageMenu({
 	onSelect: (locale: Locale) => void
 	isPending: boolean
 }) {
+	const [open, setOpen] = useState(false)
+	// Mount closed so Base UI can transition the first lazy-loaded entrance.
+	useEffect(() => setOpen(true), [])
+
 	return (
-		<DropdownMenu defaultOpen>
+		<DropdownMenu open={open} onOpenChange={setOpen}>
 			<DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
 			<LanguageDropdownContent
 				currentLocale={currentLocale}
