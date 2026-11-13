@@ -62,8 +62,8 @@ export function buildCsp(
 		"img-src 'self' data: blob: https:",
 		`font-src 'self' data:${assets}`,
 		// The browser talks only to this origin (identity, events and errors are
-		// same-origin routes) and to the Iconify icon APIs.
-		`connect-src 'self' https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com${assets}${adConnect}${tagConnect}`,
+		// same-origin routes).
+		`connect-src 'self'${assets}${adConnect}${tagConnect}`,
 		`frame-src 'self'${adFrames}${tagFrames}`,
 		"worker-src 'self'",
 		"object-src 'none'",

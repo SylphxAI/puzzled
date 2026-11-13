@@ -1,6 +1,5 @@
 'use client'
 
-import { Icon } from '@sylphx/ui'
 import { Flame, Snowflake } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
@@ -139,10 +138,10 @@ export function StreakBar({
 	if (variant === 'detailed') {
 		// Get milestone badge if at milestone
 		const getMilestoneBadge = () => {
-			if (currentStreak === 365) return { text: '365-Day Streak!', icon: 'mdi:fire' }
-			if (currentStreak === 100) return { text: '100-Day Streak!', icon: 'mdi:fire' }
-			if (currentStreak === 30) return { text: '30-Day Streak!', icon: 'mdi:fire' }
-			if (currentStreak === 7) return { text: '7-Day Streak!', icon: 'mdi:fire' }
+			if (currentStreak === 365) return '365-Day Streak!'
+			if (currentStreak === 100) return '100-Day Streak!'
+			if (currentStreak === 30) return '30-Day Streak!'
+			if (currentStreak === 7) return '7-Day Streak!'
 			return null
 		}
 
@@ -195,8 +194,8 @@ export function StreakBar({
 								'animate-milestone-glow',
 							)}
 						>
-							<Icon icon={milestoneBadge.icon} aria-hidden="true" className="h-4 w-4" />
-							{milestoneBadge.text}
+							<Flame aria-hidden="true" className="h-4 w-4" />
+							{milestoneBadge}
 						</div>
 					</div>
 				)}
