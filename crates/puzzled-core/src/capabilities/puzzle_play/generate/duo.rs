@@ -70,10 +70,7 @@ fn is_valid(grid: &mut Grid, row: usize, col: usize, value: Sym) -> bool {
             return false;
         }
         let count_col = |s: Sym| grid.iter().filter(|r| r[col] == Some(s)).count();
-        if count_col(Sym::Sun) > half || count_col(Sym::Moon) > half {
-            return false;
-        }
-        true
+        count_col(Sym::Sun) <= half && count_col(Sym::Moon) <= half
     })();
     // TS resets the cell to null after the check; it is only called on empty cells.
     grid[row][col] = saved;
