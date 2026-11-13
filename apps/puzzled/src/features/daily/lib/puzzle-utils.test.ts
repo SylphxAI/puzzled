@@ -73,7 +73,7 @@ describe('daily puzzle identity', () => {
 					status: 'won',
 					puzzleDate: result.puzzleDate,
 				}),
-			).toContain(` • ${dayKey}`)
+			).toContain(` • #${puzzleNumber}`)
 		})
 	}
 

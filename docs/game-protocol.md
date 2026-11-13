@@ -30,6 +30,12 @@ redesign it.
 - One timezone because shared conversation ("today's puzzle") breaks if every
   player has a private day boundary. Changing it is a protocol change that also
   migrates the completers definition, not client behaviour.
+- Present the live day by its puzzle number and a countdown to the shared
+  boundary, not an unlabelled Hong Kong calendar date that can read as tomorrow
+  elsewhere. A countdown is the same duration in every timezone. Keep dates
+  for explicitly dated archive/history records; never reinterpret their keys.
+  One global day preserves streak/history keys, leaderboard fairness, shared
+  result identities and shared-cache expiry. No player-data migration is needed.
 - Each `(game, day_key)` has at most one primary daily puzzle in the content
   store, or a documented deterministic server generator (sudoku). Practice
   content is undated or marked practice; archive content is dated but marked
@@ -81,7 +87,7 @@ outcome), card, re-entry (results and review, already played).
 ## Result card
 
 The viral unit. Prefer it non-spoiler, readable at a glance in a feed (pattern,
-score, streak or time band), labelled with day and game so friends know which
+score, streak or time band), labelled with puzzle number and game so friends know which
 puzzle, and shareable in one tap (Web Share or clipboard text).
 
 A server-issued share id links to `/daily?ref=<share id>`. That landing shows

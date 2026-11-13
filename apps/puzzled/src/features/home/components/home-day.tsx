@@ -30,8 +30,6 @@ export const MIN_PLAYERS_SHOWN = 500
 
 type HomeDayProps = {
 	locale: string
-	/** Product day (Asia/Hong_Kong) formatted for the viewer's locale. */
-	dateLabel: string
 	/** `getPuzzleNumber` for the server-rendered product day and module. */
 	puzzleNumber: number
 	freeGame: HomeDayGame
@@ -49,15 +47,12 @@ type HomeDayProps = {
 }
 
 /** Everything the day renders before any identity or aggregate read lands. */
-export type HomeDayStaticProps = Pick<
-	HomeDayProps,
-	'locale' | 'dateLabel' | 'puzzleNumber' | 'freeGame'
->
+export type HomeDayStaticProps = Pick<HomeDayProps, 'locale' | 'puzzleNumber' | 'freeGame'>
 
 /**
  * The day surface: the home page's first screen.
  *
- * A newspaper masthead (the product day, the puzzle number, the clock to the
+ * A newspaper masthead (the shared puzzle number and the clock to the
  * next day), a display headline, and one card in today's game colour that
  * holds the only primary action. `playerCount` stays `null` until the read
  * lands, and a landed zero renders nothing: a visitor is never told that
@@ -68,7 +63,6 @@ export type HomeDayStaticProps = Pick<
  */
 export async function HomeDay({
 	locale,
-	dateLabel,
 	puzzleNumber,
 	freeGame,
 	isMember,
@@ -97,9 +91,7 @@ export async function HomeDay({
 				{/* Masthead: the day has an identity. */}
 				<div className="home-day-masthead flex items-center justify-between gap-x-2 border-b border-foreground/80 pb-2.5 text-xs text-muted-foreground sm:gap-x-4 sm:text-[13px]">
 					<p className="flex min-w-0 items-center gap-1.5 truncate sm:gap-2">
-						<span className="truncate font-semibold text-foreground">{dateLabel}</span>
-						<span aria-hidden="true">·</span>
-						<span className="day-numeral shrink-0">
+						<span className="day-numeral shrink-0 font-semibold text-foreground">
 							{t('day.puzzleNumber', { number: puzzleNumber })}
 						</span>
 					</p>
