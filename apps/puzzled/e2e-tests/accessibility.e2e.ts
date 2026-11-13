@@ -252,7 +252,7 @@ test.describe('Company target size (44px effective hit area)', () => {
 	})
 })
 
-/** Load the popup once so its media-preference effect is settled before time is frozen. */
+/** Exercise reopening after the popup has been loaded and closed once. */
 async function prepareLanguagePopup(page: Page) {
 	const trigger = page.getByRole('button', { name: /change language/i }).first()
 	await trigger.click()
@@ -280,7 +280,7 @@ test.describe('Reduced motion', () => {
 			transformChanges(samples),
 			`first entrance moved: ${samples.join(' ')}`,
 		).toBeLessThanOrEqual(1)
-		expect(samples.at(-1)).toBe('none')
+		expect(samples.at(-1)).toBe('none;translate:none;scale:none')
 	})
 
 	test('stops transform animation on shell surfaces', async ({ page }) => {
@@ -345,6 +345,28 @@ test.describe('Motion for users without the preference', () => {
 			}),
 		)
 		expect(new Set(samples).size).toBe(1)
+	})
+
+	test('the recorder captures CSS motion on a popup with multiple children', async ({ page }) => {
+		await page.setContent(`<style>
+			[role="menu"] { translate: 0 0; scale: 1; transition: translate 200ms linear, scale 200ms linear; }
+			[role="menu"][data-starting-style] { translate: 0 -10px; scale: 0.5; }
+		</style><button>Open</button>`)
+		const samples = await samplePopupTransform(page, () =>
+			page.evaluate(() => {
+				document.body.insertAdjacentHTML(
+					'beforeend',
+					'<div role="menu" data-starting-style><div>One</div><div>Two</div></div>',
+				)
+				const popup = document.querySelector('[role="menu"]')
+				if (!popup) throw new Error('missing fixture popup')
+				getComputedStyle(popup).translate
+				requestAnimationFrame(() =>
+					requestAnimationFrame(() => popup.removeAttribute('data-starting-style')),
+				)
+			}),
+		)
+		expect(transformChanges(samples), samples.join(' ')).toBeGreaterThan(1)
 	})
 
 	test('a missing popup fails motion measurement', async ({ page }) => {
