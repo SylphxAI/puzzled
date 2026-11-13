@@ -351,7 +351,9 @@ jobs:
     # Trunk push, nightly and manual only: a full browser suite on every PR push
     # costs more than it catches before it lands.
     if: github.event_name != 'pull_request' && fromJSON(needs.plan.outputs.run).build
-    runs-on: ubuntu-latest
+    # Playwright 1.58 cannot install Chromium on ubuntu-latest (Ubuntu 26.04 since
+    # the 2026-11-01 image); stay on 24.04 until a Playwright upgrade supports it.
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     needs: [plan, build]
 
@@ -475,7 +477,9 @@ jobs:
     name: Lighthouse Budgets
     # Trunk push, nightly and manual only, like the a11y suite.
     if: github.event_name != 'pull_request' && fromJSON(needs.plan.outputs.run).build
-    runs-on: ubuntu-latest
+    # Playwright 1.58 cannot install Chromium on ubuntu-latest (Ubuntu 26.04 since
+    # the 2026-11-01 image); stay on 24.04 until a Playwright upgrade supports it.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: [plan, build]
 

@@ -23,7 +23,9 @@ jobs:
   capture:
     # Standard hosted minutes are free only for a public repository.
     if: github.event.repository.private == false
-    runs-on: ubuntu-latest
+    # Playwright 1.58 cannot install Chromium on ubuntu-latest (Ubuntu 26.04 since
+    # the 2026-11-01 image); stay on 24.04 until a Playwright upgrade supports it.
+    runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
