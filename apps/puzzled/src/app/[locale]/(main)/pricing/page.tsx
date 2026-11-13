@@ -322,6 +322,8 @@ export default async function PricingPage({ params, searchParams }: Props) {
 													locale={locale}
 													signedIn={Boolean(user)}
 													subscribed={showsCurrentPlan(access)}
+													loginReturnTo={`/pricing?plan=${encodeURIComponent(card.id)}#${group.family ? 'family' : 'plus'}`}
+													guestLabel={`${t('signInToSubscribe')} · ${group.title} · ${card.interval === 'year' ? t('yearly') : t('monthly')}`}
 													label={
 														card.trialDays > 0
 															? t('startTrial', { days: card.trialDays })

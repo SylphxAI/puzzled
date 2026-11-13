@@ -99,6 +99,25 @@ for (const viewport of VIEWPORTS) {
 			}
 		})
 
+		test('keeps one Family sign-in link with its own return destination', async ({ page }) => {
+			await openPricing(page)
+			const family = page.locator('#family')
+			test.skip((await family.count()) === 0, 'sales are closed')
+			const signIn = family.getByRole('link', { name: /^Sign in to subscribe/ })
+			await expect(signIn).toHaveCount(1)
+			await expect(signIn).toHaveText(
+				/^Sign in to subscribe · Puzzled Plus Family · (Yearly|Monthly)$/,
+			)
+			const href = await signIn.getAttribute('href')
+			const callback = new URL(href ?? '', page.url()).searchParams.get('callbackUrl')
+			const interval = (await signIn.textContent())?.endsWith('Yearly') ? 'yearly' : 'monthly'
+			expect(callback).toBe(`/pricing?plan=family_${interval}#family`)
+			// Exercise the local return destination without creating a login or checkout.
+			await page.goto(callback ?? '/pricing')
+			await expect(family).toBeInViewport()
+			await expect(signIn).toHaveCount(1)
+		})
+
 		test('puts currency beside the offer and ignores unknown plan requests', async ({ page }) => {
 			await page.goto('/pricing?plan=not-a-plan')
 			await settle(page)
