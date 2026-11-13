@@ -319,7 +319,7 @@ export function GameResultCard({
 					{/* One share: the card image with the caption and the ?ref= link riding along. */}
 					<Button
 						onClick={handleShareCard}
-						className="w-full gap-2"
+						className="w-full gap-2 bg-cta font-bold text-cta-foreground shadow-[inset_0_-3px_0_var(--color-cta-edge)] hover:bg-cta-hover"
 						size="lg"
 						disabled={cardBusy}
 						aria-busy={cardBusy}

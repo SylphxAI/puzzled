@@ -271,7 +271,7 @@ function FeaturedCard({
 					href={href}
 					// The day's primary action: the install offer stays off it.
 					data-day-primary-action=""
-					className="pressable mt-3 flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-6 text-[16px] font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+					className="pressable mt-3 flex min-h-12 w-full items-center justify-center rounded-full bg-cta px-6 text-[16px] font-bold text-cta-foreground shadow-[inset_0_-3px_0_var(--color-cta-edge)] transition-colors hover:bg-cta-hover"
 				>
 					{cta}
 				</Link>

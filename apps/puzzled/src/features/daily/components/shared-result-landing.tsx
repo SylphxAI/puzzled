@@ -78,7 +78,7 @@ export async function SharedResultLanding({ shared, shareId, locale }: SharedRes
 					</p>
 					<Link
 						href={`/games/${target.gameSlug}`}
-						className="pressable mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary px-6 text-[16px] font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+						className="pressable mt-5 flex h-12 w-full items-center justify-center rounded-full bg-cta px-6 text-[16px] font-bold text-cta-foreground shadow-[inset_0_-3px_0_var(--color-cta-edge)] transition-colors hover:bg-cta-hover"
 					>
 						{tHome('playToday', { game: playName })}
 					</Link>

@@ -6,22 +6,13 @@
 /* =============================================
    Puzzled design tokens (2026-09-26 redesign)
    =============================================
-   Ink and paper, one amber accent, a serif display voice and the system
-   UI face. The brand colours resolve from brand/tokens.css (brand/tokens.json
+   Ink and paper, one amber accent, Bricolage Grotesque for display and
+   Figtree for text. The brand colours resolve from brand/tokens.css (brand/tokens.json
    is the source of truth, brand/README.md is the usage sheet); the record of
    why each value is what it is lives in docs/design/README.md. Change a brand
    colour there and here together.
 ============================================= */
 
-@font-face {
-	font-family: "Fraunces Fallback";
-	src: local("Times New Roman"), local("Liberation Serif"), local("DejaVu Serif");
-	font-weight: 500 700;
-	ascent-override: 98%;
-	descent-override: 25%;
-	line-gap-override: 0%;
-	size-adjust: 92%;
-}
 
 @theme {
 	/* Breakpoints */
@@ -32,9 +23,9 @@
 	--breakpoint-xl: 1280px;
 	--breakpoint-2xl: 1536px;
 
-	/* Type: Fraunces for display, the platform UI face for everything else. */
-	--font-display: var(--font-display-family), "Fraunces Fallback", "Iowan Old Style", "Palatino Linotype", Georgia, var(--font-cjk-serif), serif;
-	--font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Roboto,
+	/* Type (DESIGN.md): Bricolage Grotesque for display, Figtree for text; CJK falls through to the platform faces. */
+	--font-display: var(--font-display-family), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, var(--font-cjk-sans), sans-serif;
+	--font-sans: var(--font-text-family), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Roboto,
 		"Helvetica Neue", Arial, var(--font-cjk-sans), sans-serif;
 	--font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 
@@ -123,6 +114,11 @@
 	--color-accent-warm-soft: #fcf0d2;
 	--color-accent-warm-foreground: var(--brand-color-accent-text);
 	--color-on-accent: #1a1712;
+	/* The one primary action per screen (DESIGN.md button-primary): Amber with Ink text and an Amber Edge key edge. */
+	--color-cta: var(--brand-color-accent);
+	--color-cta-hover: #f7c04d;
+	--color-cta-foreground: #1a1712;
+	--color-cta-edge: #c98a0b;
 	--color-ink: var(--brand-color-ink);
 	--color-ink-muted: #2a2620;
 	--color-ink-foreground: #f7f3ea;
@@ -237,11 +233,9 @@
 /* CJK faces for the locales we ship. */
 :root {
 	--font-cjk-sans: "PingFang TC", "PingFang HK", "Noto Sans TC", "Microsoft JhengHei";
-	--font-cjk-serif: "Songti TC", "Noto Serif TC", "PMingLiU";
 }
 :lang(zh-CN) {
 	--font-cjk-sans: "PingFang SC", "Noto Sans SC", "Microsoft YaHei";
-	--font-cjk-serif: "Songti SC", "Noto Serif SC", "SimSun";
 }
 
 :root {
@@ -584,8 +578,8 @@ body {
 
 .font-display {
 	font-family: var(--font-display);
-	letter-spacing: -0.015em;
-	font-weight: 600;
+	letter-spacing: -0.02em;
+	font-weight: 700;
 	font-feature-settings: "lnum";
 }
 
