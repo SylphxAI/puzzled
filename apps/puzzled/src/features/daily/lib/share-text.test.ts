@@ -50,6 +50,20 @@ describe('ritualShareDeepLink', () => {
 })
 
 describe('formatRitualShareText', () => {
+	test('does not invent a puzzle number when the result day is unknown or invalid', () => {
+		for (const puzzleDate of [undefined, '', 'not-a-date', '2026-02-30']) {
+			const text = formatRitualShareText({
+				origin: 'https://puzzled.gg',
+				gameSlug: 'sudoku',
+				gameName: 'Sudoku',
+				puzzleDate,
+				status: 'won',
+			})
+			expect(text.split('\n')[0]).toBe('🏆 Sudoku')
+			expect(text).toContain('puzzled.gg/games/sudoku')
+		}
+	})
+
 	test('won path is non-spoiler and deep-links the shared day', () => {
 		const text = formatRitualShareText({
 			origin: 'https://puzzled.gg',
@@ -60,7 +74,7 @@ describe('formatRitualShareText', () => {
 			attempts: 1,
 			difficultyLabel: 'Medium',
 		})
-		expect(text).toContain('🏆 Sudoku (Medium) • 2026-08-12')
+		expect(text).toContain('🏆 Sudoku (Medium) • #955')
 		expect(text).toContain('✅ 1 attempts')
 		expect(text).toContain('puzzled.gg/games/sudoku?mode=archive&date=2026-08-12')
 		expect(shareTextLooksNonSpoiler(text)).toBe(true)
@@ -88,7 +102,7 @@ describe('formatRitualShareText', () => {
 			status: 'won',
 			statLine: '⏱️ 1:23',
 		})
-		expect(text).toContain('🏆 Crossword Mini • 2026-08-13')
+		expect(text).toContain('🏆 Crossword Mini • #956')
 		expect(text).toContain('puzzled.gg/games/crossword?mode=archive&date=2026-08-13')
 		expect(text).not.toContain('Play at puzzled.gg')
 		expect(shareTextLooksNonSpoiler(text)).toBe(true)
@@ -136,6 +150,7 @@ describe('share landing link (ref = server-issued share id)', () => {
 			attempts: 3,
 			shareId: SHARE_ID,
 		})
+		expect(text).toContain('🏆 Word Guess • #1002')
 		expect(text).toContain(`puzzled.gg/daily?ref=${SHARE_ID}`)
 		expect(text).toContain('3 attempts')
 		expect(shareTextLooksNonSpoiler(text)).toBe(true)

@@ -72,78 +72,63 @@ function facts(slug: string) {
 
 /** Pins the built share text per converted module (all 19 sites). */
 const EXPECTED_TEXTS: Array<[string, string]> = [
-	[
-		'arithmo',
-		'🏆 Arithmo • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/arithmo?mode=archive&date=2026-09-21',
-	],
+	['arithmo', '🏆 Arithmo • #995\n⏱️ 1:23\n\npuzzled.gg/games/arithmo?mode=archive&date=2026-09-21'],
 	[
 		'block-slide',
-		'🏆 Slides • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/block-slide?mode=archive&date=2026-09-21',
+		'🏆 Slides • #995\n⏱️ 1:23\n\npuzzled.gg/games/block-slide?mode=archive&date=2026-09-21',
 	],
 	[
 		'crossword',
-		'🏆 Mini Grid • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/crossword?mode=archive&date=2026-09-21',
+		'🏆 Mini Grid • #995\n⏱️ 1:23\n\npuzzled.gg/games/crossword?mode=archive&date=2026-09-21',
 	],
 	[
 		'cryptogram',
-		'🏆 Cipher • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/cryptogram?mode=archive&date=2026-09-21',
+		'🏆 Cipher • #995\n⏱️ 1:23\n\npuzzled.gg/games/cryptogram?mode=archive&date=2026-09-21',
 	],
 	[
 		'killer-sudoku',
-		'🏆 Cage Sudoku • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/killer-sudoku?mode=archive&date=2026-09-21',
+		'🏆 Cage Sudoku • #995\n⏱️ 1:23\n\npuzzled.gg/games/killer-sudoku?mode=archive&date=2026-09-21',
 	],
-	[
-		'nonogram',
-		'🏆 Paint • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/nonogram?mode=archive&date=2026-09-21',
-	],
+	['nonogram', '🏆 Paint • #995\n⏱️ 1:23\n\npuzzled.gg/games/nonogram?mode=archive&date=2026-09-21'],
 	[
 		'number-path',
-		'🏆 Path • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/number-path?mode=archive&date=2026-09-21',
+		'🏆 Path • #995\n⏱️ 1:23\n\npuzzled.gg/games/number-path?mode=archive&date=2026-09-21',
 	],
 	[
 		'pattern-match',
-		'🏆 Match • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/pattern-match?mode=archive&date=2026-09-21',
+		'🏆 Match • #995\n⏱️ 1:23\n\npuzzled.gg/games/pattern-match?mode=archive&date=2026-09-21',
 	],
 	[
 		'pip-place',
-		'🏆 Spots • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/pip-place?mode=archive&date=2026-09-21',
+		'🏆 Spots • #995\n⏱️ 1:23\n\npuzzled.gg/games/pip-place?mode=archive&date=2026-09-21',
 	],
 	[
 		'quad-words',
-		'🏆 Quad • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/quad-words?mode=archive&date=2026-09-21',
+		'🏆 Quad • #995\n⏱️ 1:23\n\npuzzled.gg/games/quad-words?mode=archive&date=2026-09-21',
 	],
-	[
-		'crowns',
-		'🏆 Crowns • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/crowns?mode=archive&date=2026-09-21',
-	],
-	[
-		'sudoku',
-		'🏆 Sudoku • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/sudoku?mode=archive&date=2026-09-21',
-	],
-	['duo', '🏆 Duo • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/duo?mode=archive&date=2026-09-21'],
-	[
-		'word-box',
-		'🏆 Frame • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/word-box?mode=archive&date=2026-09-21',
-	],
+	['crowns', '🏆 Crowns • #995\n⏱️ 1:23\n\npuzzled.gg/games/crowns?mode=archive&date=2026-09-21'],
+	['sudoku', '🏆 Sudoku • #995\n⏱️ 1:23\n\npuzzled.gg/games/sudoku?mode=archive&date=2026-09-21'],
+	['duo', '🏆 Duo • #995\n⏱️ 1:23\n\npuzzled.gg/games/duo?mode=archive&date=2026-09-21'],
+	['word-box', '🏆 Frame • #995\n⏱️ 1:23\n\npuzzled.gg/games/word-box?mode=archive&date=2026-09-21'],
 	[
 		'word-groups',
-		'🏆 Threads • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/word-groups?mode=archive&date=2026-09-21',
+		'🏆 Threads • #995\n⏱️ 1:23\n\npuzzled.gg/games/word-groups?mode=archive&date=2026-09-21',
 	],
 	[
 		'word-guess',
-		'🏆 Five • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/word-guess?mode=archive&date=2026-09-21',
+		'🏆 Five • #995\n⏱️ 1:23\n\npuzzled.gg/games/word-guess?mode=archive&date=2026-09-21',
 	],
 	[
 		'word-hive',
-		'🏆 Hive • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/word-hive?mode=archive&date=2026-09-21',
+		'🏆 Hive • #995\n⏱️ 1:23\n\npuzzled.gg/games/word-hive?mode=archive&date=2026-09-21',
 	],
 	[
 		'word-ladder',
-		'🏆 Rungs • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/word-ladder?mode=archive&date=2026-09-21',
+		'🏆 Rungs • #995\n⏱️ 1:23\n\npuzzled.gg/games/word-ladder?mode=archive&date=2026-09-21',
 	],
 	[
 		'word-search',
-		'🏆 Hunt • 2026-09-21\n⏱️ 1:23\n\npuzzled.gg/games/word-search?mode=archive&date=2026-09-21',
+		'🏆 Hunt • #995\n⏱️ 1:23\n\npuzzled.gg/games/word-search?mode=archive&date=2026-09-21',
 	],
 ]
 
@@ -208,14 +193,14 @@ describe('share text: before vs after per converted site', () => {
 			ORIGIN,
 		)
 		expect(text).toBe(
-			'🏆 Five • 2026-09-21\n🟪🟧⬛\n⬛🟪🟧\n\npuzzled.gg/games/word-guess?mode=archive&date=2026-09-21',
+			'🏆 Five • #995\n🟪🟧⬛\n⬛🟪🟧\n\npuzzled.gg/games/word-guess?mode=archive&date=2026-09-21',
 		)
 	})
 
 	test('crossword never shares the drifted literal again', () => {
 		const text = buildResultShareText(READER, facts('crossword'), ORIGIN)
 		expect(text).not.toContain('Crossword Mini')
-		expect(text.startsWith('🏆 Mini Grid • 2026-09-21')).toBe(true)
+		expect(text.startsWith('🏆 Mini Grid • #995')).toBe(true)
 	})
 
 	test('a losing result keeps the shipped failed line', () => {
