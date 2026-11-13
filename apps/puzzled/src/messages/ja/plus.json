@@ -66,6 +66,7 @@
 	"offer": {
 		"resultTitle": "全{count}ゲームとアーカイブをプレイ",
 		"resultBody": "今日のおすすめパズルはいつでも無料です。Puzzled Plusなら、すべてのゲーム、過去の日のアーカイブ、各ゲームの統計をご利用いただけます。",
+		"resultPrice": "{plan}・年額 {price}",
 		"day3Title": "{days}日プレイしました。いいスタートです。",
 		"day7Title": "{days}日プレイしました。すっかり常連ですね。",
 		"milestoneBody": "Puzzled Plusなら、全{count}ゲーム、過去の日のアーカイブ、各ゲームの統計をご利用いただけます。今日のおすすめパズルは引き続き無料です。"

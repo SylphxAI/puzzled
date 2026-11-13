@@ -66,6 +66,7 @@
 	"offer": {
 		"resultTitle": "Jogue os {count} jogos e o arquivo",
 		"resultBody": "O desafio em destaque de hoje é sempre grátis. O Puzzled Plus libera todos os jogos, o arquivo dos dias anteriores e as suas estatísticas de cada um.",
+		"resultPrice": "{plan} · {price} por ano",
 		"day3Title": "{days} dias jogados. Ótimo começo.",
 		"day7Title": "{days} dias jogados. Você já é figurinha carimbada.",
 		"milestoneBody": "O Puzzled Plus libera os {count} jogos, o arquivo dos dias anteriores e as estatísticas de cada um. O desafio em destaque de hoje continua grátis."
