@@ -52,7 +52,7 @@ import { slugToCamelCase } from '@/lib/game-slug'
 import { currentUser, type IdentityUser } from '@/lib/identity/server'
 import { logger } from '@/lib/logger'
 import { withPresentationDeadline } from '@/lib/presentation-document'
-import { nextProductDayStart, PRODUCT_DAY_TZ, productDayKey } from '@/lib/product-day'
+import { nextProductDayStart, productDayKey } from '@/lib/product-day'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
 import { SHARED_HOME_HEADER } from '../../../../shared-home-policy.cjs'
 
@@ -76,16 +76,6 @@ export async function generateMetadata({ params }: Props) {
 			badge: t('hero.ogBadge'),
 		}),
 	})
-}
-
-/** Product day (Asia/Hong_Kong) written for the viewer's locale. */
-function formatProductDay(date: Date, locale: string): string {
-	return new Intl.DateTimeFormat(locale, {
-		weekday: 'long',
-		month: 'long',
-		day: 'numeric',
-		timeZone: PRODUCT_DAY_TZ,
-	}).format(date)
 }
 
 type HomeFacts = {
@@ -214,12 +204,10 @@ function buildLineup(input: {
 /** Streamed day: the personal state, the streak and the social read. */
 async function HomeDayIsland({
 	locale,
-	dateLabel,
 	puzzleNumber,
 	freeGame,
 }: {
 	locale: string
-	dateLabel: string
 	puzzleNumber: number
 	freeGame: HomeDayGame
 }) {
@@ -253,7 +241,6 @@ async function HomeDayIsland({
 			) : null}
 			<HomeDay
 				locale={locale}
-				dateLabel={dateLabel}
 				puzzleNumber={puzzleNumber}
 				freeGame={freeGame}
 				isMember={Boolean(facts.user)}
@@ -376,12 +363,7 @@ export default async function HomePage({ params }: Props) {
 			<WebApplicationJsonLd locale={locale} />
 			<SeasonalBanner />
 			{sharedHome ? (
-				<HomeDayFallback
-					locale={locale}
-					dateLabel={formatProductDay(now, locale)}
-					puzzleNumber={puzzleNumber}
-					freeGame={freeGame}
-				/>
+				<HomeDayFallback locale={locale} puzzleNumber={puzzleNumber} freeGame={freeGame} />
 			) : (
 				<Suspense
 					fallback={
@@ -392,21 +374,11 @@ export default async function HomePage({ params }: Props) {
 						) : (
 							// A first-time visitor sees the real visitor day immediately —
 							// the same thing the island below renders, so nothing swaps.
-							<HomeDayFallback
-								locale={locale}
-								dateLabel={formatProductDay(now, locale)}
-								puzzleNumber={puzzleNumber}
-								freeGame={freeGame}
-							/>
+							<HomeDayFallback locale={locale} puzzleNumber={puzzleNumber} freeGame={freeGame} />
 						)
 					}
 				>
-					<HomeDayIsland
-						locale={locale}
-						dateLabel={formatProductDay(now, locale)}
-						puzzleNumber={puzzleNumber}
-						freeGame={freeGame}
-					/>
+					<HomeDayIsland locale={locale} puzzleNumber={puzzleNumber} freeGame={freeGame} />
 				</Suspense>
 			)}
 

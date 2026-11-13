@@ -24,6 +24,18 @@ describe('day boundary clock', () => {
 		expect(msUntilNextProductDay(new Date('2026-09-20T23:59:59Z'))).toBe(16 * 60 * 60 * 1000 + 1000)
 	})
 
+	test('US and Hong Kong views of the same instant have identical reset durations', () => {
+		for (const [us, hk, expected] of [
+			// US DST start and end, plus the reported tomorrow-date window.
+			['2026-03-08T01:30:00-08:00', '2026-03-08T17:30:00+08:00', '06:30:00'],
+			['2026-11-01T01:30:00-07:00', '2026-11-01T16:30:00+08:00', '07:30:00'],
+			['2026-11-12T09:00:00-08:00', '2026-11-13T01:00:00+08:00', '23:00:00'],
+		]) {
+			expect(formatCountdown(msUntilNextProductDay(new Date(us)))).toBe(expected)
+			expect(formatCountdown(msUntilNextProductDay(new Date(hk)))).toBe(expected)
+		}
+	})
+
 	test('the label is zero-padded HH:MM:SS and never negative', () => {
 		expect(formatCountdown(0)).toBe('00:00:00')
 		expect(formatCountdown(1000)).toBe('00:00:01')

@@ -9,6 +9,7 @@
 
 import { canonicalizeGameSlug } from '@/lib/game-slug'
 import { isValidDayKey } from '@/lib/product-day'
+import { getPuzzleNumber } from './puzzle-utils'
 
 export type RitualShareInput = {
 	/** Absolute origin, e.g. https://puzzled.gg or window.location.origin */
@@ -99,7 +100,10 @@ export function formatRitualShareText(input: RitualShareInput): string {
 
 	const emoji = status === 'won' ? '🏆' : '❌'
 	const difficultyText = difficultyLabel ? ` (${difficultyLabel})` : ''
-	const dateText = puzzleDate ? ` • ${puzzleDate}` : ''
+	// Number the result's product day, never the sharer's current local day.
+	const puzzleText = isValidDayKey(puzzleDate)
+		? ` • #${getPuzzleNumber(gameSlug, new Date(`${puzzleDate?.trim()}T00:00:00+08:00`))}`
+		: ''
 	const resultLine =
 		statLine?.trim() ||
 		(status === 'won'
@@ -110,7 +114,7 @@ export function formatRitualShareText(input: RitualShareInput): string {
 
 	const greetingText = greeting?.trim() ? `${greeting.trim()}\n` : ''
 
-	return `${greetingText}${emoji} ${gameName}${difficultyText}${dateText}\n${resultLine}\n${streakText}\n${deepLink}`
+	return `${greetingText}${emoji} ${gameName}${difficultyText}${puzzleText}\n${resultLine}\n${streakText}\n${deepLink}`
 }
 
 /** True if text looks free of solution spoilers (oracle guard for tests). */
