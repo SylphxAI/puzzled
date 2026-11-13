@@ -147,7 +147,7 @@ const NOT_FOUND_STYLES = `
 }
 .nf-title {
 	margin: 0.5rem 0 0;
-	font-family: var(--font-display-family), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+	font-family: var(--font-display-family), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 	font-size: 2.25rem;
 	line-height: 1.08;
 	font-weight: 600;
