@@ -10,6 +10,10 @@
 				]
 			},
 			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
 				"value": "Account",
 				"keys": [
 					"nav.account",
@@ -1106,6 +1110,10 @@
 				]
 			},
 			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
 				"value": "Account",
 				"keys": [
 					"nav.account",
@@ -2200,6 +2208,10 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
+			},
+			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "All Users",
@@ -3330,6 +3342,10 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
+			},
+			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "All Users",
@@ -4465,6 +4481,10 @@
 				]
 			},
 			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
 				"value": "All Users",
 				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
 			},
@@ -5598,6 +5618,10 @@
 			}
 		],
 		"ja": [
+			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
 			{
 				"value": "2段階認証",
 				"keys": ["settings.security.twoFactorAuth", "settings.securityScore.checks.twoFactor"]
@@ -6884,6 +6908,10 @@
 				]
 			},
 			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
 				"value": "Abrir el centro de cuenta",
 				"keys": ["settings.account.centreCta", "settings.security.protectionCta"]
 			},
@@ -8025,6 +8053,10 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
+			},
+			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "Abre em uma nova guia.",
