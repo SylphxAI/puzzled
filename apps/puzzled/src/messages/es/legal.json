@@ -2,7 +2,7 @@
 	"privacy": {
 		"title": "Política de privacidad",
 		"lastUpdated": "Última actualización",
-		"revision": "2026-10-26",
+		"revision": "2026-11-14",
 		"eyebrow": "Legal",
 		"lead": "Esta política explica qué datos recopila Puzzled, por qué los recopila y cómo puedes ponerte en contacto con nosotros al respecto.",
 		"toc": {
@@ -62,7 +62,7 @@
 			},
 			"transfers": {
 				"title": "Transferencias internacionales",
-				"content": "Algunos de nuestros proveedores tratan datos fuera del Reino Unido. Cuando lo hacen, nos basamos en las regulaciones de adecuación del Reino Unido o en garantías que la ley aprueba, como el Acuerdo Internacional de Transferencia de Datos del Reino Unido (UK International Data Transfer Agreement) o el Anexo del Reino Unido a las cláusulas contractuales tipo de la UE. Contáctanos para obtener una copia de la garantía correspondiente."
+				"content": "Algunos de nuestros proveedores tratan datos fuera del Reino Unido. Cuando lo hacen, nos basamos en las regulaciones de adecuación del Reino Unido o en garantías que la ley aprueba, como el Acuerdo Internacional de Transferencia de Datos del Reino Unido (UK International Data Transfer Agreement) o el Anexo del Reino Unido a las cláusulas contractuales tipo de la UE. Escribe a legal@sylphx.com para obtener una copia de la garantía correspondiente."
 			},
 			"retention": {
 				"title": "Cuánto tiempo conservamos los datos",
@@ -87,7 +87,7 @@
 					"withdraw": "Retirar tu consentimiento en cualquier momento, cuando nos basemos en él, sin que ello afecte al uso anterior a la retirada",
 					"complain": "Presentar una queja ante nosotros y ante la Information Commissioner's Office (ico.org.uk) si no estás conforme con cómo tratamos tus datos"
 				},
-				"response": "Respondemos a las solicitudes en el plazo de un mes, que la ley nos permite prorrogar hasta dos meses más en caso de solicitudes complejas o numerosas. Realizamos búsquedas razonables y proporcionadas, y podemos cobrar una tarifa razonable por una solicitud manifiestamente infundada o excesiva, o rechazarla."
+				"response": "Envía todas las solicitudes legales de derechos sobre datos (acceso, rectificación, supresión, portabilidad, limitación u oposición) exclusivamente a legal@sylphx.com; los canales habituales de soporte al cliente (como hi@puzzled.gg) no pueden aceptar ni tramitar solicitudes formales de privacidad ni notificaciones legales. Respondemos a las solicitudes en el plazo de un mes, que la ley nos permite prorrogar hasta dos meses más en caso de solicitudes complejas o numerosas. Realizamos búsquedas razonables y proporcionadas, y podemos cobrar una tarifa razonable por una solicitud manifiestamente infundada o excesiva, o rechazarla."
 			},
 			"children": {
 				"title": "Menores",
@@ -99,18 +99,18 @@
 			},
 			"changes": {
 				"title": "Cambios en esta política",
-				"content": "Podemos actualizar esta política. Publicamos la nueva versión en esta página con una nueva fecha. Si pensamos usar tus datos personales para un fin nuevo, te lo comunicaremos antes de hacerlo."
+				"content": "Podemos actualizar esta política y publicar cada nueva versión en esta página con una nueva fecha de revisión vigente (actualmente 2026-11-14). Las versiones actualizadas entran en vigor tras su notificación (por ejemplo, mediante publicación en esta página, correo electrónico o aviso dentro del producto) y tu uso continuado o la aceptación de un aviso de reconfirmación en el producto. Si pensamos usar tus datos personales para un fin nuevo, o cuando la ley exija un nuevo consentimiento, te lo comunicaremos y obtendremos tu consentimiento antes de hacerlo."
 			},
 			"contact": {
 				"title": "Contacto",
-				"content": "Para consultas relacionadas con la privacidad, contáctanos en:"
+				"content": "Envía todas las solicitudes legales de derechos sobre datos (DSAR, supresión, rectificación, limitación, oposición y portabilidad) y las notificaciones formales de privacidad o legales exclusivamente a legal@sylphx.com. El soporte oficial al cliente para consultas habituales de cuenta, juego o facturación se presta únicamente a través de canales autenticados del producto o en hi@puzzled.gg; los canales de soporte al cliente no pueden aceptar la notificación de escritos legales ni tratar asuntos jurídicos. Las páginas oficiales en redes sociales son únicamente canales unidireccionales de anuncios y no tramitan solicitudes de soporte ni legales."
 			}
 		}
 	},
 	"terms": {
 		"title": "Términos del servicio",
 		"lastUpdated": "Última actualización",
-		"revision": "2026-10-01",
+		"revision": "2026-11-14",
 		"eyebrow": "Legal",
 		"lead": "Estos términos establecen las reglas que se aplican cuando usas Puzzled, incluidas las cuentas, las suscripciones a Puzzled Plus y la conducta.",
 		"toc": {
@@ -127,7 +127,7 @@
 				"content": "Lee con especial atención estos puntos. Los términos completos que figuran más abajo explican cada uno.",
 				"items": {
 					"renewal": "Puzzled Plus se renueva automáticamente hasta que lo canceles. Puedes cancelarlo en cualquier momento en Ajustes > Suscripción.",
-					"refunds": "Puzzled Plus es contenido digital que se suministra de inmediato al comprarlo. Al suscribirte solicitas que el acceso comience ahora y reconoces que pierdes tu derecho de desistimiento de 14 días una vez que comienza el suministro. Los pagos no son reembolsables, salvo cuando la ley lo exija.",
+					"refunds": "Conforme al Reglamento de Contratos de Consumo del Reino Unido de 2013 (UK Consumer Contracts Regulations 2013), el contenido digital puntual de entrega inmediata (como un pase sin renovación, Reg. 37) pierde su derecho de desistimiento de 14 días una vez comienza el suministro tras tu consentimiento previo expreso, reconocimiento y confirmación en soporte duradero. En las suscripciones periódicas continuas a Puzzled Plus (Reg. 36), si solicitas acceso inmediato y cancelas dentro de los 14 días (cuando no sea aplicable una exención válida de contenido digital conforme a la Reg. 37), solo deducimos el valor proporcional prestado antes de la cancelación. Tras cualquier plazo legal de desistimiento, los pagos no son reembolsables, salvo cuando estos términos o la ley imperativa (como el derecho de desistimiento de 7 días en Brasil) lo exijan.",
 					"changes": "Podemos cambiar los juegos, las funciones, los precios y estos términos. Si un cambio reduce de forma sustancial lo que has pagado, puedes cancelar.",
 					"suspension": "Podemos suspender o cerrar las cuentas que hagan trampas o incumplan estos términos.",
 					"liability": "Nuestra responsabilidad frente a ti es limitada, como explica la Limitación de responsabilidad. Tus derechos legales como consumidor no se ven afectados."
@@ -135,7 +135,7 @@
 			},
 			"acceptance": {
 				"title": "Aceptación de los términos",
-				"content": "Al acceder a Puzzled o usarlo, aceptas quedar vinculado por estos Términos del servicio. Si no estás de acuerdo con estos términos, no uses nuestros servicios. Si una traducción de estos términos difiere de la versión en inglés, prevalece la versión en inglés."
+				"content": "Estos Términos del servicio se publican con una fecha de versión (actualmente 2026-11-14). Al crear una cuenta, hacer clic para aceptar un aviso afirmativo de clickwrap o reconfirmación, suscribirte, o acceder a Puzzled o usarlo tras el aviso de una versión actualizada, aceptas quedar vinculado por la versión vigente de estos términos. Si no estás de acuerdo, no uses nuestros servicios. Si una traducción de estos términos difiere de la versión en inglés, prevalece la versión en inglés, sin limitar la legislación imperativa local de consumo."
 			},
 			"seller": {
 				"title": "Quiénes somos",
@@ -160,8 +160,8 @@
 				"items": {
 					"billing": "Los precios se muestran antes de que pagues e incluyen el IVA cuando corresponda. Sylphx Money cobra el pago cuando te suscribes y al comienzo de cada período mensual o anual.",
 					"renewal": "Tu suscripción se renueva automáticamente hasta que la canceles. Puedes cancelarla en cualquier momento en Ajustes > Suscripción; conservas el acceso hasta el final del período que has pagado y no se te vuelve a cobrar.",
-					"cancellation": "Suministro inmediato: al suscribirte solicitas expresamente que el acceso comience de inmediato y reconoces que pierdes tu derecho de desistimiento de 14 días sobre este contenido digital una vez que comienza el suministro. Aun así, puedes detener las renovaciones en cualquier momento en Ajustes > Suscripción, y conservas el acceso hasta el final del período que has pagado.",
-					"refund": "Los pagos no son reembolsables y no reembolsamos los períodos parcialmente usados, salvo cuando estos términos o la ley dispongan otra cosa. Si algo que entregamos no funcionó, lo corregimos. Si vives en Brasil, puedes desistir en un plazo de 7 días desde la suscripción y recibir el reembolso íntegro de lo pagado (Código de Defensa del Consumidor de Brasil, Ley 8.078/1990, art. 49).",
+					"cancellation": "Desistimiento legal (Reg. 36 frente a Reg. 37): Para cualquier compra puntual de contenido digital inmediato (cuando sea aplicable la Reg. 37 del Reglamento de Contratos de Consumo del Reino Unido de 2013), das tu consentimiento previo expreso para que el suministro comience de inmediato y reconoces que pierdes tu derecho legal de desistimiento de 14 días una vez iniciado el suministro, lo cual confirmamos en un soporte duradero. Para las suscripciones periódicas continuas a Puzzled Plus (cuando sea aplicable la Reg. 36), solicitar el acceso inmediato no implica la renuncia automática a todo tu derecho legal de desistimiento de 14 días: si cancelas dentro de los 14 días (cuando no se aplique una exención válida conforme a la Reg. 37), podemos deducir únicamente un importe proporcional al servicio prestado antes de que nos notificaras la cancelación y reembolsar el saldo restante. También puedes detener las renovaciones en cualquier momento en Ajustes > Suscripción y conservar el acceso hasta el final del período que hayas pagado.",
+					"refund": "Salvo cuando estos términos o la ley dispongan otra cosa (incluidos los reembolsos proporcionales en cancelaciones válidas de 14 días conforme a la Reg. 36), los pagos no son reembolsables y no reembolsamos los períodos parcialmente usados. Si el contenido digital o el servicio que entregamos es defectuoso, lo corregimos o te ofrecemos tu recurso legal. Si vives en Brasil, puedes desistir en un plazo de 7 días desde la suscripción y recibir el reembolso íntegro de lo pagado (Código de Defensa del Consumidor de Brasil, Ley 8.078/1990, art. 49).",
 					"price": "Podemos cambiar el precio de Puzzled Plus. Te lo comunicamos con antelación, antes de que un nuevo precio se aplique a tu próxima renovación, y puedes cancelar antes de esa fecha.",
 					"family": "Un plan familiar cubre al suscriptor y a hasta tres personas a las que invite. El suscriptor puede quitar a personas en cualquier momento.",
 					"statutory": "Nada de lo dispuesto en estos términos afecta a tus derechos legales como consumidor."
@@ -172,18 +172,18 @@
 				"content": "Aceptas:",
 				"items": {
 					"legal": "Usar el servicio únicamente con fines lícitos",
-					"respect": "Respetar a los demás usuarios y a nuestra comunidad",
+					"respect": "Respetar a los demás usuarios, a nuestra comunidad y a nuestro equipo de soporte (sin acoso, abuso ni spam de mala fe)",
 					"noCheat": "No usar trampas, exploits ni herramientas automatizadas",
 					"noInterfere": "No copiar, extraer datos de forma masiva (scraping), aplicar ingeniería inversa ni interferir con Puzzled, salvo donde la ley lo permita"
 				}
 			},
 			"suspension": {
 				"title": "Suspensión y cierre de cuentas",
-				"content": "Podemos suspender o cerrar tu cuenta, y eliminar o restablecer puntuaciones, rachas o entradas de las clasificaciones, si tenemos motivos razonables para creer que has incumplido estos términos (incluso haciendo trampas), por motivos de seguridad o cuando la ley lo exija. En los demás casos, te damos un preaviso razonable antes de cerrar una cuenta. Si cerramos tu cuenta sin un motivo grave mientras queda un período pagado, reembolsamos la parte no utilizada."
+				"content": "Podemos suspender o cerrar tu cuenta, y eliminar o restablecer puntuaciones, rachas o entradas de las clasificaciones, si tenemos motivos razonables para creer que has incumplido estos términos (incluso haciendo trampas), por motivos de seguridad o cuando la ley lo exija. En los demás casos, te damos un preaviso razonable antes de cerrar una cuenta. Si cerramos tu cuenta sin un motivo grave mientras queda un período pagado, reembolsamos la parte no utilizada. Los contactos repetitivos, abusivos, acosadores o de mala fe —incluidos mensajes reiterados sobre asuntos ya resueltos— también podrán limitarse a la documentación de autoservicio o someterse a un período de pausa en las comunicaciones, sin afectar tus derechos legales o de facturación verificados."
 			},
 			"ip": {
 				"title": "Propiedad intelectual",
-				"content": "Todos los juegos, contenidos y materiales de Puzzled son de nuestra propiedad o se nos han licenciado. No puedes copiar, modificar ni distribuir ningún contenido sin permiso. Nos concedes una licencia mundial y libre de regalías para usar tu nombre visible, tu foto de perfil y tus resultados para operar Puzzled, incluidas las clasificaciones y los resultados compartidos, y una licencia perpetua e irrevocable para usar cualquier comentario que nos envíes."
+				"content": "Todos los juegos, contenidos y materiales de Puzzled son de nuestra propiedad o se nos han licenciado. No puedes copiar, modificar ni distribuir ningún contenido sin permiso. Siempre que subas o envíes un nombre visible, una foto de perfil u otro contenido o comentario en Puzzled, garantizas y declaras que posees todos los derechos necesarios sobre ello o cuentas con una licencia válida para enviarlo y conceder los permisos indicados a continuación, y que no infringe derechos de propiedad intelectual, privacidad u otros derechos de terceros ni vulnera ninguna ley. Nos concedes una licencia mundial y libre de regalías para usar tu nombre visible, tu foto de perfil y tus resultados para operar Puzzled, incluidas las clasificaciones y los resultados compartidos, y una licencia perpetua e irrevocable para usar cualquier comentario que nos envíes. Envía todas las notificaciones de propiedad intelectual o derechos de autor exclusivamente a legal@sylphx.com; los canales de soporte al cliente no pueden aceptar notificaciones legales ni de propiedad intelectual."
 			},
 			"disclaimer": {
 				"title": "Exención de responsabilidad",
@@ -195,15 +195,15 @@
 			},
 			"changes": {
 				"title": "Cambios en los términos",
-				"content": "Podemos cambiar estos términos, por ejemplo para reflejar cambios en Puzzled, en la ley o en nuestro negocio. Publicamos los nuevos términos en esta página con una nueva fecha. Si un cambio te afecta de forma sustancial, te lo comunicamos con antelación y, si tienes una suscripción de pago, puedes cancelar antes de que el cambio se aplique y recibir un reembolso por la parte no utilizada de tu período. En los demás casos, los nuevos términos se aplican una vez publicados."
+				"content": "Podemos cambiar estos términos, por ejemplo para reflejar cambios en Puzzled, en la ley o en nuestro negocio, y publicamos cada versión actualizada en esta página con una nueva fecha de versión vigente. Los términos actualizados entran en vigor tras su notificación (como publicación en esta página, correo electrónico o aviso dentro del producto) y tu uso continuado o la aceptación de un aviso de reconfirmación en el producto. Si un cambio reduce de forma sustancial lo que te ofrece una suscripción de pago, te lo comunicamos con antelación y puedes cancelar antes de que el cambio se aplique y recibir un reembolso por la parte no utilizada de tu período pagado."
 			},
 			"general": {
 				"title": "Disposiciones generales",
-				"content": "Podemos transferir nuestros derechos y obligaciones derivados de estos términos a otra organización, por ejemplo si se vende Puzzled; te lo comunicaremos y podrás cancelar si no estás conforme. Tú no puedes transferir los tuyos. Si un tribunal considera que una parte de estos términos no es exigible, el resto sigue en vigor. Si no hacemos valer un término de inmediato, aún podemos hacerlo más adelante. Estos términos se rigen por la ley de Inglaterra y Gales. Puedes presentar una reclamación ante los tribunales de Inglaterra y Gales, o ante los tribunales de tu localidad si resides en Escocia, Irlanda del Norte u otro país, y conservas la protección de la legislación imperativa de consumo del lugar donde vives."
+				"content": "Podemos transferir nuestros derechos y obligaciones derivados de estos términos a otra organización, por ejemplo si se vende Puzzled; te lo comunicaremos y podrás cancelar si no estás conforme. Tú no puedes transferir los tuyos. Si un tribunal considera que una parte de estos términos no es exigible, el resto sigue en vigor. Si no hacemos valer un término de inmediato, aún podemos hacerlo más adelante. Antes de iniciar un procedimiento judicial o formal de disputa contra nosotros, aceptas enviar una notificación por escrito describiendo la disputa y otorgándonos 30 días para subsanarla o resolverla exclusivamente a legal@sylphx.com (los canales de soporte al cliente no pueden aceptar la notificación de escritos legales). Nada en este paso de notificación previa restringe o retrasa medidas cautelares o equitativas urgentes, actuaciones necesarias para preservar un plazo legal de prescripción, recursos legales irrenunciables del consumidor, ni reclamaciones ante la Information Commissioner's Office del Reino Unido (ICO) o cualquier autoridad competente de protección de datos o de consumo. Estos términos se rigen por la ley de Inglaterra y Gales. Puedes presentar una reclamación ante los tribunales de Inglaterra y Gales, o ante los tribunales de tu localidad si resides en Escocia, Irlanda del Norte u otro país, y conservas la protección de la legislación imperativa de consumo del lugar donde vives."
 			},
 			"contact": {
 				"title": "Contacto",
-				"content": "Para preguntas sobre estos términos, contáctanos en:"
+				"content": "El soporte oficial al cliente para consultas habituales sobre cuentas, juego o facturación se presta únicamente mediante canales autenticados del producto y nuestro correo oficial de soporte hi@puzzled.gg. Las páginas oficiales en redes sociales son únicamente canales unidireccionales de anuncios y no tramitan solicitudes de soporte ni legales. Envía todas las notificaciones legales formales, notificaciones de propiedad intelectual, solicitudes legales de derechos sobre datos y avisos previos de disputa de 30 días exclusivamente a legal@sylphx.com; los canales de soporte al cliente no pueden aceptar la notificación de escritos legales ni tratar asuntos jurídicos. Los contactos repetitivos, abusivos, acosadores o de mala fe —incluidos mensajes reiterados sobre asuntos ya resueltos— podrán limitarse a la documentación de autoservicio o someterse a una pausa en las comunicaciones sin afectar tus derechos legales o de facturación verificados."
 			}
 		}
 	}
