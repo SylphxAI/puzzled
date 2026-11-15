@@ -204,6 +204,11 @@
 	max-width: 69rem;
 }
 
+/* While sales are closed the hero above is full width, so the note keeps its left edge. */
+.page.closed > section:global(#plans) > div {
+	max-width: 76rem;
+}
+
 @media (max-width: 767px) {
 	.intro {
 		margin-bottom: 16px;

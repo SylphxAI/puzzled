@@ -14,14 +14,19 @@
 }
 
 .boxes {
+	--board-frame: var(--color-foreground);
 	position: absolute;
 	inset: 0;
 	gap: 2px;
 	padding: 2px;
 	border-radius: 12px;
-	overflow: hidden;
-	background: var(--color-foreground);
-	box-shadow: 0 4px 0 var(--color-foreground);
+	background: var(--board-frame);
+	box-shadow: 0 4px 0 var(--board-frame);
+}
+
+/* Ink on a dark page is paper-bright: soften the tray so it sits in the room. */
+:global(.dark) .boxes {
+	--board-frame: color-mix(in srgb, var(--color-foreground) 62%, var(--color-background));
 }
 
 .box {
@@ -29,6 +34,26 @@
 	min-width: 0;
 	min-height: 0;
 	background: var(--color-border);
+}
+
+/* The tray is clipped by rounding the four corner boxes and their corner cells
+   (outer radius 12px minus the 2px frame), not by overflow, so the frame stays
+   an even line round every corner and focus rings are never cut. */
+.box:nth-child(1),
+.box:nth-child(1) > .cell:nth-child(1) {
+	border-top-left-radius: 10px;
+}
+.box:nth-child(3),
+.box:nth-child(3) > .cell:nth-child(3) {
+	border-top-right-radius: 10px;
+}
+.box:nth-child(7),
+.box:nth-child(7) > .cell:nth-child(7) {
+	border-bottom-left-radius: 10px;
+}
+.box:nth-child(9),
+.box:nth-child(9) > .cell:nth-child(9) {
+	border-bottom-right-radius: 10px;
 }
 
 .cell {

@@ -111,7 +111,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 
 	if (cards.length === 0) {
 		return (
-			<main className={cn('flex-1', styles.page)}>
+			<main className={cn('flex-1', styles.page, styles.closed)}>
 				<MarketingHero
 					eyebrow={tPlus('name')}
 					title={t('title')}

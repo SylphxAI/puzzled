@@ -136,7 +136,7 @@ for (const viewport of VIEWPORTS) {
 
 			const freePlay = page.getByRole('link', { name: "Not now, play today's free puzzle" })
 			await expect(freePlay).toHaveCount(1)
-			await freePlay.scrollIntoViewIfNeeded()
+			await freePlay.evaluate((el) => el.scrollIntoView({ block: 'center' }))
 			await expect(freePlay).toBeInViewport({ ratio: 1 })
 			await expect(
 				page.getByRole('link', { name: /^Family plan for up to \d+ players$/ }),

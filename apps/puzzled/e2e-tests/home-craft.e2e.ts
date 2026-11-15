@@ -56,7 +56,8 @@ test('Chinese display type and reduced motion remain readable', async ({ page },
 				ratio: Number.parseFloat(style.lineHeight) / Number.parseFloat(style.fontSize),
 			}
 		})
-		expect(type.tracking).toBe('0px')
+		// Chromium reports a zero letter-spacing as the keyword `normal`.
+		expect(['normal', '0px']).toContain(type.tracking)
 		expect(type.ratio).toBeGreaterThanOrEqual(1.29)
 	}
 	const card = page.locator('.home-featured-card')
