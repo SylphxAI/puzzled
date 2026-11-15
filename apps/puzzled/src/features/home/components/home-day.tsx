@@ -237,11 +237,11 @@ function FeaturedCard({
 	return (
 		<div
 			data-day-puzzle-card=""
-			className="grid grid-cols-[80px_minmax(0,1fr)] overflow-hidden rounded-3xl border border-border bg-card shadow-lg sm:block"
+			className="home-featured-card grid grid-cols-[80px_minmax(0,1fr)] overflow-hidden rounded-3xl border border-border bg-card sm:block"
 		>
 			<div
 				className={cn(
-					'relative flex items-center justify-center sm:h-56',
+					'home-featured-art relative flex items-center justify-center sm:h-56',
 					colors.bg,
 					colors.onField,
 				)}
@@ -259,8 +259,10 @@ function FeaturedCard({
 					{numberLabel}
 				</span>
 			</div>
-			<div className="p-3 sm:p-6">
-				<p className="font-display text-2xl leading-tight">{game.name}</p>
+			<div className="home-featured-content p-3 sm:p-6">
+				<p className="home-featured-title font-display text-2xl leading-tight sm:text-3xl">
+					{game.name}
+				</p>
 				{game.tagline ? (
 					<p className="mt-1 text-[15px] text-muted-foreground">
 						{game.tagline}
@@ -271,7 +273,7 @@ function FeaturedCard({
 					href={href}
 					// The day's primary action: the install offer stays off it.
 					data-day-primary-action=""
-					className="pressable mt-3 flex min-h-12 w-full items-center justify-center rounded-full bg-cta px-6 text-[16px] font-bold text-cta-foreground shadow-[inset_0_-3px_0_var(--color-cta-edge)] transition-colors hover:bg-cta-hover"
+					className="pressable home-featured-action mt-4 flex min-h-12 w-full items-center justify-center rounded-xl bg-cta px-6 text-[16px] font-bold text-cta-foreground shadow-[inset_0_-3px_0_var(--color-cta-edge)] transition-colors hover:bg-cta-hover sm:mt-5"
 				>
 					{cta}
 				</Link>

@@ -670,13 +670,9 @@ export function CookieBanner(props: {
 			// in app/[locale]/layout.tsx marks <html> and globals.css hides this
 			// node, so a visitor who already decided never sees a flash.
 			data-consent-banner=""
-			// On phones the choice owns space in the page, never over the puzzle
-			// or its Play action. The desktop bar keeps its existing placement.
-			className={
-				props.position === 'bottom'
-					? 'relative z-toast px-2 py-1.5 sm:p-4 md:fixed md:inset-x-0 md:bottom-0'
-					: undefined
-			}
+			// The notice owns normal document space at every breakpoint, so it never
+			// covers a puzzle action, escape control, or footer link.
+			className={props.position === 'bottom' ? 'relative z-toast px-2 py-1.5 sm:p-4' : undefined}
 		>
 			<section
 				aria-label={t('title')}
