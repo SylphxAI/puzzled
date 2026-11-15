@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test'
+import { expect, type Locator, type Page, test } from '@playwright/test'
 import { settle } from './a11y-support'
 
 /** Pricing choices, benefits and guest return paths stay available at every size. */
@@ -12,6 +12,24 @@ const VIEWPORTS = [
 async function openPricing(page: Page) {
 	await page.goto('/pricing', { waitUntil: 'domcontentloaded' })
 	await settle(page)
+}
+
+/** Check the painted hit target, including rounded CTA corners, without navigating. */
+async function expectReachable(target: Locator) {
+	await target.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+	await expect(target).toBeInViewport({ ratio: 1 })
+	expect(
+		await target.evaluate((el) => {
+			const r = el.getBoundingClientRect()
+			return [
+				[r.x + 8, r.y + 8],
+				[r.right - 8, r.y + 8],
+				[r.x + 8, r.bottom - 8],
+				[r.right - 8, r.bottom - 8],
+			].every(([x, y]) => el.contains(document.elementFromPoint(x, y)))
+		}),
+	).toBe(true)
+	await target.click({ trial: true })
 }
 
 for (const viewport of VIEWPORTS) {
@@ -56,21 +74,22 @@ for (const viewport of VIEWPORTS) {
 						}),
 						contentType: 'image/png',
 					})
-					// The shared notice may cover a control until dismissed; assert the clear state.
-					if (consentState === 'dismissed') {
-						expect(
-							await cta.evaluate((el) => {
-								const r = el.getBoundingClientRect()
-								return [
-									[r.x + 8, r.y + 8],
-									[r.right - 8, r.y + 8],
-									[r.x + 8, r.bottom - 8],
-									[r.right - 8, r.bottom - 8],
-								].every(([x, y]) => el.contains(document.elementFromPoint(x, y)))
-							}),
-						).toBe(true)
-					}
+					await expectReachable(cta)
 				}
+				// Pricing is a page, with a free-play escape link rather than a modal close button.
+				const freePlay = page.getByRole('link', {
+					name: "Not now, play today's free puzzle",
+					exact: true,
+				})
+				await expect(freePlay).toHaveAttribute('href', /^\/games\/[^/?#]+$/)
+				await expectReachable(freePlay)
+				for (const path of ['/privacy', '/terms']) {
+					const legal = page.locator(`footer a[href="${path}"]`)
+					await expect(legal).toHaveCount(1)
+					await expectReachable(legal)
+				}
+				if (consentState === 'open') await expect(decline).toBeVisible()
+				else await expect(decline).toHaveCount(0)
 			})
 		}
 
