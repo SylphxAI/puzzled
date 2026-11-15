@@ -39,6 +39,7 @@ export function AttributionCapture() {
 			const sessionAction = nextSessionAttribution({
 				existing: existingSession,
 				search: liveSearch,
+				landingPath: pathname || window.location.pathname,
 				analyticsDeclined: isAnalyticsDeclined(),
 				marketingDeclined: isMarketingDeclined(),
 			})

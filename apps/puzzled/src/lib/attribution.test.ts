@@ -246,4 +246,19 @@ describe('session attribution across sign-in before cookie consent', () => {
 		const overridden = mergeSearchWithSession('?gclid=fresh_id', stored)
 		expect(new URLSearchParams(overridden).get('gclid')).toBe('fresh_id')
 	})
+
+	test('captures share UUID from /r/<shareId>?utm_source=share across session and cookie', () => {
+		const id = '0b6f5d6e-2c8a-4a53-9f0e-6a4d3f1c9e11'
+		const session = sessionDecoded(
+			nextSessionAttribution({
+				existing: null,
+				search: '?utm_source=share',
+				landingPath: `/zh-HK/r/${id}`,
+				analyticsDeclined: false,
+				marketingDeclined: false,
+			}),
+		)
+		expect(session?.get('r')).toBe(id)
+		expect(session?.get('s')).toBe('share')
+	})
 })

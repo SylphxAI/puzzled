@@ -1,7 +1,9 @@
 import { getTranslations } from 'next-intl/server'
 import {
 	landingPlayTarget,
+	parseShareId,
 	type SharedResult,
+	sharedPlayHref,
 	sharedResultCard,
 } from '@/features/daily/lib/challenge'
 import { resultCardStringsFrom } from '@/features/daily/lib/result-card'
@@ -16,39 +18,59 @@ import { ResultCardSummary } from './result-card-summary'
 import { ShareLandingReporter } from './share-landing-reporter'
 
 type SharedResultLandingProps = {
-	shared: SharedResult
+	shared: SharedResult | null
 	shareId: string
 	locale: string
+	fallbackGameSlug?: string | null
+	utmSource?: string
 }
 
 /**
- * The page a shared link opens: the sharer's non-spoiler result above a plain
- * invitation to play today's puzzle. It shows no name, no solution and no
- * countdown; a result from an earlier day says so and still offers today.
+ * The page a shared link opens: the sharer's non-spoiler result above an
+ * invitation to play that puzzle game (preserving `ref` and `utm_source=share`).
+ * When a share cannot be loaded (unknown id or unavailable api), falls back
+ * gracefully to a neutral challenge prompt rather than dropping attribution.
  */
-export async function SharedResultLanding({ shared, shareId, locale }: SharedResultLandingProps) {
+export async function SharedResultLanding({
+	shared,
+	shareId,
+	locale,
+	fallbackGameSlug,
+	utmSource,
+}: SharedResultLandingProps) {
 	const t = await getTranslations({ locale, namespace: 'share.landing' })
 	const tGames = await getTranslations({ locale, namespace: 'games' })
 	const tChallenge = await getTranslations({ locale, namespace: 'share.challenge' })
 	const tHome = await getTranslations({ locale, namespace: 'home.day' })
 	const tCard = await getTranslations({ locale, namespace: 'share.card' })
 	const today = { dayKey: productDayKey(), freeGameSlug: getTodaysFreeGame() }
-	const target = landingPlayTarget(shared, today)
-	const card = sharedResultCard(shared, {
-		origin: getBaseUrl('origin'),
-		gameName: resolveModuleDisplayName(tGames, shared.gameSlug),
-		theme: getHowToPlayConfig(shared.gameSlug)?.display.theme ?? 'slate',
-		locale,
-	})
+	const canonicalShareId = parseShareId(shareId)
+
+	const target = shared
+		? landingPlayTarget(shared, today)
+		: { gameSlug: fallbackGameSlug ?? today.freeGameSlug, sameAsShared: false }
+	const card = shared
+		? sharedResultCard(shared, {
+				origin: getBaseUrl('origin'),
+				gameName: resolveModuleDisplayName(tGames, target.gameSlug),
+				theme: getHowToPlayConfig(target.gameSlug)?.display.theme ?? 'slate',
+				locale,
+			})
+		: null
 	const playName = resolveModuleDisplayName(tGames, target.gameSlug)
+	const playHref = sharedPlayHref({
+		gameSlug: target.gameSlug,
+		shareId: shareId || undefined,
+		utmSource,
+	})
 
 	return (
 		<main className="flex-1">
-			<ShareLandingReporter shareId={shareId} />
-			{target.sameAsShared && (
+			{canonicalShareId && <ShareLandingReporter shareId={canonicalShareId} />}
+			{shared && target.sameAsShared && canonicalShareId && (
 				<ChallengeMemoryWriter
-					shareId={shareId}
-					gameSlug={shared.gameSlug}
+					shareId={canonicalShareId}
+					gameSlug={target.gameSlug}
 					dayKey={shared.dayKey}
 				/>
 			)}
@@ -59,25 +81,27 @@ export async function SharedResultLanding({ shared, shareId, locale }: SharedRes
 						{target.sameAsShared ? t('titleSame') : t('titleOther')}
 					</h1>
 
-					<div className="mt-6">
-						<p className="mb-2 text-center text-[15px]">
-							<span className="font-semibold">{card.gameName}</span>
-							{card.dayDisplay && (
-								<span className="text-muted-foreground"> · {card.dayDisplay}</span>
-							)}
-						</p>
-						<ResultCardSummary
-							model={card}
-							strings={resultCardStringsFrom((key) => tCard.raw(key) as string)}
-							heading={tChallenge('theirs')}
-						/>
-					</div>
+					{card && (
+						<div className="mt-6">
+							<p className="mb-2 text-center text-[15px]">
+								<span className="font-semibold">{card.gameName}</span>
+								{card.dayDisplay && (
+									<span className="text-muted-foreground"> · {card.dayDisplay}</span>
+								)}
+							</p>
+							<ResultCardSummary
+								model={card}
+								strings={resultCardStringsFrom((key) => tCard.raw(key) as string)}
+								heading={tChallenge('theirs')}
+							/>
+						</div>
+					)}
 
 					<p className="mt-6 text-center text-[15px] text-muted-foreground">
 						{target.sameAsShared ? t('bodySame') : t('bodyOther')}
 					</p>
 					<Link
-						href={`/games/${target.gameSlug}`}
+						href={playHref}
 						className="pressable mt-5 flex h-12 w-full items-center justify-center rounded-full bg-cta px-6 text-[16px] font-bold text-cta-foreground shadow-[inset_0_-3px_0_var(--color-cta-edge)] transition-colors hover:bg-cta-hover"
 					>
 						{tHome('playToday', { game: playName })}

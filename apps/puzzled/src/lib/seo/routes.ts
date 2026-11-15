@@ -84,6 +84,7 @@ export const NOINDEX_ROUTE_PREFIXES = [
 	'/challenge',
 	'/family',
 	'/daily',
+	'/r',
 ] as const
 
 /**
