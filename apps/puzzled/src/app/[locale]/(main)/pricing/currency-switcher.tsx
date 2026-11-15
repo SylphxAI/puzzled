@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { serializeCurrencyCookie } from '@/lib/billing/currency'
 import { cn } from '@/lib/utils'
+import styles from './pricing.module.css'
 
 type Props = {
 	currencies: string[]
@@ -28,12 +29,12 @@ export function CurrencySwitcher({ currencies, current }: Props) {
 	}
 
 	return (
-		<fieldset className="mb-5 flex items-center gap-3 border-0 p-0">
+		<fieldset className={cn('flex items-center gap-3 border-0 p-0', styles.currency)}>
 			<legend className="sr-only">{t('currencyLabel')}</legend>
 			<span className="text-sm text-muted-foreground" aria-hidden="true">
 				{t('currencyLabel')}
 			</span>
-			<div className="inline-flex rounded-full border border-border bg-card p-1">
+			<div className="inline-flex flex-wrap rounded-xl border border-border bg-card p-1">
 				{currencies.map((code) => (
 					<button
 						key={code}
@@ -41,7 +42,7 @@ export function CurrencySwitcher({ currencies, current }: Props) {
 						aria-pressed={code === current}
 						onClick={() => choose(code)}
 						className={cn(
-							'min-h-11 min-w-14 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+							'min-h-12 min-w-14 rounded-lg px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
 							code === current
 								? 'bg-primary text-primary-foreground'
 								: 'text-muted-foreground hover:bg-muted',

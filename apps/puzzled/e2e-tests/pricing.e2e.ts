@@ -131,7 +131,7 @@ for (const viewport of VIEWPORTS) {
 			const yearly = offer.locator('input[value="year"]')
 			test.skip((await yearly.count()) === 0, 'sales are closed')
 			await expect(yearly).toBeChecked()
-			const currency = offer.getByRole('group', { name: 'Currency', exact: true })
+			const currency = page.getByRole('group', { name: 'Currency', exact: true })
 			if ((await currency.count()) > 0) await expect(currency).toBeInViewport({ ratio: 1 })
 		})
 

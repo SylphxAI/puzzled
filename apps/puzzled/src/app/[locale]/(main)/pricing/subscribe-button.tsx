@@ -8,6 +8,7 @@ import { rememberCheckoutQuote } from '@/features/analytics/lib/google-tag'
 import { startCheckout } from '@/lib/connect/billing-client'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
+import styles from './pricing.module.css'
 
 type Props = {
 	planId: string
@@ -47,8 +48,7 @@ export function SubscribeButton({
 	const [busy, setBusy] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [consent, setConsent] = useState(false)
-	const buttonClass =
-		'pressable inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60'
+	const buttonClass = `${styles.checkout} pressable inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60`
 
 	if (!signedIn) {
 		return (

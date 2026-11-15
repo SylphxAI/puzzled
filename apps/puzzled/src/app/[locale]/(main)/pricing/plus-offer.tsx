@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { TrialChargeLine } from '@/features/plus/components/trial-charge-line'
 import { formatPrice, type PlanCard, yearlySavingPercent } from '@/lib/billing/plus'
 import { cn } from '@/lib/utils'
+import styles from './pricing.module.css'
 import { SubscribeButton } from './subscribe-button'
 
 type Props = {
@@ -94,15 +95,16 @@ export function PlusOffer({
 		: `${t('signInToSubscribe')} · ${selectedName}`
 
 	return (
-		<div id={id} className="scroll-mt-24">
+		<div id={id} className={cn('scroll-mt-24', styles.offer)}>
 			{headerSlot}
 			<div
 				className={cn(
 					'surface-card flex flex-col p-4 sm:p-5',
-					emphasized ? 'border-2 border-foreground shadow-lg' : 'border border-border',
+					styles.card,
+					emphasized && styles.featured,
 				)}
 			>
-				<div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
+				<div className={styles.cardHeading}>
 					<h2 className="flex items-center gap-2 font-display text-lg sm:text-xl">
 						{accentDot ? (
 							<span
@@ -124,9 +126,10 @@ export function PlusOffer({
 							<label
 								key={card.id}
 								className={cn(
+									styles.option,
 									'flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2',
 									'transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
-									checked ? 'border-foreground bg-muted/50' : 'border-border hover:bg-muted/40',
+									checked ? styles.selected : 'border-border hover:bg-muted/40',
 								)}
 							>
 								<input

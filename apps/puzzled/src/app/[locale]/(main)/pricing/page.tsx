@@ -21,6 +21,7 @@ import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
 import { cn } from '@/lib/utils'
 import { CurrencySwitcher } from './currency-switcher'
 import { PlusOffer } from './plus-offer'
+import styles from './pricing.module.css'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -110,7 +111,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 
 	if (cards.length === 0) {
 		return (
-			<main className="flex-1">
+			<main className={cn('flex-1', styles.page)}>
 				<MarketingHero
 					eyebrow={tPlus('name')}
 					title={t('title')}
@@ -163,17 +164,19 @@ export default async function PricingPage({ params, searchParams }: Props) {
 	)
 
 	return (
-		<main className="flex-1">
-			<section className="page-shell-wide pb-8 pt-4 md:pb-12 md:pt-10">
+		<main className={cn('flex-1', styles.page)}>
+			<section className={cn('page-shell-wide pb-8 pt-4 md:pb-12 md:pt-10', styles.shell)}>
 				{checkout === 'cancelled' ? (
 					<output className="mb-3 block rounded-xl bg-muted px-4 py-3 text-sm">
 						{t('checkoutCancelled')}
 					</output>
 				) : null}
-				<div className="mb-4 max-w-2xl md:mb-8">
-					<p className="eyebrow">{tPlus('name')}</p>
+				<div className={styles.intro}>
+					<p className={styles.eyebrow}>{tPlus('name')}</p>
+					<CurrencySwitcher currencies={currencies} current={currency} />
 					<h1
 						className={cn(
+							styles.title,
 							'mt-1 font-display text-[1.75rem] leading-tight text-balance',
 							'lg:mt-2 lg:text-5xl',
 						)}
@@ -184,11 +187,10 @@ export default async function PricingPage({ params, searchParams }: Props) {
 						{t('offerLead', { count: gameCount })}
 					</p>
 				</div>
-				<div className="grid gap-6 lg:grid-cols-2 lg:items-start lg:gap-8">
+				<div className={styles.tray}>
 					{plusMember ? (
-						<div id="plus" className="scroll-mt-24">
-							<CurrencySwitcher currencies={currencies} current={currency} />
-							<div className="surface-card border-2 border-foreground p-5 shadow-lg">
+						<div id="plus" className={cn('scroll-mt-24', styles.offer)}>
+							<div className={cn('surface-card p-5', styles.card, styles.featured)}>
 								<p className="font-display text-xl">{t('currentPlan')}</p>
 								<Link href="/settings/subscription" className={cn(memberButtonClass, 'mt-4')}>
 									{t('manage')}
@@ -214,7 +216,6 @@ export default async function PricingPage({ params, searchParams }: Props) {
 							locale={locale}
 							signedIn={Boolean(user)}
 							subscribed={false}
-							headerSlot={<CurrencySwitcher currencies={currencies} current={currency} />}
 							footerSlot={individualFooter}
 						/>
 					)}
@@ -242,6 +243,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 			<MarketingSection id="plans" className="pt-0 md:pt-0">
 				<div
 					className={cn(
+						styles.free,
 						'flex flex-col justify-between gap-4 rounded-2xl border border-border p-5',
 						'sm:flex-row sm:items-center sm:p-6',
 					)}
