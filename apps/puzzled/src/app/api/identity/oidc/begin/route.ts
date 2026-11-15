@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { authConfig, googleStartUrl, safeNext } from '@/lib/identity/client-auth'
+import { admitJsonPost } from '@/lib/identity/http'
+import { isPolicyAcceptance } from '@/lib/identity/policy-consent'
 import { authFail } from '@/lib/identity/sign-in'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 
@@ -8,18 +10,27 @@ import { getRequestSiteOrigin } from '@/lib/site-origin.server'
  * trip and returns to `/api/identity/oauth/callback` with a one-time ticket.
  */
 export async function POST(request: Request) {
+	const refused = await admitJsonPost(request)
+	if (refused) return refused
 	const config = authConfig()
 	if (!config) return authFail(503, 'identity_unconfigured')
 	const body = (await request.json().catch(() => null)) as {
+		acceptance?: unknown
 		provider?: string
 		federationId?: string
 		redirectUrl?: string
 	} | null
+	if (body?.acceptance !== undefined && !isPolicyAcceptance(body.acceptance))
+		return authFail(400, 'policy_acceptance_required')
 	const provider = (body?.provider ?? body?.federationId ?? '').trim().toLowerCase()
 	if (provider !== 'google') return authFail(400, 'oidc_provider_unsupported')
 	const next = safeNext(body?.redirectUrl)
 	const callback = `${await getRequestSiteOrigin()}/api/identity/oauth/callback?next=${encodeURIComponent(next)}`
 	return NextResponse.json({
-		authorizationUrl: googleStartUrl(config, callback),
+		authorizationUrl: googleStartUrl(
+			config,
+			callback,
+			isPolicyAcceptance(body?.acceptance) ? body.acceptance : undefined,
+		),
 	})
 }

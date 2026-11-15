@@ -16,6 +16,7 @@ import { NONCE_HEADER } from '@/lib/csp'
 import { env } from '@/lib/env'
 import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
 import { routing } from '@/lib/i18n/routing'
+import { PolicyConsentBoundary } from '@/lib/identity/policy-consent-boundary'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 import { DeferredToaster } from '@/shared/components/deferred-shell'
 import { PlatformProvider } from '@/shared/components/platform'
@@ -288,7 +289,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 						{googleTag ? <GoogleTag ids={googleTag} /> : null}
 						<ApiProvider>
 							<NextIntlClientProvider messages={pickMessages(messages, CLIENT_NAMESPACES)}>
-								{children}
+								<PolicyConsentBoundary>{children}</PolicyConsentBoundary>
 							</NextIntlClientProvider>
 						</ApiProvider>
 						{/* Off the first paint: hosted toasts */}
