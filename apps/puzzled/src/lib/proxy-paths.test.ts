@@ -20,6 +20,14 @@ describe('proxy path skipping', () => {
 		}
 	})
 
+	test('serves only the exact root IndexNow key outside locale routing', () => {
+		expect(isProxySkippedPath('/d110b31973ac28e2d59232b8a4e47cf2.txt')).toBe(true)
+		expect(isProxySkippedPath('/other-key.txt')).toBe(false)
+		expect(isProxySkippedPath('/en-US/d110b31973ac28e2d59232b8a4e47cf2.txt')).toBe(
+			false,
+		)
+	})
+
 	test('serves real static assets', () => {
 		for (const path of [
 			'/favicon.ico',

@@ -10,6 +10,7 @@ const inboundPublicRoutes = new Set(inboundModulePublicRoutes(locales))
 const STATIC_DOCUMENT_PATHS = new Set([
 	'/robots.txt',
 	'/llms.txt',
+	'/d110b31973ac28e2d59232b8a4e47cf2.txt',
 	'/sitemap.xml',
 	'/manifest.webmanifest',
 	'/offline.html',
