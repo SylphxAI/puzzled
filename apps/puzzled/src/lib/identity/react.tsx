@@ -27,6 +27,7 @@ import { getConnectTransport } from '@/lib/connect/transport'
 import { recordConsent } from './consent-client'
 import { DEST_CONSENT_PURPOSES, type IdentityUser } from './dest'
 import { MIN_PASSWORD_LENGTH } from './password-policy'
+import { POLICY_ACCEPTANCE, type PolicyAcceptance } from './policy-consent'
 
 type AuthState = {
 	user: IdentityUser | null
@@ -35,7 +36,11 @@ type AuthState = {
 	isSignedIn: boolean
 	isConfigured: boolean
 	signOut: () => Promise<void>
-	signInWithOAuth?: (input: { provider: string; redirectUrl?: string }) => Promise<void>
+	signInWithOAuth?: (input: {
+		provider: string
+		redirectUrl?: string
+		acceptance?: PolicyAcceptance
+	}) => Promise<void>
 }
 
 /** What the server renders: the session is unknown until the browser asks. */
@@ -116,12 +121,24 @@ export function SylphxProvider({ children }: { children: ReactNode }) {
 	}, [])
 
 	const signInWithOAuth = useCallback(
-		async ({ provider, redirectUrl }: { provider: string; redirectUrl?: string }) => {
+		async ({
+			provider,
+			redirectUrl,
+			acceptance,
+		}: {
+			provider: string
+			redirectUrl?: string
+			acceptance?: PolicyAcceptance
+		}) => {
 			const response = await fetch('/api/identity/oidc/begin', {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				credentials: 'same-origin',
-				body: JSON.stringify({ provider, redirectUrl: redirectUrl ?? '/' }),
+				body: JSON.stringify({
+					provider,
+					redirectUrl: redirectUrl ?? '/',
+					...(acceptance ? { acceptance } : {}),
+				}),
 			})
 			const body = await readJson(response)
 			const url = typeof body.authorizationUrl === 'string' ? body.authorizationUrl : ''
@@ -272,6 +289,7 @@ export function useSignUpForm(
 	opts: {
 		afterSignUpUrl?: string
 		minPasswordLength?: number
+		termsAccepted?: boolean
 		oauthHandler?: (provider: string) => Promise<void>
 		providers?: unknown
 	} = {},
@@ -301,6 +319,10 @@ export function useSignUpForm(
 		passwordValid: password.length >= minLength,
 		handleSubmit: async (event?: { preventDefault?: () => void }) => {
 			event?.preventDefault?.()
+			if (!opts.termsAccepted) {
+				setError('policy_acceptance_required')
+				return
+			}
 			setIsLoading(true)
 			setError(null)
 			const rememberAttempt = () => {
@@ -316,7 +338,11 @@ export function useSignUpForm(
 						method: 'POST',
 						headers: { 'content-type': 'application/json' },
 						credentials: 'same-origin',
-						body: JSON.stringify({ email, password, ...(isSignInRetry ? {} : { name }) }),
+						body: JSON.stringify({
+							email,
+							password,
+							...(isSignInRetry ? {} : { name, ...POLICY_ACCEPTANCE }),
+						}),
 					},
 				)
 				receivedResponse = true
@@ -344,6 +370,10 @@ export function useSignUpForm(
 			}
 		},
 		handleOAuthSignUp: async (provider: string) => {
+			if (!opts.termsAccepted) {
+				setError('policy_acceptance_required')
+				return
+			}
 			await opts.oauthHandler?.(provider)
 		},
 	}

@@ -7,6 +7,7 @@ import type { FormEvent } from 'react'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
 import { afterSignUpDestination, safeCallbackPath } from '@/lib/identity/after-sign-up'
+import { POLICY_ACCEPTANCE } from '@/lib/identity/policy-consent'
 import { type OAuthProvider, useSafeAuth, useSignUpForm } from '@/lib/identity/react'
 import {
 	AuthField,
@@ -28,6 +29,7 @@ interface SignUpFormProps {
 }
 
 export function SignUpForm({ providers }: SignUpFormProps) {
+	const [termsAccepted, setTermsAccepted] = useState(false)
 	const t = useTranslations('auth')
 	const tCommon = useTranslations('common')
 	const [touched, setTouched] = useState<{ name?: boolean; email?: boolean; password?: boolean }>(
@@ -57,6 +59,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		handleSubmit,
 		handleOAuthSignUp,
 	} = useSignUpForm({
+		termsAccepted,
 		providers,
 		afterSignUpUrl,
 		minPasswordLength: MIN_PASSWORD_LENGTH,
@@ -64,6 +67,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 			await signInWithOAuth?.({
 				provider: provider as OAuthSignInProvider,
 				redirectUrl: afterSignUpUrl,
+				acceptance: termsAccepted ? POLICY_ACCEPTANCE : undefined,
 			})
 		},
 	})
@@ -96,7 +100,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 
 	function onSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault()
-		if (submittingRef.current || isLoading) return
+		if (submittingRef.current || isLoading || !termsAccepted) return
 		setAttempted(true)
 		if (nameIssue || emailIssue || passwordIssue) return
 		submittingRef.current = true
@@ -125,7 +129,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 				<OAuthButtons
 					providers={providers}
 					onSelect={handleOAuthSignUp}
-					disabled={isLoading}
+					disabled={isLoading || !termsAccepted}
 					loadingProvider={loadingProvider}
 				/>
 			</div>
@@ -192,24 +196,37 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 						pending={isLoading}
 						pendingLabel={t(isSignInRetry ? 'signingIn' : 'signingUp')}
 						label={isSignInRetry ? t('retrySignIn') : tCommon('signUp')}
-						disabled={!passwordValid}
+						disabled={!passwordValid || !termsAccepted}
 					/>
 				</div>
 
-				<p className="text-center text-xs leading-relaxed text-muted-foreground">
-					{t.rich('termsAgree', {
-						terms: (chunks) => (
-							<Link href="/terms" className="font-semibold text-primary hover:underline">
-								{chunks}
-							</Link>
-						),
-						privacy: (chunks) => (
-							<Link href="/privacy" className="font-semibold text-primary hover:underline">
-								{chunks}
-							</Link>
-						),
-					})}
-				</p>
+				<label
+					htmlFor="signup-terms"
+					className="flex min-h-12 items-start gap-3 text-sm text-muted-foreground"
+				>
+					<input
+						id="signup-terms"
+						type="checkbox"
+						checked={termsAccepted}
+						onChange={(event) => setTermsAccepted(event.target.checked)}
+						disabled={isLoading}
+						className="mt-1 size-5 shrink-0 accent-primary"
+					/>
+					<span>
+						{t.rich('termsAgree', {
+							terms: (chunks) => (
+								<Link href="/terms" className="underline">
+									{chunks}
+								</Link>
+							),
+							privacy: (chunks) => (
+								<Link href="/privacy" className="underline">
+									{chunks}
+								</Link>
+							),
+						})}
+					</span>
+				</label>
 			</form>
 
 			<p className="mt-6 text-center text-sm text-muted-foreground">

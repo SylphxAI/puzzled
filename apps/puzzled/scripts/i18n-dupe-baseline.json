@@ -642,7 +642,12 @@
 			},
 			{
 				"value": "Privacy Policy",
-				"keys": ["footer.privacy", "legal.privacy.title", "support.resources.privacy.title"]
+				"keys": [
+					"auth.privacyPolicy",
+					"footer.privacy",
+					"legal.privacy.title",
+					"support.resources.privacy.title"
+				]
 			},
 			{
 				"value": "Profile",
@@ -930,7 +935,12 @@
 			},
 			{
 				"value": "Terms of Service",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "Theme",
@@ -1742,7 +1752,12 @@
 			},
 			{
 				"value": "Privacy Policy",
-				"keys": ["footer.privacy", "legal.privacy.title", "support.resources.privacy.title"]
+				"keys": [
+					"auth.privacyPolicy",
+					"footer.privacy",
+					"legal.privacy.title",
+					"support.resources.privacy.title"
+				]
 			},
 			{
 				"value": "Profile",
@@ -2030,7 +2045,12 @@
 			},
 			{
 				"value": "Terms of Service",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "Theme",
@@ -2840,7 +2860,12 @@
 			},
 			{
 				"value": "服務條款",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "未完成",
@@ -3036,7 +3061,7 @@
 			},
 			{
 				"value": "私隱政策",
-				"keys": ["consent.learnMore", "support.resources.privacy.title"]
+				"keys": ["auth.privacyPolicy", "consent.learnMore", "support.resources.privacy.title"]
 			},
 			{
 				"value": "移除",
@@ -3985,7 +4010,12 @@
 			},
 			{
 				"value": "服務條款",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "未完成",
@@ -4410,7 +4440,7 @@
 			},
 			{
 				"value": "隱私權政策",
-				"keys": ["footer.privacy", "legal.privacy.title"]
+				"keys": ["auth.privacyPolicy", "footer.privacy", "legal.privacy.title"]
 			},
 			{
 				"value": "雙重驗證",
@@ -5181,7 +5211,12 @@
 			},
 			{
 				"value": "服务条款",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "未关联",
@@ -5577,6 +5612,7 @@
 			{
 				"value": "隐私政策",
 				"keys": [
+					"auth.privacyPolicy",
 					"consent.learnMore",
 					"footer.privacy",
 					"legal.privacy.title",
@@ -6087,6 +6123,7 @@
 			{
 				"value": "プライバシーポリシー",
 				"keys": [
+					"auth.privacyPolicy",
 					"consent.learnMore",
 					"footer.privacy",
 					"legal.privacy.title",
@@ -6366,7 +6403,12 @@
 			},
 			{
 				"value": "利用規約",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "削除",
@@ -7616,6 +7658,7 @@
 			{
 				"value": "Política de privacidad",
 				"keys": [
+					"auth.privacyPolicy",
 					"consent.learnMore",
 					"footer.privacy",
 					"legal.privacy.title",
@@ -8797,6 +8840,7 @@
 			{
 				"value": "Política de Privacidade",
 				"keys": [
+					"auth.privacyPolicy",
 					"consent.learnMore",
 					"footer.privacy",
 					"legal.privacy.title",
@@ -9100,7 +9144,12 @@
 			},
 			{
 				"value": "Termos de Serviço",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "Tipo de recurso",
