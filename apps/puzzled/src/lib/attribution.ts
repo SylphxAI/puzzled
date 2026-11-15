@@ -73,9 +73,19 @@ function clean(value: string | null): string | null {
 	return cleaned || null
 }
 
+const SHARE_ROUTE_PATH =
+	/(?:^|\/)r\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\/|$)/i
+
+function extractSharePathRef(landingPath?: string): string | null {
+	if (!landingPath) return null
+	const match = landingPath.match(SHARE_ROUTE_PATH)
+	return match?.[1]?.toLowerCase() ?? null
+}
+
 function extractAttributionParams(
 	search: string,
 	allow: { tags?: boolean; clickId?: boolean },
+	landingPath?: string,
 ): URLSearchParams {
 	const params = new URLSearchParams(search)
 	const embedded = embeddedRedirectSearch(params)
@@ -85,6 +95,10 @@ function extractAttributionParams(
 		for (const [name, key] of PARAMS) {
 			const value = clean(readParam(name))
 			if (value) out.set(key, value)
+		}
+		if (!out.has('r')) {
+			const pathRef = extractSharePathRef(landingPath)
+			if (pathRef) out.set('r', pathRef)
 		}
 	}
 	if (allow.clickId) {
@@ -106,7 +120,7 @@ export function attributionCookieValue(
 	now: number,
 	allow: { tags?: boolean; clickId?: boolean } = { tags: true },
 ): string | null {
-	const out = extractAttributionParams(search, allow)
+	const out = extractAttributionParams(search, allow, landingPath)
 	if ([...out.keys()].length === 0) return null
 	// Landing path and time are analytics data: only with analytics consent.
 	if (allow.tags) {
@@ -240,6 +254,7 @@ export function nextAttributionCookie(input: {
 export function nextSessionAttribution(input: {
 	existing: string | null
 	search: string
+	landingPath?: string
 	analyticsDeclined: boolean
 	marketingDeclined: boolean
 }): CookieAction {
@@ -271,10 +286,14 @@ export function nextSessionAttribution(input: {
 		}
 	}
 
-	const fresh = extractAttributionParams(input.search, {
-		tags: !analyticsDeclined && (current === null || !hasTag(current)),
-		clickId: !marketingDeclined,
-	})
+	const fresh = extractAttributionParams(
+		input.search,
+		{
+			tags: !analyticsDeclined && (current === null || !hasTag(current)),
+			clickId: !marketingDeclined,
+		},
+		input.landingPath,
+	)
 	const freshKeys = [...fresh.keys()]
 	if (freshKeys.length > 0) {
 		const next = current ?? new URLSearchParams()

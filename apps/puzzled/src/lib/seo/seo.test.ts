@@ -118,6 +118,7 @@ describe('route truth table', () => {
 			'/challenge',
 			'/family',
 			'/daily',
+			'/r',
 		])
 	})
 
@@ -141,6 +142,8 @@ describe('route truth table', () => {
 		expect(isPrivateRoutePath('/zh-HK/settings/account')).toBe(true)
 		expect(isPrivateRoutePath('/en-GB/profile')).toBe(true)
 		expect(isPrivateRoutePath('/challenge')).toBe(true)
+		expect(isPrivateRoutePath('/r/0b6f5d6e-2c8a-4a53-9f0e-6a4d3f1c9e11')).toBe(true)
+		expect(isPrivateRoutePath('/zh-HK/r/0b6f5d6e-2c8a-4a53-9f0e-6a4d3f1c9e11')).toBe(true)
 		expect(isPrivateRoutePath('/zh-CN/admin/audit-logs')).toBe(true)
 	})
 
