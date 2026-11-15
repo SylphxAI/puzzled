@@ -53,6 +53,8 @@ type OwnedFinding = {
 type PageCase = {
 	name: string
 	path: string
+	/** Client redirect destination; audit the destination, not a transient document. */
+	redirectTo?: string
 	/** Rendered by the shared shell (top nav, bottom nav, footer). */
 	shell: boolean
 	/** Findings a parallel workstream still owns on this route. */
@@ -79,19 +81,8 @@ const PAGES: readonly PageCase[] = [
 	{
 		name: 'challenge',
 		path: '/challenge',
-		// Legacy step-up route: it renders a redirect client component, not the
-		// site shell, so the shell invariants (banner, main, skip link) do not
-		// apply. Its one contrast node is listed below.
-		shell: false,
-		owned: [
-			{
-				rule: 'color-contrast',
-				selector: 'a',
-				nodes: 1,
-				owner:
-					'legacy redirect surface (app/[locale]/(verify)/challenge/page.tsx): the redirect link contrast is unresolved and tracked here',
-			},
-		],
+		redirectTo: '/',
+		shell: true,
 	},
 	{
 		name: 'sudoku',
@@ -312,17 +303,32 @@ export async function auditPage(page: Page, testInfo: TestInfo) {
 	}
 }
 
+/** Wait for the document being audited, including client-only redirects. */
+async function openPageCase(page: Page, pageCase: PageCase): Promise<PageCase> {
+	await page.goto(pageCase.path, { waitUntil: 'domcontentloaded' })
+	let destination = pageCase
+	if (pageCase.redirectTo) {
+		await expect(page).toHaveURL((url) => url.pathname === pageCase.redirectTo)
+		await expect(page.locator('#main-content')).toBeVisible()
+		await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+		const resolved = PAGES.find((candidate) => candidate.path === pageCase.redirectTo)
+		if (!resolved) throw new Error(`Unaudited redirect destination: ${pageCase.redirectTo}`)
+		destination = resolved
+	}
+	await settle(page)
+	return destination
+}
+
 for (const mode of MODES) {
 	test.describe(`WCAG 2.2 A/AA — ${mode.name}`, () => {
 		test.use({ viewport: mode.viewport, colorScheme: mode.colorScheme })
 
 		for (const pageCase of PAGES) {
 			test(`${pageCase.name} (${pageCase.path})`, async ({ page }, testInfo) => {
-				await page.goto(pageCase.path, { waitUntil: 'domcontentloaded' })
-				await settle(page)
+				const auditedCase = await openPageCase(page, pageCase)
 
 				const results = await auditPage(page, testInfo)
-				const owned = pageCase.owned ?? []
+				const owned = auditedCase.owned ?? []
 
 				// Allow only the exact nodes a routed finding explains: the rule id
 				// must match AND the node target must still look like the element the
@@ -394,8 +400,7 @@ test.describe('Shared shell invariants', () => {
 			await page.setViewportSize(mode.viewport)
 
 			for (const pageCase of PAGES) {
-				await page.goto(pageCase.path, { waitUntil: 'domcontentloaded' })
-				await settle(page)
+				await openPageCase(page, pageCase)
 
 				const counts = await page.evaluate(() => ({
 					banners: document.querySelectorAll('header, [role="banner"]').length,
@@ -420,8 +425,7 @@ test.describe('Shared shell invariants', () => {
 
 	test('every shell route exposes one skip link that targets the main region', async ({ page }) => {
 		for (const pageCase of PAGES.filter((candidate) => candidate.shell)) {
-			await page.goto(pageCase.path, { waitUntil: 'domcontentloaded' })
-			await settle(page)
+			await openPageCase(page, pageCase)
 
 			expect(
 				await page.locator('a[href="#main-content"]').count(),
