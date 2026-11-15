@@ -20,6 +20,9 @@ on_red = "revert"
 [environments.production.build.secrets]
 public_assets = { from_secret = "PUZZLED_PUBLIC_ASSETS_KEY" }
 
+[environments.production.env.GA_MEASUREMENT_ID]
+value = "G-J5P11P794N"
+
 [environments.production.env.NEXT_PUBLIC_PUZZLED_ASSET_PREFIX]
 value = "https://api.data.sylphx.com/v1/public/objects/env_fs01jp34p38ahpzfskjywcp271j5gq/web-static"
 
