@@ -73,24 +73,24 @@ export function MinimalHeader({
 				className,
 			)}
 		>
-			<div className="mx-auto flex h-12 max-w-3xl items-center justify-between gap-2 px-1 sm:px-3">
-				<div className="flex min-w-0 items-center gap-1">
+			<div className="mx-auto flex min-h-16 max-w-3xl flex-wrap items-center justify-between gap-x-2 gap-y-1 px-1 py-1 sm:flex-nowrap sm:px-3">
+				<div className="flex min-w-0 flex-1 items-center gap-2">
 					<Link
 						href="/"
-						className="pressable flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-foreground hover:bg-muted"
+						className="pressable flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
 					>
 						<ArrowLeft className="h-5 w-5" aria-hidden="true" />
 						<span className="sr-only">{t('back')}</span>
 					</Link>
-					<p className="min-w-0 truncate text-[15px]">
-						<span className="font-semibold">{gameName}</span>
-						<span className="ml-1.5 text-muted-foreground">
+					<p className="flex min-w-0 flex-col leading-tight">
+						<span className="truncate font-display text-[17px] font-semibold">{gameName}</span>
+						<span className="mt-0.5 text-xs text-muted-foreground">
 							{formatPuzzleDate(puzzleDate, locale)}
 						</span>
 					</p>
 				</div>
 
-				<div className="flex shrink-0 items-center gap-1">
+				<div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
 					{currentStreak > 0 && (
 						<StreakBar currentStreak={currentStreak} variant="compact" showMilestone={false} />
 					)}
@@ -100,7 +100,7 @@ export function MinimalHeader({
 							<Link
 								href={changeDifficultyHref}
 								aria-label={t('difficulty.chooseDifficulty')}
-								className="pressable flex min-h-11 items-center rounded-full px-1"
+								className="pressable flex min-h-12 min-w-12 items-center justify-center rounded-xl px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
 							>
 								<DifficultyBadge difficulty={difficulty} />
 							</Link>
@@ -108,13 +108,23 @@ export function MinimalHeader({
 							<DifficultyBadge difficulty={difficulty} />
 						))}
 					{onHelpClick && (
-						<Button variant="ghost" size="icon" onClick={onHelpClick}>
+						<Button
+							variant="ghost"
+							size="icon"
+							className="h-12 w-12 shrink-0 rounded-xl motion-reduce:transition-none"
+							onClick={onHelpClick}
+						>
 							<HelpCircle className="h-5 w-5" aria-hidden="true" />
 							<span className="sr-only">{t('help')}</span>
 						</Button>
 					)}
 					{onMenuClick && (
-						<Button variant="ghost" size="icon" onClick={onMenuClick}>
+						<Button
+							variant="ghost"
+							size="icon"
+							className="h-12 w-12 shrink-0 rounded-xl motion-reduce:transition-none"
+							onClick={onMenuClick}
+						>
 							<MoreVertical className="h-5 w-5" aria-hidden="true" />
 							<span className="sr-only">{t('menu')}</span>
 						</Button>

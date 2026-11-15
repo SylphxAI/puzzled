@@ -1,0 +1,240 @@
+/* A solid tray, crisp grouping and quiet marks: state is never colour alone. */
+.board {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 1;
+	margin-inline: auto;
+}
+
+.boxes,
+.box {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
+.boxes {
+	position: absolute;
+	inset: 0;
+	gap: 2px;
+	padding: 2px;
+	border-radius: 12px;
+	overflow: hidden;
+	background: var(--color-foreground);
+	box-shadow: 0 4px 0 var(--color-foreground);
+}
+
+.box {
+	gap: 1px;
+	min-width: 0;
+	min-height: 0;
+	background: var(--color-border);
+}
+
+.cell {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: var(--color-card);
+	color: var(--color-foreground);
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+	transition: background-color 120ms ease;
+}
+
+.cell[data-related] {
+	background: var(--color-muted);
+	box-shadow: inset 0 -2px 0 var(--color-border);
+}
+
+.cell[data-matching]::after {
+	content: '';
+	position: absolute;
+	bottom: 3px;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+.cell[data-selected] {
+	z-index: 1;
+	background: var(--color-accent-warm);
+	color: var(--color-on-accent);
+	box-shadow: inset 0 0 0 2px var(--color-on-accent);
+}
+
+.value {
+	font-family: var(--font-display);
+	font-size: clamp(19px, 5vw, 25px);
+	font-weight: 650;
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+}
+
+.cell:not([data-given])[data-filled] .value {
+	color: var(--color-info);
+	font-weight: 500;
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 4px;
+}
+
+.cell[data-conflict] .value {
+	color: var(--color-destructive);
+	text-decoration-style: wavy;
+}
+
+.cell[data-selected] .value {
+	color: inherit;
+}
+
+.conflictMark {
+	position: absolute;
+	top: 2px;
+	right: 3px;
+	font: 700 10px/1 var(--font-sans);
+	color: var(--color-destructive);
+}
+
+.notes {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-rows: repeat(3, minmax(0, 1fr));
+	width: 100%;
+	height: 100%;
+	padding: 3px;
+}
+
+.note {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: clamp(9px, 2.4vw, 11px);
+	font-weight: 550;
+	line-height: 1;
+	color: var(--color-muted-foreground);
+	opacity: 0;
+}
+
+.note[data-visible] {
+	opacity: 1;
+}
+
+.cell[data-selected] .note {
+	color: var(--color-on-accent);
+}
+
+.pad {
+	width: 100%;
+	display: grid;
+	gap: 12px;
+	padding-top: 4px;
+}
+
+.digits {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(48px, 1fr));
+	gap: 8px;
+}
+
+.key {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	width: 100%;
+	min-width: 48px;
+	height: 52px;
+	padding: 0 8px;
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	background: var(--color-card);
+	color: var(--color-foreground);
+	font-family: var(--font-display);
+	font-size: 23px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	box-shadow: 0 4px 0 var(--color-border);
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+	transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.key[data-notes] {
+	font-size: 17px;
+	text-decoration: underline dotted;
+	text-underline-offset: 4px;
+}
+
+.erase,
+.tool {
+	background: var(--color-muted);
+	font-family: var(--font-sans);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.tools {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+	padding-bottom: 4px;
+}
+
+.tool[aria-pressed='true'] {
+	border-color: #c98a0b;
+	background: var(--color-accent-warm);
+	color: var(--color-on-accent);
+	box-shadow: 0 4px 0 #c98a0b;
+}
+
+.tool[aria-pressed='true'] svg {
+	stroke-width: 3px;
+}
+
+.cell:focus-visible,
+.key:focus-visible {
+	z-index: 2;
+	outline: 3px solid var(--color-ring);
+	outline-offset: -3px;
+}
+
+.key:focus-visible {
+	outline-offset: 3px;
+}
+
+.key:active:not(:disabled) {
+	transform: translateY(4px);
+	box-shadow: 0 0 0 var(--color-border);
+}
+
+.key:disabled {
+	cursor: default;
+	pointer-events: none;
+	opacity: 0.45;
+}
+
+@media (hover: hover) {
+	.cell:not([data-selected]):hover {
+		background: var(--color-accent-warm-soft);
+		color: var(--color-on-accent);
+	}
+
+	.key:hover:not(:disabled) {
+		border-color: var(--color-foreground);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cell,
+	.key {
+		transition: none;
+	}
+}
