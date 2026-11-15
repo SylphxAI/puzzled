@@ -19,13 +19,79 @@ function connectError(status: number, code: string, message: string) {
 	return Response.json({ code, message }, { status })
 }
 
-export function createPuzzleFixtureServer(port = 8787) {
+/**
+ * A read-only price list for pricing-page captures, with the amounts of
+ * config/commercial/catalogue.json. It is opt-in because an
+ * open store locks every game but the free one for guests, which is not the
+ * state the board and home harnesses run in.
+ */
+const OPEN_PLANS = {
+	salesOpen: true,
+	familyMaxMembers: 4,
+	plans: [
+		{
+			id: 'individual_monthly',
+			family: false,
+			interval: 'month',
+			prices: [
+				{ currency: 'usd', unitAmountMinor: '499' },
+				{ currency: 'gbp', unitAmountMinor: '399' },
+			],
+			trialDays: 0,
+		},
+		{
+			id: 'individual_yearly',
+			family: false,
+			interval: 'year',
+			prices: [
+				{ currency: 'usd', unitAmountMinor: '3999' },
+				{ currency: 'gbp', unitAmountMinor: '3299' },
+			],
+			trialDays: 0,
+		},
+		{
+			id: 'family_monthly',
+			family: true,
+			interval: 'month',
+			prices: [
+				{ currency: 'usd', unitAmountMinor: '799' },
+				{ currency: 'gbp', unitAmountMinor: '649' },
+			],
+			trialDays: 0,
+		},
+		{
+			id: 'family_yearly',
+			family: true,
+			interval: 'year',
+			prices: [
+				{ currency: 'usd', unitAmountMinor: '6499' },
+				{ currency: 'gbp', unitAmountMinor: '5299' },
+			],
+			trialDays: 0,
+		},
+		{
+			id: 'individual_once',
+			family: false,
+			interval: '',
+			prices: [
+				{ currency: 'usd', unitAmountMinor: '99' },
+				{ currency: 'gbp', unitAmountMinor: '79' },
+			],
+			accessDays: 3,
+		},
+	],
+}
+
+export function createPuzzleFixtureServer(port = 8787, options: { openPlans?: boolean } = {}) {
 	return Bun.serve({
 		hostname: '127.0.0.1',
 		port,
 		async fetch(request: Request) {
 			const url = new URL(request.url)
 			if (url.pathname === '/healthz') return new Response('ok')
+			if (options.openPlans && url.pathname === '/puzzled.v1.BillingService/ListPlans') {
+				return Response.json(OPEN_PLANS)
+			}
 			if (url.pathname !== '/puzzled.v1.PuzzleService/GetDaily') {
 				return connectError(404, 'not_found', 'not_found')
 			}
@@ -91,7 +157,9 @@ export function createPuzzleFixtureServer(port = 8787) {
 }
 
 if (import.meta.main) {
-	const server = createPuzzleFixtureServer(Number(process.env.FIXTURE_API_PORT ?? 8787))
+	const server = createPuzzleFixtureServer(Number(process.env.FIXTURE_API_PORT ?? 8787), {
+		openPlans: process.env.FIXTURE_OPEN_PLANS === '1',
+	})
 	console.log(`fixture GetDaily listening on http://127.0.0.1:${server.port}`)
 	await new Promise(() => {})
 }

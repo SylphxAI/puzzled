@@ -38,7 +38,7 @@ for (const viewport of [
 		})
 		expect(geometry.consent.bottom).toBeLessThanOrEqual(geometry.card.top)
 		expect(geometry.card.bottom).toBeLessThanOrEqual(geometry.nav.top)
-		expect(geometry.play.height).toBeGreaterThanOrEqual(44)
+		expect(geometry.play.height).toBeGreaterThanOrEqual(48)
 		expect(geometry.hit).toBe(true)
 		await expect(play).toHaveAttribute('href', /start=1#play$/)
 		await consent.getByRole('button', { name: 'Decline', exact: true }).click()
