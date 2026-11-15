@@ -54,11 +54,6 @@ pub(crate) async fn fresh_database() -> Option<PgPool> {
 pub(crate) fn token(sub: &str) -> String {
     use jsonwebtoken::{encode, EncodingKey, Header};
     let priv_pem = include_str!("../testdata/platform_jwt_test_priv.pem");
-    let pub_pem = include_str!("../testdata/platform_jwt_test_pub.pem");
-    crate::capabilities::identity_access::adapters::platform_jwt::install_test_decoding_key_pem(
-        pub_pem,
-    )
-    .unwrap();
     let claims = json!({"sub": sub, "name": "Player", "email": "player@example.com",
                         "exp": chrono::Utc::now().timestamp() + 3600});
     encode(
