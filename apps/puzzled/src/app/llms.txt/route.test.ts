@@ -9,7 +9,7 @@ describe('/llms.txt', () => {
 		expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8')
 		const body = await response.text()
 		expect(body.startsWith('# Puzzled\n')).toBe(true)
-		expect(body).toContain('word, logic and number puzzles, published by Sylphx.')
+		expect(body).toContain('word, logic, number and spatial puzzles, published by Sylphx Limited.')
 		expect(body).not.toMatch(/Sylphx Puzzled|<html|<script/i)
 		expect(response.headers.has('set-cookie')).toBe(false)
 	})
@@ -20,8 +20,11 @@ describe('/llms.txt', () => {
 		expect(urls).toEqual([
 			'https://puzzled.gg/',
 			'https://puzzled.gg/games',
+			'https://puzzled.gg/pricing',
 			...getAllGameMetadata().map((game) => `https://puzzled.gg/games/${game.slug}`),
 			'https://puzzled.gg/leaderboard',
+			'https://puzzled.gg/use-cases/daily-word-and-logic-puzzles-online',
+			'https://puzzled.gg/use-cases/family-brain-games-no-ads',
 			'https://puzzled.gg/support',
 			'https://puzzled.gg/privacy',
 			'https://puzzled.gg/terms',
