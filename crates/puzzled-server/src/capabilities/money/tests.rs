@@ -12,7 +12,7 @@ use serde_json::{json, Value};
 use tower::ServiceExt;
 
 use super::access::{family_active, is_premium, seats, FEATURE_PLUS, FEATURE_SEATS};
-use super::checkout::{create_session, session_body, CheckoutError, Consent};
+use super::checkout::{create_session, safe_return_to, session_body, CheckoutError, Consent};
 use super::client::Subscription;
 use super::client::{Catalog, Money};
 use super::pricing::{plan, plans};
@@ -291,6 +291,7 @@ async fn checkout_creates_a_money_session_and_returns_its_url() {
         "en-GB",
         "gbp",
         None,
+        None,
         consent,
     )
     .await
@@ -326,6 +327,7 @@ async fn checkout_drops_a_currency_money_does_not_price() {
         "",
         "jpy",
         None,
+        None,
         consent,
     )
     .await
@@ -350,7 +352,7 @@ async fn checkout_refuses_unknown_archived_and_already_subscribed() {
     let (money, fake) = fake_money(200, json!({"entitled": false})).await;
     let catalog = parsed(catalog_fixture(&[]));
     assert_eq!(
-        create_session(&money, &catalog, USER, "nope", "", "usd", None, consent).await,
+        create_session(&money, &catalog, USER, "nope", "", "usd", None, None, consent).await,
         Err(CheckoutError::PlanNotOnSale)
     );
     let archived = parsed(catalog_fixture(&["k_solo_m"]));
@@ -362,6 +364,7 @@ async fn checkout_refuses_unknown_archived_and_already_subscribed() {
             "individual_monthly",
             "",
             "usd",
+            None,
             None,
             consent
         )
@@ -378,6 +381,7 @@ async fn checkout_refuses_unknown_archived_and_already_subscribed() {
             "individual_monthly",
             "",
             "usd",
+            None,
             None,
             consent
         )
@@ -402,6 +406,7 @@ fn session_body_carries_the_click_id_in_metadata() {
         "",
         None,
         Some(&tags),
+        None,
     );
     assert_eq!(body["metadata"]["gclid"], "Cj0KCQ_abc-1");
     assert!(body.get("client_reference_id").is_none());
@@ -411,6 +416,7 @@ fn session_body_carries_the_click_id_in_metadata() {
         "individual_monthly",
         "k_solo_m",
         "",
+        None,
         None,
         None,
     );
@@ -427,6 +433,7 @@ fn session_body_sends_only_locales_stripe_accepts() {
             "individual_monthly",
             "k_solo_m",
             locale,
+            None,
             None,
             None,
         )
@@ -459,12 +466,23 @@ fn session_body_carries_attribution() {
         "",
         None,
         Some(&tags),
+        Some("/games/sudoku?mode=archive&date=2026-11-10"),
     );
     assert_eq!(body["metadata"]["utm_source"], "tryit");
     assert_eq!(body["metadata"]["ref"], "res_1");
     assert_eq!(
         body["success_url"],
-        "https://puzzled.test/settings/subscription?checkout=success&s={CHECKOUT_SESSION_ID}"
+        "https://puzzled.test/settings/subscription?checkout=success&s={CHECKOUT_SESSION_ID}&callbackUrl=%2Fgames%2Fsudoku%3Fmode%3Darchive%26date%3D2026-11-10"
+    );
+    assert_eq!(
+        body["cancel_url"],
+        "https://puzzled.test/pricing?checkout=cancelled&callbackUrl=%2Fgames%2Fsudoku%3Fmode%3Darchive%26date%3D2026-11-10"
+    );
+    assert_eq!(safe_return_to("//evil.example"), None);
+    assert_eq!(safe_return_to("https://evil.example/a"), None);
+    assert_eq!(
+        safe_return_to("/games/sudoku").as_deref(),
+        Some("/games/sudoku")
     );
 }
 

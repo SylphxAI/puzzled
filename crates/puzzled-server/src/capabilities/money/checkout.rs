@@ -71,8 +71,40 @@ pub fn checkout_locale(locale: &str) -> Option<&'static str> {
     }
 }
 
+const MAX_RETURN_TO_LENGTH: usize = 200;
+
+/// Accept only a plain same-origin path for post-checkout navigation.
+#[must_use]
+pub fn safe_return_to(raw: &str) -> Option<String> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() || trimmed.len() > MAX_RETURN_TO_LENGTH {
+        return None;
+    }
+    if !trimmed.starts_with('/') || trimmed.starts_with("//") {
+        return None;
+    }
+    if trimmed.contains('\\') || trimmed.chars().any(char::is_control) {
+        return None;
+    }
+    Some(trimmed.to_string())
+}
+
+fn percent_encode_component(raw: &str) -> String {
+    use std::fmt::Write;
+    let mut out = String::with_capacity(raw.len());
+    for byte in raw.bytes() {
+        if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b'~') {
+            out.push(byte as char);
+        } else {
+            let _ = write!(out, "%{byte:02X}");
+        }
+    }
+    out
+}
+
 /// The `checkout_sessions` request body for one plan (pure).
 #[must_use]
+#[allow(clippy::too_many_arguments)]
 pub fn session_body(
     money: &Money,
     user_id: &str,
@@ -81,8 +113,22 @@ pub fn session_body(
     locale: &str,
     currency: Option<&str>,
     attribution: Option<&Attribution>,
+    return_to: Option<&str>,
 ) -> Value {
     let base = format!("{}{}", money.public_url(), locale_prefix(locale));
+    let encoded_return = return_to
+        .and_then(safe_return_to)
+        .map(|path| percent_encode_component(&path));
+    let success_url = match &encoded_return {
+        Some(encoded) => format!(
+            "{base}/settings/subscription?checkout=success&s={{CHECKOUT_SESSION_ID}}&callbackUrl={encoded}"
+        ),
+        None => format!("{base}/settings/subscription?checkout=success&s={{CHECKOUT_SESSION_ID}}"),
+    };
+    let cancel_url = match &encoded_return {
+        Some(encoded) => format!("{base}/pricing?checkout=cancelled&callbackUrl={encoded}"),
+        None => format!("{base}/pricing?checkout=cancelled"),
+    };
     let mut metadata = Map::new();
     metadata.insert("plan_id".into(), json!(plan_id));
     metadata.insert("immediate_supply_consent".into(), json!("true"));
@@ -98,8 +144,8 @@ pub fn session_body(
     let mut body = json!({
         "subject": {"end_user": user_id},
         "line_items": [{"price": price_key, "quantity": 1}],
-        "success_url": format!("{base}/settings/subscription?checkout=success&s={{CHECKOUT_SESSION_ID}}"),
-        "cancel_url": format!("{base}/pricing?checkout=cancelled"),
+        "success_url": success_url,
+        "cancel_url": cancel_url,
         "metadata": metadata,
     });
     if let Some(code) = checkout_locale(locale) {
@@ -122,6 +168,7 @@ pub async fn create_session(
     locale: &str,
     currency: &str,
     attribution: Option<&Attribution>,
+    return_to: Option<&str>,
     _consent: Consent,
 ) -> Result<String, CheckoutError> {
     let body = prepare_session(
@@ -132,6 +179,7 @@ pub async fn create_session(
         locale,
         currency,
         attribution,
+        return_to,
     )
     .await?;
     money
@@ -151,6 +199,7 @@ pub async fn create_retained_session(
     locale: &str,
     currency: &str,
     attribution: Option<&Attribution>,
+    return_to: Option<&str>,
     _consent: Consent,
 ) -> Result<String, CheckoutError> {
     let body = prepare_session(
@@ -161,6 +210,7 @@ pub async fn create_retained_session(
         locale,
         currency,
         attribution,
+        return_to,
     )
     .await?;
     let session = super::attempts::create(pool, money, user_id, request_id, &body)
@@ -179,6 +229,7 @@ pub async fn create_retained_session(
         .ok_or_else(|| CheckoutError::Failed("checkout_unavailable".into()))
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn prepare_session(
     money: &Money,
     catalog: &Catalog,
@@ -187,6 +238,7 @@ async fn prepare_session(
     locale: &str,
     currency: &str,
     attribution: Option<&Attribution>,
+    return_to: Option<&str>,
 ) -> Result<Value, CheckoutError> {
     let plan = plan(catalog, plan_id).ok_or(CheckoutError::PlanNotOnSale)?;
     let price = price_of(catalog, &plan).ok_or(CheckoutError::PlanNotOnSale)?;
@@ -211,5 +263,6 @@ async fn prepare_session(
         locale,
         currency.as_deref(),
         attribution,
+        return_to,
     ))
 }

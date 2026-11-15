@@ -4,6 +4,8 @@ import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
+import { Suspense } from 'react'
+import { AttributionCapture } from '@/features/analytics/components/attribution-capture'
 import { FunnelReporter } from '@/features/analytics/components/funnel-reporter'
 import { GoogleTag } from '@/features/analytics/components/google-tag'
 import { CONSENT_DEFAULT_SCRIPT, googleTagIds } from '@/features/analytics/lib/google-tag'
@@ -280,6 +282,9 @@ export default async function LocaleLayout({ children, params }: Props) {
 					<PlatformProvider>
 						{/* Before the children so its effects register first. */}
 						<FunnelReporter />
+						<Suspense fallback={null}>
+							<AttributionCapture />
+						</Suspense>
 						{googleTag ? <GoogleTag ids={googleTag} /> : null}
 						<ApiProvider>
 							<NextIntlClientProvider messages={pickMessages(messages, CLIENT_NAMESPACES)}>

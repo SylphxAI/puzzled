@@ -139,6 +139,7 @@ async function renderPlayArea(
 			<GameUnlockPanel
 				slug={slug}
 				archive={archive}
+				dateParam={dateParam}
 				gameCount={gameCount}
 				isGuest={!hasUser}
 				freeGameSlug={freeGameSlug}

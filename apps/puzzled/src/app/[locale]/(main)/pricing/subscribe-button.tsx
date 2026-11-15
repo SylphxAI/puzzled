@@ -18,6 +18,8 @@ type Props = {
 	subscribed: boolean
 	label: string
 	loginReturnTo?: string
+	/** Safe in-product destination (e.g. a locked game) to return to after checkout. */
+	callbackUrl?: string
 	guestLabel?: string
 	/** What the buyer is agreeing to renew at, shown between the consent tick and the button. */
 	renewalNote?: string
@@ -33,6 +35,7 @@ export function SubscribeButton({
 	subscribed,
 	label,
 	loginReturnTo = '/pricing',
+	callbackUrl,
 	guestLabel,
 	renewalNote,
 }: Props) {
@@ -95,7 +98,9 @@ export function SubscribeButton({
 							value: amountMinor / 100,
 							currency: currency.toUpperCase(),
 						})
-						window.location.assign(await startCheckout(planId, locale, currency, consent))
+						window.location.assign(
+							await startCheckout(planId, locale, currency, consent, callbackUrl),
+						)
 					} catch (err) {
 						logger.error('plus.checkout-failed', { planId, error: err })
 						const message = err instanceof Error ? err.message : ''

@@ -22,6 +22,8 @@ type Props = {
 	view: SubscriptionView | null
 	locale: string
 	fromCheckout: boolean
+	/** Game page to return to once checkout confirms. */
+	callbackUrl?: string
 }
 
 const primary =
@@ -30,7 +32,7 @@ const secondary =
 	'inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold hover:border-primary/30 hover:text-primary disabled:opacity-60'
 
 /** Plan state, cancel/resume, the billing portal, and the family plan. */
-export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
+export function SubscriptionPanel({ view, locale, fromCheckout, callbackUrl }: Props) {
 	const t = useTranslations('plus.subscription')
 	const tFamily = useTranslations('plus.family')
 	const tUnlock = useTranslations('plus.unlock')
@@ -102,6 +104,13 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 			{trialEndMs ? <TrialEndingBanner endMs={trialEndMs} /> : null}
 			{notice ? (
 				<output className="block rounded-xl bg-muted px-4 py-3 text-sm">{notice}</output>
+			) : null}
+			{fromCheckout && confirmed && callbackUrl ? (
+				<div>
+					<Link href={callbackUrl} className={primary}>
+						{t('returnToGame')}
+					</Link>
+				</div>
 			) : null}
 
 			<Card>
