@@ -60,6 +60,8 @@ describe('route truth table', () => {
 			'/',
 			'/games',
 			'/pricing',
+			'/use-cases/daily-word-and-logic-puzzles-online',
+			'/use-cases/family-brain-games-no-ads',
 			'/support',
 			'/privacy',
 			'/terms',
