@@ -38,7 +38,7 @@ jobs:
   preview:
     name: Apply to preview
     if: github.ref == 'refs/heads/main' && github.event.repository.private == false
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 10
     env:
       ACCESS_NAME: puzzled-money-catalogue-preview
@@ -57,7 +57,7 @@ jobs:
     name: Apply to production
     needs: preview
     if: github.ref == 'refs/heads/main' && github.event.repository.private == false
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 10
     env:
       ACCESS_NAME: puzzled-money-catalogue-production
