@@ -1,6 +1,6 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 import {
 	canStoreMarketing,
@@ -18,7 +18,6 @@ import {
 	readAttributionCookie,
 	readSessionAttribution,
 } from '@/lib/attribution'
-import { usePathname } from '@/lib/i18n/routing'
 
 /**
  * Keeps first-touch attribution tags (utm_*, ref) and ad click ids (gclid,
