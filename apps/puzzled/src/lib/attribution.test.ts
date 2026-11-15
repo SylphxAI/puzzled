@@ -7,6 +7,7 @@ import {
 	mergeSearchWithSession,
 	nextAttributionCookie,
 	nextSessionAttribution,
+	readSessionEntrySurface,
 } from './attribution'
 
 describe('first-touch attribution cookie', () => {
@@ -260,5 +261,31 @@ describe('session attribution across sign-in before cookie consent', () => {
 		)
 		expect(session?.get('r')).toBe(id)
 		expect(session?.get('s')).toBe('share')
+	})
+
+	test('captures entry_surface in session attribution and reads it back', () => {
+		const stored = nextSessionAttribution({
+			existing: null,
+			search: '?entry_surface=pricing_hero&utm_source=google',
+			landingPath: '/pricing',
+			analyticsDeclined: false,
+			marketingDeclined: false,
+		})
+		const session = sessionDecoded(stored)
+		expect(session?.get('es')).toBe('pricing_hero')
+		expect(session?.get('s')).toBe('google')
+
+		const map = new Map<string, string>(
+			stored.kind === 'set' ? [['puzzled:attr:session', stored.value]] : [],
+		)
+		const storage = { getItem: (k: string) => map.get(k) ?? null }
+		expect(readSessionEntrySurface(storage)).toBe('pricing_hero')
+
+		const jsonStorage = {
+			getItem: (k: string) =>
+				k === 'puzzled:attr:session' ? JSON.stringify({ entry_surface: 'daily_cta' }) : null,
+		}
+		expect(readSessionEntrySurface(jsonStorage)).toBe('daily_cta')
+		expect(readSessionEntrySurface({ getItem: () => null })).toBeUndefined()
 	})
 })

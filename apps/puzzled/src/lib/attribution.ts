@@ -35,6 +35,8 @@ const PARAMS = [
 	['ref', 'r'],
 ] as const
 
+const ENTRY_SURFACE_PARAM = ['entry_surface', 'es'] as const
+
 const CLICK_PARAMS = [
 	['gclid', 'g'],
 	['gbraid', 'gb'],
@@ -274,7 +276,7 @@ export function nextSessionAttribution(input: {
 			}
 		}
 		if (analyticsDeclined) {
-			for (const [, key] of PARAMS) {
+			for (const [, key] of [...PARAMS, ENTRY_SURFACE_PARAM]) {
 				if (current.has(key)) {
 					current.delete(key)
 					changed = true
@@ -294,6 +296,18 @@ export function nextSessionAttribution(input: {
 		},
 		input.landingPath,
 	)
+	const liveParams = new URLSearchParams(input.search)
+	const embeddedParams = embeddedRedirectSearch(liveParams)
+	const entrySurface = !analyticsDeclined
+		? clean(
+				liveParams.get(ENTRY_SURFACE_PARAM[0]) ??
+					embeddedParams?.get(ENTRY_SURFACE_PARAM[0]) ??
+					null,
+			)
+		: null
+	if (entrySurface && !current?.has(ENTRY_SURFACE_PARAM[1])) {
+		fresh.set(ENTRY_SURFACE_PARAM[1], entrySurface)
+	}
 	const freshKeys = [...fresh.keys()]
 	if (freshKeys.length > 0) {
 		const next = current ?? new URLSearchParams()
@@ -302,6 +316,11 @@ export function nextSessionAttribution(input: {
 				const value = fresh.get(key)
 				if (value) next.set(key, value)
 			}
+			changed = true
+		}
+		const freshEntrySurface = fresh.get(ENTRY_SURFACE_PARAM[1])
+		if (freshEntrySurface && !next.has(ENTRY_SURFACE_PARAM[1])) {
+			next.set(ENTRY_SURFACE_PARAM[1], freshEntrySurface)
 			changed = true
 		}
 		if (CLICK_PARAMS.some(([, key]) => fresh.has(key))) {
@@ -335,6 +354,33 @@ export function readSessionAttribution(
 }
 
 /**
+ * Reads persisted `entry_surface` from `puzzled:attr:session` in `sessionStorage`.
+ * Supports both URL-encoded attribution strings (`es=...`) and JSON objects.
+ */
+export function readSessionEntrySurface(
+	storage: Pick<Storage, 'getItem'> | null | undefined = typeof window !== 'undefined'
+		? window.sessionStorage
+		: null,
+): string | undefined {
+	const raw = readSessionAttribution(storage)
+	if (!raw) return undefined
+	if (raw.trim().startsWith('{')) {
+		try {
+			const parsed = JSON.parse(raw) as { entry_surface?: unknown } | null
+			return (
+				clean(typeof parsed?.entry_surface === 'string' ? parsed.entry_surface : null) ?? undefined
+			)
+		} catch {
+			return undefined
+		}
+	}
+	const decoded = decode(raw)
+	return (
+		clean(decoded.get(ENTRY_SURFACE_PARAM[1]) ?? decoded.get(ENTRY_SURFACE_PARAM[0])) ?? undefined
+	)
+}
+
+/**
  * Reconstruct a query string from stored session attribution and merge it
  * behind any live query params so later consent promotion keeps params that
  * a navigation like `/login` dropped from the address bar.
@@ -343,7 +389,7 @@ export function mergeSearchWithSession(liveSearch: string, storedSession: string
 	if (!storedSession) return liveSearch
 	const decoded = decode(storedSession)
 	const merged = new URLSearchParams()
-	for (const [name, key] of PARAMS) {
+	for (const [name, key] of [...PARAMS, ENTRY_SURFACE_PARAM]) {
 		const value = decoded.get(key)
 		if (value) merged.set(name, value)
 	}
