@@ -191,6 +191,7 @@ fn jwks_refresh_signal() -> &'static tokio::sync::Notify {
     JWKS_REFRESH.get_or_init(tokio::sync::Notify::new)
 }
 
+#[cfg(not(test))]
 fn jwks_snapshot() -> Option<Arc<JwksCache>> {
     JWKS_CACHE
         .read()
@@ -204,23 +205,8 @@ fn store_jwks(cache: JwksCache) {
         .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(cache));
 }
 
-/// Ask the refresher for an early fetch; never blocks and never fetches inline.
-fn request_jwks_refresh() {
-    jwks_refresh_signal().notify_one();
-}
-
-#[cfg(test)]
-fn clear_jwks_for_test() {
-    *JWKS_CACHE
-        .write()
-        .unwrap_or_else(std::sync::PoisonError::into_inner) = None;
-}
-
-#[cfg(test)]
-static TEST_DECODING_KEY_PEM: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
-
-/// Shared lock so tests that install/clear the process-local test key do not
-/// race with each other (used by lib tests and this module's tests).
+/// Retained serialization for database-backed router fixtures. JWT verification
+/// has no mutable fixture key or teardown and does not take this lock.
 #[cfg(test)]
 pub fn test_key_lock() -> &'static std::sync::Mutex<()> {
     static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -248,34 +234,18 @@ fn expected_issuer() -> Option<String> {
         .filter(|s| !s.is_empty())
 }
 
-/// Install a process-local decoding key for unit tests (RS256 PEM).
-///
-/// Compiled only under `cfg(test)`: a release binary has no override that
-/// verification would consult before the Platform key set.
+/// Immutable fixture JWKS for router tests; compiled out of production builds.
 #[cfg(test)]
-pub fn install_test_decoding_key_pem(pem: &str) -> Result<(), String> {
-    // Validate PEM shape early.
-    let _ = DecodingKey::from_rsa_pem(pem.as_bytes()).map_err(|e| e.to_string())?;
-    *TEST_DECODING_KEY_PEM
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(pem.to_string());
-    Ok(())
-}
-
-#[cfg(test)]
-pub fn clear_test_decoding_key() {
-    *TEST_DECODING_KEY_PEM
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner) = None;
-}
-
-#[cfg(test)]
-fn test_decoding_key() -> Option<DecodingKey> {
-    let pem = TEST_DECODING_KEY_PEM
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
-        .clone()?;
-    DecodingKey::from_rsa_pem(pem.as_bytes()).ok()
+#[allow(clippy::expect_used)]
+fn fixture_jwks() -> Arc<JwksCache> {
+    static CACHE: OnceLock<Arc<JwksCache>> = OnceLock::new();
+    Arc::clone(CACHE.get_or_init(|| {
+        let pem = include_str!("../../../../testdata/platform_jwt_test_pub.pem");
+        Arc::new(JwksCache {
+            keys: HashMap::new(),
+            unkeyed: vec![DecodingKey::from_rsa_pem(pem.as_bytes()).expect("fixture RSA key")],
+        })
+    }))
 }
 
 /// Extract Bearer token from Authorization header only (cookies may be opaque
@@ -476,8 +446,23 @@ fn header_kid(token: &str) -> Option<String> {
     v.get("kid").and_then(|k| k.as_str()).map(|s| s.to_string())
 }
 
-/// Verify a raw JWT string against test key or Platform JWKS.
+/// Verify a raw JWT string against Platform JWKS (fixed fixture JWKS in unit tests).
 pub fn verify_platform_jwt(token: &str) -> Result<VerifiedIdentity, JwtError> {
+    #[cfg(not(test))]
+    let cache = jwks_snapshot();
+    #[cfg(test)]
+    let cache = Some(fixture_jwks());
+    verify_with_jwks(token, cache.as_deref(), jwks_refresh_signal())
+}
+
+/// The real verification path takes a snapshot and its refresh signal explicitly.
+/// Requests never fetch inline; independent tests cannot replace each other's keys
+/// or consume each other's early-refresh permits.
+fn verify_with_jwks(
+    token: &str,
+    cache: Option<&JwksCache>,
+    refresh: &tokio::sync::Notify,
+) -> Result<VerifiedIdentity, JwtError> {
     let token = token.trim();
     if token.is_empty() {
         return Err(JwtError::MissingBearer);
@@ -486,21 +471,8 @@ pub fn verify_platform_jwt(token: &str) -> Result<VerifiedIdentity, JwtError> {
         return Err(JwtError::MalformedToken);
     }
 
-    // Unit-test override key first (compiled into test builds only).
-    #[cfg(test)]
-    if let Some(key) = test_decoding_key() {
-        let claims = decode_with_key(token, &key)?;
-        return Ok(VerifiedIdentity {
-            user_id: claims.sub.trim().to_string(),
-            display_name: claims.name.clone(),
-            email: claims.email.clone(),
-            is_admin: is_admin_from_claims(&claims),
-            actor: claims.delegation(),
-        });
-    }
-
-    let Some(cache) = jwks_snapshot() else {
-        request_jwks_refresh();
+    let Some(cache) = cache else {
+        refresh.notify_one();
         return Err(JwtError::JwksUnavailable("jwks not loaded yet".into()));
     };
 
@@ -508,7 +480,7 @@ pub fn verify_platform_jwt(token: &str) -> Result<VerifiedIdentity, JwtError> {
     if let Some(kid) = header_kid(token) {
         if !cache.keys.contains_key(&kid) {
             // Possible key rotation: fetch early in the background.
-            request_jwks_refresh();
+            refresh.notify_one();
         }
         if let Some(key) = cache.keys.get(&kid) {
             match decode_with_key(token, key) {
@@ -553,12 +525,6 @@ pub fn resolve_verified_identity(headers: &HeaderMap) -> Result<VerifiedIdentity
 #[cfg(test)]
 #[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
-    fn lock() -> std::sync::MutexGuard<'static, ()> {
-        super::test_key_lock()
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-    }
-
     use super::*;
     use axum::http::HeaderValue;
     use jsonwebtoken::{encode, EncodingKey, Header as JwtHeader};
@@ -576,7 +542,6 @@ mod tests {
     }
 
     fn mint_token(sub: &str, scope: Option<&str>) -> String {
-        install_test_decoding_key_pem(TEST_PUB_PEM).expect("install key");
         let claims = MintClaims {
             sub: sub.to_string(),
             name: "Test User".to_string(),
@@ -589,8 +554,6 @@ mod tests {
 
     #[test]
     fn rejects_missing_bearer() {
-        let _g = lock();
-        clear_test_decoding_key();
         let h = HeaderMap::new();
         let err = resolve_verified_identity(&h).unwrap_err();
         assert_eq!(err, JwtError::MissingBearer);
@@ -598,8 +561,6 @@ mod tests {
 
     #[test]
     fn rejects_x_user_id_without_jwt() {
-        let _g = lock();
-        clear_test_decoding_key();
         let mut h = HeaderMap::new();
         h.insert("x-user-id", HeaderValue::from_static("attacker"));
         let err = resolve_verified_identity(&h).unwrap_err();
@@ -608,7 +569,6 @@ mod tests {
 
     #[test]
     fn verifies_rs256_and_extracts_sub() {
-        let _g = lock();
         let token = mint_token("user_01hxyz", None);
         let mut h = HeaderMap::new();
         h.insert(
@@ -623,35 +583,29 @@ mod tests {
 
     #[test]
     fn admin_scope_detected() {
-        let _g = lock();
         let token = mint_token("admin_1", Some("admin"));
         let id = verify_platform_jwt(&token).expect("verified");
         assert!(id.is_admin);
-        clear_test_decoding_key();
     }
 
     #[test]
     fn platform_admin_scope_does_not_grant_product_admin() {
-        let _g = lock();
         let token = mint_token("ops_1", Some("platform:admin"));
         let id = verify_platform_jwt(&token).expect("verified");
         assert!(
             !id.is_admin,
             "platform operator scope must not skip product admin"
         );
-        clear_test_decoding_key();
     }
 
     #[test]
     fn admin_scope_suffix_does_not_grant_admin() {
-        let _g = lock();
         let token = mint_token("user_1", Some("puzzled:user"));
         let id = verify_platform_jwt(&token).expect("verified");
         assert!(!id.is_admin);
         let token = mint_token("user_2", Some("editor:admin"));
         let id = verify_platform_jwt(&token).expect("verified");
         assert!(!id.is_admin, "suffix match must not grant admin");
-        clear_test_decoding_key();
     }
 
     #[test]
@@ -669,8 +623,6 @@ mod tests {
 
     #[test]
     fn act_or_actor_field_present_means_delegated_and_absent_does_not() {
-        let _g = lock();
-        install_test_decoding_key_pem(TEST_PUB_PEM).expect("install key");
         let key = EncodingKey::from_rsa_pem(TEST_PRIV_PEM.as_bytes()).expect("enc key");
         let exp = chrono::Utc::now().timestamp() + 3600;
         let identity = |extra: Option<(&str, serde_json::Value)>| {
@@ -699,13 +651,10 @@ mod tests {
                 .as_deref(),
             Some("agent_1")
         );
-        clear_test_decoding_key();
     }
 
     #[test]
     fn rejects_string_typed_exp_claim() {
-        let _g = lock();
-        install_test_decoding_key_pem(TEST_PUB_PEM).expect("install key");
         let claims = serde_json::json!({
             "sub": "user_string_exp",
             "name": "Test User",
@@ -718,14 +667,11 @@ mod tests {
             matches!(err, JwtError::VerificationFailed(_)),
             "string-typed exp must fail closed for GHSA-h395, got {err:?}"
         );
-        clear_test_decoding_key();
     }
 
     #[test]
     fn unloaded_jwks_fails_closed_without_fetching_inline() {
-        let _g = lock();
-        clear_test_decoding_key();
-        clear_jwks_for_test();
+        let refresh = tokio::sync::Notify::new();
         let token = {
             let claims = MintClaims {
                 sub: "cold_start".into(),
@@ -736,7 +682,7 @@ mod tests {
             let enc = EncodingKey::from_rsa_pem(TEST_PRIV_PEM.as_bytes()).expect("enc");
             encode(&JwtHeader::new(Algorithm::RS256), &claims, &enc).expect("mint")
         };
-        let err = verify_platform_jwt(&token).unwrap_err();
+        let err = verify_with_jwks(&token, None, &refresh).unwrap_err();
         assert!(matches!(err, JwtError::JwksUnavailable(_)), "got {err:?}");
         assert_eq!(err.status(), StatusCode::SERVICE_UNAVAILABLE);
     }
@@ -754,11 +700,8 @@ mod tests {
 
     #[test]
     fn rejects_garbage_token() {
-        let _g = lock();
-        install_test_decoding_key_pem(TEST_PUB_PEM).expect("install key");
         let err = verify_platform_jwt("not-a-jwt").unwrap_err();
         assert_eq!(err, JwtError::MalformedToken);
-        clear_test_decoding_key();
     }
 
     const TEST_N: &str = "nHAYL32Ej3o2Ub7lyRntvTpe-rQi9GgfznwVv5MY5xawWwyEzfNPoPbcEO_RZ4tAloF-F0ZYq_LZzlSQdNeR4r3pkJUS9kl-3DF6D8dzzBcOpLx2g70Arw2gtL5qIPF43v8RsAlnjgacpwwDv_vzTb8K0dgNMbmdacduabkEVXuDj5zn6AVi_RmB5LcK5KyXxoNW0Lf1Day2St8gOZj_pH0MYE37Eaa105fYPmO8h-fV2yg00pbss1K1PvTbwspfS4AZD9vdleyXKFoBXHciM4vXgHn5GlFZJ1V5A_kVFc74xsWNHAH-M8tHR2u4-yxCYg4efdcWi68SAqqYUkfKIQ";
@@ -785,13 +728,13 @@ mod tests {
     }
 
     /// Consume any pending early-refresh permit so a test starts from "none requested".
-    fn refresh_requested() -> bool {
+    fn refresh_requested(refresh: &tokio::sync::Notify) -> bool {
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_time()
             .build()
             .expect("rt");
         rt.block_on(async {
-            tokio::time::timeout(Duration::from_millis(20), jwks_refresh_signal().notified())
+            tokio::time::timeout(Duration::from_millis(20), refresh.notified())
                 .await
                 .is_ok()
         })
@@ -799,33 +742,40 @@ mod tests {
 
     #[test]
     fn token_verifies_against_jwks_key() {
-        let _g = lock();
-        clear_test_decoding_key();
-        store_jwks(jwks_cache_from_document(test_jwks("k1", Some("RS256"))).expect("cache"));
-        let _ = refresh_requested();
-        let id = verify_platform_jwt(&mint_with_kid("k1", "jwks_user")).expect("verified");
+        let refresh = tokio::sync::Notify::new();
+        let cache = jwks_cache_from_document(test_jwks("k1", Some("RS256"))).expect("cache");
+        let id = verify_with_jwks(&mint_with_kid("k1", "jwks_user"), Some(&cache), &refresh)
+            .expect("verified");
         assert_eq!(id.user_id, "jwks_user");
-        assert!(!refresh_requested(), "known kid must not trigger a refetch");
-        clear_jwks_for_test();
+        assert!(
+            !refresh_requested(&refresh),
+            "known kid must not trigger a refetch"
+        );
     }
 
     #[test]
     fn unknown_kid_requests_one_refetch() {
-        let _g = lock();
-        clear_test_decoding_key();
-        store_jwks(jwks_cache_from_document(test_jwks("k1", None)).expect("cache"));
-        let _ = refresh_requested();
+        let refresh = tokio::sync::Notify::new();
+        let cache = jwks_cache_from_document(test_jwks("k1", None)).expect("cache");
         // Verifies via the fallback key scan, but the rotation signal must fire once.
-        let _ = verify_platform_jwt(&mint_with_kid("rotated", "u"));
-        let _ = verify_platform_jwt(&mint_with_kid("rotated", "u"));
-        assert!(refresh_requested(), "unknown kid must request a refetch");
-        assert!(!refresh_requested(), "requests coalesce into one permit");
-        clear_jwks_for_test();
+        let id = verify_with_jwks(&mint_with_kid("rotated", "u"), Some(&cache), &refresh)
+            .expect("fallback key");
+        assert_eq!(id.user_id, "u");
+        let id = verify_with_jwks(&mint_with_kid("rotated", "u"), Some(&cache), &refresh)
+            .expect("fallback key");
+        assert_eq!(id.user_id, "u");
+        assert!(
+            refresh_requested(&refresh),
+            "unknown kid must request a refetch"
+        );
+        assert!(
+            !refresh_requested(&refresh),
+            "requests coalesce into one permit"
+        );
     }
 
     #[test]
     fn fetch_jwks_reads_document_over_http() {
-        let _g = lock();
         let body = serde_json::json!({"keys": [{"kty":"RSA","kid":"k1","n":TEST_N,"e":"AQAB"}]})
             .to_string();
         let rt = tokio::runtime::Builder::new_current_thread()
@@ -864,32 +814,28 @@ mod tests {
 
     #[test]
     fn env_pinned_key_is_ignored_in_production_path() {
-        let _g = lock();
-        clear_test_decoding_key();
-        clear_jwks_for_test();
+        let refresh = tokio::sync::Notify::new();
         // SAFETY-free on edition 2021; guarded by the shared test lock.
         std::env::set_var("PLATFORM_JWT_PUBLIC_KEY_PEM", TEST_PUB_PEM);
         // A token signed by the env-pinned key must NOT verify without JWKS.
         let token = mint_with_kid("k1", "pinned_attacker");
-        let err = verify_platform_jwt(&token).unwrap_err();
+        let err = verify_with_jwks(&token, None, &refresh).unwrap_err();
         assert!(matches!(err, JwtError::JwksUnavailable(_)), "got {err:?}");
         // And with a JWKS holding a different key it must fail too.
         let other = serde_json::from_value(serde_json::json!({"keys": [{
             "kty":"RSA","kid":"k1","e":"AQAB",
             "n":"qN9GfKa3xA32VKRG51lgzYMrRaqWVekUl_KG24NBoE5bWNtLx9XMfIHfpDXsEoiAhx8ZVosziI3U3Cp2CNKWXxF4qm0o6CsMpbEeeHEJ9qrbh_NvKTfomRHUjAk3s9V7LikBP-8iXOJ03fN281t2T3AtOLt26XjhPIbT3MFzGiLiPanylAmF7H78emfbBVNuCtpOAcwTljC4K3iP90SHEDkBTcMbYxps83a45tGefz5R-8sv6n5gCWlo98QgDVefd_B_IzMMzWikBmJqVmsJ7IdMcnJEbvxsDxg_WqdNVzhCAG2BSo9wsp5SPZNKq4s7d8-i-tafBSTbBKJi4Qwk3w"
         }]})).expect("doc");
-        store_jwks(jwks_cache_from_document(other).expect("cache"));
-        assert!(verify_platform_jwt(&token).is_err());
+        let cache = jwks_cache_from_document(other).expect("cache");
+        assert!(verify_with_jwks(&token, Some(&cache), &refresh).is_err());
         std::env::remove_var("PLATFORM_JWT_PUBLIC_KEY_PEM");
-        clear_jwks_for_test();
     }
 
     #[test]
     fn algorithm_confusion_is_refused() {
+        let refresh = tokio::sync::Notify::new();
         use base64::Engine as _;
-        let _g = lock();
-        clear_test_decoding_key();
-        store_jwks(jwks_cache_from_document(test_jwks("k1", None)).expect("cache"));
+        let cache = jwks_cache_from_document(test_jwks("k1", None)).expect("cache");
         let exp = chrono::Utc::now().timestamp() + 3600;
         let b64 = |v: serde_json::Value| {
             base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(v.to_string())
@@ -900,7 +846,10 @@ mod tests {
             b64(serde_json::json!({"alg":"none","typ":"JWT","kid":"k1"})),
             b64(serde_json::json!({"sub":"evil","exp":exp}))
         );
-        assert!(verify_platform_jwt(&none).is_err(), "alg=none accepted");
+        assert!(
+            verify_with_jwks(&none, Some(&cache), &refresh).is_err(),
+            "alg=none accepted"
+        );
         // HS256 signed with the public key PEM as the HMAC secret.
         let mut header = JwtHeader::new(Algorithm::HS256);
         header.kid = Some("k1".into());
@@ -911,9 +860,8 @@ mod tests {
         )
         .expect("mint hs256");
         assert!(
-            verify_platform_jwt(&hs).is_err(),
+            verify_with_jwks(&hs, Some(&cache), &refresh).is_err(),
             "HS256 with public key accepted"
         );
-        clear_jwks_for_test();
     }
 }

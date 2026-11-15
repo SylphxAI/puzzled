@@ -96,15 +96,6 @@ mod tests {
     fn mint_test_token_with_scope(sub: &str, scope: Option<&str>) -> String {
         use jsonwebtoken::{encode, EncodingKey, Header as JwtHeader};
         let priv_pem = include_str!("../testdata/platform_jwt_test_priv.pem");
-        let pub_pem = include_str!("../testdata/platform_jwt_test_pub.pem");
-        // Serialize against platform_jwt tests that install/clear the key.
-        let _g = crate::capabilities::identity_access::adapters::platform_jwt::test_key_lock()
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
-        crate::capabilities::identity_access::adapters::platform_jwt::install_test_decoding_key_pem(
-            pub_pem,
-        )
-        .expect("install test key");
         #[derive(serde::Serialize)]
         struct MintClaims {
             sub: String,
