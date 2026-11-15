@@ -98,7 +98,20 @@ test('dark CJK controls retain geometry and reduced-motion focus', async ({ page
 	await page.keyboard.press('2')
 	await page.keyboard.press('Tab')
 	await expect(page.locator(':focus-visible')).toHaveCSS('outline-width', '3px')
-	await expect(blank).toHaveCSS('transition-duration', '0s')
+	// Global reduced-motion policy uses 0.01ms rather than an exact zero.
+	await expect
+		.poll(() =>
+			blank.evaluate((cell) => {
+				const durations = getComputedStyle(cell).transitionDuration.split(',')
+				return Math.max(
+					...durations.map((duration) => {
+						const unit = duration.trim().endsWith('ms') ? 1 : 1000
+						return Number.parseFloat(duration) * unit
+					}),
+				)
+			}),
+		)
+		.toBeLessThanOrEqual(0.01)
 	const notes = page.getByRole('button', { name: '筆記模式', exact: true })
 	await dimensions(notes)
 	await notes.scrollIntoViewIfNeeded()
