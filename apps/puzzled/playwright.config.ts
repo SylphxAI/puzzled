@@ -10,6 +10,8 @@ import { defineConfig, devices } from '@playwright/test'
  * downloading a second copy.
  */
 function chromiumExecutable(): string | undefined {
+	// CI uses only the browser revision supplied by the committed Playwright lock.
+	if (process.env.CI) return undefined
 	const override = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE?.trim()
 	if (override) return override
 	if (existsSync('/usr/bin/chromium')) return '/usr/bin/chromium'
@@ -38,8 +40,8 @@ export default defineConfig({
 	fullyParallel: true,
 	// Fail the build on CI if you accidentally left test.only in the source code
 	forbidOnly: !!process.env.CI,
-	// Retry on CI only
-	retries: process.env.CI ? 2 : 0,
+	// Keep the first failure rather than hiding it with a retry.
+	retries: 0,
 	// Opt out of parallel tests on CI
 	workers: process.env.CI ? 1 : undefined,
 	// Reporter to use
@@ -49,8 +51,8 @@ export default defineConfig({
 	use: {
 		// Base URL to use in actions like `await page.goto('/')`
 		baseURL: process.env.BASE_URL || 'http://localhost:3000',
-		// Collect trace when retrying the failed test
-		trace: 'on-first-retry',
+		// Retain diagnostics from the failed first attempt.
+		trace: 'retain-on-failure',
 		// Screenshot on failure
 		screenshot: 'only-on-failure',
 		...(executablePath ? { launchOptions: { executablePath } } : {}),
