@@ -191,7 +191,6 @@
 		min-height: 60px;
 		padding: 8px 12px;
 	}
-
 }
 
 :global(.dark) .page {
@@ -233,8 +232,19 @@
 	.card > div:last-child {
 		margin-top: 12px;
 	}
+}
 
-	.card > div:last-child > output {
-		margin-bottom: 8px;
-	}
+.features {
+	display: grid;
+	gap: 6px;
+	margin-top: 16px;
+	color: var(--color-muted-foreground);
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.features li {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
 }

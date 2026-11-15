@@ -227,7 +227,6 @@ export default async function PricingPage({ params, searchParams }: Props) {
 							features={includes(true)}
 							radioName="family-interval"
 							returnAnchor="family"
-							guestPrefix={t('family')}
 							initialPlan={plan}
 							callbackUrl={callbackUrl}
 							yearly={familyYear}

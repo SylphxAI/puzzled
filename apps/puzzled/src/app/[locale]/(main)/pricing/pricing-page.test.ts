@@ -159,8 +159,8 @@ describe('PricingPage SSR', () => {
 		expect(html).toContain('$7.99')
 		expect(html).toContain('$0.99')
 		expect(html).toContain('$0.00')
-		expect(html).toContain('Sign in to subscribe · Yearly')
-		expect(html).toContain('Sign in to subscribe · Puzzled Plus Family · Yearly')
+		expect(html).not.toContain('Yearly · $39.99 per year')
+		expect(html).not.toContain('Sign in to subscribe ·')
 
 		// No duplicate $39.99 pricing card below hero
 		expect(html.match(/Choose Puzzled Plus/g)).toBeNull()

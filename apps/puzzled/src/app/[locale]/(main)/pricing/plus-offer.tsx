@@ -27,8 +27,6 @@ type Props = {
 	radioName: string
 	/** Sign-in return anchor. */
 	returnAnchor: 'plus' | 'family'
-	/** Optional tier label inserted before interval name in guest sign-in CTA. */
-	guestPrefix?: string
 	/** Available interval options for this tier in the chosen currency. */
 	once?: PlanCard
 	yearly: PlanCard | undefined
@@ -59,7 +57,6 @@ export function PlusOffer({
 	features = [],
 	radioName,
 	returnAnchor,
-	guestPrefix,
 	once,
 	yearly,
 	monthly,
@@ -83,16 +80,9 @@ export function PlusOffer({
 	const price = (card: PlanCard) => formatPrice(card.amountMinor, card.currency, locale)
 	const saving =
 		yearly && monthly ? yearlySavingPercent(monthly.amountMinor, yearly.amountMinor) : null
-	const selectedName =
-		selected.interval === 'once'
-			? t('weekendPass', { days: selected.accessDays })
-			: t(selected.interval === 'year' ? 'yearly' : 'monthly')
 	const returnParams = new URLSearchParams({ plan: selected.id })
 	if (callbackUrl) returnParams.set('callbackUrl', callbackUrl)
 	const loginReturnTo = `/pricing?${returnParams.toString()}#${returnAnchor}`
-	const guestLabel = guestPrefix
-		? `${t('signInToSubscribe')} · ${guestPrefix} · ${selectedName}`
-		: `${t('signInToSubscribe')} · ${selectedName}`
 
 	return (
 		<div id={id} className={cn('scroll-mt-24', styles.offer)}>
@@ -176,7 +166,7 @@ export function PlusOffer({
 					})}
 				</fieldset>
 				{features.length > 0 ? (
-					<ul className="mt-4 hidden space-y-2 text-sm text-muted-foreground lg:block">
+					<ul className={styles.features}>
 						{features.map((line) => (
 							<li key={line} className="flex items-start gap-2">
 								<Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
@@ -189,22 +179,12 @@ export function PlusOffer({
 					<TrialChargeLine days={selected.trialDays} price={price(selected)} />
 				) : null}
 				<div className="mt-4">
-					<output aria-live="polite" className="mb-3 block text-center text-sm font-semibold tnum">
-						{selectedName} · {price(selected)}{' '}
-						{t(
-							selected.interval === 'once'
-								? 'oneTime'
-								: selected.interval === 'year'
-									? 'perYear'
-									: 'perMonth',
-						)}
-					</output>
 					<SubscribeButton
 						key={selected.id}
 						checkoutTrigger="pricing_card"
 						loginReturnTo={loginReturnTo}
 						callbackUrl={callbackUrl}
-						guestLabel={guestLabel}
+						guestLabel={t('signInToSubscribe')}
 						planId={selected.id}
 						currency={selected.currency}
 						amountMinor={selected.amountMinor}

@@ -1,19 +1,12 @@
 import { expect, type Page, test } from '@playwright/test'
-import { DESKTOP, MOBILE, settle } from './a11y-support'
+import { settle } from './a11y-support'
 
-/**
- * Pricing first screen: Puzzled Plus leads for every visitor.
- *
- * Yearly is preselected with Monthly beside it, and the one checkout step (the
- * consent tick and "Continue to payment" for a signed-in player, "Sign in to
- * subscribe" for a guest) sits inside the first screen with no scroll. The Free
- * card and the plan comparison sit below it; one text link keeps free play a tap
- * away. Skipped while sales are closed (the page then shows no plans).
- */
-
+/** Pricing choices, benefits and guest return paths stay available at every size. */
 const VIEWPORTS = [
-	{ name: 'mobile-390x844', ...MOBILE },
-	{ name: 'desktop', ...DESKTOP },
+	{ name: 'desktop-1440x900', width: 1440, height: 900 },
+	{ name: 'tablet-768x1024', width: 768, height: 1024 },
+	{ name: 'mobile-390x844', width: 390, height: 844 },
+	{ name: 'small-375x667', width: 375, height: 667 },
 ]
 
 async function openPricing(page: Page) {
@@ -25,7 +18,63 @@ for (const viewport of VIEWPORTS) {
 	test.describe(`Pricing first screen (${viewport.name})`, () => {
 		test.use({ viewport: { width: viewport.width, height: viewport.height } })
 
-		test('leads with Plus: Yearly preselected and the checkout step in view', async ({
+		for (const consentState of ['open', 'dismissed'] as const) {
+			test(`viewport evidence with consent ${consentState}`, async ({ page }, testInfo) => {
+				await openPricing(page)
+				const decline = page.getByRole('button', { name: 'Decline', exact: true })
+				await expect(decline).toBeVisible()
+				if (consentState === 'dismissed') await decline.click()
+				await page.evaluate(() => window.scrollTo(0, 0))
+				await testInfo.attach(`pricing-${viewport.name}-${consentState}-initial`, {
+					body: await page.screenshot({
+						fullPage: false,
+						path: testInfo.outputPath(`pricing-${viewport.name}-${consentState}-initial.png`),
+					}),
+					contentType: 'image/png',
+				})
+				expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+					viewport.width,
+				)
+				for (const id of ['plus', 'family']) {
+					const offer = page.locator(`#${id}`)
+					await expect(offer.getByText('All 19 games, every day', { exact: true })).toBeVisible()
+					await expect(
+						offer.getByText('Every past day in the archive', { exact: true }),
+					).toBeVisible()
+					await expect(
+						offer.getByText('Stats and streaks for every game', { exact: true }),
+					).toBeVisible()
+					const cta = offer.getByRole('link', { name: 'Sign in to subscribe', exact: true })
+					await cta.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+					await expect(cta).toBeInViewport({ ratio: 1 })
+					await testInfo.attach(`pricing-${viewport.name}-${consentState}-${id}-scrolled`, {
+						body: await page.screenshot({
+							fullPage: false,
+							path: testInfo.outputPath(
+								`pricing-${viewport.name}-${consentState}-${id}-scrolled.png`,
+							),
+						}),
+						contentType: 'image/png',
+					})
+					// The shared notice may cover a control until dismissed; assert the clear state.
+					if (consentState === 'dismissed') {
+						expect(
+							await cta.evaluate((el) => {
+								const r = el.getBoundingClientRect()
+								return [
+									[r.x + 8, r.y + 8],
+									[r.right - 8, r.y + 8],
+									[r.x + 8, r.bottom - 8],
+									[r.right - 8, r.bottom - 8],
+								].every(([x, y]) => el.contains(document.elementFromPoint(x, y)))
+							}),
+						).toBe(true)
+					}
+				}
+			})
+		}
+
+		test('leads with Plus: Yearly preselected and checkout reachable', async ({
 			page,
 		}, testInfo) => {
 			await openPricing(page)
@@ -46,9 +95,12 @@ for (const viewport of VIEWPORTS) {
 			const signIn = offer.getByRole('link', { name: /^Sign in to subscribe/ })
 			if ((await payment.count()) > 0) {
 				await expect(consent).not.toBeChecked()
+				await consent.scrollIntoViewIfNeeded()
 				await expect(consent).toBeInViewport({ ratio: 1 })
+				await payment.scrollIntoViewIfNeeded()
 				await expect(payment).toBeInViewport({ ratio: 1 })
 			} else {
+				await signIn.scrollIntoViewIfNeeded()
 				await expect(signIn).toBeInViewport({ ratio: 1 })
 			}
 
@@ -65,6 +117,7 @@ for (const viewport of VIEWPORTS) {
 
 			const freePlay = page.getByRole('link', { name: "Not now, play today's free puzzle" })
 			await expect(freePlay).toHaveCount(1)
+			await freePlay.scrollIntoViewIfNeeded()
 			await expect(freePlay).toBeInViewport({ ratio: 1 })
 			await expect(
 				page.getByRole('link', { name: /^Family plan for up to \d+ players$/ }),
@@ -85,7 +138,7 @@ for (const viewport of VIEWPORTS) {
 			test.skip((await offer.getByRole('radio').count()) === 0, 'sales are closed')
 			const signIn = offer.getByRole('link', { name: /^Sign in to subscribe/ })
 			test.skip((await signIn.count()) === 0, 'guest return-path test')
-			for (const [interval, plan, name] of [
+			for (const [interval, plan] of [
 				['month', 'individual_monthly', 'Monthly'],
 				['once', 'individual_once', '3-day pass'],
 				['year', 'individual_yearly', 'Yearly'],
@@ -93,7 +146,7 @@ for (const viewport of VIEWPORTS) {
 				const radio = offer.locator(`input[value="${interval}"]`)
 				if ((await radio.count()) === 0) continue
 				await radio.check()
-				await expect(signIn).toContainText(name)
+				await expect(signIn).toHaveText('Sign in to subscribe')
 				const href = await signIn.getAttribute('href')
 				const callback = new URL(href ?? '', page.url()).searchParams.get('callbackUrl')
 				expect(callback).toBe(`/pricing?plan=${plan}#plus`)
@@ -111,12 +164,12 @@ for (const viewport of VIEWPORTS) {
 			await expect(family.getByRole('radio', { name: /^Yearly/ })).toBeChecked()
 			const signIn = family.getByRole('link', { name: /^Sign in to subscribe/ })
 			await expect(signIn).toHaveCount(1)
-			await expect(signIn).toHaveText(
-				/^Sign in to subscribe · Puzzled Plus Family · (Yearly|Monthly)$/,
-			)
+			await expect(signIn).toHaveText('Sign in to subscribe')
 			const href = await signIn.getAttribute('href')
 			const callback = new URL(href ?? '', page.url()).searchParams.get('callbackUrl')
-			const interval = (await signIn.textContent())?.endsWith('Yearly') ? 'yearly' : 'monthly'
+			const interval = (await family.locator('input[value="year"]').isChecked())
+				? 'yearly'
+				: 'monthly'
 			expect(callback).toBe(`/pricing?plan=family_${interval}#family`)
 			// Exercise the local return destination without creating a login or checkout.
 			await page.goto(callback ?? '/pricing')
