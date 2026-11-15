@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
-import { trackSignUp } from '@/features/analytics/lib/google-tag'
+import { trackGa4KeyEvent } from '@/features/analytics/lib/ga4-key-events'
 import { consumeSignUpCookie, SIGNED_UP_PARAM } from '@/lib/identity/after-sign-up'
 
 /** How long the confirmation stays before it fades, long enough to read once. */
@@ -32,7 +32,7 @@ export function AccountSavedNote() {
 		if (!saved && !method) return
 		url.searchParams.delete(SIGNED_UP_PARAM)
 		window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash)
-		if (method) trackSignUp(method)
+		if (method) trackGa4KeyEvent('sign_up', { method })
 		if (!saved) return
 		const onPricing = url.pathname.endsWith('/pricing')
 		setToast(onPricing)

@@ -198,6 +198,7 @@ export function PlusOffer({
 					</output>
 					<SubscribeButton
 						key={selected.id}
+						checkoutTrigger="pricing_card"
 						loginReturnTo={loginReturnTo}
 						callbackUrl={callbackUrl}
 						guestLabel={guestLabel}
