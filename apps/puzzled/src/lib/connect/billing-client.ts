@@ -16,6 +16,7 @@ import {
 	ResetFamilyInviteRequestSchema,
 	ResumeSubscriptionRequestSchema,
 } from '@/gen/connect/puzzled/v1/billing_pb'
+import { ATTRIBUTION_HEADER, RETURN_TO_HEADER, readSessionAttribution } from '@/lib/attribution'
 import { getConnectTransport } from './transport'
 
 function client() {
@@ -27,9 +28,16 @@ export async function startCheckout(
 	locale: string,
 	currency: string,
 	immediateSupplyConsent: boolean,
+	returnTo?: string,
 ) {
+	const headers: Record<string, string> = {}
+	const sessionAttr =
+		typeof window !== 'undefined' ? readSessionAttribution(window.sessionStorage) : null
+	if (sessionAttr) headers[ATTRIBUTION_HEADER] = sessionAttr
+	if (returnTo) headers[RETURN_TO_HEADER] = returnTo
 	const res = await client().createCheckout(
 		create(CreateCheckoutRequestSchema, { planId, locale, currency, immediateSupplyConsent }),
+		Object.keys(headers).length > 0 ? { headers } : undefined,
 	)
 	return res.url
 }

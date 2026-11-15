@@ -29,6 +29,10 @@ for (const viewport of VIEWPORTS) {
 			page,
 		}, testInfo) => {
 			await openPricing(page)
+			// Single clean render: one #plus card, one #family card, zero Loading...
+			await expect(page.locator('#plus')).toHaveCount(1)
+			await expect(page.locator('#family')).toHaveCount(1)
+			await expect(page.getByText('Loading...')).toHaveCount(0)
 			const offer = page.locator('#plus')
 			const yearly = offer.getByRole('radio', { name: /^Yearly/ })
 			test.skip((await yearly.count()) === 0, 'sales are closed: no plans to lead with')
@@ -103,6 +107,8 @@ for (const viewport of VIEWPORTS) {
 			await openPricing(page)
 			const family = page.locator('#family')
 			test.skip((await family.count()) === 0, 'sales are closed')
+			await expect(family).toContainText('$64.99')
+			await expect(family.getByRole('radio', { name: /^Yearly/ })).toBeChecked()
 			const signIn = family.getByRole('link', { name: /^Sign in to subscribe/ })
 			await expect(signIn).toHaveCount(1)
 			await expect(signIn).toHaveText(
@@ -127,6 +133,37 @@ for (const viewport of VIEWPORTS) {
 			await expect(yearly).toBeChecked()
 			const currency = offer.getByRole('group', { name: 'Currency', exact: true })
 			if ((await currency.count()) > 0) await expect(currency).toBeInViewport({ ratio: 1 })
+		})
+
+		test('preserves ad click ids in sessionStorage across sign-in before cookie consent', async ({
+			page,
+		}) => {
+			const query = [
+				'utm_source=google',
+				'utm_medium=cpc',
+				'gclid=Cj0_e2e_test',
+				'gbraid=gb_e2e',
+				'wbraid=wb_e2e',
+				'fbclid=fb_e2e',
+			].join('&')
+			await page.goto(`/pricing?${query}`, { waitUntil: 'domcontentloaded' })
+			await settle(page)
+			const offer = page.locator('#plus')
+			const signIn = offer.getByRole('link', { name: /^Sign in to subscribe/ })
+			test.skip((await signIn.count()) === 0, 'guest attribution sign-in flow')
+			await signIn.click()
+			await page.waitForURL(/\/login/)
+			await settle(page)
+			const stored = await page.evaluate(() =>
+				window.sessionStorage.getItem('puzzled:attr:session'),
+			)
+			expect(stored).not.toBeNull()
+			const decoded = decodeURIComponent(stored ?? '')
+			expect(decoded).toContain('g=Cj0_e2e_test')
+			expect(decoded).toContain('gb=gb_e2e')
+			expect(decoded).toContain('wb=wb_e2e')
+			expect(decoded).toContain('fb=fb_e2e')
+			expect(decoded).toContain('s=google')
 		})
 
 		test('has no horizontal overflow', async ({ page }) => {

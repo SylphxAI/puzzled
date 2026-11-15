@@ -4,7 +4,9 @@ import {
 	attributionCookieValue,
 	cleanClickId,
 	hasAttributionCookie,
+	mergeSearchWithSession,
 	nextAttributionCookie,
+	nextSessionAttribution,
 } from './attribution'
 
 describe('first-touch attribution cookie', () => {
@@ -165,5 +167,83 @@ describe('ad click id capture', () => {
 		)
 		expect(out?.get('s')).toBe('meta')
 		expect(out?.get('fb')).toBe('fb_1')
+	})
+})
+
+const sessionDecoded = (action: ReturnType<typeof nextSessionAttribution>) =>
+	action.kind === 'set' ? new URLSearchParams(decodeURIComponent(action.value)) : null
+
+describe('session attribution across sign-in before cookie consent', () => {
+	test('retains click ids and UTMs before optional marketing/analytics consent is granted', () => {
+		const action = nextSessionAttribution({
+			existing: null,
+			search: '?utm_source=google&utm_medium=cpc&gclid=Cj0_123&gbraid=gb_1&wbraid=wb_1&fbclid=fb_1',
+			analyticsDeclined: false,
+			marketingDeclined: false,
+		})
+		const params = sessionDecoded(action)
+		expect(params?.get('s')).toBe('google')
+		expect(params?.get('m')).toBe('cpc')
+		expect(params?.get('g')).toBe('Cj0_123')
+		expect(params?.get('gb')).toBe('gb_1')
+		expect(params?.get('wb')).toBe('wb_1')
+		expect(params?.get('fb')).toBe('fb_1')
+		// Path/time stay gated until analytics cookie consent is actually granted.
+		expect(params?.get('p')).toBeNull()
+		expect(params?.get('at')).toBeNull()
+
+		// Navigating to /login?callbackUrl=... strips gclid from search, but session keeps it.
+		if (action.kind !== 'set') throw new Error('expected set action')
+		expect(
+			nextSessionAttribution({
+				existing: action.value,
+				search: '?callbackUrl=%2Fpricing%3Fplan%3Dindividual_yearly%23plus',
+				analyticsDeclined: false,
+				marketingDeclined: false,
+			}),
+		).toEqual({ kind: 'keep' })
+	})
+
+	test('drops declined categories and clears session storage when everything is declined', () => {
+		const existing = encodeURIComponent('s=google&g=Cj0_123')
+		const marketingOff = sessionDecoded(
+			nextSessionAttribution({
+				existing,
+				search: '',
+				analyticsDeclined: false,
+				marketingDeclined: true,
+			}),
+		)
+		expect(marketingOff?.get('s')).toBe('google')
+		expect(marketingOff?.get('g')).toBeNull()
+		expect(
+			nextSessionAttribution({
+				existing,
+				search: '',
+				analyticsDeclined: true,
+				marketingDeclined: true,
+			}),
+		).toEqual({ kind: 'clear' })
+	})
+
+	test('promotes session attribution into puzzled_attr when consent is granted after /login', () => {
+		const stored = encodeURIComponent('s=google&m=cpc&g=Cj0_123&fb=fb_9')
+		const merged = mergeSearchWithSession('?plan=individual_yearly', stored)
+		const out = decoded(
+			nextAttributionCookie({
+				existing: null,
+				search: merged,
+				landingPath: '/pricing',
+				now: 1790000000000,
+				analytics: true,
+				marketing: true,
+			}),
+		)
+		expect(out?.get('s')).toBe('google')
+		expect(out?.get('g')).toBe('Cj0_123')
+		expect(out?.get('fb')).toBe('fb_9')
+		// Live ad click overrides older session click id.
+		const overridden = mergeSearchWithSession('?gclid=fresh_id', stored)
+		expect(new URLSearchParams(overridden).get('gclid')).toBe('fresh_id')
 	})
 })

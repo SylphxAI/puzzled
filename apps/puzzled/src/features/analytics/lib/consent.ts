@@ -8,7 +8,12 @@
  * which uses server-side storage as SSOT.
  */
 
-import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY, MARKETING_CONSENT_KEY } from '@/lib/storage-keys'
+import {
+	ATTRIBUTION_SESSION_KEY,
+	CONSENT_KEY,
+	CONSENT_TIMESTAMP_KEY,
+	MARKETING_CONSENT_KEY,
+} from '@/lib/storage-keys'
 import { deleteGoogleCookies } from './google-tag'
 
 export type ConsentStatus = 'pending' | 'accepted' | 'declined'
@@ -57,6 +62,17 @@ export function canStoreMarketing(): boolean {
 	return localStorage.getItem(MARKETING_CONSENT_KEY) === 'accepted'
 }
 
+/** Has analytics consent been explicitly declined? (`pending` is false.) */
+export function isAnalyticsDeclined(): boolean {
+	return getConsentStatus() === 'declined'
+}
+
+/** Has marketing consent been explicitly declined? (`pending` is false.) */
+export function isMarketingDeclined(): boolean {
+	if (typeof window === 'undefined') return false
+	return localStorage.getItem(MARKETING_CONSENT_KEY) === 'declined'
+}
+
 /**
  * Subscribe to consent changes
  */
@@ -85,6 +101,11 @@ export function withdrawCookieChoice(ids: string[] = []): void {
 	if (typeof window === 'undefined') return
 	localStorage.removeItem('puzzled-consent')
 	localStorage.removeItem(QUOTE_KEY)
+	try {
+		sessionStorage.removeItem(ATTRIBUTION_SESSION_KEY)
+	} catch {
+		// sessionStorage may be unavailable in restricted contexts
+	}
 	localStorage.setItem(CONSENT_KEY, 'declined')
 	localStorage.setItem(MARKETING_CONSENT_KEY, 'declined')
 	localStorage.setItem(CONSENT_TIMESTAMP_KEY, new Date().toISOString())

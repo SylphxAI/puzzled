@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { requireMember } from '@/features/console/lib/require-member'
 import { getServerSubscription } from '@/lib/api/server'
 import { checkoutConfirmed, subscriptionView } from '@/lib/billing/plus'
+import { safeCallbackPath } from '@/lib/identity/after-sign-up'
 import { logger } from '@/lib/logger'
 import { buildPageMetadata } from '@/lib/seo/metadata'
 import { CheckoutReturnTracker } from './checkout-return-tracker'
@@ -9,7 +10,7 @@ import { SubscriptionPanel } from './subscription-client'
 
 type Props = {
 	params: Promise<{ locale: string }>
-	searchParams: Promise<{ checkout?: string; s?: string }>
+	searchParams: Promise<{ checkout?: string; s?: string; callbackUrl?: string }>
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -30,9 +31,13 @@ export async function generateMetadata({ params }: Props) {
  */
 export default async function SubscriptionSettingsPage({ params, searchParams }: Props) {
 	const { locale } = await params
-	const { checkout, s: checkoutSession } = await searchParams
+	const { checkout, s: checkoutSession, callbackUrl: rawCallbackUrl } = await searchParams
 	setRequestLocale(locale)
-	const user = await requireMember({ locale, returnTo: '/settings/subscription' })
+	const callbackUrl = safeCallbackPath(rawCallbackUrl) ?? undefined
+	const returnTo = callbackUrl
+		? `/settings/subscription?callbackUrl=${encodeURIComponent(callbackUrl)}`
+		: '/settings/subscription'
+	const user = await requireMember({ locale, returnTo })
 
 	const fromCheckout = checkout === 'success'
 	let view = null
@@ -57,7 +62,12 @@ export default async function SubscriptionSettingsPage({ params, searchParams }:
 			{conversion && checkoutSession ? (
 				<CheckoutReturnTracker sessionId={checkoutSession} status={conversion} userId={user?.id} />
 			) : null}
-			<SubscriptionPanel view={view} locale={locale} fromCheckout={fromCheckout} />
+			<SubscriptionPanel
+				view={view}
+				locale={locale}
+				fromCheckout={fromCheckout}
+				callbackUrl={callbackUrl}
+			/>
 		</>
 	)
 }

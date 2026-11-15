@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic'
 
 import { headers } from 'next/headers'
 import { cache, Suspense } from 'react'
-import { AttributionCapture } from '@/features/analytics/components/attribution-capture'
 import { AnnouncementBannerChrome } from '@/features/announcements/components/announcement-banner-chrome'
 import { GuestIdentityBootstrap } from '@/features/daily/components/guest-identity-bootstrap'
 import { getServerStreakInfo, hasServerProgressIdentity } from '@/lib/api/server'
@@ -12,6 +11,7 @@ import { BottomNav } from '@/shared/components/layout'
 import { AccountSavedNote } from '@/shared/components/layout/account-saved-note'
 import { ConsentBanner } from '@/shared/components/layout/consent-banner'
 import { Footer } from '@/shared/components/layout/footer'
+import type { InitialNavUser } from '@/shared/components/layout/user-menu'
 import { SHARED_HOME_HEADER } from '../../../../shared-home-policy.cjs'
 import { LayoutTopNav } from './layout-nav'
 import { LayoutOverlays } from './layout-overlays'
@@ -33,6 +33,8 @@ function SkipNavigation() {
 }
 
 type ChromeIdentity = {
+	/** Server-resolved user snapshot for initial header render (`null` for guests). */
+	initialUser: InitialNavUser | null
 	/** null = unread: the nav hides the streak chip rather than claiming zero. */
 	currentStreak: number | null
 	/** null = unread: achievement streaks must not unlock from a fabricated 0. */
@@ -48,8 +50,11 @@ type ChromeIdentity = {
  * authorities answer or at the presentation deadline, whichever is sooner.
  */
 const readChromeIdentity = cache(async (): Promise<ChromeIdentity> => {
-	const unread: ChromeIdentity = { currentStreak: null, maxStreak: null }
 	const user = await withPresentationDeadline(currentUser(), null)
+	const initialUser: InitialNavUser | null = user
+		? { name: user.name ?? null, email: user.email, image: user.image ?? null }
+		: null
+	const unread: ChromeIdentity = { initialUser, currentStreak: null, maxStreak: null }
 	const hasIdentity = Boolean(user) || (await hasServerProgressIdentity())
 	if (!hasIdentity) return unread
 
@@ -59,12 +64,12 @@ const readChromeIdentity = cache(async (): Promise<ChromeIdentity> => {
 		null,
 	)
 	if (!streakInfo) return unread
-	return { currentStreak: streakInfo.currentStreak, maxStreak: streakInfo.maxStreak }
+	return { initialUser, currentStreak: streakInfo.currentStreak, maxStreak: streakInfo.maxStreak }
 })
 
 async function TopNavChrome() {
-	const { currentStreak } = await readChromeIdentity()
-	return <LayoutTopNav currentStreak={currentStreak} />
+	const { currentStreak, initialUser } = await readChromeIdentity()
+	return <LayoutTopNav currentStreak={currentStreak} initialUser={initialUser} />
 }
 
 /**
@@ -107,7 +112,7 @@ export default async function MainLayout({ children }: Props) {
 			{/* Guest admission refreshes the shared home with a cookie. Keep the
 			    boundary in both payloads so that refresh preserves open nav controls. */}
 			<Suspense fallback={<TopNavSkeleton />}>
-				{sharedHome ? <LayoutTopNav currentStreak={null} /> : <TopNavChrome />}
+				{sharedHome ? <LayoutTopNav currentStreak={null} initialUser={null} /> : <TopNavChrome />}
 			</Suspense>
 
 			{/* First-visit choice is in flow on phones: it cannot cover a puzzle or Play.
@@ -125,8 +130,6 @@ export default async function MainLayout({ children }: Props) {
 				{children}
 				<Footer />
 			</div>
-
-			<AttributionCapture />
 
 			{/* Fixed overlays - proper z-index stacking */}
 			<Suspense fallback={null}>
