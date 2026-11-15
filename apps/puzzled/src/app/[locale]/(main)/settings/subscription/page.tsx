@@ -8,7 +8,7 @@ import {
 	CURRENCY_COOKIE,
 	chooseCurrency,
 } from '@/lib/billing/currency'
-import { checkoutConfirmed, planCards, subscriptionView } from '@/lib/billing/plus'
+import { checkoutConfirmed, minorUnitsToMajor, planCards, subscriptionView } from '@/lib/billing/plus'
 import { safeCallbackPath } from '@/lib/identity/after-sign-up'
 import { logger } from '@/lib/logger'
 import { buildPageMetadata } from '@/lib/seo/metadata'
@@ -85,7 +85,7 @@ export default async function SubscriptionSettingsPage({ params, searchParams }:
 				if (card) {
 					checkoutPlan = {
 						planId: card.id,
-						value: card.amountMinor / 100,
+						value: minorUnitsToMajor(card.amountMinor, card.currency),
 						currency: card.currency.toUpperCase(),
 					}
 				}

@@ -16,10 +16,10 @@ at midnight, Hong Kong time (UTC+8), with the same daily set for everyone.
 Results can be shared without revealing the solution. An account keeps
 server-verified streaks, results and stats across devices.
 
-Puzzled Plus ($4.99/mo or $39.99/yr USD; £3.99/mo or £32.99/yr GBP) unlocks all
+Puzzled Plus ($4.99/mo or $39.99/yr USD; £3.99/mo or £29.99/yr GBP) unlocks all
 ${allGames.length} games, the past-day archive, and ad-free play everywhere. Puzzled Plus Family
-covers up to 4 accounts ($7.99/mo or $64.99/yr USD; £6.49/mo or £52.99/yr GBP).
-A one-time 3-Day Weekend Plus & Archive Pass is $0.99 USD / £0.79 GBP.
+covers up to 4 accounts ($7.99/mo or $64.99/yr USD; £5.99/mo or £47.99/yr GBP).
+A one-time 3-Day Weekend Plus & Archive Pass is $2.99 USD / £2.99 GBP.
 
 ## Play
 - [Home](https://puzzled.gg/): Today's featured puzzle and daily lineup.

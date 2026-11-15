@@ -7,11 +7,13 @@ import {
 import {
 	checkoutConfirmed,
 	currencyForLocale,
+	currencyFractionDigits,
 	formatPrice,
 	formatTrialEnd,
 	isOneTimePassPlan,
 	isPlayLocked,
 	isPlusRequiredError,
+	minorUnitsToMajor,
 	planCards,
 	showsCurrentPlan,
 	subscriptionView,
@@ -60,7 +62,10 @@ describe('Puzzled Plus presentation', () => {
 			],
 		}).plans
 		expect(currencyForLocale('en-GB')).toBe('gbp')
-		expect(currencyForLocale('zh-HK')).toBe('usd')
+		expect(currencyForLocale('zh-HK')).toBe('hkd')
+		expect(currencyForLocale('zh-TW')).toBe('twd')
+		expect(currencyForLocale('ja')).toBe('jpy')
+		expect(currencyForLocale('en-US')).toBe('usd')
 		const cards = planCards(plans, 'gbp')
 		expect(cards[0]).toEqual({
 			id: 'individual_monthly',
@@ -73,6 +78,19 @@ describe('Puzzled Plus presentation', () => {
 		})
 		expect(cards[1].currency).toBe('usd')
 		expect(formatPrice(399, 'gbp', 'en-GB')).toBe('£3.99')
+		expect(currencyFractionDigits('jpy')).toBe(0)
+		expect(currencyFractionDigits('krw')).toBe(0)
+		expect(currencyFractionDigits('vnd')).toBe(0)
+		expect(currencyFractionDigits('idr')).toBe(2)
+		expect(minorUnitsToMajor(799, 'jpy')).toBe(799)
+		expect(minorUnitsToMajor(6900, 'krw')).toBe(6900)
+		expect(minorUnitsToMajor(79000, 'vnd')).toBe(79000)
+		expect(minorUnitsToMajor(5900000, 'idr')).toBe(59000)
+		expect(minorUnitsToMajor(499, 'usd')).toBe(4.99)
+		expect(formatPrice(799, 'jpy', 'en-US')).toBe('¥799')
+		expect(formatPrice(6900, 'krw', 'en-US')).toBe('₩6,900')
+		expect(formatPrice(79000, 'vnd', 'en-US')).toBe('₫79,000')
+		expect(formatPrice(5900000, 'idr', 'en-US')).toBe('IDR 59,000.00')
 		expect(yearlySavingPercent(499, 3999)).toBe(33)
 		expect(yearlySavingPercent(499, 6000)).toBe(null)
 	})
@@ -84,7 +102,7 @@ describe('Puzzled Plus presentation', () => {
 					id: 'individual_once',
 					interval: '',
 					accessDays: 3,
-					prices: [{ currency: 'usd', unitAmountMinor: BigInt(99) }],
+					prices: [{ currency: 'usd', unitAmountMinor: BigInt(299) }],
 				},
 			],
 		}).plans
@@ -92,7 +110,7 @@ describe('Puzzled Plus presentation', () => {
 			id: 'individual_once',
 			interval: 'once',
 			accessDays: 3,
-			amountMinor: 99,
+			amountMinor: 299,
 		})
 		expect(isOneTimePassPlan('individual_once')).toBe(true)
 		expect(isOneTimePassPlan('individual_monthly')).toBe(false)

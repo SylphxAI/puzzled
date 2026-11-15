@@ -94,7 +94,7 @@ mock.module('@/lib/api/server', () => ({
 				interval: 'once',
 				trialDays: 0,
 				accessDays: 3,
-				prices: [{ currency: 'usd', unitAmountMinor: BigInt(99) }],
+				prices: [{ currency: 'usd', unitAmountMinor: BigInt(299) }],
 			},
 			{
 				id: 'individual_monthly',
@@ -157,7 +157,7 @@ describe('PricingPage SSR', () => {
 		expect(html).toContain('$39.99')
 		expect(html).toContain('$64.99')
 		expect(html).toContain('$7.99')
-		expect(html).toContain('$0.99')
+		expect(html).toContain('$2.99')
 		expect(html).toContain('$0.00')
 		expect(html).not.toContain('Yearly · $39.99 per year')
 		expect(html).not.toContain('Sign in to subscribe ·')

@@ -48,9 +48,24 @@ export function isOneTimePassPlan(planId: PlanId | null | undefined): boolean {
 	return planId === 'individual_once'
 }
 
-/** Currency shown for a locale: pounds for en-GB, US dollars otherwise. */
-export function currencyForLocale(locale: string): 'gbp' | 'usd' {
-	return locale.toLowerCase() === 'en-gb' ? 'gbp' : 'usd'
+const LOCALE_DEFAULT_CURRENCY: Record<string, string> = {
+	'en-gb': 'gbp',
+	'zh-hk': 'hkd',
+	'zh-tw': 'twd',
+	ja: 'jpy',
+	'ja-jp': 'jpy',
+}
+
+/** Currency inferred from a locale tag when no country header is present. */
+export function currencyForLocale(locale: string): string {
+	const normalized = locale.trim().toLowerCase()
+	if (LOCALE_DEFAULT_CURRENCY[normalized]) return LOCALE_DEFAULT_CURRENCY[normalized]
+	const [, region] = normalized.split('-')
+	if (region === 'gb') return 'gbp'
+	if (region === 'hk') return 'hkd'
+	if (region === 'tw') return 'twd'
+	if (region === 'jp') return 'jpy'
+	return 'usd'
 }
 
 export type PlanCard = {
@@ -87,12 +102,29 @@ export function planCards(plans: ListPlansResponse['plans'], currency: string): 
 	return cards
 }
 
+/** Zero-decimal currencies per Stripe and Sylphx Money (IDR & TWD remain 2 decimals). */
+const ZERO_DECIMAL_CURRENCIES = new Set(['JPY', 'KRW', 'VND'])
+
+/** Minor-unit decimal digits per Stripe / Sylphx Money (0 for JPY/KRW/VND, 2 otherwise). */
+export function currencyFractionDigits(currency: string): number {
+	return ZERO_DECIMAL_CURRENCIES.has(currency.trim().toUpperCase()) ? 0 : 2
+}
+
+/** Convert integer minor units into major currency units for Intl formatting and analytics values. */
+export function minorUnitsToMajor(amountMinor: number, currency: string): number {
+	const digits = currencyFractionDigits(currency)
+	return digits === 0 ? amountMinor : amountMinor / 10 ** digits
+}
+
 /** Format minor units as a price in the viewer's locale. */
 export function formatPrice(amountMinor: number, currency: string, locale: string): string {
+	const digits = currencyFractionDigits(currency)
 	return new Intl.NumberFormat(locale, {
 		style: 'currency',
 		currency: currency.toUpperCase(),
-	}).format(amountMinor / 100)
+		minimumFractionDigits: digits,
+		maximumFractionDigits: digits,
+	}).format(minorUnitsToMajor(amountMinor, currency))
 }
 
 /** Whole-number saving of a yearly price against twelve monthly payments. */

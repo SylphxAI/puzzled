@@ -3,6 +3,7 @@
  * It speaks the same Connect JSON protocol as the generated client, serves
  * real frozen boards, and never implements account or write operations.
  */
+import catalogue from '../../../config/commercial/catalogue.json'
 import { frozenPuzzle } from '../src/games/test-fixtures'
 import type { PuzzleDifficulty } from '../src/games/types'
 import { isValidDayKey, productDayKey } from '../src/lib/product-day'
@@ -25,61 +26,28 @@ function connectError(status: number, code: string, message: string) {
  * open store locks every game but the free one for guests, which is not the
  * state the board and home harnesses run in.
  */
+const PLAN_IDS: Record<string, string> = {
+	plus_individual_monthly: 'individual_monthly',
+	plus_individual_yearly: 'individual_yearly',
+	plus_family_monthly: 'family_monthly',
+	plus_family_yearly: 'family_yearly',
+	puzzled_starter_unlock: 'individual_once',
+}
+
 const OPEN_PLANS = {
 	salesOpen: true,
 	familyMaxMembers: 4,
-	plans: [
-		{
-			id: 'individual_monthly',
-			family: false,
-			interval: 'month',
-			prices: [
-				{ currency: 'usd', unitAmountMinor: '499' },
-				{ currency: 'gbp', unitAmountMinor: '399' },
-			],
-			trialDays: 0,
-		},
-		{
-			id: 'individual_yearly',
-			family: false,
-			interval: 'year',
-			prices: [
-				{ currency: 'usd', unitAmountMinor: '3999' },
-				{ currency: 'gbp', unitAmountMinor: '3299' },
-			],
-			trialDays: 0,
-		},
-		{
-			id: 'family_monthly',
-			family: true,
-			interval: 'month',
-			prices: [
-				{ currency: 'usd', unitAmountMinor: '799' },
-				{ currency: 'gbp', unitAmountMinor: '649' },
-			],
-			trialDays: 0,
-		},
-		{
-			id: 'family_yearly',
-			family: true,
-			interval: 'year',
-			prices: [
-				{ currency: 'usd', unitAmountMinor: '6499' },
-				{ currency: 'gbp', unitAmountMinor: '5299' },
-			],
-			trialDays: 0,
-		},
-		{
-			id: 'individual_once',
-			family: false,
-			interval: '',
-			prices: [
-				{ currency: 'usd', unitAmountMinor: '99' },
-				{ currency: 'gbp', unitAmountMinor: '79' },
-			],
-			accessDays: 3,
-		},
-	],
+	plans: catalogue.plans.map((plan) => ({
+		id: PLAN_IDS[plan.price_key] ?? plan.price_key,
+		family: plan.grants.seats !== '1',
+		interval: plan.interval,
+		prices: Object.entries(plan.unit_amounts).map(([currency, amount]) => ({
+			currency,
+			unitAmountMinor: String(amount),
+		})),
+		trialDays: plan.trial_days,
+		...(plan.interval === '' ? { accessDays: 3 } : {}),
+	})),
 }
 
 export function createPuzzleFixtureServer(port = 8787, options: { openPlans?: boolean } = {}) {
