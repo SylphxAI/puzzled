@@ -702,10 +702,12 @@ jobs:
           echo "bun install failed after retries"
           exit 1
 
-      # Pinned by the @playwright/test version in bun.lock.
-      - name: Install Playwright Chromium
+      # Pinned by the @playwright/test version in bun.lock. phone-first runs the
+      # iPhone 13 device profile, which Playwright drives on WebKit, so the
+      # job installs both engines.
+      - name: Install Playwright Chromium and WebKit
         working-directory: apps/puzzled
-        run: bunx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium webkit
 
       - name: run-store get web-build
         uses: SylphxAI/.github/.github/actions/run-store@90d88da2d60dcd6a3884899c273dd3a7f975be17

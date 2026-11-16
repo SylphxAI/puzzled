@@ -68,6 +68,8 @@ describe('self-hosted CI contract', () => {
 			expect(verify, spec).toContain(`e2e-tests/${spec}.e2e.ts`)
 		expect(verify).toContain("grep -Eq '[0-9]+ skipped'")
 		expect(verify).toContain('"salesOpen":true')
+		// phone-first runs the iPhone 13 profile, which Playwright drives on WebKit.
+		expect(verify).toContain('playwright install --with-deps chromium webkit')
 	})
 
 	test('browser installs are job-isolated and Lighthouse resolves the package revision', () => {
