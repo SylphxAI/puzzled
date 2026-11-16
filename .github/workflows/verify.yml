@@ -763,13 +763,17 @@ jobs:
             http://127.0.0.1:8788/puzzled.v1.BillingService/ListPlans | grep -q '"salesOpen":true'
 
       # A skipped test is a silent pass, so any skip fails the step.
+      # Each run keeps its own report and output folders: Playwright clears
+      # them at the start of a run, so a shared folder would let the pricing run
+      # erase the traces and screenshots of the board run's failure.
       - name: Board, home and phone-first craft
         working-directory: apps/puzzled
         env:
           BASE_URL: http://localhost:3017
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/board
         run: |
           set -euo pipefail
-          bun run test:e2e e2e-tests/board-craft.e2e.ts e2e-tests/home-craft.e2e.ts e2e-tests/phone-first.e2e.ts --workers=1 --retries=0 2>&1 | tee "$RUNNER_TEMP/craft-board.log"
+          bun run test:e2e e2e-tests/board-craft.e2e.ts e2e-tests/home-craft.e2e.ts e2e-tests/phone-first.e2e.ts --workers=1 --retries=0 --output=test-results/board 2>&1 | tee "$RUNNER_TEMP/craft-board.log"
           if grep -Eq '[0-9]+ skipped' "$RUNNER_TEMP/craft-board.log"; then echo "a craft spec skipped"; exit 1; fi
 
       - name: Pricing with the open store
@@ -777,9 +781,10 @@ jobs:
         working-directory: apps/puzzled
         env:
           BASE_URL: http://localhost:3018
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/pricing
         run: |
           set -euo pipefail
-          bun run test:e2e e2e-tests/pricing.e2e.ts --workers=1 --retries=0 2>&1 | tee "$RUNNER_TEMP/craft-pricing.log"
+          bun run test:e2e e2e-tests/pricing.e2e.ts --workers=1 --retries=0 --output=test-results/pricing 2>&1 | tee "$RUNNER_TEMP/craft-pricing.log"
           if grep -Eq '[0-9]+ skipped' "$RUNNER_TEMP/craft-pricing.log"; then echo "a pricing test skipped"; exit 1; fi
 
       - name: Stop the served builds and fixture APIs
