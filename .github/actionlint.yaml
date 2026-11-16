@@ -1,2 +1,11 @@
 self-hosted-runner:
-  labels: [sylphx-linux-standard, sylphx-linux-large, sylphx-linux-xlarge]
+  labels:
+    - sylphx-linux-standard
+    - sylphx-linux-control
+    - sylphx-linux-large
+    - sylphx-linux-xlarge
+    - sylphx-linux-2xlarge
+    - sylphx-linux-standard-merge
+    - sylphx-linux-large-merge
+    - sylphx-linux-xlarge-merge
+    - sylphx-linux-2xlarge-merge

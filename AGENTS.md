@@ -84,7 +84,7 @@ affected unit tests, the chat-senders gate, and the migration lane when
 `apps/puzzled/atlas/` changes).
 `verify.yml` runs the full suite (production web build, release binary,
 database-backed Rust tests, SEO, accessibility, Lighthouse, the seeded
-web-vitals gate, and the fixture-backed craft specs) after merge and nightly,
+web-vitals gate, and the fixture-backed craft specs) after merge,
 and marks the commit `verified`.
 The web-vitals gate loads five routes (`/`, `/games`, `/games/sudoku`,
 `/games/word-search`, `/games/nonogram`) on a seeded puzzle API, plays each,

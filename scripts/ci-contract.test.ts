@@ -11,36 +11,100 @@ type Job = {
 	needs?: string[]
 	env?: Record<string, string>
 }
-type Workflow = { jobs: Record<string, Job> }
+type Workflow = { on?: Record<string, unknown> | string[] | string; jobs: Record<string, Job> }
 const workflow = (name: string) => Bun.YAML.parse(read(`.github/workflows/${name}.yml`)) as Workflow
 const reusable = new Set([
 	'SylphxAI/.github/.github/workflows/red-main.yml@8bbd9a31a5f0364e4f286e4bf675d7f01c0abea2',
 	'SylphxAI/.github/.github/workflows/rust-check.yml@13890e5cc13e308f376748fd23f626b637a47771',
 	'./.github/workflows/verify.yml',
 ])
-const selfHosted = (job: Job) =>
-	job.uses ? reusable.has(job.uses) : job['runs-on'] === 'sylphx-linux-standard'
+const browserJobs = new Set(['a11y', 'lighthouse', 'craft', 'capture'])
+const mergeLaneSelector =
+	/^\$\{\{\s*github\.event_name\s*==\s*'merge_group'\s*&&\s*'sylphx-linux-(?:standard|large|xlarge|2xlarge)-merge'\s*\|\|\s*'sylphx-linux-(?:standard|large|xlarge|2xlarge)'\s*\}\}$/
+const visibilityGuardedControl =
+	/^\$\{\{\s*github\.event\.repository\.visibility\s*==\s*'public'\s*&&\s*'ubuntu-latest'\s*\|\|\s*'sylphx-linux-control'\s*\}\}$/
+const visibilityGuardedPlain =
+	/^\$\{\{\s*github\.event\.repository\.visibility\s*==\s*'public'\s*&&\s*'ubuntu-latest'\s*\|\|\s*'sylphx-linux-(?:standard|large|xlarge|2xlarge)'\s*\}\}$/
+const visibilityGuardedMergeLane =
+	/^\$\{\{\s*github\.event\.repository\.visibility\s*==\s*'public'\s*&&\s*'ubuntu-latest'\s*\|\|\s*\(\s*github\.event_name\s*==\s*'merge_group'\s*&&\s*'sylphx-linux-(?:standard|large|xlarge|2xlarge)-merge'\s*\|\|\s*'sylphx-linux-(?:standard|large|xlarge|2xlarge)'\s*\)\s*\}\}$/
+const selfHostedStatic = /^sylphx-linux-(?:control|(?:standard|large|xlarge|2xlarge)(?:-merge)?)$/
+const hasMergeGroup = (parsed: Workflow) => {
+	const on = parsed.on
+	if (!on) return false
+	if (typeof on === 'string') return on === 'merge_group'
+	if (Array.isArray(on)) return on.includes('merge_group')
+	return 'merge_group' in on
+}
+const allowedRunner = (
+	job: Job,
+	options: { readonly mergeGroup?: boolean; readonly browser?: boolean } = {},
+) => {
+	if (job.uses) return reusable.has(job.uses)
+	const runsOn = job['runs-on']
+	if (typeof runsOn !== 'string') return false
+	if (options.browser) {
+		return runsOn === 'sylphx-linux-standard'
+	}
+	if (options.mergeGroup) {
+		return (
+			runsOn === 'sylphx-linux-control' ||
+			mergeLaneSelector.test(runsOn) ||
+			visibilityGuardedControl.test(runsOn) ||
+			visibilityGuardedMergeLane.test(runsOn)
+		)
+	}
+	return (
+		selfHostedStatic.test(runsOn) ||
+		mergeLaneSelector.test(runsOn) ||
+		visibilityGuardedControl.test(runsOn) ||
+		visibilityGuardedPlain.test(runsOn) ||
+		visibilityGuardedMergeLane.test(runsOn)
+	)
+}
 
 describe('self-hosted CI contract', () => {
-	test('every job uses the self-hosted selector or an audited pinned reusable', () => {
+	test('every job uses an allowed self-hosted, merge-lane, or visibility-guarded selector', () => {
 		for (const file of readdirSync(join(root, '.github/workflows'))) {
 			if (!file.endsWith('.yml')) continue
 			const parsed = Bun.YAML.parse(read(`.github/workflows/${file}`)) as Workflow
+			const mergeGroup = hasMergeGroup(parsed)
 			for (const [name, job] of Object.entries(parsed.jobs)) {
-				expect(selfHosted(job), `${file}:${name}`).toBe(true)
+				expect(
+					allowedRunner(job, { mergeGroup, browser: browserJobs.has(name) }),
+					`${file}:${name}`,
+				).toBe(true)
 			}
 		}
 	})
 
-	test('hosted selectors, fallbacks and unaudited reusables fail closed', () => {
-		for (const job of [
-			{ 'runs-on': 'ubuntu-latest' },
-			{ 'runs-on': 'ubuntu-24.04' },
-			{ 'runs-on': `\${{ inputs.runner || 'ubuntu-latest' }}` },
-			{ uses: 'example/workflows/test.yml@main' },
-			{},
-		])
-			expect(selfHosted(job)).toBe(false)
+	test('hosted selectors, fallbacks, unrouted merge_group, and unaudited reusables fail closed', () => {
+		for (const [job, options] of [
+			[{ 'runs-on': 'ubuntu-latest' }, {}],
+			[{ 'runs-on': 'ubuntu-24.04' }, {}],
+			[{ 'runs-on': `\${{ inputs.runner || 'ubuntu-latest' }}` }, {}],
+			[
+				{
+					'runs-on': `\${{ !github.event.repository.private && 'ubuntu-latest' || 'sylphx-linux-standard' }}`,
+				},
+				{},
+			],
+			[{ 'runs-on': 'sylphx-linux-standard' }, { mergeGroup: true }],
+			[
+				{
+					'runs-on': `\${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || 'sylphx-linux-standard' }}`,
+				},
+				{ mergeGroup: true },
+			],
+			[
+				{
+					'runs-on': `\${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || 'sylphx-linux-standard' }}`,
+				},
+				{ browser: true },
+			],
+			[{ uses: 'example/workflows/test.yml@main' }, {}],
+			[{}, {}],
+		] as const)
+			expect(allowedRunner(job, options)).toBe(false)
 	})
 
 	test('the fast gate runs these contracts with file isolation', () => {

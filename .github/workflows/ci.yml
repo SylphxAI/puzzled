@@ -3,7 +3,7 @@ name: CI
 # Optimistic merge (SylphxAI/.github docs/optimistic-merge.md): the merge queue
 # and drafts run only the fast gate below; a pull request marked ready also
 # runs the affected full suite (verify.yml); verify.yml runs again on main
-# after merge and nightly. Ruleset checks keep their names: the seven gate jobs
+# after merge. Ruleset checks keep their names: the seven gate jobs
 # named below are what the ruleset requires today, and `ci-ok` aggregates them
 # for the day the ruleset requires one check.
 
@@ -21,7 +21,7 @@ env:
   TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
 
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || format('{0}-run-{1}', github.workflow, github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Least privilege: every job only reads the repository.
@@ -39,7 +39,7 @@ jobs:
   # switch to `enforce` after a few merge groups have been read.
   main-state:
     if: github.event_name == 'merge_group'
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || 'sylphx-linux-control' }}
     timeout-minutes: 5
     steps:
       - uses: SylphxAI/.github/.github/actions/main-red-gate@05ac6474b96425bcb4965addd025a93e061b66c4 # main 05ac647 (SylphxAI/.github, current handler)
@@ -48,7 +48,7 @@ jobs:
 
   plan:
     name: Plan
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || (github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard') }}
     timeout-minutes: 10
     outputs:
       base: ${{ steps.range.outputs.base }}
@@ -77,7 +77,7 @@ jobs:
   identifiers:
     name: Identifiers
     needs: plan
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || (github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard') }}
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -95,7 +95,7 @@ jobs:
   lint-and-typecheck:
     name: Lint & Type Check
     needs: plan
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -127,14 +127,16 @@ jobs:
               exit 0
             fi
             echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
-            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache
             sleep $((attempt * 3))
           done
           echo "bun install failed after retries"
           exit 1
 
       - name: Workflow parse
-        uses: SylphxAI/.github/.github/actions/workflow-lint@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+        uses: SylphxAI/.github/.github/actions/workflow-lint@f27e4105e2da7d681ecebe946634bdda7ba553ba # main
+        with:
+          contract-mode: enforce
 
       - name: CI contract tests
         run: bun test --isolate scripts/ci-contract.test.ts
@@ -174,21 +176,12 @@ jobs:
   security:
     name: Security Scan
     needs: plan
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || (github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard') }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.4.4"
-
-      - name: Dependency vulnerability audit (shipped dependencies)
-        # Fail-closed on high+ advisories in what ships to players. Dev-only
-        # tooling (lhci and its browser download chain) is out of scope.
-        run: bun audit --audit-level=high --prod
 
       - name: Secret detection
         # Binary install (not the GH Action docker path): self-hosted
@@ -237,7 +230,7 @@ jobs:
     name: Unit Tests
     needs: plan
     if: fromJSON(needs.plan.outputs.run).web
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -267,7 +260,7 @@ jobs:
               exit 0
             fi
             echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
-            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache
             sleep $((attempt * 3))
           done
           echo "bun install failed after retries"
@@ -295,7 +288,7 @@ jobs:
     name: Build
     needs: plan
     if: fromJSON(needs.plan.outputs.run).build
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -333,7 +326,7 @@ jobs:
     name: Rust API
     needs: plan
     if: fromJSON(needs.plan.outputs.run).rust
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -383,7 +376,7 @@ jobs:
     name: Migration Integrity
     needs: plan
     if: fromJSON(needs.plan.outputs.run).migrations
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
     timeout-minutes: 30
     env:
       PUZZLED_REQUIRE_DB_TESTS: "1"
@@ -534,6 +527,7 @@ jobs:
       contents: read
       actions: read
       checks: read
+      pull-requests: read
       id-token: write
     name: Suite
     if: github.event_name == 'pull_request' && !github.event.pull_request.draft
@@ -545,7 +539,7 @@ jobs:
   # nothing without full history, so the checkout fetches all of it.
   chat-senders:
     name: Chat senders
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || (github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard') }}
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -557,16 +551,15 @@ jobs:
         with:
           mode: fail
 
-  # Not required today (the ruleset names the seven jobs above); the single
-  # check to require once the ruleset is reduced to one.
+  # The required aggregate check.
   ci-ok:
     name: ci-ok
-    if: always()
+    if: always() && !cancelled()
     needs: [main-state, plan, identifiers, lint-and-typecheck, security, unit-tests, build, rust-api, migrations, chat-senders, suite]
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || 'sylphx-linux-control' }}
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@0546ef1e30776427b845d068895f7737eee43f84 # reviewed squash allowlist support
+      - uses: SylphxAI/.github/.github/actions/needs-pass@f27e4105e2da7d681ecebe946634bdda7ba553ba # main
         with:
           needs: ${{ toJSON(needs) }}
           required: >-

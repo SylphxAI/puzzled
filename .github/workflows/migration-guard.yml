@@ -1,3 +1,5 @@
+# optimistic-merge: advisory — Standalone required migration-guard ruleset check; evaluated independently from ci-ok.
+# optimistic-merge: gate-external
 name: Migration Guard
 
 on:
@@ -15,14 +17,15 @@ concurrency:
 
 jobs:
   migration-guard:
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || 'sylphx-linux-control' }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          filter: ${{ github.event.repository.visibility == 'public' && 'blob:none' || '' }}
           persist-credentials: false
-      - uses: SylphxAI/.github/.github/actions/migration-guard@3497f220deaa288733bd0d04d98f36e5f12ed539 # main
+      - uses: SylphxAI/.github/.github/actions/migration-guard@f27e4105e2da7d681ecebe946634bdda7ba553ba # main
         with:
           dialect: postgres
           migration-directories: |
