@@ -33,7 +33,9 @@ export function CurrencySwitcher({ currencies, current }: Props) {
 	}
 
 	return (
-		<fieldset className={cn('flex min-w-0 max-w-full items-center gap-3 border-0 p-0', styles.currency)}>
+		<fieldset
+			className={cn('flex min-w-0 max-w-full items-center gap-3 border-0 p-0', styles.currency)}
+		>
 			<legend className="sr-only">{t('currencyLabel')}</legend>
 			<label htmlFor={selectId} className="shrink-0 text-sm text-muted-foreground">
 				{t('currencyLabel')}

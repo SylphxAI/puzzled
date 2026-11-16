@@ -8,7 +8,12 @@ import {
 	CURRENCY_COOKIE,
 	chooseCurrency,
 } from '@/lib/billing/currency'
-import { checkoutConfirmed, minorUnitsToMajor, planCards, subscriptionView } from '@/lib/billing/plus'
+import {
+	checkoutConfirmed,
+	minorUnitsToMajor,
+	planCards,
+	subscriptionView,
+} from '@/lib/billing/plus'
 import { safeCallbackPath } from '@/lib/identity/after-sign-up'
 import { logger } from '@/lib/logger'
 import { buildPageMetadata } from '@/lib/seo/metadata'

@@ -99,8 +99,7 @@ export function availableCurrencies(plans: ListPlansResponse['plans']): string[]
 	const common = plans
 		.map((plan) => new Set(plan.prices.map((p) => p.currency)))
 		.reduce((acc, set) => new Set([...acc].filter((code) => set.has(code))))
-	const rank = (code: string) =>
-		code === 'usd' ? 0 : code === 'gbp' ? 1 : code === 'eur' ? 2 : 3
+	const rank = (code: string) => (code === 'usd' ? 0 : code === 'gbp' ? 1 : code === 'eur' ? 2 : 3)
 	return [...common].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
 }
 
