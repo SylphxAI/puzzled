@@ -4,7 +4,13 @@ import { join, resolve } from 'node:path'
 
 const root = resolve(import.meta.dir, '..')
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
-type Job = { 'runs-on'?: unknown; uses?: string; if?: string; env?: Record<string, string> }
+type Job = {
+	'runs-on'?: unknown
+	uses?: string
+	if?: string
+	needs?: string[]
+	env?: Record<string, string>
+}
 type Workflow = { jobs: Record<string, Job> }
 const workflow = (name: string) => Bun.YAML.parse(read(`.github/workflows/${name}.yml`)) as Workflow
 const reusable = new Set([
@@ -45,7 +51,7 @@ describe('self-hosted CI contract', () => {
 
 	test('browser infrastructure is accepted on PRs, not just after merge', () => {
 		const verify = workflow('verify')
-		for (const name of ['a11y', 'lighthouse']) {
+		for (const name of ['a11y', 'lighthouse', 'craft']) {
 			expect(verify.jobs[name].if).toBe(
 				"fromJSON(needs.plan.outputs.run).build && (github.event_name != 'pull_request' || fromJSON(needs.plan.outputs.run).browser)",
 			)
@@ -55,6 +61,15 @@ describe('self-hosted CI contract', () => {
 		)
 	})
 
+	test('the fixture craft specs gate the verified marker and cannot skip', () => {
+		const verify = read('.github/workflows/verify.yml')
+		expect(workflow('verify').jobs.verified.needs).toContain('craft')
+		for (const spec of ['board-craft', 'home-craft', 'phone-first', 'pricing'])
+			expect(verify, spec).toContain(`e2e-tests/${spec}.e2e.ts`)
+		expect(verify).toContain("grep -Eq '[0-9]+ skipped'")
+		expect(verify).toContain('"salesOpen":true')
+	})
+
 	test('browser installs are job-isolated and Lighthouse resolves the package revision', () => {
 		const verify = read('.github/workflows/verify.yml')
 		expect(verify).toContain('ms-playwright-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-a11y')
@@ -62,6 +77,7 @@ describe('self-hosted CI contract', () => {
 			'ms-playwright-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-captures',
 		)
 		expect(verify).toContain('ms-playwright-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-lighthouse')
+		expect(verify).toContain('ms-playwright-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-craft')
 		expect(verify).toContain("require('playwright').chromium.executablePath()")
 		expect(verify).not.toContain('$(find ')
 	})
