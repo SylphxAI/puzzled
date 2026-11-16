@@ -8,8 +8,18 @@ type Job = {
 	'runs-on'?: unknown
 	uses?: string
 	if?: string
-	needs?: string[]
+	needs?: string | string[]
 	env?: Record<string, string>
+	outputs?: Record<string, string>
+	with?: Record<string, string>
+	steps?: {
+		id?: string
+		name?: string
+		uses?: string
+		run?: string
+		if?: string
+		with?: Record<string, string>
+	}[]
 }
 type Workflow = { on?: Record<string, unknown> | string[] | string; jobs: Record<string, Job> }
 const workflow = (name: string) => Bun.YAML.parse(read(`.github/workflows/${name}.yml`)) as Workflow
@@ -113,18 +123,6 @@ describe('self-hosted CI contract', () => {
 		)
 	})
 
-	test('browser infrastructure is accepted on PRs, not just after merge', () => {
-		const verify = workflow('verify')
-		for (const name of ['a11y', 'lighthouse', 'craft']) {
-			expect(verify.jobs[name].if).toBe(
-				"fromJSON(needs.plan.outputs.run).build && (github.event_name != 'pull_request' || fromJSON(needs.plan.outputs.run).browser)",
-			)
-		}
-		expect(read('.github/workflows/verify.yml')).toContain(
-			'browser: apps/puzzled/playwright.config.ts apps/puzzled/e2e-tests/*',
-		)
-	})
-
 	test('the fixture craft specs gate the verified marker and cannot skip', () => {
 		const verify = read('.github/workflows/verify.yml')
 		expect(workflow('verify').jobs.verified.needs).toContain('craft')
@@ -183,3 +181,257 @@ for (const ci of [false, true]) {
 		},
 	)
 }
+
+// This deliberately covers only the expression subset used by these workflows.
+// actionlint and workflow-lint remain the authoritative syntax/context validators.
+type Context = {
+	github: { event_name: string; event: { pull_request: { draft: boolean } } }
+	inputs: { run: string }
+	needs: Record<string, { result: string; outputs: { run: string } }>
+}
+const context = (event = 'pull_request', draft = false, supplied = true): Context => ({
+	github: { event_name: event, event: { pull_request: { draft } } },
+	inputs: { run: supplied ? JSON.stringify({ build: true, rust: true, browser: true }) : '' },
+	needs: Object.fromEntries(
+		[
+			'main-state',
+			'fast-gate',
+			'plan',
+			'build',
+			'rust-api',
+			'migrations',
+			'suite',
+			'seo-contract',
+			'a11y',
+			'lighthouse',
+			'craft',
+		].map((name) => [
+			name,
+			{
+				result: 'success',
+				outputs: {
+					run: JSON.stringify({ build: true, rust: true, browser: true, migrations: true }),
+				},
+			},
+		]),
+	),
+})
+const evaluate = (source: string, ctx: Context, cancelled = false): unknown => {
+	const expression = source
+		.replace(/^\$\{\{\s*|\s*\}\}$/g, '')
+		.replace(/needs\.([\w-]+)/g, 'needs["$1"]')
+	return new Function(
+		'github',
+		'inputs',
+		'needs',
+		'fromJSON',
+		'always',
+		'cancelled',
+		`return (${expression})`,
+	)(
+		ctx.github,
+		ctx.inputs,
+		ctx.needs,
+		JSON.parse,
+		() => true,
+		() => cancelled,
+	)
+}
+const enabled = (job: Job, ctx: Context, cancelled = false) => {
+	const dependencies = typeof job.needs === 'string' ? [job.needs] : job.needs || []
+	// GitHub supplies implicit success() unless the condition has a status function.
+	if (!/\b(always|cancelled|failure|success)\(/.test(job.if || '')) {
+		if (cancelled || dependencies.some((name) => ctx.needs[name]?.result !== 'success'))
+			return false
+	}
+	return Boolean(job.if ? evaluate(job.if, ctx, cancelled) : true)
+}
+const required = (job: Job, ctx: Context) => {
+	const source = job.steps?.find((step) => step.uses?.includes('/needs-pass@'))?.with?.required
+	if (!source) throw new Error('Aggregate must use needs-pass with explicit required jobs')
+	return source
+		.replace(/\$\{\{([\s\S]*?)\}\}/g, (_, expression) => String(evaluate(expression, ctx)))
+		.split(',')
+		.map((name) => name.trim())
+		.filter(Boolean)
+		.sort()
+}
+
+describe('causal CI selection and verdicts', () => {
+	const ci = workflow('ci').jobs
+	const verify = workflow('verify').jobs
+
+	test('the caller shares its resolved range and ready PRs use only the full Rust lane', () => {
+		expect(ci['fast-gate'].outputs).toEqual({
+			base: `\${{ steps.range.outputs.base }}`,
+			run: `\${{ steps.range.outputs.run }}`,
+		})
+		expect(ci.suite.needs).toBe('fast-gate')
+		expect(ci.suite.with?.run).toBe(`\${{ needs.fast-gate.outputs.run }}`)
+		for (const [event, draft, suite, rust, main] of [
+			['pull_request', false, true, false, false],
+			['pull_request', true, false, true, false],
+			['merge_group', false, false, true, true],
+			['workflow_dispatch', false, false, true, false],
+		] as const) {
+			const ctx = context(event, draft)
+			expect(enabled(ci.suite, ctx)).toBe(suite)
+			expect(enabled(ci['rust-api'], ctx)).toBe(rust)
+			expect(enabled(ci['main-state'], ctx)).toBe(main)
+			expect(enabled(ci.migrations, ctx)).toBe(true)
+			expect(required(ci['ci-ok'], ctx)).toEqual(
+				[
+					'fast-gate',
+					...(suite ? ['suite'] : []),
+					...(rust ? ['rust-api'] : []),
+					...(main ? ['main-state'] : []),
+					'migrations',
+				].sort(),
+			)
+		}
+	})
+
+	test('supplied lanes skip Plan without skipping selected jobs or build consumers', () => {
+		const ctx = context()
+		ctx.needs.plan.result = 'skipped'
+		expect(enabled(verify.plan, ctx)).toBe(false)
+		for (const name of ['build', 'rust-api', 'seo-contract', 'a11y', 'lighthouse', 'craft']) {
+			expect(enabled(verify[name], ctx), name).toBe(true)
+		}
+		expect(required(verify.verified, ctx)).toEqual([
+			'a11y',
+			'build',
+			'craft',
+			'lighthouse',
+			'rust-api',
+			'seo-contract',
+		])
+	})
+
+	test('standalone push and dispatch use Plan, and browser acceptance is not PR-only', () => {
+		for (const event of ['push', 'workflow_dispatch']) {
+			const ctx = context(event, false, false)
+			expect(enabled(verify.plan, ctx)).toBe(true)
+			ctx.needs.plan.outputs.run = JSON.stringify({ build: true, rust: true, browser: false })
+			for (const name of ['build', 'rust-api', 'seo-contract', 'a11y', 'lighthouse', 'craft']) {
+				expect(enabled(verify[name], ctx), `${event}:${name}`).toBe(true)
+			}
+			expect(required(verify.verified, ctx)).toEqual([
+				'a11y',
+				'build',
+				'craft',
+				'lighthouse',
+				'plan',
+				'rust-api',
+				'seo-contract',
+			])
+		}
+	})
+
+	test('complementary selections omit only their unselected producers and transfers', () => {
+		for (const [lanes, selected] of [
+			[{ build: false, rust: true, browser: true }, ['rust-api']],
+			[{ build: true, rust: false, browser: false }, ['build', 'seo-contract']],
+			[{ build: false, rust: false, browser: false }, []],
+		] as const) {
+			const ctx = context()
+			ctx.inputs.run = JSON.stringify(lanes)
+			ctx.needs.plan.result = 'skipped'
+			ctx.needs.build.result = lanes.build ? 'success' : 'skipped'
+			for (const name of ['build', 'rust-api', 'seo-contract', 'a11y', 'lighthouse', 'craft']) {
+				expect(enabled(verify[name], ctx), name).toBe(
+					(selected as readonly string[]).includes(name),
+				)
+			}
+			expect(required(verify.verified, ctx)).toEqual([...selected].sort())
+		}
+	})
+
+	test('failed, cancelled, skipped or missing selected evidence cannot become an intentional skip', () => {
+		for (const result of ['failure', 'cancelled', 'skipped', '']) {
+			const standalone = context('push', false, false)
+			standalone.needs.plan = { result, outputs: { run: '' } }
+			expect(enabled(verify.build, standalone)).toBe(false)
+			expect(enabled(verify['rust-api'], standalone)).toBe(false)
+			expect(required(verify.verified, standalone)).toContain('plan')
+			const supplied = context()
+			supplied.needs.build.result = result
+			for (const name of ['seo-contract', 'a11y', 'lighthouse', 'craft']) {
+				expect(enabled(verify[name], supplied), name).toBe(false)
+				expect(required(verify.verified, supplied), name).toContain(name)
+			}
+			expect(required(verify.verified, supplied)).toContain('build')
+			supplied.needs['fast-gate'] = { result, outputs: { run: '' } }
+			expect(enabled(ci.suite, supplied)).toBe(false)
+			expect(required(ci['ci-ok'], supplied)).toEqual(['fast-gate', 'suite'])
+		}
+	})
+
+	test('both terminal verdicts always run, cancel their work and explicitly refuse cancellation', () => {
+		for (const job of [ci['ci-ok'], verify.verified]) {
+			expect(job.if).toBe('always()')
+			expect(job.steps?.find((step) => step.uses?.includes('/needs-pass@'))?.if).toBe(
+				`\${{ !cancelled() }}`,
+			)
+			expect(job.steps?.some((step) => step.if === 'cancelled()' && step.run === 'exit 1')).toBe(
+				true,
+			)
+		}
+		const ctx = context()
+		for (const name of ['build', 'rust-api', 'seo-contract', 'a11y', 'lighthouse', 'craft']) {
+			expect(enabled(verify[name], ctx, true), name).toBe(false)
+		}
+	})
+
+	test('caller and standalone range selection share immutable semantics and overlapping lane inputs', () => {
+		const range = (job: Job) => job.steps?.find((step) => step.id === 'range')
+		const caller = range(ci['fast-gate'])
+		const standalone = range(verify.plan)
+		const lanes = (value: string) =>
+			Object.fromEntries(
+				value
+					.trim()
+					.split('\n')
+					.map((line) => {
+						const [name, ...patterns] = line.trim().split(':')
+						return [name, patterns.join(':').trim()]
+					}),
+			)
+		expect(caller?.uses).toBe(
+			'SylphxAI/.github/.github/actions/ci-range@821eafc6aa821e29d8292273c6548566495970c4',
+		)
+		expect(standalone?.uses).toBe(caller?.uses)
+		expect(caller?.with?.['global-patterns']).toBe('')
+		expect(standalone?.with?.['global-patterns']).toBe('')
+		const a = lanes(caller?.with?.lanes || '')
+		const b = lanes(standalone?.with?.lanes || '')
+		expect(Object.keys(b).sort()).toEqual(['browser', 'build', 'rust'])
+		for (const [name, patterns] of Object.entries(b)) expect(a[name], name).toBe(patterns)
+		// Bun reads this workspace config to preload the unit-test setup.
+		expect(a.web.split(' ')).toContain('apps/puzzled/bunfig.toml')
+		expect(b.build.split(' ')).toContain('apps/puzzled/bunfig.toml')
+	})
+
+	test('release compilation stays with database-backed Rust and every served-build consumer verifies the handoff', () => {
+		expect(verify['rust-api'].env?.PUZZLED_REQUIRE_DB_TESTS).toBe('1')
+		const commands = (job: Job) => job.steps?.map((step) => step.run || '').join('\n') || ''
+		expect(commands(verify['rust-api'])).toContain(
+			'cargo build --locked --release -p puzzled-server',
+		)
+		expect(commands(verify['rust-api'])).toContain(
+			'cargo test --locked -p puzzled-core -p puzzled-server',
+		)
+		expect(commands(verify.build)).not.toContain('cargo build')
+		for (const name of ['seo-contract', 'a11y', 'lighthouse', 'craft']) {
+			expect(verify[name].needs).toContain('build')
+			expect(verify[name].if).toContain("needs.build.result == 'success'")
+			expect(
+				verify[name].steps?.some(
+					(step) => step.with?.mode === 'get' && step.with?.name === 'web-build',
+				),
+				name,
+			).toBe(true)
+			expect(commands(verify[name]), name).toContain('sha256sum -c web-build.tar.sha256')
+		}
+	})
+})

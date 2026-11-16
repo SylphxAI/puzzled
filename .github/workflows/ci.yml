@@ -3,9 +3,8 @@ name: CI
 # Optimistic merge (SylphxAI/.github docs/optimistic-merge.md): the merge queue
 # and drafts run only the fast gate below; a pull request marked ready also
 # runs the affected full suite (verify.yml); verify.yml runs again on main
-# after merge. Ruleset checks keep their names: the seven gate jobs
-# named below are what the ruleset requires today, and `ci-ok` aggregates them
-# for the day the ruleset requires one check.
+# after merge. `ci-ok` is the required aggregate; the independent
+# migration-guard workflow keeps its required check name.
 
 on:
   pull_request:
@@ -46,62 +45,77 @@ jobs:
         with:
           mode: observe
 
-  plan:
-    name: Plan
-    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || (github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard') }}
-    timeout-minutes: 10
+  # One checkout, range and install; standards and secret scanning always run.
+  fast-gate:
+    name: Fast gate
+    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
+    timeout-minutes: 35
     outputs:
       base: ${{ steps.range.outputs.base }}
       run: ${{ steps.range.outputs.run }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           filter: blob:none
+          persist-credentials: false
 
       - id: range
-        uses: SylphxAI/.github/.github/actions/ci-range@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+        uses: SylphxAI/.github/.github/actions/ci-range@821eafc6aa821e29d8292273c6548566495970c4
         with:
+          global-patterns: ''
           lanes: |
-            identifiers:
-            lint:
-            security:
-            web: apps/* packages/* proto/* brand/* package.json bun.lock bunfig.toml turbo.json biome.json buf.yaml buf.gen.yaml scripts/*
-            rust: crates/* proto/* Cargo.toml Cargo.lock
-            build: apps/* packages/* proto/* crates/* package.json bun.lock Cargo.toml Cargo.lock
-            migrations: apps/puzzled/atlas/* apps/puzzled/atlas.hcl crates/puzzled-server/src/*_tests.rs crates/puzzled-server/src/capabilities/preferences/* scripts/check-migration-order*
-
-  # ==========================================
-  # Repository Standards
-  # ==========================================
-
-  identifiers:
-    name: Identifiers
-    needs: plan
-    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || (github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard') }}
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          fetch-depth: 0
+            web: apps/puzzled/src/* apps/puzzled/tests/* apps/puzzled/e2e-tests/* apps/puzzled/scripts/* apps/puzzled/public/* apps/puzzled/*.ts apps/puzzled/*.json apps/puzzled/*.mjs apps/puzzled/*.cjs apps/puzzled/*.css apps/puzzled/bunfig.toml apps/puzzled/Dockerfile packages/* proto/* brand/* config/commercial/* package.json bun.lock bunfig.toml turbo.json biome.json buf.yaml buf.gen.yaml scripts/* .github/workflows/ci.yml .github/workflows/verify.yml
+            build: apps/puzzled/src/* apps/puzzled/tests/* apps/puzzled/e2e-tests/* apps/puzzled/scripts/* apps/puzzled/public/* apps/puzzled/*.ts apps/puzzled/*.json apps/puzzled/*.mjs apps/puzzled/*.cjs apps/puzzled/*.css apps/puzzled/bunfig.toml apps/puzzled/Dockerfile packages/* proto/* brand/* config/commercial/* package.json bun.lock bunfig.toml turbo.json biome.json buf.yaml buf.gen.yaml scripts/* .github/workflows/ci.yml .github/workflows/verify.yml
+            rust: crates/* proto/* Cargo.toml Cargo.lock rust-toolchain* .cargo/* apps/puzzled/atlas/* apps/puzzled/atlas.hcl scripts/check-dockerfile-puzzled-core.sh scripts/check-migration-order* .github/workflows/ci.yml .github/workflows/verify.yml
+            browser: apps/puzzled/playwright.config.ts apps/puzzled/e2e-tests/* apps/puzzled/scripts/serve-puzzle-fixture.ts scripts/ci-contract.test.ts package.json apps/puzzled/package.json bun.lock .github/workflows/ci.yml .github/workflows/verify.yml
+            migrations: apps/puzzled/atlas/* apps/puzzled/atlas.hcl crates/puzzled-server/src/*_tests.rs crates/puzzled-server/src/capabilities/preferences/* scripts/check-migration-order* .github/workflows/ci.yml
 
       - name: Non-v7 ids on added lines (owner standards/identifiers.md)
         uses: SylphxAI/.github/.github/actions/identifiers@e4a5ea41cbcc87cd93914f89f0d7c3981c868bf9
 
-  # ==========================================
-  # Code Quality
-  # ==========================================
-
-  lint-and-typecheck:
-    name: Lint & Type Check
-    needs: plan
-    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: SylphxAI/.github/.github/actions/chat-senders@5cfd55a41435cca8e4b7caf6506faf04ca08d200
         with:
-          fetch-depth: 0
-          filter: blob:none
+          mode: fail
+
+      - name: Secret detection
+        # Binary install (not the GH Action docker path): self-hosted
+        # sylphx-linux-standard runners may lack a Docker daemon; docker-based
+        # trufflehog then exits 125 and blocks required Security Scan + Auto Deploy.
+        # Keep fail-closed verified secret scan semantics.
+        run: |
+          set -euo pipefail
+          VER=3.88.33
+          ARCH=$(uname -m)
+          case "$ARCH" in
+            x86_64|amd64) TH_ARCH=amd64 ;;
+            aarch64|arm64) TH_ARCH=arm64 ;;
+            *) echo "unsupported arch: $ARCH"; exit 1 ;;
+          esac
+          URL="https://github.com/trufflesecurity/trufflehog/releases/download/v${VER}/trufflehog_${VER}_linux_${TH_ARCH}.tar.gz"
+          TGZ=/tmp/trufflehog.tgz
+          for attempt in 1 2 3 4 5; do
+            if curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 -o "$TGZ" "$URL" \
+              && tar -tzf "$TGZ" >/dev/null \
+              && tar -xzf "$TGZ" -C /tmp trufflehog; then
+              break
+            fi
+            echo "trufflehog download attempt ${attempt} failed; retrying..."
+            rm -f "$TGZ" /tmp/trufflehog
+            if [ "$attempt" -eq 5 ]; then
+              echo "trufflehog download failed after retries"
+              exit 1
+            fi
+            sleep $((attempt * 3))
+          done
+          chmod +x /tmp/trufflehog
+          BASE="${{ steps.range.outputs.base }}"
+          HEAD="${{ github.sha }}"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            BASE="$(git rev-list --max-parents=0 HEAD | head -1)"
+          fi
+          echo "trufflehog scan base=$BASE head=$HEAD"
+          /tmp/trufflehog git file://. --since-commit "$BASE" --branch "$HEAD" --only-verified --fail --no-update
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -164,114 +178,25 @@ jobs:
             bunx turbo typecheck --filter=@sylphx/puzzled --filter=@sylphx/ui --concurrency=1
           fi
         env:
-          TURBO_SCM_BASE: ${{ needs.plan.outputs.base }}
+          TURBO_SCM_BASE: ${{ steps.range.outputs.base }}
           TURBO_SCM_HEAD: ${{ github.sha }}
           NODE_OPTIONS: '--max-old-space-size=5120'
           SKIP_ENV_VALIDATION: 'true'
 
-  # ==========================================
-  # Security
-  # ==========================================
+      - name: No job selects a billed runner
+        run: bash .github/scripts/check-ci-runner-profile.sh
 
-  security:
-    name: Security Scan
-    needs: plan
-    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || (github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard') }}
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Secret detection
-        # Binary install (not the GH Action docker path): self-hosted
-        # sylphx-linux-standard runners may lack a Docker daemon; docker-based
-        # trufflehog then exits 125 and blocks required Security Scan + Auto Deploy.
-        # Keep fail-closed verified secret scan semantics.
-        run: |
-          set -euo pipefail
-          VER=3.88.33
-          ARCH=$(uname -m)
-          case "$ARCH" in
-            x86_64|amd64) TH_ARCH=amd64 ;;
-            aarch64|arm64) TH_ARCH=arm64 ;;
-            *) echo "unsupported arch: $ARCH"; exit 1 ;;
-          esac
-          URL="https://github.com/trufflesecurity/trufflehog/releases/download/v${VER}/trufflehog_${VER}_linux_${TH_ARCH}.tar.gz"
-          TGZ=/tmp/trufflehog.tgz
-          for attempt in 1 2 3 4 5; do
-            if curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 -o "$TGZ" "$URL" \
-              && tar -tzf "$TGZ" >/dev/null \
-              && tar -xzf "$TGZ" -C /tmp trufflehog; then
-              break
-            fi
-            echo "trufflehog download attempt ${attempt} failed; retrying..."
-            rm -f "$TGZ" /tmp/trufflehog
-            if [ "$attempt" -eq 5 ]; then
-              echo "trufflehog download failed after retries"
-              exit 1
-            fi
-            sleep $((attempt * 3))
-          done
-          chmod +x /tmp/trufflehog
-          BASE="${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}"
-          HEAD="${{ github.sha }}"
-          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
-            BASE="$(git rev-list --max-parents=0 HEAD | head -1)"
-          fi
-          echo "trufflehog scan base=$BASE head=$HEAD"
-          /tmp/trufflehog git file://. --since-commit "$BASE" --branch "$HEAD" --only-verified --fail --no-update
-
-  # ==========================================
-  # Unit Tests (affected by the change)
-  # ==========================================
-
-  unit-tests:
-    name: Unit Tests
-    needs: plan
-    if: fromJSON(needs.plan.outputs.run).web
-    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.4.4"
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '22'
-
-      - name: Cache bun modules
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
-          restore-keys: ${{ runner.os }}-bun-
-
-      # bun 1.3.x --frozen-lockfile false-positives here; committed lock remains authority.
-      # Outer retry: fetch-retries does not cover "Fail extracting tarball" (MQ flakes).
-      - name: bun install
-        run: |
-          set -euo pipefail
-          for attempt in 1 2 3 4 5; do
-            if bun install --frozen-lockfile --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
-              exit 0
-            fi
-            echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
-            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache
-            sleep $((attempt * 3))
-          done
-          echo "bun install failed after retries"
-          exit 1
+      - name: Dockerfile copies puzzled-core
+        run: bash scripts/check-dockerfile-puzzled-core.sh
 
       - name: Strict Turbo preserves desk controls
-        run: bun test scripts/turbo-desk-env.test.ts
+        if: fromJSON(steps.range.outputs.run).web
+        run: bun test --isolate scripts/turbo-desk-env.test.ts
 
       # bun test has no affected mode: the lane is path-selected (web paths)
       # and runs the whole unit suite when it runs.
       - name: Run unit tests
+        if: fromJSON(steps.range.outputs.run).web
         run: bun run test:unit
         working-directory: apps/puzzled
         env:
@@ -279,53 +204,10 @@ jobs:
           DATABASE_URL: 'postgresql://test:test@localhost:5432/test'
           SKIP_ENV_VALIDATION: 'true'
 
-  # ==========================================
-  # Build inputs: the packaging guard and a locked compile check. The
-  # production Next.js build and the release binary are verify.yml.
-  # ==========================================
-
-  build:
-    name: Build
-    needs: plan
-    if: fromJSON(needs.plan.outputs.run).build
-    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Install protoc 36.1 (Edition 2024 floor)
-        run: |
-          set -euo pipefail
-          curl -fsSL https://github.com/protocolbuffers/protobuf/releases/download/v36.1/protoc-36.1-linux-x86_64.zip -o protoc.zip
-          echo "c4bc672d9d49214dc8cafdceadf4df92182d6ca8e3ec65a56b2d7de5602669b4  protoc.zip" | sha256sum -c -
-          unzip -qo protoc.zip -d "$HOME/.local"
-          test "$("$HOME/.local/bin/protoc" --version)" = "libprotoc 36.1"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          echo "PROTOC=$HOME/.local/bin/protoc" >> "$GITHUB_ENV"
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
-        with:
-          components: 
-
-      - name: Put cargo on PATH
-        run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
-
-      - uses: SylphxAI/.github/.github/actions/rust-sccache@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
-        with:
-          s3-access-key: ${{ secrets.SYLPHX_CI_CACHE_ACCESS_KEY }}
-          s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
-
-      - name: Dockerfile copies puzzled-core
-        run: bash scripts/check-dockerfile-puzzled-core.sh
-
-      - name: Locked compile check
-        run: cargo check --locked -p puzzled-core -p puzzled-server
-
   rust-api:
     name: Rust API
-    needs: plan
-    if: fromJSON(needs.plan.outputs.run).rust
+    needs: fast-gate
+    if: fromJSON(needs.fast-gate.outputs.run).rust && (github.event_name != 'pull_request' || github.event.pull_request.draft)
     runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
     timeout-minutes: 30
     steps:
@@ -361,10 +243,10 @@ jobs:
         run: cargo fmt -p puzzled-core -p puzzled-server -- --check
 
       - name: cargo clippy
-        run: cargo clippy -p puzzled-core -p puzzled-server -- -D warnings -A clippy::double_parens -A clippy::too_many_arguments
+        run: cargo clippy --locked -p puzzled-core -p puzzled-server -- -D warnings -A clippy::double_parens -A clippy::too_many_arguments
 
       - name: cargo test (unit, no database)
-        run: cargo test -p puzzled-core -p puzzled-server --lib --bins
+        run: cargo test --locked -p puzzled-core -p puzzled-server --lib --bins
 
   # ==========================================
   # Database Migrations: exercised before they reach main, because DDL cannot
@@ -374,8 +256,8 @@ jobs:
 
   migrations:
     name: Migration Integrity
-    needs: plan
-    if: fromJSON(needs.plan.outputs.run).migrations
+    needs: fast-gate
+    if: fromJSON(needs.fast-gate.outputs.run).migrations
     runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
     timeout-minutes: 30
     env:
@@ -486,7 +368,7 @@ jobs:
         run: |
           set -euo pipefail
           LOG="${RUNNER_TEMP}/puzzled-migration-backed-tests.log"
-          CARGO_TERM_COLOR=never cargo test -p puzzled-server --lib -- checkout_attempt_tests metrics_tests billing_flow_tests billing_cutover_tests money_access_tests result_shares_tests account_erasure_tests account_deletion retention_push_tests guest_ownership_tests today_progress_tests | tee "$LOG"
+          CARGO_TERM_COLOR=never cargo test --locked -p puzzled-server --lib -- checkout_attempt_tests metrics_tests billing_flow_tests billing_cutover_tests money_access_tests result_shares_tests account_erasure_tests account_deletion retention_push_tests guest_ownership_tests today_progress_tests | tee "$LOG"
           grep -Eq '^test checkout_attempt_tests::concurrent_requests_submit_once_and_a_lost_reply_recovers_the_named_resource \.\.\. ok$' "$LOG"
           grep -Eq '^test checkout_attempt_tests::a_crash_before_the_network_call_remains_pending_without_replay \.\.\. ok$' "$LOG"
           grep -Eq '^test checkout_attempt_tests::fixture_registration_is_atomic_idempotent_and_cannot_reclassify_a_player \.\.\. ok$' "$LOG"
@@ -531,43 +413,30 @@ jobs:
       id-token: write
     name: Suite
     if: github.event_name == 'pull_request' && !github.event.pull_request.draft
+    needs: fast-gate
+    with:
+      run: ${{ needs.fast-gate.outputs.run }}
     uses: ./.github/workflows/verify.yml
     secrets: inherit
-
-  # The repository's chat senders: a forbidden chat API host in the tree fails
-  # the gate. The action checks only the lines the event adds and reports
-  # nothing without full history, so the checkout fetches all of it.
-  chat-senders:
-    name: Chat senders
-    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || (github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard') }}
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-
-      - uses: SylphxAI/.github/.github/actions/chat-senders@5cfd55a41435cca8e4b7caf6506faf04ca08d200
-        with:
-          mode: fail
 
   # The required aggregate check.
   ci-ok:
     name: ci-ok
-    if: always() && !cancelled()
-    needs: [main-state, plan, identifiers, lint-and-typecheck, security, unit-tests, build, rust-api, migrations, chat-senders, suite]
+    if: always()
+    needs: [main-state, fast-gate, rust-api, migrations, suite]
     runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || 'sylphx-linux-control' }}
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@f27e4105e2da7d681ecebe946634bdda7ba553ba # main
+      - if: ${{ !cancelled() }}
+        uses: SylphxAI/.github/.github/actions/needs-pass@f27e4105e2da7d681ecebe946634bdda7ba553ba # main
         with:
           needs: ${{ toJSON(needs) }}
-          required: >-
-            plan,chat-senders,
-            ${{ (github.event_name == 'merge_group') && 'main-state' || '' }},
-            ${{ (needs.plan.result == 'success') && 'identifiers,lint-and-typecheck,security' || '' }},
-            ${{ (needs.plan.result == 'success' && fromJSON(needs.plan.outputs.run).web) && 'unit-tests' || '' }},
-            ${{ (needs.plan.result == 'success' && fromJSON(needs.plan.outputs.run).build) && 'build' || '' }},
-            ${{ (needs.plan.result == 'success' && fromJSON(needs.plan.outputs.run).rust) && 'rust-api' || '' }},
-            ${{ (needs.plan.result == 'success' && fromJSON(needs.plan.outputs.run).migrations) && 'migrations' || '' }},
+          required: |
+            fast-gate,
+            ${{ github.event_name == 'merge_group' && 'main-state' || '' }},
+            ${{ (needs.fast-gate.result == 'success' && fromJSON(needs.fast-gate.outputs.run).rust && (github.event_name != 'pull_request' || github.event.pull_request.draft)) && 'rust-api' || '' }},
+            ${{ (needs.fast-gate.result == 'success' && fromJSON(needs.fast-gate.outputs.run).migrations) && 'migrations' || '' }},
             ${{ (github.event_name == 'pull_request' && !github.event.pull_request.draft) && 'suite' || '' }}
+      - name: Cancellation is not a passing verdict
+        if: cancelled()
+        run: exit 1
