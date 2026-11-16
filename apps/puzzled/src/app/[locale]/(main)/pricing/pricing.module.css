@@ -1,0 +1,255 @@
+.page {
+	background: #fcfbf8;
+	--pricing-tray: #f2efe8;
+	--pricing-card: #fcfbf8;
+	--pricing-edge: #ddd7cb;
+}
+
+.shell {
+	max-width: 69rem;
+}
+
+.intro {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	margin-bottom: 24px;
+	max-width: 100%;
+}
+
+.eyebrow {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	font-weight: 700;
+}
+
+.eyebrow::before {
+	content: "+";
+	display: grid;
+	place-items: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 8px;
+	background: #f4b42a;
+	color: #1a1712;
+	font-size: 22px;
+	line-height: 1;
+	box-shadow: 0 3px 0 #c98a0b;
+}
+
+.title {
+	font-weight: 800;
+	letter-spacing: -0.035em;
+}
+
+.title:lang(zh),
+.title:lang(ja),
+.title:lang(ko) {
+	letter-spacing: 0;
+	line-height: 1.3;
+}
+
+.tray {
+	display: grid;
+	gap: 24px;
+	min-width: 0;
+}
+
+.offer {
+	min-width: 0;
+}
+
+.card {
+	background: var(--pricing-card);
+	border: 1px solid var(--pricing-edge);
+	border-radius: 20px;
+	box-shadow: 0 4px 0 var(--pricing-edge);
+}
+
+.featured {
+	border: 2px solid var(--color-foreground);
+	box-shadow: 0 4px 0 var(--color-foreground);
+}
+
+.cardHeading {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 16px;
+}
+
+.cardHeading h2 {
+	font-weight: 800;
+}
+
+.cardHeading h2 > span {
+	width: 16px;
+	height: 16px;
+	border-radius: 5px;
+	background: #f4b42a;
+	box-shadow: 0 3px 0 #c98a0b;
+}
+
+.option {
+	background: var(--pricing-card);
+	border-width: 2px;
+}
+
+.selected {
+	border-color: var(--color-foreground);
+	background: var(--pricing-tray);
+	box-shadow: 0 2px 0 var(--color-foreground);
+}
+
+.currency {
+	order: 1;
+	min-height: 48px;
+	margin-top: 16px;
+	flex-wrap: wrap;
+}
+
+.checkout {
+	min-height: 48px;
+	border-radius: 12px;
+	padding-block: 12px;
+	text-align: center;
+	text-wrap: balance;
+	line-height: 1.35;
+}
+
+.featured .checkout {
+	background: #f4b42a;
+	color: #1a1712;
+	box-shadow: 0 4px 0 #c98a0b;
+}
+
+.featured .checkout:hover {
+	background: #f7c24e;
+}
+
+.featured .checkout:active {
+	box-shadow: none;
+	transform: translateY(4px);
+}
+
+.free {
+	background: var(--pricing-tray);
+	border: 0;
+	border-radius: 20px;
+}
+
+@media (min-width: 1024px) {
+	.intro {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+	}
+
+	.intro h1 {
+		grid-column: 1;
+	}
+
+	.intro > p:last-child {
+		grid-column: 1 / -1;
+	}
+
+	.title {
+		font-size: 3rem;
+	}
+
+	.tray {
+		grid-template-columns: 1fr 1fr;
+		align-items: start;
+		gap: 24px;
+		padding: 20px;
+		border-radius: 28px;
+		background: var(--pricing-tray);
+	}
+
+	.currency {
+		grid-column: 2;
+		grid-row: 1 / 3;
+		align-self: start;
+		margin: 0;
+	}
+
+	.card {
+		padding: 20px;
+	}
+
+	.cardHeading h2 {
+		font-size: 26px;
+	}
+
+	.cardHeading {
+		min-height: 56px;
+	}
+
+	.option {
+		min-height: 60px;
+		padding: 8px 12px;
+	}
+}
+
+:global(.dark) .page {
+	background: #141311;
+	--pricing-tray: #1f1d1a;
+	--pricing-card: #141311;
+	--pricing-edge: #38342e;
+}
+
+.page > section:global(#plans) > div {
+	max-width: 69rem;
+}
+
+/* While sales are closed the hero above is full width, so the note keeps its left edge. */
+.page.closed > section:global(#plans) > div {
+	max-width: 76rem;
+}
+
+@media (max-width: 767px) {
+	.intro {
+		margin-bottom: 16px;
+	}
+
+	.eyebrow {
+		display: none;
+	}
+
+	.currency {
+		margin-top: 8px;
+	}
+
+	.cardHeading {
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: space-between;
+		margin-bottom: 12px;
+	}
+
+	.option {
+		padding-block: 6px;
+	}
+
+	.card > div:last-child {
+		margin-top: 12px;
+	}
+}
+
+.features {
+	display: grid;
+	gap: 6px;
+	margin-top: 16px;
+	color: var(--color-muted-foreground);
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.features li {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}

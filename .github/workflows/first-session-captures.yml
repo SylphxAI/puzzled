@@ -21,12 +21,15 @@ permissions:
   contents: read
 jobs:
   capture:
-    # Standard hosted minutes are free only for a public repository.
+    # Reference captures are public-only; execution remains self-hosted.
     if: github.event.repository.private == false
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Pin the Playwright browser cache
+        run: echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/ms-playwright-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-captures" >> "$GITHUB_ENV"
+
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: "1.4.4"

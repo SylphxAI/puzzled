@@ -3,10 +3,12 @@
 import { ExternalLink } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { trackGa4KeyEvent } from '@/features/analytics/lib/ga4-key-events'
 import { rememberCheckoutQuote } from '@/features/analytics/lib/google-tag'
 import { startCheckout } from '@/lib/connect/billing-client'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
+import styles from './pricing.module.css'
 
 type Props = {
 	planId: string
@@ -18,9 +20,13 @@ type Props = {
 	subscribed: boolean
 	label: string
 	loginReturnTo?: string
+	/** Safe in-product destination (e.g. a locked game) to return to after checkout. */
+	callbackUrl?: string
 	guestLabel?: string
 	/** What the buyer is agreeing to renew at, shown between the consent tick and the button. */
 	renewalNote?: string
+	/** Surface trigger label for begin_checkout telemetry. */
+	checkoutTrigger?: string
 }
 
 /** Starts checkout for one plan once the buyer has consented to immediate supply; guests are sent to sign in first. */
@@ -33,15 +39,16 @@ export function SubscribeButton({
 	subscribed,
 	label,
 	loginReturnTo = '/pricing',
+	callbackUrl,
 	guestLabel,
 	renewalNote,
+	checkoutTrigger = 'pricing_subscribe',
 }: Props) {
 	const t = useTranslations('plus.pricing')
 	const [busy, setBusy] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [consent, setConsent] = useState(false)
-	const buttonClass =
-		'pressable inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60'
+	const buttonClass = `${styles.checkout} pressable inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60`
 
 	if (!signedIn) {
 		return (
@@ -89,13 +96,31 @@ export function SubscribeButton({
 					setBusy(true)
 					setError(null)
 					try {
+						const billingInterval = planId.endsWith('_yearly')
+							? 'year'
+							: planId.endsWith('_monthly')
+								? 'month'
+								: 'once'
+						const planTier = planId.startsWith('family_') ? 'family' : 'plus'
+						const option = planId === 'individual_once' ? 'pass' : 'subscription'
+						trackGa4KeyEvent('begin_checkout', {
+							plan: planTier,
+							plan_sku: planId,
+							billing_interval: billingInterval,
+							checkout_trigger: checkoutTrigger,
+							option,
+							value: amountMinor / 100,
+							currency: currency.toUpperCase(),
+						})
 						// What the checkout return reports to Google Ads (kept only with consent).
 						rememberCheckoutQuote({
 							plan: planId,
 							value: amountMinor / 100,
 							currency: currency.toUpperCase(),
 						})
-						window.location.assign(await startCheckout(planId, locale, currency, consent))
+						window.location.assign(
+							await startCheckout(planId, locale, currency, consent, callbackUrl),
+						)
 					} catch (err) {
 						logger.error('plus.checkout-failed', { planId, error: err })
 						const message = err instanceof Error ? err.message : ''

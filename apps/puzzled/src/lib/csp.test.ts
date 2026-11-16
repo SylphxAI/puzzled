@@ -13,6 +13,7 @@ describe('content security policy', () => {
 		const scripts = directive(buildCsp('abc'), 'script-src')
 		expect(scripts).toBe("script-src 'self' 'nonce-abc' 'strict-dynamic'")
 		expect(buildCsp('abc')).not.toContain("'unsafe-eval'")
+		expect(directive(buildCsp('abc'), 'connect-src')).toBe("connect-src 'self'")
 	})
 
 	test('development adds unsafe-eval for React and HMR only', () => {

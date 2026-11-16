@@ -81,7 +81,7 @@ for (const [decision, access] of Object.entries(decisions)) {
 				run,
 				surface,
 				cards: (html.match(/aria-labelledby="plus-result-title"/g) ?? []).length,
-				pricing: (html.match(/href="[^"]*\/pricing"/g) ?? []).length,
+				pricing: (html.match(/href="[^"]*\/pricing(\?[^"]*)?"/g) ?? []).length,
 				share: html.includes('Share'),
 			})
 		}

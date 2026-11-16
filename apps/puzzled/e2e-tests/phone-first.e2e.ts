@@ -10,6 +10,22 @@ for (const viewport of [
 	test(`first visit keeps the whole puzzle, Play and consent clear at ${viewport.width}x${viewport.height}`, async ({
 		page,
 	}) => {
+		// The served build is plain HTTP on loopback, where this spec's WebKit
+		// would upgrade the build's own assets under `upgrade-insecure-requests`.
+		// Drop only that directive from the document; every other directive stays.
+		await page.route('**/*', async (route) => {
+			if (route.request().resourceType() !== 'document') return route.continue()
+			const response = await route.fetch({ maxRedirects: 0 })
+			const headers = response.headers()
+			const csp = headers['content-security-policy']
+			if (csp) {
+				headers['content-security-policy'] = csp
+					.split(';')
+					.filter((directive) => directive.trim() !== 'upgrade-insecure-requests')
+					.join(';')
+			}
+			return route.fulfill({ response, headers })
+		})
 		await page.setViewportSize(viewport)
 		await page.goto('/')
 		const card = page.locator('[data-day-puzzle-card]')
@@ -38,7 +54,7 @@ for (const viewport of [
 		})
 		expect(geometry.consent.bottom).toBeLessThanOrEqual(geometry.card.top)
 		expect(geometry.card.bottom).toBeLessThanOrEqual(geometry.nav.top)
-		expect(geometry.play.height).toBeGreaterThanOrEqual(44)
+		expect(geometry.play.height).toBeGreaterThanOrEqual(48)
 		expect(geometry.hit).toBe(true)
 		await expect(play).toHaveAttribute('href', /start=1#play$/)
 		await consent.getByRole('button', { name: 'Decline', exact: true }).click()

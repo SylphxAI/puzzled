@@ -9,10 +9,11 @@ import { LanguageSwitcher } from './language-switcher'
 import { Logo } from './logo'
 import { MobileNavSheet } from './mobile-nav-sheet'
 import { isActivePath, NAV_ITEMS } from './nav-items'
-import { UserMenu } from './user-menu'
+import { type InitialNavUser, UserMenu } from './user-menu'
 
 type TopNavProps = {
 	currentStreak?: number
+	initialUser?: InitialNavUser | null
 }
 
 /**
@@ -21,7 +22,7 @@ type TopNavProps = {
  * account controls. On a phone the destinations move to the tab bar and the
  * header keeps only the lockup, the streak and the menu.
  */
-export function TopNav({ currentStreak = 0 }: TopNavProps) {
+export function TopNav({ currentStreak = 0, initialUser }: TopNavProps) {
 	const t = useTranslations()
 	const pathname = usePathname()
 
@@ -84,7 +85,7 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 					</div>
 
 					<div className="hidden md:block">
-						<UserMenu size="md" />
+						<UserMenu size="md" initialUser={initialUser} />
 					</div>
 
 					<MobileNavSheet currentStreak={currentStreak} />

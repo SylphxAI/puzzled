@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
+import { POLICY_ACCEPTANCE } from './policy-consent'
 
 /**
  * The account recovery and email verification doors, with only the upstream
@@ -488,7 +489,11 @@ describe('sign up', () => {
 			return Response.json({ session: { token: 'private-session' }, is_new_user: false })
 		})
 		const response = await signup(
-			jsonPost('/api/identity/signup', { email: 'new@x.test', password: GOOD_PASSWORD }),
+			jsonPost('/api/identity/signup', {
+				...POLICY_ACCEPTANCE,
+				email: 'new@x.test',
+				password: GOOD_PASSWORD,
+			}),
 		)
 		expect(response.status).toBe(200)
 		expect(await response.json()).toEqual({ signedIn: true })
@@ -519,7 +524,11 @@ describe('sign up', () => {
 					)
 				})
 				const response = await signup(
-					jsonPost('/api/identity/signup', { email: 'new@x.test', password: GOOD_PASSWORD }),
+					jsonPost('/api/identity/signup', {
+						...POLICY_ACCEPTANCE,
+						email: 'new@x.test',
+						password: GOOD_PASSWORD,
+					}),
 				)
 				expect(response.status).toBe(502)
 				expect(await response.json()).toEqual({ error: 'signup_signin_failed', retrySignIn: true })
@@ -547,6 +556,7 @@ describe('sign up', () => {
 		)
 		await signup(
 			jsonPost('/api/identity/signup', {
+				...POLICY_ACCEPTANCE,
 				email: 'new@x.test',
 				password: GOOD_PASSWORD,
 				name: 'New',

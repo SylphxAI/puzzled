@@ -66,6 +66,7 @@
 	"offer": {
 		"resultTitle": "Jogue os {count} jogos e o arquivo",
 		"resultBody": "O desafio em destaque de hoje é sempre grátis. O Puzzled Plus libera todos os jogos, o arquivo dos dias anteriores e as suas estatísticas de cada um.",
+		"resultPrice": "{plan} · {price} por ano",
 		"day3Title": "{days} dias jogados. Ótimo começo.",
 		"day7Title": "{days} dias jogados. Você já é figurinha carimbada.",
 		"milestoneBody": "O Puzzled Plus libera os {count} jogos, o arquivo dos dias anteriores e as estatísticas de cada um. O desafio em destaque de hoje continua grátis."
@@ -77,6 +78,7 @@
 		"closed": "O Puzzled Plus ainda não está à venda. Por enquanto, todos os jogos são grátis.",
 		"checkoutPending": "Estamos confirmando sua assinatura. Esta página será atualizada automaticamente. Se demorar mais, atualize a página.",
 		"checkoutSuccess": "Boas-vindas ao Puzzled Plus. Todos os jogos e o arquivo estão liberados.",
+		"returnToGame": "Voltar ao quebra-cabeça",
 		"plan": {
 			"individual_once": "Puzzled Plus, passe de 3 dias",
 			"individual_monthly": "Puzzled Plus, mensal",

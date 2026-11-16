@@ -144,12 +144,14 @@ impl BillingConnectService {
 
     /// A Money checkout: the buyer's consent is recorded, then the server
     /// creates the session and the browser is sent to its hosted page.
+    #[allow(clippy::too_many_arguments)]
     async fn money_checkout(
         &self,
         money: &Money,
         identity: &VerifiedIdentity,
         req: &CreateCheckoutRequest,
         landing: Option<&Attribution>,
+        return_to: Option<&str>,
         request_id: Option<&str>,
     ) -> Result<String, CheckoutError> {
         let consent = money_checkout::Consent::require(req.immediate_supply_consent)?;
@@ -182,6 +184,7 @@ impl BillingConnectService {
                 locale,
                 &req.currency,
                 Attribution::for_checkout(stored.as_ref(), landing).as_ref(),
+                return_to,
                 consent,
             )
             .await;
@@ -194,6 +197,7 @@ impl BillingConnectService {
             locale,
             &req.currency,
             Attribution::for_checkout(stored.as_ref(), landing).as_ref(),
+            return_to,
             consent,
         )
         .await
@@ -207,15 +211,34 @@ impl BillingConnectService {
     ) -> Result<String, ConnectError> {
         let identity = Self::account(&ctx)?;
         require_purchase_allowed(&identity)?;
-        let landing = ctx
+        let cookie_attr = ctx
             .headers()
             .get_all(axum::http::header::COOKIE)
             .iter()
             .filter_map(|value| value.to_str().ok())
             .find_map(puzzled_core::attribution::from_cookie_header);
+        let session_attr = ctx
+            .headers()
+            .get("x-puzzled-attribution")
+            .and_then(|value| value.to_str().ok())
+            .map(str::trim)
+            .and_then(Attribution::from_cookie);
+        let landing = merge_landing_attribution(cookie_attr, session_attr);
+        let return_to = ctx
+            .headers()
+            .get("x-puzzled-return-to")
+            .and_then(|value| value.to_str().ok())
+            .and_then(money_checkout::safe_return_to);
         let (_, money) = self.store()?;
         let started = self
-            .money_checkout(money, &identity, &req, landing.as_ref(), request_id)
+            .money_checkout(
+                money,
+                &identity,
+                &req,
+                landing.as_ref(),
+                return_to.as_deref(),
+                request_id,
+            )
             .await;
         match started {
             Ok(url) => Ok(url),
@@ -766,9 +789,54 @@ pub fn billing_connect_service(state: AppState) -> Arc<BillingConnectService> {
     Arc::new(BillingConnectService::new(state))
 }
 
+/// Merge the durable attribution cookie with same-tab session attribution
+/// (`x-puzzled-attribution`) so ad click ids and UTMs survive sign-in even
+/// before optional marketing cookie consent is settled.
+fn merge_landing_attribution(
+    cookie_attr: Option<Attribution>,
+    session_attr: Option<Attribution>,
+) -> Option<Attribution> {
+    match (cookie_attr, session_attr) {
+        (None, None) => None,
+        (Some(cookie), None) => Some(cookie),
+        (None, Some(session)) => Some(session),
+        (Some(mut cookie), Some(session)) => {
+            let session_has_click = session.has_click_id();
+            if cookie.source.is_none() {
+                cookie.source = session.source;
+            }
+            if cookie.medium.is_none() {
+                cookie.medium = session.medium;
+            }
+            if cookie.campaign.is_none() {
+                cookie.campaign = session.campaign;
+            }
+            if cookie.term.is_none() {
+                cookie.term = session.term;
+            }
+            if cookie.content.is_none() {
+                cookie.content = session.content;
+            }
+            if cookie.referral.is_none() {
+                cookie.referral = session.referral;
+            }
+            if !cookie.has_click_id() && session_has_click {
+                cookie.gclid = session.gclid;
+                cookie.gbraid = session.gbraid;
+                cookie.wbraid = session.wbraid;
+                cookie.fbclid = session.fbclid;
+            }
+            Some(cookie)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::new_invite_code;
+
+    use super::merge_landing_attribution;
+    use puzzled_core::attribution::Attribution;
 
     #[test]
     fn invite_codes_are_ten_unambiguous_characters() {
@@ -779,6 +847,21 @@ mod tests {
             .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()));
         assert!(!code.contains(['O', '0', 'I', '1']));
         assert_ne!(code, new_invite_code());
+    }
+
+    #[test]
+    fn session_attribution_forwards_click_ids_when_cookie_is_absent_or_partial() {
+        let session =
+            Attribution::from_cookie("s%3Dgoogle%26m%3Dcpc%26g%3DCj0_session%26fb%3Dfb_1");
+        let from_session_only = merge_landing_attribution(None, session.clone()).expect("session");
+        assert_eq!(from_session_only.source.as_deref(), Some("google"));
+        assert_eq!(from_session_only.gclid.as_deref(), Some("Cj0_session"));
+        assert_eq!(from_session_only.fbclid.as_deref(), Some("fb_1"));
+
+        let analytics_only_cookie = Attribution::from_cookie("s=tryit&m=referral");
+        let merged = merge_landing_attribution(analytics_only_cookie, session).expect("merged");
+        assert_eq!(merged.source.as_deref(), Some("tryit"));
+        assert_eq!(merged.gclid.as_deref(), Some("Cj0_session"));
     }
 }
 

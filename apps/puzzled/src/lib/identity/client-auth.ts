@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { authIdValue, destIdentityOrigin } from './dest'
+import { isPolicyAcceptance, type PolicyAcceptance } from './policy-consent'
 
 /**
  * Puzzled's players are end users of its own Sylphx Auth instance, reached
@@ -93,8 +94,17 @@ async function call<T>(
 /** Create an account; Auth answers the same whether or not the email exists. */
 export async function signUp(
 	config: AuthConfig,
-	input: { email: string; password: string; name: string; verifyUrl: string; userAgent: string },
+	input: {
+		email: string
+		password: string
+		name: string
+		verifyUrl: string
+		userAgent: string
+		acceptance: PolicyAcceptance
+	},
 ): Promise<void> {
+	if (!isPolicyAcceptance(input.acceptance))
+		throw new AuthCallError(400, 'policy_acceptance_required')
 	await call(config, '/v1/client/sign-up', {
 		bearer: config.publishableKey,
 		userAgent: input.userAgent,
@@ -103,6 +113,7 @@ export async function signUp(
 			password: input.password,
 			name: input.name,
 			redirect_url: input.verifyUrl,
+			...input.acceptance,
 		},
 	})
 }
@@ -224,12 +235,20 @@ export async function socialProviders(config: AuthConfig): Promise<string[]> {
 }
 
 /** Auth's Google start door; Auth returns to `returnUrl` with `sylphx_ticket`. */
-export function googleStartUrl(config: AuthConfig, returnUrl: string): string {
+export function googleStartUrl(
+	config: AuthConfig,
+	returnUrl: string,
+	acceptance?: PolicyAcceptance,
+): string {
 	const query = new URLSearchParams({
 		publishable_key: config.publishableKey,
 		redirect_url: returnUrl,
 		session_mode: 'server',
 	})
+	if (acceptance) {
+		if (!isPolicyAcceptance(acceptance)) throw new AuthCallError(400, 'policy_acceptance_required')
+		for (const [key, value] of Object.entries(acceptance)) query.set(key, String(value))
+	}
 	return `${config.url}/v1/client/oauth/google/start?${query}`
 }
 

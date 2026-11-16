@@ -41,6 +41,8 @@ type MarketingFaqCommonProps = {
 	subtitle?: string
 	/** Two columns on desktop for short answers; one column for long prose. */
 	columns?: 1 | 2
+	/** Emit a standalone FAQPage script tag; disable when composed into an @graph block. */
+	emitStructuredData?: boolean
 	className?: string
 }
 
@@ -69,6 +71,7 @@ export async function MarketingFaq({
 	namespace,
 	keys,
 	columns = 2,
+	emitStructuredData = true,
 	className,
 }: MarketingFaqProps) {
 	const headingId = `${id}-heading`
@@ -128,11 +131,13 @@ export async function MarketingFaq({
 				</div>
 			</div>
 
-			<script
-				type="application/ld+json"
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD built from trusted translation content
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-			/>
+			{emitStructuredData && (
+				<script
+					type="application/ld+json"
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD built from trusted translation content
+					dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+				/>
+			)}
 		</section>
 	)
 }

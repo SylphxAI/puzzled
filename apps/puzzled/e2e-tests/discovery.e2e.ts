@@ -89,7 +89,7 @@ for (const path of ['/terms', '/privacy']) {
 		// Same registered office, in the postal order already used by the legal pages.
 		expect(text).toContain('128 City Road, London EC1V 2NX, United Kingdom')
 		expect(text).not.toMatch(/16686526|Shelton Street/)
-		await expect(main.locator('a[href="mailto:hi@puzzled.gg"]')).toHaveText('hi@puzzled.gg')
+		await expect(main.locator('a[href="mailto:legal@sylphx.com"]')).toHaveText('legal@sylphx.com')
 		await expect(main.locator('a[href="tel:+447537188188"]')).toHaveText('+44 7537 188 188')
 	})
 }

@@ -4,11 +4,15 @@ import { GetSharedResultResponseSchema } from '@/gen/connect/puzzled/v1/puzzle_p
 import { attributionCookieValue } from '@/lib/attribution'
 import { CHALLENGE_KEY } from '@/lib/storage-keys'
 import {
+	explicitChallengeGame,
+	isShareLandingQuery,
 	landingPlayTarget,
 	parseShareId,
 	recallChallenge,
 	rememberChallenge,
+	resolveKnownGameSlug,
 	type SharedResult,
+	sharedPlayHref,
 	sharedResultCard,
 	toSharedResult,
 } from './challenge'
@@ -122,14 +126,15 @@ describe('a shared result is non-spoiler by construction', () => {
 })
 
 describe('ref attribution', () => {
-	test('a share link lands with its share id as the first-touch ref', () => {
+	test('a share link lands with its share id as the first-touch ref and utm_source=share', () => {
 		const path = shareLandingPath(ID)
 		const [pathname, search] = path.split('?')
 		const cookie = attributionCookieValue(`?${search}`, pathname ?? '/', 1790000000000)
 		const decoded = new URLSearchParams(decodeURIComponent(cookie ?? ''))
 		// `r` is what the api stores as account_attribution.ref and reads as the share id.
 		expect(decoded.get('r')).toBe(ID)
-		expect(decoded.get('p')).toBe('/daily')
+		expect(decoded.get('s')).toBe('share')
+		expect(decoded.get('p')).toBe(`/r/${ID}`)
 		expect(decoded.get('at')).toBe('1790000000000')
 	})
 })
@@ -170,7 +175,7 @@ describe('challenge memory', () => {
 	})
 })
 
-describe('landingPlayTarget', () => {
+describe('landingPlayTarget & sharedPlayHref', () => {
 	const today = { dayKey: '2026-09-28', freeGameSlug: 'word-guess' }
 	const shared = (over: Partial<SharedResult>) => ({
 		gameSlug: 'word-guess',
@@ -178,15 +183,50 @@ describe('landingPlayTarget', () => {
 		...over,
 	})
 
-	test("promises a comparison only for today's free puzzle", () => {
+	test('preserves the sender game slug even when it differs from today free rotation', () => {
 		expect(landingPlayTarget(shared({}), today)).toEqual({
 			gameSlug: 'word-guess',
 			sameAsShared: true,
 		})
-		expect(landingPlayTarget(shared({ dayKey: '2026-09-27' }), today).sameAsShared).toBe(false)
-		expect(landingPlayTarget(shared({ gameSlug: 'sudoku' }), today)).toEqual({
+		expect(landingPlayTarget(shared({ dayKey: '2026-09-27' }), today)).toEqual({
 			gameSlug: 'word-guess',
 			sameAsShared: false,
 		})
+		expect(landingPlayTarget(shared({ gameSlug: 'sudoku' }), today)).toEqual({
+			gameSlug: 'sudoku',
+			sameAsShared: true,
+		})
+		expect(landingPlayTarget(shared({ gameSlug: 'queens' }), today)).toEqual({
+			gameSlug: 'crowns',
+			sameAsShared: true,
+		})
+		expect(landingPlayTarget(shared({ gameSlug: 'unknown-game' }), today)).toEqual({
+			gameSlug: 'word-guess',
+			sameAsShared: false,
+		})
+	})
+
+	test('resolveKnownGameSlug validates and canonicalizes slugs', () => {
+		expect(resolveKnownGameSlug('tango')).toBe('duo')
+		expect(resolveKnownGameSlug('Crossword')).toBe('crossword')
+		expect(resolveKnownGameSlug('not-a-game')).toBeNull()
+	})
+
+	test('sharedPlayHref carries ref and utm_source=share to sender game', () => {
+		expect(sharedPlayHref({ gameSlug: 'crowns', shareId: ID })).toBe(
+			`/games/crowns?ref=${ID}&utm_source=share`,
+		)
+		expect(sharedPlayHref({ gameSlug: 'sudoku' })).toBe('/games/sudoku?utm_source=share')
+	})
+
+	test('isShareLandingQuery separates share referrals from Tryit partner links', () => {
+		expect(isShareLandingQuery({ ref: ID })).toBe(true)
+		expect(isShareLandingQuery({ ref: 'synthetic-test-id' })).toBe(true)
+		expect(isShareLandingQuery({ utm_source: 'share' })).toBe(true)
+		expect(isShareLandingQuery({ utm_source: 'tryit', ref: 'res_42' })).toBe(false)
+		expect(isShareLandingQuery({})).toBe(false)
+		expect(explicitChallengeGame({ g: 'tango' })).toBe('duo')
+		expect(explicitChallengeGame({ game: 'word-guess' })).toBe('word-guess')
+		expect(explicitChallengeGame({ g: 'bogus' })).toBeNull()
 	})
 })

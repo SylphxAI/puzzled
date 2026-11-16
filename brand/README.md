@@ -67,16 +67,20 @@ colours; they stay with the games in `apps/puzzled/src/games/theme-colors.ts`.
 
 ## Type
 
-- **Display:** Fraunces, SIL OFL 1.1. Headlines, game names and big numbers
-  only. Self-hosted: `apps/puzzled/src/app/fonts/fraunces-display.woff2` is the
-  instanced variable face (opsz 96, SOFT 50, WONK 0, weights 500-700, Latin
-  subset, about 30 KB, preloaded);
-  `apps/puzzled/public/fonts/fraunces-600.ttf` is the weight-620 static face
-  for the Open Graph route, which cannot read WOFF2. Both are made with
-  fontTools; provenance in `apps/puzzled/public/fonts/README.md`.
-- **Text and interface:** the platform face (`-apple-system`, Segoe UI,
-  Roboto), with PingFang TC / Noto Sans TC for zh-Hant and PingFang SC /
-  Noto Sans SC for zh-CN. Nothing to host, nothing to load.
+- **Display:** Bricolage Grotesque, SIL OFL 1.1. Headlines, game names, tile
+  glyphs and big numbers (700-800). Self-hosted:
+  `apps/puzzled/src/app/fonts/bricolage-grotesque-latin.woff2` is the variable
+  weight axis, Latin subset (about 41 KB, preloaded, metric-matched Arial
+  fallback). Provenance in `apps/puzzled/public/fonts/README.md`.
+- **Text and interface:** Figtree, SIL OFL 1.1, self-hosted as
+  `apps/puzzled/src/app/fonts/figtree-latin.woff2` (variable weight, Latin
+  subset, about 20 KB, preloaded). Other scripts fall through to the platform
+  face: PingFang TC / Noto Sans TC for zh-Hant and PingFang SC / Noto Sans SC
+  for zh-CN.
+- **Wordmark and Open Graph images:** still drawn from Fraunces
+  (`brand/svg/puzzled-wordmark.svg` is its weight-620 outline, and
+  `apps/puzzled/public/fonts/fraunces-600.ttf` feeds the Open Graph route, which
+  cannot read WOFF2) until those assets are redrawn in Bricolage Grotesque.
 - **Numbers:** tabular figures (`.tnum`, `.numeral`) in the app.
 
 ## Small sizes

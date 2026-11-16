@@ -43,7 +43,7 @@ permissions:
 jobs:
   plan:
     name: Plan
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 10
     outputs:
       base: ${{ steps.range.outputs.base }}
@@ -58,8 +58,9 @@ jobs:
         with:
           only: ${{ inputs.lanes }}
           lanes: |
+            browser: apps/puzzled/playwright.config.ts apps/puzzled/e2e-tests/* apps/puzzled/scripts/serve-puzzle-fixture.ts scripts/ci-contract.test.ts package.json apps/puzzled/package.json bun.lock .github/workflows/verify.yml
             rust: crates/* proto/* Cargo.toml Cargo.lock apps/puzzled/atlas/*
-            build: apps/* packages/* proto/* crates/* brand/* package.json bun.lock bunfig.toml turbo.json Cargo.toml Cargo.lock
+            build: apps/* packages/* proto/* crates/* brand/* package.json bun.lock bunfig.toml turbo.json Cargo.toml Cargo.lock .github/workflows/verify.yml
 
   build:
     permissions:
@@ -68,7 +69,7 @@ jobs:
       checks: read
       id-token: write
     name: Build (Next.js + release binary)
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 30
     needs: plan
     if: fromJSON(needs.plan.outputs.run).build
@@ -95,7 +96,7 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in 1 2 3 4 5; do
-            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+            if bun install --frozen-lockfile --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
               exit 0
             fi
             echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
@@ -173,7 +174,7 @@ jobs:
     name: Rust API (full, database-backed)
     needs: plan
     if: fromJSON(needs.plan.outputs.run).rust
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 30
     env:
       PUZZLED_REQUIRE_DB_TESTS: "1"
@@ -248,7 +249,7 @@ jobs:
       checks: read
       id-token: write
     name: SEO Contract
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 30
     needs: [plan, build]
     if: fromJSON(needs.plan.outputs.run).build
@@ -275,7 +276,7 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in 1 2 3 4 5; do
-            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+            if bun install --frozen-lockfile --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
               exit 0
             fi
             echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
@@ -348,15 +349,17 @@ jobs:
       checks: read
       id-token: write
     name: Accessibility (WCAG 2.2 AA)
-    # Trunk push, nightly and manual only: a full browser suite on every PR push
-    # costs more than it catches before it lands.
-    if: github.event_name != 'pull_request' && fromJSON(needs.plan.outputs.run).build
-    runs-on: ubuntu-latest
+    # Browser infrastructure changes are verified before merge as well as on trunk.
+    if: fromJSON(needs.plan.outputs.run).build && (github.event_name != 'pull_request' || fromJSON(needs.plan.outputs.run).browser)
+    runs-on: sylphx-linux-standard
     timeout-minutes: 40
     needs: [plan, build]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Pin the Playwright browser cache
+        run: echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/ms-playwright-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-a11y" >> "$GITHUB_ENV"
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -377,7 +380,7 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in 1 2 3 4 5; do
-            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+            if bun install --frozen-lockfile --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
               exit 0
             fi
             echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
@@ -473,9 +476,9 @@ jobs:
       checks: read
       id-token: write
     name: Lighthouse Budgets
-    # Trunk push, nightly and manual only, like the a11y suite.
-    if: github.event_name != 'pull_request' && fromJSON(needs.plan.outputs.run).build
-    runs-on: ubuntu-latest
+    # Match the a11y acceptance lane, including browser infrastructure PRs.
+    if: fromJSON(needs.plan.outputs.run).build && (github.event_name != 'pull_request' || fromJSON(needs.plan.outputs.run).browser)
+    runs-on: sylphx-linux-standard
     timeout-minutes: 30
     needs: [plan, build]
 
@@ -487,7 +490,7 @@ jobs:
       # install below and the CHROME_PATH lookup after it resolve their own
       # defaults is how they end up disagreeing.
       - name: Pin the Playwright browser cache
-        run: echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/ms-playwright" >> "$GITHUB_ENV"
+        run: echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/ms-playwright-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-lighthouse" >> "$GITHUB_ENV"
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -508,7 +511,7 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in 1 2 3 4 5; do
-            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+            if bun install --frozen-lockfile --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
               exit 0
             fi
             echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
@@ -530,12 +533,8 @@ jobs:
           set -euo pipefail
           # The full Chromium build, not the headless shell: lhci launches
           # Chrome with its own flags and needs a real browser binary.
-          bin="$(find "$PLAYWRIGHT_BROWSERS_PATH"/chromium-* -maxdepth 2 -type f -name chrome -executable | sort | tail -1)"
-          if [ -z "$bin" ]; then
-            echo "no Chromium under $PLAYWRIGHT_BROWSERS_PATH; install step did not land"
-            ls -la "$PLAYWRIGHT_BROWSERS_PATH" || true
-            exit 1
-          fi
+          bin="$(bun -e "console.log(require('playwright').chromium.executablePath())")"
+          test -x "$bin"
           "$bin" --version
           echo "CHROME_PATH=$bin" >> "$GITHUB_ENV"
 
@@ -655,12 +654,161 @@ jobs:
           path: apps/puzzled/.lighthouseci
           retention-days: 7
 
+  craft:
+    permissions:
+      contents: read
+      actions: read
+      checks: read
+      id-token: write
+    name: Fixture craft (board, home, phone, pricing)
+    # Match the a11y acceptance lane, including browser infrastructure PRs.
+    if: fromJSON(needs.plan.outputs.run).build && (github.event_name != 'pull_request' || fromJSON(needs.plan.outputs.run).browser)
+    runs-on: sylphx-linux-standard
+    timeout-minutes: 30
+    needs: [plan, build]
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Pin the Playwright browser cache
+        run: echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/ms-playwright-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-craft" >> "$GITHUB_ENV"
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: "1.4.4"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+
+      - name: Cache bun modules
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: bun install
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if bun install --frozen-lockfile --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+              exit 0
+            fi
+            echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            sleep $((attempt * 3))
+          done
+          echo "bun install failed after retries"
+          exit 1
+
+      # Pinned by the @playwright/test version in bun.lock. phone-first runs the
+      # iPhone 13 device profile, which Playwright drives on WebKit, so the
+      # job installs both engines.
+      - name: Install Playwright Chromium and WebKit
+        working-directory: apps/puzzled
+        run: bunx playwright install --with-deps chromium webkit
+
+      - name: run-store get web-build
+        uses: SylphxAI/.github/.github/actions/run-store@90d88da2d60dcd6a3884899c273dd3a7f975be17
+        with:
+          mode: get
+          name: web-build
+          path: .
+
+      - name: Verify the web build checksum
+        run: sha256sum -c web-build.tar.sha256
+
+      - name: Unpack the web build
+        run: tar -C apps/puzzled -xf web-build.tar
+
+      # The specs need a real board, not the API-error fallback, and no write:
+      # each web server reads the frozen boards from its own fixture GetDaily
+      # API. The pricing spec needs the catalogue price list open, and an open
+      # store locks every game but the free one for guests, which is not the
+      # state the board and home specs run in, so that pair is a second fixture
+      # and server.
+      - name: Start the fixture APIs and the served builds
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          SYLPHX_PUBLIC_URL: https://puzzled.gg
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/craft.pids"
+          start_pair() { # name fixture_port web_port open_plans
+            FIXTURE_API_PORT="$2" FIXTURE_OPEN_PLANS="$4" bun scripts/serve-puzzle-fixture.ts > "$RUNNER_TEMP/fixture-$1.log" 2>&1 &
+            echo "$!" >> "$RUNNER_TEMP/craft.pids"
+            for attempt in $(seq 1 30); do
+              if curl -fsS --max-time 5 "http://127.0.0.1:$2/healthz" > /dev/null 2>&1; then break; fi
+              if [ "$attempt" = 30 ]; then cat "$RUNNER_TEMP/fixture-$1.log"; exit 1; fi
+              sleep 1
+            done
+            API_INTERNAL_URL="http://127.0.0.1:$2" bun run start -p "$3" > "$RUNNER_TEMP/serve-$1.log" 2>&1 &
+            echo "$!" >> "$RUNNER_TEMP/craft.pids"
+            for attempt in $(seq 1 60); do
+              status="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$3/" || true)"
+              if [ "$status" = "200" ]; then echo "$1 build answered 200 on attempt ${attempt}"; return 0; fi
+              sleep 2
+            done
+            echo "$1 build never answered 200 (last status ${status:-none})"
+            cat "$RUNNER_TEMP/serve-$1.log"
+            exit 1
+          }
+          start_pair board 8787 3017 0
+          start_pair pricing 8788 3018 1
+          # An open store is what keeps the pricing spec from skipping.
+          curl -fsS --max-time 5 -X POST -H 'content-type: application/json' -H 'connect-protocol-version: 1' --data '{}' \
+            http://127.0.0.1:8788/puzzled.v1.BillingService/ListPlans | grep -q '"salesOpen":true'
+
+      # A skipped test is a silent pass, so any skip fails the step.
+      # Each run keeps its own report and output folders: Playwright clears
+      # them at the start of a run, so a shared folder would let the pricing run
+      # erase the traces and screenshots of the board run's failure.
+      - name: Board, home and phone-first craft
+        working-directory: apps/puzzled
+        env:
+          BASE_URL: http://localhost:3017
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/board
+        run: |
+          set -euo pipefail
+          bun run test:e2e e2e-tests/board-craft.e2e.ts e2e-tests/home-craft.e2e.ts e2e-tests/phone-first.e2e.ts --workers=1 --retries=0 --output=test-results/board 2>&1 | tee "$RUNNER_TEMP/craft-board.log"
+          if grep -Eq '[0-9]+ skipped' "$RUNNER_TEMP/craft-board.log"; then echo "a craft spec skipped"; exit 1; fi
+
+      - name: Pricing with the open store
+        if: always()
+        working-directory: apps/puzzled
+        env:
+          BASE_URL: http://localhost:3018
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/pricing
+        run: |
+          set -euo pipefail
+          bun run test:e2e e2e-tests/pricing.e2e.ts --workers=1 --retries=0 --output=test-results/pricing 2>&1 | tee "$RUNNER_TEMP/craft-pricing.log"
+          if grep -Eq '[0-9]+ skipped' "$RUNNER_TEMP/craft-pricing.log"; then echo "a pricing test skipped"; exit 1; fi
+
+      - name: Stop the served builds and fixture APIs
+        if: always()
+        run: |
+          while read -r pid; do kill "$pid" 2>/dev/null || true; done < "$RUNNER_TEMP/craft.pids"
+
+      - name: Upload the Playwright report
+        continue-on-error: true
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: craft-playwright-report
+          path: |
+            apps/puzzled/playwright-report
+            apps/puzzled/test-results
+          retention-days: 7
+
   # The marker: named exactly `verified`; never a required check.
   verified:
     name: verified
     if: always()
-    needs: [plan, build, rust-api, seo-contract, a11y, lighthouse]
-    runs-on: ubuntu-latest
+    needs: [plan, build, rust-api, seo-contract, a11y, lighthouse, craft]
+    runs-on: sylphx-linux-standard
     timeout-minutes: 5
     steps:
       - uses: SylphxAI/.github/.github/actions/needs-pass@000d98547b68d07c4da1c62f534da85f1bd4001b # main

@@ -1,6 +1,6 @@
 'use client'
 
-import { Icon } from '@sylphx/ui'
+import { Sparkles, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 type CelebrationProps = {
@@ -92,25 +92,24 @@ export function StarBurst({ show }: { show: boolean }) {
 
 	return (
 		<div className="pointer-events-none fixed inset-0 z-toast flex items-center justify-center">
-			{STAR_POSITIONS.map((pos, i) => (
-				<div
-					key={i}
-					className="star-particle absolute"
-					style={
-						{
-							animationDelay: `${i * 0.05}s`,
-							'--tx': `${pos.x}px`,
-							'--ty': `${pos.y}px`,
-						} as React.CSSProperties
-					}
-				>
-					<Icon
-						icon={STAR_ICONS[i % STAR_ICONS.length]}
-						className="h-6 w-6 text-stat-best"
-						aria-hidden="true"
-					/>
-				</div>
-			))}
+			{STAR_POSITIONS.map((pos, i) => {
+				const StarIcon = STAR_ICONS[i % STAR_ICONS.length]
+				return (
+					<div
+						key={i}
+						className="star-particle absolute"
+						style={
+							{
+								animationDelay: `${i * 0.05}s`,
+								'--tx': `${pos.x}px`,
+								'--ty': `${pos.y}px`,
+							} as React.CSSProperties
+						}
+					>
+						<StarIcon className="h-6 w-6 text-stat-best" aria-hidden="true" />
+					</div>
+				)
+			})}
 			<style jsx>{`
 				@keyframes starBurst {
 					0% {
@@ -148,8 +147,7 @@ const COLORS = [
 	'var(--celebration-purple)',
 ]
 
-// Iconify star icons for celebration
-const STAR_ICONS = ['mdi:star', 'mdi:star-four-points', 'mdi:star-shooting', 'mdi:sparkles']
+const STAR_ICONS = [Star, Sparkles] as const
 
 const STAR_POSITIONS = [
 	{ x: -100, y: -80 },
