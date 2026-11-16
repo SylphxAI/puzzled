@@ -6,6 +6,8 @@ type GameUnlockPanelProps = {
 	slug: string
 	/** The request was for a past day, not another game. */
 	archive: boolean
+	/** Specific archive date being unlocked, if any (`YYYY-MM-DD`). */
+	dateParam?: string
 	gameCount: number
 	/** No account on this request. */
 	isGuest: boolean
@@ -22,12 +24,17 @@ type GameUnlockPanelProps = {
 export async function GameUnlockPanel({
 	slug,
 	archive,
+	dateParam,
 	gameCount,
 	isGuest,
 	freeGameSlug,
 	freeGameName,
 }: GameUnlockPanelProps) {
 	const t = await getTranslations('plus.unlock')
+	const returnTo =
+		archive && dateParam
+			? `/games/${slug}?mode=archive&date=${encodeURIComponent(dateParam)}`
+			: `/games/${slug}`
 
 	return (
 		<div className="rounded-3xl border border-border/70 bg-card p-6 text-center shadow-card md:p-8">
@@ -43,7 +50,7 @@ export async function GameUnlockPanel({
 				</p>
 				<div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
 					<Link
-						href="/pricing"
+						href={{ pathname: '/pricing', query: { callbackUrl: returnTo } }}
 						className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-6 font-semibold text-primary-foreground shadow-lg shadow-primary/25"
 					>
 						<Crown className="h-4 w-4" aria-hidden="true" />
@@ -51,7 +58,7 @@ export async function GameUnlockPanel({
 					</Link>
 					{isGuest ? (
 						<Link
-							href={{ pathname: '/login', query: { callbackUrl: `/games/${slug}` } }}
+							href={{ pathname: '/login', query: { callbackUrl: returnTo } }}
 							className="inline-flex h-12 items-center justify-center rounded-2xl border border-border bg-background px-5 font-semibold hover:border-primary/30 hover:text-primary"
 						>
 							{t('signIn')}

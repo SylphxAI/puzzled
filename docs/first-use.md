@@ -5,7 +5,7 @@ scripted pass after a deploy. It complements `bun run verify:live`
 ([reference/live-verification.md](reference/live-verification.md)), which checks
 the api; this checks what a person sees. Run it at 390x844 and again at 1366x850.
 
-1. Open `/`. Expect the date, "Puzzle #N", a "Free today" card for the featured
+1. Open `/`. Expect "Puzzle #N", a "Resets in" countdown and a "Free today" card for the featured
    game and a "Play today's ..." button. No console errors.
 2. Press the play button (it goes to `/games/<slug>?start=1#play`). Expect the
    board for today's puzzle with no sign-in prompt.

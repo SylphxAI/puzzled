@@ -12,6 +12,7 @@ import {
 	type GetSharedResultResponse,
 	GetSharedResultResponseSchema,
 } from '@/gen/connect/puzzled/v1/puzzle_pb'
+import { canonicalizeGameSlug, PLAYER_TITLE } from '@/lib/game-slug'
 import { CHALLENGE_KEY } from '@/lib/storage-keys'
 import { buildResultCard, type ResultCardModel } from './result-card'
 
@@ -103,16 +104,56 @@ export function recallChallenge(
 	}
 }
 
+/** Canonicalize a game slug when it belongs to the game catalog, else null. */
+export function resolveKnownGameSlug(raw: string | null | undefined): string | null {
+	const value = raw?.trim().toLowerCase()
+	if (!value) return null
+	const canonical = canonicalizeGameSlug(value)
+	return Object.hasOwn(PLAYER_TITLE, canonical) ? canonical : null
+}
+
 /**
- * Which module the landing invites the visitor to play: the shared puzzle when
- * it is today's and open to everyone (today's free module), otherwise today's
- * free module. `sameAsShared` is true only for the first case, so the landing
- * promises a comparison only when one can happen.
+ * Which module the landing invites the visitor to play: always the sender's
+ * canonical game slug when valid (falling back to today's free module only for
+ * unknown slugs). `sameAsShared` is true when it is also today's puzzle so the
+ * landing enables side-by-side result comparison.
  */
 export function landingPlayTarget(
 	shared: Pick<SharedResult, 'gameSlug' | 'dayKey'>,
 	today: { dayKey: string; freeGameSlug: string },
 ): { gameSlug: string; sameAsShared: boolean } {
-	const sameAsShared = shared.dayKey === today.dayKey && shared.gameSlug === today.freeGameSlug
-	return { gameSlug: today.freeGameSlug, sameAsShared }
+	const known = resolveKnownGameSlug(shared.gameSlug)
+	const gameSlug = known ?? today.freeGameSlug
+	const sameAsShared = shared.dayKey === today.dayKey && known === gameSlug
+	return { gameSlug, sameAsShared }
+}
+
+/**
+ * Build the play CTA destination on the sender's game page, preserving `ref`
+ * and `utm_source` across navigation from `/r/<shareId>` or `/daily?ref=...`.
+ */
+export function sharedPlayHref(input: {
+	gameSlug: string
+	shareId?: string | null
+	utmSource?: string | null
+}): string {
+	const slug = resolveKnownGameSlug(input.gameSlug) ?? input.gameSlug.trim()
+	const params = new URLSearchParams()
+	const shareId = input.shareId?.trim()
+	if (shareId) params.set('ref', shareId)
+	params.set('utm_source', input.utmSource?.trim() || 'share')
+	return `/games/${slug}?${params.toString()}`
+}
+
+/** Explicit game hint from a share URL (`?g=<slug>` or `?game=<slug>`), when valid. */
+export function explicitChallengeGame(query: Record<string, string>): string | null {
+	return resolveKnownGameSlug(query.g ?? query.game ?? query.gameSlug)
+}
+
+/** Whether a `/daily` query carries a share referral rather than a product-redirect (e.g. Tryit). */
+export function isShareLandingQuery(query: Record<string, string>): boolean {
+	const rawRef = query.ref?.trim()
+	if (parseShareId(rawRef)) return true
+	if (query.utm_source === 'share') return true
+	return Boolean(rawRef && query.utm_source !== 'tryit')
 }

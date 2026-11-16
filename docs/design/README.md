@@ -91,12 +91,15 @@ glyph in ink, and a deep form of the hue for small text on paper.
 
 ### Type
 
-- **Display:** Fraunces (SIL OFL 1.1), self-hosted as one variable WOFF2 (weights
-  500-700, optical size 96, softness 50), subset to Latin, 30 KB, preloaded. It is used
-  for headlines, game names and big numbers only. Provenance: `apps/puzzled/public/fonts/README.md`.
-- **Text and interface:** the platform face (`-apple-system`, Segoe UI, Roboto), with
-  PingFang TC / Noto Sans TC for `zh-Hant` and PingFang SC / Noto Sans SC for `zh-CN`.
-  CJK headlines fall back to the CJK serif (Songti / Noto Serif).
+- **Display:** Bricolage Grotesque (SIL OFL 1.1, DESIGN.md), self-hosted as one variable
+  WOFF2 subset to Latin, about 41 KB, preloaded with a metric-matched Arial fallback. Used
+  for headlines, game names, tile glyphs and big numbers at 700-800 (`.font-display` is 700).
+- **Text and interface:** Figtree (SIL OFL 1.1, DESIGN.md), self-hosted as one variable WOFF2
+  subset to Latin, about 20 KB, preloaded. Other scripts fall through to the platform face:
+  PingFang TC / Noto Sans TC for `zh-Hant` and PingFang SC / Noto Sans SC for `zh-CN`, for
+  headlines too. Provenance: `apps/puzzled/public/fonts/README.md`.
+- **Primary action:** one per screen (DESIGN.md `button-primary`): Amber `--color-cta` with
+  Ink text and the Amber Edge key edge (`--color-cta-edge`); every other button stays Ink.
 - **Numbers:** tabular figures (`.tnum`, `.numeral`) for clocks, streaks and puzzle numbers.
 - **Scale (phone → desktop):** page title 34 → 56-64 px; section title 26 → 30 px;
   body 17 px; secondary 13-15 px; tab labels 10.5 px.

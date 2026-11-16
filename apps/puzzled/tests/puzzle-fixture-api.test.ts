@@ -4,6 +4,7 @@ import { createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { createPuzzleFixtureServer } from '../scripts/serve-puzzle-fixture'
 import { parseWordSearchClientPayload } from '../src/games/word-search/parse-client'
+import { BillingService, ListPlansRequestSchema } from '../src/gen/connect/puzzled/v1/billing_pb'
 import { GetDailyRequestSchema, PuzzleService } from '../src/gen/connect/puzzled/v1/puzzle_pb'
 
 let server: ReturnType<typeof createPuzzleFixtureServer> | undefined
@@ -75,5 +76,44 @@ describe('deterministic GetDaily fixture API', () => {
 			`${baseUrl}/puzzled.v1.PuzzleService/GetDaily?gameSlug=word-search`,
 		)
 		expect(response.status).toBe(405)
+	})
+})
+
+describe('opt-in price list for pricing captures', () => {
+	test('is absent unless asked for, so boards and home keep an unlocked store', async () => {
+		server = createPuzzleFixtureServer(0)
+		const response = await fetch(
+			`http://127.0.0.1:${server.port}/puzzled.v1.BillingService/ListPlans`,
+			{
+				method: 'POST',
+				headers: { 'content-type': 'application/json', 'connect-protocol-version': '1' },
+				body: '{}',
+			},
+		)
+		expect(response.status).toBe(404)
+	})
+
+	test('serves Individual and Family plans in dollars and pounds through the generated client', async () => {
+		server = createPuzzleFixtureServer(0, { openPlans: true })
+		const client = createClient(
+			BillingService,
+			createConnectTransport({
+				baseUrl: `http://127.0.0.1:${server.port}`,
+				useBinaryFormat: false,
+			}),
+		)
+		const plans = await client.listPlans(create(ListPlansRequestSchema, {}))
+		expect(plans.salesOpen).toBe(true)
+		expect(plans.familyMaxMembers).toBe(4)
+		expect(plans.plans.map((plan) => plan.id)).toEqual([
+			'individual_monthly',
+			'individual_yearly',
+			'family_monthly',
+			'family_yearly',
+			'individual_once',
+		])
+		for (const plan of plans.plans) {
+			expect(plan.prices.map((price) => price.currency)).toEqual(['usd', 'gbp'])
+		}
 	})
 })

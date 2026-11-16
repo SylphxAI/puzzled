@@ -14,6 +14,12 @@ import { useLazyMenu } from './use-lazy-menu'
 const loadMenu = () => import('./user-menu-dropdown')
 const UserMenuDropdown = lazy(loadMenu)
 
+export type InitialNavUser = {
+	name?: string | null
+	email?: string
+	image?: string | null
+}
+
 type UserMenuProps = {
 	/** Size variant for the trigger button */
 	size?: 'sm' | 'md'
@@ -21,6 +27,11 @@ type UserMenuProps = {
 	showSignIn?: boolean
 	/** Custom className for the sign-in button */
 	signInClassName?: string
+	/**
+	 * Server-resolved user snapshot for initial SSR & hydration so the header
+	 * renders Sign in or avatar immediately instead of a stray "Loading..." node.
+	 */
+	initialUser?: InitialNavUser | null
 }
 
 /**
@@ -28,11 +39,19 @@ type UserMenuProps = {
  * Handles authenticated user menu and sign-in button
  * Gracefully handles when Sylphx Platform is not configured.
  */
-export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: UserMenuProps) {
+export function UserMenu({
+	size = 'md',
+	showSignIn = true,
+	signInClassName,
+	initialUser,
+}: UserMenuProps) {
 	const t = useTranslations()
-	const { user, isLoading } = useSafeUser()
+	const { user: liveUser, isLoading, isLoaded } = useSafeUser()
 	const { signOut } = useSafeAuth()
 	const { opened, triggerProps } = useLazyMenu(loadMenu)
+
+	const user = isLoaded ? liveUser : initialUser !== undefined ? initialUser : liveUser
+	const showLoading = !isLoaded && initialUser === undefined && isLoading
 
 	const handleSignOut = async () => {
 		await signOut()
@@ -44,13 +63,13 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 	const buttonSize = 'h-11 w-11'
 	const menuWidth = size === 'sm' ? 'w-48' : 'w-56'
 
-	// Loading state
-	if (isLoading) {
+	// Loading state (only when no server snapshot was provided)
+	if (showLoading) {
 		return (
-			// `<output>` carries the implicit status role, so the placeholder is
-			// announced instead of appearing as an empty box.
-			<output className={cn('flex items-center justify-center', buttonSize)}>
-				<span className="sr-only">{t('common.loading')}</span>
+			<output
+				aria-label={t('common.loading')}
+				className={cn('flex items-center justify-center', buttonSize)}
+			>
 				<div
 					className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
 					aria-hidden="true"

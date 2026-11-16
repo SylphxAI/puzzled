@@ -21,6 +21,7 @@ export function PlusResultCard({
 	puzzleDate?: string
 }) {
 	const t = useTranslations('plus.offer')
+	const tPlus = useTranslations('plus')
 	const tUnlock = useTranslations('plus.unlock')
 	const offer = usePlusOffer()
 	if (!offer || !showResultPlusCard(offer, { mode, gameSlug, puzzleDate })) return null
@@ -36,9 +37,14 @@ export function PlusResultCard({
 				<Crown className="h-4 w-4 text-primary" aria-hidden="true" />
 				{t('resultTitle', { count: offer.gameCount })}
 			</h3>
+			{offer.yearlyPrice ? (
+				<p className="mt-1 text-sm font-semibold tnum">
+					{t('resultPrice', { plan: tPlus('name'), price: offer.yearlyPrice })}
+				</p>
+			) : null}
 			<p className="mt-1 text-sm text-muted-foreground">{t('resultBody')}</p>
 			<Link
-				href="/pricing"
+				href="/pricing?utm_source=puzzled&utm_medium=result_card&utm_content=a"
 				className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-primary px-5 font-semibold text-primary-foreground"
 			>
 				{tUnlock('cta')}

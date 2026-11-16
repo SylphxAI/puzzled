@@ -272,7 +272,9 @@ describe('shareRitualResultCard', () => {
 			}),
 		)
 		expect(result).toEqual({ outcome: 'shared', captionCopied: false })
-		expect(rendered).toEqual(['puzzled.gg/games/word-guess?mode=archive&date=2026-09-21'])
+		expect(rendered).toEqual([
+			'https://puzzled.gg/games/word-guess?mode=archive&date=2026-09-21&utm_source=share',
+		])
 		const files = calls.share[0]?.files as unknown as Array<{ name?: string }>
 		expect(files?.[0]?.name).toBe('puzzled-result-word-guess-2026-09-21.png')
 		expect(calls.share[0]?.text).toBe('existing text share')
@@ -287,7 +289,9 @@ describe('shareRitualResultCard', () => {
 		expect(result.outcome).toBe('copied')
 		expect(calls.writeText.length).toBe(1)
 		expect(calls.writeText[0]).toContain('Five')
-		expect(calls.writeText[0]).toContain('puzzled.gg/games/word-guess?mode=archive&date=2026-09-21')
+		expect(calls.writeText[0]).toContain(
+			'https://puzzled.gg/games/word-guess?mode=archive&date=2026-09-21&utm_source=share',
+		)
 		expect(calls.writeText[0]?.toLowerCase()).not.toContain('solution')
 	})
 

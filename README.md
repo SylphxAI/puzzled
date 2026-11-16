@@ -1,17 +1,17 @@
 ![Puzzled](https://mark.sylphx.com/api/v1/mark/hero.svg?type=grid&color=0%3A9a3412%2C50%3Af97316%2C100%3Afb923c&text=Puzzled&desc=Short%20daily%20brain%20games)
 
-# Puzzled: nineteen daily puzzles, one always free. [puzzled.gg](https://puzzled.gg)
+# Puzzled: nineteen daily puzzles, one always free. [puzzled.gg](https://puzzled.gg/?utm_source=github&utm_medium=readme)
 
-[![website](https://mark.sylphx.com/badge/play-puzzled.gg-f97316?style=flat-square&labelColor=1a1712)](https://puzzled.gg)
+[![website](https://mark.sylphx.com/badge/play-puzzled.gg-f97316?style=flat-square&labelColor=1a1712)](https://puzzled.gg/?utm_source=github&utm_medium=readme)
+[![Puzzled Plus](https://mark.sylphx.com/badge/Puzzled%20Plus-%244.99%2Fmo-f97316?style=flat-square&labelColor=1a1712)](https://puzzled.gg/pricing?utm_source=github&utm_medium=readme)
 [![stars](https://mark.sylphx.com/github/stars/SylphxAI/puzzled?style=flat-square&labelColor=1a1712&color=f97316)](https://github.com/SylphxAI/puzzled/stargazers)
 [![license](https://mark.sylphx.com/badge/license-MIT-f97316?style=flat-square&labelColor=1a1712)](LICENSE)
 
 Short daily brain games for anyone with a few minutes: one shared puzzle for
 everyone each day, and a result card you can share without spoiling the answer.
-Today's featured puzzle is free with no account. Puzzled Plus, a subscription
-that opens every other game, the archive of past days and a family plan, is built
-but not on sale until payments run through Sylphx Money, the platform's payments
-service ([pricing and policy](docs/monetization.md)).
+Today's featured puzzle is free with no account. [Puzzled Plus](https://puzzled.gg/pricing?utm_source=github&utm_medium=readme)
+opens all 19 daily games, the full archive, and ad-free play (Individual, Family
+4 seats, and 3-Day Weekend Pass; [pricing and policy](docs/monetization.md)).
 
 A public product overview and curated page links are available at
 [`/llms.txt`](https://puzzled.gg/llms.txt), with every game drawn from the game
@@ -39,9 +39,9 @@ ops     -> /observability/test              -> api (Rust)
   decides game results and the only one that writes to the database. Its
   daily-puzzle pipeline generates and stores every game's puzzle 14 days
   ahead (19 games), on an hourly Compute schedule, and grades guesses on the
-  server, so the browser never holds an answer. Puzzled Plus is Sylphx Money's:
-  the api asks Money for entitlements, creates its checkout sessions and reads
-  its price list, and keeps only the family membership list.
+  server, so the browser never holds an answer. Puzzled Plus entitlements,
+  checkout sessions, and price lists are served by the payments integration,
+  while the api keeps only the family membership list.
 - **core** ([crates/puzzled-core](crates/puzzled-core)): the game rules,
   answer checking and scoring, with no I/O.
 - **web** ([apps/puzzled](apps/puzzled)): the Next.js site. It renders pages

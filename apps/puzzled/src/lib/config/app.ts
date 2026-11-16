@@ -11,16 +11,24 @@ export const APP_NAME = 'Puzzled' as const
 /** Application domain (without protocol) */
 const APP_DOMAIN = 'puzzled.gg' as const
 
-/**
- * The one public contact address: a live mailbox. support@, privacy@ and
- * legal@ are aliases of it, so every public surface quotes this address only.
- */
+/** Public product contact and support mailbox. */
 export const CONTACT_EMAIL = `hi@${APP_DOMAIN}`
 
-/** Support, legal and privacy all land in the one mailbox. */
+/** Routine product, account, and billing customer support mailbox. */
 export const SUPPORT_EMAIL = CONTACT_EMAIL
-export const LEGAL_EMAIL = CONTACT_EMAIL
-export const PRIVACY_EMAIL = CONTACT_EMAIL
+
+/**
+ * Formal legal notices, statutory data-rights requests (DSAR/erasure/rectification),
+ * IP/copyright notices, and pre-action dispute notices route exclusively here.
+ */
+export const LEGAL_EMAIL = 'legal@sylphx.com' as const
+export const PRIVACY_EMAIL = LEGAL_EMAIL
+
+/** Published Terms of Service revision / clickwrap version (ISO date). */
+export const TERMS_VERSION = '2026-11-14' as const
+
+/** Published Privacy Policy revision / clickwrap version (ISO date). */
+export const PRIVACY_VERSION = '2026-11-14' as const
 
 /** Company telephone (Sylphx Limited), shown in the footer and legal pages. */
 export const COMPANY_PHONE = '+44 7537 188 188'

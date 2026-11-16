@@ -30,8 +30,6 @@ export const MIN_PLAYERS_SHOWN = 500
 
 type HomeDayProps = {
 	locale: string
-	/** Product day (Asia/Hong_Kong) formatted for the viewer's locale. */
-	dateLabel: string
 	/** `getPuzzleNumber` for the server-rendered product day and module. */
 	puzzleNumber: number
 	freeGame: HomeDayGame
@@ -49,15 +47,12 @@ type HomeDayProps = {
 }
 
 /** Everything the day renders before any identity or aggregate read lands. */
-export type HomeDayStaticProps = Pick<
-	HomeDayProps,
-	'locale' | 'dateLabel' | 'puzzleNumber' | 'freeGame'
->
+export type HomeDayStaticProps = Pick<HomeDayProps, 'locale' | 'puzzleNumber' | 'freeGame'>
 
 /**
  * The day surface: the home page's first screen.
  *
- * A newspaper masthead (the product day, the puzzle number, the clock to the
+ * A newspaper masthead (the shared puzzle number and the clock to the
  * next day), a display headline, and one card in today's game colour that
  * holds the only primary action. `playerCount` stays `null` until the read
  * lands, and a landed zero renders nothing: a visitor is never told that
@@ -68,7 +63,6 @@ export type HomeDayStaticProps = Pick<
  */
 export async function HomeDay({
 	locale,
-	dateLabel,
 	puzzleNumber,
 	freeGame,
 	isMember,
@@ -97,9 +91,7 @@ export async function HomeDay({
 				{/* Masthead: the day has an identity. */}
 				<div className="home-day-masthead flex items-center justify-between gap-x-2 border-b border-foreground/80 pb-2.5 text-xs text-muted-foreground sm:gap-x-4 sm:text-[13px]">
 					<p className="flex min-w-0 items-center gap-1.5 truncate sm:gap-2">
-						<span className="truncate font-semibold text-foreground">{dateLabel}</span>
-						<span aria-hidden="true">·</span>
-						<span className="day-numeral shrink-0">
+						<span className="day-numeral shrink-0 font-semibold text-foreground">
 							{t('day.puzzleNumber', { number: puzzleNumber })}
 						</span>
 					</p>
@@ -245,11 +237,11 @@ function FeaturedCard({
 	return (
 		<div
 			data-day-puzzle-card=""
-			className="grid grid-cols-[80px_minmax(0,1fr)] overflow-hidden rounded-3xl border border-border bg-card shadow-lg sm:block"
+			className="home-featured-card grid grid-cols-[80px_minmax(0,1fr)] overflow-hidden rounded-3xl border border-border bg-card sm:block"
 		>
 			<div
 				className={cn(
-					'relative flex items-center justify-center sm:h-56',
+					'home-featured-art relative flex items-center justify-center sm:h-56',
 					colors.bg,
 					colors.onField,
 				)}
@@ -267,8 +259,10 @@ function FeaturedCard({
 					{numberLabel}
 				</span>
 			</div>
-			<div className="p-3 sm:p-6">
-				<p className="font-display text-2xl leading-tight">{game.name}</p>
+			<div className="home-featured-content p-3 sm:p-6">
+				<p className="home-featured-title font-display text-2xl leading-tight sm:text-3xl">
+					{game.name}
+				</p>
 				{game.tagline ? (
 					<p className="mt-1 text-[15px] text-muted-foreground">
 						{game.tagline}
@@ -279,7 +273,7 @@ function FeaturedCard({
 					href={href}
 					// The day's primary action: the install offer stays off it.
 					data-day-primary-action=""
-					className="pressable mt-3 flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-6 text-[16px] font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+					className="pressable home-featured-action mt-4 flex min-h-12 w-full items-center justify-center rounded-xl bg-cta px-6 text-[16px] font-bold text-cta-foreground shadow-[inset_0_-3px_0_var(--color-cta-edge)] transition-colors hover:bg-cta-hover sm:mt-5"
 				>
 					{cta}
 				</Link>

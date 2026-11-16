@@ -1,18 +1,27 @@
 /**
- * First-touch campaign attribution (utm_* and `ref`) and the Google Ads click
- * id (gclid, gbraid, wbraid).
+ * First-touch campaign attribution (utm_* and `ref`) and ad click ids
+ * (gclid, gbraid, wbraid, fbclid).
  *
  * A landing that carries tags (for example a Tryit link) is kept for 30 days
- * in the first-party `puzzled_attr` cookie, but only once the visitor has
- * accepted analytics cookies. The first tagged landing wins. A click id is
- * kept for 90 days in the same cookie, but only once the visitor has granted
- * marketing consent, and a newer ad click replaces an older one. The api reads
- * the cookie when an account is created and when a subscription starts
- * (`puzzled_core::attribution`, the same encoding) and sends the click id to
- * Money checkout as `metadata.gclid` (or `gbraid` / `wbraid`).
+ * in the first-party `puzzled_attr` cookie, once the visitor has accepted
+ * analytics cookies. The first tagged landing wins. A click id is kept for
+ * 90 days in the same cookie once marketing consent is granted, and a newer ad
+ * click replaces an older one.
+ *
+ * Across same-tab sign-in (`pricing` -> `/login` -> `pricing` -> checkout),
+ * optional marketing cookie consent may still be pending while `/login`
+ * replaces the query string. Same-tab `sessionStorage` retains the active
+ * click ids and tags (unless declined) and forwards them on checkout creation
+ * via `x-puzzled-attribution`, or promotes them into `puzzled_attr` if consent
+ * is accepted later in the session.
  */
 
+import { ATTRIBUTION_SESSION_KEY } from './storage-keys'
+
 export const ATTRIBUTION_COOKIE = 'puzzled_attr'
+export const ATTRIBUTION_HEADER = 'x-puzzled-attribution'
+export const RETURN_TO_HEADER = 'x-puzzled-return-to'
+export { ATTRIBUTION_SESSION_KEY }
 export const ATTRIBUTION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60
 export const CLICK_ID_MAX_AGE_SECONDS = 90 * 24 * 60 * 60
 const MAX_VALUE = 100
@@ -25,6 +34,8 @@ const PARAMS = [
 	['utm_content', 'n'],
 	['ref', 'r'],
 ] as const
+
+const ENTRY_SURFACE_PARAM = ['entry_surface', 'es'] as const
 
 const CLICK_PARAMS = [
 	['gclid', 'g'],
@@ -64,6 +75,43 @@ function clean(value: string | null): string | null {
 	return cleaned || null
 }
 
+const SHARE_ROUTE_PATH =
+	/(?:^|\/)r\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\/|$)/i
+
+function extractSharePathRef(landingPath?: string): string | null {
+	if (!landingPath) return null
+	const match = landingPath.match(SHARE_ROUTE_PATH)
+	return match?.[1]?.toLowerCase() ?? null
+}
+
+function extractAttributionParams(
+	search: string,
+	allow: { tags?: boolean; clickId?: boolean },
+	landingPath?: string,
+): URLSearchParams {
+	const params = new URLSearchParams(search)
+	const embedded = embeddedRedirectSearch(params)
+	const readParam = (name: string): string | null => params.get(name) ?? embedded?.get(name) ?? null
+	const out = new URLSearchParams()
+	if (allow.tags) {
+		for (const [name, key] of PARAMS) {
+			const value = clean(readParam(name))
+			if (value) out.set(key, value)
+		}
+		if (!out.has('r')) {
+			const pathRef = extractSharePathRef(landingPath)
+			if (pathRef) out.set('r', pathRef)
+		}
+	}
+	if (allow.clickId) {
+		for (const [name, key] of CLICK_PARAMS) {
+			const value = cleanClickId(readParam(name))
+			if (value) out.set(key, value)
+		}
+	}
+	return out
+}
+
 /**
  * The cookie value for a landing, or null when the URL carries no tag.
  * `landingPath` must be a same-site path; anything else is dropped.
@@ -74,22 +122,7 @@ export function attributionCookieValue(
 	now: number,
 	allow: { tags?: boolean; clickId?: boolean } = { tags: true },
 ): string | null {
-	const params = new URLSearchParams(search)
-	const embedded = embeddedRedirectSearch(params)
-	const readParam = (name: string): string | null => params.get(name) ?? embedded?.get(name) ?? null
-	const out = new URLSearchParams()
-	if (allow.tags) {
-		for (const [name, key] of PARAMS) {
-			const value = clean(readParam(name))
-			if (value) out.set(key, value)
-		}
-	}
-	if (allow.clickId) {
-		for (const [name, key] of CLICK_PARAMS) {
-			const value = cleanClickId(readParam(name))
-			if (value) out.set(key, value)
-		}
-	}
+	const out = extractAttributionParams(search, allow, landingPath)
 	if ([...out.keys()].length === 0) return null
 	// Landing path and time are analytics data: only with analytics consent.
 	if (allow.tags) {
@@ -126,6 +159,10 @@ function decode(value: string): URLSearchParams {
 export function hasClickId(value: string): boolean {
 	const params = decode(value)
 	return CLICK_PARAMS.some(([, key]) => params.has(key))
+}
+
+function hasTag(params: URLSearchParams): boolean {
+	return PARAMS.some(([, key]) => params.has(key))
 }
 
 /** The attribution cookie's value in a `document.cookie` string, or null. */
@@ -181,13 +218,21 @@ export function nextAttributionCookie(input: {
 		}
 	}
 	const landing = attributionCookieValue(input.search, input.landingPath, input.now, {
-		tags: analytics && current === null,
+		tags: analytics && (current === null || !hasTag(current)),
 		clickId: marketing,
 	})
 	if (landing) {
 		const fresh = decode(landing)
 		const hasNewClick = CLICK_PARAMS.some(([, key]) => fresh.has(key))
+		const hasNewTags = hasTag(fresh)
 		if (current === null) return { kind: 'set', value: landing }
+		if (hasNewTags && !hasTag(current)) {
+			for (const [, key] of PARAMS) {
+				const value = fresh.get(key)
+				if (value) current.set(key, value)
+			}
+			changed = true
+		}
 		if (hasNewClick) {
 			for (const [, key] of CLICK_PARAMS) current.delete(key)
 			for (const [, key] of CLICK_PARAMS) {
@@ -200,4 +245,162 @@ export function nextAttributionCookie(input: {
 	return changed && current
 		? { kind: 'set', value: encodeURIComponent(current.toString()) }
 		: { kind: 'keep' }
+}
+
+/**
+ * Maintain same-tab session attribution (`gclid`, `gbraid`, `wbraid`, `fbclid`,
+ * `utm_*`, `ref`) across routes like `/pricing` -> `/login` -> `/pricing` ->
+ * checkout even before optional cookie consent is granted. Cleared for any
+ * category the visitor explicitly declined.
+ */
+export function nextSessionAttribution(input: {
+	existing: string | null
+	search: string
+	landingPath?: string
+	analyticsDeclined: boolean
+	marketingDeclined: boolean
+}): CookieAction {
+	const { existing, analyticsDeclined, marketingDeclined } = input
+	if (analyticsDeclined && marketingDeclined) {
+		return existing === null ? { kind: 'keep' } : { kind: 'clear' }
+	}
+	const current = existing === null ? null : decode(existing)
+	let changed = false
+	if (current) {
+		if (marketingDeclined) {
+			for (const [, key] of CLICK_PARAMS) {
+				if (current.has(key)) {
+					current.delete(key)
+					changed = true
+				}
+			}
+		}
+		if (analyticsDeclined) {
+			for (const [, key] of [...PARAMS, ENTRY_SURFACE_PARAM]) {
+				if (current.has(key)) {
+					current.delete(key)
+					changed = true
+				}
+			}
+		}
+		if ([...current.keys()].length === 0) {
+			return { kind: 'clear' }
+		}
+	}
+
+	const fresh = extractAttributionParams(
+		input.search,
+		{
+			tags: !analyticsDeclined && (current === null || !hasTag(current)),
+			clickId: !marketingDeclined,
+		},
+		input.landingPath,
+	)
+	const liveParams = new URLSearchParams(input.search)
+	const embeddedParams = embeddedRedirectSearch(liveParams)
+	const entrySurface = !analyticsDeclined
+		? clean(
+				liveParams.get(ENTRY_SURFACE_PARAM[0]) ??
+					embeddedParams?.get(ENTRY_SURFACE_PARAM[0]) ??
+					null,
+			)
+		: null
+	if (entrySurface && !current?.has(ENTRY_SURFACE_PARAM[1])) {
+		fresh.set(ENTRY_SURFACE_PARAM[1], entrySurface)
+	}
+	const freshKeys = [...fresh.keys()]
+	if (freshKeys.length > 0) {
+		const next = current ?? new URLSearchParams()
+		if (hasTag(fresh) && !hasTag(next)) {
+			for (const [, key] of PARAMS) {
+				const value = fresh.get(key)
+				if (value) next.set(key, value)
+			}
+			changed = true
+		}
+		const freshEntrySurface = fresh.get(ENTRY_SURFACE_PARAM[1])
+		if (freshEntrySurface && !next.has(ENTRY_SURFACE_PARAM[1])) {
+			next.set(ENTRY_SURFACE_PARAM[1], freshEntrySurface)
+			changed = true
+		}
+		if (CLICK_PARAMS.some(([, key]) => fresh.has(key))) {
+			for (const [, key] of CLICK_PARAMS) next.delete(key)
+			for (const [, key] of CLICK_PARAMS) {
+				const value = fresh.get(key)
+				if (value) next.set(key, value)
+			}
+			changed = true
+		}
+		if (current === null || changed) {
+			return { kind: 'set', value: encodeURIComponent(next.toString()) }
+		}
+	}
+
+	return changed && current
+		? { kind: 'set', value: encodeURIComponent(current.toString()) }
+		: { kind: 'keep' }
+}
+
+/** Safely read the encoded session attribution value from `sessionStorage`. */
+export function readSessionAttribution(
+	storage: Pick<Storage, 'getItem'> | null | undefined,
+): string | null {
+	if (!storage) return null
+	try {
+		return storage.getItem(ATTRIBUTION_SESSION_KEY) || null
+	} catch {
+		return null
+	}
+}
+
+/**
+ * Reads persisted `entry_surface` from `puzzled:attr:session` in `sessionStorage`.
+ * Supports both URL-encoded attribution strings (`es=...`) and JSON objects.
+ */
+export function readSessionEntrySurface(
+	storage: Pick<Storage, 'getItem'> | null | undefined = typeof window !== 'undefined'
+		? window.sessionStorage
+		: null,
+): string | undefined {
+	const raw = readSessionAttribution(storage)
+	if (!raw) return undefined
+	if (raw.trim().startsWith('{')) {
+		try {
+			const parsed = JSON.parse(raw) as { entry_surface?: unknown } | null
+			return (
+				clean(typeof parsed?.entry_surface === 'string' ? parsed.entry_surface : null) ?? undefined
+			)
+		} catch {
+			return undefined
+		}
+	}
+	const decoded = decode(raw)
+	return (
+		clean(decoded.get(ENTRY_SURFACE_PARAM[1]) ?? decoded.get(ENTRY_SURFACE_PARAM[0])) ?? undefined
+	)
+}
+
+/**
+ * Reconstruct a query string from stored session attribution and merge it
+ * behind any live query params so later consent promotion keeps params that
+ * a navigation like `/login` dropped from the address bar.
+ */
+export function mergeSearchWithSession(liveSearch: string, storedSession: string | null): string {
+	if (!storedSession) return liveSearch
+	const decoded = decode(storedSession)
+	const merged = new URLSearchParams()
+	for (const [name, key] of [...PARAMS, ENTRY_SURFACE_PARAM]) {
+		const value = decoded.get(key)
+		if (value) merged.set(name, value)
+	}
+	for (const [name, key] of CLICK_PARAMS) {
+		const value = decoded.get(key)
+		if (value) merged.set(name, value)
+	}
+	const live = new URLSearchParams(liveSearch)
+	for (const [key, value] of live.entries()) {
+		merged.set(key, value)
+	}
+	const qs = merged.toString()
+	return qs ? `?${qs}` : ''
 }

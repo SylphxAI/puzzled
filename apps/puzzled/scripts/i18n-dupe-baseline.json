@@ -10,6 +10,10 @@
 				]
 			},
 			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
 				"value": "Account",
 				"keys": [
 					"nav.account",
@@ -638,7 +642,12 @@
 			},
 			{
 				"value": "Privacy Policy",
-				"keys": ["footer.privacy", "legal.privacy.title", "support.resources.privacy.title"]
+				"keys": [
+					"auth.privacyPolicy",
+					"footer.privacy",
+					"legal.privacy.title",
+					"support.resources.privacy.title"
+				]
 			},
 			{
 				"value": "Profile",
@@ -926,7 +935,12 @@
 			},
 			{
 				"value": "Terms of Service",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "Theme",
@@ -1106,6 +1120,10 @@
 				]
 			},
 			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
+			{
 				"value": "Account",
 				"keys": [
 					"nav.account",
@@ -1734,7 +1752,12 @@
 			},
 			{
 				"value": "Privacy Policy",
-				"keys": ["footer.privacy", "legal.privacy.title", "support.resources.privacy.title"]
+				"keys": [
+					"auth.privacyPolicy",
+					"footer.privacy",
+					"legal.privacy.title",
+					"support.resources.privacy.title"
+				]
 			},
 			{
 				"value": "Profile",
@@ -2022,7 +2045,12 @@
 			},
 			{
 				"value": "Terms of Service",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "Theme",
@@ -2200,6 +2228,10 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
+			},
+			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "All Users",
@@ -2828,7 +2860,12 @@
 			},
 			{
 				"value": "服務條款",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "未完成",
@@ -3024,7 +3061,7 @@
 			},
 			{
 				"value": "私隱政策",
-				"keys": ["consent.learnMore", "support.resources.privacy.title"]
+				"keys": ["auth.privacyPolicy", "consent.learnMore", "support.resources.privacy.title"]
 			},
 			{
 				"value": "移除",
@@ -3330,6 +3367,10 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
+			},
+			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "All Users",
@@ -3969,7 +4010,12 @@
 			},
 			{
 				"value": "服務條款",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "未完成",
@@ -4394,7 +4440,7 @@
 			},
 			{
 				"value": "隱私權政策",
-				"keys": ["footer.privacy", "legal.privacy.title"]
+				"keys": ["auth.privacyPolicy", "footer.privacy", "legal.privacy.title"]
 			},
 			{
 				"value": "雙重驗證",
@@ -4463,6 +4509,10 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
+			},
+			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "All Users",
@@ -5161,7 +5211,12 @@
 			},
 			{
 				"value": "服务条款",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "未关联",
@@ -5557,6 +5612,7 @@
 			{
 				"value": "隐私政策",
 				"keys": [
+					"auth.privacyPolicy",
 					"consent.learnMore",
 					"footer.privacy",
 					"legal.privacy.title",
@@ -5598,6 +5654,10 @@
 			}
 		],
 		"ja": [
+			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
+			},
 			{
 				"value": "2段階認証",
 				"keys": ["settings.security.twoFactorAuth", "settings.securityScore.checks.twoFactor"]
@@ -6063,6 +6123,7 @@
 			{
 				"value": "プライバシーポリシー",
 				"keys": [
+					"auth.privacyPolicy",
 					"consent.learnMore",
 					"footer.privacy",
 					"legal.privacy.title",
@@ -6342,7 +6403,12 @@
 			},
 			{
 				"value": "利用規約",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "削除",
@@ -6882,6 +6948,10 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
+			},
+			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "Abrir el centro de cuenta",
@@ -7588,6 +7658,7 @@
 			{
 				"value": "Política de privacidad",
 				"keys": [
+					"auth.privacyPolicy",
 					"consent.learnMore",
 					"footer.privacy",
 					"legal.privacy.title",
@@ -8025,6 +8096,10 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
+			},
+			{
+				"value": "2026-11-14",
+				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "Abre em uma nova guia.",
@@ -8765,6 +8840,7 @@
 			{
 				"value": "Política de Privacidade",
 				"keys": [
+					"auth.privacyPolicy",
 					"consent.learnMore",
 					"footer.privacy",
 					"legal.privacy.title",
@@ -9068,7 +9144,12 @@
 			},
 			{
 				"value": "Termos de Serviço",
-				"keys": ["footer.terms", "legal.terms.title", "support.resources.terms.title"]
+				"keys": [
+					"auth.termsOfService",
+					"footer.terms",
+					"legal.terms.title",
+					"support.resources.terms.title"
+				]
 			},
 			{
 				"value": "Tipo de recurso",

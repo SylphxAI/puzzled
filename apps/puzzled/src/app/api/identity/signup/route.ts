@@ -3,6 +3,7 @@ import { signUpCookieHeader } from '@/lib/identity/after-sign-up'
 import { AuthCallError, authConfig, passwordTicket, signUp } from '@/lib/identity/client-auth'
 import { admitJsonPost } from '@/lib/identity/http'
 import { MIN_PASSWORD_LENGTH } from '@/lib/identity/password-policy'
+import { isPolicyAcceptance, POLICY_ACCEPTANCE } from '@/lib/identity/policy-consent'
 import { authFail, completeSignIn, userAgentOf } from '@/lib/identity/sign-in'
 import { logger } from '@/lib/logger'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
@@ -21,8 +22,21 @@ export async function POST(request: Request) {
 		email?: string
 		password?: string
 		name?: string
+		terms_accepted?: unknown
+		terms_version?: unknown
+		privacy_version?: unknown
+		surface?: unknown
 		displayName?: string
 	} | null
+	if (
+		!isPolicyAcceptance({
+			terms_accepted: body?.terms_accepted,
+			terms_version: body?.terms_version,
+			privacy_version: body?.privacy_version,
+			surface: body?.surface,
+		})
+	)
+		return authFail(400, 'policy_acceptance_required')
 	const email = body?.email?.trim()
 	const password = body?.password ?? ''
 	if (!email || !password) return authFail(400, 'invalid_signup')
@@ -35,6 +49,7 @@ export async function POST(request: Request) {
 			name: (body?.displayName ?? body?.name ?? '').trim(),
 			verifyUrl: `${await getRequestSiteOrigin()}/verify-email`,
 			userAgent,
+			acceptance: POLICY_ACCEPTANCE,
 		})
 	} catch (error) {
 		const status = error instanceof AuthCallError && error.status === 400 ? 400 : 502

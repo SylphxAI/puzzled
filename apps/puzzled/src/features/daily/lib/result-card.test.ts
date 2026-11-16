@@ -60,7 +60,9 @@ describe('buildResultCard', () => {
 		expect(model.dayDisplay).toBe('Sep 21, 2026')
 		expect(model.gameName).toBe('Five')
 		expect(model.theme).toBe('emerald')
-		expect(model.deepLink).toBe('puzzled.gg/games/word-guess?mode=archive&date=2026-09-21')
+		expect(model.deepLink).toBe(
+			'https://puzzled.gg/games/word-guess?mode=archive&date=2026-09-21&utm_source=share',
+		)
 		expect(model.timeBand).toBe('under5m')
 		expect(model.currentStreak).toBe(4)
 	})
@@ -69,7 +71,7 @@ describe('buildResultCard', () => {
 		const model = buildResultCard(baseInput({ puzzleDate: '2026-02-30' }))
 		expect(model.dayKey).toBeNull()
 		expect(model.dayDisplay).toBeNull()
-		expect(model.deepLink).toBe('puzzled.gg/games/word-guess')
+		expect(model.deepLink).toBe('https://puzzled.gg/games/word-guess?utm_source=share')
 	})
 
 	test('never carries the solution or an answer grid, even when passed in', () => {
@@ -221,7 +223,9 @@ describe('resultCardTextAlternative', () => {
 			}),
 		)
 		const alt = resultCardTextAlternative(model, STRINGS)
-		expect(alt).toBe('Puzzled result - Five. Solved! Play: puzzled.gg/games/word-guess')
+		expect(alt).toBe(
+			'Puzzled result - Five. Solved! Play: https://puzzled.gg/games/word-guess?utm_source=share',
+		)
 		expect(alt).not.toContain('  ')
 	})
 

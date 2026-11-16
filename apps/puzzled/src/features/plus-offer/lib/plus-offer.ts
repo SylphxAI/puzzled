@@ -15,6 +15,11 @@ export type PlusOffer = {
 	gameCount: number
 	/** Today's free featured game, the only one a free player can finish on a daily. */
 	freeSlug: string
+	/**
+	 * The individual yearly Plus price as the pricing page shows it (catalogue
+	 * amount, visitor's currency, formatted). Absent when it cannot be read.
+	 */
+	yearlyPrice?: string
 }
 
 /** The server pins result offers to its Hong Kong product day, not the browser clock. */

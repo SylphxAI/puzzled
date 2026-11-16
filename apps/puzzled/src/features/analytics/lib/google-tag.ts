@@ -12,6 +12,14 @@
  * reaches Google. With no ids configured the whole module is inert.
  */
 
+export {
+	type Ga4KeyEventName,
+	type Ga4KeyEventParams,
+	type Ga4KeyEventParamsMap,
+	resetGa4KeyEventsForTests,
+	trackGa4KeyEvent,
+} from './ga4-key-events'
+
 export type GoogleTagIds = { ga: string | null; ads: string | null }
 
 type IdSource = { GA_MEASUREMENT_ID?: string; GOOGLE_ADS_ID?: string }

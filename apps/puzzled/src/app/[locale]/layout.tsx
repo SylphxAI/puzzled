@@ -4,6 +4,8 @@ import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
+import { Suspense } from 'react'
+import { AttributionCapture } from '@/features/analytics/components/attribution-capture'
 import { FunnelReporter } from '@/features/analytics/components/funnel-reporter'
 import { GoogleTag } from '@/features/analytics/components/google-tag'
 import { CONSENT_DEFAULT_SCRIPT, googleTagIds } from '@/features/analytics/lib/google-tag'
@@ -14,6 +16,7 @@ import { NONCE_HEADER } from '@/lib/csp'
 import { env } from '@/lib/env'
 import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
 import { routing } from '@/lib/i18n/routing'
+import { PolicyConsentBoundary } from '@/lib/identity/policy-consent-boundary'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 import { DeferredToaster } from '@/shared/components/deferred-shell'
 import { PlatformProvider } from '@/shared/components/platform'
@@ -22,17 +25,26 @@ import catalogue from '../../../../../config/commercial/catalogue.json'
 import '../globals.css'
 
 /**
- * The display face: Fraunces (SIL OFL), instanced for display sizes and
- * subset to Latin (see public/fonts/README.md). Body text uses the platform
- * UI face, so this is the only web font and it is preloaded for the headline.
+ * Brand type (DESIGN.md): Bricolage Grotesque for display, Figtree for text, both
+ * SIL OFL, self-hosted variable faces subset to Latin (see public/fonts/README.md).
+ * CJK and other scripts fall through to the platform faces in globals.css.
  */
-const fraunces = localFont({
-	src: '../fonts/fraunces-display.woff2',
+const bricolage = localFont({
+	src: '../fonts/bricolage-grotesque-latin.woff2',
 	variable: '--font-display-family',
-	weight: '500 700',
+	weight: '200 800',
 	display: 'swap',
 	preload: true,
-	adjustFontFallback: false,
+	adjustFontFallback: 'Arial',
+})
+
+const figtree = localFont({
+	src: '../fonts/figtree-latin.woff2',
+	variable: '--font-text-family',
+	weight: '300 900',
+	display: 'swap',
+	preload: true,
+	adjustFontFallback: 'Arial',
 })
 
 const SITE_DESCRIPTION =
@@ -179,7 +191,11 @@ export default async function LocaleLayout({ children, params }: Props) {
 	const messages = await getMessages()
 
 	return (
-		<html lang={locale} suppressHydrationWarning className={fraunces.variable}>
+		<html
+			lang={locale}
+			suppressHydrationWarning
+			className={`${bricolage.variable} ${figtree.variable}`}
+		>
 			<head>
 				{/* Color scheme for proper dark mode handling */}
 				<meta name="color-scheme" content="light dark" />
@@ -267,10 +283,13 @@ export default async function LocaleLayout({ children, params }: Props) {
 					<PlatformProvider>
 						{/* Before the children so its effects register first. */}
 						<FunnelReporter />
+						<Suspense fallback={null}>
+							<AttributionCapture />
+						</Suspense>
 						{googleTag ? <GoogleTag ids={googleTag} /> : null}
 						<ApiProvider>
 							<NextIntlClientProvider messages={pickMessages(messages, CLIENT_NAMESPACES)}>
-								{children}
+								<PolicyConsentBoundary>{children}</PolicyConsentBoundary>
 							</NextIntlClientProvider>
 						</ApiProvider>
 						{/* Off the first paint: hosted toasts */}

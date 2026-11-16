@@ -7,9 +7,9 @@
 
 import { useTranslations } from 'next-intl'
 import { memo, useCallback } from 'react'
-import { cn } from '@/lib/utils'
 import type { SudokuCell as SudokuCellData } from '../types'
 import { BOX_SIZE } from '../types'
+import styles from './sudoku-craft.module.css'
 
 type CellProps = {
 	cell: SudokuCellData
@@ -38,16 +38,6 @@ const SudokuCell = memo(function SudokuCell({
 	const t = useTranslations('common')
 	const handleClick = useCallback(() => onClick(row, col), [onClick, row, col])
 
-	// Selection is amber, its row, column and box are muted, and matching
-	// digits get a light amber wash: the same cues in light and dark.
-	const background = isSelected
-		? 'bg-accent-warm/70'
-		: isSameValue
-			? 'bg-accent-warm/25'
-			: isHighlighted
-				? 'bg-muted'
-				: 'bg-card'
-
 	return (
 		<button
 			type="button"
@@ -64,33 +54,30 @@ const SudokuCell = memo(function SudokuCell({
 			]
 				.filter(Boolean)
 				.join(', ')}
-			className={cn(
-				'flex cursor-pointer items-center justify-center transition-colors duration-fast [-webkit-tap-highlight-color:transparent]',
-				'focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
-				background,
-				cell.isGiven && 'font-semibold text-foreground',
-				!cell.isGiven && cell.value && 'font-medium text-info',
-				hasConflict && !cell.isGiven && 'text-destructive',
-				isSelected && 'text-[#1a1712]',
-			)}
+			className={styles.cell}
+			data-selected={isSelected || undefined}
+			data-related={isHighlighted || undefined}
+			data-matching={isSameValue || undefined}
+			data-given={cell.isGiven || undefined}
+			data-filled={cell.value !== null || undefined}
+			data-conflict={hasConflict && !cell.isGiven ? true : undefined}
 		>
 			{cell.value ? (
-				<span className="text-lg leading-none tnum sm:text-xl">{cell.value}</span>
+				<span className={styles.value}>{cell.value}</span>
 			) : cell.notes.size > 0 ? (
-				<span className="grid h-full w-full grid-cols-3 grid-rows-3 p-px">
+				<span className={`grid ${styles.notes}`}>
 					{[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-						<span
-							key={n}
-							className={cn(
-								'flex items-center justify-center text-[8px] font-medium leading-none text-muted-foreground sm:text-[9px]',
-								!cell.notes.has(n) && 'opacity-0',
-							)}
-						>
+						<span key={n} className={styles.note} data-visible={cell.notes.has(n) || undefined}>
 							{n}
 						</span>
 					))}
 				</span>
 			) : null}
+			{hasConflict && !cell.isGiven && (
+				<span className={styles.conflictMark} aria-hidden="true">
+					!
+				</span>
+			)}
 		</button>
 	)
 })
@@ -132,16 +119,7 @@ export function SudokuGrid({ userGrid, selectedCell, conflictingCells, onCellCli
 	)
 
 	const renderBox = (boxRow: number, boxCol: number) => (
-		<div
-			key={`box-${boxRow}-${boxCol}`}
-			className="grid"
-			style={{
-				gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-				gridTemplateRows: 'repeat(3, minmax(0, 1fr))',
-				gap: '1px',
-				backgroundColor: 'var(--color-border)', // thin cell rules
-			}}
-		>
+		<div key={`box-${boxRow}-${boxCol}`} className={styles.box}>
 			{[0, 1, 2].flatMap((r) =>
 				[0, 1, 2].map((c) => {
 					const row = boxRow * 3 + r
@@ -170,23 +148,10 @@ export function SudokuGrid({ userGrid, selectedCell, conflictingCells, onCellCli
 
 	return (
 		<div className="w-full">
-			<div className="relative mx-auto aspect-square w-full">
+			<div className={styles.board}>
 				{/* Outer 3x3 grid of boxes */}
 				{/* biome-ignore lint/a11y/useSemanticElements: a sudoku board is a named group of controls, not a form fieldset */}
-				<div
-					className="absolute inset-0 grid"
-					role="group"
-					aria-label={t('name')}
-					style={{
-						gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-						gridTemplateRows: 'repeat(3, minmax(0, 1fr))',
-						gap: '2px',
-						backgroundColor: 'var(--color-foreground)', // box rules in ink
-						padding: '2px',
-						borderRadius: '10px',
-						overflow: 'hidden',
-					}}
-				>
+				<div className={styles.boxes} role="group" aria-label={t('name')}>
 					{[0, 1, 2].flatMap((br) => [0, 1, 2].map((bc) => renderBox(br, bc)))}
 				</div>
 			</div>

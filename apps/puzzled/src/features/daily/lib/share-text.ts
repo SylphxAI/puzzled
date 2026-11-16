@@ -9,6 +9,7 @@
 
 import { canonicalizeGameSlug } from '@/lib/game-slug'
 import { isValidDayKey } from '@/lib/product-day'
+import { getPuzzleNumber } from './puzzle-utils'
 
 export type RitualShareInput = {
 	/** Absolute origin, e.g. https://puzzled.gg or window.location.origin */
@@ -29,13 +30,18 @@ export type RitualShareInput = {
 	greeting?: string
 }
 
-/** Strip scheme; keep host[:port] for compact share footers. */
-export function shareHost(origin: string): string {
-	return origin.replace(/^https?:\/\//i, '').replace(/\/$/, '')
+/** Keep the origin with its scheme (defaulting to `https://`) and strip trailing slashes for linkifiable URLs. */
+export function shareOrigin(origin: string): string {
+	const trimmed = origin.trim().replace(/\/+$/, '')
+	if (!trimmed) return 'https://puzzled.gg'
+	if (/^https?:\/\//i.test(trimmed)) {
+		return trimmed.replace(/^https?:\/\//i, (scheme) => scheme.toLowerCase())
+	}
+	return `https://${trimmed}`
 }
 
 /**
- * Module deep-link path (no locale prefix — app redirects).
+ * Module deep-link path (no locale prefix — app redirects) with share attribution.
  *
  * When the day_key is known the link carries **both** halves of the archive
  * contract: `mode=archive` and `date=YYYY-MM-DD`. The landing resolves a day
@@ -45,27 +51,27 @@ export function shareHost(origin: string): string {
  */
 export function ritualSharePath(gameSlug: string, puzzleDate?: string): string {
 	const slug = canonicalizeGameSlug(gameSlug.trim())
-	if (!slug) return '/'
+	if (!slug) return '/?utm_source=share'
 	const base = `/games/${slug}`
 	if (isValidDayKey(puzzleDate)) {
-		return `${base}?mode=archive&date=${(puzzleDate as string).trim()}`
+		return `${base}?mode=archive&date=${(puzzleDate as string).trim()}&utm_source=share`
 	}
-	return base
+	return `${base}?utm_source=share`
 }
 
 /**
- * The share landing path: `/daily?ref=<share id>`. The landing shows the
- * sharer's result and lets the visitor play; `ref` is the first-touch tag that
- * credits the visit and any sign-up to the share (lib/attribution.ts).
+ * The share landing path: `/r/<share id>?utm_source=share`. The landing shows
+ * the sharer's result and lets the visitor play; `ref` + `utm_source=share` are
+ * captured into first-touch attribution (lib/attribution.ts).
  */
 export function shareLandingPath(shareId: string): string {
-	return `/daily?ref=${encodeURIComponent(shareId.trim())}`
+	return `/r/${encodeURIComponent(shareId.trim())}?utm_source=share`
 }
 
 /**
- * Compact deep-link for share text. With a share id it is the share landing
- * (`puzzled.gg/daily?ref=...`); without one (archive days, offline) it is the
- * module link, `puzzled.gg/games/sudoku?mode=archive&date=2026-08-12`.
+ * Linkifiable deep-link for share text. With a share id it is the share landing
+ * (`https://puzzled.gg/r/...?utm_source=share`); without one (archive days,
+ * offline) it is the module link (`https://puzzled.gg/games/sudoku?mode=archive&date=2026-08-12&utm_source=share`).
  */
 export function ritualShareDeepLink(
 	origin: string,
@@ -73,9 +79,9 @@ export function ritualShareDeepLink(
 	puzzleDate?: string,
 	shareId?: string,
 ): string {
-	const host = shareHost(origin) || 'puzzled.gg'
+	const base = shareOrigin(origin)
 	const path = shareId?.trim() ? shareLandingPath(shareId) : ritualSharePath(gameSlug, puzzleDate)
-	return `${host}${path}`
+	return `${base}${path}`
 }
 
 /**
@@ -99,7 +105,10 @@ export function formatRitualShareText(input: RitualShareInput): string {
 
 	const emoji = status === 'won' ? '🏆' : '❌'
 	const difficultyText = difficultyLabel ? ` (${difficultyLabel})` : ''
-	const dateText = puzzleDate ? ` • ${puzzleDate}` : ''
+	// Number the result's product day, never the sharer's current local day.
+	const puzzleText = isValidDayKey(puzzleDate)
+		? ` • #${getPuzzleNumber(gameSlug, new Date(`${puzzleDate?.trim()}T00:00:00+08:00`))}`
+		: ''
 	const resultLine =
 		statLine?.trim() ||
 		(status === 'won'
@@ -110,7 +119,7 @@ export function formatRitualShareText(input: RitualShareInput): string {
 
 	const greetingText = greeting?.trim() ? `${greeting.trim()}\n` : ''
 
-	return `${greetingText}${emoji} ${gameName}${difficultyText}${dateText}\n${resultLine}\n${streakText}\n${deepLink}`
+	return `${greetingText}${emoji} ${gameName}${difficultyText}${puzzleText}\n${resultLine}\n${streakText}\n${deepLink}`
 }
 
 /** True if text looks free of solution spoilers (oracle guard for tests). */

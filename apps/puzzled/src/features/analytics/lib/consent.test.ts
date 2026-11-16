@@ -3,11 +3,13 @@ import { canStoreMarketing, canTrackAnalytics, withdrawCookieChoice } from './co
 
 const g = globalThis as unknown as Record<string, unknown>
 let items: Map<string, string>
+let sessionItems: Map<string, string>
 let cookieWrites: string[]
 let events: string[]
 
 beforeEach(() => {
 	items = new Map()
+	sessionItems = new Map()
 	cookieWrites = []
 	events = []
 	const win: Record<string, unknown> = {
@@ -19,6 +21,11 @@ beforeEach(() => {
 		getItem: (k: string) => items.get(k) ?? null,
 		setItem: (k: string, v: string) => void items.set(k, v),
 		removeItem: (k: string) => void items.delete(k),
+	}
+	g.sessionStorage = {
+		getItem: (k: string) => sessionItems.get(k) ?? null,
+		setItem: (k: string, v: string) => void sessionItems.set(k, v),
+		removeItem: (k: string) => void sessionItems.delete(k),
 	}
 	g.document = {
 		get cookie() {
@@ -37,7 +44,9 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-	for (const k of ['window', 'localStorage', 'document', 'CustomEvent']) g[k] = undefined
+	for (const k of ['window', 'localStorage', 'sessionStorage', 'document', 'CustomEvent']) {
+		g[k] = undefined
+	}
 })
 
 describe('consent checks', () => {
@@ -53,9 +62,11 @@ describe('withdrawCookieChoice', () => {
 	test('forgets the choice, the stored quote, Google cookies, and disables the resident tag', () => {
 		items.set('puzzled-consent', '{"analytics":true,"marketing":true}')
 		items.set('puzzled:ads:checkout-quote', '{}')
+		sessionItems.set('puzzled:attr:session', 'g%3DCj0_123')
 		withdrawCookieChoice(['G-TEST1234', 'AW-123456789'])
 		expect(items.has('puzzled-consent')).toBe(false)
 		expect(items.has('puzzled:ads:checkout-quote')).toBe(false)
+		expect(sessionItems.has('puzzled:attr:session')).toBe(false)
 		expect(items.get('puzzled:consent:marketing')).toBe('declined')
 		const win = g.window as Record<string, unknown>
 		expect(win['ga-disable-G-TEST1234']).toBe(true)
