@@ -11,6 +11,10 @@ on:
     branches: [main]
   workflow_call:
     inputs:
+      run:
+        description: Resolved lane JSON from the calling fast gate; empty computes a range.
+        type: string
+        default: ""
       lanes:
         type: string
         default: ""
@@ -39,6 +43,7 @@ permissions:
 
 jobs:
   plan:
+    if: inputs.run == ''
     name: Plan
     runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || 'sylphx-linux-standard' }}
     timeout-minutes: 10
@@ -51,13 +56,14 @@ jobs:
           filter: blob:none
 
       - id: range
-        uses: SylphxAI/.github/.github/actions/ci-range@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
+        uses: SylphxAI/.github/.github/actions/ci-range@821eafc6aa821e29d8292273c6548566495970c4
         with:
           only: ${{ inputs.lanes }}
+          global-patterns: ''
           lanes: |
-            browser: apps/puzzled/playwright.config.ts apps/puzzled/e2e-tests/* apps/puzzled/scripts/serve-puzzle-fixture.ts scripts/ci-contract.test.ts package.json apps/puzzled/package.json bun.lock .github/workflows/verify.yml
-            rust: crates/* proto/* Cargo.toml Cargo.lock apps/puzzled/atlas/*
-            build: apps/* packages/* proto/* crates/* brand/* package.json bun.lock bunfig.toml turbo.json Cargo.toml Cargo.lock .github/workflows/verify.yml
+            build: apps/puzzled/src/* apps/puzzled/tests/* apps/puzzled/e2e-tests/* apps/puzzled/scripts/* apps/puzzled/public/* apps/puzzled/*.ts apps/puzzled/*.json apps/puzzled/*.mjs apps/puzzled/*.cjs apps/puzzled/*.css apps/puzzled/bunfig.toml apps/puzzled/Dockerfile packages/* proto/* brand/* config/commercial/* package.json bun.lock bunfig.toml turbo.json biome.json buf.yaml buf.gen.yaml scripts/* .github/workflows/ci.yml .github/workflows/verify.yml
+            rust: crates/* proto/* Cargo.toml Cargo.lock rust-toolchain* .cargo/* apps/puzzled/atlas/* apps/puzzled/atlas.hcl scripts/check-dockerfile-puzzled-core.sh scripts/check-migration-order* .github/workflows/ci.yml .github/workflows/verify.yml
+            browser: apps/puzzled/playwright.config.ts apps/puzzled/e2e-tests/* apps/puzzled/scripts/serve-puzzle-fixture.ts scripts/ci-contract.test.ts package.json apps/puzzled/package.json bun.lock .github/workflows/ci.yml .github/workflows/verify.yml
 
   build:
     permissions:
@@ -65,11 +71,11 @@ jobs:
       actions: read
       checks: read
       id-token: write
-    name: Build (Next.js + release binary)
+    name: Build (Next.js)
     runs-on: sylphx-linux-standard
     timeout-minutes: 30
     needs: plan
-    if: fromJSON(needs.plan.outputs.run).build
+    if: always() && !cancelled() && (inputs.run != '' || needs.plan.result == 'success') && fromJSON(inputs.run || needs.plan.outputs.run || '{}').build
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -141,36 +147,11 @@ jobs:
           SKIP_ENV_VALIDATION: 'true'
           NODE_ENV: production
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
-        with:
-          components: clippy, rustfmt
-
-      - name: Put cargo on PATH
-        run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
-
-      - uses: SylphxAI/.github/.github/actions/rust-sccache@af0cb3e5ed20701ab32265b990174cf3c9de91f5 # SylphxAI/.github main (optimistic-merge template)
-        with:
-          s3-access-key: ${{ secrets.SYLPHX_CI_CACHE_ACCESS_KEY }}
-          s3-secret-key: ${{ secrets.SYLPHX_CI_CACHE_SECRET_KEY }}
-
-      - name: Build Rust api binary (locked release)
-        run: |
-          export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:${PATH}"
-          curl -fsSL https://github.com/protocolbuffers/protobuf/releases/download/v36.1/protoc-36.1-linux-x86_64.zip -o protoc.zip
-          echo "c4bc672d9d49214dc8cafdceadf4df92182d6ca8e3ec65a56b2d7de5602669b4  protoc.zip" | sha256sum -c -
-          unzip -qo protoc.zip -d "$HOME/.local"
-          test "$("$HOME/.local/bin/protoc" --version)" = "libprotoc 36.1"
-          export PATH="$HOME/.local/bin:${PATH}"
-          export PROTOC="$HOME/.local/bin/protoc"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          echo "PROTOC=$HOME/.local/bin/protoc" >> "$GITHUB_ENV"
-          cargo build --locked --release -p puzzled-server
 
   rust-api:
     name: Rust API (full, database-backed)
     needs: plan
-    if: fromJSON(needs.plan.outputs.run).rust
+    if: always() && !cancelled() && (inputs.run != '' || needs.plan.result == 'success') && fromJSON(inputs.run || needs.plan.outputs.run || '{}').rust
     runs-on: sylphx-linux-standard
     timeout-minutes: 30
     env:
@@ -224,6 +205,12 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           echo "PROTOC=$HOME/.local/bin/protoc" >> "$GITHUB_ENV"
           protoc --version
+      - name: Dockerfile copies puzzled-core
+        run: bash scripts/check-dockerfile-puzzled-core.sh
+
+      - name: Build Rust api binary (locked release)
+        run: cargo build --locked --release -p puzzled-server
+
       - name: cargo fmt
         run: |
           export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:${PATH}"
@@ -232,12 +219,12 @@ jobs:
       - name: cargo clippy
         run: |
           export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:${PATH}"
-          cargo clippy -p puzzled-core -p puzzled-server -- -D warnings -A clippy::double_parens -A clippy::too_many_arguments
+          cargo clippy --locked -p puzzled-core -p puzzled-server -- -D warnings -A clippy::double_parens -A clippy::too_many_arguments
 
       - name: cargo test
         run: |
           export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:${PATH}"
-          cargo test -p puzzled-core -p puzzled-server
+          cargo test --locked -p puzzled-core -p puzzled-server
 
   seo-contract:
     permissions:
@@ -249,7 +236,7 @@ jobs:
     runs-on: sylphx-linux-standard
     timeout-minutes: 30
     needs: [plan, build]
-    if: fromJSON(needs.plan.outputs.run).build
+    if: always() && !cancelled() && needs.build.result == 'success' && fromJSON(inputs.run || needs.plan.outputs.run || '{}').build
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -347,7 +334,7 @@ jobs:
       id-token: write
     name: Accessibility (WCAG 2.2 AA)
     # Browser infrastructure changes are verified before merge as well as on trunk.
-    if: fromJSON(needs.plan.outputs.run).build && (github.event_name != 'pull_request' || fromJSON(needs.plan.outputs.run).browser)
+    if: always() && !cancelled() && needs.build.result == 'success' && fromJSON(inputs.run || needs.plan.outputs.run || '{}').build && (github.event_name != 'pull_request' || fromJSON(inputs.run || needs.plan.outputs.run || '{}').browser)
     runs-on: sylphx-linux-standard
     timeout-minutes: 40
     needs: [plan, build]
@@ -474,7 +461,7 @@ jobs:
       id-token: write
     name: Lighthouse Budgets
     # Match the a11y acceptance lane, including browser infrastructure PRs.
-    if: fromJSON(needs.plan.outputs.run).build && (github.event_name != 'pull_request' || fromJSON(needs.plan.outputs.run).browser)
+    if: always() && !cancelled() && needs.build.result == 'success' && fromJSON(inputs.run || needs.plan.outputs.run || '{}').build && (github.event_name != 'pull_request' || fromJSON(inputs.run || needs.plan.outputs.run || '{}').browser)
     runs-on: sylphx-linux-standard
     timeout-minutes: 30
     needs: [plan, build]
@@ -660,7 +647,7 @@ jobs:
       id-token: write
     name: Fixture craft (board, home, phone, pricing)
     # Match the a11y acceptance lane, including browser infrastructure PRs.
-    if: fromJSON(needs.plan.outputs.run).build && (github.event_name != 'pull_request' || fromJSON(needs.plan.outputs.run).browser)
+    if: always() && !cancelled() && needs.build.result == 'success' && fromJSON(inputs.run || needs.plan.outputs.run || '{}').build && (github.event_name != 'pull_request' || fromJSON(inputs.run || needs.plan.outputs.run || '{}').browser)
     runs-on: sylphx-linux-standard
     timeout-minutes: 30
     needs: [plan, build]
@@ -804,12 +791,20 @@ jobs:
   # The marker: named exactly `verified`; never a required check.
   verified:
     name: verified
-    if: always() && !cancelled()
+    if: always()
     needs: [plan, build, rust-api, seo-contract, a11y, lighthouse, craft]
     runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || 'sylphx-linux-control' }}
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@f27e4105e2da7d681ecebe946634bdda7ba553ba # main
+      - if: ${{ !cancelled() }}
+        uses: SylphxAI/.github/.github/actions/needs-pass@f27e4105e2da7d681ecebe946634bdda7ba553ba # main
         with:
           needs: ${{ toJSON(needs) }}
-          required: plan
+          required: |
+            ${{ inputs.run == '' && 'plan' || '' }},
+            ${{ fromJSON(inputs.run || needs.plan.outputs.run || '{}').build && 'build,seo-contract' || '' }},
+            ${{ fromJSON(inputs.run || needs.plan.outputs.run || '{}').rust && 'rust-api' || '' }},
+            ${{ (fromJSON(inputs.run || needs.plan.outputs.run || '{}').build && (github.event_name != 'pull_request' || fromJSON(inputs.run || needs.plan.outputs.run || '{}').browser)) && 'a11y,lighthouse,craft' || '' }}
+      - name: Cancellation is not a passing verdict
+        if: cancelled()
+        run: exit 1
