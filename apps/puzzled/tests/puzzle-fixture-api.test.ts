@@ -117,10 +117,12 @@ describe('opt-in price list for pricing captures', () => {
 			const expectedPlan = catalogue.plans[index]
 			expect(expectedPlan).toBeDefined()
 			if (!expectedPlan) continue
-			const expectedPrices = Object.entries(expectedPlan.unit_amounts).map(([currency, amount]) => ({
-				currency,
-				unitAmountMinor: BigInt(amount),
-			}))
+			const expectedPrices = Object.entries(expectedPlan.unit_amounts).map(
+				([currency, amount]) => ({
+					currency,
+					unitAmountMinor: BigInt(amount),
+				}),
+			)
 			expect(plan.prices).toHaveLength(16)
 			expect(
 				plan.prices.map((price) => ({
