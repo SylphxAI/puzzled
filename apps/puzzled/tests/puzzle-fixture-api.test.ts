@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from 'bun:test'
 import { create } from '@bufbuild/protobuf'
 import { createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
+import catalogue from '../../../config/commercial/catalogue.json'
 import { createPuzzleFixtureServer } from '../scripts/serve-puzzle-fixture'
 import { parseWordSearchClientPayload } from '../src/games/word-search/parse-client'
 import { BillingService, ListPlansRequestSchema } from '../src/gen/connect/puzzled/v1/billing_pb'
@@ -93,7 +94,7 @@ describe('opt-in price list for pricing captures', () => {
 		expect(response.status).toBe(404)
 	})
 
-	test('serves Individual and Family plans in dollars and pounds through the generated client', async () => {
+	test('serves Individual and Family plans in all 16 catalogue currencies', async () => {
 		server = createPuzzleFixtureServer(0, { openPlans: true })
 		const client = createClient(
 			BillingService,
@@ -112,8 +113,23 @@ describe('opt-in price list for pricing captures', () => {
 			'family_yearly',
 			'individual_once',
 		])
-		for (const plan of plans.plans) {
-			expect(plan.prices.map((price) => price.currency)).toEqual(['usd', 'gbp'])
+		for (const [index, plan] of plans.plans.entries()) {
+			const expectedPlan = catalogue.plans[index]
+			expect(expectedPlan).toBeDefined()
+			if (!expectedPlan) continue
+			const expectedPrices = Object.entries(expectedPlan.unit_amounts).map(
+				([currency, amount]) => ({
+					currency,
+					unitAmountMinor: BigInt(amount),
+				}),
+			)
+			expect(plan.prices).toHaveLength(16)
+			expect(
+				plan.prices.map((price) => ({
+					currency: price.currency,
+					unitAmountMinor: price.unitAmountMinor,
+				})),
+			).toEqual(expectedPrices)
 		}
 	})
 })

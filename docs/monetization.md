@@ -76,10 +76,11 @@ end of Times Puzzles in pounds. We do not undercut on cost.
 
 | Plan | USD | GBP |
 |---|---|---|
+| 3-Day Weekend Plus & Archive Pass (one-time) | 2.99 | 2.99 |
 | Puzzled Plus, monthly | 4.99 | 3.99 |
-| Puzzled Plus, yearly | 39.99 | 32.99 |
-| Puzzled Plus Family (up to 4 people), monthly | 7.99 | 6.49 |
-| Puzzled Plus Family, yearly | 64.99 | 52.99 |
+| Puzzled Plus, yearly | 39.99 | 29.99 |
+| Puzzled Plus Family (up to 4 people), monthly | 7.99 | 5.99 |
+| Puzzled Plus Family, yearly | 64.99 | 47.99 |
 
 - Prices include VAT (Stripe `tax_behavior=inclusive`). The pricing page shows
   pounds for `en-GB` and dollars elsewhere, and checkout charges the currency

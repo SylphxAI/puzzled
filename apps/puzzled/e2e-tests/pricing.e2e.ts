@@ -246,3 +246,132 @@ for (const viewport of VIEWPORTS) {
 		})
 	})
 }
+
+const THEME_MODES = ['light', 'dark'] as const
+
+const CAPTURE_VIEWPORTS = [
+	{ name: 'desktop-1440x900', width: 1440, height: 900 },
+	{ name: 'mobile-390x844', width: 390, height: 844 },
+] as const
+
+const CURRENCY_CAPTURES = [
+	{
+		code: 'usd',
+		starter: '$2.99',
+		plusYearly: '$39.99',
+		familyYearly: '$64.99',
+	},
+	{
+		code: 'gbp',
+		starter: '£2.99',
+		plusYearly: '£29.99',
+		familyYearly: '£47.99',
+	},
+	{
+		code: 'jpy',
+		starter: '¥479',
+		plusYearly: '¥6,399',
+		familyYearly: '¥10,389',
+	},
+	{
+		code: 'idr',
+		starter: /IDR\s*59,000(?!\.00)/,
+		plusYearly: /IDR\s*729,000(?!\.00)/,
+		plusMonthlyEq: /IDR\s*60,750(?!\.00)/,
+		familyYearly: /IDR\s*1,189,000(?!\.00)/,
+		familyMonthlyEq: /IDR\s*99,083(?!\.\d)/,
+		free: /IDR\s*0(?!\.00)/,
+	},
+	{
+		code: 'hkd',
+		starter: /HK\$29(?!\.00)/,
+		plusYearly: /HK\$319(?!\.00)/,
+		plusMonthlyEq: 'HK$26.58',
+		familyYearly: /HK\$519(?!\.00)/,
+		free: /HK\$0(?!\.00)/,
+	},
+] as const
+
+for (const viewport of CAPTURE_VIEWPORTS) {
+	for (const colorScheme of THEME_MODES) {
+		test.describe(`Pricing 16-currency matrix (${viewport.name}, ${colorScheme})`, () => {
+			test.use({
+				viewport: { width: viewport.width, height: viewport.height },
+				colorScheme,
+			})
+
+			test('switches USD, GBP, JPY, IDR and HKD without overflow', async ({ page }, testInfo) => {
+				await openPricing(page)
+				const plus = page.locator('#plus')
+				const yearly = plus.getByRole('radio', { name: /^Yearly/ })
+				test.skip((await yearly.count()) === 0, 'sales are closed: no currency switcher')
+
+				if (colorScheme === 'dark') {
+					await expect(page.locator('html')).toHaveClass(/\bdark\b/)
+				}
+
+				const decline = page.getByRole('button', { name: 'Decline', exact: true })
+				if (await decline.isVisible()) {
+					await decline.click()
+					await expect(decline).toHaveCount(0)
+				}
+
+				const select = page.getByRole('combobox', { name: 'Currency', exact: true })
+				await expect(select).toBeVisible()
+				await expect(select.locator('option')).toHaveCount(16)
+
+				const family = page.locator('#family')
+				for (const target of CURRENCY_CAPTURES) {
+					if ((await select.inputValue()) !== target.code) {
+						await select.selectOption(target.code)
+					}
+					await expect(select).toHaveValue(target.code)
+					await expect(plus).toContainText(target.starter)
+					await expect(plus).toContainText(target.plusYearly)
+					if ('plusMonthlyEq' in target) {
+						await expect(plus).toContainText(target.plusMonthlyEq)
+					}
+					await expect(family).toContainText(target.familyYearly)
+					if ('familyMonthlyEq' in target) {
+						await expect(family).toContainText(target.familyMonthlyEq)
+					}
+					if ('free' in target) {
+						await expect(page.locator('#plans')).toContainText(target.free)
+					}
+
+					expect(
+						await page.evaluate(() => document.documentElement.scrollWidth),
+					).toBeLessThanOrEqual(viewport.width)
+
+					const box = await select.boundingBox()
+					expect(box).not.toBeNull()
+					if (box) {
+						expect(box.x).toBeGreaterThanOrEqual(0)
+						expect(box.x + box.width).toBeLessThanOrEqual(viewport.width)
+					}
+
+					await page.evaluate(() => window.scrollTo(0, 0))
+					await settle(page)
+					const shotName = `pricing-${viewport.name}-${colorScheme}-${target.code}.png`
+					await testInfo.attach(shotName, {
+						body: await page.screenshot({
+							fullPage: false,
+							path: testInfo.outputPath(shotName),
+						}),
+						contentType: 'image/png',
+					})
+					if (viewport.width === 390 && target.code === 'idr') {
+						const fullName = `pricing-${viewport.name}-${colorScheme}-idr-full.png`
+						await testInfo.attach(fullName, {
+							body: await page.screenshot({
+								fullPage: true,
+								path: testInfo.outputPath(fullName),
+							}),
+							contentType: 'image/png',
+						})
+					}
+				}
+			})
+		})
+	}
+}

@@ -31,7 +31,7 @@ function fixture() {
 		name: sessionName,
 		state: 'open',
 		livemode: true,
-		amount_total: '99',
+		amount_total: '299',
 		currency_code: 'USD',
 		payment_status: 'unpaid',
 		processor_session_id: 'cs_live_example',
@@ -56,7 +56,7 @@ function fixture() {
 						term: { unit: 'days', count: 3 },
 					},
 					features: { plus: 'true', seats: '1' },
-					prices: [{ key: 'puzzled_starter_unlock', unit_amounts: { USD: '99', GBP: '79' } }],
+					prices: [{ key: 'puzzled_starter_unlock', unit_amounts: { USD: '299', GBP: '299' } }],
 				},
 			],
 		},
@@ -78,7 +78,7 @@ function fixture() {
 	const ports: Ports = {
 		now: () => clock,
 		requestId: requestIdentity,
-		pricing: async () => '3-day pass $0.99',
+		pricing: async () => '3-day pass $2.99',
 		hosted: async () => hosted,
 		read: async (url, _headers, body) => {
 			calls.push({ url, body, headers: _headers })
@@ -89,7 +89,7 @@ function fixture() {
 						{
 							id: 'individual_once',
 							accessDays: 3,
-							prices: [{ currency: 'usd', unitAmountMinor: '99' }],
+							prices: [{ currency: 'usd', unitAmountMinor: '299' }],
 						},
 					],
 				}

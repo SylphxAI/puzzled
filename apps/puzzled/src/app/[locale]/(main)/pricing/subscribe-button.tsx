@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { trackGa4KeyEvent } from '@/features/analytics/lib/ga4-key-events'
 import { rememberCheckoutQuote } from '@/features/analytics/lib/google-tag'
+import { minorUnitsToMajor } from '@/lib/billing/plus'
 import { startCheckout } from '@/lib/connect/billing-client'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
@@ -109,13 +110,13 @@ export function SubscribeButton({
 							billing_interval: billingInterval,
 							checkout_trigger: checkoutTrigger,
 							option,
-							value: amountMinor / 100,
+							value: minorUnitsToMajor(amountMinor, currency),
 							currency: currency.toUpperCase(),
 						})
 						// What the checkout return reports to Google Ads (kept only with consent).
 						rememberCheckoutQuote({
 							plan: planId,
-							value: amountMinor / 100,
+							value: minorUnitsToMajor(amountMinor, currency),
 							currency: currency.toUpperCase(),
 						})
 						window.location.assign(

@@ -77,7 +77,7 @@ export const USE_CASE_SPECS = {
 			href: '/?entry_surface=seo_daily-word-and-logic-puzzles-online',
 		},
 		secondaryCta: {
-			label: `Unlock all ${TOTAL_GAMES} games + archive ($0.99 weekend pass or $4.99/mo)`,
+			label: `Unlock all ${TOTAL_GAMES} games + archive ($2.99 weekend pass or $4.99/mo)`,
 			href: '/pricing?entry_surface=seo_daily-word-and-logic-puzzles-online',
 		},
 		workflowTitle: 'How the daily suite fits together',
@@ -112,7 +112,7 @@ export const USE_CASE_SPECS = {
 			},
 			{
 				title: 'Play any missed day in the archive and keep verified streaks',
-				body: `Grab a 3-Day Weekend Pass ($0.99 / £0.79 one-time, no auto-renewal) to test the whole suite, or join Puzzled Plus ($4.99/mo or $39.99/yr | £3.99/mo or £32.99/yr) to unlock all ${TOTAL_GAMES} daily games, the complete past-day archive, detailed stats, and zero ads anywhere on the site.`,
+				body: `Grab a 3-Day Weekend Pass ($2.99 / £2.99 one-time, no auto-renewal) to test the whole suite, or join Puzzled Plus ($4.99/mo or $39.99/yr | £3.99/mo or £29.99/yr) to unlock all ${TOTAL_GAMES} daily games, the complete past-day archive, detailed stats, and zero ads anywhere on the site.`,
 			},
 		],
 		comparisonTitle: 'How Puzzled compares',
@@ -153,7 +153,7 @@ export const USE_CASE_SPECS = {
 				columns: [
 					'Cluttered ad trackers',
 					'$15–$25/mo bundles',
-					'Weekend Pass $0.99 (3 days) · Plus $4.99/mo or $39.99/yr · Family (4 seats) $7.99/mo',
+					'Weekend Pass $2.99 (3 days) · Plus $4.99/mo or $39.99/yr · Family (4 seats) $7.99/mo',
 				],
 			},
 		],
@@ -170,12 +170,12 @@ export const USE_CASE_SPECS = {
 			},
 			{
 				question: 'What does Puzzled Plus unlock?',
-				answer: `Puzzled Plus unlocks all ${TOTAL_GAMES} daily games, the full archive of past days, per-game stats and streaks, and ad-free play everywhere for $4.99/month or $39.99/year (£3.99/month or £32.99/year).`,
+				answer: `Puzzled Plus unlocks all ${TOTAL_GAMES} daily games, the full archive of past days, per-game stats and streaks, and ad-free play everywhere for $4.99/month or $39.99/year (£3.99/month or £29.99/year).`,
 			},
 			{
 				question: 'Can I try all 19 games without a recurring subscription?',
 				answer:
-					'Yes. The 3-Day Weekend Plus & Archive Pass gives 3 days of full access for a one-time payment of $0.99 USD or £0.79 GBP with no renewal.',
+					'Yes. The 3-Day Weekend Plus & Archive Pass gives 3 days of full access for a one-time payment of $2.99 USD or £2.99 GBP with no renewal.',
 			},
 		],
 		closingCta: {
@@ -187,7 +187,7 @@ export const USE_CASE_SPECS = {
 		softwareDescription: `${TOTAL_GAMES} daily word, logic, number, and spatial puzzles in one web suite with midnight HKT daily resets, server-verified streaks, and full past-day archive access.`,
 		offers: [
 			{ name: "Free (Today's featured puzzle)", price: '0', priceCurrency: 'USD' },
-			{ name: '3-Day Weekend Plus & Archive Pass', price: '0.99', priceCurrency: 'USD' },
+			{ name: '3-Day Weekend Plus & Archive Pass', price: '2.99', priceCurrency: 'USD' },
 			{ name: 'Puzzled Plus (Monthly)', price: '4.99', priceCurrency: 'USD' },
 			{ name: 'Puzzled Plus (Yearly)', price: '39.99', priceCurrency: 'USD' },
 		],
@@ -197,7 +197,7 @@ export const USE_CASE_SPECS = {
 		path: '/use-cases/family-brain-games-no-ads',
 		metaTitle: 'Ad-Free Daily Brain Games for Families (4 Seats)',
 		metaDescription:
-			'Clean, distraction-free daily word, math, and logic puzzles for up to 4 family members—each with separate streaks and stats. Zero in-game ads, 8 languages. Family plan from $7.99/mo or £6.49/mo.',
+			'Clean, distraction-free daily word, math, and logic puzzles for up to 4 family members—each with separate streaks and stats. Zero in-game ads, 8 languages. Family plan from $7.99/mo or £5.99/mo.',
 		eyebrow: 'Up to 4 family seats · Zero in-game ads',
 		h1: 'Clean brain games the whole family can play—with separate streaks and zero distractions.',
 		heroSubhead: `Most puzzle apps interrupt every round with loud video ads and dark-pattern timers. Puzzled never shows an ad while you are solving a puzzle—and Puzzled Plus Family gives up to four people full, 100% ad-free access to all ${TOTAL_GAMES} daily games and past archives, each with their own stats, streaks, and preferred language.`,
@@ -225,7 +225,7 @@ export const USE_CASE_SPECS = {
 			},
 			{
 				title: 'One family plan covers 4 individual accounts',
-				body: 'Subscribe once ($7.99/mo or $64.99/yr USD · £6.49/mo or £52.99/yr GBP—about $1.35/person/month on yearly) and invite up to 3 family members via an invite link. Everyone keeps their own login, streak, and solve history, and can compare spoiler-free result cards at the dinner table.',
+				body: 'Subscribe once ($7.99/mo or $64.99/yr USD · £5.99/mo or £47.99/yr GBP—about $1.35/person/month on yearly) and invite up to 3 family members via an invite link. Everyone keeps their own login, streak, and solve history, and can compare spoiler-free result cards at the dinner table.',
 			},
 			{
 				title: 'Eight languages so grandparents, parents, and kids play comfortably',
@@ -270,7 +270,7 @@ export const USE_CASE_SPECS = {
 				columns: [
 					'Free with data/ad trackers',
 					'4 × $4.99 = $19.96/mo',
-					'$7.99/mo or $64.99/yr USD · £6.49/mo or £52.99/yr GBP',
+					'$7.99/mo or $64.99/yr USD · £5.99/mo or £47.99/yr GBP',
 				],
 			},
 		],
@@ -294,7 +294,7 @@ export const USE_CASE_SPECS = {
 			{
 				question: 'How much does Puzzled Plus Family cost?',
 				answer:
-					'Puzzled Plus Family is $7.99/month or $64.99/year USD (£6.49/month or £52.99/year GBP), VAT inclusive.',
+					'Puzzled Plus Family is $7.99/month or $64.99/year USD (£5.99/month or £47.99/year GBP), VAT inclusive.',
 			},
 		],
 		closingCta: {
@@ -308,7 +308,7 @@ export const USE_CASE_SPECS = {
 		offers: [
 			{ name: 'Puzzled Plus Family (Monthly, 4 seats)', price: '7.99', priceCurrency: 'USD' },
 			{ name: 'Puzzled Plus Family (Yearly, 4 seats)', price: '64.99', priceCurrency: 'USD' },
-			{ name: 'Puzzled Plus Family (Yearly GBP, 4 seats)', price: '52.99', priceCurrency: 'GBP' },
+			{ name: 'Puzzled Plus Family (Yearly GBP, 4 seats)', price: '47.99', priceCurrency: 'GBP' },
 		],
 	},
 } as const satisfies Record<string, UseCaseSpec>

@@ -5,7 +5,12 @@ import { useTranslations } from 'next-intl'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { TrialChargeLine } from '@/features/plus/components/trial-charge-line'
-import { formatPrice, type PlanCard, yearlySavingPercent } from '@/lib/billing/plus'
+import {
+	formatMonthlyEquivalentPrice,
+	formatPrice,
+	type PlanCard,
+	yearlySavingPercent,
+} from '@/lib/billing/plus'
 import { cn } from '@/lib/utils'
 import styles from './pricing.module.css'
 import { SubscribeButton } from './subscribe-button'
@@ -146,8 +151,8 @@ export function PlusOffer({
 									{isYear ? (
 										<span className="block text-sm text-muted-foreground tnum">
 											{t('monthlyEquivalent', {
-												price: formatPrice(
-													Math.round(card.amountMinor / 12),
+												price: formatMonthlyEquivalentPrice(
+													card.amountMinor,
 													card.currency,
 													locale,
 												),

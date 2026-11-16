@@ -21,8 +21,69 @@ export const COUNTRY_HEADER = 'cf-ipcountry'
 
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 
-/** Countries whose visitors default to pounds: the UK and its Crown Dependencies. */
-const GBP_COUNTRIES = new Set(['GB', 'GG', 'JE', 'IM'])
+const EUR_COUNTRIES = new Set([
+	// Eurozone member states
+	'AT',
+	'BE',
+	'BG',
+	'CY',
+	'DE',
+	'EE',
+	'ES',
+	'FI',
+	'FR',
+	'GR',
+	'HR',
+	'IE',
+	'IT',
+	'LT',
+	'LU',
+	'LV',
+	'MT',
+	'NL',
+	'PT',
+	'SI',
+	'SK',
+	// Euro microstates & territories using EUR
+	'AD',
+	'AX',
+	'BL',
+	'GF',
+	'GP',
+	'MC',
+	'ME',
+	'MF',
+	'MQ',
+	'PM',
+	'RE',
+	'SM',
+	'VA',
+	'XK',
+	'YT',
+])
+
+const COUNTRY_TO_CURRENCY: Record<string, string> = {
+	// British Pound (UK and Crown Dependencies)
+	GB: 'gbp',
+	GG: 'gbp',
+	JE: 'gbp',
+	IM: 'gbp',
+	// APAC & Americas
+	HK: 'hkd',
+	TW: 'twd',
+	JP: 'jpy',
+	KR: 'krw',
+	MY: 'myr',
+	SG: 'sgd',
+	CA: 'cad',
+	AU: 'aud',
+	NZ: 'nzd',
+	TH: 'thb',
+	PH: 'php',
+	ID: 'idr',
+	VN: 'vnd',
+	US: 'usd',
+}
 
 const CODE_PATTERN = /^[a-z]{3}$/
 
@@ -32,21 +93,33 @@ export function normalizeCurrency(raw: string | null | undefined): string | null
 	return code && CODE_PATTERN.test(code) ? code : null
 }
 
-/** Currencies every plan publishes, so one choice prices every card. Sorted, with US dollars and pounds first. */
+/** Currencies every plan publishes, so one choice prices every card. USD/GBP/EUR first, then alphabetical. */
 export function availableCurrencies(plans: ListPlansResponse['plans']): string[] {
 	if (plans.length === 0) return []
 	const common = plans
 		.map((plan) => new Set(plan.prices.map((p) => p.currency)))
 		.reduce((acc, set) => new Set([...acc].filter((code) => set.has(code))))
-	const rank = (code: string) => (code === 'gbp' ? 0 : code === 'usd' ? 1 : 2)
+	const rank = (code: string) => (code === 'usd' ? 0 : code === 'gbp' ? 1 : code === 'eur' ? 2 : 3)
 	return [...common].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+}
+
+/** Localized select label for a currency code, e.g. `USD — US Dollar`. */
+export function currencyOptionLabel(code: string, locale: string): string {
+	const upper = code.toUpperCase()
+	try {
+		const name = new Intl.DisplayNames([locale], { type: 'currency' }).of(upper)
+		return name && name.toUpperCase() !== upper ? `${upper} — ${name}` : upper
+	} catch {
+		return upper
+	}
 }
 
 /** The default from where the visitor is: country first, then the locale region, else dollars. */
 export function defaultCurrency(country: string | null | undefined, locale: string): string {
 	const code = country?.trim().toUpperCase()
 	if (code && /^[A-Z]{2}$/.test(code) && code !== 'XX' && code !== 'T1') {
-		return GBP_COUNTRIES.has(code) ? 'gbp' : 'usd'
+		if (EUR_COUNTRIES.has(code)) return 'eur'
+		return COUNTRY_TO_CURRENCY[code] ?? 'usd'
 	}
 	return currencyForLocale(locale)
 }

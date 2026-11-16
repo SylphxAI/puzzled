@@ -30,7 +30,9 @@ for (const viewport of [
 			await action.evaluate((el) => el.scrollIntoView({ block: 'center' }))
 			await expect(action).toBeInViewport({ ratio: 1 })
 			await action.click({ trial: true })
-			expect((await action.boundingBox())!.height).toBeGreaterThanOrEqual(48)
+			const actionBox = (await action.boundingBox())!
+			// Tolerate Blink float32 subpixel rounding (e.g. 47.99997px on min-h-12).
+			expect(Math.round(actionBox.height * 100) / 100).toBeGreaterThanOrEqual(48)
 			await page.screenshot({
 				path: info.outputPath(`${consentState}-play.jpg`),
 				type: 'jpeg',

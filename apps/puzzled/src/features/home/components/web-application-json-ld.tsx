@@ -1,3 +1,4 @@
+import { currencyFractionDigits, minorUnitsToMajor } from '@/lib/billing/plus'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 import catalogue from '../../../../../../config/commercial/catalogue.json'
 
@@ -5,8 +6,9 @@ import catalogue from '../../../../../../config/commercial/catalogue.json'
 export async function WebApplicationJsonLd({ locale }: { locale: string }) {
 	const baseUrl = await getRequestSiteOrigin()
 	const currency =
-		(catalogue.currency_display.by_locale as Record<string, string>)[locale] ??
+		(catalogue.currency_display as { by_locale?: Record<string, string> }).by_locale?.[locale] ??
 		catalogue.base_currency
+	const fractionDigits = currencyFractionDigits(currency)
 	const nameFor = (names: Record<string, string>) => names[locale] ?? names['en-US']
 	const schema = {
 		'@context': 'https://schema.org',
@@ -24,7 +26,7 @@ export async function WebApplicationJsonLd({ locale }: { locale: string }) {
 			{
 				'@type': 'Offer',
 				name: `${nameFor(catalogue.free.name)} daily puzzles`,
-				price: (catalogue.free.price_minor / 100).toFixed(2),
+				price: minorUnitsToMajor(catalogue.free.price_minor, currency).toFixed(fractionDigits),
 				priceCurrency: currency.toUpperCase(),
 				url: baseUrl,
 			},
@@ -33,7 +35,7 @@ export async function WebApplicationJsonLd({ locale }: { locale: string }) {
 				.flatMap((plan) => {
 					const amount = (plan.unit_amounts as Record<string, number>)[currency]
 					if (amount === undefined) return []
-					const price = (amount / 100).toFixed(2)
+					const price = minorUnitsToMajor(amount, currency).toFixed(fractionDigits)
 					return [
 						{
 							'@type': 'Offer',

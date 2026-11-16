@@ -1,7 +1,7 @@
 {
 	"product": "puzzled",
 	"format": "sylphx-money.catalogue/1",
-	"updated": "2026-10-26",
+	"updated": "2026-11-15",
 	"readme": "The single source for Puzzled's commercial facts; CI applies it to Sylphx Money (PATCH price_catalogs/default?allow_missing=true, then :sync); change it only by PR. Products, price keys, amounts, features (entitlements) and family seats are declared here; scripts/money-catalogue-spec.ts turns them into Money's catalogue spec. Amounts are integer minor units, tax inclusive. The app holds no price: it reads Money's price_catalogs/default and entitlement_grants:check.",
 	"seller": {
 		"legal_name": "Sylphx Limited",
@@ -18,11 +18,32 @@
 	"base_currency": "usd",
 	"currency_display": {
 		"by_locale": {
-			"en-GB": "gbp"
+			"en-GB": "gbp",
+			"zh-HK": "hkd",
+			"zh-TW": "twd",
+			"ja": "jpy"
 		},
+		"by_country_note": "All 16 Money catalogue currencies supported via cookie, CF-IPCountry, locale region, or USD fallback",
 		"default": "usd",
-		"rule": "the pricing page shows the locale's currency when the price publishes one, and the default currency otherwise",
-		"source": "the pricing page shows the locale's currency when Money's price carries it"
+		"supported": [
+			"hkd",
+			"twd",
+			"usd",
+			"gbp",
+			"eur",
+			"jpy",
+			"krw",
+			"myr",
+			"sgd",
+			"cad",
+			"aud",
+			"nzd",
+			"thb",
+			"php",
+			"idr",
+			"vnd"
+		],
+		"rule": "the pricing page shows the visitor currency when published and pins checkout to that exact currency"
 	},
 	"free": {
 		"id": "free",
@@ -129,8 +150,22 @@
 			},
 			"interval": "month",
 			"unit_amounts": {
+				"hkd": 4900,
+				"twd": 16900,
 				"usd": 499,
-				"gbp": 399
+				"gbp": 399,
+				"eur": 499,
+				"jpy": 799,
+				"krw": 6900,
+				"myr": 2099,
+				"sgd": 699,
+				"cad": 799,
+				"aud": 799,
+				"nzd": 999,
+				"thb": 17900,
+				"php": 31900,
+				"idr": 9900000,
+				"vnd": 129000
 			},
 			"tax_behavior": "inclusive",
 			"grants": {
@@ -138,7 +173,7 @@
 				"seats": "1"
 			},
 			"trial_days": 0,
-			"source": "the Money declaration of 2026-09-28; amounts as first declared in the 2026-09-26 Money migration plan"
+			"source": "Verified 16-currency parity matrix (sylphx-money-catalogue-signoff-2026-11-15)"
 		},
 		{
 			"price_key": "plus_individual_yearly",
@@ -151,8 +186,22 @@
 			},
 			"interval": "year",
 			"unit_amounts": {
+				"hkd": 31900,
+				"twd": 131900,
 				"usd": 3999,
-				"gbp": 3299
+				"gbp": 2999,
+				"eur": 3699,
+				"jpy": 6399,
+				"krw": 53900,
+				"myr": 16399,
+				"sgd": 5199,
+				"cad": 5799,
+				"aud": 5899,
+				"nzd": 7299,
+				"thb": 135900,
+				"php": 255900,
+				"idr": 72900000,
+				"vnd": 1039000
 			},
 			"tax_behavior": "inclusive",
 			"grants": {
@@ -160,7 +209,7 @@
 				"seats": "1"
 			},
 			"trial_days": 0,
-			"source": "the Money declaration of 2026-09-28; amounts as first declared in the 2026-09-26 Money migration plan"
+			"source": "Verified 16-currency parity matrix (sylphx-money-catalogue-signoff-2026-11-15)"
 		},
 		{
 			"price_key": "plus_family_monthly",
@@ -173,8 +222,22 @@
 			},
 			"interval": "month",
 			"unit_amounts": {
+				"hkd": 6900,
+				"twd": 26900,
 				"usd": 799,
-				"gbp": 649
+				"gbp": 599,
+				"eur": 799,
+				"jpy": 1279,
+				"krw": 10900,
+				"myr": 3299,
+				"sgd": 1099,
+				"cad": 1199,
+				"aud": 1199,
+				"nzd": 1499,
+				"thb": 27900,
+				"php": 51900,
+				"idr": 14900000,
+				"vnd": 209000
 			},
 			"tax_behavior": "inclusive",
 			"grants": {
@@ -183,7 +246,7 @@
 				"seats": "4"
 			},
 			"trial_days": 0,
-			"source": "the Money declaration of 2026-09-28; amounts as first declared in the 2026-09-26 Money migration plan"
+			"source": "Verified 16-currency parity matrix (sylphx-money-catalogue-signoff-2026-11-15)"
 		},
 		{
 			"price_key": "plus_family_yearly",
@@ -196,8 +259,22 @@
 			},
 			"interval": "year",
 			"unit_amounts": {
+				"hkd": 51900,
+				"twd": 214900,
 				"usd": 6499,
-				"gbp": 5299
+				"gbp": 4799,
+				"eur": 5899,
+				"jpy": 10389,
+				"krw": 87900,
+				"myr": 26599,
+				"sgd": 8399,
+				"cad": 9299,
+				"aud": 9599,
+				"nzd": 11799,
+				"thb": 220900,
+				"php": 414900,
+				"idr": 118900000,
+				"vnd": 1679000
 			},
 			"tax_behavior": "inclusive",
 			"grants": {
@@ -206,7 +283,7 @@
 				"seats": "4"
 			},
 			"trial_days": 0,
-			"source": "the Money declaration of 2026-09-28; amounts as first declared in the 2026-09-26 Money migration plan"
+			"source": "Verified 16-currency parity matrix (sylphx-money-catalogue-signoff-2026-11-15)"
 		},
 		{
 			"price_key": "puzzled_starter_unlock",
@@ -219,8 +296,22 @@
 			},
 			"interval": "",
 			"unit_amounts": {
-				"usd": 99,
-				"gbp": 79
+				"hkd": 2900,
+				"twd": 9900,
+				"usd": 299,
+				"gbp": 299,
+				"eur": 299,
+				"jpy": 479,
+				"krw": 4900,
+				"myr": 1299,
+				"sgd": 399,
+				"cad": 499,
+				"aud": 499,
+				"nzd": 599,
+				"thb": 10900,
+				"php": 19900,
+				"idr": 5900000,
+				"vnd": 79000
 			},
 			"tax_behavior": "inclusive",
 			"grants": {
@@ -228,7 +319,7 @@
 				"seats": "1"
 			},
 			"trial_days": 0,
-			"source": "Argon MMS contract decision, 2026-10-26: a one-time 3-day full Plus pass, bounded by Money's native licence term"
+			"source": "Verified 16-currency parity matrix (sylphx-money-catalogue-signoff-2026-11-15)"
 		}
 	],
 	"policy": {
