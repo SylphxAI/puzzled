@@ -10,7 +10,10 @@ for (const viewport of [
 	test(`home craft at ${viewport.width}x${viewport.height}`, async ({ page }, info) => {
 		await page.setViewportSize(viewport)
 		await page.goto('/')
-		await expect(page.locator('[data-day-primary-action]')).toBeVisible()
+		const primaryAction = page.locator('[data-day-primary-action]')
+		// Wait for SSR Suspense reveal ($RC -> $RV) to remove the hidden streaming container before strict visibility check.
+		await expect(primaryAction).toHaveCount(1)
+		await expect(primaryAction).toBeVisible()
 		await settle(page)
 		for (const consentState of ['open', 'dismissed']) {
 			if (consentState === 'dismissed') {
@@ -48,6 +51,8 @@ test('Chinese display type and reduced motion remain readable', async ({ page },
 	await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' })
 	await page.goto('/zh-CN')
 	const title = page.locator('.home-day-grid h1')
+	// Wait for SSR Suspense reveal ($RC -> $RV) to remove the hidden streaming container.
+	await expect(title).toHaveCount(1)
 	await expect(title).toBeVisible()
 	await settle(page)
 	for (const selector of ['.home-day-grid h1', '.home-featured-title']) {
