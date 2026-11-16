@@ -1,3 +1,4 @@
+# optimistic-merge: advisory — Nonblocking first-session parity screenshot capture; never gates PRs or merge groups.
 name: First-session captures
 on:
   pull_request:
@@ -17,6 +18,9 @@ on:
         description: Include NYT reference entry pages
         type: boolean
         default: true
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || format('{0}-run-{1}', github.workflow, github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 permissions:
   contents: read
 jobs:

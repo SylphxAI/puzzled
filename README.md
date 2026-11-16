@@ -75,7 +75,7 @@ A local full stack (api, web and a scratch Postgres) is described in
 ## Test and deploy
 
 Pull requests go through the merge queue, which runs a fast gate; the full suite
-runs after merge and nightly ([AGENTS.md](AGENTS.md#ci-and-the-merge-queue)). A
+runs after merge ([AGENTS.md](AGENTS.md#ci-and-the-merge-queue)). A
 merged commit that passes is deployed by the platform from `sylphx.toml`, with
 schema migrations applied by an Atlas job first. After a deploy, run
 `bun run verify:live` to check production

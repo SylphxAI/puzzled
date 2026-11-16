@@ -1,9 +1,9 @@
 # Post-merge verification (optimistic merge, SylphxAI/.github
 # docs/optimistic-merge.md): everything the gate dropped - the production web
 # build, the release binary, the full database-backed Rust suite and the
-# served-build harnesses - runs here on each push to main, nightly, and on a
-# pull request marked ready (ci.yml calls this file). The `verified` job is the
-# marker the platform's Release reads.
+# served-build harnesses - runs here on each push to main, manually via
+# dispatch, and on a pull request marked ready (ci.yml calls this file). The
+# `verified` job is the marker the platform's Release reads.
 name: Verify
 
 on:
@@ -20,10 +20,6 @@ on:
         description: Comma-separated lanes to run. Empty runs every lane the range selects.
         type: string
         default: ""
-  # Nightly: runs every lane (a schedule has no base), including the browser
-  # harnesses.
-  schedule:
-    - cron: '17 3 * * *'
 
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -39,11 +35,12 @@ permissions:
   contents: read
   actions: read
   checks: read
+  pull-requests: read
 
 jobs:
   plan:
     name: Plan
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || 'sylphx-linux-standard' }}
     timeout-minutes: 10
     outputs:
       base: ${{ steps.range.outputs.base }}
@@ -100,7 +97,7 @@ jobs:
               exit 0
             fi
             echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
-            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache
             sleep $((attempt * 3))
           done
           echo "bun install failed after retries"
@@ -280,7 +277,7 @@ jobs:
               exit 0
             fi
             echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
-            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache
             sleep $((attempt * 3))
           done
           echo "bun install failed after retries"
@@ -335,12 +332,12 @@ jobs:
 
       - name: Show the server log
         if: failure()
-        run: cat "$RUNNER_TEMP/serve-seo.log" || true
+        run: if [ -f "$RUNNER_TEMP/serve-seo.log" ]; then cat "$RUNNER_TEMP/serve-seo.log"; fi
 
       - name: Stop the served build
         if: always()
         run: |
-          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
+          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || :; fi
 
   a11y:
     permissions:
@@ -384,7 +381,7 @@ jobs:
               exit 0
             fi
             echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
-            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache
             sleep $((attempt * 3))
           done
           echo "bun install failed after retries"
@@ -454,7 +451,6 @@ jobs:
         run: bun run test:e2e e2e-tests/discovery.e2e.ts e2e-tests/llms.e2e.ts --workers=1 --retries=0
 
       - name: Upload the Playwright report
-        continue-on-error: true
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -462,12 +458,13 @@ jobs:
           path: |
             apps/puzzled/playwright-report
             apps/puzzled/test-results
+          if-no-files-found: ignore
           retention-days: 7
 
       - name: Stop the served build
         if: always()
         run: |
-          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
+          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || :; fi
 
   lighthouse:
     permissions:
@@ -515,7 +512,7 @@ jobs:
               exit 0
             fi
             echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
-            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache
             sleep $((attempt * 3))
           done
           echo "bun install failed after retries"
@@ -586,8 +583,9 @@ jobs:
           cat "$RUNNER_TEMP/puzzle-fixture.log"
           exit 1
 
-      # lhci starts `bun run start` itself on port 3000.
+      # lhci starts `bun run start` itself on port 3000; timing assertions run post-merge only.
       - name: Lighthouse budget (bun run lighthouse)
+        if: github.event_name != 'pull_request' && github.event_name != 'pull_request_target' && github.event_name != 'merge_group'
         working-directory: apps/puzzled
         env:
           SKIP_ENV_VALIDATION: 'true'
@@ -630,28 +628,28 @@ jobs:
       - name: Stop the served build
         if: always()
         run: |
-          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
-          if [ -n "${FIXTURE_API_PID:-}" ]; then kill "$FIXTURE_API_PID" 2>/dev/null || true; fi
+          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || :; fi
+          if [ -n "${FIXTURE_API_PID:-}" ]; then kill "$FIXTURE_API_PID" 2>/dev/null || :; fi
 
       # After the server is stopped, so a failed vitals run still publishes
       # the table. A missing report is not a failure: the test writes it only
       # when it reaches the assertion.
       - name: Upload the web vitals report
-        continue-on-error: true
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: web-vitals-report
           path: apps/puzzled/test-results/web-vitals
+          if-no-files-found: ignore
           retention-days: 7
 
       - name: Upload the Lighthouse report
-        continue-on-error: true
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: lighthouse-report
           path: apps/puzzled/.lighthouseci
+          if-no-files-found: ignore
           retention-days: 7
 
   craft:
@@ -696,7 +694,7 @@ jobs:
               exit 0
             fi
             echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
-            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache
             sleep $((attempt * 3))
           done
           echo "bun install failed after retries"
@@ -790,10 +788,9 @@ jobs:
       - name: Stop the served builds and fixture APIs
         if: always()
         run: |
-          while read -r pid; do kill "$pid" 2>/dev/null || true; done < "$RUNNER_TEMP/craft.pids"
+          while read -r pid; do kill "$pid" 2>/dev/null || :; done < "$RUNNER_TEMP/craft.pids"
 
       - name: Upload the Playwright report
-        continue-on-error: true
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -801,17 +798,18 @@ jobs:
           path: |
             apps/puzzled/playwright-report
             apps/puzzled/test-results
+          if-no-files-found: ignore
           retention-days: 7
 
   # The marker: named exactly `verified`; never a required check.
   verified:
     name: verified
-    if: always()
+    if: always() && !cancelled()
     needs: [plan, build, rust-api, seo-contract, a11y, lighthouse, craft]
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || 'sylphx-linux-control' }}
     timeout-minutes: 5
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@000d98547b68d07c4da1c62f534da85f1bd4001b # main
+      - uses: SylphxAI/.github/.github/actions/needs-pass@f27e4105e2da7d681ecebe946634bdda7ba553ba # main
         with:
           needs: ${{ toJSON(needs) }}
           required: plan
