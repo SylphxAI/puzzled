@@ -275,15 +275,20 @@ const CURRENCY_CAPTURES = [
 	},
 	{
 		code: 'idr',
-		starter: /IDR\s*59,000\.00/,
-		plusYearly: /IDR\s*729,000\.00/,
-		familyYearly: /IDR\s*1,189,000\.00/,
+		starter: /IDR\s*59,000(?!\.00)/,
+		plusYearly: /IDR\s*729,000(?!\.00)/,
+		plusMonthlyEq: /IDR\s*60,750(?!\.00)/,
+		familyYearly: /IDR\s*1,189,000(?!\.00)/,
+		familyMonthlyEq: /IDR\s*99,083(?!\.\d)/,
+		free: /IDR\s*0(?!\.00)/,
 	},
 	{
 		code: 'hkd',
-		starter: 'HK$29.00',
-		plusYearly: 'HK$319.00',
-		familyYearly: 'HK$519.00',
+		starter: /HK\$29(?!\.00)/,
+		plusYearly: /HK\$319(?!\.00)/,
+		plusMonthlyEq: 'HK$26.58',
+		familyYearly: /HK\$519(?!\.00)/,
+		free: /HK\$0(?!\.00)/,
 	},
 ] as const
 
@@ -323,7 +328,16 @@ for (const viewport of CAPTURE_VIEWPORTS) {
 					await expect(select).toHaveValue(target.code)
 					await expect(plus).toContainText(target.starter)
 					await expect(plus).toContainText(target.plusYearly)
+					if ('plusMonthlyEq' in target) {
+						await expect(plus).toContainText(target.plusMonthlyEq)
+					}
 					await expect(family).toContainText(target.familyYearly)
+					if ('familyMonthlyEq' in target) {
+						await expect(family).toContainText(target.familyMonthlyEq)
+					}
+					if ('free' in target) {
+						await expect(page.locator('#plans')).toContainText(target.free)
+					}
 
 					expect(
 						await page.evaluate(() => document.documentElement.scrollWidth),

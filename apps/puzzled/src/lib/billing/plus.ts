@@ -105,6 +105,9 @@ export function planCards(plans: ListPlansResponse['plans'], currency: string): 
 /** Zero-decimal currencies per Stripe and Sylphx Money (IDR & TWD remain 2 decimals). */
 const ZERO_DECIMAL_CURRENCIES = new Set(['JPY', 'KRW', 'VND'])
 
+/** Currencies where fractional cents/sen are never displayed on pricing UI surfaces. */
+const WHOLE_UNIT_DISPLAY_CURRENCIES = new Set(['JPY', 'KRW', 'VND', 'IDR', 'TWD'])
+
 /** Minor-unit decimal digits per Stripe / Sylphx Money (0 for JPY/KRW/VND, 2 otherwise). */
 export function currencyFractionDigits(currency: string): number {
 	return ZERO_DECIMAL_CURRENCIES.has(currency.trim().toUpperCase()) ? 0 : 2
@@ -116,15 +119,46 @@ export function minorUnitsToMajor(amountMinor: number, currency: string): number
 	return digits === 0 ? amountMinor : amountMinor / 10 ** digits
 }
 
-/** Format minor units as a price in the viewer's locale. */
-export function formatPrice(amountMinor: number, currency: string, locale: string): string {
-	const digits = currencyFractionDigits(currency)
+function formatMajorPrice(
+	major: number,
+	currency: string,
+	locale: string,
+	fractionDigits: 0 | 2,
+): string {
 	return new Intl.NumberFormat(locale, {
 		style: 'currency',
 		currency: currency.toUpperCase(),
-		minimumFractionDigits: digits,
-		maximumFractionDigits: digits,
-	}).format(minorUnitsToMajor(amountMinor, currency))
+		minimumFractionDigits: fractionDigits,
+		maximumFractionDigits: fractionDigits,
+	}).format(major)
+}
+
+/** Format minor units as a price in the viewer's locale without redundant whole-unit decimals. */
+export function formatPrice(amountMinor: number, currency: string, locale: string): string {
+	const upper = currency.trim().toUpperCase()
+	const wholeCurrency = WHOLE_UNIT_DISPLAY_CURRENCIES.has(upper)
+	const major = minorUnitsToMajor(amountMinor, upper)
+	const fractionDigits: 0 | 2 =
+		wholeCurrency || currencyFractionDigits(upper) === 0 || amountMinor % 100 === 0 ? 0 : 2
+	return formatMajorPrice(wholeCurrency ? Math.round(major) : major, upper, locale, fractionDigits)
+}
+
+/** Format the annualized monthly equivalent of a yearly price in the viewer's locale. */
+export function formatMonthlyEquivalentPrice(
+	yearlyMinor: number,
+	currency: string,
+	locale: string,
+): string {
+	const upper = currency.trim().toUpperCase()
+	if (WHOLE_UNIT_DISPLAY_CURRENCIES.has(upper)) {
+		return formatMajorPrice(
+			Math.round(minorUnitsToMajor(yearlyMinor, upper) / 12),
+			upper,
+			locale,
+			0,
+		)
+	}
+	return formatPrice(Math.round(yearlyMinor / 12), upper, locale)
 }
 
 /** Whole-number saving of a yearly price against twelve monthly payments. */

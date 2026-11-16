@@ -8,6 +8,7 @@ import {
 	checkoutConfirmed,
 	currencyForLocale,
 	currencyFractionDigits,
+	formatMonthlyEquivalentPrice,
 	formatPrice,
 	formatTrialEnd,
 	isOneTimePassPlan,
@@ -90,7 +91,18 @@ describe('Puzzled Plus presentation', () => {
 		expect(formatPrice(799, 'jpy', 'en-US')).toBe('¥799')
 		expect(formatPrice(6900, 'krw', 'en-US')).toBe('₩6,900')
 		expect(formatPrice(79000, 'vnd', 'en-US')).toBe('₫79,000')
-		expect(formatPrice(5900000, 'idr', 'en-US')).toBe('IDR 59,000.00')
+		expect(formatPrice(5900000, 'idr', 'en-US')).toBe('IDR\u00a059,000')
+		expect(formatPrice(0, 'usd', 'en-US')).toBe('$0')
+		expect(formatPrice(0, 'idr', 'en-US')).toBe('IDR\u00a00')
+		expect(formatPrice(2900, 'hkd', 'en-US')).toBe('HK$29')
+		expect(formatPrice(2658, 'hkd', 'en-US')).toBe('HK$26.58')
+		expect(formatPrice(9900, 'twd', 'en-US')).toBe('NT$99')
+		expect(formatPrice(299, 'usd', 'en-US')).toBe('$2.99')
+		expect(formatMonthlyEquivalentPrice(72900000, 'idr', 'en-US')).toBe('IDR\u00a060,750')
+		expect(formatMonthlyEquivalentPrice(118900000, 'idr', 'en-US')).toBe('IDR\u00a099,083')
+		expect(formatMonthlyEquivalentPrice(131900, 'twd', 'en-US')).toBe('NT$110')
+		expect(formatMonthlyEquivalentPrice(31900, 'hkd', 'en-US')).toBe('HK$26.58')
+		expect(formatMonthlyEquivalentPrice(2999, 'gbp', 'en-GB')).toBe('£2.50')
 		expect(yearlySavingPercent(499, 3999)).toBe(33)
 		expect(yearlySavingPercent(499, 6000)).toBe(null)
 	})
