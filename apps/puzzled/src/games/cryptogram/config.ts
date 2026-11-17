@@ -5,7 +5,6 @@
 
 import { MINUTE_MS } from '@/lib/constants/time'
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { CryptogramHowToPlay } from './components/how-to-play'
 import { CryptogramIcon } from './icon'
 import type {
 	CryptogramGuess,
@@ -28,7 +27,6 @@ export const cryptogramConfig: GameConfig<
 	category: 'word',
 	skills: ['pattern', 'logic'],
 	difficulty: 'hard',
-	HowToPlayContent: CryptogramHowToPlay,
 	display: {
 		taglineKey: 'games.cryptogram.tagline',
 		highlightKey: 'games.cryptogram.highlight',

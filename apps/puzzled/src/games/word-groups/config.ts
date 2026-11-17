@@ -10,7 +10,6 @@ import {
 	type GameConfig,
 	type GameShareStats,
 } from '../types'
-import { ConnectionsHowToPlay } from './components/how-to-play'
 import { WordGroupsIcon } from './icon'
 import type { Category, ConnectionsPuzzleData, ConnectionsSolution } from './types'
 
@@ -67,7 +66,6 @@ export const wordGroupsConfig: GameConfig<
 	category: 'word',
 	skills: ['vocabulary', 'association', 'logic'],
 	difficulty: 'medium',
-	HowToPlayContent: ConnectionsHowToPlay,
 	display: {
 		taglineKey: 'games.wordGroups.tagline',
 		highlightKey: 'games.wordGroups.highlight',

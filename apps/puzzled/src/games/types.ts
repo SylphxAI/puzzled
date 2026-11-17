@@ -274,9 +274,7 @@ export interface GameDisplayMeta {
  * Configuration for a game module
  * Each game implements this interface to be registered in the system
  *
- * PLUG-AND-PLAY: Games are self-contained modules that define their own:
- * - UI components (HowToPlayContent)
- * - Translations (in translations/ folder)
+ * The play route and the instructions registry own their UI components.
  *
  * Grading is not a game module concern: the Rust core owns validation and
  * scoring for every game, so a client cannot assert a finish or a score.
@@ -333,27 +331,6 @@ export interface GameConfig<
 	 * Order determines display order in UI (first = default)
 	 */
 	difficultyLevels?: DifficultyLevelConfig[]
-
-	// ==========================================
-	// Components (for plug-and-play UI)
-	// ==========================================
-
-	/**
-	 * Main game component (lazy-loaded)
-	 *
-	 * DEPRECATED: Use client-registry.ts instead.
-	 * This field is optional because GameComponent causes Turbopack to trace
-	 * client-side imports (like Celebration) into the server bundle.
-	 * Client components should get GameComponent from client-registry.ts.
-	 */
-	GameComponent?: ComponentType<GameProps>
-
-	/**
-	 * How-to-play content component
-	 * Rendered inside the HowToPlayModal when user clicks "How to Play"
-	 * Should include title, rules, and visual examples
-	 */
-	HowToPlayContent?: ComponentType
 
 	// ==========================================
 	// Puzzle Generation

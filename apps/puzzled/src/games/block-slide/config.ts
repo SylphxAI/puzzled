@@ -6,7 +6,6 @@
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import { DEFAULT_LAUNCH_DATE, type DifficultyLevelConfig, type GameConfig } from '../types'
-import { BlockSlideHowToPlay } from './components/how-to-play'
 import { BlockSlideIcon } from './icon'
 import type { Block, BlockSlidePuzzle, BlockSlideSolution, Direction } from './types'
 
@@ -82,7 +81,6 @@ export const blockSlideConfig: GameConfig<
 	category: 'spatial',
 	skills: ['spatial', 'logic'],
 	difficulty: 'hard',
-	HowToPlayContent: BlockSlideHowToPlay,
 	display: {
 		taglineKey: 'games.blockSlide.tagline',
 		highlightKey: 'games.blockSlide.highlight',

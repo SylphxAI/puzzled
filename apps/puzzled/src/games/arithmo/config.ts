@@ -4,7 +4,6 @@
  */
 
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { ArithmoHowToPlay } from './components/how-to-play'
 import { ArithmoIcon } from './icon'
 import type { ArithmoGuess, ArithmoGuessResult, ArithmoPuzzleData, ArithmoSolution } from './types'
 
@@ -25,7 +24,6 @@ export const arithmoConfig: GameConfig<
 	category: 'math',
 	skills: ['arithmetic', 'logic'],
 	difficulty: 'medium',
-	HowToPlayContent: ArithmoHowToPlay,
 	display: {
 		taglineKey: 'games.arithmo.tagline',
 		highlightKey: 'games.arithmo.highlight',

@@ -4,7 +4,6 @@
  */
 
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { LetterBoxedHowToPlay } from './components/how-to-play'
 import { WordBoxIcon } from './icon'
 import type {
 	LetterBoxedGuessInput,
@@ -27,7 +26,6 @@ export const wordBoxConfig: GameConfig<
 	category: 'word',
 	skills: ['vocabulary', 'spatial'],
 	difficulty: 'hard',
-	HowToPlayContent: LetterBoxedHowToPlay,
 	display: {
 		taglineKey: 'games.wordBox.tagline',
 		highlightKey: 'games.wordBox.highlight',

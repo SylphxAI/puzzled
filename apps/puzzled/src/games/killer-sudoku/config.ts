@@ -5,7 +5,6 @@
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import { DEFAULT_LAUNCH_DATE, type DifficultyLevelConfig, type GameConfig } from '../types'
-import { KillerSudokuHowToPlay } from './components/how-to-play'
 import { KillerSudokuIcon } from './icon'
 import type {
 	KillerSudokuGuessInput,
@@ -53,7 +52,6 @@ export const killerSudokuConfig: GameConfig<
 	category: 'math',
 	skills: ['arithmetic', 'logic'],
 	difficulty: 'hard',
-	HowToPlayContent: KillerSudokuHowToPlay,
 	display: {
 		taglineKey: 'games.killerSudoku.tagline',
 		highlightKey: 'games.killerSudoku.highlight',

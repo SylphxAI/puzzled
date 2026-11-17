@@ -5,7 +5,6 @@
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { PipPlaceHowToPlay } from './components/how-to-play'
 import { PipPlaceIcon } from './icon'
 import type {
 	PipPlaceGuess,
@@ -28,7 +27,6 @@ export const pipPlaceConfig: GameConfig<
 	category: 'spatial',
 	skills: ['spatial', 'logic'],
 	difficulty: 'medium',
-	HowToPlayContent: PipPlaceHowToPlay,
 	display: {
 		taglineKey: 'games.pipPlace.tagline',
 		highlightKey: 'games.pipPlace.highlight',

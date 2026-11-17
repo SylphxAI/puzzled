@@ -13,20 +13,7 @@ type HowToPlayModalProps = {
 	gameSlug: GameSlug
 }
 
-/**
- * HowToPlayModal - Dynamic game instructions from client registry
- *
- * Each game provides its own HowToPlayContent component via client-registry.
- * This modal simply renders that component - no game-specific code here.
- *
- * NOTE: Uses client-registry.ts (not registry.ts) to avoid pulling in
- * server-only code (node:fs via puzzle generators).
- *
- * To add instructions for a new game:
- * 1. Create /src/games/[slug]/components/how-to-play.tsx
- * 2. Add HowToPlayContent to client-registry.ts
- * That's it - the modal will automatically render it.
- */
+/** Renders the rules and examples from the standalone how-to-play registry. */
 export function HowToPlayModal({ open, onClose, gameSlug }: HowToPlayModalProps) {
 	const t = useTranslations()
 	const config = getHowToPlayConfig(gameSlug)

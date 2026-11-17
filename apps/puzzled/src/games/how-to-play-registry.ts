@@ -1,15 +1,6 @@
 /**
- * HowToPlay Content Registry
- *
- * SEPARATED FROM client-registry.ts to break circular dependency:
- * - how-to-play-modal.tsx imports from this file
- * - This file does NOT import GameComponents
- * - GameComponents import how-to-play-modal.tsx
- *
- * This breaks the cycle: how-to-play-modal → client-registry → game-xxx-game → how-to-play-modal
- *
- * ALSO provides isPerfectGame for game-result.tsx (client component)
- * to avoid importing from the server-only registry.ts
+ * Rules, examples, and result-display metadata for client components.
+ * Do not import game renderers here: they open the modal that reads this registry.
  */
 
 import type { ComponentType } from 'react'

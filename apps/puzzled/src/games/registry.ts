@@ -1,19 +1,6 @@
 /**
- * Game Registry - Central registration point for all games
- *
- * PLUG-AND-PLAY ARCHITECTURE:
- * Each game is a self-contained module. To add a new game:
- * 1. Create folder: /src/games/[game-slug]/
- * 2. Implement GameConfig in config.ts
- * 3. Create components/how-to-play.tsx
- * 4. Create translations/en.json (+ other locales)
- * 5. Add import and entry to GAME_CONFIGS below
- *
- * That's it! The game will automatically appear in:
- * - Game selection UI
- * - How-to-play modal
- * - Server validation
- * - All other game-aware components
+ * Canonical catalogue of game metadata. A new game also needs its own play
+ * renderer and a rules entry in how-to-play-registry.ts; Rust owns validation.
  */
 
 import { canonicalizeGameSlug } from '@/lib/game-slug'

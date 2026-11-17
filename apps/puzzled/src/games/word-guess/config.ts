@@ -5,7 +5,6 @@
 
 import { pickRandom } from '@/games/shared'
 import { DEFAULT_LAUNCH_DATE, type GameConfig, type GameShareStats } from '../types'
-import { WordleHowToPlay } from './components/how-to-play'
 import { WordGuessIcon } from './icon'
 import { type LetterStatus, WORD_LENGTH, type WordlePuzzleData, type WordleSolution } from './types'
 
@@ -80,7 +79,6 @@ export const wordGuessConfig: GameConfig<
 	category: 'word',
 	skills: ['vocabulary', 'logic'],
 	difficulty: 'medium',
-	HowToPlayContent: WordleHowToPlay,
 	display: {
 		taglineKey: 'games.wordGuess.tagline',
 		highlightKey: 'games.wordGuess.highlight',

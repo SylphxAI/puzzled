@@ -4,7 +4,6 @@
  */
 
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { QuordleHowToPlay } from './components/how-to-play'
 import { QuadWordsIcon } from './icon'
 import type {
 	QuordleGuessInput,
@@ -27,7 +26,6 @@ export const quadWordsConfig: GameConfig<
 	category: 'word',
 	skills: ['vocabulary', 'logic', 'memory'],
 	difficulty: 'hard',
-	HowToPlayContent: QuordleHowToPlay,
 	display: {
 		taglineKey: 'games.quadWords.tagline',
 		highlightKey: 'games.quadWords.highlight',
