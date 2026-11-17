@@ -5,7 +5,7 @@
  * Run from `apps/puzzled` against `next start` (never against dev):
  *
  *   bun run build
- *   SYLPHX_PUBLIC_URL=https://puzzled.gg bun run start -p 3014 &
+ *   SYLPHX_PUBLIC_URL=https://tryit.fun bun run start -p 3014 &
  *   bun run verify:seo --base http://localhost:3014
  *
  * What it asserts, from real HTTP responses only:
@@ -221,7 +221,7 @@ function sortedEntries(record: Record<string, string>): string {
 }
 
 async function main(): Promise<void> {
-	console.log(`puzzled SEO contract harness — base ${BASE}\n`)
+	console.log(`tryit SEO contract harness — base ${BASE}\n`)
 
 	// ── robots.txt ──────────────────────────────────────────────────────────
 	const robots = await fetchHtml('/robots.txt')
@@ -492,7 +492,7 @@ async function main(): Promise<void> {
 			}
 			const website = blocks.find((block) => block['@type'] === 'WebSite')
 			assert(website !== undefined, `${path} is missing the WebSite block`)
-			assert(website.name === 'Puzzled', `${path} WebSite.name is not the product name`)
+			assert(website.name === 'Tryit', `${path} WebSite.name is not the product name`)
 			assert(website.url === origin, `${path} WebSite.url is ${String(website.url)}`)
 			const action = website.potentialAction as { target?: { urlTemplate?: string } } | undefined
 			assert(
@@ -501,7 +501,7 @@ async function main(): Promise<void> {
 			)
 			const organization = blocks.find((block) => block['@type'] === 'Organization')
 			assert(organization !== undefined, `${path} is missing the Organization block`)
-			assert(organization.name === 'Puzzled', `${path} Organization.name is not the product name`)
+			assert(organization.name === 'Tryit', `${path} Organization.name is not the product name`)
 			assert(
 				typeof organization.logo === 'string' && organization.logo.startsWith(origin),
 				`${path} Organization.logo is not on this origin`,

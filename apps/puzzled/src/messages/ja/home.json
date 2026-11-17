@@ -45,9 +45,9 @@
 	},
 	"faq": {
 		"title": "よくある質問",
-		"subtitle": "Puzzledのしくみを簡単にご紹介します。",
+		"subtitle": "Tryitのしくみを簡単にご紹介します。",
 		"free": {
-			"question": "Puzzledは無料ですか?",
+			"question": "Tryitは無料ですか?",
 			"answer": "今日のおすすめパズルは無料で、アカウントも不要です。Plusなら全19ゲームとすべての過去のパズルをプレイできます。"
 		},
 		"account": {
@@ -81,7 +81,7 @@
 		"titleMemberStreak": "{days}日連続の記録が待っています",
 		"titleMemberDone": "今日はすべて完了です。お疲れさまでした",
 		"titleDone": "今日の{game}は完了です",
-		"bodyGuest": "Puzzledは、言葉・ロジック・数字のパズルを毎日お届けするサービスです。毎日1つは無料で、数分で遊べて、登録も不要です。",
+		"bodyGuest": "Tryitは、言葉・ロジック・数字のパズルを毎日お届けするサービスです。毎日1つは無料で、数分で遊べて、登録も不要です。",
 		"bodyMember": "連続記録、統計、今日のラインナップへ、ワンタップでアクセスできます。",
 		"playToday": "今日の{game}を遊ぶ",
 		"playAgain": "今日のパズルをもう一度遊ぶ",

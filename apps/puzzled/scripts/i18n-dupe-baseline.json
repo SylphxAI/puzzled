@@ -5727,12 +5727,12 @@
 				]
 			},
 			{
-				"value": "Puzzledプレイヤー",
-				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
-			},
-			{
 				"value": "Tryit Plus",
 				"keys": ["nav.plus", "plus.name"]
+			},
+			{
+				"value": "Tryitプレイヤー",
+				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
 			{
 				"value": "tryit.fun/u/{username}でプロフィールを公開します",

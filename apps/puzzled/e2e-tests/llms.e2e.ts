@@ -11,7 +11,7 @@ test('llms.txt stays public plain text even with a remembered locale', async ({ 
 	expect(body).toContain('published by Sylphx')
 	expect(body).not.toMatch(/Sylphx Tryit|<html|<script/i)
 	const gameLinks = [
-		...body.matchAll(/^- \[([^\]]+)\]\((https:\/\/puzzled\.gg\/games\/[^)]+)\): (.+)$/gm),
+		...body.matchAll(/^- \[([^\]]+)\]\((https:\/\/tryit\.fun\/games\/[^)]+)\): (.+)$/gm),
 	]
 	expect(gameLinks.map((match) => match[2]).sort()).toEqual(
 		getAllGameMetadata()

@@ -36,7 +36,7 @@
 	"descriptionGuest": "ゲストとしてプレイ中です。記録はこのブラウザに保存されています。ログインすると、記録を引き継げます。",
 	"viewLeaderboard": "ランキング",
 	"identity": {
-		"player": "Puzzledプレイヤー",
+		"player": "Tryitプレイヤー",
 		"member": "メンバー",
 		"guest": "ゲストプレイ",
 		"streakChip": "{days}日連続",
