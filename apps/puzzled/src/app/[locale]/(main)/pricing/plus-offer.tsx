@@ -31,7 +31,7 @@ type Props = {
 	/** Radio group name so Individual and Family selectors stay independent. */
 	radioName: string
 	/** Sign-in return anchor. */
-	returnAnchor: 'plus' | 'family'
+	returnAnchor?: 'plus' | 'family'
 	/** Available interval options for this tier in the chosen currency. */
 	once?: PlanCard
 	yearly: PlanCard | undefined
@@ -61,7 +61,6 @@ export function PlusOffer({
 	emphasized = false,
 	features = [],
 	radioName,
-	returnAnchor,
 	once,
 	yearly,
 	monthly,
@@ -85,9 +84,7 @@ export function PlusOffer({
 	const price = (card: PlanCard) => formatPrice(card.amountMinor, card.currency, locale)
 	const saving =
 		yearly && monthly ? yearlySavingPercent(monthly.amountMinor, yearly.amountMinor) : null
-	const returnParams = new URLSearchParams({ plan: selected.id })
-	if (callbackUrl) returnParams.set('callbackUrl', callbackUrl)
-	const loginReturnTo = `/pricing?${returnParams.toString()}#${returnAnchor}`
+	const effectiveTrialDays = signedIn ? selected.trialDays : 0
 
 	return (
 		<div id={id} className={cn('scroll-mt-24', styles.offer)}>
@@ -180,16 +177,14 @@ export function PlusOffer({
 						))}
 					</ul>
 				) : null}
-				{selected.interval === 'year' && selected.trialDays > 0 ? (
-					<TrialChargeLine days={selected.trialDays} price={price(selected)} />
+				{selected.interval === 'year' && effectiveTrialDays > 0 ? (
+					<TrialChargeLine days={effectiveTrialDays} price={price(selected)} />
 				) : null}
 				<div className="mt-4">
 					<SubscribeButton
 						key={selected.id}
 						checkoutTrigger="pricing_card"
-						loginReturnTo={loginReturnTo}
 						callbackUrl={callbackUrl}
-						guestLabel={t(id === 'family' ? 'signInToStartFamily' : 'signInToGetPlus')}
 						planId={selected.id}
 						currency={selected.currency}
 						amountMinor={selected.amountMinor}
@@ -197,8 +192,8 @@ export function PlusOffer({
 						signedIn={signedIn}
 						subscribed={subscribed}
 						label={
-							selected.trialDays > 0
-								? t('startTrial', { days: selected.trialDays })
+							effectiveTrialDays > 0
+								? t('startTrial', { days: effectiveTrialDays })
 								: t('continueToPayment')
 						}
 						renewalNote={

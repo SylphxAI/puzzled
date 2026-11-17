@@ -62,10 +62,14 @@ for (const viewport of VIEWPORTS) {
 					await expect(
 						offer.getByText('Stats and streaks for every game', { exact: true }),
 					).toBeVisible()
-					const cta = offer.getByRole('link', {
-						name: id === 'family' ? 'Sign in to start Family' : 'Sign in to get Plus',
-						exact: true,
-					})
+					const consent = offer.getByRole('checkbox')
+					await consent.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+					await expect(consent).toBeInViewport({ ratio: 1 })
+					await expect(consent).not.toBeChecked()
+					const cta = offer.getByRole('button', { name: 'Continue to payment' })
+					await expect(cta).toBeDisabled()
+					await consent.check()
+					await expect(cta).toBeEnabled()
 					await cta.evaluate((el) => el.scrollIntoView({ block: 'center' }))
 					await expect(cta).toBeInViewport({ ratio: 1 })
 					await testInfo.attach(`pricing-${viewport.name}-${consentState}-${id}-scrolled`, {
@@ -78,6 +82,7 @@ for (const viewport of VIEWPORTS) {
 						contentType: 'image/png',
 					})
 					await expectReachable(cta)
+					await consent.uncheck()
 				}
 				// Pricing is a page, with a free-play escape link rather than a modal close button.
 				const freePlay = page.getByRole('link', {
@@ -111,20 +116,15 @@ for (const viewport of VIEWPORTS) {
 			await expect(yearly).toBeChecked()
 			await expect(offer.getByRole('radio', { name: /^Monthly/ })).not.toBeChecked()
 
-			// Signed in: the unticked consent box and the one payment button. Guest: the sign-in link.
+			// Cold guests and signed-in non-members both get immediate-supply consent + payment CTA.
 			const consent = offer.getByRole('checkbox')
 			const payment = offer.getByRole('button', { name: 'Continue to payment' })
-			const signIn = offer.getByRole('link', { name: /^Sign in to get Plus/ })
-			if ((await payment.count()) > 0) {
-				await expect(consent).not.toBeChecked()
-				await consent.scrollIntoViewIfNeeded()
-				await expect(consent).toBeInViewport({ ratio: 1 })
-				await payment.scrollIntoViewIfNeeded()
-				await expect(payment).toBeInViewport({ ratio: 1 })
-			} else {
-				await signIn.scrollIntoViewIfNeeded()
-				await expect(signIn).toBeInViewport({ ratio: 1 })
-			}
+			await expect(consent).not.toBeChecked()
+			await consent.scrollIntoViewIfNeeded()
+			await expect(consent).toBeInViewport({ ratio: 1 })
+			await payment.scrollIntoViewIfNeeded()
+			await expect(payment).toBeInViewport({ ratio: 1 })
+			await expect(payment).toBeDisabled()
 
 			await testInfo.attach(`pricing-${viewport.name}`, {
 				body: await page.screenshot(),
@@ -154,49 +154,102 @@ for (const viewport of VIEWPORTS) {
 			expect(freeTop, 'the Free card sits below the free-play link').toBeGreaterThan(linkBottom)
 		})
 
-		test('keeps the selected plan through the sign-in return', async ({ page }) => {
+		test('preselects requested plan query for both Plus and Family offers', async ({ page }) => {
 			await openPricing(page)
 			const offer = page.locator('#plus')
 			test.skip((await offer.getByRole('radio').count()) === 0, 'sales are closed')
-			const signIn = offer.getByRole('link', { name: /^Sign in to get Plus/ })
-			test.skip((await signIn.count()) === 0, 'guest return-path test')
 			for (const [interval, plan] of [
-				['month', 'individual_monthly', 'Monthly'],
-				['once', 'individual_once', '3-day pass'],
-				['year', 'individual_yearly', 'Yearly'],
+				['month', 'individual_monthly'],
+				['once', 'individual_once'],
+				['year', 'individual_yearly'],
 			]) {
+				await page.goto(`/pricing?plan=${plan}#plus`)
+				await settle(page)
 				const radio = offer.locator(`input[value="${interval}"]`)
 				if ((await radio.count()) === 0) continue
-				await radio.check()
-				await expect(signIn).toHaveText('Sign in to get Plus')
-				const href = await signIn.getAttribute('href')
-				const callback = new URL(href ?? '', page.url()).searchParams.get('callbackUrl')
-				expect(callback).toBe(`/pricing?plan=${plan}#plus`)
-				// Follow only the local return URL; never sign in or create a checkout.
-				await page.goto(callback ?? '/pricing')
 				await expect(radio).toBeChecked()
 			}
+			const family = page.locator('#family')
+			await page.goto('/pricing?plan=family_monthly#family')
+			await settle(page)
+			await expect(family).toContainText('$7.99')
+			await expect(family.locator('input[value="month"]')).toBeChecked()
+			await expect(family.getByRole('button', { name: 'Continue to payment' })).toBeDisabled()
 		})
 
-		test('keeps one Family sign-in link with its own return destination', async ({ page }) => {
-			await openPricing(page)
-			const family = page.locator('#family')
-			test.skip((await family.count()) === 0, 'sales are closed')
-			await expect(family).toContainText('$64.99')
-			await expect(family.getByRole('radio', { name: /^Yearly/ })).toBeChecked()
-			const signIn = family.getByRole('link', { name: 'Sign in to start Family', exact: true })
-			await expect(signIn).toHaveCount(1)
-			await expect(signIn).toHaveText('Sign in to start Family')
-			const href = await signIn.getAttribute('href')
-			const callback = new URL(href ?? '', page.url()).searchParams.get('callbackUrl')
-			const interval = (await family.locator('input[value="year"]').isChecked())
-				? 'yearly'
-				: 'monthly'
-			expect(callback).toBe(`/pricing?plan=family_${interval}#family`)
-			// Exercise the local return destination without creating a login or checkout.
-			await page.goto(callback ?? '/pricing')
-			await expect(family).toBeInViewport()
-			await expect(signIn).toHaveCount(1)
+		test('starts cold-guest checkout directly with consent, attribution and callbackUrl, and prompts cleanly on return', async ({
+			page,
+		}) => {
+			let capturedBody: Record<string, unknown> | null = null
+			let capturedHeaders: Record<string, string> = {}
+			await page.route('**/v1/guest/session', async (route) => {
+				await route.fulfill({
+					status: 200,
+					contentType: 'application/json',
+					body: JSON.stringify({ issued: true }),
+				})
+			})
+			await page.route('**/puzzled.v1.BillingService/CreateCheckout', async (route) => {
+				capturedHeaders = route.request().headers()
+				capturedBody = JSON.parse(route.request().postData() ?? '{}') as Record<string, unknown>
+				await route.fulfill({
+					status: 200,
+					contentType: 'application/json',
+					body: JSON.stringify({
+						url: `${new URL(page.url()).origin}/settings/subscription?checkout=success&s=cs_e2e_guest_1&callbackUrl=%2Fgames%2Fsudoku`,
+					}),
+				})
+			})
+
+			const query = [
+				'callbackUrl=%2Fgames%2Fsudoku',
+				'utm_source=google',
+				'utm_medium=cpc',
+				'gclid=Cj0_e2e_test',
+				'gbraid=gb_e2e',
+				'wbraid=wb_e2e',
+				'fbclid=fb_e2e',
+			].join('&')
+			await page.goto(`/pricing?${query}`, { waitUntil: 'domcontentloaded' })
+			await settle(page)
+
+			const offer = page.locator('#plus')
+			test.skip((await offer.getByRole('radio').count()) === 0, 'sales are closed')
+			await offer.getByRole('checkbox').check()
+			await offer.getByRole('button', { name: 'Continue to payment' }).click()
+
+			await page.waitForURL(/\/settings\/subscription\?checkout=success&s=cs_e2e_guest_1/)
+			await settle(page)
+
+			expect(capturedBody).toMatchObject({
+				planId: 'individual_yearly',
+				locale: 'en-US',
+				immediateSupplyConsent: true,
+			})
+			const attrHeader = decodeURIComponent(capturedHeaders['x-puzzled-attribution'] ?? '')
+			expect(attrHeader).toContain('g=Cj0_e2e_test')
+			expect(attrHeader).toContain('gb=gb_e2e')
+			expect(attrHeader).toContain('wb=wb_e2e')
+			expect(attrHeader).toContain('fb=fb_e2e')
+			expect(attrHeader).toContain('s=google')
+			expect(capturedHeaders['x-puzzled-return-to']).toBe('/games/sudoku')
+
+			// Post-payment unauthenticated claim prompt preserves return destination with zero secret leak.
+			await expect(
+				page.getByRole('heading', { name: 'Payment received — link your Tryit Plus' }),
+			).toBeVisible()
+			const createLink = page.getByRole('link', { name: 'Create account to activate Plus' })
+			const signInLink = page.getByRole('link', { name: 'Sign in to link subscription' })
+			await expect(createLink).toBeVisible()
+			await expect(signInLink).toBeVisible()
+			const createCallback = new URL(
+				(await createLink.getAttribute('href')) ?? '',
+				page.url(),
+			).searchParams.get('callbackUrl')
+			expect(createCallback).toBe(
+				'/settings/subscription?checkout=success&s=cs_e2e_guest_1&callbackUrl=%2Fgames%2Fsudoku',
+			)
+			expect(page.url()).not.toContain('clm_')
 		})
 
 		test('puts currency beside the offer and ignores unknown plan requests', async ({ page }) => {
@@ -208,37 +261,6 @@ for (const viewport of VIEWPORTS) {
 			await expect(yearly).toBeChecked()
 			const currency = page.getByRole('group', { name: 'Currency', exact: true })
 			if ((await currency.count()) > 0) await expect(currency).toBeInViewport({ ratio: 1 })
-		})
-
-		test('preserves ad click ids in sessionStorage across sign-in before cookie consent', async ({
-			page,
-		}) => {
-			const query = [
-				'utm_source=google',
-				'utm_medium=cpc',
-				'gclid=Cj0_e2e_test',
-				'gbraid=gb_e2e',
-				'wbraid=wb_e2e',
-				'fbclid=fb_e2e',
-			].join('&')
-			await page.goto(`/pricing?${query}`, { waitUntil: 'domcontentloaded' })
-			await settle(page)
-			const offer = page.locator('#plus')
-			const signIn = offer.getByRole('link', { name: /^Sign in to get Plus/ })
-			test.skip((await signIn.count()) === 0, 'guest attribution sign-in flow')
-			await signIn.click()
-			await page.waitForURL(/\/login/)
-			await settle(page)
-			const stored = await page.evaluate(() =>
-				window.sessionStorage.getItem('puzzled:attr:session'),
-			)
-			expect(stored).not.toBeNull()
-			const decoded = decodeURIComponent(stored ?? '')
-			expect(decoded).toContain('g=Cj0_e2e_test')
-			expect(decoded).toContain('gb=gb_e2e')
-			expect(decoded).toContain('wb=wb_e2e')
-			expect(decoded).toContain('fb=fb_e2e')
-			expect(decoded).toContain('s=google')
 		})
 
 		test('has no horizontal overflow', async ({ page }) => {

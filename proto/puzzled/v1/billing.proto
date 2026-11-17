@@ -143,6 +143,20 @@ message GetCheckoutResponse {
   string synthetic_fixture = 7;
 }
 
+message ClaimCheckoutRequest {
+  // Stripe checkout session id (cs_...) or Money checkout session id (chk_...)
+  // from the post-payment return URL. Empty claims any pending guest checkout
+  // secret retained in the caller's HttpOnly checkout cookie.
+  string checkout_session_id = 1;
+  // BCP 47 locale path segment for consent audit recording when newly claimed.
+  string locale = 2;
+}
+
+message ClaimCheckoutResponse {
+  // True when at least one guest checkout session is bound to this account.
+  bool claimed = 1;
+}
+
 message CreatePortalRequest {
   string locale = 1;
 }
@@ -194,6 +208,7 @@ service BillingService {
   // An older server without this method refuses before creating a session.
   rpc CreateCheckoutAttempt(CreateCheckoutAttemptRequest) returns (CreateCheckoutAttemptResponse);
   rpc GetCheckout(GetCheckoutRequest) returns (GetCheckoutResponse);
+  rpc ClaimCheckout(ClaimCheckoutRequest) returns (ClaimCheckoutResponse);
   rpc CreatePortal(CreatePortalRequest) returns (CreatePortalResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
   rpc ResumeSubscription(ResumeSubscriptionRequest) returns (ResumeSubscriptionResponse);

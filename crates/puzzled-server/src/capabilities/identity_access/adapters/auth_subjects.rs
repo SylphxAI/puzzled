@@ -90,6 +90,30 @@ pub async fn recorded_subjects(
         .await
 }
 
+/// Candidate Money `end_user` subject identifiers for `user_id`: the player UUID
+/// first, followed by any linked non-legacy Sylphx Auth subjects (`usr_...`) so
+/// guest checkouts claimed via Auth verified-email fallback resolve seamlessly.
+pub async fn money_subjects_for_player(pool: &PgPool, user_id: &str) -> Vec<String> {
+    let mut out = vec![user_id.to_string()];
+    let Ok(player) = Uuid::parse_str(user_id) else {
+        return out;
+    };
+    if let Ok(subjects) = sqlx::query_scalar::<_, String>(
+        "SELECT subject FROM auth_subjects WHERE user_id = $1 ORDER BY subject",
+    )
+    .bind(player)
+    .fetch_all(pool)
+    .await
+    {
+        for subj in subjects {
+            if subj != user_id && !subj.starts_with("principal-") && !out.contains(&subj) {
+                out.push(subj);
+            }
+        }
+    }
+    out
+}
+
 /// The player an Auth subject names, without linking a new one: its map row,
 /// else the old-form uuid. `None` for an unknown new-form subject.
 pub async fn known_player(pool: &PgPool, subject: &str) -> Result<Option<Uuid>, sqlx::Error> {

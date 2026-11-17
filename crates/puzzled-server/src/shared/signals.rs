@@ -136,6 +136,7 @@ fn is_user_write(path: &str) -> bool {
             | "/puzzled.v1.PreferencesService/DeleteAccountData"
             | "/puzzled.v1.PreferencesService/RecordSignupAttribution"
             | "/puzzled.v1.BillingService/CreateCheckout"
+            | "/puzzled.v1.BillingService/ClaimCheckout"
             | "/puzzled.v1.BillingService/CreatePortal"
             | "/puzzled.v1.BillingService/CancelSubscription"
             | "/puzzled.v1.BillingService/ResumeSubscription"

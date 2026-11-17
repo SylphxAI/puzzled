@@ -499,7 +499,10 @@ impl PreferencesService for PreferencesConnectService {
         // cannot answer refuses erasure (retryable) rather than erasing a
         // paying account.
         if let Some(money) = &self.state.money {
-            match money.has_renewing_subscription(&identity.user_id).await {
+            match money
+                .has_renewing_subscription_for_player(pool, &identity.user_id)
+                .await
+            {
                 Ok(true) => {
                     return Err(ConnectError::new(
                         ErrorCode::FailedPrecondition,

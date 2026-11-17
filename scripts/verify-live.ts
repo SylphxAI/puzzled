@@ -520,11 +520,52 @@ function httpEvidence(result: HttpResult): Record<string, unknown> {
 	}
 }
 
+async function mintGuestSessionCookie(
+	base: string,
+	timeoutMs: number,
+): Promise<{ cookie: string | null; status: number | null; error: string | null }> {
+	const origin = new URL(base).origin
+	try {
+		const response = await fetch(`${base}/v1/guest/session`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/json',
+				accept: 'application/json',
+				origin,
+				'sec-fetch-site': 'same-origin',
+				'user-agent': 'puzzled-verify-live/1 (SylphxAI/puzzled scripts/verify-live.ts)',
+			},
+			body: '{}',
+			signal: AbortSignal.timeout(timeoutMs),
+		})
+		const setCookies =
+			typeof response.headers.getSetCookie === 'function'
+				? response.headers.getSetCookie()
+				: [response.headers.get('set-cookie')].filter((v): v is string => Boolean(v))
+		const guestPair =
+			setCookies
+				.map((raw) => raw.split(';')[0]?.trim() ?? '')
+				.find((pair) => pair.startsWith('__Host-puzzled_guest=')) ?? null
+		await response.body?.cancel().catch(() => {})
+		return {
+			cookie: response.ok ? guestPair : null,
+			status: response.status,
+			error: response.ok && guestPair ? null : `/v1/guest/session status=${response.status}`,
+		}
+	} catch (error) {
+		return {
+			cookie: null,
+			status: null,
+			error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+		}
+	}
+}
+
 async function connectUnary(
 	base: string,
 	method: string,
 	body: Record<string, unknown>,
-	options: { guestId?: string | null; timeoutMs: number },
+	options: { guestId?: string | null; guestCookie?: string | null; timeoutMs: number },
 ): Promise<ConnectResult> {
 	const headers: Record<string, string> = {
 		'content-type': 'application/json',
@@ -532,7 +573,7 @@ async function connectUnary(
 		'x-puzzled-verification': '1',
 		accept: 'application/json',
 	}
-	if (options.guestId) headers['x-puzzled-guest-id'] = options.guestId
+	if (options.guestCookie) headers.cookie = options.guestCookie
 	const result = await httpRequest(`${base}${CONNECT_PREFIX}/${method}`, {
 		method: 'POST',
 		headers,
@@ -2064,13 +2105,39 @@ async function checkFinishLoop(
 		puzzleDate: productDayKeyValue,
 	})
 
+	// Mint a server-issued __Host-puzzled_guest credential for this play verification run.
+	const guestSession = await mintGuestSessionCookie(options.base, options.timeoutMs)
+	if (!guestSession.cookie) {
+		return {
+			id: checkId,
+			title: 'finish loop (terminal + one-finish-per-day)',
+			status: guestSession.status === null ? 'unknown' : 'fail',
+			required: true,
+			unknownReason: guestSession.status === null ? 'indeterminate' : null,
+			summary: `guest session bootstrap failed (${guestSession.error ?? 'no __Host-puzzled_guest cookie'})`,
+			sub: [
+				sub(
+					'guest-session-bootstrap',
+					guestSession.status === null ? 'unknown' : 'fail',
+					guestSession.error ?? 'missing __Host-puzzled_guest Set-Cookie',
+				),
+			],
+			evidence: {
+				attempted: true,
+				guestSessionStatus: guestSession.status,
+				guestSessionError: guestSession.error,
+			},
+		}
+	}
+	const guestCookie = guestSession.cookie
+
 	// Pre-check: a reused guest with an accepted finish cannot produce a genuine
 	// terminal; report it instead of pretending.
 	const preRead = await connectUnary(
 		options.base,
 		'GetDaily',
 		{ gameSlug: discovery.freeSlug, puzzleDate: productDayKeyValue },
-		{ guestId: options.guest, timeoutMs: options.timeoutMs },
+		{ guestCookie, timeoutMs: options.timeoutMs },
 	)
 	const preBody = asRecord(preRead.bodyJson)
 	if (preBody?.hasCompleted === true) {
@@ -2104,7 +2171,7 @@ async function checkFinishLoop(
 		'SubmitGuess',
 		submitBody(terminalPlan.status),
 		{
-			guestId: options.guest,
+			guestCookie,
 			timeoutMs: options.timeoutMs,
 		},
 	)
@@ -2119,7 +2186,7 @@ async function checkFinishLoop(
 	if (!accepted && /Invalid (win|loss) claim/i.test(firstError)) {
 		const flippedStatus = /loss claim/i.test(firstError) ? 'won' : 'lost'
 		submission = await connectUnary(options.base, 'SubmitGuess', submitBody(flippedStatus), {
-			guestId: options.guest,
+			guestCookie,
 			timeoutMs: options.timeoutMs,
 		})
 		attempts.push({ flippedStatus, ...connectEvidence(submission) })
@@ -2131,7 +2198,7 @@ async function checkFinishLoop(
 		options.base,
 		'GetDaily',
 		{ gameSlug: discovery.freeSlug, puzzleDate: productDayKeyValue },
-		{ guestId: options.guest, timeoutMs: options.timeoutMs },
+		{ guestCookie, timeoutMs: options.timeoutMs },
 	)
 	const reBody = asRecord(reRead.bodyJson)
 	const completedSession = asRecord(reBody?.completedSession)
@@ -2139,7 +2206,7 @@ async function checkFinishLoop(
 		options.base,
 		'SubmitGuess',
 		submitBody((asString(submissionBody?.status) as 'won' | 'lost' | null) ?? terminalPlan.status),
-		{ guestId: options.guest, timeoutMs: options.timeoutMs },
+		{ guestCookie, timeoutMs: options.timeoutMs },
 	)
 	const secondRefused = second.httpStatus === 409 && second.connectMessage === 'already_played'
 	const subResults: SubResult[] = [

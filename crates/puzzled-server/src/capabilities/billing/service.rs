@@ -81,20 +81,29 @@ pub async fn access(
     if !is_account_id(user_id) {
         return Ok(Entitlement::default());
     }
-    if access::is_premium(money, user_id).await {
-        return Ok(Entitlement {
-            entitled: true,
-            family_owner: None,
-            trial_ends_ms: None,
-        });
-    }
-    if let Some(owner) = billing_db::family_owner_of(pool, user_id).await? {
-        if access::family_active(money, &owner).await {
+    for subj in
+        crate::capabilities::identity_access::adapters::auth_subjects::money_subjects_for_player(
+            pool, user_id,
+        )
+        .await
+    {
+        if access::is_premium(money, &subj).await {
             return Ok(Entitlement {
                 entitled: true,
-                family_owner: Some(owner),
+                family_owner: None,
                 trial_ends_ms: None,
             });
+        }
+    }
+    if let Some(owner) = billing_db::family_owner_of(pool, user_id).await? {
+        for owner_subj in crate::capabilities::identity_access::adapters::auth_subjects::money_subjects_for_player(pool, &owner).await {
+            if access::family_active(money, &owner_subj).await {
+                return Ok(Entitlement {
+                    entitled: true,
+                    family_owner: Some(owner),
+                    trial_ends_ms: None,
+                });
+            }
         }
     }
     if let Some(ends) = reverse_trial_ends_ms(

@@ -7,6 +7,7 @@
 pub mod access;
 pub mod attempts;
 pub mod checkout;
+pub mod claim_cookie;
 pub mod client;
 pub mod consent_db;
 pub mod fixtures;

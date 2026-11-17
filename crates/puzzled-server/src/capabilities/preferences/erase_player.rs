@@ -147,7 +147,10 @@ async fn run_inner(
     };
     // The in-app rule: a subscription that still renews is cancelled first.
     if let (Some(money), Some(player)) = (money, player) {
-        match money.has_renewing_subscription(&player.to_string()).await {
+        match money
+            .has_renewing_subscription_for_player(pool, &player.to_string())
+            .await
+        {
             Ok(false) => {}
             Ok(true) => {
                 report.outcome = "cancel_subscription_first";

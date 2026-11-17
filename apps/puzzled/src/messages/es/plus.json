@@ -102,7 +102,11 @@
 		"cancelledPeriod": "Cancelada. Tryit Plus sigue abierto hasta el {date}.",
 		"resume": "Mantener mi suscripción",
 		"resumed": "Tu suscripción se renovará como antes.",
-		"error": "No ha funcionado. Inténtalo de nuevo."
+		"error": "No ha funcionado. Inténtalo de nuevo.",
+		"claimTitle": "Pago recibido — vincula tu Tryit Plus",
+		"claimBody": "Crea tu cuenta de Tryit o inicia sesión para vincular Tryit Plus y abrir todos los juegos en tu cuenta.",
+		"claimCreateAccount": "Crear cuenta para activar Plus",
+		"claimSignIn": "Iniciar sesión para vincular suscripción"
 	},
 	"family": {
 		"title": "Familia",

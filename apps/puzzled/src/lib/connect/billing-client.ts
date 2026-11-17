@@ -8,6 +8,7 @@ import { createClient } from '@connectrpc/connect'
 import {
 	BillingService,
 	CancelSubscriptionRequestSchema,
+	ClaimCheckoutRequestSchema,
 	CreateCheckoutRequestSchema,
 	CreatePortalRequestSchema,
 	JoinFamilyRequestSchema,
@@ -40,6 +41,15 @@ export async function startCheckout(
 		Object.keys(headers).length > 0 ? { headers } : undefined,
 	)
 	return res.url
+}
+
+export const CHECKOUT_CLAIM_COOKIE = 'puzzled_checkout_claim'
+
+export async function claimCheckout(checkoutSessionId = '', locale = '') {
+	const res = await client().claimCheckout(
+		create(ClaimCheckoutRequestSchema, { checkoutSessionId, locale }),
+	)
+	return res.claimed
 }
 
 export async function openPortal(locale: string) {
