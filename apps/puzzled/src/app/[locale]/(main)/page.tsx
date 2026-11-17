@@ -405,9 +405,7 @@ export default async function HomePage({ params }: Props) {
 					question: tHome(`faq.${key}.question`),
 					answer: tHome(`faq.${key}.answer`),
 					answerLink:
-						key === 'streak'
-							? { href: '/games', label: tHome('lineup.seeAll') }
-							: undefined,
+						key === 'streak' ? { href: '/games', label: tHome('lineup.seeAll') } : undefined,
 				}))}
 			/>
 		</main>

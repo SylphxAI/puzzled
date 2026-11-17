@@ -62,7 +62,10 @@ for (const viewport of VIEWPORTS) {
 					await expect(
 						offer.getByText('Stats and streaks for every game', { exact: true }),
 					).toBeVisible()
-					const cta = offer.getByRole('link', { name: id === 'family' ? 'Sign in to start Family' : 'Sign in to get Plus', exact: true })
+					const cta = offer.getByRole('link', {
+						name: id === 'family' ? 'Sign in to start Family' : 'Sign in to get Plus',
+						exact: true,
+					})
 					await cta.evaluate((el) => el.scrollIntoView({ block: 'center' }))
 					await expect(cta).toBeInViewport({ ratio: 1 })
 					await testInfo.attach(`pricing-${viewport.name}-${consentState}-${id}-scrolled`, {

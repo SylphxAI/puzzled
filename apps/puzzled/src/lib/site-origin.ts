@@ -124,7 +124,10 @@ function normalizeOriginCandidate(value: string | null | undefined): string | nu
 export function canonicalOrigin(origin: string): string {
 	try {
 		const url = new URL(origin)
-		if (['tryit.fun', 'www.tryit.fun', 'puzzled.gg', 'www.puzzled.gg'].includes(url.hostname) && !url.port) {
+		if (
+			['tryit.fun', 'www.tryit.fun', 'puzzled.gg', 'www.puzzled.gg'].includes(url.hostname) &&
+			!url.port
+		) {
 			return PRODUCTION_SITE_ORIGIN
 		}
 	} catch {

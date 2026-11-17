@@ -254,14 +254,19 @@ describe('strict bracketed request authority', () => {
 	})
 })
 
-
 describe('dual production origin cutover', () => {
 	for (const host of ['tryit.fun', 'puzzled.gg']) {
 		const configuredUrl = host === 'tryit.fun' ? 'https://puzzled.gg' : 'https://tryit.fun'
 		test(host + ' keeps Auth on the incoming host despite opposite configuration', () => {
 			for (const input of [
 				{ host, configuredUrl, nodeEnv: 'production' },
-				{ host: 'web:3000', forwardedHost: host, forwardedProto: 'https', configuredUrl, nodeEnv: 'production' },
+				{
+					host: 'web:3000',
+					forwardedHost: host,
+					forwardedProto: 'https',
+					configuredUrl,
+					nodeEnv: 'production',
+				},
 			]) {
 				expect(resolveSiteOrigin(input, 'request')).toBe('https://' + host)
 				expect(resolveSiteOrigin(input)).toBe(PRODUCTION_SITE_ORIGIN)
@@ -269,8 +274,25 @@ describe('dual production origin cutover', () => {
 		})
 	}
 	test('malformed and foreign forwarded authority cannot fall back to a configured domain', () => {
-		for (const forwardedHost of ['evil.com', 'tryit.fun.evil.com', 'tryit.fun, puzzled.gg', 'tryit.fun/path', 'tryit.fun:99999']) {
-			expect(resolveSiteOrigin({ host: 'tryit.fun', forwardedHost, forwardedProto: 'https', configuredUrl: PRODUCTION_SITE_ORIGIN, nodeEnv: 'production' }, 'request')).toBeNull()
+		for (const forwardedHost of [
+			'evil.com',
+			'tryit.fun.evil.com',
+			'tryit.fun, puzzled.gg',
+			'tryit.fun/path',
+			'tryit.fun:99999',
+		]) {
+			expect(
+				resolveSiteOrigin(
+					{
+						host: 'tryit.fun',
+						forwardedHost,
+						forwardedProto: 'https',
+						configuredUrl: PRODUCTION_SITE_ORIGIN,
+						nodeEnv: 'production',
+					},
+					'request',
+				),
+			).toBeNull()
 		}
 	})
 })

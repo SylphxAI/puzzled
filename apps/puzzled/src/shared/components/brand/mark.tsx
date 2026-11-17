@@ -1,5 +1,5 @@
-import wordmark from '../../../../../../brand/wordmark.json'
 import { cn } from '@/lib/utils'
+import wordmark from '../../../../../../brand/wordmark.json'
 
 /**
  * Tryit brand mark and wordmark.

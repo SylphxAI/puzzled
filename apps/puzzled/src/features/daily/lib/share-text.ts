@@ -8,8 +8,8 @@
  */
 
 import { canonicalizeGameSlug } from '@/lib/game-slug'
-import { canonicalOrigin } from '@/lib/site-origin'
 import { isValidDayKey } from '@/lib/product-day'
+import { canonicalOrigin } from '@/lib/site-origin'
 import { getPuzzleNumber } from './puzzle-utils'
 
 export type RitualShareInput = {

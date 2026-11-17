@@ -19,9 +19,7 @@ test('navigation offline shows the branded fallback and retry recovers the origi
 	await context.setOffline(true)
 	await page.goto('/games/sudoku?offline-check=1')
 	await expect(page.getByRole('heading', { name: "You're offline" })).toBeVisible()
-	await expect(
-		page.getByText('Tryit needs an internet connection', { exact: false }),
-	).toBeVisible()
+	await expect(page.getByText('Tryit needs an internet connection', { exact: false })).toBeVisible()
 	await expect(page.getByRole('img', { name: 'Tryit' })).toBeVisible()
 	await page.getByRole('link', { name: 'Try again' }).click()
 	await expect(page.getByRole('heading', { name: "You're offline" })).toBeVisible()

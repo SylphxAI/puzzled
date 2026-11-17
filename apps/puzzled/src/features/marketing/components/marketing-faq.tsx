@@ -133,7 +133,10 @@ export async function MarketingFaq({
 								{item.answerLink && (
 									<>
 										{' '}
-										<Link href={item.answerLink.href} className="font-semibold underline underline-offset-4">
+										<Link
+											href={item.answerLink.href}
+											className="font-semibold underline underline-offset-4"
+										>
 											{item.answerLink.label}
 										</Link>
 									</>
