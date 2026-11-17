@@ -446,7 +446,7 @@
 				"keys": ["admin.users.makeAdmin", "admin.users.makeAdminBulk"]
 			},
 			{
-				"value": "Make your profile visible at puzzled.gg/u/{username}",
+				"value": "Make your profile visible at tryit.fun/u/{username}",
 				"keys": [
 					"settings.privacy.profileVisibility.publicProfileDescription",
 					"settings.profile.publicProfileDescription"
@@ -687,14 +687,6 @@
 			{
 				"value": "Puzzle #{number}",
 				"keys": ["daily.puzzleNumber", "home.day.puzzleNumber"]
-			},
-			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
-			},
-			{
-				"value": "Puzzled player",
-				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
 			{
 				"value": "Quick Actions",
@@ -988,6 +980,14 @@
 					"stats.dailyStatusRetry",
 					"stats.retry"
 				]
+			},
+			{
+				"value": "Tryit Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
+				"value": "Tryit player",
+				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
 			{
 				"value": "Unknown device",
@@ -1556,7 +1556,7 @@
 				"keys": ["admin.users.makeAdmin", "admin.users.makeAdminBulk"]
 			},
 			{
-				"value": "Make your profile visible at puzzled.gg/u/{username}",
+				"value": "Make your profile visible at tryit.fun/u/{username}",
 				"keys": [
 					"settings.privacy.profileVisibility.publicProfileDescription",
 					"settings.profile.publicProfileDescription"
@@ -1797,14 +1797,6 @@
 			{
 				"value": "Puzzle #{number}",
 				"keys": ["daily.puzzleNumber", "home.day.puzzleNumber"]
-			},
-			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
-			},
-			{
-				"value": "Puzzled player",
-				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
 			{
 				"value": "Quick Actions",
@@ -2100,6 +2092,14 @@
 				]
 			},
 			{
+				"value": "Tryit Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
+				"value": "Tryit player",
+				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
+			},
+			{
 				"value": "Unknown device",
 				"keys": ["settings.security.loginHistory.unknownDevice", "settings.sessions.unknownDevice"]
 			},
@@ -2339,14 +2339,6 @@
 				]
 			},
 			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
-			},
-			{
-				"value": "Puzzled 玩家",
-				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
-			},
-			{
 				"value": "Quick Actions",
 				"keys": ["admin.commandPalette.actions", "admin.dashboard.quickActions"]
 			},
@@ -2369,6 +2361,14 @@
 			{
 				"value": "System Health",
 				"keys": ["admin.sidebar.system", "admin.system.title"]
+			},
+			{
+				"value": "Tryit Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
+				"value": "Tryit 玩家",
+				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
 			{
 				"value": "Yes, Delete",
@@ -3149,7 +3149,7 @@
 				"keys": ["auth.emailInvalid", "settings.email.invalidEmail"]
 			},
 			{
-				"value": "讓你的個人檔案顯示於 puzzled.gg/u/{username}",
+				"value": "讓你的個人檔案顯示於 tryit.fun/u/{username}",
 				"keys": [
 					"settings.privacy.profileVisibility.publicProfileDescription",
 					"settings.profile.publicProfileDescription"
@@ -3478,14 +3478,6 @@
 				]
 			},
 			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
-			},
-			{
-				"value": "Puzzled 玩家",
-				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
-			},
-			{
 				"value": "Quick Actions",
 				"keys": ["admin.commandPalette.actions", "admin.dashboard.quickActions"]
 			},
@@ -3508,6 +3500,14 @@
 			{
 				"value": "System Health",
 				"keys": ["admin.sidebar.system", "admin.system.title"]
+			},
+			{
+				"value": "Tryit Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
+				"value": "Tryit 玩家",
+				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
 			{
 				"value": "Yes, Delete",
@@ -4278,7 +4278,7 @@
 				"keys": ["auth.emailInvalid", "settings.email.invalidEmail"]
 			},
 			{
-				"value": "讓你的個人檔案顯示於 puzzled.gg/u/{username}",
+				"value": "讓你的個人檔案顯示於 tryit.fun/u/{username}",
 				"keys": [
 					"settings.privacy.profileVisibility.publicProfileDescription",
 					"settings.profile.publicProfileDescription"
@@ -4620,14 +4620,6 @@
 				]
 			},
 			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
-			},
-			{
-				"value": "Puzzled 玩家",
-				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
-			},
-			{
 				"value": "Quick Actions",
 				"keys": ["admin.commandPalette.actions", "admin.dashboard.quickActions"]
 			},
@@ -4650,6 +4642,14 @@
 			{
 				"value": "System Health",
 				"keys": ["admin.sidebar.system", "admin.system.title"]
+			},
+			{
+				"value": "Tryit Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
+				"value": "Tryit 玩家",
+				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
 			{
 				"value": "Yes, Delete",
@@ -5457,7 +5457,7 @@
 				"keys": ["plus.pricing.subscribe", "plus.subscription.title"]
 			},
 			{
-				"value": "让你的个人资料显示在 puzzled.gg/u/{username}",
+				"value": "让你的个人资料显示在 tryit.fun/u/{username}",
 				"keys": [
 					"settings.privacy.profileVisibility.publicProfileDescription",
 					"settings.profile.publicProfileDescription"
@@ -5727,15 +5727,15 @@
 				]
 			},
 			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
-			},
-			{
 				"value": "Puzzledプレイヤー",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
 			{
-				"value": "puzzled.gg/u/{username}でプロフィールを公開します",
+				"value": "Tryit Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
+				"value": "tryit.fun/u/{username}でプロフィールを公開します",
 				"keys": [
 					"settings.privacy.profileVisibility.publicProfileDescription",
 					"settings.profile.publicProfileDescription"
@@ -7435,7 +7435,7 @@
 				"keys": ["admin.plans.saveChanges", "settings.profile.saveChanges"]
 			},
 			{
-				"value": "Haz tu perfil visible en puzzled.gg/u/{username}",
+				"value": "Haz tu perfil visible en tryit.fun/u/{username}",
 				"keys": [
 					"settings.privacy.profileVisibility.publicProfileDescription",
 					"settings.profile.publicProfileDescription"
@@ -7511,7 +7511,7 @@
 				"keys": ["leaderboard.columns.player", "plus.family.unnamed"]
 			},
 			{
-				"value": "Jugador de Puzzled",
+				"value": "Jugador de Tryit",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
 			{
@@ -7726,10 +7726,6 @@
 			{
 				"value": "Puzzle",
 				"keys": ["leaderboard.moduleLabel", "stats.history.module", "stats.modules.module"]
-			},
-			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
 			},
 			{
 				"value": "Página {page} de {total}",
@@ -7963,6 +7959,10 @@
 			{
 				"value": "Todos los usuarios",
 				"keys": ["admin.announcements.allUsers", "admin.users.filterAll"]
+			},
+			{
+				"value": "Tryit Plus",
+				"keys": ["nav.plus", "plus.name"]
 			},
 			{
 				"value": "Tu nombre",
@@ -8359,7 +8359,7 @@
 				"keys": ["admin.auditLogs.details.timestamp", "admin.auditLogs.table.timestamp"]
 			},
 			{
-				"value": "Deixe seu perfil visível em puzzled.gg/u/{username}",
+				"value": "Deixe seu perfil visível em tryit.fun/u/{username}",
 				"keys": [
 					"settings.privacy.profileVisibility.publicProfileDescription",
 					"settings.profile.publicProfileDescription"
@@ -8610,7 +8610,7 @@
 				"keys": ["leaderboard.columns.player", "plus.family.unnamed"]
 			},
 			{
-				"value": "Jogador do Puzzled",
+				"value": "Jogador do Tryit",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
 			{
@@ -8898,10 +8898,6 @@
 				]
 			},
 			{
-				"value": "Puzzled Plus",
-				"keys": ["nav.plus", "plus.name"]
-			},
-			{
 				"value": "Página {page} de {total}",
 				"keys": ["admin.auditLogs.pagination.page", "pagination.page"]
 			},
@@ -9174,6 +9170,10 @@
 			{
 				"value": "Total de usuários",
 				"keys": ["admin.dashboard.totalUsers", "admin.system.totalUsers", "admin.users.totalUsers"]
+			},
+			{
+				"value": "Tryit Plus",
+				"keys": ["nav.plus", "plus.name"]
 			},
 			{
 				"value": "Usa um layout mais denso, com espaçamentos menores",

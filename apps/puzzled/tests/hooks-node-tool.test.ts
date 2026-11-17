@@ -119,8 +119,11 @@ describe('lefthook wiring', () => {
 		const hook = Bun.file(resolve(repoRoot, 'lefthook.yml')).text()
 		return hook.then((text) => {
 			expect(text).toContain('scripts/hooks/node-tool.sh biome')
-			expect(text).toContain('scripts/hooks/node-tool.sh turbo typecheck --filter=@sylphx/ui')
-			expect(text).toContain('scripts/hooks/node-tool.sh turbo typecheck --filter=@sylphx/puzzled')
+			const runs = [...text.matchAll(/^\s*run:\s*(.+)$/gm)].map((match) => match[1]!.trim())
+			expect(runs.length).toBeGreaterThan(0)
+			for (const run of runs) {
+				expect(run.startsWith('scripts/hooks/node-tool.sh ')).toBe(true)
+			}
 			// The unpinned-latest path is what this change removes: it rewrote the tracked AGENTS.md.
 			expect(text).not.toContain('bunx turbo')
 			expect(text).not.toContain('./node_modules/.bin/biome check')

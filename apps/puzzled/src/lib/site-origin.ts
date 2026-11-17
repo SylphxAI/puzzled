@@ -24,6 +24,12 @@ export type SiteOriginInput = {
 
 const LOOPBACK_HOSTNAMES = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'])
 const PRODUCT_APICES = ['tryit.fun', 'puzzled.gg']
+const PRODUCTION_APEX_HOSTS = new Set([
+	'tryit.fun',
+	'www.tryit.fun',
+	'puzzled.gg',
+	'www.puzzled.gg',
+])
 const PRODUCT_HOST_SUFFIXES = ['.tryit.fun', '.puzzled.gg', '.sylphx.app']
 const DEFAULT_DEV_PORT = '3000'
 
@@ -121,13 +127,19 @@ function normalizeOriginCandidate(value: string | null | undefined): string | nu
 }
 
 /** Both public production domains publish the same canonical and share URLs. */
+function isProductionApexOrigin(origin: string): boolean {
+	try {
+		const url = new URL(origin)
+		return url.protocol === 'https:' && !url.port && PRODUCTION_APEX_HOSTS.has(url.hostname)
+	} catch {
+		return false
+	}
+}
+
 export function canonicalOrigin(origin: string): string {
 	try {
 		const url = new URL(origin)
-		if (
-			['tryit.fun', 'www.tryit.fun', 'puzzled.gg', 'www.puzzled.gg'].includes(url.hostname) &&
-			!url.port
-		) {
+		if (PRODUCTION_APEX_HOSTS.has(url.hostname) && !url.port) {
 			return PRODUCTION_SITE_ORIGIN
 		}
 	} catch {
@@ -178,10 +190,8 @@ export function resolveSiteOrigin(
 			}
 		}
 
-		// An incoming owned authority wins over configuration on either domain.
-		// Validate forwarded pairs above before considering Host or configuration.
-		if (forwarded) return forwarded
-		if (input.host) {
+		let directHost: string | null = null
+		if (!forwarded && input.host) {
 			const { hostname, port } = splitHostPort(input.host)
 			const owned = normalizeProductHostname(hostname)
 			if (owned) {
@@ -189,13 +199,16 @@ export function resolveSiteOrigin(
 				if (isProduction && loopback) return null
 				const candidate = hostToOrigin(hostname.toLowerCase(), port, loopback ? 'http' : 'https')
 				try {
-					return new URL(candidate).origin === candidate ? candidate : null
+					if (new URL(candidate).origin !== candidate) return null
+					directHost = candidate
 				} catch {
 					return null
 				}
 			}
 		}
 
+		// Validate configured authority fail-closed before choosing precedence.
+		let configuredOrigin: string | null = null
 		if (input.configuredUrl != null && input.configuredUrl !== '') {
 			try {
 				const configured = new URL(input.configuredUrl)
@@ -210,7 +223,7 @@ export function resolveSiteOrigin(
 				if ((isProduction && loopback) || (!loopback && configured.protocol !== 'https:'))
 					return null
 				if (configured.protocol !== 'https:' && configured.protocol !== 'http:') return null
-				return hostToOrigin(
+				configuredOrigin = hostToOrigin(
 					owned,
 					configured.port || null,
 					configured.protocol === 'https:' ? 'https' : 'http',
@@ -219,7 +232,19 @@ export function resolveSiteOrigin(
 				return null
 			}
 		}
-		return forwarded
+
+		const incoming = forwarded ?? directHost
+		if (configuredOrigin !== null) {
+			if (
+				isProductionApexOrigin(configuredOrigin) &&
+				incoming !== null &&
+				isProductionApexOrigin(incoming)
+			) {
+				return incoming
+			}
+			return configuredOrigin
+		}
+		return incoming
 	}
 
 	// 1. Operator-configured origin wins when present.
