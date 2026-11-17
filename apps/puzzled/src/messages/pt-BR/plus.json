@@ -102,7 +102,11 @@
 		"cancelledPeriod": "Cancelada. O Tryit Plus continua liberado até {date}.",
 		"resume": "Manter minha assinatura",
 		"resumed": "Sua assinatura será renovada como antes.",
-		"error": "Não deu certo. Tente novamente."
+		"error": "Não deu certo. Tente novamente.",
+		"claimTitle": "Pagamento recebido — vincule seu Tryit Plus",
+		"claimBody": "Crie sua conta Tryit ou entre para vincular o Tryit Plus e liberar todos os jogos na sua conta.",
+		"claimCreateAccount": "Criar conta para ativar o Plus",
+		"claimSignIn": "Entrar para vincular assinatura"
 	},
 	"family": {
 		"title": "Família",

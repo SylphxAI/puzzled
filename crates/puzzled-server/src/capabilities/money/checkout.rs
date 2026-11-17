@@ -6,8 +6,17 @@ use puzzled_core::attribution::Attribution;
 use serde_json::{json, Map, Value};
 
 use super::access::{FEATURE_FAMILY, FEATURE_PLUS};
-use super::client::{Catalog, Money, MoneyError};
+use super::client::{Catalog, CreatedCheckout, Money, MoneyError};
 use super::pricing::{plan, price_of};
+
+/// A cold-guest checkout session created without a pre-existing account subject.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GuestCheckoutSession {
+    pub created: CreatedCheckout,
+    pub plan_id: String,
+    pub price_key: String,
+    pub locale: String,
+}
 
 /// Why a checkout could not be started.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -102,12 +111,10 @@ fn percent_encode_component(raw: &str) -> String {
     out
 }
 
-/// The `checkout_sessions` request body for one plan (pure).
-#[must_use]
 #[allow(clippy::too_many_arguments)]
-pub fn session_body(
+fn build_session_body(
     money: &Money,
-    user_id: &str,
+    user_id: Option<&str>,
     plan_id: &str,
     price_key: &str,
     locale: &str,
@@ -142,12 +149,14 @@ pub fn session_body(
         }
     }
     let mut body = json!({
-        "subject": {"end_user": user_id},
         "line_items": [{"price": price_key, "quantity": 1}],
         "success_url": success_url,
         "cancel_url": cancel_url,
         "metadata": metadata,
     });
+    if let Some(uid) = user_id {
+        body["subject"] = json!({"end_user": uid});
+    }
     if let Some(code) = checkout_locale(locale) {
         body["locale"] = json!(code);
     }
@@ -155,6 +164,92 @@ pub fn session_body(
         body["currency_code"] = json!(code.to_ascii_uppercase());
     }
     body
+}
+
+/// The `checkout_sessions` request body for an authenticated account (pure).
+#[must_use]
+#[allow(clippy::too_many_arguments)]
+pub fn session_body(
+    money: &Money,
+    user_id: &str,
+    plan_id: &str,
+    price_key: &str,
+    locale: &str,
+    currency: Option<&str>,
+    attribution: Option<&Attribution>,
+    return_to: Option<&str>,
+) -> Value {
+    build_session_body(
+        money,
+        Some(user_id),
+        plan_id,
+        price_key,
+        locale,
+        currency,
+        attribution,
+        return_to,
+    )
+}
+
+/// The `checkout_sessions` request body for an unauthenticated cold guest (omits `subject`).
+#[must_use]
+pub fn guest_session_body(
+    money: &Money,
+    plan_id: &str,
+    price_key: &str,
+    locale: &str,
+    currency: Option<&str>,
+    attribution: Option<&Attribution>,
+    return_to: Option<&str>,
+) -> Value {
+    build_session_body(
+        money,
+        None,
+        plan_id,
+        price_key,
+        locale,
+        currency,
+        attribution,
+        return_to,
+    )
+}
+
+/// Create an unclaimed guest checkout session (omitting `subject` on the wire so Money
+/// allocates `guest:{id}` and returns a single-use `claim_secret`).
+#[allow(clippy::too_many_arguments)]
+pub async fn create_guest_session(
+    money: &Money,
+    catalog: &Catalog,
+    plan_id: &str,
+    locale: &str,
+    currency: &str,
+    attribution: Option<&Attribution>,
+    return_to: Option<&str>,
+    _consent: Consent,
+) -> Result<GuestCheckoutSession, CheckoutError> {
+    let found_plan = plan(catalog, plan_id).ok_or(CheckoutError::PlanNotOnSale)?;
+    let price = price_of(catalog, &found_plan).ok_or(CheckoutError::PlanNotOnSale)?;
+    let upper = currency.trim().to_ascii_uppercase();
+    let chosen_currency = price.unit_amounts.contains_key(&upper).then_some(upper);
+    let body = guest_session_body(
+        money,
+        plan_id,
+        &found_plan.price_key,
+        locale,
+        chosen_currency.as_deref(),
+        attribution,
+        return_to,
+    );
+    let created = money
+        .create_checkout_session_full(&body)
+        .await
+        .map_err(|e: MoneyError| CheckoutError::Failed(e.to_string()))?;
+    Ok(GuestCheckoutSession {
+        created,
+        plan_id: found_plan.plan_id,
+        price_key: found_plan.price_key,
+        locale: locale.to_string(),
+    })
 }
 
 /// Create the session and return the hosted page's URL. `_consent` is the

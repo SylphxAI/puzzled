@@ -18,20 +18,23 @@ use super::identity::{require_identity, require_purchase_allowed};
 use super::state::AppState;
 use crate::capabilities::billing::adapters::billing_db::{self, JoinRefused};
 use crate::capabilities::billing::service;
-use crate::capabilities::identity_access::adapters::platform_jwt::VerifiedIdentity;
+use crate::capabilities::identity_access::adapters::{
+    auth_session, auth_subjects, platform_jwt::VerifiedIdentity,
+};
 use crate::capabilities::money::{
-    access as money_access, checkout as money_checkout, consent_db, pricing, CheckoutError, Money,
+    access as money_access, checkout as money_checkout, claim_cookie, client::Subscription,
+    consent_db, pricing, CheckoutError, Money, MoneyError,
 };
 use crate::capabilities::preferences::adapters::attribution_db::attribution_for_user;
 use crate::proto::puzzled::v1::{
-    BillingService, CancelSubscriptionRequest, CancelSubscriptionResponse,
-    CreateCheckoutAttemptRequest, CreateCheckoutAttemptResponse, CreateCheckoutRequest,
-    CreateCheckoutResponse, CreatePortalRequest, CreatePortalResponse, Family, FamilyMember,
-    GetCheckoutRequest, GetCheckoutResponse, GetSubscriptionRequest, GetSubscriptionResponse,
-    JoinFamilyRequest, JoinFamilyResponse, LeaveFamilyRequest, LeaveFamilyResponse,
-    ListPlansRequest, ListPlansResponse, Plan, PlanPrice, RemoveFamilyMemberRequest,
-    RemoveFamilyMemberResponse, ResetFamilyInviteRequest, ResetFamilyInviteResponse,
-    ResumeSubscriptionRequest, ResumeSubscriptionResponse,
+    BillingService, CancelSubscriptionRequest, CancelSubscriptionResponse, ClaimCheckoutRequest,
+    ClaimCheckoutResponse, CreateCheckoutAttemptRequest, CreateCheckoutAttemptResponse,
+    CreateCheckoutRequest, CreateCheckoutResponse, CreatePortalRequest, CreatePortalResponse,
+    Family, FamilyMember, GetCheckoutRequest, GetCheckoutResponse, GetSubscriptionRequest,
+    GetSubscriptionResponse, JoinFamilyRequest, JoinFamilyResponse, LeaveFamilyRequest,
+    LeaveFamilyResponse, ListPlansRequest, ListPlansResponse, Plan, PlanPrice,
+    RemoveFamilyMemberRequest, RemoveFamilyMemberResponse, ResetFamilyInviteRequest,
+    ResetFamilyInviteResponse, ResumeSubscriptionRequest, ResumeSubscriptionResponse,
 };
 use puzzled_core::attribution::Attribution;
 
@@ -121,12 +124,40 @@ impl BillingConnectService {
             .ok_or_else(|| ConnectError::new(ErrorCode::FailedPrecondition, "sales_closed"))
     }
 
+    async fn player_subjects(&self, user_id: &str) -> Vec<String> {
+        match &self.state.pool {
+            Some(pool) => auth_subjects::money_subjects_for_player(pool, user_id).await,
+            None => vec![user_id.to_string()],
+        }
+    }
+
+    async fn player_subscriptions(
+        &self,
+        money: &Money,
+        user_id: &str,
+    ) -> Result<Vec<(String, Subscription)>, MoneyError> {
+        let mut out: Vec<(String, Subscription)> = Vec::new();
+        for subj in self.player_subjects(user_id).await {
+            for sub in money.subscriptions(&subj).await? {
+                if !out.iter().any(|(_, existing)| existing.id == sub.id) {
+                    out.push((subj.clone(), sub));
+                }
+            }
+        }
+        Ok(out)
+    }
+
     /// Does `owner` hold a family plan now, in Money?
     async fn family_active(&self, owner: &str) -> bool {
-        match &self.state.money {
-            Some(money) => money_access::family_active(money, owner).await,
-            None => false,
+        let Some(money) = &self.state.money else {
+            return false;
+        };
+        for subj in self.player_subjects(owner).await {
+            if money_access::family_active(money, &subj).await {
+                return true;
+            }
         }
+        false
     }
 
     /// Seats on `owner`'s plan, from Money's `seats` limit. `Err`: Money could
@@ -135,11 +166,12 @@ impl BillingConnectService {
     async fn max_members(&self, owner: &str) -> Result<u32, ConnectError> {
         let unavailable = || ConnectError::new(ErrorCode::Unavailable, "seats_unavailable");
         let money = self.state.money.as_ref().ok_or_else(unavailable)?;
-        money_access::seats(money, owner)
-            .await
-            .ok()
-            .flatten()
-            .ok_or_else(unavailable)
+        for subj in self.player_subjects(owner).await {
+            if let Some(seats) = money_access::seats(money, &subj).await.ok().flatten() {
+                return Ok(seats);
+            }
+        }
+        Err(unavailable())
     }
 
     /// A Money checkout: the buyer's consent is recorded, then the server
@@ -240,33 +272,68 @@ impl BillingConnectService {
                 request_id,
             )
             .await;
-        match started {
-            Ok(url) => Ok(url),
-            Err(CheckoutError::ConsentRequired) => Err(ConnectError::new(
-                ErrorCode::FailedPrecondition,
-                "consent_required",
-            )),
-            Err(CheckoutError::PlanNotOnSale) => Err(ConnectError::new(
-                ErrorCode::FailedPrecondition,
-                "plan_not_on_sale",
-            )),
-            Err(CheckoutError::AlreadySubscribed) => Err(ConnectError::new(
-                ErrorCode::AlreadyExists,
-                "already_subscribed",
-            )),
-            Err(CheckoutError::InvalidRequest) => Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "request_id_invalid",
-            )),
-            Err(CheckoutError::AttemptChanged) => Err(ConnectError::new(
-                ErrorCode::AlreadyExists,
-                "checkout_request_changed",
-            )),
-            Err(CheckoutError::AttemptPending) => Err(ConnectError::new(
-                ErrorCode::Unavailable,
-                "checkout_pending",
-            )),
-            Err(CheckoutError::Failed(error)) => Err(internal("checkout_unavailable")(error)),
+        started.map_err(Self::map_checkout_error)
+    }
+
+    fn map_checkout_error(err: CheckoutError) -> ConnectError {
+        match err {
+            CheckoutError::ConsentRequired => {
+                ConnectError::new(ErrorCode::FailedPrecondition, "consent_required")
+            }
+            CheckoutError::PlanNotOnSale => {
+                ConnectError::new(ErrorCode::FailedPrecondition, "plan_not_on_sale")
+            }
+            CheckoutError::AlreadySubscribed => {
+                ConnectError::new(ErrorCode::AlreadyExists, "already_subscribed")
+            }
+            CheckoutError::InvalidRequest => {
+                ConnectError::new(ErrorCode::InvalidArgument, "request_id_invalid")
+            }
+            CheckoutError::AttemptChanged => {
+                ConnectError::new(ErrorCode::AlreadyExists, "checkout_request_changed")
+            }
+            CheckoutError::AttemptPending => {
+                ConnectError::new(ErrorCode::Unavailable, "checkout_pending")
+            }
+            CheckoutError::Failed(error) => internal("checkout_unavailable")(error),
+        }
+    }
+
+    /// Signed-in account when present; `Ok(None)` for an unauthenticated cold guest;
+    /// `Err` when an explicit invalid bearer/JWT credential was supplied.
+    fn optional_account(ctx: &RequestContext) -> Result<Option<VerifiedIdentity>, ConnectError> {
+        match super::identity::verify(ctx.headers()) {
+            Ok(identity) if service::is_account_id(&identity.user_id) => Ok(Some(identity)),
+            Ok(_) => Ok(None),
+            Err(err) if err.message.as_deref() == Some("identity_required") => Ok(None),
+            Err(err) => Err(err),
+        }
+    }
+
+    async fn record_claimed_consent(
+        pool: &PgPool,
+        money: &Money,
+        user_id: &str,
+        plan_id: Option<String>,
+        price_key: Option<String>,
+        locale: &str,
+    ) {
+        let Some(pid) = plan_id.filter(|s| !s.is_empty()) else {
+            return;
+        };
+        let resolved_price = match price_key.filter(|s| !s.is_empty()) {
+            Some(pk) => Some(pk),
+            None => money
+                .catalog()
+                .await
+                .ok()
+                .and_then(|c| pricing::plan(&c, &pid).map(|p| p.price_key)),
+        };
+        if let Some(pk) = resolved_price {
+            let locale_val = if locale.is_empty() { "en-US" } else { locale };
+            if let Err(error) = consent_db::record(pool, user_id, &pid, &pk, locale_val).await {
+                warn!(%error, "post-claim consent audit insert failed");
+            }
         }
     }
 
@@ -404,7 +471,9 @@ impl BillingService for BillingConnectService {
             return Response::ok(response);
         }
         if request.to_owned_message().refresh {
-            money.refresh_grants(&identity.user_id);
+            for subj in self.player_subjects(&identity.user_id).await {
+                money.refresh_grants(&subj);
+            }
         }
         let entitlement = service::access(pool, Some(money), &identity.user_id)
             .await
@@ -420,8 +489,8 @@ impl BillingService for BillingConnectService {
             response.source = "plus".to_string();
             // The subscription behind it, when there is one (a manual grant
             // has none). A read that fails leaves the access answer standing.
-            if let Ok(subs) = money.subscriptions(&identity.user_id).await {
-                if let Some(sub) = subs.iter().find(|s| s.live()) {
+            if let Ok(subs) = self.player_subscriptions(money, &identity.user_id).await {
+                if let Some((_, sub)) = subs.iter().find(|(_, s)| s.live()) {
                     // A Tryit-referred account's first paid subscription is
                     // queued for Tryit (one row per account and event, so
                     // this is idempotent). Money sends Puzzled no webhook,
@@ -485,13 +554,82 @@ impl BillingService for BillingConnectService {
         ctx: RequestContext,
         request: ServiceRequest<'_, CreateCheckoutRequest>,
     ) -> ServiceResult<CreateCheckoutResponse> {
-        let url = self
-            .checkout_url(ctx, request.to_owned_message(), None)
-            .await?;
-        Response::ok(CreateCheckoutResponse {
-            url,
+        let req = request.to_owned_message();
+        if Self::optional_account(&ctx)?.is_some() {
+            let url = self.checkout_url(ctx, req, None).await?;
+            return Response::ok(CreateCheckoutResponse {
+                url,
+                ..Default::default()
+            });
+        }
+
+        // Cold-guest checkout: record immediate-supply consent in Money's checkout
+        // metadata, omit `subject` so Money allocates `guest:{id}`, and keep the
+        // returned single-use `claim_secret` strictly in an HttpOnly cookie.
+        let consent = money_checkout::Consent::require(req.immediate_supply_consent)
+            .map_err(Self::map_checkout_error)?;
+        let (_, money) = self.store()?;
+        let cookie_attr = ctx
+            .headers()
+            .get_all(axum::http::header::COOKIE)
+            .iter()
+            .filter_map(|value| value.to_str().ok())
+            .find_map(puzzled_core::attribution::from_cookie_header);
+        let session_attr = ctx
+            .headers()
+            .get("x-puzzled-attribution")
+            .and_then(|value| value.to_str().ok())
+            .map(str::trim)
+            .and_then(Attribution::from_cookie);
+        let landing = merge_landing_attribution(cookie_attr, session_attr);
+        let return_to = ctx
+            .headers()
+            .get("x-puzzled-return-to")
+            .and_then(|value| value.to_str().ok())
+            .and_then(money_checkout::safe_return_to);
+        let catalog = money
+            .catalog()
+            .await
+            .map_err(|e| internal("checkout_unavailable")(e.to_string()))?;
+        let guest = money_checkout::create_guest_session(
+            money,
+            &catalog,
+            req.plan_id.trim(),
+            req.locale.trim(),
+            &req.currency,
+            landing.as_ref(),
+            return_to.as_deref(),
+            consent,
+        )
+        .await
+        .map_err(Self::map_checkout_error)?;
+
+        let reply = CreateCheckoutResponse {
+            url: guest.created.url,
             ..Default::default()
-        })
+        };
+        if let Some(secret) = guest.created.claim_secret {
+            let entries = claim_cookie::append_entry(
+                claim_cookie::read_entries(ctx.headers()),
+                claim_cookie::ClaimCookieEntry {
+                    s: guest.created.processor_session_id,
+                    chk: guest.created.session_id,
+                    sec: secret,
+                    plan: guest.plan_id,
+                    price: guest.price_key,
+                    loc: guest.locale,
+                },
+            );
+            let secure = money.public_url().starts_with("https://");
+            if let Ok(cookie_header) = claim_cookie::format_set_cookie(&entries, secure) {
+                if let Ok(resp) = Response::new(reply.clone())
+                    .try_with_header(axum::http::header::SET_COOKIE, cookie_header)
+                {
+                    return Ok(resp);
+                }
+            }
+        }
+        Response::ok(reply)
     }
 
     async fn create_checkout_attempt(
@@ -584,6 +722,171 @@ impl BillingService for BillingConnectService {
         Response::ok(response)
     }
 
+    async fn claim_checkout(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, ClaimCheckoutRequest>,
+    ) -> ServiceResult<ClaimCheckoutResponse> {
+        let identity = Self::account(&ctx)?;
+        require_purchase_allowed(&identity)?;
+        let (pool, money) = self.store()?;
+        let req = request.to_owned_message();
+        let requested_id = req.checkout_session_id.trim().to_string();
+        let req_locale = req.locale.trim().to_string();
+        let entries = claim_cookie::read_entries(ctx.headers());
+        let session_tok = auth_session::session_token(ctx.headers());
+        let secure = money.public_url().starts_with("https://");
+
+        if requested_id.is_empty() {
+            if entries.is_empty() {
+                return Response::ok(ClaimCheckoutResponse {
+                    claimed: false,
+                    ..Default::default()
+                });
+            }
+            let mut remaining = Vec::new();
+            let mut any_claimed = false;
+            for entry in &entries {
+                let lookup_id = entry.lookup_id();
+                if lookup_id.is_empty() {
+                    continue;
+                }
+                match money
+                    .claim_checkout_session(
+                        lookup_id,
+                        &identity.user_id,
+                        Some(entry.sec.as_str()),
+                        session_tok.as_deref(),
+                    )
+                    .await
+                {
+                    Ok(claimed) => {
+                        any_claimed = true;
+                        let loc = if !entry.loc.is_empty() {
+                            entry.loc.as_str()
+                        } else {
+                            req_locale.as_str()
+                        };
+                        Self::record_claimed_consent(
+                            pool,
+                            money,
+                            &identity.user_id,
+                            (!entry.plan.is_empty())
+                                .then(|| entry.plan.clone())
+                                .or(claimed.plan_id),
+                            (!entry.price.is_empty()).then(|| entry.price.clone()),
+                            loc,
+                        )
+                        .await;
+                    }
+                    Err(MoneyError::Refused {
+                        status: 403 | 404 | 409,
+                        ..
+                    }) => {
+                        // Terminal for this secret (consumed, expired, or bound elsewhere): prune it.
+                    }
+                    Err(MoneyError::Refused { .. } | MoneyError::Unavailable(_)) => {
+                        remaining.push(entry.clone());
+                    }
+                }
+            }
+            let reply = ClaimCheckoutResponse {
+                claimed: any_claimed,
+                ..Default::default()
+            };
+            if remaining.len() != entries.len() {
+                if let Ok(cookie_header) = claim_cookie::format_set_cookie(&remaining, secure) {
+                    if let Ok(resp) = Response::new(reply.clone())
+                        .try_with_header(axum::http::header::SET_COOKIE, cookie_header)
+                    {
+                        return Ok(resp);
+                    }
+                }
+            }
+            return Response::ok(reply);
+        }
+
+        if requested_id.len() > 128
+            || !requested_id
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+        {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "checkout_session_invalid",
+            ));
+        }
+
+        let matched = claim_cookie::find_entry(&entries, &requested_id).cloned();
+        let outcome = money
+            .claim_checkout_session(
+                &requested_id,
+                &identity.user_id,
+                matched.as_ref().map(|e| e.sec.as_str()),
+                session_tok.as_deref(),
+            )
+            .await;
+
+        match outcome {
+            Ok(claimed) => {
+                let loc = matched
+                    .as_ref()
+                    .map(|e| e.loc.as_str())
+                    .filter(|s| !s.is_empty())
+                    .unwrap_or(req_locale.as_str());
+                Self::record_claimed_consent(
+                    pool,
+                    money,
+                    &identity.user_id,
+                    matched
+                        .as_ref()
+                        .and_then(|e| (!e.plan.is_empty()).then(|| e.plan.clone()))
+                        .or(claimed.plan_id),
+                    matched
+                        .as_ref()
+                        .and_then(|e| (!e.price.is_empty()).then(|| e.price.clone())),
+                    loc,
+                )
+                .await;
+                let reply = ClaimCheckoutResponse {
+                    claimed: true,
+                    ..Default::default()
+                };
+                if matched.is_some() {
+                    let updated = claim_cookie::remove_entry(entries, &requested_id);
+                    if let Ok(cookie_header) = claim_cookie::format_set_cookie(&updated, secure) {
+                        if let Ok(resp) = Response::new(reply.clone())
+                            .try_with_header(axum::http::header::SET_COOKIE, cookie_header)
+                        {
+                            return Ok(resp);
+                        }
+                    }
+                }
+                Response::ok(reply)
+            }
+            Err(MoneyError::Refused { status: 409, .. }) => Err(ConnectError::new(
+                ErrorCode::AlreadyExists,
+                "checkout_already_claimed",
+            )),
+            Err(MoneyError::Refused { status: 404, .. }) => {
+                Err(ConnectError::new(ErrorCode::NotFound, "checkout_not_found"))
+            }
+            Err(MoneyError::Refused {
+                status: 401 | 403, ..
+            }) => Err(ConnectError::new(
+                ErrorCode::PermissionDenied,
+                "claim_denied",
+            )),
+            Err(MoneyError::Refused {
+                status: 400 | 422, ..
+            }) => Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "checkout_session_invalid",
+            )),
+            Err(error) => Err(internal("claim_unavailable")(error.to_string())),
+        }
+    }
+
     async fn create_portal(
         &self,
         ctx: RequestContext,
@@ -593,23 +896,23 @@ impl BillingService for BillingConnectService {
         require_purchase_allowed(&identity)?;
         let (_, money) = self.store()?;
         let req = request.to_owned_message();
-        let subs = money
-            .subscriptions(&identity.user_id)
+        let subs = self
+            .player_subscriptions(money, &identity.user_id)
             .await
             .map_err(|e| internal("portal_unavailable")(e.to_string()))?;
-        if subs.is_empty() {
+        let Some((subj, sub)) = subs.iter().find(|(_, s)| s.live()).or_else(|| subs.first()) else {
             return Err(ConnectError::new(
                 ErrorCode::FailedPrecondition,
                 "no_billing_account",
             ));
-        }
+        };
         let back = format!(
             "{}{}/settings/subscription",
             money.public_url(),
             money_checkout::locale_prefix(req.locale.trim())
         );
         let url = money
-            .portal_url(&identity.user_id, &back)
+            .portal_url_for_subscription(subj, Some(&sub.id), &back)
             .await
             .map_err(|e| internal("portal_unavailable")(e.to_string()))?;
         Response::ok(CreatePortalResponse {
@@ -625,11 +928,11 @@ impl BillingService for BillingConnectService {
     ) -> ServiceResult<CancelSubscriptionResponse> {
         let identity = Self::account(&ctx)?;
         let (_, money) = self.store()?;
-        let subs = money
-            .subscriptions(&identity.user_id)
+        let subs = self
+            .player_subscriptions(money, &identity.user_id)
             .await
             .map_err(|e| internal("cancel_unavailable")(e.to_string()))?;
-        let Some(sub) = subs.iter().find(|s| s.renews()) else {
+        let Some((_, sub)) = subs.iter().find(|(_, s)| s.renews()) else {
             return Err(ConnectError::new(
                 ErrorCode::FailedPrecondition,
                 "no_subscription",
@@ -654,11 +957,14 @@ impl BillingService for BillingConnectService {
         let identity = Self::account(&ctx)?;
         require_purchase_allowed(&identity)?;
         let (_, money) = self.store()?;
-        let subs = money
-            .subscriptions(&identity.user_id)
+        let subs = self
+            .player_subscriptions(money, &identity.user_id)
             .await
             .map_err(|e| internal("resume_unavailable")(e.to_string()))?;
-        let Some(sub) = subs.iter().find(|s| s.live() && s.cancel_at_period_end) else {
+        let Some((_, sub)) = subs
+            .iter()
+            .find(|(_, s)| s.live() && s.cancel_at_period_end)
+        else {
             return Err(ConnectError::new(
                 ErrorCode::FailedPrecondition,
                 "nothing_to_resume",

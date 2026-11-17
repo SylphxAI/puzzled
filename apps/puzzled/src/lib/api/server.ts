@@ -28,6 +28,7 @@ import {
 } from '@/gen/connect/puzzled/v1/announcements_pb'
 import {
 	BillingService,
+	ClaimCheckoutRequestSchema,
 	GetSubscriptionRequestSchema,
 	ListPlansRequestSchema,
 } from '@/gen/connect/puzzled/v1/billing_pb'
@@ -100,6 +101,7 @@ async function getServerTransport() {
 		.filter(
 			(cookie) =>
 				cookie.name === '__Host-puzzled_guest' ||
+				cookie.name === 'puzzled_checkout_claim' ||
 				SESSION_COOKIE_NAMES.some((name) => name === cookie.name) ||
 				(cookie.name.startsWith('__sylphx_') && cookie.name.endsWith('_session')),
 		)
@@ -410,6 +412,15 @@ export const getServerPlans = cache(async () => {
 	return createClient(BillingService, transport).listPlans(create(ListPlansRequestSchema, {}))
 })
 
+/** Claim a guest checkout session (or all pending cookie entries when `checkoutSessionId` is empty) onto the signed-in account. */
+export async function claimServerCheckout(checkoutSessionId = '', locale = ''): Promise<boolean> {
+	const transport = await getServerTransport()
+	const res = await createClient(BillingService, transport).claimCheckout(
+		create(ClaimCheckoutRequestSchema, { checkoutSessionId, locale }),
+	)
+	return res.claimed
+}
+
 /** The signed-in account's subscription; `refresh` is accepted for compatibility; access is Sylphx Money's answer. */
 export const getServerSubscription = cache(async (refresh = false) => {
 	const transport = await getServerTransport()
@@ -465,7 +476,14 @@ export const getServerPlusOfferAccess = cache(async (signedIn: boolean): Promise
 export const getServerPlusAccess = cache(async (signedIn: boolean): Promise<PlusAccess> => {
 	if (signedIn) {
 		try {
-			const res = await getServerSubscription()
+			const hasPendingClaim = Boolean((await cookies()).get('puzzled_checkout_claim')?.value)
+			if (hasPendingClaim) {
+				await claimServerCheckout('').catch((error) => {
+					logger.warn('plus.auto-claim-failed', { error })
+					return false
+				})
+			}
+			const res = await getServerSubscription(hasPendingClaim)
 			return {
 				salesOpen: res.salesOpen,
 				entitled: res.entitled,

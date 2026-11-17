@@ -9,7 +9,7 @@
 
 export const SIGNED_UP_PARAM = 'signedUp'
 
-const MAX_CALLBACK_LENGTH = 200
+const MAX_CALLBACK_LENGTH = 280
 
 /** The path when `raw` is a safe same-origin relative path, otherwise null. */
 export function safeCallbackPath(raw: string | null | undefined): string | null {

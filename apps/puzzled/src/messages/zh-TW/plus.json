@@ -27,6 +27,8 @@
 			"individual_once": "Tryit Plus（3 天通行證）"
 		},
 		"renews": "將於 {date} 續訂",
-		"resumed": "你的訂閱會如常續訂。"
+		"resumed": "你的訂閱會如常續訂。",
+		"claimBody": "建立 Tryit 帳號或登入，即可將 Tryit Plus 與全部遊戲連結至你的帳號。",
+		"claimCreateAccount": "建立帳號並啟用 Plus"
 	}
 }

@@ -8,6 +8,7 @@ import type { SubscriptionView } from '@/lib/billing/plus'
 import { checkoutConfirmed, isOneTimePassPlan, trialBannerEndMs } from '@/lib/billing/plus'
 import {
 	cancelSubscription,
+	claimCheckout,
 	leaveFamily,
 	openPortal,
 	removeFamilyMember,
@@ -22,6 +23,8 @@ type Props = {
 	view: SubscriptionView | null
 	locale: string
 	fromCheckout: boolean
+	checkoutSessionId?: string
+	hasClaimCookie?: boolean
 	/** Game page to return to once checkout confirms. */
 	callbackUrl?: string
 }
@@ -32,7 +35,14 @@ const secondary =
 	'inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold hover:border-primary/30 hover:text-primary disabled:opacity-60'
 
 /** Plan state, cancel/resume, the billing portal, and the family plan. */
-export function SubscriptionPanel({ view, locale, fromCheckout, callbackUrl }: Props) {
+export function SubscriptionPanel({
+	view,
+	locale,
+	fromCheckout,
+	checkoutSessionId,
+	hasClaimCookie = false,
+	callbackUrl,
+}: Props) {
 	const t = useTranslations('plus.subscription')
 	const tFamily = useTranslations('plus.family')
 	const tUnlock = useTranslations('plus.unlock')
@@ -45,6 +55,19 @@ export function SubscriptionPanel({ view, locale, fromCheckout, callbackUrl }: P
 	const confirmed = checkoutConfirmed(view)
 	// The processor may confirm just after the redirect. Re-read the server's
 	// Money answer for a bounded period; neither the URL nor polling grants Plus.
+	const claimSyncedRef = useRef(false)
+	// Clear consumed HttpOnly claim cookie in the browser and reconcile any in-flight guest claim.
+	useEffect(() => {
+		if (claimSyncedRef.current) return
+		if (!hasClaimCookie && !(fromCheckout && checkoutSessionId && !confirmed)) return
+		claimSyncedRef.current = true
+		void claimCheckout(fromCheckout && checkoutSessionId ? checkoutSessionId : '', locale)
+			.then((claimed) => {
+				if (claimed && !confirmed) router.refresh()
+			})
+			.catch(() => undefined)
+	}, [hasClaimCookie, fromCheckout, checkoutSessionId, confirmed, locale, router])
+
 	useEffect(() => {
 		if (!fromCheckout || confirmed) return
 		let attempts = 0

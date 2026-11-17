@@ -40,6 +40,9 @@ function serializeHref(
 	return qs ? `${href.pathname}?${qs}` : href.pathname
 }
 
+let mockSignedIn = false
+let mockSubscribed = false
+
 mock.module('next/headers', () => ({
 	cookies: async () => ({ get: () => undefined }),
 	headers: async () => new Headers(),
@@ -80,7 +83,8 @@ mock.module('@/lib/i18n/routing', () => ({
 }))
 
 mock.module('@/lib/identity/server', () => ({
-	currentUser: async () => null,
+	currentUser: async () =>
+		mockSignedIn ? { id: 'usr_test_1', email: 'player@example.com', emailVerified: true } : null,
 }))
 
 mock.module('@/lib/api/server', () => ({
@@ -130,29 +134,46 @@ mock.module('@/lib/api/server', () => ({
 			},
 		],
 	}),
-	getServerPlusAccess: async () => ({ entitled: false, source: 'none', planId: null }),
+	getServerPlusAccess: async () => ({
+		salesOpen: true,
+		entitled: mockSubscribed,
+		source: mockSubscribed ? 'plus' : 'none',
+		planId: mockSubscribed ? 'individual_yearly' : null,
+	}),
 }))
 
 const { default: PricingPage } = await import('./page')
 
 describe('PricingPage SSR', () => {
-	test('renders single Individual and Family hero cards without duplicates', async () => {
+	test('renders cold-guest immediate-supply consent and direct checkout CTAs without /login gate', async () => {
+		mockSignedIn = false
+		mockSubscribed = false
 		const node = await PricingPage({
 			params: Promise.resolve({ locale: 'en-US' }),
 			searchParams: Promise.resolve({ callbackUrl: '/games/sudoku' }),
 		})
 		const html = renderToStaticMarkup(node)
 
-		// No stray Loading... in pricing markup
+		// No stray Loading... or /login gate in cold-guest pricing markup
 		expect(html).not.toContain('Loading...')
+		expect(html).not.toContain('Sign in to get Plus')
+		expect(html).not.toContain('Sign in to start Family')
+		expect(html).not.toContain('href="/login')
 
 		// Exact single render of #plus and #family hero cards, plus Free below
 		expect(html.match(/id="plus"/g)?.length).toBe(1)
 		expect(html.match(/id="family"/g)?.length).toBe(1)
 		expect(html.match(/name="plus-interval"/g)?.length).toBe(3)
 		expect(html.match(/name="family-interval"/g)?.length).toBe(2)
-		expect(html.match(/Sign in to get Plus/g)?.length).toBe(1)
-		expect(html.match(/Sign in to start Family/g)?.length).toBe(1)
+
+		// Both hero cards render immediate-supply consent checkbox, renewal note, and primary checkout CTA
+		expect(
+			html.match(/I want access now and understand I lose the 14-day cancellation right\./g)
+				?.length,
+		).toBe(2)
+		expect(html.match(/Continue to payment/g)?.length).toBe(2)
+		expect(html).toContain('Renews every year at $39.99 until you cancel.')
+		expect(html).toContain('Renews every year at $64.99 until you cancel.')
 
 		// Authorized $64.99/yr Family and $39.99/yr Individual prices in SSR HTML
 		expect(html).toContain('$39.99')
@@ -161,16 +182,30 @@ describe('PricingPage SSR', () => {
 		expect(html).toContain('$2.99')
 		expect(html).toContain('$0')
 		expect(html).not.toContain('$0.00')
-		expect(html).not.toContain('Yearly · $39.99 per year')
-		expect(html).not.toContain('Sign in to get Plus ·')
-
-		// No duplicate $39.99 pricing card below hero
 		expect(html.match(/Choose Tryit Plus/g)).toBeNull()
+	})
 
-		// Preserves game callbackUrl through sign-in return destination
-		const expectedReturn = encodeURIComponent(
-			'/pricing?plan=individual_yearly&callbackUrl=%2Fgames%2Fsudoku#plus',
-		)
-		expect(html).toContain(`callbackUrl=${expectedReturn}`)
+	test('preserves Japanese tokushoho disclosure link on cold-guest pricing', async () => {
+		mockSignedIn = false
+		mockSubscribed = false
+		const node = await PricingPage({
+			params: Promise.resolve({ locale: 'ja' }),
+			searchParams: Promise.resolve({}),
+		})
+		const html = renderToStaticMarkup(node)
+		expect(html).toContain('href="/tokushoho"')
+		expect(html).toContain('特定商取引法に基づく表記')
+	})
+
+	test('renders currentPlan -> /settings/subscription for signed-in subscribed members', async () => {
+		mockSignedIn = true
+		mockSubscribed = true
+		const node = await PricingPage({
+			params: Promise.resolve({ locale: 'en-US' }),
+			searchParams: Promise.resolve({}),
+		})
+		const html = renderToStaticMarkup(node)
+		expect(html).toContain('You have Tryit Plus')
+		expect(html).toContain('href="/settings/subscription"')
 	})
 })

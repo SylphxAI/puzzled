@@ -57,6 +57,9 @@ export function createPuzzleFixtureServer(port = 8787, options: { openPlans?: bo
 		async fetch(request: Request) {
 			const url = new URL(request.url)
 			if (url.pathname === '/healthz') return new Response('ok')
+			if (url.pathname === '/v1/guest/session' && request.method === 'POST') {
+				return Response.json({ issued: true })
+			}
 			if (options.openPlans && url.pathname === '/puzzled.v1.BillingService/ListPlans') {
 				return Response.json(OPEN_PLANS)
 			}

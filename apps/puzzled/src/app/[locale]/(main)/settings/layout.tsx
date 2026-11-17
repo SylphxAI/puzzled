@@ -4,8 +4,8 @@ import type { ReactNode } from 'react'
 import { ConsoleHeader } from '@/features/console/components/console-chrome'
 import { SettingsNav } from '@/features/console/components/settings-nav'
 import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
-import { redirect } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
+import { withPresentationDeadline } from '@/lib/presentation-document'
 import { buildPageMetadata } from '@/lib/seo/metadata'
 
 type Props = {
@@ -29,22 +29,32 @@ export async function generateMetadata({ params }: Props) {
 
 /**
  * Account settings frame: one h1, one section rail, and the section the URL
- * names. Signed-in only — visitors without a session go to sign-in and come
- * back here afterwards.
+ * names. Every settings page runs its own `requireMember` guard; anonymous
+ * post-payment checkout returns (`/settings/subscription?checkout=success&s=...`)
+ * render a clean claim prompt without account chrome instead of losing `s=`.
  */
 export default async function SettingsLayout({ children, params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	const user = await currentUser()
+	const [user, messages] = await Promise.all([
+		withPresentationDeadline(currentUser(), null),
+		getMessages(),
+	])
+	const picked = pickMessages(messages, [...CLIENT_NAMESPACES, 'settings'])
+
 	if (!user) {
-		redirect({ href: { pathname: '/login', query: { callbackUrl: '/settings' } }, locale })
+		return (
+			<NextIntlClientProvider messages={picked}>
+				<main className="page-shell-wide py-8 md:py-12">{children}</main>
+			</NextIntlClientProvider>
+		)
 	}
 
-	const [t, messages] = await Promise.all([getTranslations('settings'), getMessages()])
+	const t = await getTranslations('settings')
 
 	return (
-		<NextIntlClientProvider messages={pickMessages(messages, [...CLIENT_NAMESPACES, 'settings'])}>
+		<NextIntlClientProvider messages={picked}>
 			<main className="page-shell-wide py-8 md:py-10">
 				<ConsoleHeader eyebrow={t('eyebrow')} title={t('title')} description={t('subtitle')} />
 

@@ -102,7 +102,11 @@
 		"cancelledPeriod": "已取消。Tryit Plus 将开放至 {date}。",
 		"resume": "保留我的订阅",
 		"resumed": "你的订阅将照常续期。",
-		"error": "操作未能完成，请重试。"
+		"error": "操作未能完成，请重试。",
+		"claimTitle": "已收到付款 — 绑定你的 Tryit Plus",
+		"claimBody": "创建 Tryit 账号或登录，即可将 Tryit Plus 与全部游戏绑定到你的账号。",
+		"claimCreateAccount": "创建账号并激活 Plus",
+		"claimSignIn": "登录以绑定订阅"
 	},
 	"family": {
 		"title": "家庭",

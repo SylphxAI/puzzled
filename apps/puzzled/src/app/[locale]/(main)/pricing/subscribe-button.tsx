@@ -20,17 +20,18 @@ type Props = {
 	signedIn: boolean
 	subscribed: boolean
 	label: string
-	loginReturnTo?: string
 	/** Safe in-product destination (e.g. a locked game) to return to after checkout. */
 	callbackUrl?: string
-	guestLabel: string
 	/** What the buyer is agreeing to renew at, shown between the consent tick and the button. */
 	renewalNote?: string
 	/** Surface trigger label for begin_checkout telemetry. */
 	checkoutTrigger?: string
 }
 
-/** Starts checkout for one plan once the buyer has consented to immediate supply; guests are sent to sign in first. */
+/**
+ * Starts checkout for one plan once the buyer has consented to immediate supply.
+ * Cold guests proceed straight into Stripe Checkout and claim their subscription after payment.
+ */
 export function SubscribeButton({
 	planId,
 	currency,
@@ -39,9 +40,7 @@ export function SubscribeButton({
 	signedIn,
 	subscribed,
 	label,
-	loginReturnTo = '/pricing',
 	callbackUrl,
-	guestLabel,
 	renewalNote,
 	checkoutTrigger = 'pricing_subscribe',
 }: Props) {
@@ -51,17 +50,7 @@ export function SubscribeButton({
 	const [consent, setConsent] = useState(false)
 	const buttonClass = `${styles.checkout} pressable inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60`
 
-	if (!signedIn) {
-		return (
-			<Link
-				href={{ pathname: '/login', query: { callbackUrl: loginReturnTo } }}
-				className={buttonClass}
-			>
-				{guestLabel}
-			</Link>
-		)
-	}
-	if (subscribed) {
+	if (signedIn && subscribed) {
 		return (
 			<Link href="/settings/subscription" className={buttonClass}>
 				{t('currentPlan')}
