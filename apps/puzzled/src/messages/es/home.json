@@ -19,7 +19,7 @@
 	},
 	"lineup": {
 		"title": "Selección de hoy",
-		"subtitle": "Una rotación que se renueva cada día. El catálogo completo está en la página de juegos.",
+		"subtitle": "Encuentra aquí los puzzles de hoy o explora todos los juegos.",
 		"seeAll": "Ver todos los juegos",
 		"play": "Jugar",
 		"freeToday": "Elegido de hoy"
@@ -27,8 +27,8 @@
 	"value": {
 		"dailyTitle": "Un conjunto nuevo cada día",
 		"dailyBody": "Los puzzles nuevos llegan a medianoche, hora de Hong Kong: el mismo conjunto para todos, así los resultados se comparan con justicia.",
-		"honestTitle": "Resultados honestos y verificados",
-		"honestBody": "Cada resultado se comprueba en el servidor, así que las rachas, los tiempos y tu puesto en la clasificación significan algo de verdad.",
+		"honestTitle": "Puntuaciones que vale la pena comparar",
+		"honestBody": "Compara tu tiempo, alarga tu racha y consulta tu posición. Los puzzles completados se comprueban antes de que cuenten los resultados.",
 		"shareTitle": "Comparte sin spoilers",
 		"shareBody": "Tu tarjeta de resultado muestra el patrón y el tiempo, nunca la respuesta. Envíala sin arruinarle el día a nadie."
 	},
@@ -45,10 +45,10 @@
 	},
 	"faq": {
 		"title": "Preguntas y respuestas",
-		"subtitle": "La versión corta de cómo funciona Puzzled.",
+		"subtitle": "La versión corta de cómo funciona Tryit.",
 		"free": {
-			"question": "¿Puzzled es gratis?",
-			"answer": "Sí. Hay un puzzle gratis cada día, que nunca exige pago ni cuenta."
+			"question": "¿Tryit es gratis?",
+			"answer": "El puzzle destacado de hoy es gratis y no requiere cuenta. Plus da acceso a los 19 juegos y al archivo completo."
 		},
 		"account": {
 			"question": "¿Necesito una cuenta para jugar?",
@@ -56,11 +56,11 @@
 		},
 		"schedule": {
 			"question": "¿Cuándo aparecen los puzzles nuevos?",
-			"answer": "Todos los días a medianoche, hora de Hong Kong. Todo el mundo juega el mismo conjunto el mismo día, y eso es lo que hace comparables los resultados compartidos."
+			"answer": "Cada día a medianoche, hora de Hong Kong. Resuelve los mismos puzzles diarios que tus amigos y compara los resultados."
 		},
 		"streak": {
 			"question": "¿Cómo funcionan las rachas?",
-			"answer": "Completa al menos un puzzle válido en un día de puzzles para alargar tu racha. Fallar un solo día no borra tu historial."
+			"answer": "Termina cualquiera de los 19 juegos en modo diario antes de la próxima actualización, a medianoche en Hong Kong, para mantener tu racha. Cuentan tanto las victorias como las derrotas; el archivo y el modo de práctica no cuentan."
 		},
 		"share": {
 			"question": "¿Puedo compartir mi resultado sin revelar la solución?",
@@ -81,7 +81,7 @@
 		"titleMemberStreak": "Tu racha de {days} días te espera",
 		"titleMemberDone": "Todo hecho por hoy: bien jugado",
 		"titleDone": "{game} de hoy está completado",
-		"bodyGuest": "Puzzled es un conjunto diario de puzzles de palabras, lógica y números. Uno es gratis cada día, lleva unos minutos y no requiere registro.",
+		"bodyGuest": "Tryit es un conjunto diario de puzzles de palabras, lógica y números. Uno es gratis cada día, lleva unos minutos y no requiere registro.",
 		"bodyMember": "Tu racha, tus estadísticas y la selección de hoy están a un toque.",
 		"playToday": "Juega {game} de hoy",
 		"playAgain": "Jugar hoy otra vez",

@@ -36,7 +36,7 @@
 	"descriptionGuest": "你正以訪客身分遊玩，紀錄保存在此瀏覽器；登入即可帶到不同裝置。",
 	"viewLeaderboard": "排行榜",
 	"identity": {
-		"player": "Puzzled 玩家",
+		"player": "Tryit 玩家",
 		"member": "會員",
 		"guest": "訪客遊玩",
 		"streakChip": "連續 {days} 天",

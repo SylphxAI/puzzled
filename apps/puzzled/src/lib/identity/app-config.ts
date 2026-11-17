@@ -32,7 +32,7 @@ export async function getAppConfig(_opts?: {
 		oauthProviders,
 		app: {
 			id: _opts?.appId?.trim() || 'puzzled',
-			name: 'Puzzled',
+			name: 'Tryit',
 			slug: 'puzzled',
 		},
 		fetchedAt: new Date().toISOString(),

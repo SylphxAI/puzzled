@@ -57,7 +57,7 @@ describe('content security policy', () => {
 	})
 
 	test('the proxy puts a matching nonce policy on the page and the request', async () => {
-		const response = await proxy(new NextRequest('https://puzzled.gg/games'))
+		const response = await proxy(new NextRequest('https://tryit.fun/games'))
 		const csp = response.headers.get('content-security-policy') ?? ''
 		const nonce = csp.match(/'nonce-([^']+)'/)?.[1]
 		if (!nonce) throw new Error('no nonce in the policy')
@@ -66,7 +66,7 @@ describe('content security policy', () => {
 	})
 
 	test('proxy-skipped paths get the policy too', async () => {
-		const response = await proxy(new NextRequest('https://puzzled.gg/favicon.png'))
+		const response = await proxy(new NextRequest('https://tryit.fun/favicon.png'))
 		expect(response.headers.get('content-security-policy')).toContain("'strict-dynamic'")
 	})
 

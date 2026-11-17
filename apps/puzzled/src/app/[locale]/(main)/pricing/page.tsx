@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props) {
 }
 
 /**
- * Puzzled Plus plans. Every amount is Sylphx Money's catalogue price (ListPlans),
+ * Tryit Plus plans. Every amount is Sylphx Money's catalogue price (ListPlans),
  * tax included, in the currency checkout will charge; nothing is hardcoded.
  * While sales are closed the page says everything is free.
  *

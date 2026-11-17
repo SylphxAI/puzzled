@@ -26,7 +26,7 @@ const STRINGS: ResultCardStrings = {
 	streakDays: '{days}-day streak',
 	patternSummary: 'Pattern: {hit} hit / {near} near / {miss} miss',
 	altOnDay: ' on {day}',
-	altTemplate: 'Puzzled result - {game}{day}. {result}',
+	altTemplate: 'Tryit result - {game}{day}. {result}',
 	altDetailsTemplate: ' {details}.',
 	altLinkTemplate: ' Play: {link}',
 	detailSeparator: ', ',
@@ -49,7 +49,7 @@ const THEMES: GameColorTheme[] = [
 
 function baseInput(overrides: Partial<ResultCardInput> = {}): ResultCardInput {
 	return {
-		origin: 'https://puzzled.gg',
+		origin: 'https://tryit.fun',
 		gameSlug: 'word-guess',
 		gameName: 'Five',
 		theme: 'emerald',
@@ -167,7 +167,7 @@ describe('paintResultCard', () => {
 		expect(painted).toContain('3 of 6')
 		expect(painted).toContain('4')
 		expect(painted).toContain('One to five minutes')
-		expect(painted).toContain('puzzled.gg/games/word-guess?mode=archive&date=2026-09-21')
+		expect(painted).toContain('tryit.fun/games/word-guess?mode=archive&date=2026-09-21')
 	})
 
 	test('never paints solution or answer content, even when it rides the input', () => {
@@ -244,7 +244,7 @@ describe('paintResultCard', () => {
 		paintResultCard(rec.ctx, model, STRINGS)
 		const painted = rec.texts.join('\n')
 		expect(painted).toContain('Five')
-		expect(painted).toContain('puzzled.gg/games/word-guess')
+		expect(painted).toContain('tryit.fun/games/word-guess')
 		expect(painted).not.toContain('undefined')
 		expect(painted).not.toContain('NaN')
 	})

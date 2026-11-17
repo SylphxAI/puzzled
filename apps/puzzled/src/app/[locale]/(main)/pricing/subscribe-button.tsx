@@ -23,7 +23,7 @@ type Props = {
 	loginReturnTo?: string
 	/** Safe in-product destination (e.g. a locked game) to return to after checkout. */
 	callbackUrl?: string
-	guestLabel?: string
+	guestLabel: string
 	/** What the buyer is agreeing to renew at, shown between the consent tick and the button. */
 	renewalNote?: string
 	/** Surface trigger label for begin_checkout telemetry. */
@@ -57,7 +57,7 @@ export function SubscribeButton({
 				href={{ pathname: '/login', query: { callbackUrl: loginReturnTo } }}
 				className={buttonClass}
 			>
-				{guestLabel ?? t('signInToSubscribe')}
+				{guestLabel}
 			</Link>
 		)
 	}

@@ -29,7 +29,7 @@ const STRINGS: ResultCardStrings = {
 	streakDays: '{days}-day streak',
 	patternSummary: 'Pattern: {hit} hit / {near} near / {miss} miss',
 	altOnDay: ' on {day}',
-	altTemplate: 'Puzzled result - {game}{day}. {result}',
+	altTemplate: 'Tryit result - {game}{day}. {result}',
 	altDetailsTemplate: ' {details}.',
 	altLinkTemplate: ' Play: {link}',
 	detailSeparator: ', ',
@@ -37,7 +37,7 @@ const STRINGS: ResultCardStrings = {
 
 function baseInput(overrides: Partial<ResultCardInput> = {}): ResultCardInput {
 	return {
-		origin: 'https://puzzled.gg',
+		origin: 'https://tryit.fun',
 		gameSlug: 'word-guess',
 		gameName: 'Five',
 		theme: 'emerald',
@@ -61,7 +61,7 @@ describe('buildResultCard', () => {
 		expect(model.gameName).toBe('Five')
 		expect(model.theme).toBe('emerald')
 		expect(model.deepLink).toBe(
-			'https://puzzled.gg/games/word-guess?mode=archive&date=2026-09-21&utm_source=share',
+			'https://tryit.fun/games/word-guess?mode=archive&date=2026-09-21&utm_source=share',
 		)
 		expect(model.timeBand).toBe('under5m')
 		expect(model.currentStreak).toBe(4)
@@ -71,7 +71,7 @@ describe('buildResultCard', () => {
 		const model = buildResultCard(baseInput({ puzzleDate: '2026-02-30' }))
 		expect(model.dayKey).toBeNull()
 		expect(model.dayDisplay).toBeNull()
-		expect(model.deepLink).toBe('https://puzzled.gg/games/word-guess?utm_source=share')
+		expect(model.deepLink).toBe('https://tryit.fun/games/word-guess?utm_source=share')
 	})
 
 	test('never carries the solution or an answer grid, even when passed in', () => {
@@ -207,7 +207,7 @@ describe('resultCardTextAlternative', () => {
 		expect(alt).toContain('3 of 6')
 		expect(alt).toContain('4-day streak')
 		expect(alt).toContain('One to five minutes')
-		expect(alt).toContain('puzzled.gg/games/word-guess?mode=archive&date=2026-09-21')
+		expect(alt).toContain('tryit.fun/games/word-guess?mode=archive&date=2026-09-21')
 		expect(alt.toLowerCase()).not.toContain('solution')
 	})
 
@@ -224,7 +224,7 @@ describe('resultCardTextAlternative', () => {
 		)
 		const alt = resultCardTextAlternative(model, STRINGS)
 		expect(alt).toBe(
-			'Puzzled result - Five. Solved! Play: https://puzzled.gg/games/word-guess?utm_source=share',
+			'Tryit result - Five. Solved! Play: https://tryit.fun/games/word-guess?utm_source=share',
 		)
 		expect(alt).not.toContain('  ')
 	})

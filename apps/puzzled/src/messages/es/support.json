@@ -1,6 +1,6 @@
 {
 	"title": "Soporte y ayuda",
-	"description": "Escribe a Puzzled sobre tu cuenta, tus juegos o tus datos. Respondemos por correo electrónico.",
+	"description": "Escribe a Tryit sobre tu cuenta, tus juegos o tus datos. Respondemos por correo electrónico.",
 	"hero": {
 		"eyebrow": "Soporte",
 		"lead": "Escríbenos sobre tu cuenta, tu progreso o un error. Respondemos por correo electrónico.",
@@ -48,7 +48,7 @@
 			"answer": "Un día de racha significa completar al menos un puzzle válido dentro de un día de puzzles. Si no completas ninguno, la racha actual termina; tu mejor racha y tus resultados anteriores se conservan."
 		},
 		"accessibility": {
-			"question": "¿Es accesible Puzzled?",
+			"question": "¿Es accesible Tryit?",
 			"answer": "La compatibilidad varía según el puzzle, y es más importante ser sinceros que usar un eslogan. Ya disponible: un enlace para saltar al contenido en el sitio principal; etiquetas en los controles de los juegos que solo tienen icono; regiones dinámicas que anuncian el estado y los resultados en varios puzzles; contornos de foco visibles para el teclado; y animaciones propias desactivadas cuando tu sistema pide reducir el movimiento. Carencia conocida: algunas etiquetas de controles dentro de los juegos siguen estando solo en inglés, sea cual sea el idioma de interfaz que elijas. Si un puzzle te lo impide, escribe a soporte con el nombre del puzzle y lo que ocurrió, para que el equipo pueda revisar ese caso."
 		},
 		"data": {
@@ -56,7 +56,7 @@
 			"answer": "Escribe a {email} para solicitar acceso, una exportación, una corrección o la eliminación; esa única dirección gestiona esas solicitudes. La Política de privacidad indica qué datos se recogen, qué terceros intervienen y los derechos que puedes ejercer."
 		},
 		"cancel": {
-			"question": "¿Cómo cancelo Puzzled Plus?",
+			"question": "¿Cómo cancelo Tryit Plus?",
 			"answer": "Puedes cancelar en cualquier momento en Ajustes > Suscripción. Al cancelar se detienen las renovaciones futuras."
 		},
 		"afterCancel": {
@@ -81,7 +81,7 @@
 		},
 		"terms": {
 			"title": "Términos del servicio",
-			"body": "Las normas para usar Puzzled."
+			"body": "Las normas para usar Tryit."
 		}
 	},
 	"cta": {

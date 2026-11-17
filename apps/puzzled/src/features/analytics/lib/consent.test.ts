@@ -13,7 +13,7 @@ beforeEach(() => {
 	cookieWrites = []
 	events = []
 	const win: Record<string, unknown> = {
-		location: { hostname: 'puzzled.gg' },
+		location: { hostname: 'tryit.fun' },
 		dispatchEvent: (e: { type: string }) => events.push(e.type),
 	}
 	g.window = win

@@ -100,8 +100,27 @@ pub(crate) fn dest_email_delivery(
     subject: &str,
     text_body: &str,
 ) -> Value {
-    let sender =
-        dest_product_env("EVENTS_EMAIL_FROM").unwrap_or_else(|| "noreply@puzzled.gg".to_string());
+    email_delivery(
+        connector_id,
+        user_id,
+        email,
+        email_type,
+        subject,
+        text_body,
+        dest_product_env("EVENTS_EMAIL_FROM").as_deref(),
+    )
+}
+
+fn email_delivery(
+    connector_id: &str,
+    user_id: &str,
+    email: &str,
+    email_type: &str,
+    subject: &str,
+    text_body: &str,
+    sender: Option<&str>,
+) -> Value {
+    let sender = sender.unwrap_or("noreply@send.tryit.fun");
     let today = chrono::Utc::now().date_naive();
     let idempotency_key = sanitize_idempotency(&format!("win-back-{email_type}-{user_id}-{today}"));
     json!({
@@ -164,6 +183,33 @@ pub(crate) async fn dest_events_deliver(body: Value) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tryit_sender_default_preserves_overrides_and_delivery_identity() {
+        for sender in [None, Some("existing-sender@example.com")] {
+            let payload = email_delivery(
+                "connector",
+                "player",
+                "player@example.com",
+                "day7",
+                "Tryit",
+                "Puzzle",
+                sender,
+            );
+            let email = &payload["intent"]["email"];
+            assert_eq!(
+                email["message"]["sender"]["address"],
+                sender.unwrap_or("noreply@send.tryit.fun")
+            );
+            assert_eq!(email["message"]["to"][0]["address"], "player@example.com");
+            assert_eq!(email["connector_id"], "connector");
+            assert_eq!(
+                payload["idempotency_key"],
+                format!("win-back-day7-player-{}", chrono::Utc::now().date_naive())
+            );
+            assert_eq!(payload["retry_policy"]["maximum_attempts"], 3);
+        }
+    }
 
     #[test]
     fn auth_origin_honors_binding_and_defaults_to_the_auth_service() {

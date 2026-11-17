@@ -64,7 +64,7 @@ describe('rawKeyLeaks', () => {
 
 	test('a zero, a format template and a brand are not keys', () => {
 		// The catalogue carries counters and templates; a page renders them.
-		expect(rawKeyLeaks('<p>0 1 2 · Puzzled · 100%</p>')).toEqual([])
+		expect(rawKeyLeaks('<p>0 1 2 · Tryit · 100%</p>')).toEqual([])
 	})
 
 	test('markup plumbing a route name shares is not read as a leak', () => {

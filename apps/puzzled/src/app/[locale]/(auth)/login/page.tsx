@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props) {
 		imagePath: ogImagePath({
 			title: t('signInTitle'),
 			subtitle: t('signInDescription'),
-			eyebrow: 'Puzzled',
+			eyebrow: 'Tryit',
 		}),
 		noindex: true,
 		withAlternates: false,

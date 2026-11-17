@@ -1,10 +1,10 @@
 {
 	"title": "Compartilhe seu resultado",
-	"text": "Puzzled - {game}\n{result}",
+	"text": "Tryit - {game}\n{result}",
 	"share": "Compartilhar",
 	"copy": "Copiar",
 	"card": {
-		"title": "Cartão de resultado do Puzzled",
+		"title": "Cartão de resultado do Tryit",
 		"downloaded": "Imagem do cartão salva; legenda copiada para a área de transferência.",
 		"copied": "Legenda copiada para a área de transferência; este navegador não conseguiu gerar a imagem.",
 		"unavailable": "Não foi possível compartilhar automaticamente.",
@@ -24,7 +24,7 @@
 		"streakDays": "Sequência de {days} dias",
 		"patternSummary": "Padrão: {hit} certas / {near} perto / {miss} erradas",
 		"altOnDay": " em {day}",
-		"altTemplate": "Puzzled - {game}{day}. {result}",
+		"altTemplate": "Tryit - {game}{day}. {result}",
 		"altDetailsTemplate": " {details}.",
 		"altLinkTemplate": " Jogue: {link}",
 		"detailSeparator": ", ",
@@ -39,7 +39,7 @@
 	"landing": {
 		"metaTitle": "Um resultado compartilhado",
 		"ogTitle": "{game}: um resultado para superar",
-		"metaDescription": "Veja o resultado de um amigo e jogue de graça o desafio de hoje do Puzzled.",
+		"metaDescription": "Veja o resultado de um amigo e jogue de graça o desafio de hoje do Tryit.",
 		"eyebrow": "Um amigo compartilhou um resultado",
 		"titleSame": "Será que você consegue superar?",
 		"titleOther": "Veja como foi e jogue o desafio de hoje",

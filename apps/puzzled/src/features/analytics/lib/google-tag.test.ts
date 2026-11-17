@@ -23,7 +23,7 @@ function harness(choice: { analytics: boolean; marketing: boolean }, ids = IDS) 
 	const calls: unknown[][] = []
 	const store = new Map<string, string>()
 	const win = {
-		location: { origin: 'https://puzzled.gg', hostname: 'puzzled.gg' },
+		location: { origin: 'https://tryit.fun', hostname: 'tryit.fun' },
 		dataLayer: [] as unknown[],
 		gtag: (...args: unknown[]) => calls.push(args),
 	} as unknown as TagWindow
@@ -103,9 +103,9 @@ describe('loading', () => {
 		expect(names(h.calls)).toEqual(['consent', 'js', 'set', 'config', 'config'])
 		expect(h.scripts).toEqual(['https://www.googletagmanager.com/gtag/js?id=G-TEST1234'])
 		expect(h.calls[2]?.[1]).toEqual({
-			page_location: 'https://puzzled.gg/',
+			page_location: 'https://tryit.fun/',
 			page_referrer: '',
-			page_title: 'Puzzled',
+			page_title: 'Tryit',
 		})
 		expect(h.calls[3]?.[2]).toMatchObject({
 			send_page_view: false,
@@ -163,9 +163,9 @@ describe('page views and addresses', () => {
 		expect(h.tag.pageView('/games/sudoku?id=secret')).toBe(false)
 		const events = h.calls.filter((c) => c[0] === 'event')
 		expect(events).toHaveLength(1)
-		expect(events[0]?.[2]).toMatchObject({ page_location: 'https://puzzled.gg/pricing' })
+		expect(events[0]?.[2]).toMatchObject({ page_location: 'https://tryit.fun/pricing' })
 		const sets = h.calls.filter((c) => c[0] === 'set')
-		expect(sets[sets.length - 1]?.[1]).toMatchObject({ page_location: 'https://puzzled.gg/' })
+		expect(sets[sets.length - 1]?.[1]).toMatchObject({ page_location: 'https://tryit.fun/' })
 		expect(JSON.stringify(h.calls)).not.toContain('secret')
 	})
 })
@@ -309,10 +309,10 @@ describe('cookies', () => {
 					writes.push(v)
 				},
 			},
-			'www.puzzled.gg',
+			'www.tryit.fun',
 		)
 		expect(writes).toContain('_ga=; Path=/; Max-Age=0')
-		expect(writes).toContain('_ga=; Path=/; Max-Age=0; Domain=.puzzled.gg')
+		expect(writes).toContain('_ga=; Path=/; Max-Age=0; Domain=.tryit.fun')
 		expect(writes.some((w) => w.startsWith('puzzled_attr') || w.startsWith('theme'))).toBe(false)
 	})
 })

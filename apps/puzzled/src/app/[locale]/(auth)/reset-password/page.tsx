@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props) {
 		imagePath: ogImagePath({
 			title: t('resetPasswordTitle'),
 			subtitle: t('resetPasswordDescription'),
-			eyebrow: 'Puzzled',
+			eyebrow: 'Tryit',
 		}),
 		noindex: true,
 		withAlternates: false,

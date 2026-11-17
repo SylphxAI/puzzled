@@ -14,7 +14,7 @@ declare global {
 
 /**
  * One ad unit, labelled. Renders nothing unless ads are configured, the viewer
- * has no Puzzled Plus and the visitor accepted cookies. Place it only on the
+ * has no Tryit Plus and the visitor accepted cookies. Place it only on the
  * archive index and the result screen, never inside a puzzle.
  *
  * `config` is passed by server pages; result screens omit it and read the

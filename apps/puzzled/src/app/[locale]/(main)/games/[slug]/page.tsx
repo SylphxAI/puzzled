@@ -86,7 +86,7 @@ export async function generateMetadata({ params }: Props) {
  * so an unknown slug is a 404 with no rendered shell. Everything else is server-rendered for
  * every viewer — hero, rules, tips, FAQ and related modules — while the
  * interactive part streams behind a skeleton. Today's featured module is open
- * to every player, guests included; the rest need Puzzled Plus once it is on
+ * to every player, guests included; the rest need Tryit Plus once it is on
  * sale, and end in an honest unlock path instead of a dead end.
  */
 export default async function GamePage({ params, searchParams }: Props) {

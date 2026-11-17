@@ -19,7 +19,7 @@
  *
  * Usage:
  *   bun scripts/verify-live.ts                                  # read-only, live
- *   bun scripts/verify-live.ts --base https://puzzled.gg --json
+ *   bun scripts/verify-live.ts --base https://tryit.fun --json
  *   bun scripts/verify-live.ts --play --guest <uuid>            # writes one finish
  *   bun scripts/verify-live.ts --base https://example.com --json
  */
@@ -31,7 +31,7 @@ import { createServer } from 'node:http'
 // Constants (contracts this harness asserts against)
 // ---------------------------------------------------------------------------
 
-const DEFAULT_BASE = 'https://puzzled.gg'
+const DEFAULT_BASE = 'https://tryit.fun'
 const DEFAULT_TIMEOUT_MS = 20_000
 /** Hard cap on any response body read (defensive; product pages are ~150 KB). */
 const MAX_BODY_BYTES = 4 * 1024 * 1024

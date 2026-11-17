@@ -53,7 +53,7 @@ watch_paths = [
 # literals reach the runtime; a per-service table of values is not delivered.
 # Browser origin verified against the live production web/api route binding.
 [env.PUZZLED_PUBLIC_URL]
-value = "https://puzzled.gg"
+value = "https://tryit.fun"
 
 # Admin allow-list (workaround, docs/capabilities.md PUZ-AUTH-ADMIN): comma-separated
 # exact Sylphx Auth subjects (principal.subject) that are Puzzled admins. Empty means

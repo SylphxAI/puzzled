@@ -756,7 +756,7 @@ export function AccountSection() {
 	if (!user) return <p>Sign in to manage your Identity dest account.</p>
 	return (
 		<div>
-			<p>{user.name || 'Puzzled player'}</p>
+			<p>{user.name || 'Tryit player'}</p>
 			<p>{user.email}</p>
 			<p>Identity principal {user.id}</p>
 		</div>

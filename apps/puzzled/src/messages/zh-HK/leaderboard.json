@@ -6,7 +6,7 @@
 	},
 	"title": "排行榜",
 	"metaDescription": "各遊戲今日、本週與全期的排行榜：誰完成了什麼，以及你自己的位置。",
-	"eyebrow": "Puzzled 排行榜",
+	"eyebrow": "Tryit 排行榜",
 	"description": "每次只顯示一個遊戲、一個期間，與計分方式完全一致。只有選擇公開身分的玩家會出現在榜上。",
 	"chip": "榜單：{module}",
 	"anonymous": "匿名玩家",

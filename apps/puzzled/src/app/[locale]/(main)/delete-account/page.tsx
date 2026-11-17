@@ -24,7 +24,7 @@ export default async function DeleteAccountPage({ params }: Props) {
 	setRequestLocale(locale)
 	const t = await getTranslations('settings')
 	const user = await currentUser()
-	const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Puzzled account deletion request')}`
+	const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Tryit account deletion request')}`
 	return (
 		<main className="page-shell-wide max-w-3xl space-y-6 py-10">
 			<h1 className="font-display text-3xl font-semibold">{t('deletePage.title')}</h1>

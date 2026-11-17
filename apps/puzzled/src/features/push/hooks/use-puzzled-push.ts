@@ -6,7 +6,7 @@ import { MINUTE_MS } from '@/lib/constants/time'
 import { useNotifications } from '@/lib/identity/react'
 
 /**
- * Puzzled-specific notification types
+ * Tryit-specific notification types
  */
 type PuzzledNotificationType =
 	| 'daily_puzzle' // Daily puzzle available
@@ -17,7 +17,7 @@ type PuzzledNotificationType =
 	| 'leaderboard' // Leaderboard update
 
 /**
- * Puzzled notification payload
+ * Tryit notification payload
  */
 export interface PuzzledNotification {
 	type: PuzzledNotificationType
@@ -32,7 +32,7 @@ export interface PuzzledNotification {
 }
 
 /**
- * Notification preferences for Puzzled
+ * Notification preferences for Tryit
  */
 export interface PuzzledNotificationPreferences {
 	pushEnabled: boolean
@@ -43,7 +43,7 @@ export interface PuzzledNotificationPreferences {
 }
 
 /**
- * Hook for Puzzled-specific push notification management
+ * Hook for Tryit-specific push notification management
  *
  * @example
  * ```tsx

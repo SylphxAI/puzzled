@@ -45,7 +45,7 @@ const WordTile = memo(function WordTile({
 			aria-pressed={isSelected}
 			style={isShuffling ? { animationDelay: `${shuffleIndex * 20}ms` } : undefined}
 			className={cn(
-				// Playful roundness (14-16px) with brand-tinted shadows - Puzzled signature look
+				// Playful roundness (14-16px) with brand-tinted shadows - Tryit signature look
 				// Mobile-first: min 44px touch target, better text scaling
 				'flex min-h-[44px] aspect-[5/4] items-center justify-center rounded-xl px-2 text-xs font-semibold uppercase tracking-tight min-[400px]:aspect-[4/3] min-[400px]:text-sm sm:rounded-2xl sm:text-base',
 				'transition-all duration-150 shadow-[var(--shadow-tile)]',

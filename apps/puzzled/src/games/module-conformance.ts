@@ -65,7 +65,7 @@ function nonSpoilerResultMaps(slug: string): boolean {
 	const canonical = canonicalizeGameSlug(slug)
 	const name = getGameMetadata(canonical)?.name ?? canonical
 	const text = formatRitualShareText({
-		origin: 'https://puzzled.gg',
+		origin: 'https://tryit.fun',
 		gameSlug: canonical,
 		gameName: name,
 		puzzleDate: '2026-08-22',

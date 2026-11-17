@@ -1,6 +1,6 @@
 {
 	"title": "結果をシェア",
-	"text": "Puzzled - {game}\n{result}",
+	"text": "Tryit - {game}\n{result}",
 	"share": "シェア",
 	"copy": "コピー",
 	"card": {
@@ -24,7 +24,7 @@
 		"streakDays": "{days}日連続",
 		"patternSummary": "パターン: 一致 {hit} / 惜しい {near} / はずれ {miss}",
 		"altOnDay": "({day})",
-		"altTemplate": "Puzzled - {game}{day}。{result}",
+		"altTemplate": "Tryit - {game}{day}。{result}",
 		"altDetailsTemplate": " {details}。",
 		"altLinkTemplate": " 遊ぶ: {link}",
 		"detailSeparator": "、",

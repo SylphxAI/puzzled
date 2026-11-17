@@ -158,7 +158,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 						for (const category of [...solvedCategories, ...revealedCategories]) {
 							if (category.words.includes(word)) {
 								const level = category.level
-								// Distinctive Puzzled colors: Rose, Teal, Amber, Fuchsia
+								// Distinctive Tryit colors: Rose, Teal, Amber, Fuchsia
 								return ['🟥', '🩵', '🟨', '🟪'][level]
 							}
 						}

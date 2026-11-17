@@ -15,5 +15,5 @@ editable reference code; Git history is the archive.
 Do not reintroduce executable TypeScript backend source under
 `apps/puzzled/src/server/**`. Product API policy belongs to the Rust service.
 `packages/sdk/src/server/**` is an intentional SDK server package, not a
-Puzzled product backend. Platform job webhooks remain explicit web residuals
+Tryit product backend. Platform job webhooks remain explicit web residuals
 until Rust job adapters own their full I/O (see `sylphx.toml`).

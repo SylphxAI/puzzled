@@ -46,9 +46,9 @@ function withEnv<T>(
 
 describe('resolveSiteOrigin', () => {
 	test('uses the request host for product-owned hosts', () => {
-		expect(resolveSiteOrigin({ host: 'puzzled.gg' })).toBe('https://puzzled.gg')
+		expect(resolveSiteOrigin({ host: 'puzzled.gg' })).toBe(PRODUCTION_SITE_ORIGIN)
 		expect(resolveSiteOrigin({ host: 'puzzled.gg:443', forwardedProto: 'https' })).toBe(
-			'https://puzzled.gg',
+			PRODUCTION_SITE_ORIGIN,
 		)
 		expect(
 			resolveSiteOrigin({
@@ -56,7 +56,7 @@ describe('resolveSiteOrigin', () => {
 				forwardedHost: 'puzzled.gg',
 				forwardedProto: 'https',
 			}),
-		).toBe('https://puzzled.gg')
+		).toBe(PRODUCTION_SITE_ORIGIN)
 		expect(resolveSiteOrigin({ host: 'puzzled-git-feature.sylphx.app' })).toBe(
 			'https://puzzled-git-feature.sylphx.app',
 		)
@@ -102,7 +102,7 @@ describe('resolveSiteOrigin', () => {
 	test('public product hosts are always https (x-forwarded-proto cannot downgrade)', () => {
 		expect(
 			resolveSiteOrigin({ host: 'puzzled.gg', forwardedProto: 'http', nodeEnv: 'production' }),
-		).toBe('https://puzzled.gg')
+		).toBe(PRODUCTION_SITE_ORIGIN)
 		expect(
 			resolveSiteOrigin({
 				host: 'puzzled-git-feature.sylphx.app',
@@ -160,7 +160,7 @@ describe('server base URL', () => {
 
 	test('configured production URL wins over the fallback', () => {
 		withEnv({ NODE_ENV: 'production', SYLPHX_PUBLIC_URL: 'https://puzzled.gg' }, () => {
-			expect(getServerBaseUrl()).toBe('https://puzzled.gg')
+			expect(getServerBaseUrl()).toBe(PRODUCTION_SITE_ORIGIN)
 		})
 	})
 
@@ -219,7 +219,7 @@ describe('site origin request-validation mode', () => {
 			nodeEnv: 'production',
 		}
 		expect(resolveSiteOrigin(input, 'request')).toBeNull()
-		expect(resolveSiteOrigin(input)).toBe('https://puzzled.gg')
+		expect(resolveSiteOrigin(input)).toBe(PRODUCTION_SITE_ORIGIN)
 	})
 })
 
@@ -231,7 +231,7 @@ describe('strict bracketed request authority', () => {
 			nodeEnv: 'production',
 		}
 		expect(resolveSiteOrigin(input, 'request')).toBeNull()
-		expect(resolveSiteOrigin(input)).toBe('https://puzzled.gg')
+		expect(resolveSiteOrigin(input)).toBe(PRODUCTION_SITE_ORIGIN)
 	})
 
 	test('development forwarded IPv6 authority retains every suffix byte', () => {
@@ -250,6 +250,27 @@ describe('strict bracketed request authority', () => {
 					'request',
 				),
 			).toBe(`http://${forwardedHost}`)
+		}
+	})
+})
+
+
+describe('dual production origin cutover', () => {
+	for (const host of ['tryit.fun', 'puzzled.gg']) {
+		const configuredUrl = host === 'tryit.fun' ? 'https://puzzled.gg' : 'https://tryit.fun'
+		test(host + ' keeps Auth on the incoming host despite opposite configuration', () => {
+			for (const input of [
+				{ host, configuredUrl, nodeEnv: 'production' },
+				{ host: 'web:3000', forwardedHost: host, forwardedProto: 'https', configuredUrl, nodeEnv: 'production' },
+			]) {
+				expect(resolveSiteOrigin(input, 'request')).toBe('https://' + host)
+				expect(resolveSiteOrigin(input)).toBe(PRODUCTION_SITE_ORIGIN)
+			}
+		})
+	}
+	test('malformed and foreign forwarded authority cannot fall back to a configured domain', () => {
+		for (const forwardedHost of ['evil.com', 'tryit.fun.evil.com', 'tryit.fun, puzzled.gg', 'tryit.fun/path', 'tryit.fun:99999']) {
+			expect(resolveSiteOrigin({ host: 'tryit.fun', forwardedHost, forwardedProto: 'https', configuredUrl: PRODUCTION_SITE_ORIGIN, nodeEnv: 'production' }, 'request')).toBeNull()
 		}
 	})
 })

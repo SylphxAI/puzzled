@@ -1,5 +1,5 @@
 /**
- * Push Notifications for Puzzled
+ * Push Notifications for Tryit
  *
  * Uses the Sylphx Platform SDK's push notification system.
  * Enables daily puzzle reminders and achievement notifications.
@@ -17,6 +17,6 @@
 
 'use client'
 
-// Re-export with Puzzled-specific types
+// Re-export with Tryit-specific types
 
 export { NotificationPreferences } from './components/notification-preferences'

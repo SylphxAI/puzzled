@@ -1,5 +1,5 @@
 /**
- * The shortest password Puzzled accepts. The sign-up route enforces it on the
+ * The shortest password Tryit accepts. The sign-up route enforces it on the
  * server; the sign-up and reset forms show and check the same number, so a
  * player is never told a password is fine and then refused.
  */

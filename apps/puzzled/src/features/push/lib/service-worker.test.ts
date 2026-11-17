@@ -9,7 +9,7 @@ function worker() {
 	const self = {
 		addEventListener: (name: string, callback: (event: unknown) => void) =>
 			handlers.set(name, callback),
-		location: { origin: 'https://puzzled.gg' },
+		location: { origin: 'https://tryit.fun' },
 		registration: {
 			showNotification: async (...args: unknown[]) => {
 				notifications.push(args)
@@ -29,7 +29,7 @@ function worker() {
 	return { handlers, notifications, opened }
 }
 
-describe('Puzzled service worker', () => {
+describe('Tryit service worker', () => {
 	test('renders the localized push payload without caching any data', async () => {
 		const { handlers, notifications } = worker()
 		let pending: Promise<unknown> = Promise.resolve()
@@ -62,6 +62,6 @@ describe('Puzzled service worker', () => {
 		expect(opened).toHaveLength(0)
 		click('/zh-TW')
 		await pending
-		expect(opened).toEqual(['https://puzzled.gg/zh-TW'])
+		expect(opened).toEqual(['https://tryit.fun/zh-TW'])
 	})
 })

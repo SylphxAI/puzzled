@@ -42,7 +42,7 @@
 		}
 	},
 	"overview": {
-		"metaTitle": "設定 - Puzzled",
+		"metaTitle": "設定 - Tryit",
 		"metaDescription": "Puzzledのアカウント設定を管理します",
 		"title": "設定",
 		"subtitle": "アカウントと環境設定を管理します",
@@ -343,7 +343,7 @@
 		"bioPlaceholder": "あなたについて少し教えてください...",
 		"bioCharacters": "{count}/160",
 		"publicProfile": "公開プロフィール",
-		"publicProfileDescription": "puzzled.gg/u/{username}でプロフィールを公開します",
+		"publicProfileDescription": "tryit.fun/u/{username}でプロフィールを公開します",
 		"setUsernameFirst": "公開プロフィールを有効にするには、ユーザー名を設定してください",
 		"profileVisibleAt": "プロフィールは/u/{username}で公開されます",
 		"save": "保存",
@@ -808,7 +808,7 @@
 			"title": "プロフィールの公開範囲",
 			"description": "プロフィールと情報を誰に見せるかを設定します",
 			"publicProfile": "公開プロフィール",
-			"publicProfileDescription": "puzzled.gg/u/{username}でプロフィールを公開します",
+			"publicProfileDescription": "tryit.fun/u/{username}でプロフィールを公開します",
 			"leaderboardVisibility": "ランキングに表示",
 			"leaderboardDescription": "公開ランキングに名前と成績を表示します",
 			"visibleWhenPublic": "公開すると、他の人に表示される情報:",

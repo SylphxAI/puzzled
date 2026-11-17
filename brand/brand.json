@@ -1,5 +1,5 @@
 {
-  "name": "Puzzled",
+  "name": "Tryit",
   "icon": {
     "master": "svg/puzzled-app-icon.svg",
     "small": "svg/puzzled-favicon.svg",
@@ -48,5 +48,9 @@
     "apps/puzzled/public/icons/icon-maskable-512.png": "app-icon/icon-maskable-512.png",
     "apps/puzzled/public/brand/mark.svg": "svg/puzzled-symbol.svg",
     "apps/puzzled/public/brand/mark-mono.svg": "svg/puzzled-symbol-mono.svg"
+  },
+  "wordmark": {
+    "text": "Tryit",
+    "font": "../apps/puzzled/public/fonts/fraunces-600.ttf"
   }
 }

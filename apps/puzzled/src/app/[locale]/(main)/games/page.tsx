@@ -11,7 +11,7 @@ import { getAllGameMetadata } from '@/games/registry'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
 import { Link } from '@/lib/i18n/routing'
 import { buildPageMetadata, localizedPath, ogImagePath } from '@/lib/seo/metadata'
-import { getRequestSiteOrigin } from '@/lib/site-origin.server'
+import { getCanonicalSiteOrigin } from '@/lib/site-origin.server'
 import { GameTile } from '@/shared/components/games/game-tile'
 
 // Force dynamic rendering - the featured module follows the product day
@@ -71,7 +71,7 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 	const category = parseCatalogCategory(categoryParam)
 	const visibleEntries = filterCatalogEntries(entries, { query, category })
 
-	const origin = await getRequestSiteOrigin()
+	const origin = await getCanonicalSiteOrigin()
 	const itemList = {
 		'@context': 'https://schema.org',
 		'@type': 'ItemList',

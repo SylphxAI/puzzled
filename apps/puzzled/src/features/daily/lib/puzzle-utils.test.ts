@@ -55,7 +55,7 @@ describe('daily puzzle identity', () => {
 			expect(result.puzzleNumber).toBe(game.puzzleNumber)
 			expect(result.puzzleDate).toBe(dayKey)
 			const card = buildResultCard({
-				origin: 'https://puzzled.gg',
+				origin: 'https://tryit.fun',
 				gameSlug,
 				gameName: 'Daily puzzle',
 				theme: 'violet',
@@ -67,7 +67,7 @@ describe('daily puzzle identity', () => {
 			expect(card.deepLink).toContain(`date=${dayKey}`)
 			expect(
 				formatRitualShareText({
-					origin: 'https://puzzled.gg',
+					origin: 'https://tryit.fun',
 					gameSlug,
 					gameName: 'Daily puzzle',
 					status: 'won',

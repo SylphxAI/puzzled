@@ -100,7 +100,7 @@ function UnsubscribeContent() {
 				<div>
 					<h1 className="mb-2 flex items-center justify-center gap-2 text-2xl font-bold">
 						<GamepadIcon size={28} className="text-primary" />
-						Puzzled
+						Tryit
 					</h1>
 				</div>
 

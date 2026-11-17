@@ -1,5 +1,5 @@
 /**
- * BillingService browser client (Puzzled Plus). The api owns every decision;
+ * BillingService browser client (Tryit Plus). The api owns every decision;
  * these calls only start a checkout, open the Sylphx Money billing portal, or change the
  * account's own subscription and family.
  */

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { createPreferencesServiceClient } from '@/lib/connect/preferences-client'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
 import { correlationIdFrom, logger } from '@/lib/logger'
-import { getRequestSiteOrigin } from '@/lib/site-origin.server'
+import { getCanonicalSiteOrigin } from '@/lib/site-origin.server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
  */
 export async function GET(request: Request) {
 	const landing = async (query: string) =>
-		NextResponse.redirect(new URL(`/unsubscribe?${query}`, await getRequestSiteOrigin()))
+		NextResponse.redirect(new URL(`/unsubscribe?${query}`, await getCanonicalSiteOrigin()))
 	const token = new URL(request.url).searchParams.get('token')
 	if (!token) {
 		return landing('error=missing_token')

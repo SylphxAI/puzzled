@@ -13,7 +13,7 @@ describe('GET / presentation document', () => {
 		expect(
 			isHtmlDocument(
 				'text/html; charset=utf-8',
-				'<!DOCTYPE html><html><body>Puzzled</body></html>',
+				'<!DOCTYPE html><html><body>Tryit</body></html>',
 			),
 		).toBe(true)
 	})
@@ -43,7 +43,7 @@ describe('GET / presentation document', () => {
 		expect(typeof mod.isHtmlDocument).toBe('function')
 		expect(mod.isHtmlDocument('text/html', '')).toBe(false)
 		expect(
-			mod.isHtmlDocument('text/html', '<!DOCTYPE html><html><body>Puzzled</body></html>'),
+			mod.isHtmlDocument('text/html', '<!DOCTYPE html><html><body>Tryit</body></html>'),
 		).toBe(true)
 	})
 })

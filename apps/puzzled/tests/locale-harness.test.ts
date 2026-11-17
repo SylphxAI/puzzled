@@ -18,7 +18,7 @@ async function runFixture(overrides: Record<string, string | Response> = {}, onl
 			}
 			if (path === '/sitemap.xml') {
 				return new Response(
-					`<urlset>${locales.map((locale) => `<url><loc>https://puzzled.gg${locale === defaultLocale ? '/' : `/${locale}`}</loc></url>`).join('')}</urlset>`,
+					`<urlset>${locales.map((locale) => `<url><loc>https://tryit.fun${locale === defaultLocale ? '/' : `/${locale}`}</loc></url>`).join('')}</urlset>`,
 				)
 			}
 			const locale = locales.find((candidate) => path.split('/')[1] === candidate) ?? defaultLocale

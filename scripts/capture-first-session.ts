@@ -9,7 +9,7 @@ function origin(value: string): string {
 		throw new Error('Use a public HTTPS origin without credentials')
 	return url.origin
 }
-const targets = [['served', origin(process.env.BASE_URL ?? 'https://puzzled.gg')]]
+const targets = [['served', origin(process.env.BASE_URL ?? 'https://tryit.fun')]]
 if (process.env.PREVIEW_URL) targets.push(['preview', origin(process.env.PREVIEW_URL)])
 const browser = await chromium.launch()
 try {

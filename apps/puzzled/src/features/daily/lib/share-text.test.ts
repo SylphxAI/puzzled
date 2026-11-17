@@ -10,11 +10,11 @@ import {
 
 describe('shareOrigin', () => {
 	test('preserves scheme and strips trailing slash', () => {
-		expect(shareOrigin('https://puzzled.gg/')).toBe('https://puzzled.gg')
-		expect(shareOrigin('HTTPS://puzzled.gg///')).toBe('https://puzzled.gg')
+		expect(shareOrigin('https://tryit.fun/')).toBe('https://tryit.fun')
+		expect(shareOrigin('HTTPS://tryit.fun///')).toBe('https://tryit.fun')
 		expect(shareOrigin('http://localhost:3000/')).toBe('http://localhost:3000')
-		expect(shareOrigin('puzzled.gg/')).toBe('https://puzzled.gg')
-		expect(shareOrigin('  ')).toBe('https://puzzled.gg')
+		expect(shareOrigin('tryit.fun/')).toBe('https://tryit.fun')
+		expect(shareOrigin('  ')).toBe('https://tryit.fun')
 	})
 })
 
@@ -46,8 +46,8 @@ describe('ritualSharePath', () => {
 
 describe('ritualShareDeepLink', () => {
 	test('preserves https:// origin + module + day + utm_source=share', () => {
-		expect(ritualShareDeepLink('https://puzzled.gg', 'sudoku', '2026-08-12')).toBe(
-			'https://puzzled.gg/games/sudoku?mode=archive&date=2026-08-12&utm_source=share',
+		expect(ritualShareDeepLink('https://tryit.fun', 'sudoku', '2026-08-12')).toBe(
+			'https://tryit.fun/games/sudoku?mode=archive&date=2026-08-12&utm_source=share',
 		)
 	})
 })
@@ -56,20 +56,20 @@ describe('formatRitualShareText', () => {
 	test('does not invent a puzzle number when the result day is unknown or invalid', () => {
 		for (const puzzleDate of [undefined, '', 'not-a-date', '2026-02-30']) {
 			const text = formatRitualShareText({
-				origin: 'https://puzzled.gg',
+				origin: 'https://tryit.fun',
 				gameSlug: 'sudoku',
 				gameName: 'Sudoku',
 				puzzleDate,
 				status: 'won',
 			})
 			expect(text.split('\n')[0]).toBe('🏆 Sudoku')
-			expect(text).toContain('https://puzzled.gg/games/sudoku?utm_source=share')
+			expect(text).toContain('https://tryit.fun/games/sudoku?utm_source=share')
 		}
 	})
 
 	test('won path is non-spoiler and deep-links the shared day', () => {
 		const text = formatRitualShareText({
-			origin: 'https://puzzled.gg',
+			origin: 'https://tryit.fun',
 			gameSlug: 'sudoku',
 			gameName: 'Sudoku',
 			puzzleDate: '2026-08-12',
@@ -80,7 +80,7 @@ describe('formatRitualShareText', () => {
 		expect(text).toContain('🏆 Sudoku (Medium) • #955')
 		expect(text).toContain('✅ 1 attempts')
 		expect(text).toContain(
-			'https://puzzled.gg/games/sudoku?mode=archive&date=2026-08-12&utm_source=share',
+			'https://tryit.fun/games/sudoku?mode=archive&date=2026-08-12&utm_source=share',
 		)
 		expect(shareTextLooksNonSpoiler(text)).toBe(true)
 		expect(text.toLowerCase()).not.toContain('solution')
@@ -88,7 +88,7 @@ describe('formatRitualShareText', () => {
 
 	test('lost path no solution leak', () => {
 		const text = formatRitualShareText({
-			origin: 'https://puzzled.gg',
+			origin: 'https://tryit.fun',
 			gameSlug: 'sudoku',
 			gameName: 'Sudoku',
 			puzzleDate: '2026-08-12',
@@ -100,7 +100,7 @@ describe('formatRitualShareText', () => {
 
 	test('crossword flagship includes module path and day_key', () => {
 		const text = formatRitualShareText({
-			origin: 'https://puzzled.gg',
+			origin: 'https://tryit.fun',
 			gameSlug: 'crossword',
 			gameName: 'Crossword Mini',
 			puzzleDate: '2026-08-13',
@@ -109,16 +109,16 @@ describe('formatRitualShareText', () => {
 		})
 		expect(text).toContain('🏆 Crossword Mini • #956')
 		expect(text).toContain(
-			'https://puzzled.gg/games/crossword?mode=archive&date=2026-08-13&utm_source=share',
+			'https://tryit.fun/games/crossword?mode=archive&date=2026-08-13&utm_source=share',
 		)
-		expect(text).not.toContain('Play at puzzled.gg')
+		expect(text).not.toContain('Play at tryit.fun')
 		expect(shareTextLooksNonSpoiler(text)).toBe(true)
 		expect(text.toLowerCase()).not.toMatch(/steam|answer|solution/)
 	})
 
 	test('statLine override for time-based games', () => {
 		const text = formatRitualShareText({
-			origin: 'https://puzzled.gg',
+			origin: 'https://tryit.fun',
 			gameSlug: 'sudoku',
 			gameName: 'Sudoku',
 			puzzleDate: '2026-08-12',
@@ -128,7 +128,7 @@ describe('formatRitualShareText', () => {
 		})
 		expect(text).toContain('⏱️ 1:23')
 		expect(text).toContain(
-			'https://puzzled.gg/games/sudoku?mode=archive&date=2026-08-12&utm_source=share',
+			'https://tryit.fun/games/sudoku?mode=archive&date=2026-08-12&utm_source=share',
 		)
 	})
 })
@@ -138,20 +138,20 @@ describe('share landing link (ref = server-issued share id)', () => {
 
 	test('a share id makes the link the landing carrying it as ref', () => {
 		expect(shareLandingPath(SHARE_ID)).toBe(`/r/${SHARE_ID}?utm_source=share`)
-		expect(ritualShareDeepLink('https://puzzled.gg', 'sudoku', '2026-08-12', SHARE_ID)).toBe(
-			`https://puzzled.gg/r/${SHARE_ID}?utm_source=share`,
+		expect(ritualShareDeepLink('https://tryit.fun', 'sudoku', '2026-08-12', SHARE_ID)).toBe(
+			`https://tryit.fun/r/${SHARE_ID}?utm_source=share`,
 		)
 	})
 
 	test('without a share id the module link is kept', () => {
-		expect(ritualShareDeepLink('https://puzzled.gg', 'sudoku', '2026-08-12', '  ')).toBe(
-			'https://puzzled.gg/games/sudoku?mode=archive&date=2026-08-12&utm_source=share',
+		expect(ritualShareDeepLink('https://tryit.fun', 'sudoku', '2026-08-12', '  ')).toBe(
+			'https://tryit.fun/games/sudoku?mode=archive&date=2026-08-12&utm_source=share',
 		)
 	})
 
 	test('the shared text carries the https permalink with utm_source=share and nothing that spoils', () => {
 		const text = formatRitualShareText({
-			origin: 'https://puzzled.gg',
+			origin: 'https://tryit.fun',
 			gameSlug: 'word-guess',
 			gameName: 'Word Guess',
 			puzzleDate: '2026-09-28',
@@ -160,7 +160,7 @@ describe('share landing link (ref = server-issued share id)', () => {
 			shareId: SHARE_ID,
 		})
 		expect(text).toContain('🏆 Word Guess • #1002')
-		expect(text).toContain(`https://puzzled.gg/r/${SHARE_ID}?utm_source=share`)
+		expect(text).toContain(`https://tryit.fun/r/${SHARE_ID}?utm_source=share`)
 		expect(text).toContain('3 attempts')
 		expect(shareTextLooksNonSpoiler(text)).toBe(true)
 	})

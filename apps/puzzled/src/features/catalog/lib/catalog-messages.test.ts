@@ -95,7 +95,7 @@ describe('catalog messages', () => {
 })
 
 describe('featured-free claims', () => {
-	// Only today's featured puzzle is free; every other game is Puzzled Plus.
+	// Only today's featured puzzle is free; every other game is Tryit Plus.
 	// These claims must never say "every puzzle" is open, free or playable as a guest.
 	const falseClaims = [
 		/Every other puzzle in the suite is open/,
@@ -120,8 +120,8 @@ describe('featured-free claims', () => {
 				for (const claim of falseClaims) expect(text).not.toMatch(claim)
 			}
 			if (locale !== 'en-GB') {
-				expect(catalog.ritual.step1Body).toMatch(/Puzzled Plus/)
-				expect(catalog.faq.start.answer).toMatch(/Puzzled Plus/)
+				expect(catalog.ritual.step1Body).toMatch(/Tryit Plus/)
+				expect(catalog.faq.start.answer).toMatch(/Tryit Plus/)
 			}
 		})
 	}

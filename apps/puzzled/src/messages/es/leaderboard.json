@@ -6,7 +6,7 @@
 	},
 	"title": "Clasificación",
 	"metaDescription": "Clasificaciones de puzzles de hoy, de esta semana y de todos los tiempos: quién completó qué y dónde se sitúa tu puntuación.",
-	"eyebrow": "Clasificaciones de Puzzled",
+	"eyebrow": "Clasificaciones de Tryit",
 	"description": "Un puzzle y un período a la vez, tal como se cuentan las puntuaciones. Solo aparecen los jugadores que eligieron mostrarse públicamente.",
 	"chip": "Clasificación: {module}",
 	"anonymous": "Jugador anónimo",

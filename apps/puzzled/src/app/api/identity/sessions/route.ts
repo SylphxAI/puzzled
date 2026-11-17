@@ -93,7 +93,7 @@ export async function POST(request: Request) {
 				body: {
 					idempotency_key: derivedIdempotencyKey('session-revoke', token, id),
 					session_id: id,
-					reason: 'Player ended a session in Puzzled settings',
+					reason: 'Player ended a session in Tryit settings',
 				},
 			},
 		)

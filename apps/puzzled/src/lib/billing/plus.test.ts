@@ -23,7 +23,7 @@ import {
 	yearlySavingPercent,
 } from './plus'
 
-describe('Puzzled Plus presentation', () => {
+describe('Tryit Plus presentation', () => {
 	test('nothing is locked while sales are closed or for a subscriber', () => {
 		const game = { slug: 'sudoku', freeSlug: 'crowns', archive: true }
 		expect(isPlayLocked({ salesOpen: false, entitled: false }, game)).toBe(false)

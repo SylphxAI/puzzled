@@ -1,7 +1,7 @@
 /**
  * Player-facing rank ladder guard (CATALOG §3.1 chrome, §3.2 marks).
  *
- * The rank ladder is Puzzled's own chrome: one source of truth for display
+ * The rank ladder is Tryit's own chrome: one source of truth for display
  * order, complete coverage of the threshold table, and no reuse of another
  * publisher's rank names. Internal rank ids stay stable for analytics and
  * stored sessions; only the player-facing labels are product-owned.
@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs'
 import { RANK_LABELS } from './components/rank-display'
 import { RANK_THRESHOLDS } from './types'
 
-/** Golden ladder in threshold order — Puzzled's own ranks. */
+/** Golden ladder in threshold order — Tryit's own ranks. */
 const GOLDEN_LADDER = [
 	'Start',
 	'Warm Up',

@@ -33,7 +33,7 @@ describe('Connect protocol transport', () => {
 			resolveConnectBaseUrl({ NODE_ENV: 'production' } as Record<string, string>, {
 				isServer: true,
 			}),
-		).not.toBe('https://puzzled.gg')
+		).not.toBe('https://tryit.fun')
 		expect(
 			resolveConnectBaseUrl({ NODE_ENV: 'production' } as Record<string, string>, {
 				isServer: true,

@@ -43,7 +43,7 @@ export type AppConfig = {
 export const EMPTY_APP_CONFIG: AppConfig = {
 	consentTypes: [...DEST_CONSENT_PURPOSES],
 	oauthProviders: [],
-	app: { id: 'puzzled', name: 'Puzzled', slug: 'puzzled' },
+	app: { id: 'puzzled', name: 'Tryit', slug: 'puzzled' },
 	fetchedAt: new Date(0).toISOString(),
 }
 

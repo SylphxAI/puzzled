@@ -1,10 +1,12 @@
 import { ChevronDown } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
+import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
 
 export type MarketingFaqItem = {
 	question: string
 	answer: string
+	answerLink?: { href: string; label: string }
 }
 
 /**
@@ -84,7 +86,10 @@ export async function MarketingFaq({
 		mainEntity: resolvedItems.map((item) => ({
 			'@type': 'Question',
 			name: item.question,
-			acceptedAnswer: { '@type': 'Answer', text: item.answer },
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: item.answerLink ? `${item.answer} ${item.answerLink.label}` : item.answer,
+			},
 		})),
 	}
 
@@ -125,6 +130,14 @@ export async function MarketingFaq({
 							</summary>
 							<p className="pb-4 pr-8 text-[15px] leading-relaxed text-muted-foreground">
 								{item.answer}
+								{item.answerLink && (
+									<>
+										{' '}
+										<Link href={item.answerLink.href} className="font-semibold underline underline-offset-4">
+											{item.answerLink.label}
+										</Link>
+									</>
+								)}
 							</p>
 						</details>
 					))}

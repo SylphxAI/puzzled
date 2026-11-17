@@ -106,7 +106,7 @@ describe('/api/identity/sessions', () => {
 		expect(revokes[0]?.body).toEqual(revokes[1]?.body)
 		expect(revokes[0]?.body).toMatchObject({
 			session_id: 'other',
-			reason: 'Player ended a session in Puzzled settings',
+			reason: 'Player ended a session in Tryit settings',
 		})
 		expect(clears).toBe(0)
 	})

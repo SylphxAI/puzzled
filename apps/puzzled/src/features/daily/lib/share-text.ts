@@ -8,11 +8,12 @@
  */
 
 import { canonicalizeGameSlug } from '@/lib/game-slug'
+import { canonicalOrigin } from '@/lib/site-origin'
 import { isValidDayKey } from '@/lib/product-day'
 import { getPuzzleNumber } from './puzzle-utils'
 
 export type RitualShareInput = {
-	/** Absolute origin, e.g. https://puzzled.gg or window.location.origin */
+	/** Absolute origin, e.g. https://tryit.fun or window.location.origin */
 	origin: string
 	gameSlug: string
 	gameName: string
@@ -33,11 +34,11 @@ export type RitualShareInput = {
 /** Keep the origin with its scheme (defaulting to `https://`) and strip trailing slashes for linkifiable URLs. */
 export function shareOrigin(origin: string): string {
 	const trimmed = origin.trim().replace(/\/+$/, '')
-	if (!trimmed) return 'https://puzzled.gg'
+	if (!trimmed) return 'https://tryit.fun'
 	if (/^https?:\/\//i.test(trimmed)) {
-		return trimmed.replace(/^https?:\/\//i, (scheme) => scheme.toLowerCase())
+		return canonicalOrigin(trimmed.replace(/^https?:\/\//i, (scheme) => scheme.toLowerCase()))
 	}
-	return `https://${trimmed}`
+	return canonicalOrigin(`https://${trimmed}`)
 }
 
 /**
@@ -70,8 +71,8 @@ export function shareLandingPath(shareId: string): string {
 
 /**
  * Linkifiable deep-link for share text. With a share id it is the share landing
- * (`https://puzzled.gg/r/...?utm_source=share`); without one (archive days,
- * offline) it is the module link (`https://puzzled.gg/games/sudoku?mode=archive&date=2026-08-12&utm_source=share`).
+ * (`https://tryit.fun/r/...?utm_source=share`); without one (archive days,
+ * offline) it is the module link (`https://tryit.fun/games/sudoku?mode=archive&date=2026-08-12&utm_source=share`).
  */
 export function ritualShareDeepLink(
 	origin: string,

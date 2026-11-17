@@ -1,7 +1,7 @@
 /**
  * Presentation document (GET `/`) must return application HTTP even when
  * Connect or Platform never answers. Knative probes GET `/`; a hang keeps
- * queue-proxy not Ready and `puzzled.gg/` at 0 bytes.
+ * queue-proxy not Ready and `tryit.fun/` at 0 bytes.
  */
 
 import { SERVER_CONNECT_TIMEOUT_MS } from '@/lib/api/connect-fetch'

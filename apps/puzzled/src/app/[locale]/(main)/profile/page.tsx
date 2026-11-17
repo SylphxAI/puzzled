@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props) {
 		imagePath: ogImagePath({
 			title: t('playerCard.pageTitle'),
 			subtitle: t('playerCard.pageDescription'),
-			eyebrow: 'Puzzled',
+			eyebrow: 'Tryit',
 		}),
 		// A player's own identity page, not search content.
 		noindex: true,

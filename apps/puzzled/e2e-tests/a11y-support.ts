@@ -92,7 +92,7 @@ export const TARGET_SIZE_EXCEPTIONS: readonly {
 			'visually hidden until focused (sr-only): it is a keyboard affordance, not a touch target',
 	},
 	{
-		name: 'Puzzled',
+		name: 'Tryit',
 		reason:
 			'the wordmark is 44px high at its touch area but its text box is narrower on desktop; the logo link is a brand mark, never the only route to a destination',
 	},

@@ -44,7 +44,7 @@ export function OfflineDocument() {
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<meta name="robots" content="noindex" />
-				<title>You're offline · Puzzled</title>
+				<title>You're offline · Tryit</title>
 				<style>{css}</style>
 			</head>
 			<body>
@@ -55,7 +55,7 @@ export function OfflineDocument() {
 					</header>
 					<h1>You're offline</h1>
 					<p>
-						Puzzled needs an internet connection to load puzzles and save finishes. Reconnect, then
+						Tryit needs an internet connection to load puzzles and save finishes. Reconnect, then
 						try again.
 					</p>
 					<Button asChild size="lg">

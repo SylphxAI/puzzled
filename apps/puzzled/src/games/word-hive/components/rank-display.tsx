@@ -10,7 +10,7 @@ type RankDisplayProps = {
 }
 
 /**
- * Puzzled's own rank ladder (player-facing chrome).
+ * Tryit's own rank ladder (player-facing chrome).
  *
  * Deliberately not another publisher's rank names: the ladder is our chrome,
  * so it must not clone a competitor's distinctive labels (CATALOG §3.1). The

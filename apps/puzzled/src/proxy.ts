@@ -1,5 +1,5 @@
 /**
- * Puzzled Proxy (Next.js 16 Middleware)
+ * Tryit Proxy (Next.js 16 Middleware)
  *
  * Combines:
  * 1. Sylphx Auth (token refresh, route protection, auth routes)

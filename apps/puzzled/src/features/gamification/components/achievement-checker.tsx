@@ -34,7 +34,7 @@ export function AchievementChecker({ maxStreak = null }: AchievementCheckerProps
 		isConfigured: achievementsConfigured,
 	} = useSafeAchievements()
 
-	// Fetch per-game stats (game stats are Puzzled-specific)
+	// Fetch per-game stats (game stats are Tryit-specific)
 	const { data: userStats } = useUserStats({
 		enabled: !!user,
 		staleTime: 10000,

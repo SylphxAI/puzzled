@@ -151,7 +151,8 @@ describe('PricingPage SSR', () => {
 		expect(html.match(/id="family"/g)?.length).toBe(1)
 		expect(html.match(/name="plus-interval"/g)?.length).toBe(3)
 		expect(html.match(/name="family-interval"/g)?.length).toBe(2)
-		expect(html.match(/Sign in to subscribe/g)?.length).toBe(2)
+		expect(html.match(/Sign in to get Plus/g)?.length).toBe(1)
+		expect(html.match(/Sign in to start Family/g)?.length).toBe(1)
 
 		// Authorized $64.99/yr Family and $39.99/yr Individual prices in SSR HTML
 		expect(html).toContain('$39.99')
@@ -161,10 +162,10 @@ describe('PricingPage SSR', () => {
 		expect(html).toContain('$0')
 		expect(html).not.toContain('$0.00')
 		expect(html).not.toContain('Yearly · $39.99 per year')
-		expect(html).not.toContain('Sign in to subscribe ·')
+		expect(html).not.toContain('Sign in to get Plus ·')
 
 		// No duplicate $39.99 pricing card below hero
-		expect(html.match(/Choose Puzzled Plus/g)).toBeNull()
+		expect(html.match(/Choose Tryit Plus/g)).toBeNull()
 
 		// Preserves game callbackUrl through sign-in return destination
 		const expectedReturn = encodeURIComponent(

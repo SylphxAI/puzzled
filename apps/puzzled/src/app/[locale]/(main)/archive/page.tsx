@@ -62,7 +62,7 @@ function formatDayKey(dayKey: string, locale: string): string {
  * product days.
  *
  * While Plus is not on sale every viewer, guests included, sees the day list;
- * once it is on sale a viewer without Plus sees the Puzzled Plus path. Every row links the dated play route,
+ * once it is on sale a viewer without Plus sees the Tryit Plus path. Every row links the dated play route,
  * `/games/<slug>?mode=archive&date=YYYY-MM-DD`, which Connect admits or refuses
  * on its own — this page decides nothing about play.
  *
@@ -78,7 +78,7 @@ export default async function ArchivePage({ params }: Props) {
 	const tGames = await getTranslations('games')
 
 	const user = await withPresentationDeadline(currentUser(), null)
-	// Past days need Puzzled Plus once it is on sale, for guests and accounts
+	// Past days need Tryit Plus once it is on sale, for guests and accounts
 	// alike; until then nothing is locked and every past day is open to everyone
 	// (the rule /pricing states). Connect enforces the same rule.
 	const access = await withPresentationDeadline(getServerPlusAccess(Boolean(user?.id)), OPEN_ACCESS)

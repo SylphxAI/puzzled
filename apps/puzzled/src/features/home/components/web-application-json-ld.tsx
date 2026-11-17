@@ -1,10 +1,10 @@
 import { currencyFractionDigits, minorUnitsToMajor } from '@/lib/billing/plus'
-import { getRequestSiteOrigin } from '@/lib/site-origin.server'
+import { getCanonicalSiteOrigin } from '@/lib/site-origin.server'
 import catalogue from '../../../../../../config/commercial/catalogue.json'
 
 /** Discovery prices come from the declaration applied to Money, never a second price list. */
 export async function WebApplicationJsonLd({ locale }: { locale: string }) {
-	const baseUrl = await getRequestSiteOrigin()
+	const baseUrl = await getCanonicalSiteOrigin()
 	const currency =
 		(catalogue.currency_display as { by_locale?: Record<string, string> }).by_locale?.[locale] ??
 		catalogue.base_currency
@@ -13,7 +13,7 @@ export async function WebApplicationJsonLd({ locale }: { locale: string }) {
 	const schema = {
 		'@context': 'https://schema.org',
 		'@type': 'WebApplication',
-		name: 'Puzzled',
+		name: 'Tryit',
 		url: baseUrl,
 		applicationCategory: 'GameApplication',
 		operatingSystem: 'Any',

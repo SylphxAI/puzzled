@@ -18,7 +18,7 @@ import { SubscribeButton } from './subscribe-button'
 type Props = {
 	/** HTML anchor id (`plus` or `family`). */
 	id: 'plus' | 'family'
-	/** Card heading (e.g. `Puzzled Plus` or `Puzzled Plus Family`). */
+	/** Card heading (e.g. `Tryit Plus` or `Tryit Family`). */
 	title: string
 	/** Short subtitle under the card heading. */
 	subtitle: string
@@ -189,7 +189,7 @@ export function PlusOffer({
 						checkoutTrigger="pricing_card"
 						loginReturnTo={loginReturnTo}
 						callbackUrl={callbackUrl}
-						guestLabel={t('signInToSubscribe')}
+						guestLabel={t(id === 'family' ? 'signInToStartFamily' : 'signInToGetPlus')}
 						planId={selected.id}
 						currency={selected.currency}
 						amountMinor={selected.amountMinor}

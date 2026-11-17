@@ -26,7 +26,7 @@ describe('Identity dest login and recovery doors', () => {
 				project_id: 'project-puzzled',
 				principal_hint: 'a@example.com',
 				purpose: 'login',
-				device: { device_id: 'puzzled-web', display_name: 'Puzzled', user_agent: 'test' },
+				device: { device_id: 'puzzled-web', display_name: 'Tryit', user_agent: 'test' },
 			},
 		})
 		await destIdentityJson('https://identity.test', '/v1/authentication/complete', {
@@ -86,7 +86,7 @@ describe('Identity dest login and recovery doors', () => {
 				email: 'b@example.com',
 				password: 'correct-horse-battery',
 				display_name: 'Bee',
-				organization_name: 'Puzzled',
+				organization_name: 'Tryit',
 				captcha_token: '',
 			},
 		})

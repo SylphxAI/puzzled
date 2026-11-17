@@ -1,10 +1,10 @@
 {
 	"title": "分享你的成绩",
-	"text": "Puzzled - {game}\n{result}\n\n来 puzzled.gg 一起玩",
+	"text": "Tryit - {game}\n{result}\n\n来 tryit.fun 一起玩",
 	"share": "分享",
 	"copy": "复制",
 	"card": {
-		"title": "Puzzled 成绩卡",
+		"title": "Tryit 成绩卡",
 		"downloaded": "成绩卡已保存，说明文字已复制到剪贴板。",
 		"copied": "说明文字已复制；此浏览器无法生成图片。",
 		"unavailable": "无法自动分享。",
@@ -24,7 +24,7 @@
 		"streakDays": "连续 {days} 天",
 		"patternSummary": "图案：{hit} 中 / {near} 近 / {miss} 无",
 		"altOnDay": "（{day}）",
-		"altTemplate": "Puzzled 成绩 — {game}{day}。{result}",
+		"altTemplate": "Tryit 成绩 — {game}{day}。{result}",
 		"altDetailsTemplate": " {details}。",
 		"altLinkTemplate": " 一起玩：{link}",
 		"detailSeparator": "、",
@@ -39,7 +39,7 @@
 	"landing": {
 		"metaTitle": "分享的谜题成绩",
 		"ogTitle": "{game}：一个等你挑战的成绩",
-		"metaDescription": "查看朋友的成绩，然后免费玩今天的 Puzzled 谜题。",
+		"metaDescription": "查看朋友的成绩，然后免费玩今天的 Tryit 谜题。",
 		"eyebrow": "朋友分享了一个成绩",
 		"titleSame": "你能超过他吗？",
 		"titleOther": "看看对方的成绩，再玩今天的谜题",

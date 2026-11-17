@@ -2,7 +2,7 @@ import { Play } from 'lucide-react'
 
 type HeroPlayActionProps = {
 	/**
-	 * The game or day is behind Puzzled Plus for this viewer. The unlock panel
+	 * The game or day is behind Tryit Plus for this viewer. The unlock panel
 	 * below then owns the one action ("Play {game} free"), so the hero offers none.
 	 */
 	locked: boolean

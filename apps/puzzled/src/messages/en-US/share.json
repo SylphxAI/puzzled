@@ -1,10 +1,10 @@
 {
 	"title": "Share your result",
-	"text": "Puzzled - {game}\n{result}",
+	"text": "Tryit - {game}\n{result}",
 	"share": "Share",
 	"copy": "Copy",
 	"card": {
-		"title": "Puzzled result card",
+		"title": "Tryit result card",
 		"downloaded": "Card image saved; caption copied to the clipboard.",
 		"copied": "Caption copied to the clipboard; this browser could not build the image.",
 		"unavailable": "Could not share automatically.",
@@ -24,7 +24,7 @@
 		"streakDays": "{days}-day streak",
 		"patternSummary": "Pattern: {hit} hit / {near} near / {miss} miss",
 		"altOnDay": " on {day}",
-		"altTemplate": "Puzzled - {game}{day}. {result}",
+		"altTemplate": "Tryit - {game}{day}. {result}",
 		"altDetailsTemplate": " {details}.",
 		"altLinkTemplate": " Play: {link}",
 		"detailSeparator": ", ",
@@ -39,7 +39,7 @@
 	"landing": {
 		"metaTitle": "A shared puzzle result",
 		"ogTitle": "{game}: a result to beat",
-		"metaDescription": "See a friend's result, then play today's Puzzled puzzle free.",
+		"metaDescription": "See a friend's result, then play today's Tryit puzzle free.",
 		"eyebrow": "A friend shared a result",
 		"titleSame": "Can you beat it?",
 		"titleOther": "See how it went, then play today's puzzle",

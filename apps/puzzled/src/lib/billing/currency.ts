@@ -13,7 +13,7 @@ import { currencyForLocale } from './plus'
 export const CURRENCY_COOKIE = 'puzzled_currency'
 
 /**
- * Country header set by the edge. puzzled.gg is served through Cloudflare
+ * Country header set by the edge. tryit.fun is served through Cloudflare
  * (`server: cloudflare`, `cf-ray` on every response), which adds `CF-IPCountry`
  * with the ISO 3166-1 alpha-2 code of the client (`XX` unknown, `T1` Tor).
  */

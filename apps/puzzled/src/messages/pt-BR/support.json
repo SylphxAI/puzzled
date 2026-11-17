@@ -1,6 +1,6 @@
 {
 	"title": "Suporte e ajuda",
-	"description": "Escreva para o Puzzled sobre sua conta, seus jogos ou seus dados. Respondemos por e-mail.",
+	"description": "Escreva para o Tryit sobre sua conta, seus jogos ou seus dados. Respondemos por e-mail.",
 	"hero": {
 		"eyebrow": "Suporte",
 		"lead": "Escreva para nós sobre sua conta, seu progresso ou um bug. Respondemos por e-mail.",
@@ -48,7 +48,7 @@
 			"answer": "Um dia de sequência significa concluir pelo menos um desafio válido em um dia de desafios. Se você não concluir nenhum, a sequência atual termina — sua melhor sequência e seus resultados anteriores continuam."
 		},
 		"accessibility": {
-			"question": "O Puzzled é acessível?",
+			"question": "O Tryit é acessível?",
 			"answer": "O suporte varia conforme o desafio, e o retrato honesto importa mais que um slogan. Já temos: um link para pular para o conteúdo no site principal; rótulos nos controles só com ícone dos jogos; regiões dinâmicas que anunciam status e resultados em vários desafios; contornos de foco visíveis para o teclado; e animações próprias desativadas quando o seu sistema pede movimento reduzido. Lacuna conhecida: alguns rótulos de controles dentro dos jogos ainda estão só em inglês, qualquer que seja o idioma da interface. Se um desafio impedir você de jogar, escreva para o suporte com o nome do desafio e o que aconteceu, para que a equipe analise o caso."
 		},
 		"data": {
@@ -56,7 +56,7 @@
 			"answer": "Escreva para {email} para pedir acesso, exportação, correção ou exclusão; esse único endereço cuida desses pedidos. A Política de Privacidade lista o que é coletado, quais terceiros estão envolvidos e os direitos que você pode exercer."
 		},
 		"cancel": {
-			"question": "Como cancelo o Puzzled Plus?",
+			"question": "Como cancelo o Tryit Plus?",
 			"answer": "Você pode cancelar a qualquer momento em Configurações > Assinatura. O cancelamento interrompe as renovações futuras."
 		},
 		"afterCancel": {
@@ -81,7 +81,7 @@
 		},
 		"terms": {
 			"title": "Termos de Serviço",
-			"body": "As regras para usar o Puzzled."
+			"body": "As regras para usar o Tryit."
 		}
 	},
 	"cta": {

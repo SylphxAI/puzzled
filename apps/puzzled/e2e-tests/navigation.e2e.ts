@@ -21,7 +21,7 @@ test.describe('Navigation', () => {
 			await page.waitForSelector('main', { timeout: 10000 })
 
 			// Check page title
-			await expect(page).toHaveTitle(/Puzzled/i)
+			await expect(page).toHaveTitle(/Tryit/i)
 
 			// Home page should display game cards
 			// Look for game links (they link to /games/[slug])

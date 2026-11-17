@@ -18,7 +18,7 @@ for (const { path, locale, currency } of [
 		const app = apps[0]
 		expect(app).toMatchObject({
 			'@context': 'https://schema.org',
-			name: 'Puzzled',
+			name: 'Tryit',
 			applicationCategory: 'GameApplication',
 			operatingSystem: 'Any',
 			publisher: {
@@ -57,7 +57,7 @@ for (const { path, locale, currency } of [
 		])
 		const organization = schemas.find((schema) => schema['@type'] === 'Organization')
 		expect(organization).toMatchObject({
-			name: 'Puzzled',
+			name: 'Tryit',
 			url: app.url,
 			parentOrganization: {
 				'@type': 'Organization',
@@ -67,7 +67,7 @@ for (const { path, locale, currency } of [
 			},
 			contactPoint: {
 				'@type': 'ContactPoint',
-				email: 'hi@puzzled.gg',
+				email: 'hi@tryit.fun',
 				telephone: '+447537188188',
 				contactType: 'customer support',
 			},

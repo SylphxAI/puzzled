@@ -67,7 +67,7 @@ export type ConnectionsSolution = {
 	categories: Category[]
 }
 
-// Distinctive Puzzled category colors - refined, modern palette
+// Distinctive Tryit category colors - refined, modern palette
 export const CATEGORY_COLORS: Record<
 	CategoryLevel,
 	{ bg: string; text: string; ring: string; shadow: string }

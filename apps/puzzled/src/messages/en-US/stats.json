@@ -36,7 +36,7 @@
 	"descriptionGuest": "You are playing as a guest. Your record lives in this browser — sign in to carry it with you.",
 	"viewLeaderboard": "Leaderboard",
 	"identity": {
-		"player": "Puzzled player",
+		"player": "Tryit player",
 		"member": "Member",
 		"guest": "Guest play",
 		"streakChip": "{days}-day streak",

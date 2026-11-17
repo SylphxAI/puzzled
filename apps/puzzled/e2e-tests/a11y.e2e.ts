@@ -3,7 +3,7 @@ import { expect, type Page, type TestInfo, test } from '@playwright/test'
 import { settle } from './a11y-support'
 
 /**
- * WCAG 2.2 A/AA conformance gate for the Puzzled web app.
+ * WCAG 2.2 A/AA conformance gate for the Tryit web app.
  *
  * Covers the audited surfaces (`.scratch/puzzled-recon/a11y.md`) at desktop and
  * mobile widths in light and dark themes, the localised roots, the sudoku board

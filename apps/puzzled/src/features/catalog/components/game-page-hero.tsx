@@ -4,7 +4,7 @@ import { type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import type { GameCategory } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
 import { localizedPath } from '@/lib/seo/metadata'
-import { getRequestSiteOrigin } from '@/lib/site-origin.server'
+import { getCanonicalSiteOrigin } from '@/lib/site-origin.server'
 import { cn } from '@/lib/utils'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 import { HeroGuestNote } from './hero-guest-note'
@@ -28,7 +28,7 @@ type GamePageHeroProps = {
 	freeToday: boolean
 	/** No account on this request; sign-in keeps the streak. */
 	isGuest: boolean
-	/** Behind Puzzled Plus for this viewer: the unlock panel owns the action. */
+	/** Behind Tryit Plus for this viewer: the unlock panel owns the action. */
 	locked: boolean
 	/** Where the play button goes: today's started board, or `#play` on an archive day. */
 	playHref: string
@@ -57,7 +57,7 @@ export async function GamePageHero({
 	const t = await getTranslations('catalog')
 	const tNav = await getTranslations('nav')
 	const colors = getGameColors(theme)
-	const origin = await getRequestSiteOrigin()
+	const origin = await getCanonicalSiteOrigin()
 	const pageUrl = `${origin}${localizedPath(locale, `/games/${slug}`)}`
 
 	const structuredData = {
@@ -87,7 +87,7 @@ export async function GamePageHero({
 				description,
 				genre: t(`category.${category}`),
 				playMode: 'SinglePlayer',
-				publisher: { '@type': 'Organization', name: 'Puzzled' },
+				publisher: { '@type': 'Organization', name: 'Tryit' },
 				url: pageUrl,
 				inLanguage: 'en',
 				isAccessibleForFree: true,

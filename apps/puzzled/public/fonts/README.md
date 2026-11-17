@@ -13,4 +13,4 @@ Provenance of the self-hosted faces. All are SIL Open Font License 1.1.
   the Open Graph route (next/og, satori cannot read WOFF2), made with fontTools
   (`fontTools.varLib.instancer`, then `pyftsubset`) from google/fonts. Licence:
   `OFL.txt`. The wordmark in `brand/svg/puzzled-wordmark.svg` (repo root, see
-  `brand/README.md`) is the weight-620 outline of the word "Puzzled".
+  `brand/README.md`) is the weight-620 outline of the word "Tryit".

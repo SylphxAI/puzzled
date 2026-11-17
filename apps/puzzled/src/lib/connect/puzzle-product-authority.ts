@@ -1,5 +1,5 @@
 /**
- * Pure product-authority planner for Puzzled primary play (PuzzleService).
+ * Pure product-authority planner for Tryit primary play (PuzzleService).
  * HARD PATH: densified play is sole Connect — REST dual success path deleted.
  */
 import {

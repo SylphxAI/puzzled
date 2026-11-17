@@ -169,7 +169,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleDate }: Props) {
 					.map((tile) => {
 						switch (tile.status) {
 							case 'correct':
-								return '🟪' // Purple - Puzzled brand color
+								return '🟪' // Purple - Tryit brand color
 							case 'present':
 								return '🟧' // Orange - distinctive from NYT yellow
 							default:

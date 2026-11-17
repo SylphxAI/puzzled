@@ -16,7 +16,7 @@ describe('one own-product card a product day', () => {
 		expect(today).not.toEqual(tomorrow)
 	})
 
-	test('every product appears, and Puzzled itself never does', () => {
+	test('every product appears, and Tryit itself never does', () => {
 		const seen = new Set<string>()
 		for (let day = 1; day <= OWN_PRODUCTS.length; day++) {
 			const product = productForDay(`2026-03-${String(day).padStart(2, '0')}`)
@@ -40,7 +40,7 @@ describe('one own-product card a product day', () => {
 })
 
 describe('the click is a public attributed link', () => {
-	test('every product link names Puzzled as the source and carries no player data', () => {
+	test('every product link names Tryit as the source and carries no player data', () => {
 		for (const product of OWN_PRODUCTS) {
 			const url = new URL(productLink(product))
 			expect(url.origin + url.pathname).toBe(`${new URL(product.url).origin}/`)
