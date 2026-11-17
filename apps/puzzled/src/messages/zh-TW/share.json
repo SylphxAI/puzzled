@@ -2,7 +2,6 @@
 	"card": {
 		"groupsSolvedLabel": "已找出的組別",
 		"groupsSolvedCount": "已找出的組別：{total}／{total} 組",
-		"mistakeCount": "答錯：{mistakes} 次",
 		"copied": "說明文字已複製；此瀏覽器無法產生圖片。",
 		"statusLost": "這次沒成功",
 		"timeUnder5m": "1-5 分鐘",

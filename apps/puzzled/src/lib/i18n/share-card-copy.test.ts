@@ -2,7 +2,7 @@
  * Result-card copy oracle (S3 slice 2).
  *
  * Every string the card draws or speaks lives in the share namespace's card
- * block, in all five catalogs. This scan fails when a locale falls behind, when
+ * block, in every resolved locale. This scan fails when a locale falls behind, when
  * a placeholder a sentence needs goes missing, when a placeholder nobody
  * supplies sneaks in, or when the surface and the catalogs drift apart in
  * either direction (a used key that does not exist; a shipped key nothing uses).
@@ -11,6 +11,7 @@ import { describe, expect, test } from 'bun:test'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { resolveLocale } from '../../../scripts/i18n-resolved-catalogue'
+import { locales } from './config'
 
 type Json = Record<string, unknown>
 
@@ -20,16 +21,14 @@ const SRC = join(import.meta.dir, '..', '..')
  * Resolved exactly as the runtime assembles them: overlay locales (en-GB over
  * en-US, zh-TW over zh-HK) ship only their deltas over the base.
  */
-const CATALOGS: Record<string, Json> = {
-	'en-US': resolveLocale('en-US').share as Json,
-	'en-GB': resolveLocale('en-GB').share as Json,
-	'zh-HK': resolveLocale('zh-HK').share as Json,
-	'zh-TW': resolveLocale('zh-TW').share as Json,
-	'zh-CN': resolveLocale('zh-CN').share as Json,
-}
+const CATALOGS = Object.fromEntries(
+	locales.map((locale) => [locale, resolveLocale(locale).share as Json]),
+)
 
-/** Placeholders each key must keep, or its sentence loses a fact. */
-const REQUIRED_PLACEHOLDERS: Record<string, string[]> = {
+/** Exact arguments the result-card formatter supplies to each template. */
+const CARD_PLACEHOLDERS: Record<string, string[]> = {
+	groupsSolvedCount: ['total'],
+	mistakeCount: ['mistakes'],
 	attemptsOf: ['attempts', 'max'],
 	attemptsCount: ['attempts'],
 	scorePoints: ['score'],
@@ -40,21 +39,6 @@ const REQUIRED_PLACEHOLDERS: Record<string, string[]> = {
 	altDetailsTemplate: ['details'],
 	altLinkTemplate: ['link'],
 }
-
-const ALLOWED_PLACEHOLDERS = new Set([
-	'attempts',
-	'max',
-	'score',
-	'days',
-	'hit',
-	'near',
-	'miss',
-	'day',
-	'game',
-	'result',
-	'details',
-	'link',
-])
 
 function cardBlock(catalogue: Json): Record<string, string> {
 	const card = catalogue.card
@@ -116,33 +100,14 @@ describe('share.card copy', () => {
 		}
 	})
 
-	test('each sentence keeps the placeholders it needs', () => {
-		for (const [locale, catalogue] of Object.entries(CATALOGS)) {
-			const card = cardBlock(catalogue)
-			for (const [key, placeholders] of Object.entries(REQUIRED_PLACEHOLDERS)) {
-				for (const placeholder of placeholders) {
-					expect(locale + '.' + key + ' {').toBe(
-						locale +
-							'.' +
-							key +
-							' ' +
-							(card[key]?.includes('{' + placeholder + '}') ? '{' : 'MISSING'),
-					)
-				}
-			}
-		}
-	})
-
-	test('no placeholder appears that the model does not supply', () => {
+	test('each template uses exactly the arguments its formatter supplies', () => {
 		for (const [locale, catalogue] of Object.entries(CATALOGS)) {
 			const card = cardBlock(catalogue)
 			for (const [key, value] of Object.entries(card)) {
-				const tokens = [...value.matchAll(/\{([A-Za-z0-9_]+)\}/g)].map(
-					(match) => match[1] as string,
-				)
-				const unknown = tokens.filter((token) => !ALLOWED_PLACEHOLDERS.has(token))
-				expect(locale + '.' + key + ' unknown=' + unknown.join(',')).toBe(
-					locale + '.' + key + ' unknown=',
+				const tokens = new Set([...value.matchAll(/\{([A-Za-z0-9_]+)\}/g)].map((match) => match[1]))
+				const expected = CARD_PLACEHOLDERS[key] ?? []
+				expect(locale + '.' + key + ': ' + [...tokens].sort().join(',')).toBe(
+					locale + '.' + key + ': ' + [...expected].sort().join(','),
 				)
 			}
 		}
