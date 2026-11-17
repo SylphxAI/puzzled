@@ -17,7 +17,7 @@ type GameUnlockPanelProps = {
 }
 
 /**
- * The path for a game or day that needs Puzzled Plus: what Plus opens, the
+ * The path for a game or day that needs Tryit Plus: what Plus opens, the
  * plans, sign-in for guests, and today's free game, so the page is never a
  * dead end. Finished results are never taken away.
  */

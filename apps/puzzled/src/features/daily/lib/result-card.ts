@@ -72,7 +72,7 @@ export interface ResultCardModel {
 	dayKey: string | null
 	/** Day rendered for the viewer, e.g. Sep 21, 2026; null without a day. */
 	dayDisplay: string | null
-	/** Linkifiable share URL: https://puzzled.gg/r/<id>?utm_source=share, else https://puzzled.gg/games/<slug>?[mode=archive&date=...&]utm_source=share. */
+	/** Linkifiable share URL: https://tryit.fun/r/<id>?utm_source=share, else https://tryit.fun/games/<slug>?[mode=archive&date=...&]utm_source=share. */
 	deepLink: string
 	attempts: number | null
 	maxAttempts: number | null

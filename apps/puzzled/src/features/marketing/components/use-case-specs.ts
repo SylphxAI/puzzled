@@ -112,16 +112,16 @@ export const USE_CASE_SPECS = {
 			},
 			{
 				title: 'Play any missed day in the archive and keep verified streaks',
-				body: `Grab a 3-Day Weekend Pass ($2.99 / £2.99 one-time, no auto-renewal) to test the whole suite, or join Puzzled Plus ($4.99/mo or $39.99/yr | £3.99/mo or £29.99/yr) to unlock all ${TOTAL_GAMES} daily games, the complete past-day archive, detailed stats, and zero ads anywhere on the site.`,
+				body: `Grab a 3-Day Weekend Pass ($2.99 / £2.99 one-time, no auto-renewal) to test the whole suite, or join Tryit Plus ($4.99/mo or $39.99/yr | £3.99/mo or £29.99/yr) to unlock all ${TOTAL_GAMES} daily games, the complete past-day archive, detailed stats, and zero ads anywhere on the site.`,
 			},
 		],
-		comparisonTitle: 'How Puzzled compares',
-		comparisonSubtitle: 'Verified differences based on shipped Puzzled plans and board rules.',
+		comparisonTitle: 'How Tryit compares',
+		comparisonSubtitle: 'Verified differences based on shipped Tryit plans and board rules.',
 		comparisonHeaders: [
 			'Feature',
 			'Scattered Free Puzzle Sites',
 			'Legacy Newspaper Subscriptions',
-			'Puzzled (puzzled.gg)',
+			'Tryit (tryit.fun)',
 		],
 		comparisonRows: [
 			{
@@ -160,7 +160,7 @@ export const USE_CASE_SPECS = {
 		faqTitle: 'Frequently asked questions',
 		faqs: [
 			{
-				question: 'Which puzzles are free on Puzzled?',
+				question: 'Which puzzles are free on Tryit?',
 				answer:
 					'One featured puzzle rotates free every day across Five, Threads, Crowns, Sudoku, and Mini Grid with no account required.',
 			},
@@ -169,8 +169,8 @@ export const USE_CASE_SPECS = {
 				answer: `All ${TOTAL_GAMES} daily puzzles refresh at midnight Hong Kong time (UTC+8) with the same daily set for players worldwide.`,
 			},
 			{
-				question: 'What does Puzzled Plus unlock?',
-				answer: `Puzzled Plus unlocks all ${TOTAL_GAMES} daily games, the full archive of past days, per-game stats and streaks, and ad-free play everywhere for $4.99/month or $39.99/year (£3.99/month or £29.99/year).`,
+				question: 'What does Tryit Plus unlock?',
+				answer: `Tryit Plus unlocks all ${TOTAL_GAMES} daily games, the full archive of past days, per-game stats and streaks, and ad-free play everywhere for $4.99/month or $39.99/year (£3.99/month or £29.99/year).`,
 			},
 			{
 				question: 'Can I try all 19 games without a recurring subscription?',
@@ -183,13 +183,13 @@ export const USE_CASE_SPECS = {
 			body: 'No pop-ups on the puzzle board, server-verified daily streaks, and transparent VAT-inclusive plans.',
 			note: `Questions? Email ${CONTACT_EMAIL}`,
 		},
-		softwareName: 'Puzzled',
+		softwareName: 'Tryit',
 		softwareDescription: `${TOTAL_GAMES} daily word, logic, number, and spatial puzzles in one web suite with midnight HKT daily resets, server-verified streaks, and full past-day archive access.`,
 		offers: [
 			{ name: "Free (Today's featured puzzle)", price: '0', priceCurrency: 'USD' },
 			{ name: '3-Day Weekend Plus & Archive Pass', price: '2.99', priceCurrency: 'USD' },
-			{ name: 'Puzzled Plus (Monthly)', price: '4.99', priceCurrency: 'USD' },
-			{ name: 'Puzzled Plus (Yearly)', price: '39.99', priceCurrency: 'USD' },
+			{ name: 'Tryit Plus (Monthly)', price: '4.99', priceCurrency: 'USD' },
+			{ name: 'Tryit Plus (Yearly)', price: '39.99', priceCurrency: 'USD' },
 		],
 	},
 	'family-brain-games-no-ads': {
@@ -200,7 +200,7 @@ export const USE_CASE_SPECS = {
 			'Clean, distraction-free daily word, math, and logic puzzles for up to 4 family members—each with separate streaks and stats. Zero in-game ads, 8 languages. Family plan from $7.99/mo or £5.99/mo.',
 		eyebrow: 'Up to 4 family seats · Zero in-game ads',
 		h1: 'Clean brain games the whole family can play—with separate streaks and zero distractions.',
-		heroSubhead: `Most puzzle apps interrupt every round with loud video ads and dark-pattern timers. Puzzled never shows an ad while you are solving a puzzle—and Puzzled Plus Family gives up to four people full, 100% ad-free access to all ${TOTAL_GAMES} daily games and past archives, each with their own stats, streaks, and preferred language.`,
+		heroSubhead: `Most puzzle apps interrupt every round with loud video ads and dark-pattern timers. Tryit never shows an ad while you are solving a puzzle—and Tryit Family gives up to four people full, 100% ad-free access to all ${TOTAL_GAMES} daily games and past archives, each with their own stats, streaks, and preferred language.`,
 		facts: [
 			'4 individual accounts, 1 plan',
 			'Zero ads while playing',
@@ -208,7 +208,7 @@ export const USE_CASE_SPECS = {
 			`${locales.length} UI languages per member`,
 		],
 		primaryCta: {
-			label: 'Start Puzzled Plus Family (4 seats)',
+			label: 'Start Tryit Family (4 seats)',
 			href: '/pricing?entry_surface=seo_family-brain-games-no-ads#family',
 		},
 		secondaryCta: {
@@ -221,7 +221,7 @@ export const USE_CASE_SPECS = {
 		workflows: [
 			{
 				title: 'Zero interruptions while solving—for everyone',
-				body: 'Even on the free daily pick, Puzzled never puts banners, pop-ups, or video ads on a puzzle board. Upgrade to Puzzled Plus Family and every screen—including the archive index and result cards—stays 100% ad-free.',
+				body: 'Even on the free daily pick, Tryit never puts banners, pop-ups, or video ads on a puzzle board. Upgrade to Tryit Family and every screen—including the archive index and result cards—stays 100% ad-free.',
 			},
 			{
 				title: 'One family plan covers 4 individual accounts',
@@ -232,13 +232,13 @@ export const USE_CASE_SPECS = {
 				body: 'Each member sets their own interface language independently across English (US & UK), 繁體中文 (香港 & 台灣), 简体中文, 日本語, Español, and Português (Brasil).',
 			},
 		],
-		comparisonTitle: 'Why households pick Puzzled Plus Family',
+		comparisonTitle: 'Why households pick Tryit Family',
 		comparisonSubtitle: 'One VAT-inclusive subscription replaces up to four individual plans.',
 		comparisonHeaders: [
 			'Feature',
 			'Ad-Supported Puzzle Apps',
 			'Individual Subscriptions × 4',
-			'Puzzled Plus Family (puzzled.gg)',
+			'Tryit Family (tryit.fun)',
 		],
 		comparisonRows: [
 			{
@@ -277,14 +277,14 @@ export const USE_CASE_SPECS = {
 		faqTitle: 'Frequently asked questions',
 		faqs: [
 			{
-				question: 'Are there ads while playing Puzzled?',
+				question: 'Are there ads while playing Tryit?',
 				answer:
-					'No. Puzzled never shows ads while a puzzle is being played, and Puzzled Plus and Puzzled Plus Family accounts have zero ads anywhere on the site.',
+					'No. Tryit never shows ads while a puzzle is being played, and Tryit Plus and Tryit Family accounts have zero ads anywhere on the site.',
 			},
 			{
-				question: 'How many people does Puzzled Plus Family cover?',
+				question: 'How many people does Tryit Family cover?',
 				answer:
-					'Puzzled Plus Family covers up to 4 people (the plan owner plus 3 invited members), each with their own account, streaks, and stats.',
+					'Tryit Family covers up to 4 people (the plan owner plus 3 invited members), each with their own account, streaks, and stats.',
 			},
 			{
 				question: 'Can family members use different languages?',
@@ -292,9 +292,9 @@ export const USE_CASE_SPECS = {
 					'Yes. Each player can choose from 8 locales: en-US, en-GB, zh-HK, zh-TW, zh-CN, ja, es, and pt-BR.',
 			},
 			{
-				question: 'How much does Puzzled Plus Family cost?',
+				question: 'How much does Tryit Family cost?',
 				answer:
-					'Puzzled Plus Family is $7.99/month or $64.99/year USD (£5.99/month or £47.99/year GBP), VAT inclusive.',
+					'Tryit Family is $7.99/month or $64.99/year USD (£5.99/month or £47.99/year GBP), VAT inclusive.',
 			},
 		],
 		closingCta: {
@@ -302,20 +302,20 @@ export const USE_CASE_SPECS = {
 			body: `Share all ${TOTAL_GAMES} daily games, the full archive, and ad-free play across four family accounts.`,
 			note: `Questions? Email ${CONTACT_EMAIL}`,
 		},
-		softwareName: 'Puzzled Plus Family',
+		softwareName: 'Tryit Family',
 		softwareDescription:
 			'Ad-free daily word, logic, number, and spatial brain games for up to 4 family members, each with their own streaks, stats, and full archive access.',
 		offers: [
-			{ name: 'Puzzled Plus Family (Monthly, 4 seats)', price: '7.99', priceCurrency: 'USD' },
-			{ name: 'Puzzled Plus Family (Yearly, 4 seats)', price: '64.99', priceCurrency: 'USD' },
-			{ name: 'Puzzled Plus Family (Yearly GBP, 4 seats)', price: '47.99', priceCurrency: 'GBP' },
+			{ name: 'Tryit Family (Monthly, 4 seats)', price: '7.99', priceCurrency: 'USD' },
+			{ name: 'Tryit Family (Yearly, 4 seats)', price: '64.99', priceCurrency: 'USD' },
+			{ name: 'Tryit Family (Yearly GBP, 4 seats)', price: '47.99', priceCurrency: 'GBP' },
 		],
 	},
 } as const satisfies Record<string, UseCaseSpec>
 
 export type UseCaseSlug = keyof typeof USE_CASE_SPECS
 
-export function buildUseCaseJsonLd(spec: UseCaseSpec, origin = 'https://puzzled.gg') {
+export function buildUseCaseJsonLd(spec: UseCaseSpec, origin = 'https://tryit.fun') {
 	const baseOrigin = origin.replace(/\/+$/, '')
 	return {
 		'@context': 'https://schema.org',

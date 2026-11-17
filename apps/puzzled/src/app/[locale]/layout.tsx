@@ -17,7 +17,7 @@ import { env } from '@/lib/env'
 import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
 import { routing } from '@/lib/i18n/routing'
 import { PolicyConsentBoundary } from '@/lib/identity/policy-consent-boundary'
-import { getRequestSiteOrigin } from '@/lib/site-origin.server'
+import { getCanonicalSiteOrigin } from '@/lib/site-origin.server'
 import { DeferredToaster } from '@/shared/components/deferred-shell'
 import { PlatformProvider } from '@/shared/components/platform'
 import { ThemeProvider } from '@/shared/components/theme'
@@ -60,32 +60,32 @@ const SITE_KEYWORDS = [
 
 /**
  * Metadata is request-scoped: canonical/OG/JSON-LD must use the origin actually
- * serving the player (puzzled.gg in production, preview host on Cloud preview),
+ * serving the player (tryit.fun in production, preview host on Cloud preview),
  * never the localhost dev fallback.
  */
 export async function generateMetadata(): Promise<Metadata> {
-	const baseUrl = await getRequestSiteOrigin()
+	const baseUrl = await getCanonicalSiteOrigin()
 	return {
 		title: {
-			default: 'Puzzled',
-			template: '%s | Puzzled',
+			default: 'Tryit',
+			template: '%s | Tryit',
 		},
 		description: SITE_DESCRIPTION,
 		keywords: SITE_KEYWORDS,
-		authors: [{ name: 'Puzzled' }],
-		creator: 'Puzzled',
-		publisher: 'Puzzled',
+		authors: [{ name: 'Tryit' }],
+		creator: 'Tryit',
+		publisher: 'Tryit',
 		metadataBase: new URL(baseUrl),
 		// Canonical, hreflang and social cards are per page: Next replaces these
 		// objects wholesale, so a route that only sets a title would otherwise
 		// drop the layout's hreflang cluster. Every page calls
 		// `buildPageMetadata` instead.
-		applicationName: 'Puzzled',
+		applicationName: 'Tryit',
 		manifest: '/manifest.webmanifest',
 		appleWebApp: {
 			capable: true,
 			statusBarStyle: 'default',
-			title: 'Puzzled',
+			title: 'Tryit',
 		},
 		formatDetection: {
 			telephone: false,
@@ -121,7 +121,7 @@ function JsonLd({ baseUrl }: { baseUrl: string }) {
 	const organizationSchema = {
 		'@context': 'https://schema.org',
 		'@type': 'Organization',
-		name: 'Puzzled',
+		name: 'Tryit',
 		url: baseUrl,
 		logo: `${baseUrl}/icons/icon-512.png`,
 		description: SITE_DESCRIPTION,
@@ -142,7 +142,7 @@ function JsonLd({ baseUrl }: { baseUrl: string }) {
 	const websiteSchema = {
 		'@context': 'https://schema.org',
 		'@type': 'WebSite',
-		name: 'Puzzled',
+		name: 'Tryit',
 		url: baseUrl,
 		description: SITE_DESCRIPTION,
 		potentialAction: {
@@ -173,7 +173,7 @@ function JsonLd({ baseUrl }: { baseUrl: string }) {
 
 export default async function LocaleLayout({ children, params }: Props) {
 	const { locale } = await params
-	const baseUrl = await getRequestSiteOrigin()
+	const baseUrl = await getCanonicalSiteOrigin()
 	// The proxy's per-request CSP nonce; inline scripts run only with it.
 	const nonce = (await headers()).get(NONCE_HEADER) ?? undefined
 

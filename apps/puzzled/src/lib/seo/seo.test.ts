@@ -29,14 +29,14 @@ import {
 
 // Deterministic origin for the documents and metadata under test. Held only
 // for this file: the relay and canonical resolvers read these values live, so
-// leaving `https://puzzled.gg` set would make another file's loopback requests
+// leaving `https://tryit.fun` set would make another file's loopback requests
 // fail closed (relay.ts -> site-origin.ts). `sitemap()` runs while the suites
 // are collected, so this cannot move into a `beforeAll`.
 const PREVIOUS_ORIGIN = {
 	SYLPHX_PUBLIC_URL: process.env.SYLPHX_PUBLIC_URL,
 	NODE_ENV: process.env.NODE_ENV,
 }
-process.env.SYLPHX_PUBLIC_URL = 'https://puzzled.gg'
+process.env.SYLPHX_PUBLIC_URL = 'https://tryit.fun'
 afterAll(() => {
 	for (const [key, value] of Object.entries(PREVIOUS_ORIGIN)) {
 		if (value === undefined) delete process.env[key]
@@ -44,7 +44,7 @@ afterAll(() => {
 	}
 })
 
-const BASE = 'https://puzzled.gg'
+const BASE = 'https://tryit.fun'
 const LOCALE_PREFIX = /^\/(en-GB|zh-HK|zh-TW|zh-CN|ja|es|pt-BR)(?=\/|$)/
 
 /** Path of a URL with any locale prefix removed (`/zh-HK/games` -> `/games`). */
@@ -354,13 +354,13 @@ describe('metadata helper', () => {
 	test('honours an absolute image override', async () => {
 		const metadata = await buildPageMetadata({
 			locale: 'en-US',
-			title: 'Puzzled',
+			title: 'Tryit',
 			description: 'Daily puzzles',
 			imagePath: 'https://cdn.example.com/card.png',
 			baseUrl: BASE,
 		})
 		expect(metadata.openGraph?.images).toEqual([
-			{ url: 'https://cdn.example.com/card.png', width: 1200, height: 630, alt: 'Puzzled' },
+			{ url: 'https://cdn.example.com/card.png', width: 1200, height: 630, alt: 'Tryit' },
 		])
 		expect(ogImagePath({ title: 'Sudoku' })).toBe('/og?title=Sudoku')
 	})

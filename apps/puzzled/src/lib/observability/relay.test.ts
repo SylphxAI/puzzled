@@ -32,11 +32,11 @@ afterEach(() => {
 
 function post(
 	extra: Record<string, string | null> = {},
-	origin: string | null = 'https://puzzled.gg',
+	origin: string | null = 'https://tryit.fun',
 ) {
 	const headers = new Headers({
 		host: 'web:3000',
-		'x-forwarded-host': 'puzzled.gg',
+		'x-forwarded-host': 'tryit.fun',
 		'x-forwarded-proto': 'https',
 		'x-forwarded-for': `relay-test-${client}`,
 	})
@@ -65,30 +65,30 @@ describe('relay canonical request authority', () => {
 	})
 
 	test('configured runtime authority admits direct and valid internal-proxy requests', async () => {
-		process.env.SYLPHX_PUBLIC_URL = 'https://preview.puzzled.gg'
+		process.env.SYLPHX_PUBLIC_URL = 'https://preview.tryit.fun'
 		expect(
 			(
 				await relayBrowserError(
 					post(
 						{ 'x-forwarded-host': null, 'x-forwarded-proto': null },
-						'https://preview.puzzled.gg',
+						'https://preview.tryit.fun',
 					),
 				)
 			).status,
 		).toBe(204)
-		expect((await relayBrowserError(post({}, 'https://preview.puzzled.gg'))).status).toBe(204)
+		expect((await relayBrowserError(post({}, 'https://preview.tryit.fun'))).status).toBe(204)
 		expect(captureSpy).toHaveBeenCalledTimes(2)
 		await denied(post())
 	})
 
 	const authorities: Record<string, string | null>[] = [
-		{ 'x-forwarded-host': 'puzzled.gg/path' },
+		{ 'x-forwarded-host': 'tryit.fun/path' },
 		{ 'x-forwarded-host': null },
 		{ 'x-forwarded-proto': null },
 		{ 'x-forwarded-host': null, 'x-forwarded-proto': null },
 		{ 'x-forwarded-host': 'other.example' },
-		{ 'x-forwarded-host': 'puzzled.gg.example' },
-		{ 'x-forwarded-host': 'puzzled.gg:99999' },
+		{ 'x-forwarded-host': 'tryit.fun.example' },
+		{ 'x-forwarded-host': 'tryit.fun:99999' },
 		{ 'x-forwarded-proto': 'http' },
 		{ 'x-forwarded-proto': 'ftp' },
 		{ 'x-forwarded-proto': '' },
@@ -101,15 +101,15 @@ describe('relay canonical request authority', () => {
 	}
 
 	test('bad explicit forwarded scheme does not disappear behind configured authority', async () => {
-		process.env.SYLPHX_PUBLIC_URL = 'https://puzzled.gg'
+		process.env.SYLPHX_PUBLIC_URL = 'https://tryit.fun'
 		await denied(post({ 'x-forwarded-proto': 'http' }))
-		await denied(post({ 'x-forwarded-host': 'puzzled.gg/path' }))
+		await denied(post({ 'x-forwarded-host': 'tryit.fun/path' }))
 		expect(captureSpy).toHaveBeenCalledTimes(0)
 	})
 
 	for (const configured of [
-		'https://puzzled.gg/path',
-		'http://puzzled.gg',
+		'https://tryit.fun/path',
+		'http://tryit.fun',
 		'https://other.example',
 		'not-an-origin',
 	]) {
@@ -123,12 +123,12 @@ describe('relay canonical request authority', () => {
 		null,
 		'null',
 		'https://other.example',
-		'https://puzzled.gg.example',
-		'http://puzzled.gg',
-		'https://puzzled.gg:444',
-		'https://puzzled.gg/path',
-		'https://user@puzzled.gg',
-		'https://puzzled.gg, https://puzzled.gg',
+		'https://tryit.fun.example',
+		'http://tryit.fun',
+		'https://tryit.fun:444',
+		'https://tryit.fun/path',
+		'https://user@tryit.fun',
+		'https://tryit.fun, https://tryit.fun',
 		'not-an-origin',
 	]) {
 		test(`invalid or mismatched Origin is refused before capture ${origin}`, async () => {
@@ -139,7 +139,7 @@ describe('relay canonical request authority', () => {
 
 	for (const header of ['host', 'x-forwarded-host', 'x-forwarded-proto']) {
 		test(`ambiguous ${header} is refused before capture`, async () => {
-			await denied(post({ [header]: 'puzzled.gg, puzzled.gg' }))
+			await denied(post({ [header]: 'tryit.fun, tryit.fun' }))
 		})
 	}
 
@@ -162,7 +162,7 @@ describe('relay canonical request authority', () => {
 
 describe('bracketed authority is rejected before capture', () => {
 	test('production configured origin with malformed Host refuses a valid report', async () => {
-		process.env.SYLPHX_PUBLIC_URL = 'https://puzzled.gg'
+		process.env.SYLPHX_PUBLIC_URL = 'https://tryit.fun'
 		await denied(post({ host: '[::1]garbage' }))
 		expect(captureSpy).toHaveBeenCalledTimes(0)
 	})

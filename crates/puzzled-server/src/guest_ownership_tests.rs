@@ -367,6 +367,68 @@ async fn private_access_lease_serializes_adoption_and_revocation() {
 }
 
 #[tokio::test]
+async fn production_origins_issue_and_reuse_host_only_cookies_without_database_effects() {
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let app = router(AppState::new(Some(pool.clone())));
+    // Each host keeps its own existing cookie; this does not copy browser
+    // credentials across domains or materialize guest records at bootstrap.
+    for (origin, host) in [
+        ("https://tryit.fun", "tryit.fun"),
+        ("https://puzzled.gg", "puzzled.gg"),
+    ] {
+        let mut cookie: Option<String> = None;
+        for issued in [true, false] {
+            let mut req = Request::builder()
+                .method("POST")
+                .uri("/v1/guest/session")
+                .header("content-type", "application/json")
+                .header("origin", origin)
+                .header("host", host)
+                .header("sec-fetch-site", "same-origin");
+            if let Some(cookie) = &cookie {
+                req = req.header("cookie", cookie);
+            }
+            let response = app
+                .clone()
+                .oneshot(req.body(Body::from("{}")).unwrap())
+                .await
+                .unwrap();
+            assert_eq!(response.status(), StatusCode::OK);
+            assert!(response.headers().get("location").is_none());
+            let returned = response.headers()["set-cookie"].to_str().unwrap();
+            for attribute in [
+                "__Host-puzzled_guest=",
+                "Path=/",
+                "HttpOnly",
+                "Secure",
+                "SameSite=Lax",
+            ] {
+                assert!(returned.contains(attribute));
+            }
+            assert!(!returned.contains("Domain="));
+            let pair = returned.split(';').next().unwrap().to_string();
+            if let Some(cookie) = &cookie {
+                assert_eq!(&pair, cookie);
+            }
+            cookie = Some(pair);
+            let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+            assert_eq!(
+                serde_json::from_slice::<Value>(&bytes).unwrap(),
+                json!({"issued": issued})
+            );
+        }
+    }
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM guest_credentials")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(count, 0);
+    pool.close().await;
+}
+
+#[tokio::test]
 async fn issuance_rejects_origin_ambiguity_without_database_effects() {
     let Some(pool) = fresh_database().await else {
         return;

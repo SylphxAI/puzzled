@@ -1,6 +1,6 @@
 {
 	"metaTitle": "Todos los juegos",
-	"metaDescription": "Explora todos los puzzles diarios de Puzzled: el juego gratis de hoy y la colección completa de rituales de palabras, lógica y números.",
+	"metaDescription": "Explora todos los puzzles diarios de Tryit: el juego gratis de hoy y la colección completa de rituales de palabras, lógica y números.",
 	"title": "Todos los juegos",
 	"subtitle": "{count} puzzles diarios en un solo ritual. Uno es gratis cada día y todo el mundo juega el mismo conjunto, que se renueva a medianoche, hora de Hong Kong.",
 	"heroEyebrow": "Colección de puzzles diarios",
@@ -26,10 +26,10 @@
 	"featuredNote": "Abierto para todos hoy, sin necesidad de cuenta. Mañana otro puzzle ocupará su lugar.",
 	"suiteTitle": "Toda la colección",
 	"ritual": {
-		"title": "Cómo es un día en Puzzled",
+		"title": "Cómo es un día en Tryit",
 		"body": "Un día de puzzles, un conjunto compartido, igual para todos los jugadores.",
 		"step1Title": "Elige el puzzle de hoy",
-		"step1Body": "El juego del día va primero y los {count} puzzles comparten el mismo conjunto diario. El juego del día es gratis para todos; los demás se abren con Puzzled Plus.",
+		"step1Body": "El juego del día va primero y los {count} puzzles comparten el mismo conjunto diario. El juego del día es gratis para todos; los demás se abren con Tryit Plus.",
 		"step2Title": "Resuelve a tu ritmo",
 		"step2Body": "La mayoría de los puzzles duran entre dos y diez minutos, y los que tienen niveles de dificultad te permiten calentar o ir a por más reto.",
 		"step3Title": "Mantén el hábito",
@@ -40,7 +40,7 @@
 		"body": "Lo esencial sobre cómo funciona este catálogo.",
 		"start": {
 			"question": "¿Por dónde empiezo?",
-			"answer": "Abre el juego del día. No necesita cuenta ni pago. Los demás puzzles se abren con Puzzled Plus."
+			"answer": "Abre el juego del día. No necesita cuenta ni pago. Los demás puzzles se abren con Tryit Plus."
 		},
 		"rotation": {
 			"question": "¿Cómo cambia el juego del día?",

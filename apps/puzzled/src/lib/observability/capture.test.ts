@@ -86,8 +86,8 @@ describe('relayBrowserError', () => {
 		body: string,
 		headers: Record<string, string> = {
 			'sec-fetch-site': 'same-origin',
-			origin: 'https://puzzled.gg',
-			'x-forwarded-host': 'puzzled.gg',
+			origin: 'https://tryit.fun',
+			'x-forwarded-host': 'tryit.fun',
 			'x-forwarded-proto': 'https',
 		},
 	) =>

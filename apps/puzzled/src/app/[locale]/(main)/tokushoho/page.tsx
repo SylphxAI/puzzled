@@ -11,7 +11,7 @@ type Props = {
 }
 
 const TITLE = '特定商取引法に基づく表記'
-const LEAD = 'Puzzled Plus の販売条件に関する、特定商取引法に基づく表示です。'
+const LEAD = 'Tryit Plus の販売条件に関する、特定商取引法に基づく表示です。'
 
 /**
  * Japanese seller disclosure (特定商取引法に基づく表記). It is a Japan-market

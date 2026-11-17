@@ -102,7 +102,7 @@ describe('a shared result is non-spoiler by construction', () => {
 			toSharedResult(fromJson(GetSharedResultResponseSchema, { status: 'won', streak: 0 })).streak,
 		).toBe(null)
 		const card = sharedResultCard(toSharedResult(withStreak), {
-			origin: 'https://puzzled.gg',
+			origin: 'https://tryit.fun',
 			gameName: 'Sudoku',
 			theme: 'slate',
 			locale: 'en-US',
@@ -112,7 +112,7 @@ describe('a shared result is non-spoiler by construction', () => {
 
 	test('the landing card shows a time band, not the exact time, and links to the play page', () => {
 		const card = sharedResultCard(toSharedResult(wire), {
-			origin: 'https://puzzled.gg',
+			origin: 'https://tryit.fun',
 			gameName: 'Word Guess',
 			theme: 'slate',
 			locale: 'en-US',

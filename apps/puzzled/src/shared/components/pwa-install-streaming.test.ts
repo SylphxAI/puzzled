@@ -21,7 +21,7 @@ const observed = new Set<Element>()
 let originalIntersection: PropertyDescriptor | undefined
 
 beforeAll(async () => {
-	GlobalRegistrator.register({ url: 'https://puzzled.gg/' })
+	GlobalRegistrator.register({ url: 'https://tryit.fun/' })
 	Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true)
 	originalIntersection = Object.getOwnPropertyDescriptor(globalThis, 'IntersectionObserver')
 	Object.defineProperty(globalThis, 'IntersectionObserver', {

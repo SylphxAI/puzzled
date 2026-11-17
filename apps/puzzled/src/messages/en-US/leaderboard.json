@@ -6,7 +6,7 @@
 	},
 	"title": "Leaderboard",
 	"metaDescription": "Puzzle leaderboards for today, this week and all time — who finished what, and where your own score sits.",
-	"eyebrow": "Puzzled boards",
+	"eyebrow": "Tryit boards",
 	"description": "One puzzle and one period at a time, exactly as scores are counted. Only players who chose to appear publicly are listed.",
 	"chip": "Board: {module}",
 	"anonymous": "Anonymous player",

@@ -21,7 +21,7 @@ export type OwnProduct = {
 
 /**
  * Products with a live public home a finished player can open today.
- * Puzzled is not in the list: the card points at our other products.
+ * Tryit is not in the list: the card points at our other products.
  * Cubeage titles are a separate company and are not linked from here.
  */
 export const OWN_PRODUCTS: readonly OwnProduct[] = [

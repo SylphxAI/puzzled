@@ -18,7 +18,7 @@
  *
  * This is a LOCAL readback tool. It never talks to production unless the
  * upstream URLs are pointed there, and a green local run is not a Live claim:
- * the Live layer is `scripts/verify-live.ts --base https://puzzled.gg`.
+ * the Live layer is `scripts/verify-live.ts --base https://tryit.fun`.
  *
  * Usage (defaults match `docs/reference/local-stack.md`):
  *   bun scripts/local-stack.ts

@@ -59,7 +59,7 @@ test('result modal actions are tappable and the banner can be declined with the 
 	}
 
 	// The Plus offer, when the store is open, leads to pricing.
-	const plus = dialog.getByRole('link', { name: 'See Puzzled Plus' })
+	const plus = dialog.getByRole('link', { name: 'See Tryit Plus' })
 	if (await plus.count()) {
 		await plus.click()
 		await expect(page).toHaveURL(/\/pricing/)

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { defaultLocale, type Locale, localeFacts, locales } from '@/lib/i18n/config'
-import { getRequestSiteOrigin } from '@/lib/site-origin.server'
+import { getCanonicalSiteOrigin } from '@/lib/site-origin.server'
 
 /**
  * Request-scoped metadata builder.
@@ -28,8 +28,8 @@ export function localizedPath(locale: Locale | string, path = '/'): string {
 /** Absolute self-referencing URL for one page. */
 export function canonicalUrl(baseUrl: string, locale: Locale | string, path = '/'): string {
 	const localized = localizedPath(locale, path)
-	// The site root is the bare origin: `https://puzzled.gg` and
-	// `https://puzzled.gg/` are one URL to a crawler, and the served canonical
+	// The site root is the bare origin: `https://tryit.fun` and
+	// `https://tryit.fun/` are one URL to a crawler, and the served canonical
 	// for the home page is the origin itself.
 	return localized === '/' ? baseUrl : `${baseUrl}${localized}`
 }
@@ -84,7 +84,7 @@ export async function buildPageMetadata({
 	withAlternates = true,
 	baseUrl: baseUrlOverride,
 }: BuildPageMetadataInput): Promise<Metadata> {
-	const baseUrl = baseUrlOverride ?? (await getRequestSiteOrigin())
+	const baseUrl = baseUrlOverride ?? (await getCanonicalSiteOrigin())
 	const canonical = canonicalUrl(baseUrl, locale, path)
 	// Default to a card carrying this page's own title: a shared static banner
 	// makes every shared link look the same.
@@ -102,7 +102,7 @@ export async function buildPageMetadata({
 		alternates: withAlternates ? { canonical, languages } : { canonical },
 		openGraph: {
 			type,
-			siteName: 'Puzzled',
+			siteName: 'Tryit',
 			url: canonical,
 			locale: OG_LOCALES[locale as Locale] ?? 'en_US',
 			alternateLocale: locales

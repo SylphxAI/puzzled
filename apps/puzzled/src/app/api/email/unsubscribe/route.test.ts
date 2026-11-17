@@ -10,6 +10,7 @@ const { GET, POST } = await import('./route')
 
 const originalFetch = globalThis.fetch
 const originalUrl = process.env.API_INTERNAL_URL
+const originalPublicUrl = process.env.SYLPHX_PUBLIC_URL
 let forwarded: { url: string; body: unknown }[] = []
 let rpcStatus = 200
 
@@ -18,7 +19,7 @@ beforeEach(() => {
 	resetConnectTransportCache()
 	forwarded = []
 	rpcStatus = 200
-	requestHeaders = new Headers({ host: 'puzzled.gg', 'x-forwarded-proto': 'https' })
+	requestHeaders = new Headers({ host: 'tryit.fun', 'x-forwarded-proto': 'https' })
 	globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
 		const request = new Request(input, init)
 		forwarded.push({ url: request.url, body: await request.json() })
@@ -35,6 +36,8 @@ afterEach(() => {
 	globalThis.fetch = originalFetch
 	if (originalUrl === undefined) delete process.env.API_INTERNAL_URL
 	else process.env.API_INTERNAL_URL = originalUrl
+	if (originalPublicUrl === undefined) delete process.env.SYLPHX_PUBLIC_URL
+	else process.env.SYLPHX_PUBLIC_URL = originalPublicUrl
 	resetConnectTransportCache()
 })
 
@@ -90,7 +93,7 @@ describe('unsubscribe forwarding', () => {
 		expect((await POST(jsonRequest('forged-or-expired'))).status).toBe(400)
 		const response = await GET(new Request('https://puzzled.test/api/email/unsubscribe?token=bad'))
 		expect(response.headers.get('location')).toBe(
-			'https://puzzled.gg/unsubscribe?error=invalid_token',
+			'https://tryit.fun/unsubscribe?error=invalid_token',
 		)
 	})
 
@@ -98,21 +101,23 @@ describe('unsubscribe forwarding', () => {
 		const response = await GET(
 			new Request('https://puzzled.test/api/email/unsubscribe?token=valid'),
 		)
-		expect(response.headers.get('location')).toBe('https://puzzled.gg/unsubscribe?success=true')
+		expect(response.headers.get('location')).toBe('https://tryit.fun/unsubscribe?success=true')
 		expect(forwarded[0]?.body).toEqual({ token: 'valid' })
 	})
 
 	test('redirects use the public origin, not the internal listener request URL', async () => {
-		const internal = 'https://0.0.0.0:3000/api/email/unsubscribe'
+		process.env.SYLPHX_PUBLIC_URL = 'https://tryit.fun'
+		requestHeaders = new Headers({ host: '127.0.0.1:3000' })
+		const internal = 'http://127.0.0.1:3000/api/email/unsubscribe'
 		const ok = await GET(new Request(`${internal}?token=valid`))
 		expect(ok.status).toBe(307)
-		expect(ok.headers.get('location')).toBe('https://puzzled.gg/unsubscribe?success=true')
+		expect(ok.headers.get('location')).toBe('https://tryit.fun/unsubscribe?success=true')
 		expect((await GET(new Request(internal))).headers.get('location')).toBe(
-			'https://puzzled.gg/unsubscribe?error=missing_token',
+			'https://tryit.fun/unsubscribe?error=missing_token',
 		)
 		rpcStatus = 400
 		expect((await GET(new Request(`${internal}?token=forged`))).headers.get('location')).toBe(
-			'https://puzzled.gg/unsubscribe?error=invalid_token',
+			'https://tryit.fun/unsubscribe?error=invalid_token',
 		)
 	})
 

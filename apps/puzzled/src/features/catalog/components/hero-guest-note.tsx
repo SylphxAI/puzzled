@@ -4,7 +4,7 @@ type HeroGuestNoteProps = {
 	/** No account on this request. */
 	isGuest: boolean
 	/**
-	 * The game is behind Puzzled Plus for this viewer. "No account needed to
+	 * The game is behind Tryit Plus for this viewer. "No account needed to
 	 * play" would be untrue above the lock, so the hero says nothing then.
 	 */
 	locked: boolean

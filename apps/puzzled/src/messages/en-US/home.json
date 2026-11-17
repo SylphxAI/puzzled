@@ -19,7 +19,7 @@
 	},
 	"lineup": {
 		"title": "Today's lineup",
-		"subtitle": "One rotation, refreshed every day. The full catalog lives on the games page.",
+		"subtitle": "Find today's puzzles here, or explore every game.",
 		"seeAll": "See all games",
 		"play": "Play",
 		"freeToday": "Today's pick"
@@ -27,8 +27,8 @@
 	"value": {
 		"dailyTitle": "A fresh set every day",
 		"dailyBody": "New puzzles land at midnight, Hong Kong time — the same set for everyone, so results compare fairly.",
-		"honestTitle": "Honest, verified results",
-		"honestBody": "Every finish is checked on the server, so streaks, times and place on the board actually mean something.",
+		"honestTitle": "Scores worth comparing",
+		"honestBody": "Compare your time, build a streak, and see where you place. Completed puzzles are checked before results count.",
 		"shareTitle": "Share without spoilers",
 		"shareBody": "Your result card shows the pattern and the time — never the answer. Send it without ruining anyone's day."
 	},
@@ -45,10 +45,10 @@
 	},
 	"faq": {
 		"title": "Questions, answered",
-		"subtitle": "The short version of how Puzzled works.",
+		"subtitle": "The short version of how Tryit works.",
 		"free": {
-			"question": "Is Puzzled free?",
-			"answer": "Yes. Every puzzle is free every day and never requires payment or an account."
+			"question": "Is Tryit free?",
+			"answer": "Today's featured puzzle is free, with no account needed. Plus unlocks all 19 games and the full archive."
 		},
 		"account": {
 			"question": "Do I need an account to play?",
@@ -56,11 +56,11 @@
 		},
 		"schedule": {
 			"question": "When do new puzzles appear?",
-			"answer": "Every day at midnight, Hong Kong time. Everyone plays the same set on the same day, which is what makes shared results comparable."
+			"answer": "Every day at midnight, Hong Kong time. Take on the same daily puzzles as your friends and compare how you did."
 		},
 		"streak": {
 			"question": "How do streaks work?",
-			"answer": "Finish at least one qualifying puzzle in a puzzle day to extend your streak. A single missed day does not erase your history."
+			"answer": "Finish any of the 19 games in daily mode before the next refresh at midnight, Hong Kong time, to keep your streak going. Wins and losses both count; archive and practice play do not."
 		},
 		"share": {
 			"question": "Can I share my result without spoiling it?",
@@ -81,7 +81,7 @@
 		"titleMemberStreak": "Your {days}-day streak is waiting",
 		"titleMemberDone": "All done for today — nicely played",
 		"titleDone": "Today's {game} is done",
-		"bodyGuest": "Puzzled is a daily set of word, logic and number puzzles. One is free every day, takes a few minutes, and needs no signup.",
+		"bodyGuest": "Tryit is a daily set of word, logic and number puzzles. One is free every day, takes a few minutes, and needs no signup.",
 		"bodyMember": "Your streak, your stats and today's lineup are one tap away.",
 		"playToday": "Play today's {game}",
 		"playAgain": "Play today again",

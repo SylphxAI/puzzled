@@ -62,7 +62,10 @@ for (const viewport of VIEWPORTS) {
 					await expect(
 						offer.getByText('Stats and streaks for every game', { exact: true }),
 					).toBeVisible()
-					const cta = offer.getByRole('link', { name: 'Sign in to subscribe', exact: true })
+					const cta = offer.getByRole('link', {
+						name: id === 'family' ? 'Sign in to start Family' : 'Sign in to get Plus',
+						exact: true,
+					})
 					await cta.evaluate((el) => el.scrollIntoView({ block: 'center' }))
 					await expect(cta).toBeInViewport({ ratio: 1 })
 					await testInfo.attach(`pricing-${viewport.name}-${consentState}-${id}-scrolled`, {
@@ -111,7 +114,7 @@ for (const viewport of VIEWPORTS) {
 			// Signed in: the unticked consent box and the one payment button. Guest: the sign-in link.
 			const consent = offer.getByRole('checkbox')
 			const payment = offer.getByRole('button', { name: 'Continue to payment' })
-			const signIn = offer.getByRole('link', { name: /^Sign in to subscribe/ })
+			const signIn = offer.getByRole('link', { name: /^Sign in to get Plus/ })
 			if ((await payment.count()) > 0) {
 				await expect(consent).not.toBeChecked()
 				await consent.scrollIntoViewIfNeeded()
@@ -155,7 +158,7 @@ for (const viewport of VIEWPORTS) {
 			await openPricing(page)
 			const offer = page.locator('#plus')
 			test.skip((await offer.getByRole('radio').count()) === 0, 'sales are closed')
-			const signIn = offer.getByRole('link', { name: /^Sign in to subscribe/ })
+			const signIn = offer.getByRole('link', { name: /^Sign in to get Plus/ })
 			test.skip((await signIn.count()) === 0, 'guest return-path test')
 			for (const [interval, plan] of [
 				['month', 'individual_monthly', 'Monthly'],
@@ -165,7 +168,7 @@ for (const viewport of VIEWPORTS) {
 				const radio = offer.locator(`input[value="${interval}"]`)
 				if ((await radio.count()) === 0) continue
 				await radio.check()
-				await expect(signIn).toHaveText('Sign in to subscribe')
+				await expect(signIn).toHaveText('Sign in to get Plus')
 				const href = await signIn.getAttribute('href')
 				const callback = new URL(href ?? '', page.url()).searchParams.get('callbackUrl')
 				expect(callback).toBe(`/pricing?plan=${plan}#plus`)
@@ -181,9 +184,9 @@ for (const viewport of VIEWPORTS) {
 			test.skip((await family.count()) === 0, 'sales are closed')
 			await expect(family).toContainText('$64.99')
 			await expect(family.getByRole('radio', { name: /^Yearly/ })).toBeChecked()
-			const signIn = family.getByRole('link', { name: /^Sign in to subscribe/ })
+			const signIn = family.getByRole('link', { name: 'Sign in to start Family', exact: true })
 			await expect(signIn).toHaveCount(1)
-			await expect(signIn).toHaveText('Sign in to subscribe')
+			await expect(signIn).toHaveText('Sign in to start Family')
 			const href = await signIn.getAttribute('href')
 			const callback = new URL(href ?? '', page.url()).searchParams.get('callbackUrl')
 			const interval = (await family.locator('input[value="year"]').isChecked())
@@ -221,7 +224,7 @@ for (const viewport of VIEWPORTS) {
 			await page.goto(`/pricing?${query}`, { waitUntil: 'domcontentloaded' })
 			await settle(page)
 			const offer = page.locator('#plus')
-			const signIn = offer.getByRole('link', { name: /^Sign in to subscribe/ })
+			const signIn = offer.getByRole('link', { name: /^Sign in to get Plus/ })
 			test.skip((await signIn.count()) === 0, 'guest attribution sign-in flow')
 			await signIn.click()
 			await page.waitForURL(/\/login/)

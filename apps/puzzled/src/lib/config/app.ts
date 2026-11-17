@@ -6,10 +6,10 @@
  */
 
 /** Application name used across the app */
-export const APP_NAME = 'Puzzled' as const
+export const APP_NAME = 'Tryit' as const
 
 /** Application domain (without protocol) */
-const APP_DOMAIN = 'puzzled.gg' as const
+const APP_DOMAIN = 'tryit.fun' as const
 
 /** Public product contact and support mailbox. */
 export const CONTACT_EMAIL = `hi@${APP_DOMAIN}`

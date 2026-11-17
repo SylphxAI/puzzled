@@ -1,5 +1,5 @@
 /**
- * Puzzled Plus presentation rules. The Rust api decides access (Connect
+ * Tryit Plus presentation rules. The Rust api decides access (Connect
  * `PuzzleService` refuses with `plus_required` / `plus_required_archive`);
  * these helpers only choose what the page shows, from the same facts.
  */
@@ -11,7 +11,7 @@ import type {
 
 /** What a page needs to know about the viewer and the store. */
 export type PlusAccess = {
-	/** Puzzled Plus is on sale. False: nothing is sold and nothing is locked. */
+	/** Tryit Plus is on sale. False: nothing is sold and nothing is locked. */
 	salesOpen: boolean
 	/** The viewer may play every game and the archive. */
 	entitled: boolean
@@ -31,7 +31,7 @@ export function isPlayLocked(
 	return input.slug !== input.freeSlug
 }
 
-/** Connect error messages that mean "Puzzled Plus needed". */
+/** Connect error messages that mean "Tryit Plus needed". */
 export function isPlusRequiredError(message: string | undefined | null): boolean {
 	return Boolean(message && /plus_required/.test(message))
 }

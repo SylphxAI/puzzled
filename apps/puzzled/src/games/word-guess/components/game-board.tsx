@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<LetterStatus, string> = {
  * Memoized tile component - only re-renders when its props change
  */
 const Tile = memo(function Tile({ letter, status, delay = 0, isCurrentRow, position }: TileProps) {
-	// Enhanced tile colors with brand-tinted shadows and playful roundness (Puzzled signature look)
+	// Enhanced tile colors with brand-tinted shadows and playful roundness (Tryit signature look)
 	// Uses violet-tinted shadows instead of NYT's neutral gray shadows
 	const statusColors: Record<LetterStatus, string> = {
 		correct:

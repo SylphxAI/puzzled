@@ -8,9 +8,9 @@ describe('/llms.txt', () => {
 		expect(response.status).toBe(200)
 		expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8')
 		const body = await response.text()
-		expect(body.startsWith('# Puzzled\n')).toBe(true)
+		expect(body.startsWith('# Tryit\n')).toBe(true)
 		expect(body).toContain('word, logic, number and spatial puzzles, published by Sylphx Limited.')
-		expect(body).not.toMatch(/Sylphx Puzzled|<html|<script/i)
+		expect(body).not.toMatch(/Sylphx Tryit|<html|<script/i)
 		expect(response.headers.has('set-cookie')).toBe(false)
 	})
 
@@ -18,23 +18,23 @@ describe('/llms.txt', () => {
 		const body = await GET().text()
 		const urls = [...body.matchAll(/\]\((https:\/\/[^)]+)\)/g)].map((match) => match[1])
 		expect(urls).toEqual([
-			'https://puzzled.gg/',
-			'https://puzzled.gg/games',
-			'https://puzzled.gg/pricing',
-			...getAllGameMetadata().map((game) => `https://puzzled.gg/games/${game.slug}`),
-			'https://puzzled.gg/leaderboard',
-			'https://puzzled.gg/use-cases/daily-word-and-logic-puzzles-online',
-			'https://puzzled.gg/use-cases/family-brain-games-no-ads',
-			'https://puzzled.gg/support',
-			'https://puzzled.gg/privacy',
-			'https://puzzled.gg/terms',
+			'https://tryit.fun/',
+			'https://tryit.fun/games',
+			'https://tryit.fun/pricing',
+			...getAllGameMetadata().map((game) => `https://tryit.fun/games/${game.slug}`),
+			'https://tryit.fun/leaderboard',
+			'https://tryit.fun/use-cases/daily-word-and-logic-puzzles-online',
+			'https://tryit.fun/use-cases/family-brain-games-no-ads',
+			'https://tryit.fun/support',
+			'https://tryit.fun/privacy',
+			'https://tryit.fun/terms',
 		])
 		expect(new Set(urls).size).toBe(urls.length)
 		for (const game of getAllGameMetadata()) {
 			expect(body).toContain(
-				`[${game.name}](https://puzzled.gg/games/${game.slug}): ${game.description}`,
+				`[${game.name}](https://tryit.fun/games/${game.slug}): ${game.description}`,
 			)
 		}
-		expect(body.trimEnd().endsWith('Contact: hi@puzzled.gg.')).toBe(true)
+		expect(body.trimEnd().endsWith('Contact: hi@tryit.fun.')).toBe(true)
 	})
 })

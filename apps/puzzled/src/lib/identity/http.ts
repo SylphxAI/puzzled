@@ -22,7 +22,7 @@ export function identityOrigin(): string {
 export function destDevice(request: Request) {
 	return {
 		device_id: 'puzzled-web',
-		display_name: 'Puzzled',
+		display_name: 'Tryit',
 		user_agent: request.headers.get('user-agent')?.trim() || 'puzzled-web',
 	}
 }

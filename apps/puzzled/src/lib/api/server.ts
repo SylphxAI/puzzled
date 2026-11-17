@@ -135,7 +135,7 @@ export async function hasServerProgressIdentity(): Promise<boolean> {
 }
 
 /**
- * Whether the signed-in player is a Puzzled admin, as the api decides it
+ * Whether the signed-in player is a Tryit admin, as the api decides it
  * (`is_admin` on the verified identity, enforced by `require_admin` on every
  * admin RPC). The web keeps no admin check of its own: it asks the api through
  * the cheapest admin read, so the page gate and the data gate share one source.
@@ -401,7 +401,7 @@ const activeAnnouncements = createActiveAnnouncementsCache({
 export const getServerActiveAnnouncements = () => activeAnnouncements.get()
 
 // ==========================================
-// Puzzled Plus (BillingService)
+// Tryit Plus (BillingService)
 // ==========================================
 
 /** The price list; guests can read it. */

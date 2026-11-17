@@ -27,7 +27,7 @@ export function Logo({ showText = true, size = 'md', className, tone = 'default'
 				tone === 'inverse' ? 'text-ink-foreground' : 'text-foreground',
 				className,
 			)}
-			aria-label="Puzzled - Home"
+			aria-label="Tryit - Home"
 		>
 			<BrandMark size={s.mark} tone={tone === 'inverse' ? 'inverse' : 'tile'} />
 			{showText && <Wordmark height={s.word} className="mt-0.5" />}

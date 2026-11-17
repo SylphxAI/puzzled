@@ -25,7 +25,7 @@ import {
 } from '@/features/home/components/today-lineup'
 import { WebApplicationJsonLd } from '@/features/home/components/web-application-json-ld'
 import { lineupStatus } from '@/features/home/lib/home-day-copy'
-import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from '@/features/home/lib/home-faq'
+import { HOME_FAQ_KEYS } from '@/features/home/lib/home-faq'
 import { MarketingFaq } from '@/features/marketing/components'
 import { TrialEndingBanner } from '@/features/plus/components/trial-ending-banner'
 import { PlusMilestonePrompt } from '@/features/plus-offer/components/plus-milestone-prompt'
@@ -401,9 +401,12 @@ export default async function HomePage({ params }: Props) {
 				id="home-faq"
 				title={tHome('faq.title')}
 				subtitle={tHome('faq.subtitle')}
-				itemsFrom="namespace"
-				namespace={HOME_FAQ_NAMESPACE}
-				keys={HOME_FAQ_KEYS}
+				items={HOME_FAQ_KEYS.map((key) => ({
+					question: tHome(`faq.${key}.question`),
+					answer: tHome(`faq.${key}.answer`),
+					answerLink:
+						key === 'streak' ? { href: '/games', label: tHome('lineup.seeAll') } : undefined,
+				}))}
 			/>
 		</main>
 	)

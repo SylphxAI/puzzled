@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Puzzled React Query hooks — sole Connect authority (ADR-170).
+ * Tryit React Query hooks — sole Connect authority (ADR-170).
  *
  * Every hook calls a generated Connect client. The Hono REST client layer is
  * deleted; there is no REST fallback and no client-computed authority.

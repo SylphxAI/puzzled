@@ -153,7 +153,7 @@ export function paintResultCard(
 	// Wordmark left, product day right.
 	ctx.fillStyle = palette.text
 	ctx.font = `600 ${Math.round(44 * scale)}px ${display}`
-	ctx.fillText('Puzzled', innerX, 134 * scale)
+	ctx.fillText('Tryit', innerX, 134 * scale)
 	if (model.dayDisplay) {
 		ctx.textAlign = 'right'
 		ctx.fillStyle = palette.textMuted

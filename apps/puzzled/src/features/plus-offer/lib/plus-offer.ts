@@ -1,5 +1,5 @@
 /**
- * When Puzzled Plus is offered inside the app. Pure rules: the Rust api still
+ * When Tryit Plus is offered inside the app. Pure rules: the Rust api still
  * decides access, and these only pick what the page shows, from the same
  * `PlusAccess` facts as the lock card.
  */

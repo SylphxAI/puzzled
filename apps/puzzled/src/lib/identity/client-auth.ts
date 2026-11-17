@@ -4,7 +4,7 @@ import { authIdValue, destIdentityOrigin } from './dest'
 import { isPolicyAcceptance, type PolicyAcceptance } from './policy-consent'
 
 /**
- * Puzzled's players are end users of its own Sylphx Auth instance, reached
+ * Tryit's players are end users of its own Sylphx Auth instance, reached
  * through the Auth client API in server mode:
  *
  * - sign-up: `POST /v1/client/sign-up` (publishable key), then sign in;

@@ -62,7 +62,7 @@ function clamp(value: string | null, max: number): string {
 
 export function GET(request: NextRequest) {
 	const params = request.nextUrl.searchParams
-	const title = clamp(params.get('title'), 64) || 'Puzzled'
+	const title = clamp(params.get('title'), 64) || 'Tryit'
 	const subtitle = clamp(params.get('subtitle'), 96)
 	const eyebrow = clamp(params.get('eyebrow'), 32)
 	const badge = clamp(params.get('badge'), 32) || 'Free puzzle every day'
@@ -136,7 +136,7 @@ export function GET(request: NextRequest) {
 					>
 						{badge}
 					</span>
-					<span style={{ color: MUTED }}>puzzled.gg</span>
+					<span style={{ color: MUTED }}>tryit.fun</span>
 				</div>
 			</div>
 

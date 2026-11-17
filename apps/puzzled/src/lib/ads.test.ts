@@ -29,7 +29,7 @@ describe('ads config', () => {
 		})
 	})
 
-	test('Puzzled Plus removes the ad', () => {
+	test('Tryit Plus removes the ad', () => {
 		const config = adsConfig(configured)
 		expect(adsFor(config, true)).toBeNull()
 		expect(adsFor(config, false)).toEqual(config)

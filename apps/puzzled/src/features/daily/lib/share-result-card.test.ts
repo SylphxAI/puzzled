@@ -23,14 +23,14 @@ const STRINGS: ResultCardStrings = {
 	streakDays: '{days}-day streak',
 	patternSummary: 'Pattern: {hit} hit / {near} near / {miss} miss',
 	altOnDay: ' on {day}',
-	altTemplate: 'Puzzled result - {game}{day}. {result}',
+	altTemplate: 'Tryit result - {game}{day}. {result}',
 	altDetailsTemplate: ' {details}.',
 	altLinkTemplate: ' Play: {link}',
 	detailSeparator: ', ',
 }
 
 const MODEL = buildResultCard({
-	origin: 'https://puzzled.gg',
+	origin: 'https://tryit.fun',
 	gameSlug: 'word-guess',
 	gameName: 'Five',
 	theme: 'emerald',
@@ -261,7 +261,7 @@ describe('shareRitualResultCard', () => {
 		const { nav, calls } = navDouble({ canShare: () => true })
 		const rendered: string[] = []
 		const result = await shareRitualResultCard(
-			{ model: MODEL, strings: STRINGS, text: 'existing text share', title: 'Puzzled' },
+			{ model: MODEL, strings: STRINGS, text: 'existing text share', title: 'Tryit' },
 			baseDeps({
 				navigator: nav,
 				document: null,
@@ -273,7 +273,7 @@ describe('shareRitualResultCard', () => {
 		)
 		expect(result).toEqual({ outcome: 'shared', captionCopied: false })
 		expect(rendered).toEqual([
-			'https://puzzled.gg/games/word-guess?mode=archive&date=2026-09-21&utm_source=share',
+			'https://tryit.fun/games/word-guess?mode=archive&date=2026-09-21&utm_source=share',
 		])
 		const files = calls.share[0]?.files as unknown as Array<{ name?: string }>
 		expect(files?.[0]?.name).toBe('puzzled-result-word-guess-2026-09-21.png')
@@ -283,14 +283,14 @@ describe('shareRitualResultCard', () => {
 	test('uses the text alternative as caption when no text share is given', async () => {
 		const { nav, calls } = navDouble({ canShare: () => false })
 		const result = await shareRitualResultCard(
-			{ model: MODEL, strings: STRINGS, title: 'Puzzled' },
+			{ model: MODEL, strings: STRINGS, title: 'Tryit' },
 			baseDeps({ navigator: nav, document: null, renderBlob: async () => null }),
 		)
 		expect(result.outcome).toBe('copied')
 		expect(calls.writeText.length).toBe(1)
 		expect(calls.writeText[0]).toContain('Five')
 		expect(calls.writeText[0]).toContain(
-			'https://puzzled.gg/games/word-guess?mode=archive&date=2026-09-21&utm_source=share',
+			'https://tryit.fun/games/word-guess?mode=archive&date=2026-09-21&utm_source=share',
 		)
 		expect(calls.writeText[0]?.toLowerCase()).not.toContain('solution')
 	})
@@ -298,7 +298,7 @@ describe('shareRitualResultCard', () => {
 	test('survives a renderer that throws, falling back to the caption', async () => {
 		const { nav, calls } = navDouble({ canShare: () => true })
 		const result = await shareRitualResultCard(
-			{ model: MODEL, strings: STRINGS, text: 'caption', title: 'Puzzled' },
+			{ model: MODEL, strings: STRINGS, text: 'caption', title: 'Tryit' },
 			baseDeps({
 				navigator: nav,
 				document: null,

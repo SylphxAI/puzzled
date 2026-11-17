@@ -1,6 +1,6 @@
 {
 	"metaTitle": "所有遊戲",
-	"metaDescription": "瀏覽 Puzzled 所有每日謎題 — 今日免費遊戲，以及文字、邏輯與數字遊戲的完整系列。",
+	"metaDescription": "瀏覽 Tryit 所有每日謎題 — 今日免費遊戲，以及文字、邏輯與數字遊戲的完整系列。",
 	"title": "所有遊戲",
 	"subtitle": "每日 {count} 款遊戲，同一套玩法。每日有一款免費，所有人玩同一套題目，香港時間午夜更新。",
 	"heroEyebrow": "每日遊戲系列",
@@ -26,10 +26,10 @@
 	"featuredNote": "今日開放給所有人，無需帳戶。明日會輪到另一款遊戲。",
 	"suiteTitle": "完整遊戲系列",
 	"ritual": {
-		"title": "Puzzled 的每日流程",
+		"title": "Tryit 的每日流程",
 		"body": "每個謎題日,一套共同題目,每位玩家都一樣。",
 		"step1Title": "選出今日遊戲",
-		"step1Body": "由今日精選開始,全部 {count} 款謎題都用同一套每日題目;今日精選人人免費,其餘遊戲由 Puzzled Plus 開放。",
+		"step1Body": "由今日精選開始,全部 {count} 款謎題都用同一套每日題目;今日精選人人免費,其餘遊戲由 Tryit Plus 開放。",
 		"step2Title": "按自己的節奏解題",
 		"step2Body": "大部分遊戲需時兩至十分鐘；設有難度選擇的遊戲可讓你熱身，或挑戰更難的題目。",
 		"step3Title": "養成每日習慣",
@@ -40,7 +40,7 @@
 		"body": "關於遊戲目錄的簡短說明。",
 		"start": {
 			"question": "應該從哪裏開始？",
-			"answer": "打開今日精選就可以,毋須帳戶,毋須付款。其他謎題由 Puzzled Plus 開放。"
+			"answer": "打開今日精選就可以,毋須帳戶,毋須付款。其他謎題由 Tryit Plus 開放。"
 		},
 		"rotation": {
 			"question": "今日精選點樣輪替?",

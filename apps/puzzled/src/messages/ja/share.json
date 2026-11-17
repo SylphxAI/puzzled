@@ -1,10 +1,10 @@
 {
 	"title": "結果をシェア",
-	"text": "Puzzled - {game}\n{result}",
+	"text": "Tryit - {game}\n{result}",
 	"share": "シェア",
 	"copy": "コピー",
 	"card": {
-		"title": "Puzzled結果カード",
+		"title": "Tryit結果カード",
 		"downloaded": "カード画像を保存し、キャプションをクリップボードにコピーしました。",
 		"copied": "キャプションをクリップボードにコピーしました。このブラウザでは画像を作成できませんでした。",
 		"unavailable": "自動でシェアできませんでした。",
@@ -24,7 +24,7 @@
 		"streakDays": "{days}日連続",
 		"patternSummary": "パターン: 一致 {hit} / 惜しい {near} / はずれ {miss}",
 		"altOnDay": "({day})",
-		"altTemplate": "Puzzled - {game}{day}。{result}",
+		"altTemplate": "Tryit - {game}{day}。{result}",
 		"altDetailsTemplate": " {details}。",
 		"altLinkTemplate": " 遊ぶ: {link}",
 		"detailSeparator": "、",
@@ -39,7 +39,7 @@
 	"landing": {
 		"metaTitle": "シェアされたパズルの結果",
 		"ogTitle": "{game}: 超えたい結果",
-		"metaDescription": "友だちの結果を見てから、今日のPuzzledパズルを無料で遊びましょう。",
+		"metaDescription": "友だちの結果を見てから、今日のTryitパズルを無料で遊びましょう。",
 		"eyebrow": "友だちが結果をシェアしました",
 		"titleSame": "この結果を超えられますか?",
 		"titleOther": "結果を見てから、今日のパズルに挑戦しよう",

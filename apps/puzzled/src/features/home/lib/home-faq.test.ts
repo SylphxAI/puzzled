@@ -13,7 +13,7 @@ import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from './home-faq'
  * what the component resolves, for every locale.
  */
 
-const LOCALES = ['en-US', 'en-GB', 'zh-CN', 'zh-HK', 'zh-TW'] as const
+const LOCALES = ['en-US', 'en-GB', 'zh-CN', 'zh-HK', 'zh-TW', 'ja', 'es', 'pt-BR'] as const
 
 /** Shape next-intl prints when a message is missing, e.g. `home.free.question`. */
 const RAW_KEY_PATH = /^[a-z][a-z0-9-]*(?:\.[a-z0-9-]+)+$/

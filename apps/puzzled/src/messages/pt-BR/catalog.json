@@ -1,6 +1,6 @@
 {
 	"metaTitle": "Todos os jogos",
-	"metaDescription": "Veja todos os desafios diários do Puzzled — o jogo grátis de hoje e toda a coleção de rituais de palavras, lógica e números.",
+	"metaDescription": "Veja todos os desafios diários do Tryit — o jogo grátis de hoje e toda a coleção de rituais de palavras, lógica e números.",
 	"title": "Todos os jogos",
 	"subtitle": "{count} desafios diários em um só ritual. Um deles é grátis todos os dias, e todo mundo joga a mesma seleção — renovada à meia-noite, no horário de Hong Kong.",
 	"heroEyebrow": "Coleção de desafios diários",
@@ -26,10 +26,10 @@
 	"featuredNote": "Aberto a todos hoje — sem precisar de conta. Amanhã outro desafio ocupa o lugar.",
 	"suiteTitle": "A coleção completa",
 	"ritual": {
-		"title": "Como funciona um dia no Puzzled",
+		"title": "Como funciona um dia no Tryit",
 		"body": "Um dia de desafios, uma seleção compartilhada, igual para todos os jogadores.",
 		"step1Title": "Escolha o desafio de hoje",
-		"step1Body": "O destaque de hoje vem primeiro, e todos os {count} desafios compartilham a mesma seleção diária. O destaque de hoje é grátis para todos; os outros jogos são liberados com o Puzzled Plus.",
+		"step1Body": "O destaque de hoje vem primeiro, e todos os {count} desafios compartilham a mesma seleção diária. O destaque de hoje é grátis para todos; os outros jogos são liberados com o Tryit Plus.",
 		"step2Title": "Resolva no seu ritmo",
 		"step2Body": "A maioria dos desafios leva de dois a dez minutos, e os que têm níveis de dificuldade permitem que você aqueça ou se desafie mais.",
 		"step3Title": "Mantenha o hábito",
@@ -40,7 +40,7 @@
 		"body": "A versão resumida de como este catálogo funciona.",
 		"start": {
 			"question": "Por onde devo começar?",
-			"answer": "Abra o destaque de hoje. Ele não exige conta nem pagamento. Os outros desafios são liberados com o Puzzled Plus."
+			"answer": "Abra o destaque de hoje. Ele não exige conta nem pagamento. Os outros desafios são liberados com o Tryit Plus."
 		},
 		"rotation": {
 			"question": "Como o destaque de hoje muda?",

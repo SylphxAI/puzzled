@@ -66,7 +66,7 @@ type GamePlayAreaProps = {
  * The interactive part of a module page.
  *
  * Renders the play flow (the difficulty chooser, the server board, the client
- * GetDaily fallback and the completed card) or, when Puzzled Plus is on sale
+ * GetDaily fallback and the completed card) or, when Tryit Plus is on sale
  * and the viewer cannot open this game or day, the unlock panel. Connect
  * enforces the same rule (`plus_required`); this only picks what to show.
  *

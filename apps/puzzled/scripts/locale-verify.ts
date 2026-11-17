@@ -18,7 +18,7 @@
  * verdict.
  *
  * Usage:
- *   bun run scripts/locale-verify.ts                          # live, puzzled.gg
+ *   bun run scripts/locale-verify.ts                          # live, tryit.fun
  *   bun run scripts/locale-verify.ts --base http://localhost:3000 --json
  *   bun run scripts/locale-verify.ts --only /ja --only /es/pricing
  */
@@ -35,7 +35,7 @@ export type Options = {
 
 export function parseArgs(argv: string[]): Options {
 	const options: Options = {
-		base: 'https://puzzled.gg',
+		base: 'https://tryit.fun',
 		json: false,
 		timeoutMs: 30_000,
 		only: [],

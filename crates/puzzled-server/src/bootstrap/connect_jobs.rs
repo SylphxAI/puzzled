@@ -182,6 +182,9 @@ impl JobsConnectService {
             return Err(vec!["no database pool".to_string()]);
         };
         let connector_id = dest_email_connector_id().map_err(|e| vec![e])?;
+        let origin =
+            crate::shared::public_origin::public_origin().map_err(|e| vec![e.to_string()])?;
+        let (subject, text_body) = win_back_message(&origin);
         let mut errors = Vec::new();
         let mut processed = 0u32;
         let today = Utc::now().date_naive();
@@ -190,8 +193,6 @@ impl JobsConnectService {
                 .await
                 .map_err(|e| vec![e])?;
             for (user_id, email) in targets {
-                let subject = "We miss you at Puzzled";
-                let text_body = format!("Come back and play today's puzzle ({email_type}).");
                 let delivery = dest_email_delivery(
                     &connector_id,
                     &user_id,
@@ -271,13 +272,37 @@ pub fn jobs_connect_service(state: AppState) -> Arc<JobsConnectService> {
     Arc::new(JobsConnectService::new(state))
 }
 
+fn win_back_message(origin: &str) -> (&'static str, String) {
+    (
+        "Your next puzzle is waiting at Tryit",
+        format!("Take a short puzzle break at Tryit.\n\nPlay today's puzzle: {origin}/\n\nNeed a hand? hi@tryit.fun"),
+    )
+}
+
 #[cfg(test)]
 mod tests {
-    use super::send_due_daily_reminders_with;
+    use super::{send_due_daily_reminders_with, win_back_message};
+
     use crate::capabilities::preferences::adapters::web_push;
     use crate::test_support::fresh_database;
     use chrono::NaiveDate;
     use uuid::Uuid;
+
+    #[test]
+    fn tryit_win_back_copy_uses_configured_links_and_support() {
+        for origin in [
+            crate::shared::public_origin::DEFAULT_PUBLIC_URL,
+            "https://puzzled.gg",
+            "https://puzzled.test",
+        ] {
+            let (subject, body) = win_back_message(origin);
+            assert_eq!(subject, "Your next puzzle is waiting at Tryit");
+            assert!(body.contains(&format!("Play today's puzzle: {origin}/")));
+            assert!(body.contains("hi@tryit.fun"));
+            assert!(!body.contains("day7"));
+            assert!(!subject.contains("Puzzled"));
+        }
+    }
 
     /// Exercise consecutive Compute ticks through the real database claim/release
     /// loop, with no outbound delivery and no VAPID configuration.

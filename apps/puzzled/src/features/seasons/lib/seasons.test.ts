@@ -109,7 +109,7 @@ describe('the list itself', () => {
 
 describe('share caption and card', () => {
 	const base = {
-		origin: 'https://puzzled.gg',
+		origin: 'https://tryit.fun',
 		gameSlug: 'word-guess',
 		gameName: 'Five',
 		status: 'won' as const,
@@ -152,7 +152,7 @@ describe('share caption and card', () => {
 			streakDays: '{days}-day streak',
 			patternSummary: 'p',
 			altOnDay: ' on {day}',
-			altTemplate: 'Puzzled - {game}{day}. {result}',
+			altTemplate: 'Tryit - {game}{day}. {result}',
 			altDetailsTemplate: ' {details}.',
 			altLinkTemplate: ' Play: {link}',
 			detailSeparator: ', ',

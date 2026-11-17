@@ -113,7 +113,7 @@ export function GameIcon({
 }
 
 // Category Colors for Word Groups (text representation for share)
-// Using distinctive Puzzled palette instead of NYT colors
+// Using distinctive Tryit palette instead of NYT colors
 const _CATEGORY_COLORS = {
 	0: 'rose', // Coral pink (was yellow)
 	1: 'teal', // Cyan (was green)
@@ -124,7 +124,7 @@ const _CATEGORY_COLORS = {
 // Share text helpers (text-based for clipboard compatibility)
 // Using purple/orange for Word Guess (distinctive from NYT green/yellow)
 const _SHARE_SQUARES = {
-	correct: '🟪', // Purple - Puzzled brand (was green)
+	correct: '🟪', // Purple - Tryit brand (was green)
 	partial: '🟧', // Orange - warm, friendly (was yellow)
 	wrong: '⬛',
 	// Word Groups category colors

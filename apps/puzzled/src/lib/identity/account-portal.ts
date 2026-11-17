@@ -3,7 +3,7 @@
  * account deletion.
  *
  * That will be Auth's hosted Account Portal, passed in by a server component
- * once Auth publishes its URL. Until then the links open Puzzled's support
+ * once Auth publishes its URL. Until then the links open Tryit's support
  * page, where the team handles these requests. Players are never sent to a
  * Sylphx console.
  */

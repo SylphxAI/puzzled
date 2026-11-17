@@ -4,7 +4,7 @@
  * The title states the task ("free daily word puzzle") and the description
  * says what the game is, in the module's own words. Only the featured puzzle
  * of the day is free for guests, so the copy says exactly that - it stays true
- * before and after Puzzled Plus is on sale.
+ * before and after Tryit Plus is on sale.
  */
 
 /** Add the closing full stop a module rule may lack, without doubling any. */

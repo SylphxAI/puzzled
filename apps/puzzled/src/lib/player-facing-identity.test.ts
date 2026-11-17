@@ -39,7 +39,7 @@
  * rationale via ALLOWED_GENERIC — never by weakening the matcher.
  *
  * Reviewed non-violations (2026-09-11, kept intentionally):
- *  - word-hive rank labels are Puzzled's own ladder (Start…Perfect Hive) since
+ *  - word-hive rank labels are Tryit's own ladder (Start…Perfect Hive) since
  *    the chrome rename; the guard lives in
  *    `src/games/word-hive/rank-labels.test.ts` so another publisher's rank
  *    names cannot come back as our display chrome.

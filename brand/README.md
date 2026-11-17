@@ -1,26 +1,26 @@
-# Puzzled brand
+# Tryit brand
 
-This folder is the source of truth for the Puzzled brand: the vector masters,
+This folder is the source of truth for the Tryit brand: the vector masters,
 the generated icons and the colour and type tokens, with where each file came
 from. Every surface copies from here. `brand/tokens.css` and every raster are
 generated - edit a master, then run `python3 brand/build.py` (pillow, resvg-py
-and numpy; the header of `build.py` says how). `python3 brand/build.py --check`
+numpy and fonttools; the header of `build.py` says how). `python3 brand/build.py --check`
 verifies the generated files and the surface copies with the standard library
 alone, and CI runs it.
 
 ## Name
 
-- **Running text:** Puzzled. It keeps the Latin name in every locale; the zh-HK
-  and zh-CN text writes it as "Puzzled" ("歡迎來到 Puzzled！"). The subscription
-  is "Puzzled Plus", two words and two capitals.
-- **Legal name and operator:** Puzzled is operated by Sylphx Limited,
+- **Running text:** Tryit. It keeps the Latin name in every locale; the zh-HK
+  and zh-CN text writes it as "Tryit" ("歡迎來到 Tryit！"). The subscription
+  is "Tryit Plus", two words and two capitals.
+- **Legal name and operator:** Tryit is operated by Sylphx Limited,
   registered in England and Wales, company no. 16438428, registered office
   128 City Road, London EC1V 2NX. The company line lives in the footer
   copyright and on the legal pages; it is never part of the brand, never
   locked up with the mark and never carries the logo.
 - **Capitals:** nothing is capitalised only in the logo. The wordmark draws
-  "Puzzled" in the same spelling as running text; never "PUZZLED".
-- **Domain:** puzzled.gg.
+  "Tryit" in the same spelling as running text; never "PUZZLED".
+- **Domain:** tryit.fun.
 
 ## Files
 
@@ -78,7 +78,7 @@ colours; they stay with the games in `apps/puzzled/src/games/theme-colors.ts`.
   face: PingFang TC / Noto Sans TC for zh-Hant and PingFang SC / Noto Sans SC
   for zh-CN.
 - **Wordmark and Open Graph images:** still drawn from Fraunces
-  (`brand/svg/puzzled-wordmark.svg` is its weight-620 outline, and
+  (`brand/svg/puzzled-wordmark.svg` is its weight-600 outline, and
   `apps/puzzled/public/fonts/fraunces-600.ttf` feeds the Open Graph route, which
   cannot read WOFF2) until those assets are redrawn in Bricolage Grotesque.
 - **Numbers:** tabular figures (`.tnum`, `.numeral`) in the app.
@@ -179,5 +179,9 @@ Not registered. Owner decision owner#781: no trademark filings before the
 product earns money. Use ™ at most, never ®.
 
 Checked 2026-09-28 (web and app-store search, US trademark listings).
-- **Name: close match, same category.** Netflix ships "Netflix Puzzled", a daily word and logic puzzle app on iOS, Android and Tudum (launched 2025). No US trademark filing by Netflix for PUZZLED was found; "PUZZLED" is registered by Puzzled, Inc. for physical puzzles and toys (class 28, reg. 3983811), which is outside software. This is the one real risk in the portfolio: a store listing or search result can be confused with Netflix's. Noted once, not blocking (owner#781).
+- **Name: close match, same category.** Netflix ships "Netflix Tryit", a daily word and logic puzzle app on iOS, Android and Tudum (launched 2025). No US trademark filing by Netflix for PUZZLED was found; "PUZZLED" is registered by Tryit, Inc. for physical puzzles and toys (class 28, reg. 3983811), which is outside software. This is the one real risk in the portfolio: a store listing or search result can be confused with Netflix's. Noted once, not blocking (owner#781).
 - **Mark:** a question-mark hook with an amber tile for its dot. No close match found among puzzle-app icons.
+
+The wordmark is outlined reproducibly from the bundled Fraunces 600 font and
+`wordmark` in `brand.json`. `build.py` writes the SVG variants and `wordmark.json`;
+React reads the latter directly. Filenames retain their historical prefix.

@@ -14,7 +14,7 @@
 	"preferences": {
 		"description": "Customise your experience",
 		"appearance": {
-			"description": "Customise how Puzzled looks",
+			"description": "Customise how Tryit looks",
 			"themeDescription": "Choose your colour theme",
 			"reduceMotionDescription": "Minimise animations and transitions"
 		}

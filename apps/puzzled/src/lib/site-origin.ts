@@ -1,24 +1,11 @@
 /**
- * Canonical site origin resolution for player-facing URLs (canonical link,
- * Open Graph, JSON-LD, robots/sitemap).
- *
- * Resolution order:
- * 1. Configured origin (`SYLPHX_PUBLIC_URL`, platform, runtime) — trusted, wins
- *    when set (a localhost value is ignored in production builds).
- * 2. Request headers (`x-forwarded-host`, then `host`) — accepted only when the
- *    hostname belongs to the product (puzzled.gg, *.puzzled.gg, *.sylphx.app, or
- *    loopback in dev). Anything else (spoofed `Host`/`X-Forwarded-Host` such as
- *    evil.com) is ignored. `www.puzzled.gg` normalizes to the apex. Public hosts
- *    are always https; `x-forwarded-proto` only allows http for loopback dev.
- * 3. Deterministic production origin — never localhost from a production build.
- * 4. http://localhost:<PORT|3000> only for local dev/test.
- *
- * The pure resolver is separate from the `next/headers` wrapper
- * (site-origin.server.ts) so the behavior is mechanically testable without a
- * request context.
+ * Two distinct URL contracts: canonical production links advertise Tryit;
+ * request authority retains the incoming host for Auth and browser writes.
+ * Preview and local origins remain local to their deployment. Strict request
+ * validation never substitutes the marketing fallback for invalid authority.
  */
 
-export const PRODUCTION_SITE_ORIGIN = 'https://puzzled.gg'
+export const PRODUCTION_SITE_ORIGIN = 'https://tryit.fun'
 
 export type SiteOriginInput = {
 	/** Request `host` header (may include a port). */
@@ -36,8 +23,14 @@ export type SiteOriginInput = {
 }
 
 const LOOPBACK_HOSTNAMES = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'])
-const PRODUCT_APEX = 'puzzled.gg'
-const PRODUCT_HOST_SUFFIXES = ['.puzzled.gg', '.sylphx.app']
+const PRODUCT_APICES = ['tryit.fun', 'puzzled.gg']
+const PRODUCTION_APEX_HOSTS = new Set([
+	'tryit.fun',
+	'www.tryit.fun',
+	'puzzled.gg',
+	'www.puzzled.gg',
+])
+const PRODUCT_HOST_SUFFIXES = ['.tryit.fun', '.puzzled.gg', '.sylphx.app']
 const DEFAULT_DEV_PORT = '3000'
 
 function firstHeaderValue(value: string | null | undefined): string | null {
@@ -101,7 +94,9 @@ function isValidRequestHost(host: string, strict = false): boolean {
 export function normalizeProductHostname(hostname: string): string | null {
 	const host = hostname.toLowerCase()
 	if (isLoopbackHostname(host)) return host
-	if (host === PRODUCT_APEX || host === `www.${PRODUCT_APEX}`) return PRODUCT_APEX
+	for (const apex of PRODUCT_APICES) {
+		if (host === apex || host === `www.${apex}`) return apex
+	}
 	if (PRODUCT_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix))) return host
 	return null
 }
@@ -125,10 +120,32 @@ function normalizeOriginCandidate(value: string | null | undefined): string | nu
 		const owned = normalizeProductHostname(url.hostname)
 		if (!owned) return url.origin
 		const port = url.port ? url.port : null
-		return hostToOrigin(owned, port, url.protocol === 'http:' ? 'http' : 'https')
+		return canonicalOrigin(hostToOrigin(owned, port, url.protocol === 'http:' ? 'http' : 'https'))
 	} catch {
 		return null
 	}
+}
+
+/** Both public production domains publish the same canonical and share URLs. */
+function isProductionApexOrigin(origin: string): boolean {
+	try {
+		const url = new URL(origin)
+		return url.protocol === 'https:' && !url.port && PRODUCTION_APEX_HOSTS.has(url.hostname)
+	} catch {
+		return false
+	}
+}
+
+export function canonicalOrigin(origin: string): string {
+	try {
+		const url = new URL(origin)
+		if (PRODUCTION_APEX_HOSTS.has(url.hostname) && !url.port) {
+			return PRODUCTION_SITE_ORIGIN
+		}
+	} catch {
+		// The caller's normalizer decides how to handle invalid input.
+	}
+	return origin
 }
 
 function originIsLoopback(origin: string): boolean {
@@ -165,7 +182,7 @@ export function resolveSiteOrigin(
 			if (!owned || (isProduction && isLoopbackHostname(owned))) return null
 			if (!isLoopbackHostname(owned) && proto !== 'https') return null
 			try {
-				const candidate = hostToOrigin(owned, port, proto)
+				const candidate = hostToOrigin(hostname.toLowerCase(), port, proto)
 				if (new URL(candidate).origin !== candidate) return null
 				forwarded = candidate
 			} catch {
@@ -173,6 +190,25 @@ export function resolveSiteOrigin(
 			}
 		}
 
+		let directHost: string | null = null
+		if (!forwarded && input.host) {
+			const { hostname, port } = splitHostPort(input.host)
+			const owned = normalizeProductHostname(hostname)
+			if (owned) {
+				const loopback = isLoopbackHostname(owned)
+				if (isProduction && loopback) return null
+				const candidate = hostToOrigin(hostname.toLowerCase(), port, loopback ? 'http' : 'https')
+				try {
+					if (new URL(candidate).origin !== candidate) return null
+					directHost = candidate
+				} catch {
+					return null
+				}
+			}
+		}
+
+		// Validate configured authority fail-closed before choosing precedence.
+		let configuredOrigin: string | null = null
 		if (input.configuredUrl != null && input.configuredUrl !== '') {
 			try {
 				const configured = new URL(input.configuredUrl)
@@ -187,7 +223,7 @@ export function resolveSiteOrigin(
 				if ((isProduction && loopback) || (!loopback && configured.protocol !== 'https:'))
 					return null
 				if (configured.protocol !== 'https:' && configured.protocol !== 'http:') return null
-				return hostToOrigin(
+				configuredOrigin = hostToOrigin(
 					owned,
 					configured.port || null,
 					configured.protocol === 'https:' ? 'https' : 'http',
@@ -196,7 +232,19 @@ export function resolveSiteOrigin(
 				return null
 			}
 		}
-		return forwarded
+
+		const incoming = forwarded ?? directHost
+		if (configuredOrigin !== null) {
+			if (
+				isProductionApexOrigin(configuredOrigin) &&
+				incoming !== null &&
+				isProductionApexOrigin(incoming)
+			) {
+				return incoming
+			}
+			return configuredOrigin
+		}
+		return incoming
 	}
 
 	// 1. Operator-configured origin wins when present.
@@ -217,7 +265,7 @@ export function resolveSiteOrigin(
 		// Public product hosts are always https; an explicit https is also honored
 		// for loopback dev. `x-forwarded-proto: http` cannot downgrade a public host.
 		const proto = loopback ? (forwardedProto === 'https' ? 'https' : 'http') : 'https'
-		return hostToOrigin(owned, port, proto)
+		return canonicalOrigin(hostToOrigin(owned, port, proto))
 	}
 
 	// 3./4. Deterministic production origin, then local dev fallback.

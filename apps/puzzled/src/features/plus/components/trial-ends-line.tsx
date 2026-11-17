@@ -17,7 +17,7 @@ export function PlusTrialProvider({
 }
 
 /**
- * The true end of the free week of Puzzled Plus, on the result screen. Nothing
+ * The true end of the free week of Tryit Plus, on the result screen. Nothing
  * while no trial runs, and nothing is charged when it ends.
  */
 export function TrialEndsLine({ className }: { className?: string }) {

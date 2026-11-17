@@ -43,7 +43,7 @@ self.addEventListener('push', (event) => {
 		return
 	}
 	event.waitUntil(
-		self.registration.showNotification(payload.title || 'Puzzled', {
+		self.registration.showNotification(payload.title || 'Tryit', {
 			body: payload.body || '',
 			icon: '/icons/icon-192.png',
 			badge: '/icons/icon-96.png',

@@ -4,7 +4,7 @@
 		"lastUpdated": "Last Updated",
 		"revision": "2026-11-14",
 		"eyebrow": "Legal",
-		"lead": "This policy explains what data Puzzled collects, why it is collected, and how to contact us about it.",
+		"lead": "This policy explains what data Tryit collects, why it is collected, and how to contact us about it.",
 		"toc": {
 			"title": "On this page"
 		},
@@ -16,7 +16,7 @@
 		"sections": {
 			"intro": {
 				"title": "Introduction",
-				"content": "This policy explains how Sylphx Limited (\"we\", \"us\", or \"our\") collects and uses personal data when you use Puzzled, and the rights you have over it."
+				"content": "This policy explains how Sylphx Limited (\"we\", \"us\", or \"our\") collects and uses personal data when you use Tryit, and the rights you have over it."
 			},
 			"controller": {
 				"title": "Who is responsible for your data",
@@ -38,12 +38,12 @@
 				"title": "How we use your data, and our legal basis",
 				"content": "We use your data for these purposes, on these legal bases under the UK GDPR:",
 				"items": {
-					"service": "To provide Puzzled, your account, Puzzled Plus and the family plan, and to answer your requests: performance of our contract with you",
-					"improve": "To keep Puzzled secure, prevent cheating, abuse and fraud, fix faults, and understand and improve our games: our legitimate interests in running a safe, working and improving service",
-					"communicate": "To send you messages about your account, subscription and changes to Puzzled: our contract with you and our legitimate interests",
-					"analytics": "To measure how Puzzled is played, which links and ads bring players, and whether they sign up or subscribe, using analytics, advertising measurement and the referral cookie: your consent (analytics and advertising are separate choices), which you can withdraw at any time with Change cookie choice in the Cookies section",
+					"service": "To provide Tryit, your account, Tryit Plus and the family plan, and to answer your requests: performance of our contract with you",
+					"improve": "To keep Tryit secure, prevent cheating, abuse and fraud, fix faults, and understand and improve our games: our legitimate interests in running a safe, working and improving service",
+					"communicate": "To send you messages about your account, subscription and changes to Tryit: our contract with you and our legitimate interests",
+					"analytics": "To measure how Tryit is played, which links and ads bring players, and whether they sign up or subscribe, using analytics, advertising measurement and the referral cookie: your consent (analytics and advertising are separate choices), which you can withdraw at any time with Change cookie choice in the Cookies section",
 					"legal": "To keep tax and accounting records, respond to lawful requests, and establish, exercise or defend legal claims: our legal obligations and our legitimate interests",
-					"noSale": "We do not sell your personal data. Players without Puzzled Plus may see advertising on the archive and result screens (never during a puzzle), served by Google AdSense; the ad is shown, and advertising cookies are set, only if you turned on advertising cookies."
+					"noSale": "We do not sell your personal data. Players without Tryit Plus may see advertising on the archive and result screens (never during a puzzle), served by Google AdSense; the ad is shown, and advertising cookies are set, only if you turned on advertising cookies."
 				}
 			},
 			"payments": {
@@ -57,7 +57,7 @@
 				"stripe": "Payment processing",
 				"google": "Authentication",
 				"mail": "Email delivery (sign-in and verification mail)",
-				"others": "We may also share data with our hosting providers, professional advisers, authorities where the law requires it, and a buyer or successor if our business or Puzzled is sold or reorganized.",
+				"others": "We may also share data with our hosting providers, professional advisers, authorities where the law requires it, and a buyer or successor if our business or Tryit is sold or reorganized.",
 				"googleMeasurement": "Analytics and advertising measurement (only after you consent)"
 			},
 			"transfers": {
@@ -70,7 +70,7 @@
 			},
 			"cookies": {
 				"title": "Cookies",
-				"content": "We use cookies that are strictly necessary to sign you in, keep Puzzled secure and remember your settings. We use analytics and the referral cookie only if you accept analytics, and advertising measurement only if you separately turn on advertising in Settings; nothing is pre-selected and declining costs you nothing.",
+				"content": "We use cookies that are strictly necessary to sign you in, keep Tryit secure and remember your settings. We use analytics and the referral cookie only if you accept analytics, and advertising measurement only if you separately turn on advertising in Settings; nothing is pre-selected and declining costs you nothing.",
 				"notices": "One more cookie remembers which site notices you have closed or already seen: puzzled_dismissed_notices. It is strictly necessary, set by us (first-party) and kept for one year; it holds only the ids of those notices, no personal data, so it is set without asking and is not used for analytics. Another strictly necessary first-party cookie, puzzled_currency, remembers the currency you pick on the pricing page (for example GBP or USD) for one year; it holds only that currency code, no personal data, and is not used for analytics.",
 				"google": "If Google Analytics or Google Ads is switched on for this site, it loads only after you have said yes: Google Analytics for analytics, and Google Ads to measure whether an ad led to a sign-up or a purchase, with the plan and price but no name or email. We turn off ad personalisation and Google signals, and send Google only public page addresses. You can withdraw at any time with the button below, which also deletes the Google cookies."
 			},
@@ -87,11 +87,11 @@
 					"withdraw": "Withdraw your consent at any time, where we rely on it, without affecting use before you withdrew",
 					"complain": "Complain to us, and to the Information Commissioner's Office (ico.org.uk) if you are unhappy with how we handle your data"
 				},
-				"response": "Send all statutory data-rights requests (access, correction, deletion, portability, restriction, or objection) exclusively to legal@sylphx.com; routine customer support channels (such as hi@puzzled.gg) cannot accept or process formal statutory privacy requests or legal notices. We answer requests within one month, which the law allows us to extend by up to two further months for complex or numerous requests. We make reasonable and proportionate searches, and we may charge a reasonable fee for, or refuse, a request that is manifestly unfounded or excessive."
+				"response": "Send all statutory data-rights requests (access, correction, deletion, portability, restriction, or objection) exclusively to legal@sylphx.com; routine customer support channels (such as hi@tryit.fun) cannot accept or process formal statutory privacy requests or legal notices. We answer requests within one month, which the law allows us to extend by up to two further months for complex or numerous requests. We make reasonable and proportionate searches, and we may charge a reasonable fee for, or refuse, a request that is manifestly unfounded or excessive."
 			},
 			"children": {
 				"title": "Children",
-				"content": "Puzzled accounts are for people aged 13 and over. If we learn that we hold an account of a child under 13, we may close it and delete its data. We do not profile children for marketing."
+				"content": "Tryit accounts are for people aged 13 and over. If we learn that we hold an account of a child under 13, we may close it and delete its data. We do not profile children for marketing."
 			},
 			"security": {
 				"title": "Security and breaches",
@@ -103,7 +103,7 @@
 			},
 			"contact": {
 				"title": "Contact Us",
-				"content": "Send all statutory data-rights requests (DSAR, erasure, rectification, restriction, objection, and portability) and formal privacy or legal notices exclusively to legal@sylphx.com. Official customer support for routine account, gameplay, or billing questions is available solely through authenticated in-product channels or at hi@puzzled.gg; customer support channels cannot accept service of legal notices or discuss legal matters. Official social media pages are one-way announcement channels only and do not process support or legal requests."
+				"content": "Send all statutory data-rights requests (DSAR, erasure, rectification, restriction, objection, and portability) and formal privacy or legal notices exclusively to legal@sylphx.com. Official customer support for routine account, gameplay, or billing questions is available solely through authenticated in-product channels or at hi@tryit.fun; customer support channels cannot accept service of legal notices or discuss legal matters. Official social media pages are one-way announcement channels only and do not process support or legal requests."
 			}
 		}
 	},
@@ -112,7 +112,7 @@
 		"lastUpdated": "Last Updated",
 		"revision": "2026-11-14",
 		"eyebrow": "Legal",
-		"lead": "These terms set out the rules that apply when you use Puzzled, including accounts, Puzzled Plus subscriptions and conduct.",
+		"lead": "These terms set out the rules that apply when you use Tryit, including accounts, Tryit Plus subscriptions and conduct.",
 		"toc": {
 			"title": "On this page"
 		},
@@ -126,8 +126,8 @@
 				"title": "Key terms",
 				"content": "Please read these points in particular. The full terms below explain each one.",
 				"items": {
-					"renewal": "Puzzled Plus renews automatically until you cancel. You can cancel at any time in Settings > Subscription.",
-					"refunds": "Under the UK Consumer Contracts Regulations 2013, one-off immediate digital content (such as a non-renewing pass, Reg 37) loses its 14-day cancellation right once supply starts after your express prior consent, acknowledgment, and durable confirmation. For ongoing recurring Puzzled Plus subscriptions (Reg 36), if you request immediate access and cancel within 14 days (where no valid Reg 37 digital-content waiver applies), we deduct only the proportionate value supplied before cancellation. After any statutory cancellation period, payments are non-refundable except where these terms or mandatory law (such as Brazil's 7-day withdrawal right) require.",
+					"renewal": "Tryit Plus renews automatically until you cancel. You can cancel at any time in Settings > Subscription.",
+					"refunds": "Under the UK Consumer Contracts Regulations 2013, one-off immediate digital content (such as a non-renewing pass, Reg 37) loses its 14-day cancellation right once supply starts after your express prior consent, acknowledgment, and durable confirmation. For ongoing recurring Tryit Plus subscriptions (Reg 36), if you request immediate access and cancel within 14 days (where no valid Reg 37 digital-content waiver applies), we deduct only the proportionate value supplied before cancellation. After any statutory cancellation period, payments are non-refundable except where these terms or mandatory law (such as Brazil's 7-day withdrawal right) require.",
 					"changes": "We may change games, features, prices and these terms. If a change materially reduces what you have paid for, you can cancel.",
 					"suspension": "We may suspend or close accounts that cheat or break these terms.",
 					"liability": "Our liability to you is limited, as Limitation of Liability explains. Your statutory rights as a consumer are not affected."
@@ -135,15 +135,15 @@
 			},
 			"acceptance": {
 				"title": "Acceptance of Terms",
-				"content": "These Terms of Service are published with a version date (currently 2026-11-14). By creating an account, clicking to accept an affirmative clickwrap or re-consent prompt, subscribing, or accessing or using Puzzled after notice of an updated version, you agree to be bound by the current version of these terms. If you do not agree, do not use our services. If a translation of these terms differs from the English version, the English version applies, without limiting mandatory local consumer law."
+				"content": "These Terms of Service are published with a version date (currently 2026-11-14). By creating an account, clicking to accept an affirmative clickwrap or re-consent prompt, subscribing, or accessing or using Tryit after notice of an updated version, you agree to be bound by the current version of these terms. If you do not agree, do not use our services. If a translation of these terms differs from the English version, the English version applies, without limiting mandatory local consumer law."
 			},
 			"seller": {
 				"title": "Who we are",
-				"content": "Puzzled is provided by Sylphx Limited, a company registered in England and Wales (company number 16438428). Registered office: 128 City Road, London EC1V 2NX, United Kingdom. VAT number: GB 502 7862 95."
+				"content": "Tryit is provided by Sylphx Limited, a company registered in England and Wales (company number 16438428). Registered office: 128 City Road, London EC1V 2NX, United Kingdom. VAT number: GB 502 7862 95."
 			},
 			"service": {
 				"title": "Our Service",
-				"content": "Puzzled provides daily puzzle games and challenges for personal, non-commercial use. We may change, add or remove games, features, content and limits, and suspend or withdraw Puzzled or any part of it, for example for maintenance, security, legal or business reasons. If a change materially reduces what a paid subscription gives you, we tell you in advance, and you may cancel and receive a refund for the time left in the period you have paid for."
+				"content": "Tryit provides daily puzzle games and challenges for personal, non-commercial use. We may change, add or remove games, features, content and limits, and suspend or withdraw Tryit or any part of it, for example for maintenance, security, legal or business reasons. If a change materially reduces what a paid subscription gives you, we tell you in advance, and you may cancel and receive a refund for the time left in the period you have paid for."
 			},
 			"accounts": {
 				"title": "User Accounts",
@@ -155,14 +155,14 @@
 				}
 			},
 			"subscriptions": {
-				"title": "Puzzled Plus subscriptions",
-				"content": "Today's featured puzzle is free. Puzzled Plus is an optional paid subscription that opens every game, the archive of past days, and stats for every game.",
+				"title": "Tryit Plus subscriptions",
+				"content": "Today's featured puzzle is free. Tryit Plus is an optional paid subscription that opens every game, the archive of past days, and stats for every game.",
 				"items": {
 					"billing": "Prices are shown before you pay and include VAT where it applies. Sylphx Money takes payment when you subscribe and at the start of each monthly or yearly period.",
 					"renewal": "Your subscription renews automatically until you cancel. You can cancel at any time in Settings > Subscription; you keep access until the end of the period you have paid for and are not charged again.",
-					"cancellation": "Statutory cancellation (Reg 36 vs Reg 37): For any one-off immediate digital content purchase (where UK Consumer Contracts Regulations 2013 Reg 37 applies), you give express prior consent for supply to start immediately and acknowledge that you lose your 14-day cancellation right once supply begins, which we confirm on a durable medium. For ongoing recurring Puzzled Plus subscriptions (where Reg 36 applies), requesting immediate access does not automatically waive your entire 14-day cancellation right: if you cancel within 14 days (where no valid Reg 37 waiver applies), we may deduct only an amount proportionate to the service supplied before you notified us of cancellation and refund any remaining balance. You can also stop renewals at any time in Settings > Subscription and keep access until the end of the period you have paid for.",
+					"cancellation": "Statutory cancellation (Reg 36 vs Reg 37): For any one-off immediate digital content purchase (where UK Consumer Contracts Regulations 2013 Reg 37 applies), you give express prior consent for supply to start immediately and acknowledge that you lose your 14-day cancellation right once supply begins, which we confirm on a durable medium. For ongoing recurring Tryit Plus subscriptions (where Reg 36 applies), requesting immediate access does not automatically waive your entire 14-day cancellation right: if you cancel within 14 days (where no valid Reg 37 waiver applies), we may deduct only an amount proportionate to the service supplied before you notified us of cancellation and refund any remaining balance. You can also stop renewals at any time in Settings > Subscription and keep access until the end of the period you have paid for.",
 					"refund": "Except where these terms or the law say otherwise (including proportionate refunds on valid 14-day Reg 36 cancellations), payments are non-refundable and we do not refund part-used periods. If digital content or a service we delivered is faulty, we put it right or provide your statutory remedy. If you live in Brazil, you may withdraw within 7 days of subscribing and receive a full refund of what you paid (Brazilian Consumer Defence Code, Law 8.078/1990, article 49).",
-					"price": "We may change the price of Puzzled Plus. We tell you in advance, before a new price applies to your next renewal, and you can cancel before then.",
+					"price": "We may change the price of Tryit Plus. We tell you in advance, before a new price applies to your next renewal, and you can cancel before then.",
 					"family": "A family plan covers the subscriber and up to three people they invite. The subscriber can remove people at any time.",
 					"statutory": "Nothing in these terms affects your statutory rights as a consumer."
 				}
@@ -174,7 +174,7 @@
 					"legal": "Use the service only for lawful purposes",
 					"respect": "Respect other users, our community, and our support team (no harassment, abuse, or bad-faith spam)",
 					"noCheat": "Not use cheats, exploits, or automated tools",
-					"noInterfere": "Not copy, scrape, reverse engineer or interfere with Puzzled, except where the law allows"
+					"noInterfere": "Not copy, scrape, reverse engineer or interfere with Tryit, except where the law allows"
 				}
 			},
 			"suspension": {
@@ -183,27 +183,27 @@
 			},
 			"ip": {
 				"title": "Intellectual Property",
-				"content": "All games, content, and materials on Puzzled are our property or licensed to us. You may not copy, modify, or distribute any content without permission. Whenever you upload or submit a display name, profile picture, or other content or feedback on Puzzled, you warrant and represent that you own all necessary rights in it or hold a valid license to submit it and grant the permissions below, and that it does not infringe any third party's intellectual property, privacy, or other rights or violate any law. You give us a worldwide, royalty-free license to use your display name, profile picture and results to run Puzzled, including leaderboards and shared results, and a perpetual, irrevocable license to use any feedback you send us. Send all intellectual property or copyright notices exclusively to legal@sylphx.com; customer support channels cannot accept legal or IP notices."
+				"content": "All games, content, and materials on Tryit are our property or licensed to us. You may not copy, modify, or distribute any content without permission. Whenever you upload or submit a display name, profile picture, or other content or feedback on Tryit, you warrant and represent that you own all necessary rights in it or hold a valid license to submit it and grant the permissions below, and that it does not infringe any third party's intellectual property, privacy, or other rights or violate any law. You give us a worldwide, royalty-free license to use your display name, profile picture and results to run Tryit, including leaderboards and shared results, and a perpetual, irrevocable license to use any feedback you send us. Send all intellectual property or copyright notices exclusively to legal@sylphx.com; customer support channels cannot accept legal or IP notices."
 			},
 			"disclaimer": {
 				"title": "Disclaimer",
-				"content": "Puzzled is provided for entertainment. We supply it with reasonable care and skill and as described, as the law requires, but we do not promise that it will be uninterrupted or error-free, or that scores, streaks or statistics will never be lost or corrected."
+				"content": "Tryit is provided for entertainment. We supply it with reasonable care and skill and as described, as the law requires, but we do not promise that it will be uninterrupted or error-free, or that scores, streaks or statistics will never be lost or corrected."
 			},
 			"liability": {
 				"title": "Limitation of Liability",
-				"content": "We are responsible for loss you suffer that is a foreseeable result of our breaking these terms or failing to use reasonable care and skill. We are not responsible for loss that was not foreseeable, for loss caused by events outside our reasonable control, or for any business loss, such as lost profit or opportunity, because Puzzled is for personal use. If digital content we supply damages your device or other digital content because we did not use reasonable care and skill, we will repair the damage or pay you compensation. Otherwise, our total liability to you is limited to the greater of what you paid us in the 12 months before the claim arose and £100. Nothing in these terms limits our liability for death or personal injury caused by our negligence, for fraud, or for anything else the law does not allow us to limit."
+				"content": "We are responsible for loss you suffer that is a foreseeable result of our breaking these terms or failing to use reasonable care and skill. We are not responsible for loss that was not foreseeable, for loss caused by events outside our reasonable control, or for any business loss, such as lost profit or opportunity, because Tryit is for personal use. If digital content we supply damages your device or other digital content because we did not use reasonable care and skill, we will repair the damage or pay you compensation. Otherwise, our total liability to you is limited to the greater of what you paid us in the 12 months before the claim arose and £100. Nothing in these terms limits our liability for death or personal injury caused by our negligence, for fraud, or for anything else the law does not allow us to limit."
 			},
 			"changes": {
 				"title": "Changes to Terms",
-				"content": "We may change these terms, for example to reflect changes to Puzzled, the law or our business, and we publish each updated version on this page with a new effective version date. Updated terms take effect upon notice (such as posting on this page, email, or in-product notice) and your continued use or acceptance of an in-product re-consent prompt. If a change materially reduces what a paid subscription gives you, we tell you in advance, and you may cancel before the change applies and receive a refund for the unused part of your paid period."
+				"content": "We may change these terms, for example to reflect changes to Tryit, the law or our business, and we publish each updated version on this page with a new effective version date. Updated terms take effect upon notice (such as posting on this page, email, or in-product notice) and your continued use or acceptance of an in-product re-consent prompt. If a change materially reduces what a paid subscription gives you, we tell you in advance, and you may cancel before the change applies and receive a refund for the unused part of your paid period."
 			},
 			"general": {
 				"title": "General",
-				"content": "We may transfer our rights and obligations under these terms to another organization, for example if Puzzled is sold; we will tell you, and you can cancel if you are unhappy. You may not transfer yours. If a court finds part of these terms unenforceable, the rest stays in force. If we do not enforce a term straight away, we can still enforce it later. Before starting formal court or dispute proceedings against us, you agree to send a written notice describing the dispute and giving us 30 days to cure or resolve it exclusively to legal@sylphx.com (customer support channels cannot accept service of legal notices). Nothing in this pre-action notice step restricts or delays urgent injunctive or equitable relief, action needed to preserve a statutory limitation period, non-waivable statutory consumer remedies, or complaints to the UK Information Commissioner's Office (ICO) or any competent data-protection or consumer regulator. These terms are governed by the law of England and Wales. You can bring a claim in the courts of England and Wales, or in your local courts if you live in Scotland, Northern Ireland or another country, and you keep the protection of the mandatory consumer law of the place you live."
+				"content": "We may transfer our rights and obligations under these terms to another organization, for example if Tryit is sold; we will tell you, and you can cancel if you are unhappy. You may not transfer yours. If a court finds part of these terms unenforceable, the rest stays in force. If we do not enforce a term straight away, we can still enforce it later. Before starting formal court or dispute proceedings against us, you agree to send a written notice describing the dispute and giving us 30 days to cure or resolve it exclusively to legal@sylphx.com (customer support channels cannot accept service of legal notices). Nothing in this pre-action notice step restricts or delays urgent injunctive or equitable relief, action needed to preserve a statutory limitation period, non-waivable statutory consumer remedies, or complaints to the UK Information Commissioner's Office (ICO) or any competent data-protection or consumer regulator. These terms are governed by the law of England and Wales. You can bring a claim in the courts of England and Wales, or in your local courts if you live in Scotland, Northern Ireland or another country, and you keep the protection of the mandatory consumer law of the place you live."
 			},
 			"contact": {
 				"title": "Contact",
-				"content": "Official customer support for routine account, gameplay, or billing questions is provided solely through authenticated product channels and our official support email at hi@puzzled.gg. Official social media pages are one-way announcement channels only and do not process support or legal requests. Send all formal legal notices, intellectual property notices, statutory data-rights requests, and 30-day pre-action dispute notices exclusively to legal@sylphx.com; customer support channels cannot accept service of legal notices or discuss legal matters. Repetitive, abusive, harassing, or bad-faith contacts—including repeated messages on resolved matters—may be restricted to self-service documentation or placed on a communication cooldown without affecting verified statutory or billing rights."
+				"content": "Official customer support for routine account, gameplay, or billing questions is provided solely through authenticated product channels and our official support email at hi@tryit.fun. Official social media pages are one-way announcement channels only and do not process support or legal requests. Send all formal legal notices, intellectual property notices, statutory data-rights requests, and 30-day pre-action dispute notices exclusively to legal@sylphx.com; customer support channels cannot accept service of legal notices or discuss legal matters. Repetitive, abusive, harassing, or bad-faith contacts—including repeated messages on resolved matters—may be restricted to self-service documentation or placed on a communication cooldown without affecting verified statutory or billing rights."
 			}
 		}
 	}

@@ -65,7 +65,7 @@ export const CONSENT_DEFAULT_SCRIPT = `window.dataLayer=window.dataLayer||[];fun
 	{ ...consentSignals({ analytics: false, marketing: false }), wait_for_update: 500 },
 )});`
 
-export const SITE_TITLE = 'Puzzled'
+export const SITE_TITLE = 'Tryit'
 
 const LOCALE_PREFIX = /^\/(en-GB|zh-HK|zh-CN|zh-TW|ja|es|pt-BR)(?=\/|$)/
 const PUBLIC_PATHS = new Set([

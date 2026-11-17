@@ -6,7 +6,7 @@
 	},
 	"title": "Ranking",
 	"metaDescription": "Rankings de desafios de hoje, da semana e de todos os tempos — quem concluiu o quê e onde fica a sua pontuação.",
-	"eyebrow": "Rankings do Puzzled",
+	"eyebrow": "Rankings do Tryit",
 	"description": "Um desafio e um período por vez, exatamente como as pontuações são contadas. Só aparecem jogadores que escolheram ser públicos.",
 	"chip": "Ranking: {module}",
 	"anonymous": "Jogador anônimo",

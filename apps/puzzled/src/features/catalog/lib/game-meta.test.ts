@@ -32,7 +32,7 @@ describe('game page search metadata', () => {
 			const description = gameMetaDescription(t, copy.name, meta.category, copy.description, '.')
 			expect(title).toContain('daily')
 			expect(title.toLowerCase()).not.toContain('free')
-			expect(`${title} | Puzzled`.length).toBeLessThanOrEqual(60)
+			expect(`${title} | Tryit`.length).toBeLessThanOrEqual(60)
 			expect(description.length).toBeGreaterThanOrEqual(120)
 			expect(description.length).toBeLessThanOrEqual(160)
 			expect(seen.has(description)).toBe(false)
