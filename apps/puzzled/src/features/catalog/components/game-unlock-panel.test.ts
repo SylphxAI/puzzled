@@ -41,9 +41,16 @@ mock.module('@/lib/i18n/routing', () => ({
 	Link: MockLink,
 }))
 
+function MockCheckoutOffer({ callbackUrl, signedIn }: { callbackUrl: string; signedIn: boolean }) {
+	return createElement(
+		'button',
+		{ type: 'button', 'data-callback': callbackUrl, 'data-signed-in': signedIn },
+		'Checkout',
+	)
+}
+
 mock.module('@/features/plus-offer/components/checkout-offer', () => ({
-	CheckoutOffer: ({ callbackUrl, signedIn }: { callbackUrl: string; signedIn: boolean }) =>
-		createElement('button', { 'data-callback': callbackUrl, 'data-signed-in': signedIn }, 'Checkout'),
+	CheckoutOffer: MockCheckoutOffer,
 }))
 
 const { GameUnlockPanel } = await import('./game-unlock-panel')

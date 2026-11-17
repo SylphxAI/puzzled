@@ -43,7 +43,9 @@ export async function GameUnlockPanel({
 				<h2 className="font-display text-xl md:text-2xl">
 					{archive ? t('archiveTitle') : t('title')}
 				</h2>
-				<div className="w-full text-left"><CheckoutOffer signedIn={!isGuest} callbackUrl={returnTo} gameCount={gameCount} /></div>
+				<div className="w-full text-left">
+					<CheckoutOffer signedIn={!isGuest} callbackUrl={returnTo} gameCount={gameCount} />
+				</div>
 				<div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
 					{isGuest ? (
 						<Link
@@ -53,7 +55,12 @@ export async function GameUnlockPanel({
 							{t('signIn')}
 						</Link>
 					) : null}
-					<Link href="/games" className="inline-flex h-12 items-center justify-center rounded-2xl border border-border bg-background px-5 font-semibold hover:border-foreground/30">{t('backToToday')}</Link>
+					<Link
+						href="/games"
+						className="inline-flex h-12 items-center justify-center rounded-2xl border border-border bg-background px-5 font-semibold hover:border-foreground/30"
+					>
+						{t('backToToday')}
+					</Link>
 				</div>
 				<p className="text-xs text-muted-foreground">{t('keep')}</p>
 			</div>
