@@ -30,8 +30,8 @@ export async function generateMetadata({ params }: Props) {
 /**
  * Account settings frame: one h1, one section rail, and the section the URL
  * names. Every settings page runs its own `requireMember` guard; anonymous
- * post-payment checkout returns (`/settings/subscription?checkout=success&s=...`)
- * render a clean claim prompt without account chrome instead of losing `s=`.
+ * post-payment checkout returns (`/settings/subscription?checkout=success&s=...` or `&session_id=...`)
+ * render a clean claim prompt without account chrome instead of losing the checkout session id.
  */
 export default async function SettingsLayout({ children, params }: Props) {
 	const { locale } = await params

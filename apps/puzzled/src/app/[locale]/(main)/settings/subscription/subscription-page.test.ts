@@ -43,6 +43,17 @@ function serializeHref(
 let mockSignedIn = false
 let mockClaimCookie: string | undefined
 let mockEntitled = false
+let memoizedSubscription:
+	| {
+			salesOpen: boolean
+			entitled: boolean
+			source: string
+			planId?: string
+			status?: string
+			currentPeriodEndMs?: bigint
+			cancelAtPeriodEnd: boolean
+	  }
+	| undefined
 const claimCalls: Array<{ sessionId: string; locale: string }> = []
 const redirectedTo: string[] = []
 
@@ -103,15 +114,22 @@ mock.module('@/lib/api/server', () => ({
 		mockEntitled = true
 		return true
 	},
-	getServerSubscription: async () => ({
-		salesOpen: true,
-		entitled: mockEntitled,
-		source: mockEntitled ? 'plus' : 'none',
-		planId: mockEntitled ? 'individual_yearly' : undefined,
-		status: mockEntitled ? 'active' : undefined,
-		currentPeriodEndMs: mockEntitled ? BigInt(4_070_908_800_000) : undefined,
-		cancelAtPeriodEnd: false,
-	}),
+	// Mirror React.cache() per-request memoization in server.ts so tests fail if
+	// getServerSubscription is read before claimServerCheckout runs.
+	getServerSubscription: async () => {
+		if (!memoizedSubscription) {
+			memoizedSubscription = {
+				salesOpen: true,
+				entitled: mockEntitled,
+				source: mockEntitled ? 'plus' : 'none',
+				planId: mockEntitled ? 'individual_yearly' : undefined,
+				status: mockEntitled ? 'active' : undefined,
+				currentPeriodEndMs: mockEntitled ? BigInt(4_070_908_800_000) : undefined,
+				cancelAtPeriodEnd: false,
+			}
+		}
+		return memoizedSubscription
+	},
 	getServerPlans: async () => ({
 		salesOpen: true,
 		familyMaxMembers: 4,
@@ -135,6 +153,7 @@ describe('SubscriptionSettingsPage guest checkout claim handoff', () => {
 		mockSignedIn = false
 		mockClaimCookie = 'encoded_secret_cookie_only'
 		mockEntitled = false
+		memoizedSubscription = undefined
 		claimCalls.length = 0
 		redirectedTo.length = 0
 
@@ -162,9 +181,37 @@ describe('SubscriptionSettingsPage guest checkout claim handoff', () => {
 		expect(html).not.toContain('clm_')
 	})
 
+	test('preserves session_id for signed-out buyer without HttpOnly cookie so verified-email :claim works after sign-in', async () => {
+		mockSignedIn = false
+		mockClaimCookie = undefined
+		mockEntitled = false
+		memoizedSubscription = undefined
+		claimCalls.length = 0
+		redirectedTo.length = 0
+
+		const node = await SubscriptionSettingsPage({
+			params: Promise.resolve({ locale: 'en-US' }),
+			searchParams: Promise.resolve({
+				checkout: 'success',
+				session_id: 'cs_live_verify_probe',
+			}),
+		})
+		const html = renderToStaticMarkup(node)
+
+		expect(redirectedTo).toHaveLength(0)
+		expect(claimCalls).toHaveLength(0)
+		expect(html).toContain('Payment received — link your Tryit Plus')
+		const expectedCallback = encodeURIComponent(
+			'/settings/subscription?checkout=success&session_id=cs_live_verify_probe',
+		)
+		expect(html).toContain(`/signup?callbackUrl=${expectedCallback}`)
+		expect(html).toContain(`/login?callbackUrl=${expectedCallback}`)
+	})
+
 	test('redirects unauthenticated visitors on normal /settings/subscription without checkout=success', async () => {
 		mockSignedIn = false
 		mockClaimCookie = undefined
+		memoizedSubscription = undefined
 		redirectedTo.length = 0
 
 		await SubscriptionSettingsPage({
@@ -178,6 +225,7 @@ describe('SubscriptionSettingsPage guest checkout claim handoff', () => {
 		mockSignedIn = true
 		mockClaimCookie = 'opaque_cookie_value'
 		mockEntitled = false
+		memoizedSubscription = undefined
 		claimCalls.length = 0
 
 		const node = await SubscriptionSettingsPage({
@@ -195,17 +243,18 @@ describe('SubscriptionSettingsPage guest checkout claim handoff', () => {
 		expect(html).toContain('Return to puzzle')
 	})
 
-	test('falls back to verified-email :claim when signed-in buyer returns without claim cookie', async () => {
+	test('falls back to verified-email :claim before memoized subscription read when signed-in buyer returns with session_id and no cookie', async () => {
 		mockSignedIn = true
 		mockClaimCookie = undefined
 		mockEntitled = false
+		memoizedSubscription = undefined
 		claimCalls.length = 0
 
 		const node = await SubscriptionSettingsPage({
 			params: Promise.resolve({ locale: 'en-US' }),
 			searchParams: Promise.resolve({
 				checkout: 'success',
-				s: 'cs_live_email_match_456',
+				session_id: 'cs_live_email_match_456',
 			}),
 		})
 		const html = renderToStaticMarkup(node)
