@@ -1,4 +1,4 @@
-# Git hooks managed by lefthook.
+# Git hooks managed by lefthook. Typechecks run once in the affected CI gate.
 #
 # JS tools run from the repo's node_modules via scripts/hooks/node-tool.sh. A worktree without
 # node_modules skips them with a warning (exit 0) instead of exiting 127; CI runs the same checks.
@@ -13,19 +13,3 @@ pre-commit:
         - "**/biome.json"
       run: scripts/hooks/node-tool.sh biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
-
-    02-typecheck-ui:
-      priority: 2
-      glob: "packages/ui/**"
-      env:
-        NODE_OPTIONS: "--max-old-space-size=4096"
-        SKIP_ENV_VALIDATION: "true"
-      run: scripts/hooks/node-tool.sh turbo typecheck --filter=@sylphx/ui
-
-    03-typecheck-puzzled:
-      priority: 3
-      glob: "apps/puzzled/**"
-      env:
-        NODE_OPTIONS: "--max-old-space-size=4096"
-        SKIP_ENV_VALIDATION: "true"
-      run: scripts/hooks/node-tool.sh turbo typecheck --filter=@sylphx/puzzled
