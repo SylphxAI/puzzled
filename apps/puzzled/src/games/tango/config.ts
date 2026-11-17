@@ -5,7 +5,6 @@
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { TangoHowToPlay } from './components/how-to-play'
 import { TangoIcon } from './icon'
 import type { TangoGuessInput, TangoGuessResult, TangoPuzzleData, TangoSolution } from './types'
 
@@ -23,7 +22,6 @@ export const tangoConfig: GameConfig<
 	category: 'logic',
 	skills: ['logic', 'pattern'],
 	difficulty: 'medium',
-	HowToPlayContent: TangoHowToPlay,
 	display: {
 		taglineKey: 'games.tango.tagline',
 		highlightKey: 'games.tango.highlight',

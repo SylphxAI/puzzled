@@ -6,7 +6,6 @@
 import { compareByTime, formatTimeScore } from '@/games/shared'
 import { MINUTE_MS } from '@/lib/constants/time'
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { WordSearchHowToPlay } from './components/how-to-play'
 import { WordSearchIcon } from './icon'
 import type {
 	WordSearchGuess,
@@ -29,7 +28,6 @@ export const wordSearchConfig: GameConfig<
 	category: 'word',
 	skills: ['vocabulary', 'pattern'],
 	difficulty: 'easy',
-	HowToPlayContent: WordSearchHowToPlay,
 	display: {
 		taglineKey: 'games.wordSearch.tagline',
 		highlightKey: 'games.wordSearch.highlight',

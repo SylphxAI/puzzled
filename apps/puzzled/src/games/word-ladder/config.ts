@@ -6,7 +6,6 @@
 import { compareByTime, isPerfectGame } from '@/games/shared'
 import { formatTimer } from '@/games/shared/format'
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { WordLadderHowToPlay } from './components/how-to-play'
 import { WordLadderIcon } from './icon'
 import type {
 	WordLadderGuess,
@@ -32,7 +31,6 @@ export const wordLadderConfig: GameConfig<
 	category: 'word',
 	skills: ['vocabulary'],
 	difficulty: 'medium',
-	HowToPlayContent: WordLadderHowToPlay,
 	display: {
 		taglineKey: 'games.wordLadder.tagline',
 		highlightKey: 'games.wordLadder.highlight',

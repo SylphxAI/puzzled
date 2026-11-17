@@ -5,7 +5,6 @@
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { NumberPathHowToPlay } from './components/how-to-play'
 import { NumberPathIcon } from './icon'
 import type {
 	NumberPathGuess,
@@ -28,7 +27,6 @@ export const numberPathConfig: GameConfig<
 	category: 'spatial',
 	skills: ['spatial', 'logic'],
 	difficulty: 'medium',
-	HowToPlayContent: NumberPathHowToPlay,
 	display: {
 		taglineKey: 'games.numberPath.tagline',
 		highlightKey: 'games.numberPath.highlight',

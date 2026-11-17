@@ -5,7 +5,6 @@
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import { DEFAULT_LAUNCH_DATE, type DifficultyLevelConfig, type GameConfig } from '../types'
-import { SudokuHowToPlay } from './components/how-to-play'
 import { SudokuIcon } from './icon'
 import type {
 	SudokuGuess,
@@ -55,7 +54,6 @@ export const sudokuConfig: GameConfig<
 	category: 'logic',
 	skills: ['logic', 'pattern'],
 	difficulty: 'medium',
-	HowToPlayContent: SudokuHowToPlay,
 	display: {
 		taglineKey: 'games.sudoku.tagline',
 		highlightKey: 'games.sudoku.highlight',

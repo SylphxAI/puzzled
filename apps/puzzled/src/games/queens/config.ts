@@ -5,7 +5,6 @@
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import { DEFAULT_LAUNCH_DATE, type DifficultyLevelConfig, type GameConfig } from '../types'
-import { QueensHowToPlay } from './components/how-to-play'
 import { QueensIcon } from './icon'
 import type { QueensGuess, QueensGuessResult, QueensPuzzleData, QueensSolution } from './types'
 
@@ -50,7 +49,6 @@ export const queensConfig: GameConfig<
 	category: 'logic',
 	skills: ['logic', 'spatial'],
 	difficulty: 'medium',
-	HowToPlayContent: QueensHowToPlay,
 	display: {
 		taglineKey: 'games.queens.tagline',
 		highlightKey: 'games.queens.highlight',

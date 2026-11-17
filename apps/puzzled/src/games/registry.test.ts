@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { getHowToPlayConfig } from './how-to-play-registry'
 import {
 	getAllGameMetadata,
 	getAllGames,
@@ -8,6 +9,12 @@ import {
 	getSeedFromDate,
 	isValidGameSlug,
 } from './registry'
+
+test('every catalogue game has instructions in the help registry', () => {
+	for (const slug of getGameSlugs()) {
+		expect(typeof getHowToPlayConfig(slug)?.HowToPlayContent).toBe('function')
+	}
+})
 
 describe('getSeedFromDate', () => {
 	test('generates consistent seed from date', () => {

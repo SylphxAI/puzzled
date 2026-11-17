@@ -7,7 +7,6 @@
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { PatternMatchHowToPlay } from './components/how-to-play'
 import { PatternMatchIcon } from './icon'
 import type { Card, PatternMatchSolution } from './types'
 
@@ -57,7 +56,6 @@ export const patternMatchConfig: GameConfig<
 	category: 'spatial',
 	skills: ['pattern', 'logic'],
 	difficulty: 'medium',
-	HowToPlayContent: PatternMatchHowToPlay,
 	display: {
 		taglineKey: 'games.patternMatch.tagline',
 		highlightKey: 'games.patternMatch.highlight',

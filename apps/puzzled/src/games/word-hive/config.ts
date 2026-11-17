@@ -4,7 +4,6 @@
  */
 
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { SpellingBeeHowToPlay } from './components/how-to-play'
 import { WordHiveIcon } from './icon'
 import type { SpellingBeePuzzleClientData } from './types'
 
@@ -79,7 +78,6 @@ export const wordHiveConfig: GameConfig<
 	category: 'word',
 	skills: ['vocabulary', 'spelling'],
 	difficulty: 'medium',
-	HowToPlayContent: SpellingBeeHowToPlay,
 	display: {
 		taglineKey: 'games.wordHive.tagline',
 		highlightKey: 'games.wordHive.highlight',

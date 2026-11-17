@@ -5,7 +5,6 @@
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import { DEFAULT_LAUNCH_DATE, type DifficultyLevelConfig, type GameConfig } from '../types'
-import { NonogramHowToPlay } from './components/how-to-play'
 import { NonogramIcon } from './icon'
 import type {
 	NonogramGuess,
@@ -60,7 +59,6 @@ export const nonogramConfig: GameConfig<
 	category: 'logic',
 	skills: ['logic', 'pattern', 'spatial'],
 	difficulty: 'medium',
-	HowToPlayContent: NonogramHowToPlay,
 	display: {
 		taglineKey: 'games.nonogram.tagline',
 		highlightKey: 'games.nonogram.highlight',

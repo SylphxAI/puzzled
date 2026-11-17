@@ -5,7 +5,6 @@
 
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import { DEFAULT_LAUNCH_DATE, type GameConfig } from '../types'
-import { CrosswordHowToPlay } from './components/how-to-play'
 import { CrosswordIcon } from './icon'
 import type {
 	CrosswordGuess,
@@ -30,7 +29,6 @@ export const crosswordConfig: GameConfig<
 	category: 'word',
 	skills: ['vocabulary', 'association'],
 	difficulty: 'medium',
-	HowToPlayContent: CrosswordHowToPlay,
 	display: {
 		taglineKey: 'games.crossword.tagline',
 		highlightKey: 'games.crossword.highlight',
