@@ -41,10 +41,15 @@ mock.module('@/lib/i18n/routing', () => ({
 	Link: MockLink,
 }))
 
+mock.module('@/features/plus-offer/components/checkout-offer', () => ({
+	CheckoutOffer: ({ callbackUrl, signedIn }: { callbackUrl: string; signedIn: boolean }) =>
+		createElement('button', { 'data-callback': callbackUrl, 'data-signed-in': signedIn }, 'Checkout'),
+}))
+
 const { GameUnlockPanel } = await import('./game-unlock-panel')
 
 describe('GameUnlockPanel', () => {
-	test('preserves callbackUrl on Upgrade and Sign-in links for a locked game', async () => {
+	test('preserves direct checkout and sign-in callbacks without a fixed-free diversion', async () => {
 		const node = await GameUnlockPanel({
 			slug: 'crossword',
 			archive: false,
@@ -54,9 +59,11 @@ describe('GameUnlockPanel', () => {
 			freeGameName: 'Sudoku',
 		})
 		const html = renderToStaticMarkup(node)
-		expect(html).toContain('href="/pricing?callbackUrl=%2Fgames%2Fcrossword"')
+		expect(html).toContain('data-callback="/games/crossword"')
+		expect(html).toContain('data-signed-in="false"')
 		expect(html).toContain('href="/login?callbackUrl=%2Fgames%2Fcrossword"')
-		expect(html).toContain('href="/games/sudoku"')
+		expect(html).toContain('href="/games"')
+		expect(html).not.toContain('href="/games/sudoku"')
 	})
 
 	test('preserves archive date inside callbackUrl when unlocking an archive day', async () => {
@@ -70,7 +77,8 @@ describe('GameUnlockPanel', () => {
 			freeGameName: 'Sudoku',
 		})
 		const html = renderToStaticMarkup(node)
-		const expected = `/pricing?callbackUrl=${encodeURIComponent('/games/crossword?mode=archive&date=2026-11-10')}`
-		expect(html).toContain(`href="${expected.replace(/&/g, '&amp;')}"`)
+		expect(html).toContain('data-callback="/games/crossword?mode=archive&amp;date=2026-11-10"')
+		expect(html).toContain('data-signed-in="true"')
+		expect(html).not.toContain('href="/login')
 	})
 })

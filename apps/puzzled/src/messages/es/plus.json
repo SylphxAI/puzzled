@@ -62,7 +62,8 @@
 		"cta": "Ver Tryit Plus",
 		"signIn": "Iniciar sesión",
 		"playFree": "Juega {game} gratis",
-		"keep": "Todo lo que ya has completado se queda en tus estadísticas."
+		"keep": "Todo lo que ya has completado se queda en tus estadísticas.",
+		"backToToday": "Volver a los juegos de hoy"
 	},
 	"offer": {
 		"resultTitle": "Juega los {count} juegos y el archivo",
@@ -133,5 +134,11 @@
 			"already_in_family": "Ya estás en otro plan familiar. Sal de él primero.",
 			"family_owner": "Este es tu propio plan familiar."
 		}
+	},
+	"checkoutOffer": {
+		"body": "Los {count} juegos y los últimos 30 días. Elige un pase o una suscripción para seguir jugando.",
+		"comparePlans": "Comparar todos los planes",
+		"unavailableTitle": "Los planes no están disponibles ahora",
+		"unavailableBody": "Vuelve a intentarlo en unos minutos. Tus puzzles completados y tu progreso están guardados."
 	}
 }

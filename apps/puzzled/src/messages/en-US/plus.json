@@ -62,7 +62,8 @@
 		"cta": "See Tryit Plus",
 		"signIn": "Sign in",
 		"playFree": "Play {game} free",
-		"keep": "Everything you have already finished stays in your stats."
+		"keep": "Everything you have already finished stays in your stats.",
+		"backToToday": "Back to today’s games"
 	},
 	"offer": {
 		"resultTitle": "Play all {count} games and the archive",
@@ -133,5 +134,11 @@
 			"already_in_family": "You are already in another family plan. Leave it first.",
 			"family_owner": "This is your own family plan."
 		}
+	},
+	"checkoutOffer": {
+		"body": "All {count} games and the past 30 days. Choose a pass or a subscription to keep playing.",
+		"comparePlans": "Compare all plans",
+		"unavailableTitle": "Plans are unavailable right now",
+		"unavailableBody": "Please try again shortly. Your completed puzzles and progress are safe."
 	}
 }

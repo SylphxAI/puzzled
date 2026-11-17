@@ -1,10 +1,13 @@
 {
 	"metaTitle": "謎題典藏",
-	"metaDescription": "重玩 Tryit 典藏中過往的每日謎題。",
+	"metaDescription": "瀏覽過去 30 天全部 19 款謎題遊戲。用 Tryit Plus 解鎖過往題目。",
 	"eyebrow": "典藏",
-	"title": "典藏",
-	"body": "每個過往的每日謎題都還在這裡。選一天，再玩一次。",
-	"listBody": "最近 {count} 個遊戲日，最新在前。每一天都會開啟當日運行的謎題。",
+	"title": "你的過往題庫",
+	"body": "喜歡的遊戲，還有更多。瀏覽過去 30 天的全部遊戲，用 Plus 挑一道過往謎題慢慢玩。",
+	"listBody": "過去 {count} 個謎題日，每天全部 {games} 款遊戲，由近到遠排列。",
 	"playFreeToday": "玩今天的免費謎題（{game}）",
-	"playToday": "玩今天的儀式（{game}）"
+	"playToday": "玩今天的儀式（{game}）",
+	"listTitle": "過去 30 天・全部 19 款遊戲",
+	"locked": "Plus 解鎖",
+	"play": "開始玩"
 }

@@ -1,17 +1,18 @@
 {
 	"metaTitle": "Puzzle archive",
-	"metaDescription": "Replay past daily puzzles from the Tryit archive.",
+	"metaDescription": "Explore all 19 puzzle games from the past 30 days. Unlock past puzzles with Tryit Plus.",
 	"eyebrow": "Archive",
-	"title": "The archive",
-	"body": "Every past daily is still here. Pick a day and play it again.",
+	"title": "Your puzzle archive",
+	"body": "Browse every game from the past 30 days, then pick a puzzle to play with Plus.",
 	"playFreeToday": "Play today's free puzzle ({game})",
-	"listTitle": "Past days",
-	"listBody": "The last {count} puzzle days, newest first. Each one opens the puzzle that ran that day.",
+	"listTitle": "Past 30 days · all 19 games",
+	"listBody": "All {games} games from each of the past {count} puzzle days, newest first.",
 	"playDayLabel": "Play {game} from {date}",
 	"play": "Play",
 	"playToday": "Play today's ritual ({game})",
 	"backToGames": "Back to all games",
 	"emptyTitle": "The archive is still empty",
 	"emptyBody": "Every past daily lands here as the puzzle days roll over — today is the ritual. Play it and tomorrow’s set takes its place.",
-	"emptyPlay": "Play today’s ritual ({game})"
+	"emptyPlay": "Play today’s ritual ({game})",
+	"locked": "Plus to play"
 }

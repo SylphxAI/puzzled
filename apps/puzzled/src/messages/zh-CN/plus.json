@@ -62,7 +62,8 @@
 		"cta": "了解 Tryit Plus",
 		"signIn": "登录",
 		"playFree": "免费玩 {game}",
-		"keep": "你已完成的题目会一直保留在统计中。"
+		"keep": "你已完成的题目会一直保留在统计中。",
+		"backToToday": "返回今日游戏"
 	},
 	"offer": {
 		"resultTitle": "畅玩全部 {count} 款游戏和往日题库",
@@ -133,5 +134,11 @@
 			"already_in_family": "你已在另一个家庭方案中，请先退出。",
 			"family_owner": "这是你自己的家庭方案。"
 		}
+	},
+	"checkoutOffer": {
+		"body": "全部 {count} 款游戏，加上过去 30 天的题目。选择通行证或订阅，继续玩下去。",
+		"comparePlans": "比较所有方案",
+		"unavailableTitle": "暂时无法加载方案",
+		"unavailableBody": "请稍后重试。你已完成的题目和进度会保留。"
 	}
 }
