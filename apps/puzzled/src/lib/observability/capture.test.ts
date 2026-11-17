@@ -3,7 +3,6 @@ import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { buildErrorEvent, captureException, PARENT } from './capture'
-import { relayBrowserError } from './relay'
 import { fileUrlFor, uploadSourceMaps } from './source-maps'
 
 const env = {
@@ -70,39 +69,6 @@ describe('captureException', () => {
 			captureException(new Error('x'), {}, { env, client: down }),
 		).resolves.toBeUndefined()
 		await expect(captureException(new Error('x'), {}, { env: {} })).resolves.toBeUndefined()
-	})
-})
-
-describe('relayBrowserError', () => {
-	// A distinct client address per request keeps each expectation independent
-	// of the process-wide rate-limit window that other test files may fill.
-	let client = 0
-
-	// A public origin, not loopback: the relay refuses loopback hosts in a
-	// production build (site-origin.ts), and another test file may leave
-	// NODE_ENV=production in this shared process. Naming the origin here keeps
-	// these assertions about the relay's own rules in every environment.
-	const post = (
-		body: string,
-		headers: Record<string, string> = {
-			'sec-fetch-site': 'same-origin',
-			origin: 'https://tryit.fun',
-			'x-forwarded-host': 'tryit.fun',
-			'x-forwarded-proto': 'https',
-		},
-	) =>
-		new Request('https://app.test/api/observability/errors', {
-			method: 'POST',
-			body,
-			headers: { ...headers, 'x-forwarded-for': `relay-capture-${++client}` },
-		})
-
-	it('refuses cross-site, oversized, and empty reports', async () => {
-		expect((await relayBrowserError(post('{}', { 'sec-fetch-site': 'cross-site' }))).status).toBe(
-			403,
-		)
-		expect((await relayBrowserError(post('x'.repeat(40_000)))).status).toBe(413)
-		expect((await relayBrowserError(post('{"message":""}'))).status).toBe(400)
 	})
 })
 

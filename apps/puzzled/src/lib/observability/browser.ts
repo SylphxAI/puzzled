@@ -198,7 +198,9 @@ function install() {
 		if (code >= 100 && code <= 599) add({ kind: 'http', route: currentRoute(), status: code })
 	}
 	// Keep this relay itself out of both the network effect detector and crumbs.
-	window.fetch = (...args) => {
+	const browser: { fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> } =
+		window
+	browser.fetch = (...args) => {
 		effect()
 		return fetchFromPage(...args).then((response) => {
 			status(response.status)

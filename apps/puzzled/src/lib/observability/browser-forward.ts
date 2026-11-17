@@ -9,7 +9,7 @@ export async function forwardBrowserReport(
 	report: BrowserReport,
 	signal: AbortSignal,
 	options: {
-		env?: NodeJS.ProcessEnv
+		env?: Record<string, string | undefined>
 		fetch?: (url: URL, init: RequestInit) => Promise<Response>
 	} = {},
 ): Promise<void> {
