@@ -55,21 +55,21 @@ export async function AuthShell({ locale, children }: AuthShellProps) {
 
 					<div className="relative">
 						<Logo size="lg" tone="inverse" />
-						<h2 className="mt-10 max-w-md font-display text-3xl leading-tight text-balance xl:text-4xl">
+						<h2 className="mt-10 max-w-md font-display text-3xl leading-tight text-balance text-white xl:text-4xl">
 							{t('brandPanel.title')}
 						</h2>
-						<p className="mt-3 max-w-md text-sm leading-relaxed text-foreground/80">
+						<p className="mt-3 max-w-md text-sm leading-relaxed text-white/80">
 							{t('brandPanel.body')}
 						</p>
 
-						<div className="mt-8 max-w-md rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-							<p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
+						<div className="mt-8 max-w-md rounded-2xl border border-white/15 bg-white/[0.06] p-4 backdrop-blur">
+							<p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/75">
 								{t('brandPanel.proofLabel')}
 							</p>
-							<p className="mt-1.5 font-display text-lg">
+							<p className="mt-1.5 font-display text-lg text-white">
 								{t('brandPanel.proofGame', { game: freeGameName })}
 							</p>
-							<p className="mt-1 text-sm text-foreground/80">
+							<p className="mt-1 text-sm text-white/80">
 								{playersToday === null || playersToday <= MIN_PLAYERS_SHOWN
 									? t('brandPanel.proofNoCount')
 									: t('brandPanel.proofPlayers', {
@@ -78,17 +78,17 @@ export async function AuthShell({ locale, children }: AuthShellProps) {
 							</p>
 							<Link
 								href={`/games/${freeGameSlug}`}
-								className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/10 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--color-ink)]"
+								className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/12 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--color-ink)]"
 							>
 								{t('brandPanel.playFree')}
 								<ArrowRight className="h-4 w-4" aria-hidden="true" />
 							</Link>
 						</div>
 
-						<ul className="mt-8 max-w-md space-y-2 text-sm text-foreground/80">
+						<ul className="mt-8 max-w-md space-y-2 text-sm text-white/85">
 							{trustPoints.map((point) => (
 								<li key={point} className="flex items-start gap-2">
-									<Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+									<Check className="mt-0.5 h-4 w-4 shrink-0 text-[#6fcf8e]" aria-hidden="true" />
 									{point}
 								</li>
 							))}

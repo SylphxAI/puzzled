@@ -547,6 +547,7 @@ body {
 .surface-ink {
 	background-color: var(--color-ink);
 	color: var(--color-ink-foreground);
+	--color-success: #6fcf8e;
 }
 
 /* Hairline rule between editorial sections. */

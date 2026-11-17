@@ -25,12 +25,24 @@ import { buildPageMetadata } from '@/lib/seo/metadata'
 import { CheckoutReturnTracker } from './checkout-return-tracker'
 import { SubscriptionPanel } from './subscription-client'
 
+type SearchParamValue = string | string[] | undefined
+
 type Props = {
 	params: Promise<{ locale: string }>
-	searchParams: Promise<{ checkout?: string; s?: string; callbackUrl?: string }>
+	searchParams: Promise<{
+		checkout?: SearchParamValue
+		s?: SearchParamValue
+		session_id?: SearchParamValue
+		checkout_session_id?: SearchParamValue
+		callbackUrl?: SearchParamValue
+	}>
 }
 
 const VALID_CHECKOUT_SESSION_RE = /^[A-Za-z0-9_-]{1,128}$/
+
+function firstParam(value: SearchParamValue): string | undefined {
+	return Array.isArray(value) ? value[0] : value
+}
 
 function sanitizeCheckoutSessionId(raw: string | undefined): string | undefined {
 	if (!raw) return undefined
@@ -52,20 +64,27 @@ export async function generateMetadata({ params }: Props) {
 
 /**
  * Tryit Plus for the signed-in account, plus the post-payment claim handoff for
- * cold-guest checkouts returning from Stripe Checkout.
+ * cold-guest checkouts returning from Stripe Checkout (both cookie-backed and
+ * cross-browser verified-email match).
  */
 export default async function SubscriptionSettingsPage({ params, searchParams }: Props) {
 	const { locale } = await params
-	const { checkout, s: rawSession, callbackUrl: rawCallbackUrl } = await searchParams
+	const sp = await searchParams
 	setRequestLocale(locale)
-	const callbackUrl = safeCallbackPath(rawCallbackUrl) ?? undefined
-	const checkoutSession = sanitizeCheckoutSessionId(rawSession)
-	const fromCheckout = checkout === 'success'
+	const callbackUrl = safeCallbackPath(firstParam(sp.callbackUrl)) ?? undefined
+	const rawS = firstParam(sp.s)
+	const rawSessionId = firstParam(sp.session_id)
+	const rawCheckoutSessionId = firstParam(sp.checkout_session_id)
+	const checkoutSession = sanitizeCheckoutSessionId(rawS ?? rawSessionId ?? rawCheckoutSessionId)
+	const sessionParamName: 's' | 'session_id' = !rawS && rawSessionId ? 'session_id' : 's'
+	const fromCheckout = firstParam(sp.checkout) === 'success' || Boolean(checkoutSession)
 
 	const returnQuery = new URLSearchParams()
-	if (fromCheckout && checkoutSession) {
+	if (fromCheckout) {
 		returnQuery.set('checkout', 'success')
-		returnQuery.set('s', checkoutSession)
+	}
+	if (checkoutSession) {
+		returnQuery.set(sessionParamName, checkoutSession)
 	}
 	if (callbackUrl) {
 		returnQuery.set('callbackUrl', callbackUrl)
@@ -75,9 +94,15 @@ export default async function SubscriptionSettingsPage({ params, searchParams }:
 			? `/settings/subscription?${returnQuery.toString()}`
 			: '/settings/subscription'
 
-	const user = await withPresentationDeadline(currentUser(), null)
+	const [user, cookieStore, requestHeaders] = await Promise.all([
+		withPresentationDeadline(currentUser(), null),
+		cookies(),
+		headers(),
+	])
+	const hasClaimCookie = Boolean(cookieStore.get(CHECKOUT_CLAIM_COOKIE)?.value)
+
 	if (!user) {
-		if (fromCheckout && checkoutSession) {
+		if (fromCheckout || hasClaimCookie) {
 			const t = await getTranslations('plus.subscription')
 			return (
 				<section className="mx-auto max-w-lg">
@@ -109,14 +134,15 @@ export default async function SubscriptionSettingsPage({ params, searchParams }:
 		return null
 	}
 
-	const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()])
-	const hasClaimCookie = Boolean(cookieStore.get(CHECKOUT_CLAIM_COOKIE)?.value)
-
-	if (hasClaimCookie) {
+	// Run :claim BEFORE reading getServerSubscription (which is React.cache-memoized
+	// per request): handles both HttpOnly claim_secret cookies and cookie-less
+	// cross-browser returns carrying session_id / s via Money verified-email match.
+	if (hasClaimCookie || (fromCheckout && checkoutSession)) {
 		try {
 			await claimServerCheckout(fromCheckout && checkoutSession ? checkoutSession : '', locale)
 		} catch (error) {
-			logger.warn('plus.checkout-claim-cookie-failed', { error })
+			// A 409 on an already-bound authenticated checkout is expected.
+			logger.warn('plus.checkout-claim-skipped', { error })
 		}
 	}
 
@@ -125,19 +151,6 @@ export default async function SubscriptionSettingsPage({ params, searchParams }:
 		view = subscriptionView(await getServerSubscription(fromCheckout || hasClaimCookie))
 	} catch (error) {
 		logger.error('plus.subscription-page-read-failed', { error })
-	}
-
-	// Verified-email fallback when a guest checkout returns without its HttpOnly claim cookie.
-	if (!hasClaimCookie && fromCheckout && checkoutSession && !view?.entitled) {
-		try {
-			const claimed = await claimServerCheckout(checkoutSession, locale)
-			if (claimed) {
-				view = subscriptionView(await getServerSubscription(true))
-			}
-		} catch (error) {
-			// A 409 on an already-bound authenticated checkout whose webhook is still in flight is expected.
-			logger.warn('plus.checkout-claim-fallback-skipped', { error })
-		}
 	}
 
 	// A confirmed subscription coming back from Money checkout is a conversion.

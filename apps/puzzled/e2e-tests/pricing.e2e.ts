@@ -400,3 +400,103 @@ for (const viewport of CAPTURE_VIEWPORTS) {
 		})
 	}
 }
+test.describe('Post-payment verified-email handoff and auth brand panel contrast', () => {
+	test.use({ viewport: { width: 1440, height: 900 } })
+
+	test('preserves session_id across signed-out /settings/subscription -> /login -> /signup without claim cookie', async ({
+		page,
+	}) => {
+		await page.goto('/settings/subscription?checkout=success&session_id=cs_live_verify_probe', {
+			waitUntil: 'domcontentloaded',
+		})
+		await settle(page)
+
+		await expect(
+			page.getByRole('heading', { name: 'Payment received — link your Tryit Plus' }),
+		).toBeVisible()
+		const expectedCallback = encodeURIComponent(
+			'/settings/subscription?checkout=success&session_id=cs_live_verify_probe',
+		)
+		const createAccount = page.getByRole('link', { name: 'Create account to activate Plus' })
+		const signIn = page.getByRole('link', { name: 'Sign in to link subscription' })
+		await expect(createAccount).toHaveAttribute('href', `/signup?callbackUrl=${expectedCallback}`)
+		await expect(signIn).toHaveAttribute('href', `/login?callbackUrl=${expectedCallback}`)
+
+		await signIn.click()
+		await page.waitForURL(`**/login?callbackUrl=${expectedCallback}`)
+		await expect(page.getByRole('link', { name: 'Sign up' })).toHaveAttribute(
+			'href',
+			`/signup?callbackUrl=${expectedCallback}`,
+		)
+	})
+
+	for (const colorScheme of ['light', 'dark'] as const) {
+		test(`auth brand panel maintains WCAG AA contrast on dark ink surface in ${colorScheme} mode`, async ({
+			page,
+		}) => {
+			await page.emulateMedia({ colorScheme })
+			for (const authPath of ['/login', '/signup']) {
+				await page.goto(authPath, { waitUntil: 'domcontentloaded' })
+				await settle(page)
+				const panel = page.locator('aside.surface-ink')
+				await expect(panel).toBeVisible()
+
+				const report = await panel.evaluate((aside) => {
+					const parseRgba = (raw: string): [number, number, number, number] => {
+						const canvas = document.createElement('canvas')
+						canvas.width = 1
+						canvas.height = 1
+						const ctx = canvas.getContext('2d')
+						if (!ctx) return [0, 0, 0, 1]
+						ctx.clearRect(0, 0, 1, 1)
+						ctx.fillStyle = raw
+						ctx.fillRect(0, 0, 1, 1)
+						const d = ctx.getImageData(0, 0, 1, 1).data
+						return [d[0], d[1], d[2], d[3] / 255]
+					}
+					const composite = (
+						fg: [number, number, number, number],
+						bg: [number, number, number],
+					): [number, number, number] => [
+						fg[0] * fg[3] + bg[0] * (1 - fg[3]),
+						fg[1] * fg[3] + bg[1] * (1 - fg[3]),
+						fg[2] * fg[3] + bg[2] * (1 - fg[3]),
+					]
+					const luminance = ([r, g, b]: [number, number, number]) => {
+						const chan = (v: number) => {
+							const s = v / 255
+							return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+						}
+						return 0.2126 * chan(r) + 0.7152 * chan(g) + 0.0722 * chan(b)
+					}
+					const contrast = (a: [number, number, number], b: [number, number, number]) => {
+						const l1 = luminance(a)
+						const l2 = luminance(b)
+						return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)
+					}
+
+					const bgRgba = parseRgba(getComputedStyle(aside).backgroundColor)
+					const bg: [number, number, number] = [bgRgba[0], bgRgba[1], bgRgba[2]]
+					const textNodes = Array.from(aside.querySelectorAll('h2, p, li, a'))
+					const textMin = Math.min(
+						...textNodes.map((el) =>
+							contrast(composite(parseRgba(getComputedStyle(el).color), bg), bg),
+						),
+					)
+					const checks = Array.from(aside.querySelectorAll('ul svg'))
+					const checkMin = Math.min(
+						...checks.map((el) =>
+							contrast(composite(parseRgba(getComputedStyle(el).color), bg), bg),
+						),
+					)
+					return { textCount: textNodes.length, textMin, checkCount: checks.length, checkMin }
+				})
+
+				expect(report.textCount).toBeGreaterThanOrEqual(8)
+				expect(report.textMin).toBeGreaterThanOrEqual(7)
+				expect(report.checkCount).toBe(3)
+				expect(report.checkMin).toBeGreaterThanOrEqual(4.5)
+			}
+		})
+	}
+})
