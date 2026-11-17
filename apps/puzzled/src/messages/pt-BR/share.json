@@ -4,6 +4,9 @@
 	"share": "Compartilhar",
 	"copy": "Copiar",
 	"card": {
+		"groupsSolvedLabel": "Grupos resolvidos",
+		"groupsSolvedCount": "Grupos resolvidos: {total}/{total}",
+		"mistakeCount": "Erros: {mistakes}",
 		"title": "Cartão de resultado do Tryit",
 		"downloaded": "Imagem do cartão salva; legenda copiada para a área de transferência.",
 		"copied": "Legenda copiada para a área de transferência; este navegador não conseguiu gerar a imagem.",

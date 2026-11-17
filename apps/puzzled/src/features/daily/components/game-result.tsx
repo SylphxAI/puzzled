@@ -17,6 +17,7 @@ import {
 	type ResultCardTile,
 	resultCardStringsFrom,
 	resultCardTextAlternative,
+	wordGroupsWinSummary,
 } from '@/features/daily/lib/result-card'
 import { resolveModuleDisplayName } from '@/features/daily/lib/result-share'
 import { shareRitualResultCard } from '@/features/daily/lib/share-result-card'
@@ -125,6 +126,10 @@ export function GameResultCard({
 
 	// The same sentence the share fallback copies; also the card's accessible text.
 	const cardAltText = resultCardTextAlternative(buildCard(), cardStrings)
+	const groupsWin =
+		gameType === 'word-groups' && isWin
+			? wordGroupsWinSummary(cardStrings, stats.attempts, stats.mistakes)
+			: null
 
 	const handleShareCard = async () => {
 		if (cardBusy) return
@@ -182,6 +187,7 @@ export function GameResultCard({
 	// Build announcement message for screen readers
 	const getAnnouncementMessage = () => {
 		if (isWin) {
+			if (groupsWin) return groupsWin
 			if (stats.attempts !== undefined) {
 				return t('srWonWithAttempts', { attempts: stats.attempts })
 			}
@@ -219,6 +225,7 @@ export function GameResultCard({
 					<h3 className="font-display text-[1.75rem] leading-tight">
 						{isWin ? t('congratulations') : t('gameOver')}
 					</h3>
+					{groupsWin && <p className="mt-1 text-sm text-muted-foreground">{groupsWin}</p>}
 					{solution && !isWin && (
 						<p className="mt-1 text-sm text-muted-foreground">
 							{t('theWordWas', { word: solution.toUpperCase() })}
@@ -283,18 +290,20 @@ export function GameResultCard({
 
 				{/* Stats Grid */}
 				<div className="mb-6 flex divide-x divide-border rounded-2xl border border-border">
-					{/* Attempts (Wordle/Connections) */}
-					{stats.attempts !== undefined && stats.maxAttempts !== undefined && (
-						<StatBox
-							icon={<Target className="h-4 w-4" aria-hidden="true" />}
-							label={t('attempts')}
-							value={`${stats.attempts}/${stats.maxAttempts}`}
-							highlight={isWin && stats.attempts <= 2}
-						/>
-					)}
+					{/* Guess-budget games only; Threads has a group summary. */}
+					{gameType !== 'word-groups' &&
+						stats.attempts !== undefined &&
+						stats.maxAttempts !== undefined && (
+							<StatBox
+								icon={<Target className="h-4 w-4" aria-hidden="true" />}
+								label={t('attempts')}
+								value={`${stats.attempts}/${stats.maxAttempts}`}
+								highlight={isWin && stats.attempts <= 2}
+							/>
+						)}
 
 					{/* Mistakes (Connections) */}
-					{stats.mistakes !== undefined && (
+					{!groupsWin && stats.mistakes !== undefined && (
 						<StatBox
 							icon={<BarChart3 className="h-4 w-4" aria-hidden="true" />}
 							label={t('mistakes')}

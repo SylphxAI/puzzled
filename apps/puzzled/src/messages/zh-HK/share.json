@@ -4,6 +4,9 @@
 	"share": "分享",
 	"copy": "複製",
 	"card": {
+		"groupsSolvedLabel": "配對成功",
+		"groupsSolvedCount": "配對成功：{total}／{total} 組",
+		"mistakeCount": "答錯：{mistakes} 次",
 		"title": "Tryit 成績卡",
 		"downloaded": "成績卡已儲存，說明文字已複製到剪貼簿。",
 		"copied": "說明文字已複製；此瀏覽器未能產生圖片。",

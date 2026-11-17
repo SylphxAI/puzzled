@@ -16,6 +16,9 @@ const STRINGS: ResultCardStrings = {
 	statusWon: 'Solved!',
 	statusLost: 'Not this time',
 	attemptsLabel: 'Attempts',
+	groupsSolvedLabel: 'Groups solved',
+	groupsSolvedCount: 'Groups solved: {total}/{total}',
+	mistakeCount: 'Mistakes: {mistakes}',
 	scoreLabel: 'Score',
 	streakLabel: 'Streak',
 	timeLabel: 'Time',
@@ -157,6 +160,33 @@ describe('formatCardDayKey', () => {
 	test('formats the product day zone-stably', () => {
 		expect(formatCardDayKey('2026-09-21', 'en-US')).toBe('Sep 21, 2026')
 		expect(formatCardDayKey('2026-09-21', 'zh-HK')).toContain('2026')
+	})
+})
+
+describe('Threads wins', () => {
+	test.each([
+		[4, 0],
+		[5, 1],
+		[6, 2],
+	])('%i guesses show four completed groups and %i mistakes', (attempts, mistakes) => {
+		for (const stats of [{ attempts, mistakes }, { attempts }]) {
+			const model = buildResultCard(
+				baseInput({ gameSlug: 'word-groups', gameName: 'Threads', maxAttempts: 8, ...stats }),
+			)
+			expect(resultCardChips(model, STRINGS).slice(0, 2)).toEqual([
+				{ label: 'Groups solved', value: '4/4' },
+				{ label: 'Mistakes', value: String(mistakes) },
+			])
+			const text = resultCardTextAlternative(model, STRINGS)
+			expect(text).toContain(`Groups solved: 4/4, Mistakes: ${mistakes}`)
+			expect(text).not.toContain('of 8')
+		}
+	})
+
+	test('does not claim zero mistakes when a restored win has no guess count', () => {
+		const model = buildResultCard(baseInput({ gameSlug: 'word-groups', attempts: 0 }))
+		expect(resultCardTextAlternative(model, STRINGS)).toContain('Groups solved: 4/4')
+		expect(resultCardTextAlternative(model, STRINGS)).not.toContain('Mistakes:')
 	})
 })
 

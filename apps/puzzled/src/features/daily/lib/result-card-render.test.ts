@@ -13,6 +13,9 @@ const STRINGS: ResultCardStrings = {
 	statusWon: 'Solved!',
 	statusLost: 'Not this time',
 	attemptsLabel: 'Attempts',
+	groupsSolvedLabel: 'Groups solved',
+	groupsSolvedCount: 'Groups solved: {total}/{total}',
+	mistakeCount: 'Mistakes: {mistakes}',
 	scoreLabel: 'Score',
 	streakLabel: 'Streak',
 	timeLabel: 'Time',
@@ -263,19 +266,19 @@ describe('resultCardBlob', () => {
 describe('resultCardFileName', () => {
 	test('names files per module and day', () => {
 		expect(resultCardFileName(buildResultCard(baseInput()))).toBe(
-			'puzzled-result-word-guess-2026-09-21.png',
+			'tryit-result-word-guess-2026-09-21.png',
 		)
 	})
 
 	test('drops the day when the run has none', () => {
 		expect(resultCardFileName(buildResultCard(baseInput({ puzzleDate: null })))).toBe(
-			'puzzled-result-word-guess.png',
+			'tryit-result-word-guess.png',
 		)
 	})
 
 	test('sanitizes unexpected slug characters', () => {
 		expect(resultCardFileName(buildResultCard(baseInput({ gameSlug: 'Word Groups!?' })))).toBe(
-			'puzzled-result-word-groups-2026-09-21.png',
+			'tryit-result-word-groups-2026-09-21.png',
 		)
 	})
 })

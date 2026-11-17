@@ -8,7 +8,11 @@ import { AdSlot } from '@/features/ads/components/ad-slot'
 import { OwnProductCard } from '@/features/cross-promo/components/own-product-card'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useWarmShareId } from '@/features/daily/hooks/use-share-id'
-import { buildResultCard, resultCardStringsFrom } from '@/features/daily/lib/result-card'
+import {
+	buildResultCard,
+	resultCardStringsFrom,
+	wordGroupsWinSummary,
+} from '@/features/daily/lib/result-card'
 import { TrialEndsLine } from '@/features/plus/components/trial-ends-line'
 import { PlusResultCard } from '@/features/plus-offer/components/plus-result-card'
 import { seasonGreeting } from '@/features/seasons/lib/seasons'
@@ -93,7 +97,13 @@ export function AlreadyCompletedView({
 	}, [])
 
 	const isWin = session.status === 'won'
-	const celebrationMessage = isWin ? getCelebrationMessage(session.attempts) : null
+	const cardStrings = resultCardStringsFrom(
+		(key) => tShareCard.raw(key) as string,
+		seasonGreeting(tHome, puzzleDate),
+	)
+	const groupsWin =
+		gameSlug === 'word-groups' && isWin ? wordGroupsWinSummary(cardStrings, session.attempts) : null
+	const celebrationMessage = isWin && !groupsWin ? getCelebrationMessage(session.attempts) : null
 
 	// Get difficulty label for share text
 	const difficultyLabel = difficulty ? tDifficulty(difficulty) : null
@@ -107,7 +117,8 @@ export function AlreadyCompletedView({
 			// Wire day_key for landings; long locale date stays in UI above.
 			puzzleDate,
 			status: session.status,
-			attempts: session.attempts,
+			attempts: groupsWin ? undefined : session.attempts,
+			statLine: groupsWin ?? undefined,
 			difficultyLabel,
 			currentStreak,
 		})
@@ -159,6 +170,7 @@ export function AlreadyCompletedView({
 						? t('youSolvedTodays', { game: gameName })
 						: t('youTriedTodays', { game: gameName })}
 				</h2>
+				{groupsWin && <p className="mt-1 text-sm text-muted-foreground">{groupsWin}</p>}
 				<div className="mt-1 flex items-center justify-center gap-2 text-sm text-muted-foreground">
 					<span>{gameName}</span>
 					{difficulty && <DifficultyBadge difficulty={difficulty} />}
@@ -176,7 +188,7 @@ export function AlreadyCompletedView({
 				)}
 			>
 				<CardContent className="p-5">
-					<div className="grid grid-cols-2 gap-4">
+					<div className={cn('grid gap-4', groupsWin ? 'grid-cols-1' : 'grid-cols-2')}>
 						{/* Status */}
 						<div
 							className={cn(
@@ -204,14 +216,15 @@ export function AlreadyCompletedView({
 							</span>
 						</div>
 
-						{/* Attempts */}
-						<div className="flex flex-col items-center rounded-xl bg-muted/50 p-4">
-							<div className="mb-2 flex items-center gap-1.5 text-muted-foreground">
-								<Target className="h-4 w-4" />
-								<span className="text-xs font-medium">{tResult('attempts')}</span>
+						{!groupsWin && (
+							<div className="flex flex-col items-center rounded-xl bg-muted/50 p-4">
+								<div className="mb-2 flex items-center gap-1.5 text-muted-foreground">
+									<Target className="h-4 w-4" />
+									<span className="text-xs font-medium">{tResult('attempts')}</span>
+								</div>
+								<span className="text-xl font-bold tabular-nums">{session.attempts}</span>
 							</div>
-							<span className="text-xl font-bold tabular-nums">{session.attempts}</span>
-						</div>
+						)}
 					</div>
 
 					{/* Streak indicator (if streak > 0) */}
@@ -238,10 +251,7 @@ export function AlreadyCompletedView({
 					attempts: session.attempts > 0 ? session.attempts : null,
 					score: session.score,
 				})}
-				strings={resultCardStringsFrom(
-					(key) => tShareCard.raw(key) as string,
-					seasonGreeting(tHome, puzzleDate),
-				)}
+				strings={cardStrings}
 				gameName={gameName}
 			/>
 

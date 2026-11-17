@@ -4,6 +4,9 @@
 	"share": "シェア",
 	"copy": "コピー",
 	"card": {
+		"groupsSolvedLabel": "見つけたグループ",
+		"groupsSolvedCount": "見つけたグループ：{total}/{total}",
+		"mistakeCount": "ミス：{mistakes}回",
 		"title": "Tryit結果カード",
 		"downloaded": "カード画像を保存し、キャプションをクリップボードにコピーしました。",
 		"copied": "キャプションをクリップボードにコピーしました。このブラウザでは画像を作成できませんでした。",
