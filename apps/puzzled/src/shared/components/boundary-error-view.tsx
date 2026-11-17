@@ -4,7 +4,7 @@
  * The one view behind every route error boundary (TD-07).
  *
  * The five `error.tsx` files had all grown the same three things: report the
- * throw once through the plain reporter (`reportError` from
+ * throw once through the plain reporter (`reportBoundaryError` from
  * `lib/observability/browser`, never the monitoring hooks, whose context is
  * not guaranteed and would mask the original throw), render the alert badge + copy, and
  * offer the recovery actions. A behaviour fix meant five edits; this keeps it
@@ -19,12 +19,12 @@
 import { Button } from '@sylphx/ui'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { type ReactNode, useEffect, useRef } from 'react'
-import { reportError } from '@/lib/observability/browser'
+import { reportBoundaryError } from '@/lib/observability/browser'
+import type { Boundary } from '@/lib/observability/browser-report'
 
 export type BoundaryErrorViewProps = {
 	/** Boundary name in the error report, e.g. `auth` or `game-page`. */
-	boundary: string
-	error: Error & { digest?: string }
+	boundary: Boundary
 	reset: () => void
 	/** Already-resolved copy — wrappers keep their own translation keys. */
 	title: string
@@ -45,7 +45,6 @@ export type BoundaryErrorViewProps = {
 
 export function BoundaryErrorView({
 	boundary,
-	error,
 	reset,
 	title,
 	description,
@@ -61,8 +60,8 @@ export function BoundaryErrorView({
 	useEffect(() => {
 		if (reported.current) return
 		reported.current = true
-		reportError(error, { boundary, digest: error.digest })
-	}, [boundary, error])
+		reportBoundaryError(boundary)
+	}, [boundary])
 
 	return (
 		<div className={className}>

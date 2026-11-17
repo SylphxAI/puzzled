@@ -14,7 +14,6 @@ export default function ErrorPage({ error, reset }: Props) {
 	return (
 		<BoundaryErrorView
 			boundary="main-layout"
-			error={error}
 			reset={reset}
 			title={t('error')}
 			description={t('errorDescription')}

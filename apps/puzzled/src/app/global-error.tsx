@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { reportError } from '@/lib/observability/browser'
+import { reportBoundaryError } from '@/lib/observability/browser'
 
 type Props = {
 	error: Error & { digest?: string }
@@ -15,7 +15,7 @@ type Props = {
  * It cannot use provider hooks (the providers may not be mounted), so it
  * reports through the plain relay client to Sylphx Observability.
  */
-export default function GlobalError({ error, reset }: Props) {
+export default function GlobalError({ reset }: Props) {
 	const reported = useRef(false)
 
 	useEffect(() => {
@@ -23,8 +23,8 @@ export default function GlobalError({ error, reset }: Props) {
 		if (reported.current) return
 		reported.current = true
 
-		reportError(error, { boundary: 'global', digest: error.digest })
-	}, [error])
+		reportBoundaryError('global')
+	}, [])
 
 	return (
 		<html lang="en">

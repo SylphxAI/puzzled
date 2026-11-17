@@ -20,7 +20,6 @@ export default function LocaleError({ error, reset }: ErrorProps) {
 	return (
 		<BoundaryErrorView
 			boundary="locale"
-			error={error}
 			reset={reset}
 			title="Something went wrong"
 			description="We encountered an unexpected error. Please try again or return to the home page."

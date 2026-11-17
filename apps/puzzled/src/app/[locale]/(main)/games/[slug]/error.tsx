@@ -21,7 +21,6 @@ export default function GameError({ error, reset }: ErrorProps) {
 	return (
 		<BoundaryErrorView
 			boundary="game-page"
-			error={error}
 			reset={reset}
 			title={t('error')}
 			description="Something went wrong while loading the game. Please try again."
