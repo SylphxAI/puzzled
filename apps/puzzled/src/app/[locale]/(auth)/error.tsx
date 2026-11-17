@@ -18,13 +18,12 @@ interface ErrorProps {
 	reset: () => void
 }
 
-export default function AuthError({ error, reset }: ErrorProps) {
+export default function AuthError({ reset }: ErrorProps) {
 	const t = useTranslations('auth')
 
 	return (
 		<BoundaryErrorView
 			boundary="auth"
-			error={error}
 			reset={reset}
 			title={t('errorTitle')}
 			description={t('errorBody')}

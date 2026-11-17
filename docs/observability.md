@@ -1,6 +1,6 @@
 # Where errors go
 
-Puzzled sends server and browser errors to **Sylphx Observability**, our own
+Puzzled sends server errors to **Sylphx Observability**, our own
 error-monitoring service, through the Sylphx SDK on `api.sylphx.com`
 (`observability.errorGroups.capture`). There is no third-party error SDK,
 script or host.
@@ -8,7 +8,7 @@ script or host.
 | Source | Path | Code |
 | --- | --- | --- |
 | Next.js server (route handlers, server components, actions, proxy) | `onRequestError` in `apps/puzzled/src/instrumentation.ts` | `apps/puzzled/src/lib/observability/capture.ts` (`@sylphx/sdk`) |
-| Browser (uncaught errors, unhandled rejections, error boundaries, CSP violations: [csp.md](reference/csp.md)) | same-origin `POST /api/observability/errors`, captured server side | `lib/observability/browser.ts`, `lib/observability/relay.ts` |
+| Browser (uncaught errors, rejections, error boundaries, media failures, ineffective clicks and [CSP violations](reference/csp.md)) | same-origin `POST /api/observability/errors`; forwarding disabled | `lib/observability/browser.ts`, `lib/observability/relay.ts` |
 | Rust api (every 5xx, every panic) | axum middleware and panic hook | `crates/puzzled-server/src/observability.rs` (`sylphx` crate) |
 
 ## Key and SDK route
@@ -21,8 +21,22 @@ script or host.
 - Capture is a soft dependency: it never throws, gives up after 3 s, and never
   fails a request. A refused capture logs `[observability] capture failed`
   (web) or `observability capture failed` (api).
-- The browser holds no key, so it posts to the same-origin relay. Direct
-  browser capture waits on a publishable key with ingest (SylphxAI/cloud#9401).
+
+## Browser reports
+
+The browser sends only closed issue codes, a route template, a structural
+selector, and up to 15 recent navigation, click and HTTP-status breadcrumbs.
+It holds breadcrumbs in memory, sends them only with an issue, and attempts at
+most five reports per rolling minute. It sends no raw error messages, stacks,
+URLs, page content or user input. Both ends enforce a 32 KiB encoded body limit.
+
+The relay accepts only same-origin, schema-valid JSON. A 204 acknowledges
+validation, not delivery. **Upstream forwarding stays disabled**, even with a
+server key, until Hosting enforces 20 requests per minute per authenticated
+client IP on both the public domain and its managed alias. The
+[Hosting header contract](https://github.com/SylphxAI/cloud/blob/b0253af5fd45d19bc1709efda1d54d9b70602564/docs/services/hosting/request-headers.md#L30-L53)
+does not authenticate client addresses from forwarding headers. There is no
+browser key or cross-origin fallback.
 
 ## Source maps
 
@@ -36,7 +50,8 @@ script or host.
   names it (Turbopack names maps by their own hash), with each path segment
   percent-encoded as browsers report it (`app/%5Blocale%5D/…`). The runtime
   image therefore carries both `.next/static` and `.next/source-maps`.
-  The service maps minified browser frames to source at ingest.
+  The service can map minified frames at ingest, but browser reports do not
+  include stacks.
 
 ## Api reporter
 

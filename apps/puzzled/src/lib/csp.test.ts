@@ -2,7 +2,6 @@ import { describe, expect, test } from 'bun:test'
 import { NextRequest } from 'next/server'
 import { proxy } from '../proxy'
 import { buildCsp, createNonce, NONCE_HEADER } from './csp'
-import { cspViolationMessage } from './observability/browser'
 
 function directive(csp: string, name: string): string {
 	return csp.split('; ').find((part) => part.startsWith(`${name} `)) ?? ''
@@ -68,17 +67,5 @@ describe('content security policy', () => {
 	test('proxy-skipped paths get the policy too', async () => {
 		const response = await proxy(new NextRequest('https://tryit.fun/favicon.png'))
 		expect(response.headers.get('content-security-policy')).toContain("'strict-dynamic'")
-	})
-
-	test('violation reports group by directive and blocked origin', () => {
-		expect(
-			cspViolationMessage({
-				effectiveDirective: 'script-src-elem',
-				blockedURI: 'https://evil.example/x.js?token=1',
-			}),
-		).toBe('CSP script-src-elem blocked https://evil.example')
-		expect(
-			cspViolationMessage({ effectiveDirective: 'script-src-elem', blockedURI: 'inline' }),
-		).toBe('CSP script-src-elem blocked inline')
 	})
 })
