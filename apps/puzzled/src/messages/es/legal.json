@@ -28,7 +28,7 @@
 				"items": {
 					"account": "Información de la cuenta: nombre, dirección de correo electrónico y foto de perfil",
 					"game": "Datos de juego: puntuaciones, estadísticas, rachas e historial de partidas",
-					"payment": "Información de pago: Sylphx Money, el servicio de pagos de Sylphx Limited, y su procesador de pagos Stripe recopilan los datos de tu tarjeta; nosotros recibimos el estado de tu suscripción, los importes, las fechas y las referencias de pago",
+					"payment": "Información de pago: Sylphx Limited y su procesador de pagos Stripe recopilan los datos de tu tarjeta; nosotros recibimos el estado de tu suscripción, los importes, las fechas y las referencias de pago",
 					"technical": "Datos técnicos: dirección IP, tipo de navegador e información del dispositivo",
 					"errors": "Informes de errores: cuando una página o nuestro servidor falla, registramos el mensaje de error, la traza de pila y la ruta de la página (nunca la cadena de consulta, las direcciones de correo electrónico ni nada de lo que hayas escrito) en nuestro propio servicio de supervisión de errores, para localizar y corregir el fallo",
 					"referral": "Etiquetas de referencia y de anuncios: si llegas mediante un enlace con etiquetas de campaña (parámetros utm_ o un identificador de referencia, por ejemplo desde otro producto de Sylphx) y has aceptado las cookies de analítica, conservamos esas etiquetas durante 30 días en una cookie propia y las guardamos junto con tu cuenta si te registras. Si llegas desde un anuncio de Google y has activado las cookies de publicidad, conservamos el identificador de clic del anuncio durante 90 días en la misma cookie y lo pasamos únicamente al registro de pago de una suscripción que inicies, no a tu cuenta. Las usamos para saber qué enlace o anuncio te ha traído y no las vendemos. Si aceptas el análisis, también vinculamos las visitas a un resultado compartido con tu identificador de jugador invitado o de cuenta durante un máximo de 41 días de producto, para medir si completas tu primer rompecabezas diario. Al eliminar tu cuenta se borran estos registros vinculados; los informes agregados no contienen identificadores de jugadores."
@@ -48,12 +48,12 @@
 			},
 			"payments": {
 				"title": "Pagos",
-				"content": "Cuando te suscribes, Sylphx Money (operado por Sylphx Limited) y su procesador de pagos Stripe procesan tu pago; nunca recibimos el número completo de tu tarjeta. Registramos que, al suscribirte, solicitaste que el acceso comenzara de inmediato. Sylphx Money conserva un registro de tu suscripción, pagos y reembolsos (importes, fechas y referencias de pago) durante el tiempo que exijan las leyes fiscales y contables. Si eliminas tu cuenta, estos registros se conservan sin tu ID de jugador."
+				"content": "Cuando te suscribes, Sylphx Limited y su procesador de pagos Stripe procesan tu pago; nunca recibimos el número completo de tu tarjeta. Registramos que, al suscribirte, solicitaste que el acceso comenzara de inmediato. Sylphx Limited conserva un registro de tu suscripción, pagos y reembolsos (importes, fechas y referencias de pago) durante el tiempo que exijan las leyes fiscales y contables. Si eliminas tu cuenta, estos registros se conservan sin tu ID de jugador."
 			},
 			"thirdParty": {
 				"title": "Con quién compartimos datos",
 				"content": "Compartimos datos personales con proveedores de servicios que los tratan por encargo nuestro en virtud de un contrato, entre ellos:",
-				"money": "Procesamiento de pagos y suscripciones",
+
 				"stripe": "Procesamiento de pagos",
 				"google": "Autenticación",
 				"mail": "Envío de correo electrónico (correos de inicio de sesión y de verificación)",
@@ -158,7 +158,7 @@
 				"title": "Suscripciones a Tryit Plus",
 				"content": "El puzle destacado de hoy es gratuito. Tryit Plus es una suscripción de pago opcional que abre todos los juegos, el archivo de días anteriores y las estadísticas de cada juego.",
 				"items": {
-					"billing": "Los precios se muestran antes de que pagues e incluyen el IVA cuando corresponda. Sylphx Money cobra el pago cuando te suscribes y al comienzo de cada período mensual o anual.",
+					"billing": "Los precios se muestran antes de que pagues e incluyen el IVA cuando corresponda. Sylphx Limited cobra el pago cuando te suscribes y al comienzo de cada período mensual o anual.",
 					"renewal": "Tu suscripción se renueva automáticamente hasta que la canceles. Puedes cancelarla en cualquier momento en Ajustes > Suscripción; conservas el acceso hasta el final del período que has pagado y no se te vuelve a cobrar.",
 					"cancellation": "Desistimiento legal (Reg. 36 frente a Reg. 37): Para cualquier compra puntual de contenido digital inmediato (cuando sea aplicable la Reg. 37 del Reglamento de Contratos de Consumo del Reino Unido de 2013), das tu consentimiento previo expreso para que el suministro comience de inmediato y reconoces que pierdes tu derecho legal de desistimiento de 14 días una vez iniciado el suministro, lo cual confirmamos en un soporte duradero. Para las suscripciones periódicas continuas a Tryit Plus (cuando sea aplicable la Reg. 36), solicitar el acceso inmediato no implica la renuncia automática a todo tu derecho legal de desistimiento de 14 días: si cancelas dentro de los 14 días (cuando no se aplique una exención válida conforme a la Reg. 37), podemos deducir únicamente un importe proporcional al servicio prestado antes de que nos notificaras la cancelación y reembolsar el saldo restante. También puedes detener las renovaciones en cualquier momento en Ajustes > Suscripción y conservar el acceso hasta el final del período que hayas pagado.",
 					"refund": "Salvo cuando estos términos o la ley dispongan otra cosa (incluidos los reembolsos proporcionales en cancelaciones válidas de 14 días conforme a la Reg. 36), los pagos no son reembolsables y no reembolsamos los períodos parcialmente usados. Si el contenido digital o el servicio que entregamos es defectuoso, lo corregimos o te ofrecemos tu recurso legal. Si vives en Brasil, puedes desistir en un plazo de 7 días desde la suscripción y recibir el reembolso íntegro de lo pagado (Código de Defensa del Consumidor de Brasil, Ley 8.078/1990, art. 49).",

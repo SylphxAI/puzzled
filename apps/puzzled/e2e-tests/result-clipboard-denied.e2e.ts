@@ -56,7 +56,9 @@ test('a saved result image never claims its caption copied after a clipboard den
 	).toBe('denied')
 	const download = page.waitForEvent('download')
 	await dialog.getByRole('button', { name: 'Share', exact: true }).click()
-	await download
+	expect((await download).suggestedFilename()).toMatch(
+		/^tryit-result-sudoku-\d{4}-\d{2}-\d{2}\.png$/,
+	)
 	await expect(dialog.getByText('Card image saved.', { exact: true })).toBeVisible()
 	await expect(dialog.getByText(/caption copied to the clipboard/i)).toHaveCount(0)
 	await expect(dialog.getByRole('alert')).toHaveText(

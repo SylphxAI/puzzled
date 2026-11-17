@@ -312,12 +312,12 @@ export async function resultCardBlob(
 	})
 }
 
-/** Download/attachment name: puzzled-result-<slug>[-<day>].png */
+/** Download/attachment name: tryit-result-<slug>[-<day>].png */
 export function resultCardFileName(model: ResultCardModel): string {
 	const slug =
 		model.gameSlug
 			.toLowerCase()
 			.replace(/[^a-z0-9]+/g, '-')
 			.replace(/^-+|-+$/g, '') || 'puzzled'
-	return model.dayKey ? `puzzled-result-${slug}-${model.dayKey}.png` : `puzzled-result-${slug}.png`
+	return model.dayKey ? `tryit-result-${slug}-${model.dayKey}.png` : `tryit-result-${slug}.png`
 }

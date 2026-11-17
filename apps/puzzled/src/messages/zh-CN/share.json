@@ -4,6 +4,9 @@
 	"share": "分享",
 	"copy": "复制",
 	"card": {
+		"groupsSolvedLabel": "已找到的分组",
+		"groupsSolvedCount": "已找到的分组：{total}/{total} 组",
+		"mistakeCount": "错误：{mistakes} 次",
 		"title": "Tryit 成绩卡",
 		"downloaded": "成绩卡已保存，说明文字已复制到剪贴板。",
 		"copied": "说明文字已复制；此浏览器无法生成图片。",

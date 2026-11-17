@@ -28,7 +28,7 @@
 				"items": {
 					"account": "Account information: name, email address, and profile picture",
 					"game": "Game data: scores, statistics, streaks, and game history",
-					"payment": "Payment information: Sylphx Money, the payments service of Sylphx Limited, and its payment processor Stripe collect your card details; we receive your subscription status, amounts, dates and payment references",
+					"payment": "Payment information: Sylphx Limited and its payment processor Stripe collect your card details; we receive your subscription status, amounts, dates and payment references",
 					"technical": "Technical data: IP address, browser type, and device information",
 					"errors": "Error reports: when a page or our server fails, we record the error message, stack trace and page path (never the query string, email addresses or anything you typed) in our own error-monitoring service, to find and fix the fault",
 					"referral": "Referral and ad tags: if you arrive through a link that carries campaign tags (utm_ parameters or a referral id, for example from another Sylphx product), and you have accepted analytics cookies, we keep those tags for 30 days in a first-party cookie and store them with your account if you sign up. If you arrive from a Google ad and have turned on advertising cookies, we keep the ad click id for 90 days in the same cookie and pass it only to the payment record of a subscription you start, not to your account. We use them to know which link or ad brought you, and we do not sell them. With analytics consent, we also link a visit to a shared result to your guest or account player ID for up to 41 product days to measure whether you finish your first daily puzzle. Deleting your account erases these linked receipts; aggregate reports contain no player IDs."
@@ -48,12 +48,12 @@
 			},
 			"payments": {
 				"title": "Payments",
-				"content": "When you subscribe, Sylphx Money (operated by Sylphx Limited) and its payment processor Stripe process your payment; we never receive your full card number. We record that you asked for access to start at once when you subscribed. Sylphx Money keeps a record of your subscription, payments and refunds (amounts, dates and payment references) for as long as tax and accounting law requires. If you delete your account, these records are kept without your player ID."
+				"content": "When you subscribe, Sylphx Limited and its payment processor Stripe process your payment; we never receive your full card number. We record that you asked for access to start at once when you subscribed. Sylphx Limited keeps a record of your subscription, payments and refunds (amounts, dates and payment references) for as long as tax and accounting law requires. If you delete your account, these records are kept without your player ID."
 			},
 			"thirdParty": {
 				"title": "Who we share data with",
 				"content": "We share personal data with service providers that process it for us under contract, including:",
-				"money": "Payment processing and subscriptions",
+
 				"stripe": "Payment processing",
 				"google": "Authentication",
 				"mail": "Email delivery (sign-in and verification mail)",
@@ -158,7 +158,7 @@
 				"title": "Tryit Plus subscriptions",
 				"content": "Today's featured puzzle is free. Tryit Plus is an optional paid subscription that opens every game, the archive of past days, and stats for every game.",
 				"items": {
-					"billing": "Prices are shown before you pay and include VAT where it applies. Sylphx Money takes payment when you subscribe and at the start of each monthly or yearly period.",
+					"billing": "Prices are shown before you pay and include VAT where it applies. Sylphx Limited takes payment when you subscribe and at the start of each monthly or yearly period.",
 					"renewal": "Your subscription renews automatically until you cancel. You can cancel at any time in Settings > Subscription; you keep access until the end of the period you have paid for and are not charged again.",
 					"cancellation": "Statutory cancellation (Reg 36 vs Reg 37): For any one-off immediate digital content purchase (where UK Consumer Contracts Regulations 2013 Reg 37 applies), you give express prior consent for supply to start immediately and acknowledge that you lose your 14-day cancellation right once supply begins, which we confirm on a durable medium. For ongoing recurring Tryit Plus subscriptions (where Reg 36 applies), requesting immediate access does not automatically waive your entire 14-day cancellation right: if you cancel within 14 days (where no valid Reg 37 waiver applies), we may deduct only an amount proportionate to the service supplied before you notified us of cancellation and refund any remaining balance. You can also stop renewals at any time in Settings > Subscription and keep access until the end of the period you have paid for.",
 					"refund": "Except where these terms or the law say otherwise (including proportionate refunds on valid 14-day Reg 36 cancellations), payments are non-refundable and we do not refund part-used periods. If digital content or a service we delivered is faulty, we put it right or provide your statutory remedy. If you live in Brazil, you may withdraw within 7 days of subscribing and receive a full refund of what you paid (Brazilian Consumer Defence Code, Law 8.078/1990, article 49).",

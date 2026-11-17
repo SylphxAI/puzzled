@@ -28,7 +28,7 @@
 				"items": {
 					"account": "Informações da conta: nome, endereço de e-mail e foto de perfil",
 					"game": "Dados de jogo: pontuações, estatísticas, sequências e histórico de jogos",
-					"payment": "Informações de pagamento: a Sylphx Money, o serviço de pagamentos da Sylphx Limited, e seu processador de pagamentos, a Stripe, coletam os dados do seu cartão; nós recebemos o status da sua assinatura, os valores, as datas e as referências de pagamento",
+					"payment": "Informações de pagamento: a Sylphx Limited e seu processador de pagamentos, a Stripe, coletam os dados do seu cartão; nós recebemos o status da sua assinatura, os valores, as datas e as referências de pagamento",
 					"technical": "Dados técnicos: endereço IP, tipo de navegador e informações do dispositivo",
 					"errors": "Relatórios de erro: quando uma página ou o nosso servidor falha, registramos a mensagem de erro, o stack trace e o caminho da página (nunca a query string, endereços de e-mail ou qualquer coisa que você tenha digitado) em nosso próprio serviço de monitoramento de erros, para encontrar e corrigir a falha",
 					"referral": "Tags de indicação e de anúncios: se você chegar por um link com tags de campanha (parâmetros utm_ ou um ID de indicação, por exemplo vindo de outro produto da Sylphx) e tiver aceitado os cookies de análise, guardamos essas tags por 30 dias em um cookie próprio e as armazenamos junto com a sua conta se você se cadastrar. Se você chegar por um anúncio do Google e tiver ativado os cookies de publicidade, guardamos o ID de clique do anúncio por 90 dias no mesmo cookie e o repassamos apenas ao registro de pagamento de uma assinatura que você iniciar, não à sua conta. Usamos essas informações para saber qual link ou anúncio trouxe você, e não as vendemos. Com seu consentimento para análise, também vinculamos a visita a um resultado compartilhado ao seu identificador de jogador visitante ou de conta por até 41 dias do produto, para medir se você conclui seu primeiro quebra-cabeça diário. Excluir sua conta apaga esses registros vinculados; os relatórios agregados não contêm identificadores de jogadores."
@@ -48,12 +48,12 @@
 			},
 			"payments": {
 				"title": "Pagamentos",
-				"content": "Quando você assina, a Sylphx Money (operada pela Sylphx Limited) e seu processador de pagamentos, a Stripe, processam o seu pagamento; nunca recebemos o número completo do seu cartão. Registramos que você pediu para o acesso começar imediatamente quando assinou. A Sylphx Money mantém um registro da sua assinatura, dos pagamentos e dos reembolsos (valores, datas e referências de pagamento) pelo tempo que a legislação fiscal e contábil exigir. Se você excluir sua conta, esses registros são mantidos sem o seu ID de jogador."
+				"content": "Quando você assina, a Sylphx Limited e seu processador de pagamentos, a Stripe, processam o seu pagamento; nunca recebemos o número completo do seu cartão. Registramos que você pediu para o acesso começar imediatamente quando assinou. A Sylphx Limited mantém um registro da sua assinatura, dos pagamentos e dos reembolsos (valores, datas e referências de pagamento) pelo tempo que a legislação fiscal e contábil exigir. Se você excluir sua conta, esses registros são mantidos sem o seu ID de jogador."
 			},
 			"thirdParty": {
 				"title": "Com quem compartilhamos dados",
 				"content": "Compartilhamos dados pessoais com prestadores de serviços que os processam para nós sob contrato, incluindo:",
-				"money": "Processamento de pagamentos e assinaturas",
+
 				"stripe": "Processamento de pagamentos",
 				"google": "Autenticação",
 				"mail": "Envio de e-mails (e-mails de login e verificação)",
@@ -158,7 +158,7 @@
 				"title": "Assinaturas do Tryit Plus",
 				"content": "O desafio em destaque de hoje é grátis. O Tryit Plus é uma assinatura paga opcional que libera todos os jogos, o arquivo dos dias anteriores e as estatísticas de cada jogo.",
 				"items": {
-					"billing": "Os preços são exibidos antes do pagamento e incluem o VAT quando aplicável. A Sylphx Money cobra quando você assina e no início de cada período mensal ou anual.",
+					"billing": "Os preços são exibidos antes do pagamento e incluem o VAT quando aplicável. A Sylphx Limited cobra quando você assina e no início de cada período mensal ou anual.",
 					"renewal": "Sua assinatura é renovada automaticamente até você cancelar. Você pode cancelar a qualquer momento em Configurações > Assinatura; o acesso continua até o fim do período que você pagou e você não é cobrado de novo.",
 					"cancellation": "Cancelamento legal (Reg. 36 vs Reg. 37): Para qualquer compra avulsa de conteúdo digital imediato (quando aplicável a Reg. 37 do UK Consumer Contracts Regulations 2013), você dá consentimento prévio expresso para que o fornecimento comece imediatamente e reconhece que perde o seu direito legal de cancelamento de 14 dias assim que o fornecimento começar, o que confirmamos em suporte durável. Para assinaturas recorrentes contínuas do Tryit Plus (quando aplicável a Reg. 36), solicitar acesso imediato não renuncia automaticamente a todo o seu direito legal de cancelamento de 14 dias: se você cancelar em até 14 dias (quando não se aplicar uma renúncia válida nos termos da Reg. 37), poderemos deduzir apenas um valor proporcional ao serviço fornecido antes de você nos notificar sobre o cancelamento e reembolsar qualquer saldo restante. Você também pode interromper as renovações a qualquer momento em Configurações > Assinatura e manter o acesso até o fim do período pago.",
 					"refund": "Salvo quando estes termos ou a lei disserem o contrário (incluindo reembolsos proporcionais em cancelamentos válidos de 14 dias nos termos da Reg. 36), os pagamentos não são reembolsáveis e não reembolsamos períodos usados em parte. Se um conteúdo digital ou serviço que entregamos apresentar defeito, corrigimos ou fornecemos o seu direito legal. Se você mora no Brasil, pode desistir em até 7 dias após a assinatura e receber o reembolso integral do valor pago (Código de Defesa do Consumidor, Lei 8.078/1990, art. 49).",

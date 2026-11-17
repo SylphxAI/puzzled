@@ -17,6 +17,7 @@
 
 import { seasonForDayKey } from '@/features/seasons/lib/seasons'
 import type { GameColorTheme } from '@/games/theme-colors'
+import { MAX_MISTAKES, TOTAL_CATEGORIES } from '@/games/word-groups/types'
 import { isValidDayKey } from '@/lib/product-day'
 import { ritualShareDeepLink } from './share-text'
 
@@ -98,6 +99,9 @@ export interface ResultCardStrings {
 	streakLabel: string
 	timeLabel: string
 	mistakesLabel: string
+	groupsSolvedLabel: string
+	groupsSolvedCount: string
+	mistakeCount: string
 	timeUnder1m: string
 	timeUnder5m: string
 	timeOver5m: string
@@ -134,6 +138,9 @@ export function resultCardStringsFrom(
 		streakLabel: t('streakLabel'),
 		timeLabel: t('timeLabel'),
 		mistakesLabel: t('mistakesLabel'),
+		groupsSolvedLabel: t('groupsSolvedLabel'),
+		groupsSolvedCount: t('groupsSolvedCount'),
+		mistakeCount: t('mistakeCount'),
 		timeUnder1m: t('timeUnder1m'),
 		timeUnder5m: t('timeUnder5m'),
 		timeOver5m: t('timeOver5m'),
@@ -255,13 +262,49 @@ export function resultCardTimeBandText(
 	return null
 }
 
+// Every win has four correct submissions. Restored results carry the guess
+// count but may not carry mistakes. Omit the count on older or invalid records.
+function wordGroupsWinMistakes(attempts?: number | null, mistakes?: number | null): number | null {
+	const count = mistakes ?? (attempts == null ? null : attempts - TOTAL_CATEGORIES)
+	return count != null && Number.isInteger(count) && count >= 0 && count < MAX_MISTAKES
+		? count
+		: null
+}
+
+export function wordGroupsWinSummary(
+	strings: ResultCardStrings,
+	attempts?: number | null,
+	mistakes?: number | null,
+): string {
+	return wordGroupsWinDetails(strings, attempts, mistakes).join(strings.detailSeparator)
+}
+
+function wordGroupsWinDetails(
+	strings: ResultCardStrings,
+	attempts?: number | null,
+	mistakes?: number | null,
+): string[] {
+	const parts = [fillCardTemplate(strings.groupsSolvedCount, { total: TOTAL_CATEGORIES })]
+	const count = wordGroupsWinMistakes(attempts, mistakes)
+	if (count != null) parts.push(fillCardTemplate(strings.mistakeCount, { mistakes: count }))
+	return parts
+}
+
 /** Up to four glanceable chips; order is fixed so cards compare at a glance. */
 export function resultCardChips(
 	model: ResultCardModel,
 	strings: ResultCardStrings,
 ): ResultCardChip[] {
 	const chips: ResultCardChip[] = []
-	if (model.attempts != null) {
+	const groups = model.gameSlug === 'word-groups'
+	if (groups && model.status === 'won') {
+		chips.push({
+			label: strings.groupsSolvedLabel,
+			value: `${TOTAL_CATEGORIES}/${TOTAL_CATEGORIES}`,
+		})
+		const count = wordGroupsWinMistakes(model.attempts, model.mistakes)
+		if (count != null) chips.push({ label: strings.mistakesLabel, value: String(count) })
+	} else if (!groups && model.attempts != null) {
 		chips.push({
 			label: strings.attemptsLabel,
 			value:
@@ -273,7 +316,7 @@ export function resultCardChips(
 					: String(model.attempts),
 		})
 	}
-	if (model.score != null) {
+	if (!groups && model.score != null) {
 		chips.push({ label: strings.scoreLabel, value: String(model.score) })
 	}
 	if (model.currentStreak != null) {
@@ -284,7 +327,7 @@ export function resultCardChips(
 	if (band && chips.length < 4) {
 		chips.push({ label: strings.timeLabel, value: band })
 	}
-	if (model.mistakes != null && chips.length < 4) {
+	if (model.mistakes != null && chips.length < 4 && !(groups && model.status === 'won')) {
 		chips.push({ label: strings.mistakesLabel, value: String(model.mistakes) })
 	}
 	return chips
@@ -300,7 +343,10 @@ export function resultCardTextAlternative(
 	strings: ResultCardStrings,
 ): string {
 	const parts: string[] = []
-	if (model.attempts != null) {
+	const groups = model.gameSlug === 'word-groups'
+	if (groups && model.status === 'won') {
+		parts.push(...wordGroupsWinDetails(strings, model.attempts, model.mistakes))
+	} else if (!groups && model.attempts != null) {
 		parts.push(
 			model.maxAttempts != null
 				? fillCardTemplate(strings.attemptsOf, {
@@ -310,7 +356,7 @@ export function resultCardTextAlternative(
 				: fillCardTemplate(strings.attemptsCount, { attempts: model.attempts }),
 		)
 	}
-	if (model.score != null) {
+	if (!groups && model.score != null) {
 		parts.push(fillCardTemplate(strings.scorePoints, { score: model.score }))
 	}
 	const band = resultCardTimeBandText(model, strings)

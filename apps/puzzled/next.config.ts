@@ -9,6 +9,7 @@ const tracingRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '../
 
 const nextConfig: NextConfig = {
 	output: 'standalone',
+	poweredByHeader: false,
 	// Production browser bytes have durable, public custody outside each image.
 	assetPrefix: process.env.NEXT_PUBLIC_PUZZLED_ASSET_PREFIX || undefined,
 	crossOrigin: 'anonymous',

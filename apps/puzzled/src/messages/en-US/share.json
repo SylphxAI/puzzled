@@ -4,6 +4,9 @@
 	"share": "Share",
 	"copy": "Copy",
 	"card": {
+		"groupsSolvedLabel": "Groups solved",
+		"groupsSolvedCount": "Groups solved: {total}/{total}",
+		"mistakeCount": "Mistakes: {mistakes}",
 		"title": "Tryit result card",
 		"downloaded": "Card image saved; caption copied to the clipboard.",
 		"copied": "Caption copied to the clipboard; this browser could not build the image.",

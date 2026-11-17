@@ -10,6 +10,9 @@ const STRINGS: ResultCardStrings = {
 	statusWon: 'Solved!',
 	statusLost: 'Not this time',
 	attemptsLabel: 'Attempts',
+	groupsSolvedLabel: 'Groups solved',
+	groupsSolvedCount: 'Groups solved: {total}/{total}',
+	mistakeCount: 'Mistakes: {mistakes}',
 	scoreLabel: 'Score',
 	streakLabel: 'Streak',
 	timeLabel: 'Time',
@@ -121,7 +124,7 @@ describe('shareResultCard', () => {
 		const result = await shareResultCard(
 			{
 				blob: BLOB,
-				fileName: 'puzzled-result-word-guess-2026-09-21.png',
+				fileName: 'tryit-result-word-guess-2026-09-21.png',
 				text: 'caption',
 				title: 'T',
 			},
@@ -131,7 +134,7 @@ describe('shareResultCard', () => {
 		expect(calls.canShare).toBe(1)
 		expect(calls.share.length).toBe(1)
 		const files = calls.share[0]?.files as unknown as Array<{ name?: string; type?: string }>
-		expect(files?.[0]?.name).toBe('puzzled-result-word-guess-2026-09-21.png')
+		expect(files?.[0]?.name).toBe('tryit-result-word-guess-2026-09-21.png')
 		expect(files?.[0]?.type).toBe('image/png')
 		expect(calls.share[0]?.text).toBe('caption')
 		expect(calls.writeText.length).toBe(0)
@@ -165,7 +168,7 @@ describe('shareResultCard', () => {
 		const result = await shareResultCard(
 			{
 				blob: BLOB,
-				fileName: 'puzzled-result-word-guess-2026-09-21.png',
+				fileName: 'tryit-result-word-guess-2026-09-21.png',
 				text: 'caption',
 				title: 'T',
 			},
@@ -174,7 +177,7 @@ describe('shareResultCard', () => {
 		expect(result).toEqual({ outcome: 'downloaded', captionCopied: true })
 		expect(calls.share.length).toBe(0)
 		expect(clicks).toEqual([
-			{ href: 'blob:fake-1', download: 'puzzled-result-word-guess-2026-09-21.png' },
+			{ href: 'blob:fake-1', download: 'tryit-result-word-guess-2026-09-21.png' },
 		])
 		expect(url.created.length).toBe(1)
 		expect(url.revoked).toEqual(['blob:fake-1'])
@@ -276,7 +279,7 @@ describe('shareRitualResultCard', () => {
 			'https://tryit.fun/games/word-guess?mode=archive&date=2026-09-21&utm_source=share',
 		])
 		const files = calls.share[0]?.files as unknown as Array<{ name?: string }>
-		expect(files?.[0]?.name).toBe('puzzled-result-word-guess-2026-09-21.png')
+		expect(files?.[0]?.name).toBe('tryit-result-word-guess-2026-09-21.png')
 		expect(calls.share[0]?.text).toBe('existing text share')
 	})
 
