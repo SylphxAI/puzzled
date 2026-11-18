@@ -16,16 +16,28 @@ fn pick_ephemeral_port() -> u16 {
     }
 }
 
-fn spawn_api(port: u16) -> Child {
+struct RunningApi(Child);
+
+impl Drop for RunningApi {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+
+fn spawn_api(port: u16) -> RunningApi {
     let bin = env!("CARGO_BIN_EXE_puzzled-server");
     match Command::new(bin)
         .env("PUZZLED_HTTP_PORT", port.to_string())
         .env("RUST_LOG", "error")
+        .env_remove("DATABASE_URL")
+        .env_remove("POSTGRES_URL")
+        .env("GIT_COMMIT_SHA", "0123456789abcdef0123456789abcdef01234567")
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
     {
-        Ok(child) => child,
+        Ok(child) => RunningApi(child),
         Err(error) => panic!("spawn puzzled-server: {error}"),
     }
 }
@@ -56,37 +68,38 @@ fn wait_for_ok(port: u16, path: &str) -> reqwest::blocking::Response {
     panic!("GET {path} failed after retries: {last_error}");
 }
 
-#[test]
-fn healthz_returns_ok_json() {
-    let port = pick_ephemeral_port();
-    let mut child = spawn_api(port);
-    let response = wait_for_ok(port, "/healthz");
-    assert_eq!(response.status(), 200);
-    let body: serde_json::Value = match response.json() {
-        Ok(body) => body,
-        Err(error) => panic!("response json: {error}"),
-    };
-    assert_eq!(body["status"], "ok");
-    let _ = child.kill();
-    let _ = child.wait();
+fn assert_headers(response: &reqwest::blocking::Response, status: u16) {
+    assert_eq!(response.status(), status);
+    assert_eq!(response.headers()["cache-control"], "no-store");
+    assert_eq!(response.headers()["content-type"], "application/json");
+    assert!(!response.headers().contains_key("x-revision-sha"));
 }
 
 #[test]
-fn readyz_fails_closed_without_postgres() {
-    // Without DATABASE_URL / pool, readiness must fail closed (503), not fake green.
+fn public_probes_return_only_uncacheable_status() {
     let port = pick_ephemeral_port();
-    let mut child = spawn_api(port);
-    let response = wait_for_ok(port, "/readyz");
-    assert_eq!(response.status(), 503);
-    let body: serde_json::Value = match response.json() {
-        Ok(body) => body,
-        Err(error) => panic!("response json: {error}"),
-    };
-    assert_eq!(body["status"], "not_ready");
-    assert_eq!(body["stub"], true);
-    assert_eq!(body["dependencies"][0]["name"], "postgres");
-    assert_eq!(body["dependencies"][0]["ok"], false);
-    assert_eq!(body["dependencies"][0]["required"], true);
-    let _ = child.kill();
-    let _ = child.wait();
+    let _api = spawn_api(port);
+    for (path, status, body) in [
+        ("/healthz", 200, r#"{"status":"ok"}"#),
+        ("/readyz", 503, r#"{"status":"not_ready"}"#),
+    ] {
+        let response = wait_for_ok(port, path);
+        assert_headers(&response, status);
+        assert_eq!(
+            response
+                .text()
+                .unwrap_or_else(|err| panic!("GET body: {err}")),
+            body
+        );
+
+        let response = http_client()
+            .head(format!("http://127.0.0.1:{port}{path}"))
+            .send()
+            .unwrap_or_else(|err| panic!("HEAD {path}: {err}"));
+        assert_headers(&response, status);
+        assert!(response
+            .bytes()
+            .unwrap_or_else(|err| panic!("HEAD body: {err}"))
+            .is_empty());
+    }
 }

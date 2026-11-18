@@ -37,17 +37,17 @@ psql -h localhost -U postgres -c 'CREATE DATABASE puzzled_local_check;'
 export DATABASE_URL="postgres://postgres:postgres@localhost:5432/puzzled_local_check?sslmode=disable"
 atlas migrate apply --dir file://apps/puzzled/atlas/migrations --url "$DATABASE_URL"
 
-# 2. api — the Rust authority (owns Postgres). GIT_COMMIT_SHA makes /healthz
-#    report the revision, which is what --expected-sha asserts against.
-GIT_COMMIT_SHA=$(git rev-parse HEAD) PUZZLED_HTTP_PORT=8787 DATABASE_URL="$DATABASE_URL" \
-  cargo run -p puzzled-server &
+# 2. api — the Rust authority (owns Postgres).
+PUZZLED_HTTP_PORT=8787 DATABASE_URL="$DATABASE_URL" cargo run -p puzzled-server &
 
 # 3. web — presentation only; it must boot without DATABASE_URL and reach the
 #    api through API_INTERNAL_URL (the platform injects the same value).
 (cd apps/puzzled && API_INTERNAL_URL=http://127.0.0.1:8787 PORT=3000 bun run dev)
 
 # 4. ingress — mirrors the sylphx.toml split: Connect namespace + probes go to
-#    the api, everything else to the web service.
+#    the api, everything else to the web service. Like the platform router it
+#    stamps x-revision-sha (`git rev-parse HEAD`), which is what --expected-sha
+#    asserts against.
 PUZZLED_API_PORT=8787 bun scripts/local-stack.ts
 ```
 
@@ -80,7 +80,7 @@ origin resolver. A production build ignores a loopback
 | `finish-loop` | pass on a revision that records losses | Terminal recorded, `hasCompleted` on re-read, second submit refused `already_played`. On a revision that still hard-codes the win claim this check fails with `Invalid win claim …` — that failure is the point of the check, not a local artifact. |
 | `web-document`, `marks-scan` | pass | The web layer is what renders canonical/JSON-LD/CTA; loopback targets are accepted as-is. |
 | `share-deep-link` | `unknown` | The harness cannot solve the free module, so the solution signature stays unknown; the landing-page shape and non-spoiler checks still run. |
-| `healthz` `git-commit-sha` | pass when launched with `GIT_COMMIT_SHA` | The api reads `SYLPHX_GIT_COMMIT_SHA`/`GIT_COMMIT_SHA`/`GIT_SHA`/`GITHUB_SHA` and omits the field when unset. Without it the sub-check is `fail` (200 + no sha), so step 2 sets it from `git rev-parse HEAD`. |
+| `healthz` `revision-sha` | pass | The api probes return only `{"status":"ok"}`; the revision is the router's `x-revision-sha` header, which `local-stack.ts` stamps from `git rev-parse HEAD`. |
 
 ## What a green local `finish-loop` proves
 

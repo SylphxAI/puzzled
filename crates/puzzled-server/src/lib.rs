@@ -167,7 +167,7 @@ mod tests {
         };
         assert_eq!(response.status(), StatusCode::OK);
         let json = body_json(response).await;
-        assert_eq!(json["status"], "ok");
+        assert_eq!(json, serde_json::json!({"status": "ok"}));
     }
 
     #[tokio::test]
@@ -1081,9 +1081,24 @@ mod tests {
         };
         assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let json = body_json(response).await;
-        assert_eq!(json["status"], "not_ready");
-        assert_eq!(json["dependencies"][0]["ok"], false);
-        assert_eq!(json["dependencies"][0]["required"], true);
+        assert_eq!(json, serde_json::json!({"status": "not_ready"}));
+    }
+
+    #[tokio::test]
+    async fn readyz_returns_ok_with_postgres() {
+        let Some(db) = crate::test_support::fresh_database().await else {
+            return;
+        };
+        let response = router(AppState::new(Some(db)))
+            .oneshot(build_request(Method::GET, "/readyz", Body::empty()))
+            .await
+            .unwrap_or_else(|error| panic!("readyz request: {error}"));
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers()["cache-control"], "no-store");
+        assert_eq!(
+            body_json(response).await,
+            serde_json::json!({"status": "ok"})
+        );
     }
 
     #[test]

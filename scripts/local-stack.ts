@@ -12,9 +12,10 @@
  *
  * The ingress rewrites only transport concerns: it forwards the request body
  * and the caller's `Host` (plus `x-forwarded-*`) so the web layer resolves the
- * canonical origin exactly as it does behind the platform router, and it drops
- * the upstream content-encoding/length headers because the payload is
- * re-encoded on the way out.
+ * canonical origin exactly as it does behind the platform router, drops the
+ * upstream content-encoding/length headers because the payload is re-encoded on
+ * the way out, and stamps `x-revision-sha` (`git rev-parse HEAD`) as the
+ * platform router does.
  *
  * This is a LOCAL readback tool. It never talks to production unless the
  * upstream URLs are pointed there, and a green local run is not a Live claim:
@@ -60,6 +61,7 @@ function portFromEnv(key: string, fallback: number): number {
 const WEB = `http://127.0.0.1:${portFromEnv('PUZZLED_WEB_PORT', 3000)}`
 const API = `http://127.0.0.1:${portFromEnv('PUZZLED_API_PORT', 8080)}`
 const PORT = portFromEnv('PUZZLED_STACK_PORT', 9999)
+const REVISION = Bun.spawnSync(['git', 'rev-parse', 'HEAD']).stdout.toString().trim()
 
 const server = Bun.serve({
 	port: PORT,
@@ -81,6 +83,7 @@ const server = Bun.serve({
 			const upstream = await fetch(target, init)
 			const responseHeaders = new Headers(upstream.headers)
 			for (const name of STRIP_RESPONSE_HEADERS) responseHeaders.delete(name)
+			if (REVISION) responseHeaders.set('x-revision-sha', REVISION)
 			console.log(
 				`${request.method} ${url.pathname} -> ${toApi ? 'api' : 'web'} ${upstream.status}`,
 			)
