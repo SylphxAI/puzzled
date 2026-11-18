@@ -31,6 +31,7 @@ test('each comparison page has its own path, entry surface and rival', () => {
 		'/vs/linkedin-games',
 		'/vs/elevate',
 		'/vs/puzzmo',
+		'/vs/brilliant',
 	])
 	expect(new Set(SPECS.map((spec) => spec.rival)).size).toBe(SPECS.length)
 	expect(new Set(SPECS.map((spec) => spec.primaryCta.href)).size).toBe(SPECS.length)
@@ -41,7 +42,7 @@ for (const spec of SPECS) {
 	const visibleCopy = JSON.stringify({ ...spec, offers: undefined, softwareDescription: undefined })
 
 	describe(`${spec.path} comparison page`, () => {
-		test('renders one h1, entry CTAs and one SoftwareApplication + FAQPage graph', async () => {
+		test('renders one h1, entry CTAs and one SoftwareApplication + FAQPage + BreadcrumbList graph', async () => {
 			const html = await renderMarkup(createElement(ComparisonLanding, { spec }))
 			expect(html.match(/<h1[\s>]/g)).toHaveLength(1)
 			expect(html).toContain(`href="/?entry_surface=seo_vs-${spec.slug}"`)
@@ -51,14 +52,29 @@ for (const spec of SPECS) {
 			]
 			expect(scripts).toHaveLength(1)
 			const graph = JSON.parse(scripts[0]?.[1] ?? '{}') as {
-				'@graph': Array<{ '@type': string; mainEntity?: unknown[]; url?: string }>
+				'@graph': Array<{
+					'@type': string
+					mainEntity?: { name: string; acceptedAnswer: { text: string } }[]
+					itemListElement?: { item: string }[]
+					url?: string
+				}>
 			}
 			expect(graph['@graph'].map((node) => node['@type'])).toEqual([
 				'SoftwareApplication',
 				'FAQPage',
+				'BreadcrumbList',
 			])
 			expect(graph['@graph'][0]?.url).toBe(`https://tryit.fun${spec.path}`)
-			expect(graph['@graph'][1]?.mainEntity).toHaveLength(spec.faqs.length)
+			// Visible FAQ and FAQPage are the same list, in the same order.
+			expect(graph['@graph'][1]?.mainEntity?.map((q) => [q.name, q.acceptedAnswer.text])).toEqual(
+				spec.faqs.map((faq) => [faq.question, faq.answer]),
+			)
+			expect(graph['@graph'][2]?.itemListElement?.map((step) => step.item)).toEqual([
+				'https://tryit.fun',
+				'https://tryit.fun/vs',
+				`https://tryit.fun${spec.path}`,
+			])
+			expect(html).toContain('href="/vs"')
 			for (const faq of spec.faqs) expect(html).toContain(faq.question)
 			expect(spec.disclaimer).toMatch(/^Tryit is independent and not affiliated with/)
 			expect(spec.disclaimer).toContain('checked against')
@@ -110,3 +126,28 @@ for (const spec of SPECS) {
 		})
 	})
 }
+
+describe('/vs/brilliant specifics', () => {
+	const spec = COMPARISON_SPECS.brilliant
+	const visibleCopy = JSON.stringify({ ...spec, offers: undefined, softwareDescription: undefined })
+
+	test('pairs Brilliant fans only with logic, number and spatial-reasoning games that exist', () => {
+		const categories = spec.pairings.map((pairing) => getGameMetadata(pairing.slug)?.category)
+		expect(categories.every((category) => category !== undefined)).toBe(true)
+		expect(new Set(categories)).toEqual(new Set(['math', 'logic', 'spatial', 'word']))
+		// The one word game is Cipher, a substitution puzzle, never a vocabulary game.
+		expect(spec.pairings.filter((p) => getGameMetadata(p.slug)?.category === 'word')).toEqual([
+			expect.objectContaining({ slug: 'cryptogram' }),
+		])
+	})
+
+	test('quotes no Brilliant price, because Brilliant varies it by plan and offer', () => {
+		const brilliantSide = JSON.stringify(spec.rows.map((row) => row.them))
+		expect(brilliantSide).not.toMatch(/[$£€¥]\s?\d/)
+		for (const faq of spec.faqs) {
+			const brilliantPart = faq.answer.split('Brilliant Premium')[1] ?? ''
+			expect(brilliantPart).not.toMatch(/[$£€¥]\s?\d/)
+		}
+		expect(visibleCopy).toContain('18 November 2026')
+	})
+})

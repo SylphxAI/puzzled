@@ -3,7 +3,8 @@ import { getGameMetadata } from '@/games/registry'
 import { getGameColors } from '@/games/theme-colors'
 import { Link } from '@/lib/i18n/routing'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
-import type { ComparisonSpec } from './comparison-specs'
+import { COMPARISON_HUB_PATH } from './comparison-slugs'
+import { COMPARISON_HUB, type ComparisonSpec } from './comparison-specs'
 import { MarketingCta } from './marketing-cta'
 import { MarketingFaq } from './marketing-faq'
 import { MarketingHero } from './marketing-hero'
@@ -12,7 +13,7 @@ import { INK_SECONDARY_CTA, SECONDARY_CTA } from './use-case-landing'
 import { buildUseCaseJsonLd } from './use-case-specs'
 
 /** The page's one amber action, as on the home page. */
-const PLAY_CTA =
+export const PLAY_CTA =
 	'pressable inline-flex min-h-12 items-center gap-2 rounded-2xl bg-cta px-6 py-3 font-bold text-cta-foreground shadow-[inset_0_-3px_0_var(--color-cta-edge)] transition-colors hover:bg-cta-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
 
 export async function buildComparisonMetadata(locale: string, spec: ComparisonSpec) {
@@ -30,16 +31,56 @@ export async function buildComparisonMetadata(locale: string, spec: ComparisonSp
 	})
 }
 
+const ORIGIN = 'https://tryit.fun'
+
+/** Home > Compare > this page, as schema.org reads a breadcrumb trail. */
+export function comparisonBreadcrumbJsonLd(spec: ComparisonSpec) {
+	const trail = [
+		{ name: 'Tryit', url: ORIGIN },
+		{ name: COMPARISON_HUB.eyebrow, url: `${ORIGIN}${COMPARISON_HUB_PATH}` },
+		{ name: `Tryit vs ${spec.rival}`, url: `${ORIGIN}${spec.path}` },
+	]
+	return {
+		'@type': 'BreadcrumbList',
+		itemListElement: trail.map((step, index) => ({
+			'@type': 'ListItem',
+			position: index + 1,
+			name: step.name,
+			item: step.url,
+		})),
+	}
+}
+
 /**
  * An honest "Tryit vs X" page: a short verdict first, the side-by-side table,
  * credit where the other product is stronger, then closest-match games.
  */
 export function ComparisonLanding({ spec }: { spec: ComparisonSpec }) {
-	const structuredData = buildUseCaseJsonLd(spec)
+	const landing = buildUseCaseJsonLd(spec)
+	const structuredData = {
+		...landing,
+		'@graph': [...landing['@graph'], comparisonBreadcrumbJsonLd(spec)],
+	}
 
 	return (
 		<main className="pb-16">
 			<MarketingHero
+				breadcrumb={
+					<nav aria-label="Breadcrumb" className="-mt-3 mb-1">
+						<ol className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
+							<li>
+								<Link
+									href={COMPARISON_HUB_PATH}
+									className="inline-flex min-h-11 items-center font-semibold text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+								>
+									{COMPARISON_HUB.eyebrow}
+								</Link>
+							</li>
+							<li aria-hidden="true">/</li>
+							<li aria-current="page">{`Tryit vs ${spec.rival}`}</li>
+						</ol>
+					</nav>
+				}
 				eyebrow={spec.eyebrow}
 				title={spec.h1}
 				lead={spec.lead}
