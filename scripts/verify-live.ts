@@ -5,12 +5,12 @@
  * graph (PUZ-MODULE / PUZ-DAILY / PUZ-FREE / PUZ-SHARE / PUZ-MARKS).
  *
  * Layer: Live (owner standards/docs.md, "Claims stay inside their layer") for the revision the
- * target itself reports. Source/CI/Deploy layers are NOT established here, and
+ * serving router reports. Source/CI/Deploy layers are NOT established here, and
  * a green-looking proxy never upgrades a check.
  *
  * Every check reports pass / fail / unknown together with the raw evidence that
  * supports it (HTTP status, timing, response excerpts, SHA-256 fingerprints and
- * the git_commit_sha the target reports on /healthz).
+ * the `x-revision-sha` header the router stamps on /healthz).
  *
  * Read-only by default. `--play` bootstraps a fresh guest, explicitly starts
  * three games, probes the fourth when Plus is on sale, and verifies one finish
@@ -165,6 +165,9 @@ type HttpResult = {
 	maxBodyBytes: number
 	location: string | null
 	middlewareRewrite: string | null
+	cacheControl: string | null
+	/** `x-revision-sha`: the serving revision, stamped by the router, not the app. */
+	revisionSha: string | null
 	error: string | null
 }
 
@@ -217,7 +220,7 @@ Options:
                     and write ONE guest finish (default: read-only)
   --guest <uuid>    report correlation label, not a credential (default: random)
   --expected-sha <sha>
-                    assert the /healthz git_commit_sha (prefix match either
+                    assert the /healthz x-revision-sha (prefix match either
                     direction). Default is a pure readback: without this flag
                     the expected revision is unknown and not asserted.
   --json            print only the stable JSON report on stdout (no human lines)
@@ -230,7 +233,7 @@ Exit code: 1 when any required check fails, or when an indeterminate unknown
 remains; 0 otherwise. Read-only mode skips starts, finishing, and the
 share-solution signature comparison (unknown/not_attempted).
 
-Evidence layer: Live (observed behavior of the target's own reported revision).
+Evidence layer: Live (observed behavior of the revision the router reports).
 `)
 }
 
@@ -455,6 +458,8 @@ async function httpRequest(
 			maxBodyBytes: MAX_BODY_BYTES,
 			location: response.headers.get('location'),
 			middlewareRewrite: response.headers.get('x-middleware-rewrite'),
+			cacheControl: response.headers.get('cache-control'),
+			revisionSha: response.headers.get('x-revision-sha')?.trim() || null,
 			error: null,
 		}
 	} catch (error) {
@@ -474,6 +479,8 @@ async function httpRequest(
 			maxBodyBytes: MAX_BODY_BYTES,
 			location: null,
 			middlewareRewrite: null,
+			cacheControl: null,
+			revisionSha: null,
 			error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
 		}
 	}
@@ -531,6 +538,8 @@ function httpEvidence(result: HttpResult): Record<string, unknown> {
 		bodySha256Scope: result.bodySha256Scope,
 		bodyExcerpt: excerpt(result.bodyText),
 		middlewareRewrite: result.middlewareRewrite,
+		cacheControl: result.cacheControl,
+		revisionSha: result.revisionSha,
 		error: result.error,
 	}
 }
@@ -891,7 +900,7 @@ function buildEmptyStringGrid(puzzleData: unknown): (string | null)[][] {
 // ---------------------------------------------------------------------------
 
 /**
- * Revision assertion: with `--expected-sha` set the reported `git_commit_sha`
+ * Revision assertion: with `--expected-sha` set the router's `x-revision-sha`
  * must match (prefix match either direction, so short SHAs work); without the
  * flag the expected revision is unknown and stays a pure readback.
  */
@@ -901,38 +910,57 @@ function shaMatches(actual: string, expected: string): boolean {
 	return a === e || a.startsWith(e) || e.startsWith(a)
 }
 
+/**
+ * Sub-checks shared by both public probes: the expected HTTP status, a
+ * status-only JSON body (`{"status":"ok"}`, nothing else to leak or cache), and
+ * `Cache-Control: no-store` so no shared cache can replay a stale probe.
+ */
+function probeSubResults(path: string, result: HttpResult): SubResult[] {
+	const body = asRecord(result.bodyJson)
+	const keys = body ? Object.keys(body) : []
+	const noResponse = result.httpStatus === null
+	return [
+		sub(
+			'http-200',
+			result.httpStatus === 200 ? 'pass' : noResponse ? 'unknown' : 'fail',
+			`GET ${path} → ${result.httpStatus ?? result.error} in ${result.timeMs}ms`,
+		),
+		sub(
+			'status-only-body',
+			body && body.status === 'ok' && keys.length === 1
+				? 'pass'
+				: noResponse || result.bodyJsonError
+					? 'unknown'
+					: 'fail',
+			body
+				? `body keys=${keys.join(',') || 'none'} status=${asString(body.status) ?? 'missing'} (expected exactly {"status":"ok"})`
+				: `body is not the api JSON probe document: ${excerpt(result.bodyText, 120)}`,
+		),
+		sub(
+			'no-store',
+			/(^|,)\s*no-store\s*(,|$)/i.test(result.cacheControl ?? '')
+				? 'pass'
+				: noResponse
+					? 'unknown'
+					: 'fail',
+			`cache-control=${result.cacheControl ?? 'missing'}`,
+		),
+	]
+}
+
 async function checkHealthz(
 	base: string,
 	timeoutMs: number,
 	expectedSha: string | null,
 ): Promise<Check> {
 	const result = await httpRequest(`${base}/healthz`, { timeoutMs })
-	const body = asRecord(result.bodyJson)
-	const sha = asString(body?.git_commit_sha)
-	const bodyStatus = asString(body?.status)
+	const sha = result.revisionSha
 	const subResults: SubResult[] = [
+		...probeSubResults('/healthz', result),
 		sub(
-			'http-200',
-			result.httpStatus === 200 ? 'pass' : result.httpStatus === null ? 'unknown' : 'fail',
-			`GET /healthz → ${result.httpStatus ?? result.error} in ${result.timeMs}ms`,
-		),
-		sub(
-			'api-health-shape',
-			body && bodyStatus === 'ok'
-				? 'pass'
-				: result.httpStatus === null || result.bodyJsonError
-					? 'unknown'
-					: 'fail',
-			body
-				? `health body status=${bodyStatus ?? 'missing'} (expected the api health document, status "ok")`
-				: `health body is not the api JSON health document: ${excerpt(result.bodyText, 120)}`,
-		),
-		sub(
-			'git-commit-sha',
-			sha ? 'pass' : result.bodyJsonError || result.httpStatus === null ? 'unknown' : 'fail',
-			sha
-				? `git_commit_sha=${sha}`
-				: `git_commit_sha missing (body: ${excerpt(result.bodyText, 120)})`,
+			'revision-sha',
+			sha ? 'pass' : 'unknown',
+			sha ? `x-revision-sha=${sha}` : 'x-revision-sha header missing (serving revision unknown)',
 		),
 	]
 	if (expectedSha) {
@@ -942,8 +970,8 @@ async function checkHealthz(
 				'expected-revision',
 				matches ? 'pass' : 'fail',
 				matches
-					? `git_commit_sha=${sha} matches --expected-sha ${expectedSha}`
-					: `git_commit_sha=${sha ?? 'missing'} does NOT match --expected-sha ${expectedSha}`,
+					? `x-revision-sha=${sha} matches --expected-sha ${expectedSha}`
+					: `x-revision-sha=${sha ?? 'missing'} does NOT match --expected-sha ${expectedSha}`,
 			),
 		)
 	}
@@ -952,11 +980,11 @@ async function checkHealthz(
 		: 'unknown (no --expected-sha; pure readback)'
 	return {
 		id: 'healthz',
-		title: 'api liveness + deployed revision identity',
+		title: 'api liveness + serving revision identity',
 		status: combine(subResults),
 		required: true,
 		unknownReason: null,
-		summary: `GET /healthz → ${result.httpStatus ?? 'no response'}; git_commit_sha=${sha ?? 'missing'}${
+		summary: `GET /healthz → ${result.httpStatus ?? 'no response'}; x-revision-sha=${sha ?? 'missing'}${
 			expectedSha
 				? sha && shaMatches(sha, expectedSha)
 					? ` (matches --expected-sha ${expectedSha})`
@@ -966,7 +994,6 @@ async function checkHealthz(
 		sub: subResults,
 		evidence: {
 			...httpEvidence(result),
-			gitCommitSha: sha,
 			expectedSha,
 			revisionExpectation,
 		},
@@ -979,66 +1006,24 @@ async function checkReadyz(
 	timeoutMs: number,
 ): Promise<Check> {
 	const result = await httpRequest(`${base}/readyz`, { timeoutMs })
-	const body = asRecord(result.bodyJson)
-	const dependencies = Array.isArray(body?.dependencies) ? (body?.dependencies as unknown[]) : null
-	const dependencyStates = (dependencies ?? []).map((entry) => {
-		const record = asRecord(entry)
-		return {
-			name: asString(record?.name),
-			ok: typeof record?.ok === 'boolean' ? record.ok : null,
-			required: typeof record?.required === 'boolean' ? record.required : null,
-			detail: asString(record?.detail),
-		}
-	})
-	// Fail closed: only an explicit `required: false` exempts a dependency.
-	const requiredUnhealthy = dependencyStates.filter(
-		(entry) => entry.required !== false && entry.ok !== true,
-	)
-	const stubValue = typeof body?.stub === 'boolean' ? String(body.stub) : 'absent(false)'
-	const bodySha = asString(body?.git_commit_sha)
+	const sha = result.revisionSha
 	const subResults: SubResult[] = [
-		sub(
-			'http-200',
-			result.httpStatus === 200 ? 'pass' : result.httpStatus === null ? 'unknown' : 'fail',
-			`GET /readyz → ${result.httpStatus ?? result.error} in ${result.timeMs}ms`,
-		),
-		sub(
-			'dependencies-healthy',
-			dependencyStates.length === 0 ? 'unknown' : requiredUnhealthy.length === 0 ? 'pass' : 'fail',
-			dependencyStates.length === 0
-				? `no dependency states in body: ${excerpt(result.bodyText, 160)}`
-				: JSON.stringify(dependencyStates),
-		),
+		...probeSubResults('/readyz', result),
 		sub(
 			'sha-consistent-with-healthz',
-			liveSha && bodySha ? (liveSha === bodySha ? 'pass' : 'fail') : 'unknown',
-			`healthz=${liveSha ?? 'missing'} readyz=${bodySha ?? 'missing'}`,
+			liveSha && sha ? (liveSha === sha ? 'pass' : 'fail') : 'unknown',
+			`healthz=${liveSha ?? 'missing'} readyz=${sha ?? 'missing'}`,
 		),
 	]
 	return {
 		id: 'readyz',
-		title: 'api readiness + dependency states',
+		title: 'api readiness (fails closed without Postgres)',
 		status: combine(subResults),
 		required: true,
 		unknownReason: null,
-		summary: `GET /readyz → ${result.httpStatus ?? 'no response'}; slice=${asString(body?.slice) ?? '?'} stub=${stubValue}; deps=${
-			dependencyStates
-				.map(
-					(entry) =>
-						`${entry.name}:${entry.ok === true ? 'ok' : entry.ok === false ? 'down' : '?'}`,
-				)
-				.join(',') || 'none'
-		}`,
+		summary: `GET /readyz → ${result.httpStatus ?? 'no response'}; x-revision-sha=${sha ?? 'missing'}`,
 		sub: subResults,
-		evidence: {
-			...httpEvidence(result),
-			status: asString(body?.status),
-			slice: asString(body?.slice),
-			stub: typeof body?.stub === 'boolean' ? body.stub : null,
-			uptimeS: typeof body?.uptime_s === 'number' ? body.uptime_s : null,
-			gitCommitSha: bodySha,
-			dependencies: dependencyStates,
-		},
+		evidence: httpEvidence(result),
 	}
 }
 
@@ -2190,8 +2175,9 @@ async function checkFinishLoop(
 type StubResponse = { status: number; headers?: Record<string, string>; body: string }
 
 type StubConfig = {
-	/** Replaces the default api health document. */
+	/** Replace the default api probe documents. */
 	healthz?: StubResponse
+	readyz?: StubResponse
 	/** Returns this status for every GetDaily probe (e.g. 525). */
 	dailyStatusAll?: number
 	salesOpen?: boolean
@@ -2243,6 +2229,19 @@ const STUB_SUDOKU_GRID: Array<Array<number | null>> = [
 
 function jsonStub(body: unknown, status = 200): StubResponse {
 	return { status, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
+}
+
+/** A public probe as the router serves it: status-only, no-store, revision-stamped. */
+function probeStub(status: 'ok' | 'not_ready', code = 200): StubResponse {
+	return {
+		status: code,
+		headers: {
+			'content-type': 'application/json',
+			'cache-control': 'no-store',
+			'x-revision-sha': STUB_SHA,
+		},
+		body: JSON.stringify({ status }),
+	}
 }
 
 function htmlStub(body: string, status = 200): StubResponse {
@@ -2362,18 +2361,8 @@ function makeStubConfigHandler(config: StubConfig): StubHandler {
 				revealJson: 'test-reveal-must-not-appear-in-report',
 			})
 		}
-		if (path === '/healthz') {
-			return config.healthz ?? jsonStub({ status: 'ok', git_commit_sha: STUB_SHA })
-		}
-		if (path === '/readyz') {
-			return jsonStub({
-				status: 'ok',
-				slice: 'S1',
-				stub: false,
-				git_commit_sha: STUB_SHA,
-				dependencies: [{ name: 'postgres', ok: true, required: true, detail: 'self-test stub' }],
-			})
-		}
+		if (path === '/healthz') return config.healthz ?? probeStub('ok')
+		if (path === '/readyz') return config.readyz ?? probeStub('ok')
 		if (path === '/') {
 			return htmlStub(config.homeHtml ?? defaultStubHomeHtml(origin, freeSlug))
 		}
@@ -2485,6 +2474,33 @@ const SELF_TEST_CASES: SelfTestCase[] = [
 			}
 			if (report.summary.indeterminate < 1) {
 				problems.push('no indeterminate check recorded for the unknown health identity')
+			}
+			return problems
+		},
+	},
+	{
+		// A cacheable probe, or one that leaks more than its status, fails.
+		id: 'probes-cacheable-or-verbose-fail',
+		config: {
+			healthz: {
+				...probeStub('ok'),
+				headers: { 'content-type': 'application/json', 'x-revision-sha': STUB_SHA },
+			},
+			readyz: {
+				...probeStub('ok'),
+				body: JSON.stringify({ status: 'ok', git_commit_sha: STUB_SHA, uptime_s: 1 }),
+			},
+		},
+		expect: (report) => {
+			const problems: string[] = []
+			if (report.ok) problems.push('run is green although the probes are cacheable or verbose')
+			for (const [id, subId] of [
+				['healthz', 'no-store'],
+				['readyz', 'status-only-body'],
+			] as const) {
+				const check = report.checks.find((entry) => entry.id === id)
+				const failed = check?.sub.find((entry) => entry.id === subId)?.status === 'fail'
+				if (check?.status !== 'fail' || !failed) problems.push(`${id} should fail ${subId}`)
 			}
 			return problems
 		},
@@ -2818,7 +2834,7 @@ async function runReport(options: Options): Promise<{ report: Report }> {
 
 	const checks: Check[] = []
 	const healthz = await checkHealthz(options.base, options.timeoutMs, options.expectedSha)
-	const healthzSha = asString(healthz.evidence.gitCommitSha)
+	const healthzSha = asString(healthz.evidence.revisionSha)
 	const readyz = await checkReadyz(options.base, healthzSha, options.timeoutMs)
 	const billing = await readSalesOpen(options.base, options.timeoutMs)
 	const discovery = await checkFreeSlugDiscovery(options)
@@ -2903,7 +2919,7 @@ function printReport(report: Report, options: Options): void {
 	} else {
 		console.log(`puzzled live verification — ${report.base}`)
 		console.log(`observedAt    ${report.observedAt}`)
-		console.log(`liveRevision  ${report.liveRevision ?? 'unknown'} (healthz git_commit_sha)`)
+		console.log(`liveRevision  ${report.liveRevision ?? 'unknown'} (healthz x-revision-sha)`)
 		if (report.expectedRevision) {
 			console.log(
 				`expectedSha   ${report.expectedRevision} (${

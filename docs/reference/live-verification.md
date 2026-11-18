@@ -13,7 +13,8 @@ rotation suggests a game; it does not decide which games are free.
 The harness is Bun + `fetch` only (no dependencies, no new packages) and it
 never infers success from a proxy: every check prints `pass` / `fail` /
 `unknown` plus the raw evidence behind it (HTTP status, timing, response
-excerpts, SHA-256 fingerprints, and the `git_commit_sha` the target reports).
+excerpts, SHA-256 fingerprints, and the `x-revision-sha` header the router
+stamps on `/healthz`).
 
 ## Accessibility quarantine
 
@@ -94,8 +95,8 @@ service is contacted.
 
 | Check id | Assertion | Raw evidence recorded |
 | --- | --- | --- |
-| `healthz` | `GET /healthz` is 200 and reports `git_commit_sha` (the live revision identity); with `--expected-sha`, that SHA must match the expected value | status, timing, body, reported SHA, expected SHA + match/mismatch |
-| `readyz` | `GET /readyz` is 200, every dependency not explicitly marked `required: false` is `ok`, and its SHA matches `/healthz` | dependency array, `slice`, `stub`, SHA pair |
+| `healthz` | `GET /healthz` is 200 with exactly `{"status":"ok"}` and `Cache-Control: no-store`, and the router's `x-revision-sha` header names the serving revision; with `--expected-sha`, that SHA must match the expected value | status, timing, body, `cache-control`, `x-revision-sha`, expected SHA + match/mismatch |
+| `readyz` | `GET /readyz` is 200 with exactly `{"status":"ok"}` (the api answers 503 `{"status":"not_ready"}` unless its Postgres ping succeeds) and `Cache-Control: no-store`, and its `x-revision-sha` matches `/healthz` | status, body, `cache-control`, SHA pair |
 | `web-document` | `GET /` is 200 HTML, does not point to a localhost canonical on a real domain, and links to the day's featured game (same origin, one optional locale prefix). This checks the homepage suggestion, not access. | canonical URL, matching and rejected hrefs, rendered-text excerpt |
 | `free-slug-discovery` | Anonymous `GetDaily` returns HTTP 200 for every catalog game, whether Plus is on sale or not. A 5xx or transport failure is retried once per game; a repeated failure is indeterminate. | per-game statuses, Connect errors, timings, both attempts when retried |
 | `daily-serve` | Each cold response identifies the requested game and today's Hong Kong date, has `requiresStart: true` and `canPlay: true`, and omits `puzzleDataJson`, completion, and solution keys. This does **not** establish playable board delivery. | flags, dates and board presence for each game, leak key paths |
@@ -113,13 +114,13 @@ Hong Kong date; otherwise it shows the local expectation.
 
 ## Evidence-layer statement (what this does NOT prove)
 
-This is **Live**-layer evidence only, for the revision the target itself
+This is **Live**-layer evidence only, for the revision the serving router
 reports. It does **not** establish:
 
 - **Source / CI / Landed**: nothing about the git history, tests, or review of
   the responded revision.
 - **Artifact / Released / Deployed**: no image digest, provenance, SBOM, or
-  rollout check. `liveRevision` is the `git_commit_sha` the target *claims*
+  rollout check. `liveRevision` is the `x-revision-sha` the router *claims*
   on `/healthz`; the harness does not verify that mapping. `--expected-sha`
   strengthens this from a self-reported check to an asserted match with the
   deploy you expected, but the claim is still self-reported — it does not
