@@ -30,6 +30,8 @@ describe('/llms.txt', () => {
 			'https://tryit.fun/vs/nyt-games',
 			'https://tryit.fun/vs/lumosity',
 			'https://tryit.fun/vs/linkedin-games',
+			'https://tryit.fun/vs/elevate',
+			'https://tryit.fun/vs/puzzmo',
 			'https://tryit.fun/support',
 			'https://tryit.fun/privacy',
 			'https://tryit.fun/terms',

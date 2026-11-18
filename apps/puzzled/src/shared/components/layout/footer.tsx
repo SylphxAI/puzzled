@@ -104,6 +104,16 @@ export async function Footer() {
 									{t('compareLinkedinGames')}
 								</Link>
 							</li>
+							<li>
+								<Link href="/vs/elevate" className={linkClass}>
+									{t('compareElevate')}
+								</Link>
+							</li>
+							<li>
+								<Link href="/vs/puzzmo" className={linkClass}>
+									{t('comparePuzzmo')}
+								</Link>
+							</li>
 						</ul>
 					</nav>
 

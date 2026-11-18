@@ -29,6 +29,8 @@ test('each comparison page has its own path, entry surface and rival', () => {
 		'/vs/nyt-games',
 		'/vs/lumosity',
 		'/vs/linkedin-games',
+		'/vs/elevate',
+		'/vs/puzzmo',
 	])
 	expect(new Set(SPECS.map((spec) => spec.rival)).size).toBe(SPECS.length)
 	expect(new Set(SPECS.map((spec) => spec.primaryCta.href)).size).toBe(SPECS.length)

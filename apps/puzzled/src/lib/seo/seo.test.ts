@@ -65,6 +65,8 @@ describe('route truth table', () => {
 			'/vs/nyt-games',
 			'/vs/lumosity',
 			'/vs/linkedin-games',
+			'/vs/elevate',
+			'/vs/puzzmo',
 			'/support',
 			'/privacy',
 			'/terms',
