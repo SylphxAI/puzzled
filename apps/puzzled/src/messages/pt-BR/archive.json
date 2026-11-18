@@ -14,5 +14,9 @@
 	"emptyTitle": "O arquivo ainda está vazio",
 	"emptyBody": "Cada desafio diário anterior aparece aqui conforme os dias passam — hoje é o ritual. Jogue e a seleção de amanhã toma o lugar dele.",
 	"emptyPlay": "Jogue o ritual de hoje ({game})",
-	"locked": "Jogar com Plus"
+	"locked": "Jogar com Plus",
+	"dayPicker": "Escolha um dia",
+	"filterLabel": "Filtrar por categoria",
+	"yesterday": "Ontem",
+	"dayCount": "{count} desafios"
 }

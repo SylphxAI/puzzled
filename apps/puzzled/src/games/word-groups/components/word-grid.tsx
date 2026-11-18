@@ -25,6 +25,7 @@ const WordTile = memo(function WordTile({
 	isShuffling,
 	shuffleIndex = 0,
 }: WordTileProps) {
+	const longest = Math.max(6, ...word.split(/\s+/).map((part) => part.length))
 	const handleClick = useCallback(() => {
 		// Trigger sound and haptic based on current state (before toggle)
 		if (isSelected) {
@@ -43,20 +44,23 @@ const WordTile = memo(function WordTile({
 			disabled={disabled || isShuffling}
 			aria-label={`${isSelected ? 'Deselect' : 'Select'} word: ${word}`}
 			aria-pressed={isSelected}
-			style={isShuffling ? { animationDelay: `${shuffleIndex * 20}ms` } : undefined}
+			data-selected={isSelected ? 'true' : undefined}
+			style={
+				{
+					// The tile type shrinks with the word, so a 10-12 letter word keeps
+					// clear of the tile edge at every width (see .word-tile).
+					'--word-len': longest,
+					...(longest >= 9 ? { '--word-tracking': '-0.01em' } : {}),
+					...(isShuffling ? { animationDelay: `${shuffleIndex * 20}ms` } : {}),
+				} as React.CSSProperties
+			}
 			className={cn(
-				// Playful roundness (14-16px) with brand-tinted shadows - Tryit signature look
-				// Mobile-first: min 44px touch target, better text scaling
-				'flex min-h-[44px] aspect-[5/4] items-center justify-center rounded-xl px-2 text-xs font-semibold uppercase tracking-tight min-[400px]:aspect-[4/3] min-[400px]:text-sm sm:rounded-2xl sm:text-base',
-				'transition-all duration-150 shadow-[var(--shadow-tile)]',
-				isSelected
-					? 'bg-foreground text-background shadow-[var(--shadow-tile-hover)] scale-[0.97]'
-					: 'bg-muted/60 text-foreground hover:bg-muted hover:shadow-[var(--shadow-tile-hover)] active:scale-[0.95] active:animate-tile-press',
+				'word-tile',
 				disabled && 'cursor-not-allowed opacity-50',
 				isShuffling && 'animate-shuffle-tile',
 			)}
 		>
-			{word}
+			<span className="word-tile-label">{word}</span>
 		</button>
 	)
 })
@@ -77,8 +81,8 @@ export function WordGrid({
 	isShuffling,
 }: WordGridProps) {
 	return (
-		// Always 4 columns - tiles scale down on small screens for compact layout
-		<div className="grid w-full max-w-md grid-cols-4 gap-2 px-2 min-[400px]:gap-2.5 sm:gap-3 sm:px-0">
+		// Always 4 columns; the grid is a size container so tile type follows its width.
+		<div className="word-grid grid w-full max-w-md grid-cols-4 px-0.5 sm:px-0">
 			{words.map((word, index) => (
 				<WordTile
 					key={word}

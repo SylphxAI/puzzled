@@ -14,5 +14,9 @@
 	"emptyTitle": "アーカイブはまだ空です",
 	"emptyBody": "過去のデイリーパズルは、日付が変わるたびにここへ追加されます。今日のパズルを遊べば、明日にはここに並びます。",
 	"emptyPlay": "今日の日課を遊ぶ({game})",
-	"locked": "Plusでプレイ"
+	"locked": "Plusでプレイ",
+	"dayPicker": "日付を選ぶ",
+	"filterLabel": "カテゴリーで絞り込む",
+	"yesterday": "昨日",
+	"dayCount": "{count}問"
 }

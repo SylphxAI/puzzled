@@ -67,33 +67,33 @@ export type ConnectionsSolution = {
 	categories: Category[]
 }
 
-// Distinctive Tryit category colors - refined, modern palette
+// The four group colours: flat printed bands with ink text (AA on each).
 export const CATEGORY_COLORS: Record<
 	CategoryLevel,
 	{ bg: string; text: string; ring: string; shadow: string }
 > = {
 	0: {
-		bg: 'bg-yellow-300',
-		text: 'text-yellow-900',
-		ring: 'ring-yellow-200',
-		shadow: 'shadow-yellow-300/50',
-	}, // Easiest - Soft yellow
+		bg: 'bg-[#f6d26b]',
+		text: 'text-[#1a1712]',
+		ring: 'ring-[#f6d26b]',
+		shadow: 'shadow-[#f6d26b]/50',
+	}, // Easiest - butter
 	1: {
-		bg: 'bg-emerald-400',
-		text: 'text-emerald-950',
-		ring: 'ring-emerald-300',
-		shadow: 'shadow-emerald-400/50',
-	}, // Green
+		bg: 'bg-[#8fd1a0]',
+		text: 'text-[#1a1712]',
+		ring: 'ring-[#8fd1a0]',
+		shadow: 'shadow-[#8fd1a0]/50',
+	}, // Mint
 	2: {
-		bg: 'bg-sky-400',
-		text: 'text-sky-950',
-		ring: 'ring-sky-300',
-		shadow: 'shadow-sky-400/50',
-	}, // Blue
+		bg: 'bg-[#8cc4f0]',
+		text: 'text-[#1a1712]',
+		ring: 'ring-[#8cc4f0]',
+		shadow: 'shadow-[#8cc4f0]/50',
+	}, // Sky
 	3: {
-		bg: 'bg-violet-400',
-		text: 'text-violet-950',
-		ring: 'ring-violet-300',
-		shadow: 'shadow-violet-400/50',
-	}, // Hardest - Purple
+		bg: 'bg-[#c3b3f5]',
+		text: 'text-[#1a1712]',
+		ring: 'ring-[#c3b3f5]',
+		shadow: 'shadow-[#c3b3f5]/50',
+	}, // Hardest - lavender
 }

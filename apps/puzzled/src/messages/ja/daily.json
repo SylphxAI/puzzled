@@ -28,5 +28,6 @@
 	"todaysFreeGame": "今日の無料パズルを遊ぶ",
 	"notReadyTitle": "今日の{game}はまだ準備中です",
 	"notReadyBody": "今日の{game}のパズルはまだありません。今日の無料パズルはすぐに遊べます。",
-	"notReadyCta": "今日の無料パズルを遊ぶ"
+	"notReadyCta": "今日の無料パズルを遊ぶ",
+	"startUsesPick": "始めると今日の無料枠（3つ）を1つ使います。始めたゲームは一日中遊べます。"
 }

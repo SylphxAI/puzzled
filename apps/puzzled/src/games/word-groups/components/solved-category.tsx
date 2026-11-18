@@ -27,16 +27,16 @@ export function SolvedCategory({ category, animate }: SolvedCategoryProps) {
 	return (
 		<div
 			className={cn(
-				'flex flex-col items-center justify-center gap-0.5 rounded-lg py-3 transition-all duration-300 min-[400px]:rounded-xl min-[400px]:py-4 sm:py-5',
+				'solved-band flex flex-col items-center justify-center gap-0.5 px-3 py-3 text-center transition-all duration-300 min-[400px]:py-3.5 sm:py-4',
 				colors.bg,
 				colors.text,
 				animate && 'animate-bounce-once',
 			)}
 		>
-			<span className="text-xs font-bold uppercase tracking-wide min-[400px]:text-sm">
+			<span className="font-display text-[13px] font-bold uppercase tracking-wide min-[400px]:text-sm sm:text-[15px]">
 				{category.name}
 			</span>
-			<span className="text-[10px] font-medium opacity-80 min-[400px]:text-xs">
+			<span className="text-[11px] font-semibold opacity-85 [overflow-wrap:anywhere] min-[400px]:text-xs sm:text-[13px]">
 				{category.words.join(', ')}
 			</span>
 		</div>

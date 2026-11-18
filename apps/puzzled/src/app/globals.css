@@ -303,8 +303,16 @@
    Base Styles
 ============================================= */
 
-* {
-	border-color: var(--color-border);
+/* The default border colour sits in the base layer: unlayered, it beat every
+   border-colour utility (an ink rule, a game hue) and every component class. */
+@layer base {
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-border);
+	}
 }
 
 html,
@@ -1404,6 +1412,29 @@ html[data-consent-decided] [data-consent-banner] {
 	display: none;
 }
 
+/* The undecided visitor's bar sticks to the viewport bottom, above the phone
+   tab bar. Scroll padding keeps a focused control from sliding under it. */
+.consent-bar {
+	/* The gap above the tab bar is offset, not padding: the bar's box never
+	   reaches under the tab bar, whichever viewport the engine pins it to. */
+	bottom: calc(var(--spacing-bottom-nav-height) + var(--spacing-safe-bottom) + 0.5rem);
+	pointer-events: none;
+}
+.consent-bar > section {
+	pointer-events: auto;
+}
+html:not([data-consent-decided]):has([data-consent-banner]) {
+	scroll-padding-bottom: 12rem;
+}
+@media (min-width: 768px) {
+	.consent-bar {
+		bottom: 0;
+	}
+	html:not([data-consent-decided]):has([data-consent-banner]) {
+		scroll-padding-bottom: 5rem;
+	}
+}
+
 /* =============================================
    Reduced Motion (Accessibility)
 ============================================= */
@@ -1503,50 +1534,14 @@ html[data-consent-decided] [data-consent-banner] {
 	letter-spacing: -0.01em;
 }
 
-/* Keep the complete first puzzle and its action readable on short phones.
-   Consent is in flow, so neither choice can obscure the other. */
+/* Keep the complete first puzzle and its action readable on short phones,
+   above the consent bar and the tab bar. */
 @media (max-width: 639px) and (max-height: 700px) {
   .home-day-shell { padding-top: 0.75rem; }
   .home-day-masthead { font-size: 0.6875rem; column-gap: 0.5rem; padding-bottom: 0.5rem; }
   .home-day-grid { padding-top: 0.75rem; gap: 0.75rem; }
   .home-day-grid h1 { font-size: 2rem; margin-top: 0.375rem; }
   .home-day-description { display: none; }
-}
-
-/* The daily tile is a physical little object: a quiet edge, a clear face,
-   and one amber action. Keep elevation crisp rather than a floating blur. */
-.home-featured-card {
-	box-shadow: 0 2px 0 rgb(26 23 18 / 0.08);
-	transition: transform var(--transition-duration-fast) var(--ease-out), box-shadow var(--transition-duration-fast) var(--ease-out);
-}
-
-.home-featured-art {
-	min-height: 8rem;
-}
-
-.home-featured-content {
-	background: var(--color-card);
-}
-
-.home-featured-action {
-	transition: transform var(--transition-duration-fast) var(--ease-out), background-color var(--transition-duration-fast) var(--ease-out);
-}
-
-.home-featured-action:active {
-	transform: translateY(2px);
-}
-
-@media (hover: hover) {
-	.home-featured-card:hover {
-		box-shadow: 0 4px 0 rgb(26 23 18 / 0.1);
-		transform: translateY(-1px);
-	}
-}
-
-@media (min-width: 640px) {
-	.home-featured-art {
-		min-height: 14rem;
-	}
 }
 
 /* Give CJK display text its own breathing room instead of Latin tracking. */
@@ -1557,8 +1552,361 @@ html[data-consent-decided] [data-consent-banner] {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.home-featured-card,
 	.home-featured-card:hover,
 	.home-featured-action:active {
 		transform: none;
 	}
+}
+/* The redesign's component classes sit in the components layer, so a
+   Tailwind utility on the same element (a game colour, a radius) still wins. */
+@layer components {
+	/* =============================================
+	   Tactile broadsheet craft (2026-11 redesign)
+	=============================================
+	   Ink-bordered paper objects that stand on a solid key edge, like printed
+	   cards on a desk. Hover lifts the card and lengthens the edge; press drops
+	   it. Dark mode keeps the geometry with a light hairline and a black edge. */
+	:root {
+		--tactile-line: rgb(26 23 18 / 0.92);
+		--tactile-edge: rgb(26 23 18 / 0.92);
+		--tactile-soft-line: rgb(26 23 18 / 0.16);
+	}
+	.dark {
+		--tactile-line: rgb(242 238 230 / 0.34);
+		--tactile-edge: rgb(0 0 0 / 0.75);
+		--tactile-soft-line: rgb(242 238 230 / 0.12);
+	}
+
+	.tactile-card {
+		border: 1.5px solid var(--tactile-line);
+		border-radius: 1.125rem;
+		background-color: var(--color-card);
+		box-shadow: 0 3px 0 0 var(--tactile-edge);
+		transition:
+			transform var(--transition-duration-fast) var(--ease-out),
+			box-shadow var(--transition-duration-fast) var(--ease-out);
+	}
+	.tactile-card-field {
+		border-bottom: 1.5px solid var(--tactile-line);
+	}
+	@media (hover: hover) {
+		.tactile-card:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 5px 0 0 var(--tactile-edge);
+		}
+	}
+	.tactile-card:active {
+		transform: translateY(2px);
+		box-shadow: 0 1px 0 0 var(--tactile-edge);
+	}
+
+	/* A quiet outlined tag: solve time, category. */
+	.tag-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		border: 1px solid var(--tactile-soft-line);
+		border-radius: 9999px;
+		padding: 0.125rem 0.5rem;
+		line-height: 1.25rem;
+		background-color: var(--color-background);
+	}
+
+	/* The broadsheet masthead: a heavy ink rule over a hairline. */
+	.masthead-rule {
+		border-top: 3px solid var(--color-foreground);
+		border-bottom: 1px solid var(--color-foreground);
+	}
+
+	:lang(zh) .game-tile-title,
+	:lang(ja) .game-tile-title {
+		letter-spacing: 0;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.tactile-card,
+		.tactile-card:hover,
+		.tactile-card:active {
+			transform: none;
+			transition: none;
+		}
+	}
+
+	/* The three free picks: slots that fill as the player opens games. */
+	.picks-pill {
+		display: inline-flex;
+		min-height: 2rem;
+		align-items: center;
+		gap: 0.5rem;
+		border: 1.5px solid var(--tactile-line);
+		border-radius: 9999px;
+		background-color: var(--color-card);
+		padding: 0.25rem 0.75rem 0.25rem 0.5rem;
+		box-shadow: 0 2px 0 0 var(--tactile-edge);
+		font-size: 0.8125rem;
+		font-weight: 600;
+		line-height: 1.2;
+		color: var(--color-foreground);
+		white-space: nowrap;
+	}
+	.picks-pill-link {
+		min-height: 2.75rem;
+		text-decoration: none;
+		transition: transform var(--transition-duration-fast) var(--ease-out);
+	}
+	.picks-pill-link:active {
+		transform: translateY(1px);
+	}
+	.picks-slot {
+		display: block;
+		width: 0.8125rem;
+		height: 0.8125rem;
+		border: 1.5px solid var(--color-foreground);
+		border-radius: 0.25rem;
+		background-color: transparent;
+		transition: background-color var(--transition-duration-normal) var(--ease-out);
+	}
+	.picks-slot-used,
+	.picks-slot-plus {
+		background-color: var(--color-accent-warm);
+	}
+
+	/* Category filter chip with its count. */
+	.category-chip {
+		display: inline-flex;
+		min-height: 2.25rem;
+		align-items: center;
+		gap: 0.375rem;
+		border: 1px solid var(--tactile-soft-line);
+		border-radius: 9999px;
+		background-color: var(--color-card);
+		padding: 0 0.75rem;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: var(--color-foreground);
+		transition: border-color var(--transition-duration-fast) var(--ease-out);
+	}
+	.category-chip:hover {
+		border-color: var(--tactile-line);
+	}
+
+	/* Featured card art: a compact square on phones, a wide field from sm up. */
+	.home-featured-art {
+		min-height: 7.5rem;
+	}
+	.home-featured-motif {
+		width: 100%;
+		height: auto;
+		max-width: 7rem;
+	}
+	@media (min-width: 640px) {
+		.home-featured-art {
+			min-height: 0;
+			aspect-ratio: 16 / 8.5;
+			padding: 1.75rem 1.5rem 1rem;
+		}
+		.home-featured-motif {
+			max-width: none;
+			height: 100%;
+		}
+	}
+	@media (min-width: 1024px) and (max-height: 960px) {
+		.home-featured-art {
+			aspect-ratio: 16 / 7;
+		}
+	}
+	.home-featured-action:active {
+		transform: translateY(2px);
+		box-shadow: 0 1px 0 0 #1a1712;
+	}
+
+	/* =============================================
+	   Board craft: paper keycaps on a tray
+	============================================= */
+	/* The play area sits in a framed tray from md up, a printed puzzle card. */
+	@media (min-width: 768px) {
+		.game-stage {
+			border: 1.5px solid var(--tactile-line);
+			border-radius: 1.5rem;
+			background-color: var(--color-surface-muted);
+			box-shadow: 0 4px 0 0 var(--tactile-edge);
+			padding: 0.5rem 1.5rem 2rem;
+		}
+	}
+
+	/* Word tiles: the grid is a size container, and the type shrinks with the
+	   longest word on the tile so 10-12 letters never touch the edges. */
+	.word-grid {
+		--wg-gap: 0.375rem;
+		container-type: inline-size;
+		gap: var(--wg-gap);
+	}
+	@media (min-width: 400px) {
+		.word-grid {
+			--wg-gap: 0.625rem;
+		}
+	}
+	@media (min-width: 640px) {
+		.word-grid {
+			--wg-gap: 0.75rem;
+		}
+	}
+	.word-tile {
+		position: relative;
+		display: flex;
+		min-height: 44px;
+		aspect-ratio: 5 / 4;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		border: 1.5px solid var(--tactile-line);
+		border-radius: 0.75rem;
+		background-color: var(--color-card);
+		padding: 0 0.25rem;
+		box-shadow: 0 3px 0 0 var(--tactile-edge);
+		color: var(--color-foreground);
+		font-family: var(--font-display);
+		/* One tile is a quarter of the grid less its share of the gaps; the
+		   longest word gets about 0.68em a letter of that, less borders and
+		   padding, so it always keeps clear of the edge. */
+		font-size: min(
+			clamp(0.6875rem, 3.6cqi, 1.0625rem),
+			calc((25cqi - 0.75 * var(--wg-gap, 0.75rem) - 1rem) / (var(--word-len, 6) * 0.68))
+		);
+		font-weight: 700;
+		line-height: 1.05;
+		letter-spacing: var(--word-tracking, 0.01em);
+		text-transform: uppercase;
+		transition:
+			transform var(--transition-duration-fast) var(--ease-out),
+			box-shadow var(--transition-duration-fast) var(--ease-out),
+			background-color var(--transition-duration-fast) var(--ease-out),
+			color var(--transition-duration-fast) var(--ease-out);
+		-webkit-tap-highlight-color: transparent;
+	}
+	.word-tile-label {
+		display: block;
+		max-width: 100%;
+		text-align: center;
+		overflow-wrap: anywhere;
+	}
+	@media (hover: hover) {
+		.word-tile:not(:disabled):not([data-selected]):hover {
+			transform: translateY(-1px);
+			box-shadow: 0 4px 0 0 var(--tactile-edge);
+		}
+	}
+	.word-tile[data-selected] {
+		background-color: var(--color-foreground);
+		color: var(--color-background);
+		transform: translateY(2px);
+		box-shadow: 0 1px 0 0 var(--tactile-edge);
+	}
+	.word-tile:not(:disabled):active {
+		transform: translateY(3px);
+		box-shadow: 0 0 0 0 var(--tactile-edge);
+	}
+
+	/* A solved group: a printed band on the same key edge as the tiles. */
+	.solved-band {
+		border: 1.5px solid var(--tactile-line);
+		border-radius: 0.75rem;
+		box-shadow: 0 3px 0 0 var(--tactile-edge);
+	}
+
+
+	@media (prefers-reduced-motion: reduce) {
+		.word-tile,
+		.word-tile:hover,
+		.word-tile:active,
+		.word-tile[data-selected] {
+			transform: none;
+			transition: none;
+		}
+	}
+
+	/* =============================================
+	   Archive almanac
+	============================================= */
+	.almanac-day {
+		display: flex;
+		min-width: 3.5rem;
+		padding: 0 0.5rem;
+		min-height: 4.25rem;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
+		border: 1.5px solid var(--tactile-soft-line);
+		border-radius: 0.875rem;
+		background-color: var(--color-card);
+		color: var(--color-foreground);
+		transition:
+			border-color var(--transition-duration-fast) var(--ease-out),
+			transform var(--transition-duration-fast) var(--ease-out);
+	}
+	.almanac-day:hover {
+		border-color: var(--tactile-line);
+	}
+	.almanac-day-on {
+		border-color: var(--color-foreground);
+		background-color: var(--color-foreground);
+		color: var(--color-background);
+		box-shadow: 0 3px 0 0 var(--tactile-edge);
+	}
+	.category-chip-on {
+		border-color: var(--color-foreground);
+		background-color: var(--color-foreground);
+		color: var(--color-background);
+	}
+	.almanac-game {
+		min-height: 3.75rem;
+		border: 1px solid var(--tactile-soft-line);
+		border-radius: 0.875rem;
+		background-color: var(--color-card);
+		padding: 0.5rem;
+		transition:
+			border-color var(--transition-duration-fast) var(--ease-out),
+			transform var(--transition-duration-fast) var(--ease-out),
+			box-shadow var(--transition-duration-fast) var(--ease-out);
+	}
+	.almanac-game:hover {
+		border-color: var(--tactile-line);
+		box-shadow: 0 2px 0 0 var(--tactile-edge);
+		transform: translateY(-1px);
+	}
+	.almanac-game:focus-visible {
+		outline: 2px solid var(--color-ring);
+		outline-offset: 2px;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.almanac-game:hover {
+			transform: none;
+		}
+	}
+}
+
+/* Amber-key overrides: these must beat the shared Button's utilities, so
+   they stay outside the layers. */
+/* Submit turns into the amber key once a guess is ready. */
+.board-submit[data-ready] {
+	border: 1.5px solid #1a1712;
+	background-color: var(--color-cta);
+	color: var(--color-cta-foreground);
+	box-shadow: 0 3px 0 0 #1a1712;
+}
+.board-submit[data-ready]:hover {
+	background-color: var(--color-cta-hover);
+}
+
+/* The start card's action when the player came here to play: the amber key. */
+.stage-cta {
+	border: 1.5px solid #1a1712;
+	background-color: var(--color-cta);
+	color: var(--color-cta-foreground);
+	box-shadow: 0 3px 0 0 #1a1712;
+}
+.stage-cta:hover {
+	background-color: var(--color-cta-hover);
 }

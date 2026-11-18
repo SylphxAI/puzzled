@@ -6,6 +6,7 @@ import { readMessage, relatedCatalogSlugs } from '@/features/catalog/lib/catalog
 import { gameMetaDescription, gameMetaTitle } from '@/features/catalog/lib/game-meta'
 import { parseGameFaq, parseGameTips, requireGamePage } from '@/features/catalog/lib/game-page'
 import { resolveGameDayRequest } from '@/features/daily/lib/day-request'
+import { START_PARAM_ON } from '@/features/daily/lib/start-param'
 import { todayPlayPath } from '@/features/daily/lib/today-play-path'
 import { gameSupportsDifficulty, getAllGameMetadata, getGameSlugs } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -18,6 +19,7 @@ import { difficultyLabelKey } from '@/lib/i18n/difficulty'
 import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { buildPageMetadata, localizedPath, ogImagePath } from '@/lib/seo/metadata'
+import { cn } from '@/lib/utils'
 import { GamePlayArea } from './game-play-area'
 import { GamePlaySkeleton } from './game-play-skeleton'
 
@@ -26,7 +28,7 @@ export const dynamic = 'force-dynamic'
 
 type Props = {
 	params: Promise<{ locale: string; slug: string }>
-	searchParams: Promise<{ mode?: string; date?: string; difficulty?: string }>
+	searchParams: Promise<{ mode?: string; date?: string; difficulty?: string; start?: string }>
 }
 
 export async function generateStaticParams() {
@@ -92,7 +94,12 @@ export async function generateMetadata({ params }: Props) {
  */
 export default async function GamePage({ params, searchParams }: Props) {
 	const { locale, slug } = await params
-	const { mode: modeParam, date: dateParam, difficulty: difficultyParam } = await searchParams
+	const {
+		mode: modeParam,
+		date: dateParam,
+		difficulty: difficultyParam,
+		start: startParam,
+	} = await searchParams
 	setRequestLocale(locale)
 
 	// Registry SSOT: canonical slug + module metadata, or a real 404.
@@ -106,6 +113,9 @@ export default async function GamePage({ params, searchParams }: Props) {
 	// today's ritual. Serve, entitlement and the one-finish guard stay in
 	// Connect — this only picks the day to ask for.
 	const { mode, puzzleDate } = resolveGameDayRequest({ mode: modeParam, date: dateParam })
+	// The player pressed Play (`todayPlayPath`): the board leads and the hero
+	// shrinks to a title bar.
+	const started = mode === 'daily' && startParam === START_PARAM_ON
 
 	// Check if game supports difficulty and validate difficulty parameter
 	const supportsDifficulty = gameSupportsDifficulty(canonicalSlug)
@@ -189,41 +199,49 @@ export default async function GamePage({ params, searchParams }: Props) {
 						? localizedPath(locale, todayPlayPath(canonicalSlug, difficulty))
 						: '#play'
 				}
+				variant={started ? 'stage' : 'landing'}
 			/>
 
 			{/*
-			 * The board streams in after the page: reserve the height of its usual
-			 * first state (game header plus start card or difficulty list), so the
-			 * rules and FAQ below do not jump when it lands.
+			 * The board streams in after the hero, and the rules, tips, FAQ and
+			 * related games stream with it in the same boundary: nothing on
+			 * screen moves when the board lands, whatever its height (a start
+			 * strip, a level list or a full board), and the whole page is still
+			 * in the one HTML response for crawlers.
 			 */}
-			<div
-				id="play"
-				className="page-shell min-h-[36rem] scroll-mt-[calc(3.5rem+env(safe-area-inset-top))] py-6 md:scroll-mt-16 md:py-8"
-			>
+			<div id="play" className="scroll-mt-[calc(3.5rem+env(safe-area-inset-top))] md:scroll-mt-16">
 				<h2 className="sr-only">{tCatalog('gamePage.playCta')}</h2>
-				<Suspense fallback={<GamePlaySkeleton />}>
-					<GamePlayArea
-						slug={canonicalSlug}
-						locale={locale}
-						gameName={gameName}
-						mode={mode}
-						difficulty={difficulty}
-						supportsDifficulty={supportsDifficulty}
-						hasUser={Boolean(user)}
-						gameCount={getAllGameMetadata().length}
-						dateParam={puzzleDate}
+				<Suspense
+					fallback={
+						<div className="page-shell py-4 md:py-6">
+							<GamePlaySkeleton variant={started ? 'stage' : 'landing'} />
+						</div>
+					}
+				>
+					<div className={cn('page-shell py-4 md:py-6', started && 'min-h-[25rem]')}>
+						<GamePlayArea
+							slug={canonicalSlug}
+							locale={locale}
+							gameName={gameName}
+							mode={mode}
+							difficulty={difficulty}
+							supportsDifficulty={supportsDifficulty}
+							hasUser={Boolean(user)}
+							gameCount={getAllGameMetadata().length}
+							dateParam={puzzleDate}
+							started={started}
+						/>
+					</div>
+					<GamePageContent
+						name={gameName}
+						rules={rules}
+						tips={tips}
+						faq={faq}
+						relatedSlugs={relatedSlugs}
+						freeGameSlug={todaysFreeGame}
 					/>
 				</Suspense>
 			</div>
-
-			<GamePageContent
-				name={gameName}
-				rules={rules}
-				tips={tips}
-				faq={faq}
-				relatedSlugs={relatedSlugs}
-				freeGameSlug={todaysFreeGame}
-			/>
 		</main>
 	)
 }

@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import { sendFunnel } from '@/features/analytics/lib/funnel'
 import { MinimalHeader } from '@/features/daily/components/minimal-header'
+import { recordDailyPick } from '@/features/daily/lib/daily-picks'
 import type { GameSlug } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import type { GameMode } from '@/lib/db/schema'
@@ -49,8 +50,16 @@ export function GamePageClient({
 		sendFunnel({ event: 'game_start', game_slug: slug })
 	}, [slug])
 
+	// The server served today's board, so this game is one of today's picks:
+	// mirror it for the masthead's picks pill (display only, never a gate).
+	useEffect(() => {
+		if (mode === 'daily') recordDailyPick(puzzleDate, slug)
+	}, [mode, puzzleDate, slug])
+
 	return (
-		<div className="flex flex-1 flex-col">
+		// The game component loads client-side after this paints: the stage
+		// reserves a board's usual height so the rules below never jump.
+		<div className="game-stage flex min-h-[33rem] flex-1 flex-col" data-game-stage="board">
 			{/* Help Modal - managed at page level */}
 			{helpRequested ? (
 				<HowToPlayModal
@@ -72,6 +81,7 @@ export function GamePageClient({
 					setShowHelpModal(true)
 				}}
 				difficulty={difficulty}
+				className="md:rounded-t-[1.25rem] md:border-[var(--tactile-soft-line)] md:bg-surface-muted"
 				changeDifficultyHref={difficulty && mode === 'daily' ? `/games/${slug}#play` : undefined}
 			/>
 

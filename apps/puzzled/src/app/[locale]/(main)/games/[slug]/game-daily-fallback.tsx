@@ -2,9 +2,9 @@
 
 import { ConnectError } from '@connectrpc/connect'
 import { Button } from '@sylphx/ui'
-import { RotateCw } from 'lucide-react'
+import { Play, RotateCw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { type ReactNode, useEffect, useReducer, useRef, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import {
 	classifyDailyResponse,
@@ -13,13 +13,17 @@ import {
 	loadDailySnapshot,
 } from '@/features/daily/lib/daily-fallback'
 import { completedViewLevel } from '@/features/daily/lib/difficulty-completion'
+import { takeStartIntent } from '@/features/daily/lib/start-intent'
 import type { GameSlug } from '@/games/how-to-play-registry'
+import { type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import type { PuzzleDifficulty } from '@/games/types'
 import { isPlusRequiredError } from '@/lib/billing/plus'
 import { startDaily } from '@/lib/connect/puzzle-client'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils'
+import { GameMotif } from '@/shared/components/games/game-motif'
 import { GamePageClient } from './game-page-client'
 
 type GameDailyFallbackProps = {
@@ -35,6 +39,10 @@ type GameDailyFallbackProps = {
 	unlock?: ReactNode
 	/** Public metadata returned by SSR, without a playable payload. */
 	startDate?: string
+	/** The player arrived by pressing Play: the start card is the screen's one amber action. */
+	started?: boolean
+	/** The game's colour field for the start card. */
+	theme?: GameColorTheme
 	currentStreak?: number
 }
 
@@ -57,6 +65,8 @@ export function GameDailyFallback({
 	puzzleDate,
 	unlock,
 	startDate,
+	started = false,
+	theme = 'violet',
 	currentStreak = 0,
 }: GameDailyFallbackProps) {
 	const t = useTranslations('daily')
@@ -71,25 +81,42 @@ export function GameDailyFallback({
 	const startPending = useRef(false)
 	const [starting, setStarting] = useState(false)
 
-	async function play(date: string) {
-		if (startPending.current) return
-		startPending.current = true
-		setStarting(true)
-		try {
-			const daily = await startDaily({ gameSlug: slug, puzzleDate: date, difficulty })
-			dispatch({ type: 'load-succeeded', snapshot: classifyDailyResponse(daily) })
-		} catch (error) {
-			if (isPlusRequiredError(ConnectError.from(error).rawMessage)) {
-				dispatch({ type: 'load-refused' })
-			} else {
-				logger.error('game-daily-fallback.start-failed', { error })
-				dispatch({ type: 'load-failed' })
+	const play = useCallback(
+		async (date: string) => {
+			if (startPending.current) return
+			startPending.current = true
+			setStarting(true)
+			try {
+				const daily = await startDaily({ gameSlug: slug, puzzleDate: date, difficulty })
+				dispatch({ type: 'load-succeeded', snapshot: classifyDailyResponse(daily) })
+			} catch (error) {
+				if (isPlusRequiredError(ConnectError.from(error).rawMessage)) {
+					dispatch({ type: 'load-refused' })
+				} else {
+					logger.error('game-daily-fallback.start-failed', { error })
+					dispatch({ type: 'load-failed' })
+				}
+			} finally {
+				startPending.current = false
+				setStarting(false)
 			}
-		} finally {
-			startPending.current = false
-			setStarting(false)
-		}
-	}
+		},
+		[slug, difficulty],
+	)
+
+	// A Play press on the previous page is the explicit start: open the board
+	// now instead of asking twice. A pasted or crawled link carries no press
+	// (`start-intent.ts`), so it waits for the card's own button.
+	const startableDate =
+		state.status === 'ready' && state.snapshot.kind === 'startable'
+			? state.snapshot.puzzleDate
+			: null
+	const autoStarted = useRef(false)
+	useEffect(() => {
+		if (!startableDate || autoStarted.current) return
+		autoStarted.current = true
+		if (takeStartIntent(slug)) void play(startableDate)
+	}, [startableDate, slug, play])
 
 	// `state.status` drives the fetch: retry moves error/unavailable back to
 	// `loading`, which re-runs this effect without a hard navigation.
@@ -135,17 +162,62 @@ export function GameDailyFallback({
 
 	const snapshot = state.status === 'ready' ? state.snapshot : null
 
-	if (snapshot?.kind === 'startable') {
+	if (snapshot?.kind === 'startable' && !started) {
+		// The game's own page: the hero already shows the board, so the start
+		// action is one compact strip under it.
 		return (
-			<div className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-3xl border border-border bg-card px-6 py-8 text-center shadow-card">
+			<div
+				data-game-stage="start"
+				className="tactile-card mx-auto flex w-full max-w-2xl flex-col items-center gap-3 px-5 py-4 text-center sm:flex-row sm:gap-5 sm:text-left"
+			>
+				<p className="min-w-0 flex-1 text-[14px] leading-snug text-muted-foreground">
+					{t('startUsesPick')}
+				</p>
 				<Button
 					type="button"
-					className="min-h-11 rounded-full"
+					className="min-h-12 w-full shrink-0 gap-2 rounded-xl px-6 text-[15px] font-bold sm:w-auto"
 					disabled={starting}
 					onClick={() => void play(snapshot.puzzleDate)}
 				>
+					{starting ? (
+						<RotateCw className="h-4 w-4 animate-spin" aria-hidden="true" />
+					) : (
+						<Play className="h-4 w-4" fill="currentColor" aria-hidden="true" />
+					)}
 					{starting ? t('loadingPuzzle') : tHome('playToday', { game: gameName })}
 				</Button>
+			</div>
+		)
+	}
+
+	if (snapshot?.kind === 'startable') {
+		const colors = getGameColors(theme)
+		return (
+			<div data-game-stage="start" className="tactile-card mx-auto w-full max-w-xl overflow-hidden">
+				<div
+					className={cn('tactile-card-field aspect-[16/7] px-6 py-3 sm:px-10', colors.bg)}
+					aria-hidden="true"
+				>
+					<GameMotif slug={slug} />
+				</div>
+				<div className="flex flex-col items-center gap-3 px-5 pb-5 pt-4 text-center sm:px-8">
+					<Button
+						type="button"
+						className="stage-cta min-h-14 w-full max-w-sm gap-2 rounded-xl text-[16px] font-bold"
+						disabled={starting}
+						onClick={() => void play(snapshot.puzzleDate)}
+					>
+						{starting ? (
+							<RotateCw className="h-4 w-4 animate-spin" aria-hidden="true" />
+						) : (
+							<Play className="h-4 w-4" fill="currentColor" aria-hidden="true" />
+						)}
+						{starting ? t('loadingPuzzle') : tHome('playToday', { game: gameName })}
+					</Button>
+					<p className="max-w-sm text-[13px] leading-snug text-muted-foreground">
+						{t('startUsesPick')}
+					</p>
+				</div>
 			</div>
 		)
 	}
@@ -201,7 +273,7 @@ export function GameDailyFallback({
 	// the puzzle that is ready. A retry would ask the same question again.
 	if (snapshot?.kind === 'unavailable') {
 		return (
-			<div className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-3xl border border-border bg-card px-6 py-8 text-center shadow-card">
+			<div className="tactile-card mx-auto flex max-w-md flex-col items-center gap-3 px-6 py-8 text-center">
 				<p className="font-display text-2xl leading-tight">
 					{t('notReadyTitle', { game: gameName })}
 				</p>
@@ -224,7 +296,7 @@ export function GameDailyFallback({
 
 	// The fetch failed: a client-side retry.
 	return (
-		<div className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-3xl border border-border bg-card px-6 py-8 text-center shadow-card">
+		<div className="tactile-card mx-auto flex max-w-md flex-col items-center gap-3 px-6 py-8 text-center">
 			<p className="font-display text-2xl leading-tight">{t('unavailableTitle')}</p>
 			<p className="text-[15px] text-muted-foreground">{t('unavailableDescription')}</p>
 			<Button

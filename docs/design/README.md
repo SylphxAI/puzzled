@@ -32,9 +32,11 @@ the same pull request.
 
 ### Mark and wordmark
 
-The mark is a question-mark hook whose dot is one amber tile: the piece you are
-looking for. 64-unit canvas, 8-unit stroke, round caps. The wordmark is "Puzzled"
-in Fraunces at weight 620, as outlines (no font needed).
+The mark is a T built from five puzzle tiles on an ink ground: three across, two
+down, and the last one amber, the piece that clicks into place (redrawn
+2026-11-18; it replaced a question-mark hook that read as a help icon). 64-unit
+canvas, 14-unit tiles, 2.5-unit seams. The wordmark is "Tryit" in Fraunces at
+weight 600, as outlines (no font needed).
 
 The masters, the generated icons, the tokens and where each file came from live in
 [`brand/`](../../brand/README.md), the brand's usage sheet. It lists what each file
@@ -129,16 +131,25 @@ glyph in ink, and a deep form of the hue for small text on paper.
 
 | Page | Job | Notes |
 | --- | --- | --- |
-| `/` Today | play today's free puzzle in one tap; see the day's lineup | masthead (date, puzzle number, reset clock); one featured card holds the only primary action; lineup; value or member stats; tomorrow; FAQ |
-| `/games` | find a game | search, category filter, a 2 / 3 / 4-column grid |
-| `/games/{slug}` | learn and play one game | full-bleed cover in the game's colour; the difficulty list; the board; rules, tips, FAQ, related games |
-| `/archive` | replay a past day | sign-in gate for guests |
+| `/` Today | play a game in one tap; see all of the day's games at once | broadsheet masthead (puzzle number, the three free-pick slots, reset clock; no calendar date, because the Hong Kong day is not every visitor's date); the hook headline and one featured card hold the only primary action; beside them every game as a compact tactile card with its board miniature and category chips; value or member stats; tomorrow; FAQ |
+| `/games` | find a game | title and search on one row, category chips, a 2 / 3 / 4-column grid of tactile cards with board miniatures, solve time and category tags |
+| `/games/{slug}` | learn and play one game | landing: title, facts and Play beside the game's miniature card, then a compact start strip; after Play (`?start=1`): a slim title bar and the board in a framed tray, opened in one press (`start-intent.ts`); rules, tips, FAQ, related games |
+| `/archive` | replay a past day | an almanac: a strip of the past 30 days, a category filter and one day's games at a time, beside the Plus card when past days are locked |
 | `/stats`, `/leaderboard` | see your record | 2×2 summary; today's list; streak calendar |
 | `/pricing` | understand and buy Puzzled Plus | live prices from `ListPlans`; the first screen is the Plus offer with Yearly preselected, an unticked consent tick and one checkout button; the Free card and the comparison sit below it, with one text link back to today's free puzzle; closed-sales state lists what Plus includes |
 | `/profile`, `/settings/*`, `/family/join` | manage the account | shared console chrome |
 | `/login`, `/signup`, password pages | account access | Sylphx Auth end users |
 | `/terms`, `/privacy`, `/support` | legal and help | operator: Sylphx Limited |
 | 404, error | recover | 404 offers today's free puzzle first |
+
+Every game card shows a miniature of its own board (`game-motif.tsx`): ink and paper
+tiles on a key edge, one amber piece, never a real puzzle or answer. Dense grids load
+the same drawings as cached files from `public/motifs/` (one DOM node each; regenerate
+with `bun scripts/generate-motifs.tsx`, a unit test keeps them in sync); single large
+boards draw them inline in the site font. Cards, tiles and
+key buttons share one tactile language (`.tactile-card`, 1.5px ink line, solid 3px
+key edge; light hairline and black edge in dark mode). The cookie choice is a slim
+sticky bar at the bottom of the viewport, so it never pushes the hero or a board down.
 
 Removed from the home page: the "How Puzzled works" steps, the trust bullet row and the
 closing sales band (the featured card and the FAQ carry that job). Removed from `/games`:

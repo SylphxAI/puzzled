@@ -61,9 +61,8 @@ export async function GamePageContent({
 				slug: metadata.slug,
 				name: readMessage(tGames, `${camel}.name`, playerTitle(metadata.slug)),
 				tagline: readMessage(tGames, `${camel}.tagline`, ''),
-				meta: [metadata.display.duration, readMessage(tGames, `${camel}.highlight`, '')]
-					.filter(Boolean)
-					.join(' • '),
+				duration: metadata.display.duration,
+				category: t(`category.${metadata.category}`),
 				theme: metadata.display.theme,
 				status: metadata.slug === freeGameSlug ? ('free' as const) : ('play' as const),
 			},
@@ -174,16 +173,16 @@ export async function GamePageContent({
 						</div>
 
 						<ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-							{related.map((module, index) => (
+							{related.map((module) => (
 								<li key={module.slug} className="h-full">
 									<GameTile
 										slug={module.slug}
 										name={module.name}
 										tagline={module.tagline}
-										meta={module.meta}
+										duration={module.duration}
+										category={module.category}
 										theme={module.theme}
 										status={module.status}
-										index={index}
 										labels={{
 											play: t('open'),
 											seeResult: tResult('seeResult'),

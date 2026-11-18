@@ -1,5 +1,6 @@
 import { Lock } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
+import { DAILY_FREE_PICKS } from '@/features/daily/lib/daily-picks'
 import { CheckoutOffer } from '@/features/plus-offer/components/checkout-offer'
 import { Link } from '@/lib/i18n/routing'
 
@@ -33,12 +34,29 @@ export async function GameUnlockPanel({
 			: `/games/${slug}`
 
 	return (
-		<div className="rounded-3xl border border-border/70 bg-card p-6 text-center shadow-card md:p-8">
-			<div className="mx-auto flex max-w-lg flex-col items-center gap-4">
-				<span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-					<Lock className="h-7 w-7" aria-hidden="true" />
-				</span>
-				<h2 className="font-display text-xl md:text-2xl">
+		<div
+			className="mx-auto w-full max-w-xl text-center"
+			data-unlock-panel={archive ? 'archive' : 'picks'}
+		>
+			<div className="flex flex-col items-center gap-4">
+				{archive ? (
+					<span className="flex h-14 w-14 items-center justify-center rounded-2xl border-[1.5px] border-[var(--tactile-line)] bg-card shadow-[0_3px_0_0_var(--tactile-edge)]">
+						<Lock className="h-6 w-6" aria-hidden="true" />
+					</span>
+				) : (
+					// The masthead's three pick slots, all used: the same object, now full.
+					<span className="picks-pill" aria-hidden="true">
+						<span className="flex items-center gap-1">
+							{Array.from({ length: DAILY_FREE_PICKS }, (_, i) => (
+								<span key={i} className="picks-slot picks-slot-used" />
+							))}
+						</span>
+						<span className="numeral">
+							{DAILY_FREE_PICKS} / {DAILY_FREE_PICKS}
+						</span>
+					</span>
+				)}
+				<h2 className="font-display text-2xl leading-tight text-balance md:text-[1.75rem]">
 					{archive ? t('archiveTitle') : t('title')}
 				</h2>
 				<div className="w-full text-left">
@@ -48,14 +66,14 @@ export async function GameUnlockPanel({
 					{isGuest ? (
 						<Link
 							href={{ pathname: '/login', query: { callbackUrl: returnTo } }}
-							className="inline-flex h-12 items-center justify-center rounded-2xl border border-border bg-background px-5 font-semibold hover:border-primary/30 hover:text-primary"
+							className="inline-flex h-12 items-center justify-center rounded-xl border-[1.5px] border-[var(--tactile-line)] bg-card px-5 font-semibold hover:bg-muted"
 						>
 							{t('signIn')}
 						</Link>
 					) : null}
 					<Link
 						href="/games"
-						className="inline-flex h-12 items-center justify-center rounded-2xl border border-border bg-background px-5 font-semibold hover:border-foreground/30"
+						className="inline-flex h-12 items-center justify-center rounded-xl border-[1.5px] border-[var(--tactile-line)] bg-card px-5 font-semibold hover:bg-muted"
 					>
 						{t('backToToday')}
 					</Link>

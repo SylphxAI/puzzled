@@ -28,5 +28,6 @@
 	"todaysFreeGame": "Jogue o desafio grátis de hoje",
 	"notReadyTitle": "O {game} de hoje ainda não está pronto",
 	"notReadyBody": "Ainda não há um desafio de {game} para hoje. O desafio grátis de hoje já está pronto para jogar.",
-	"notReadyCta": "Jogue o desafio grátis de hoje"
+	"notReadyCta": "Jogue o desafio grátis de hoje",
+	"startUsesPick": "Começar usa uma das 3 escolhas grátis de hoje. O jogo que você começar fica liberado o dia todo."
 }

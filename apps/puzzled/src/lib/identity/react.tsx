@@ -670,13 +670,18 @@ export function CookieBanner(props: {
 			// in app/[locale]/layout.tsx marks <html> and globals.css hides this
 			// node, so a visitor who already decided never sees a flash.
 			data-consent-banner=""
-			// The notice owns normal document space at every breakpoint, so it never
-			// covers a puzzle action, escape control, or footer link.
-			className={props.position === 'bottom' ? 'relative z-toast px-2 py-1.5 sm:p-4' : undefined}
+			// A slim bar pinned to the bottom of the viewport (above the phone tab
+			// bar). It is mounted last in the page flow and is sticky, not fixed: it
+			// never pushes the hero or a board down, it owns its own slot at the end
+			// of the document so the footer is never covered, and scroll padding
+			// keeps a focused control clear of it.
+			className={
+				props.position === 'bottom' ? 'consent-bar sticky z-toast px-2 sm:px-4 md:pb-3' : undefined
+			}
 		>
 			<section
 				aria-label={t('title')}
-				className="mx-auto flex max-w-3xl flex-col gap-1 rounded-xl border bg-background/95 px-2 py-1.5 text-xs leading-tight shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:rounded-2xl sm:p-4 sm:text-sm sm:leading-snug"
+				className="mx-auto flex max-w-3xl flex-col gap-1.5 rounded-xl border bg-background/95 px-2.5 py-2 text-xs leading-tight shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:rounded-2xl sm:py-2 sm:pl-4 sm:pr-2 sm:text-[13px] sm:leading-snug"
 			>
 				{step === 'choose' ? (
 					<>

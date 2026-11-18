@@ -19,10 +19,11 @@
 	},
 	"lineup": {
 		"title": "今日のラインナップ",
-		"subtitle": "今日のパズルはここから。すべてのゲームも探せます。",
+		"subtitle": "全{count}種。今日は好きな3つが無料。",
 		"seeAll": "すべてのゲームを見る",
 		"play": "遊ぶ",
-		"freeToday": "今日のおすすめ"
+		"freeToday": "今日のおすすめ",
+		"subtitleShort": "今日は{count}種"
 	},
 	"value": {
 		"dailyTitle": "毎日、新しい問題",
@@ -76,12 +77,12 @@
 		"puzzleNumber": "パズル #{number}",
 		"resetsIn": "更新まで",
 		"resetsAt": "香港時間の午前0時",
-		"guestTitle": "今日の{game}を無料で遊ぶ",
+		"guestTitle": "毎日{count}種のパズル。好きな3つが無料。",
 		"titleMemberReady": "今日の{game}の準備ができました",
 		"titleMemberStreak": "{days}日連続の記録が待っています",
 		"titleMemberDone": "今日はすべて完了です。お疲れさまでした",
 		"titleDone": "今日の{game}は完了です",
-		"bodyGuest": "Tryitは、言葉・ロジック・数字のパズルを毎日お届けするサービスです。毎日好きな3つを無料で、数分で遊べて、登録も不要です。",
+		"bodyGuest": "言葉・ロジック・数字のパズルは、どれも数分で遊べます。今日の3つは登録なしですぐに始められて、みんな同じ問題に挑戦します。",
 		"bodyMember": "連続記録、統計、今日のラインナップへ、ワンタップでアクセスできます。",
 		"playToday": "今日の{game}を遊ぶ",
 		"playAgain": "今日のパズルをもう一度遊ぶ",
@@ -98,5 +99,11 @@
 		"midAutumn": "中秋節おめでとうございます",
 		"halloween": "ハッピーハロウィン",
 		"christmas": "メリークリスマス"
+	},
+	"picks": {
+		"fresh": "今日の無料枠 {count}つ",
+		"left": "無料枠 残り{count}つ",
+		"none": "無料枠を使い切りました · Plusを見る",
+		"unlimited": "Plus · すべてのゲームが遊び放題"
 	}
 }

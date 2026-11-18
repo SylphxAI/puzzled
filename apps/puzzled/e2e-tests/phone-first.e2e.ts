@@ -7,7 +7,7 @@ for (const viewport of [
 	{ width: 390, height: 844 },
 	{ width: 360, height: 640 },
 ]) {
-	test(`first visit keeps the whole puzzle, Play and consent clear at ${viewport.width}x${viewport.height}`, async ({
+	test(`first visit keeps the whole puzzle and Play above the consent bar at ${viewport.width}x${viewport.height}`, async ({
 		page,
 	}) => {
 		// The served build is plain HTTP on loopback, where this spec's WebKit
@@ -45,6 +45,9 @@ for (const viewport of [
 			const action = document.querySelector('[data-day-primary-action]')!
 			const r = action.getBoundingClientRect()
 			return {
+				cardDocTop:
+					document.querySelector('[data-day-puzzle-card]')!.getBoundingClientRect().top +
+					window.scrollY,
 				card: bounds('[data-day-puzzle-card]'),
 				play: bounds('[data-day-primary-action]'),
 				consent: bounds('[data-consent-banner]'),
@@ -52,18 +55,19 @@ for (const viewport of [
 				hit: action.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)),
 			}
 		})
-		expect(geometry.consent.bottom).toBeLessThanOrEqual(geometry.card.top)
-		expect(geometry.card.bottom).toBeLessThanOrEqual(geometry.nav.top)
+		// The consent bar sits at the bottom, above the tab bar, and below the
+		// whole featured card: it never covers the puzzle or Play.
+		expect(geometry.card.bottom).toBeLessThanOrEqual(geometry.consent.top)
+		expect(geometry.consent.bottom).toBeLessThanOrEqual(geometry.nav.top + 1)
 		expect(geometry.play.height).toBeGreaterThanOrEqual(48)
 		expect(geometry.hit).toBe(true)
 		await expect(play).toHaveAttribute('href', /start=1#play$/)
 		await consent.getByRole('button', { name: 'Decline', exact: true }).click()
 		await expect(consent).toBeHidden()
 		await expect(play).toBeVisible()
-		const after = await card.boundingBox()
-		expect(after!.y).toBeCloseTo(
-			geometry.card.top - (geometry.consent.bottom - geometry.consent.top),
-			0,
-		)
+		// Deciding moves nothing in the layout: the bar never pushed the hero down.
+		// (Compared in document coordinates: pressing a sticky button may scroll.)
+		const after = await card.evaluate((el) => el.getBoundingClientRect().top + window.scrollY)
+		expect(after).toBeCloseTo(geometry.cardDocTop, 0)
 	})
 }

@@ -1,11 +1,10 @@
-import { ArrowRight, Flame, Users } from 'lucide-react'
+import { Flame, Play, Users } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
-import { DayCountdown } from '@/features/home/components/day-countdown'
 import { homeDayCopy } from '@/features/home/lib/home-day-copy'
 import { type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import { Link } from '@/lib/i18n/routing'
 import { cn, formatNumber } from '@/lib/utils'
-import { GameIcon } from '@/shared/components/ui/game-icons'
+import { GameMotif } from '@/shared/components/games/game-motif'
 
 /** Today's module, as the day surface needs it. */
 export type HomeDayGame = {
@@ -33,6 +32,10 @@ type HomeDayProps = {
 	/** `getPuzzleNumber` for the server-rendered product day and module. */
 	puzzleNumber: number
 	freeGame: HomeDayGame
+	/** Registered games; the hook never hardcodes the count. */
+	gameCount: number
+	/** Localised category names, the eyebrow over the hook. */
+	categories: readonly string[]
 	isMember: boolean
 	currentStreak: number
 	hasPlayedToday: boolean
@@ -47,24 +50,27 @@ type HomeDayProps = {
 }
 
 /** Everything the day renders before any identity or aggregate read lands. */
-export type HomeDayStaticProps = Pick<HomeDayProps, 'locale' | 'puzzleNumber' | 'freeGame'>
+export type HomeDayStaticProps = Pick<
+	HomeDayProps,
+	'locale' | 'puzzleNumber' | 'freeGame' | 'gameCount' | 'categories'
+>
 
 /**
- * The day surface: the home page's first screen.
+ * The day's lead column: the hook headline and today's featured game.
  *
- * A newspaper masthead (the shared puzzle number and the clock to the
- * next day), a display headline, and one card in today's game colour that
- * holds the only primary action. `playerCount` stays `null` until the read
- * lands, and a landed zero renders nothing: a visitor is never told that
- * nobody is playing.
+ * It sits beside the full lineup in the home grid, under the masthead the
+ * page renders. One card in today's game colour holds the only primary
+ * action. `playerCount` stays `null` until the read lands, and a landed zero
+ * renders nothing: a visitor is never told that nobody is playing.
  *
- * LCP: the headline paints in the first frame with no entrance animation;
- * motion is kept to the card.
+ * LCP: the headline paints in the first frame with no entrance animation.
  */
 export async function HomeDay({
 	locale,
 	puzzleNumber,
 	freeGame,
+	gameCount,
+	categories,
 	isMember,
 	currentStreak,
 	hasPlayedToday,
@@ -83,91 +89,55 @@ export async function HomeDay({
 	const headline = t(`day.${copy.headlineKey}`, {
 		game: freeGame.name,
 		days: currentStreak,
+		count: gameCount,
 	})
 
 	return (
-		<section className="day-surface relative">
-			<div className="home-day-shell page-shell-wide pt-5 md:pt-8">
-				{/* Masthead: the day has an identity. */}
-				<div className="home-day-masthead flex items-center justify-between gap-x-2 border-b border-foreground/80 pb-2.5 text-xs text-muted-foreground sm:gap-x-4 sm:text-[13px]">
-					<p className="flex min-w-0 items-center gap-1.5 truncate sm:gap-2">
-						<span className="day-numeral shrink-0 font-semibold text-foreground">
-							{t('day.puzzleNumber', { number: puzzleNumber })}
-						</span>
-					</p>
-					<p className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
-						<span>{t('day.resetsIn')}</span>
-						<DayCountdown className="font-semibold text-foreground" />
-					</p>
-				</div>
+		<div className="home-day-lead min-w-0">
+			{isMember && currentStreak > 0 ? (
+				<p className="eyebrow flex items-center gap-1.5 text-stat-streak">
+					<Flame className="h-3.5 w-3.5" aria-hidden="true" />
+					{t('hero.streakChip', { days: currentStreak })}
+				</p>
+			) : (
+				<p className="eyebrow">{categories.join(' · ')}</p>
+			)}
 
-				<div className="home-day-grid grid items-center gap-5 pb-10 pt-4 md:gap-10 md:pb-14 md:pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-					<div>
-						{isMember && currentStreak > 0 ? (
-							<p className="eyebrow flex items-center gap-1.5 text-stat-streak">
-								<Flame className="h-3.5 w-3.5" aria-hidden="true" />
-								{t('hero.streakChip', { days: currentStreak })}
-							</p>
-						) : (
-							<p className="eyebrow">{t('day.freeToday')}</p>
-						)}
+			<h1 className="mt-2 font-display text-[2.125rem] leading-[1.02] text-balance sm:text-5xl lg:text-[3.25rem] xl:text-[3.5rem]">
+				{headline}
+			</h1>
 
-						<h1 className="mt-2 font-display text-[2.375rem] leading-[1.04] text-balance sm:text-5xl lg:text-[4rem]">
-							{headline}
-						</h1>
+			<p className="home-day-description mt-3 max-w-lg text-[16px] leading-relaxed text-muted-foreground sm:text-[17px]">
+				{isMember ? t('day.bodyMember') : t('day.bodyGuest')}
+			</p>
 
-						<p className="home-day-description mt-4 max-w-lg text-[17px] leading-relaxed text-muted-foreground">
-							{isMember ? t('day.bodyMember') : t('day.bodyGuest')}
-						</p>
-
-						<div className="mt-5 hidden flex-col gap-2 text-sm text-muted-foreground lg:flex">
-							<DayFacts
-								t={t as Translator}
-								locale={locale}
-								showsProgress={showsProgress}
-								completedCount={completedCount}
-								availableCount={availableCount}
-								playerCount={playerCount}
-								progressUnverified={progressUnverified}
-							/>
-						</div>
-					</div>
-
-					<div>
-						<FeaturedCard
-							game={freeGame}
-							numberLabel={t('day.puzzleNumber', { number: puzzleNumber })}
-							label={t('day.freeToday')}
-							cta={
-								copy.cta === 'result'
-									? tResult('seeResult')
-									: t('day.playToday', { game: freeGame.name })
-							}
-							href={copy.cta === 'result' ? freeGame.resultHref : freeGame.playHref}
-							note={copy.showsNote ? t('day.guestNote') : undefined}
-						/>
-						<div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground lg:hidden">
-							<DayFacts
-								t={t as Translator}
-								locale={locale}
-								showsProgress={showsProgress}
-								completedCount={completedCount}
-								availableCount={availableCount}
-								playerCount={playerCount}
-								progressUnverified={progressUnverified}
-							/>
-						</div>
-						<Link
-							href="/games"
-							className="mt-3 inline-flex min-h-11 items-center gap-1 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-						>
-							{t('day.browseAll')}
-							<ArrowRight className="h-4 w-4" aria-hidden="true" />
-						</Link>
-					</div>
+			<div className="mt-5">
+				<FeaturedCard
+					game={freeGame}
+					numberLabel={t('day.puzzleNumber', { number: puzzleNumber })}
+					label={t('lineup.freeToday')}
+					cta={
+						copy.cta === 'result'
+							? tResult('seeResult')
+							: t('day.playToday', { game: freeGame.name })
+					}
+					href={copy.cta === 'result' ? freeGame.resultHref : freeGame.playHref}
+					startIntent={copy.cta === 'play' ? freeGame.slug : undefined}
+					note={copy.showsNote ? t('day.guestNote') : undefined}
+				/>
+				<div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground empty:hidden">
+					<DayFacts
+						t={t as Translator}
+						locale={locale}
+						showsProgress={showsProgress}
+						completedCount={completedCount}
+						availableCount={availableCount}
+						playerCount={playerCount}
+						progressUnverified={progressUnverified}
+					/>
 				</div>
 			</div>
-		</section>
+		</div>
 	)
 }
 
@@ -213,9 +183,9 @@ function DayFacts({
 }
 
 /**
- * Today's game as one card: its colour field with the glyph, the number and
- * the name, then the play action. The field is decorative; the button carries
- * the accessible name.
+ * Today's game as one tactile card: its colour field with the board
+ * miniature, the name and the play action. The field is decorative; the
+ * button carries the accessible name.
  */
 function FeaturedCard({
 	game,
@@ -223,6 +193,7 @@ function FeaturedCard({
 	label,
 	cta,
 	href,
+	startIntent,
 	note,
 }: {
 	game: HomeDayGame
@@ -230,6 +201,8 @@ function FeaturedCard({
 	label: string
 	cta: string
 	href: string
+	/** Set when the action starts today's board: the press is the explicit start. */
+	startIntent?: string
 	/** Reassurance under the action, shown to first-time visitors only. */
 	note?: string
 }) {
@@ -237,48 +210,51 @@ function FeaturedCard({
 	return (
 		<div
 			data-day-puzzle-card=""
-			className="home-featured-card grid grid-cols-[80px_minmax(0,1fr)] overflow-hidden rounded-3xl border border-border bg-card sm:block"
+			className="home-featured-card tactile-card grid grid-cols-[6.5rem_minmax(0,1fr)] overflow-hidden sm:block"
 		>
 			<div
 				className={cn(
-					'home-featured-art relative flex items-center justify-center sm:h-56',
+					'home-featured-art relative flex items-center justify-center border-r-[1.5px] border-[var(--tactile-line)] sm:border-b-[1.5px] sm:border-r-0',
 					colors.bg,
-					colors.onField,
 				)}
 				aria-hidden="true"
 			>
-				<GameIcon
-					slug={game.slug}
-					size={96}
-					className="h-14 w-14 drop-shadow-[0_1px_0_rgb(255_255_255/0.4)] sm:h-24 sm:w-24"
-				/>
-				<span className="absolute left-4 top-4 hidden rounded-full sm:block bg-[#1a1712] px-2.5 py-1 text-xs font-semibold text-[#fbf9f4]">
+				<GameMotif slug={game.slug} className="home-featured-motif" />
+				<span className="absolute left-3 top-3 hidden rounded-full bg-[#1a1712] px-2.5 py-1 text-xs font-semibold text-[#fbf9f4] sm:block">
 					{label}
 				</span>
-				<span className="numeral absolute right-4 top-4 hidden text-xs sm:block font-semibold opacity-70">
+				<span className="numeral absolute right-3 top-3 hidden rounded-full bg-[#fbf9f4]/80 px-2 py-0.5 text-xs font-semibold text-[#1a1712] sm:block">
 					{numberLabel}
 				</span>
 			</div>
-			<div className="home-featured-content p-3 sm:p-6">
-				<p className="home-featured-title font-display text-2xl leading-tight sm:text-3xl">
-					{game.name}
-				</p>
+			<div className="home-featured-content p-3 sm:p-5">
+				<div className="flex items-baseline justify-between gap-3">
+					<p className="home-featured-title font-display text-[1.375rem] leading-tight sm:text-[1.75rem]">
+						{game.name}
+					</p>
+					{game.duration ? (
+						<span className="numeral hidden shrink-0 text-sm text-muted-foreground sm:inline">
+							{game.duration}
+						</span>
+					) : null}
+				</div>
 				{game.tagline ? (
-					<p className="mt-1 text-[15px] text-muted-foreground">
+					<p className="mt-0.5 line-clamp-1 text-[14px] text-muted-foreground sm:text-[15px]">
 						{game.tagline}
-						{game.duration ? <span className="numeral"> · {game.duration}</span> : null}
 					</p>
 				) : null}
 				<Link
 					href={href}
 					// The day's primary action: the install offer stays off it.
 					data-day-primary-action=""
-					className="pressable home-featured-action mt-4 flex min-h-12 w-full items-center justify-center rounded-xl bg-cta px-6 text-[16px] font-bold text-cta-foreground shadow-[inset_0_-3px_0_var(--color-cta-edge)] transition-colors hover:bg-cta-hover sm:mt-5"
+					data-start-intent={startIntent}
+					className="pressable home-featured-action mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-[#1a1712] bg-cta px-4 text-[15px] font-bold text-cta-foreground shadow-[0_3px_0_0_#1a1712] transition-colors hover:bg-cta-hover sm:mt-4 sm:text-[16px]"
 				>
-					{cta}
+					<Play className="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true" />
+					<span className="truncate">{cta}</span>
 				</Link>
 				{note ? (
-					<p className="mt-2 text-center text-xs text-muted-foreground sm:mt-3 sm:text-sm">
+					<p className="mt-2 text-center text-xs text-muted-foreground sm:mt-2.5 sm:text-[13px]">
 						{note}
 					</p>
 				) : null}
@@ -310,34 +286,22 @@ export function HomeDayFallback(props: HomeDayStaticProps) {
 /**
  * Reserved space for viewers whose progress we owe but have not read yet. It
  * carries no copy (the guest variant would be wrong for a member) and matches
- * the real day's geometry, so nothing moves when it lands.
+ * the real lead column's geometry, so nothing moves when it lands.
  */
 export function HomeDaySkeleton() {
 	return (
-		<section className="day-surface relative" aria-busy="true">
-			<div className="page-shell-wide pt-5 md:pt-8">
-				<div className="flex items-center justify-between border-b border-foreground/80 pb-2.5">
-					<div className="h-4 w-52 animate-pulse rounded bg-muted" />
-					<div className="h-4 w-28 animate-pulse rounded bg-muted" />
-				</div>
-				<div className="grid items-center gap-5 pb-10 pt-4 md:gap-10 md:pb-14 md:pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-					<div>
-						<div className="h-3 w-24 animate-pulse rounded bg-muted" />
-						<div className="mt-3 h-10 w-full animate-pulse rounded-lg bg-muted sm:h-12" />
-						<div className="mt-2 h-10 w-3/4 animate-pulse rounded-lg bg-muted sm:h-12" />
-						<div className="mt-5 h-5 w-full animate-pulse rounded bg-muted" />
-						<div className="mt-2 h-5 w-2/3 animate-pulse rounded bg-muted" />
-					</div>
-					<div className="overflow-hidden rounded-3xl border border-border bg-card">
-						<div className="h-44 animate-pulse bg-muted sm:h-56" />
-						<div className="p-5 sm:p-6">
-							<div className="h-7 w-40 animate-pulse rounded bg-muted" />
-							<div className="mt-2 h-4 w-56 animate-pulse rounded bg-muted" />
-							<div className="mt-5 h-12 w-full animate-pulse rounded-full bg-muted" />
-						</div>
-					</div>
+		<div className="home-day-lead min-w-0" aria-busy="true">
+			<div className="h-3 w-40 animate-pulse rounded bg-muted" />
+			<div className="mt-3 h-10 w-full animate-pulse rounded-lg bg-muted sm:h-12" />
+			<div className="mt-2 h-10 w-3/4 animate-pulse rounded-lg bg-muted sm:h-12" />
+			<div className="mt-4 h-5 w-full animate-pulse rounded bg-muted" />
+			<div className="mt-5 overflow-hidden rounded-[1.125rem] border border-border bg-card">
+				<div className="h-28 animate-pulse bg-muted sm:h-52" />
+				<div className="p-4 sm:p-5">
+					<div className="h-7 w-40 animate-pulse rounded bg-muted" />
+					<div className="mt-4 h-12 w-full animate-pulse rounded-xl bg-muted" />
 				</div>
 			</div>
-		</section>
+		</div>
 	)
 }

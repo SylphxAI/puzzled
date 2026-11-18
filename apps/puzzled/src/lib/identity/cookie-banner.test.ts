@@ -83,10 +83,11 @@ describe('CookieBanner (mobile compact)', () => {
 		expect(link).not.toMatch(/\b(inline-block|inline-flex|block|relative|absolute|fixed)\b/)
 	})
 
-	test('owns page space at every width rather than covering puzzle actions', () => {
-		expect(html).toContain('relative z-toast')
-		expect(html).not.toContain('md:fixed md:inset-x-0 md:bottom-0')
-		expect(html).not.toContain('bottom-[calc(var(--spacing-bottom-nav-height)')
+	test('is a slim sticky bottom bar: it never pushes the hero down or covers the footer', () => {
+		// Sticky at the end of the flow, not fixed: it keeps its own slot after
+		// the footer, and the bottom offset (above the tab bar) lives in CSS.
+		expect(html).toContain('consent-bar sticky z-toast')
+		expect(html).not.toMatch(/\bfixed\b/)
 		expect(html).toContain('text-xs')
 		expect(html).toContain('min-h-11')
 		expect(html).not.toContain('min-h-9')
