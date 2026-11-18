@@ -8,6 +8,7 @@ describe('/llms.txt', () => {
 		const response = GET()
 		expect(response.status).toBe(200)
 		expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8')
+		expect(response.headers.get('cache-control')).toBe('public, max-age=0, must-revalidate')
 		const body = await response.text()
 		expect(body.startsWith('# Tryit\n')).toBe(true)
 		expect(body).toContain('word, logic, number and spatial puzzles, published by Sylphx Limited.')
