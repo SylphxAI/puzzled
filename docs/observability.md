@@ -1,6 +1,6 @@
 # Where errors go
 
-Puzzled sends server errors to **Sylphx Observability**, our own
+Puzzled sends server and browser errors to **Sylphx Observability**, our own
 error-monitoring service, through the Sylphx SDK on `api.sylphx.com`
 (`observability.errorGroups.capture`). There is no third-party error SDK,
 script or host.
@@ -8,7 +8,7 @@ script or host.
 | Source | Path | Code |
 | --- | --- | --- |
 | Next.js server (route handlers, server components, actions, proxy) | `onRequestError` in `apps/puzzled/src/instrumentation.ts` | `apps/puzzled/src/lib/observability/capture.ts` (`@sylphx/sdk`) |
-| Browser (uncaught errors, rejections, error boundaries, media failures, ineffective clicks and [CSP violations](reference/csp.md)) | same-origin `POST /api/observability/errors`; forwarding disabled | `lib/observability/browser.ts`, `lib/observability/relay.ts` |
+| Browser (uncaught errors, rejections, error boundaries, media failures, ineffective clicks and [CSP violations](reference/csp.md)) | same-origin `POST /api/observability/errors`; captured server side | `lib/observability/browser.ts`, `lib/observability/relay.ts` |
 | Rust api (every 5xx, every panic) | axum middleware and panic hook | `crates/puzzled-server/src/observability.rs` (`sylphx` crate) |
 
 ## Key and SDK route
@@ -24,19 +24,15 @@ script or host.
 
 ## Browser reports
 
-The browser sends only closed issue codes, a route template, a structural
-selector, and up to 15 recent navigation, click and HTTP-status breadcrumbs.
-It holds breadcrumbs in memory, sends them only with an issue, and attempts at
-most five reports per rolling minute. It sends no raw error messages, stacks,
-URLs, page content or user input. Both ends enforce a 32 KiB encoded body limit.
+The browser sends only a closed issue code, a fixed message, a route template,
+a structural selector, and up to 15 recent navigation, click and HTTP-status
+breadcrumbs. It keeps breadcrumbs in memory and attaches them only to an issue.
+Each page attempts at most five reports per rolling minute, each at most 32 KiB
+encoded. It sends no raw error messages, stacks, URLs, page content or user input.
 
-The relay accepts only same-origin, schema-valid JSON. A 204 acknowledges
-validation, not delivery. **Upstream forwarding stays disabled**, even with a
-server key, until Hosting enforces 20 requests per minute per authenticated
-client IP on both the public domain and its managed alias. The
-[Hosting header contract](https://github.com/SylphxAI/cloud/blob/b0253af5fd45d19bc1709efda1d54d9b70602564/docs/services/hosting/request-headers.md#L30-L53)
-does not authenticate client addresses from forwarding headers. There is no
-browser key or cross-origin fallback.
+The browser holds no key and posts only to the same-origin relay, without
+cookies or a referrer. The existing relay attempts capture with the server key
+when available. Its 204 response does not confirm that an event was stored.
 
 ## Source maps
 
@@ -85,9 +81,8 @@ the `observability test error <nonce>` group with the new release.
 
 The service parses the raw stack and scrubs secrets, tokens, card numbers and
 email addresses before storing. No request or response body and no header is
-attached. The api reports the route template and status only. The relay
-accepts same-origin reports only, at most 32 KB each and 20 per client per
-minute; a page sends at most 10.
+attached. The api reports the route template and status only. The
+browser omits raw stacks and uses the fixed fields described above.
 
 ## Removed with the legacy host
 

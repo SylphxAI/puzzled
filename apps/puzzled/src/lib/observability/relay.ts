@@ -1,124 +1,130 @@
+/**
+ * The browser error relay: `POST <relay path>` on this app's own origin.
+ *
+ * The browser holds no Observability key (direct capture needs a publishable
+ * key with observability:ingest, SylphxAI/cloud#9401), so it posts a small report here and the server captures it with the
+ * environment key. The report is bounded, same-origin only, rate limited per
+ * client; the service scrubs it before storing.
+ */
+
 import { env } from '../env'
 import { resolveSiteOrigin } from '../site-origin'
-import {
-	type BrowserReport,
-	isBrowserReport,
-	MAX_BODY_BYTES,
-	RELAY_TIMEOUT_MS,
-} from './browser-report'
+
+import { type Breadcrumb, captureException } from './capture'
+
+const MAX_BODY_BYTES = 32_768
+const WINDOW_MS = 60_000
+const PER_WINDOW = 20
+const recent = new Map<string, { start: number; count: number }>()
+
+export type BrowserErrorReport = {
+	type?: string
+	message?: string
+	stack?: string
+	/** Page path without query string. */
+	path?: string
+	breadcrumbs?: Breadcrumb[]
+	/** Free-form tags from the page (boundary name, digest). */
+	tags?: Record<string, string>
+}
+
+function limited(client: string, now = Date.now()): boolean {
+	if (recent.size > 5000) recent.clear()
+	const entry = recent.get(client)
+	if (!entry || now - entry.start > WINDOW_MS) {
+		recent.set(client, { start: now, count: 1 })
+		return false
+	}
+	entry.count += 1
+	return entry.count > PER_WINDOW
+}
+
+/** Clears the per-client window so each test starts from an empty limiter. */
+export function resetRelayLimiter(): void {
+	recent.clear()
+}
+
+function text(value: unknown, max: number): string | undefined {
+	return typeof value === 'string' && value.trim() ? value.slice(0, max) : undefined
+}
 
 function sameOrigin(request: Request): boolean {
 	const site = request.headers.get('sec-fetch-site')
 	if (site !== null && site !== 'same-origin') return false
 	const origin = request.headers.get('origin')
-	if (!origin || origin === 'null' || origin.includes(',')) return false
+	if (!origin || origin === 'null') return false
+	// The public edge sets these headers before rewriting Host to the web service.
+	// Lists are ambiguous here; do not use the canonical resolver's first-value fallback.
+	for (const name of ['origin', 'host', 'x-forwarded-host', 'x-forwarded-proto']) {
+		if (request.headers.get(name)?.includes(',')) return false
+	}
 	try {
-		if (new URL(origin).origin !== origin) return false
-		// The public edge supplies the external authority before rewriting Host.
-		// The strict resolver rejects ambiguous or malformed proxy headers.
-		const authority = {
-			host: request.headers.get('host'),
-			forwardedHost: request.headers.get('x-forwarded-host'),
-			forwardedProto: request.headers.get('x-forwarded-proto'),
-			nodeEnv: env.NODE_ENV,
-		}
-		// Config is an additional constraint, never a substitute for the actual host.
+		const supplied = new URL(origin)
+		if (supplied.origin !== origin) return false
 		return (
-			origin === resolveSiteOrigin(authority, 'request') &&
 			origin ===
-				resolveSiteOrigin({ ...authority, configuredUrl: env.SYLPHX_PUBLIC_URL }, 'request')
+			resolveSiteOrigin(
+				{
+					host: request.headers.get('host'),
+					forwardedHost: request.headers.get('x-forwarded-host'),
+					forwardedProto: request.headers.get('x-forwarded-proto'),
+					configuredUrl: env.SYLPHX_PUBLIC_URL,
+					nodeEnv: env.NODE_ENV,
+					port: env.PORT,
+				},
+				'request',
+			)
 		)
 	} catch {
 		return false
 	}
 }
 
-const empty = (status: number) => new Response(null, { status })
-type Forward = (report: BrowserReport, signal: AbortSignal) => Promise<void>
-
-async function readReport(
-	request: Request,
-	signal: AbortSignal,
-): Promise<BrowserReport | 400 | 413> {
-	if (!request.body) return 400
-	const reader = request.body.getReader()
-	const cancel = () => {
-		void reader.cancel().catch(() => {})
-	}
-	signal.addEventListener('abort', cancel, { once: true })
+/** Handles one relay request; the route file only exports `POST = relayBrowserError`. */
+export async function relayBrowserError(request: Request): Promise<Response> {
+	if (!sameOrigin(request)) return new Response(null, { status: 403 })
+	const client =
+		request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+		request.headers.get('x-real-ip') ||
+		'unknown'
+	if (limited(client)) return new Response(null, { status: 429 })
+	const raw = await request.text().catch(() => '')
+	if (!raw || raw.length > MAX_BODY_BYTES) return new Response(null, { status: 413 })
+	let report: BrowserErrorReport
 	try {
-		const bytes = new Uint8Array(MAX_BODY_BYTES)
-		let size = 0
-		while (!signal.aborted) {
-			const chunk = await reader.read()
-			if (chunk.done) break
-			if (chunk.value.byteLength > MAX_BODY_BYTES - size) {
-				cancel()
-				return 413
-			}
-			bytes.set(chunk.value, size)
-			size += chunk.value.byteLength
-		}
-		if (signal.aborted) return 400
-		const parsed: unknown = JSON.parse(
-			new TextDecoder('utf-8', { fatal: true }).decode(bytes.subarray(0, size)),
-		)
-		return isBrowserReport(parsed) ? parsed : 400
+		report = JSON.parse(raw) as BrowserErrorReport
 	} catch {
-		return 400
-	} finally {
-		signal.removeEventListener('abort', cancel)
-		reader.releaseLock()
+		return new Response(null, { status: 400 })
 	}
-}
-
-/** Validate and acknowledge; a forwarder may only be wired behind trusted ingress rate enforcement. */
-export function createBrowserErrorRelay(forward?: Forward) {
-	return async function relayBrowserError(request: Request): Promise<Response> {
-		if (!sameOrigin(request)) return empty(403)
-		const contentType = request.headers.get('content-type') ?? ''
-		const encoding = request.headers.get('content-encoding')
-		if (
-			!/^application\/json(?:\s*;\s*charset=(?:utf-8|"utf-8"))?$/i.test(contentType) ||
-			(encoding !== null && encoding.toLowerCase() !== 'identity')
-		)
-			return empty(415)
-		const length = request.headers.get('content-length')
-		if (length !== null) {
-			if (!/^\d+$/.test(length)) return empty(400)
-			if (Number(length) > MAX_BODY_BYTES) return empty(413)
-		}
-
-		const controller = new AbortController()
-		let accepted = false
-		let timer: ReturnType<typeof setTimeout> | undefined
-		const deadline = new Promise<Response>((resolve) => {
-			timer = setTimeout(() => {
-				resolve(empty(accepted ? 204 : 408))
-				controller.abort()
-			}, RELAY_TIMEOUT_MS)
-		})
-		try {
-			return await Promise.race([
-				deadline,
-				(async () => {
-					const result = await readReport(request, controller.signal)
-					if (typeof result === 'number') return empty(result)
-					accepted = true
-					try {
-						if (!controller.signal.aborted) await forward?.(result, controller.signal)
-					} catch {
-						// Optional observability must not log or fail a product request.
-					}
-					return empty(204)
-				})(),
-			])
-		} finally {
-			clearTimeout(timer)
-		}
+	const message = text(report.message, 2000)
+	if (!message) return new Response(null, { status: 400 })
+	const tags: Record<string, string> = { source: 'browser' }
+	for (const [key, value] of Object.entries(report.tags ?? {}).slice(0, 8)) {
+		const clean = text(value, 200)
+		if (clean) tags[key.slice(0, 64)] = clean
 	}
+	const breadcrumbs = Array.isArray(report.breadcrumbs)
+		? report.breadcrumbs.slice(-30).flatMap((crumb) => {
+				const crumbMessage = text(crumb?.message, 500)
+				return crumbMessage
+					? [
+							{
+								category: text(crumb.category, 64),
+								message: crumbMessage,
+								timestamp: text(crumb.timestamp, 40),
+							},
+						]
+					: []
+			})
+		: []
+	const error = new Error(message)
+	await captureException(error, {
+		service: `${process.env.SYLPHX_SERVICE_NAME || 'web'}-browser`,
+		exceptionType: text(report.type, 200) ?? 'Error',
+		stack: text(report.stack, 16_000) ?? '',
+		route: text(report.path, 500),
+		breadcrumbs,
+		tags,
+	})
+	return new Response(null, { status: 204 })
 }
-
-// No forwarder, even when the server key exists. Hosting must enforce 20/min by
-// authenticated end-user IP on both hostnames before a production forwarder is wired.
-export const relayBrowserError = createBrowserErrorRelay()

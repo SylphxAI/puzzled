@@ -276,7 +276,6 @@ export default async function LocaleLayout({ children, params }: Props) {
 				<JsonLd baseUrl={baseUrl} />
 			</head>
 			<body className="antialiased">
-				{/* At first paint, outside the providers, so early errors are captured too. */}
 				<ThemeProvider nonce={nonce}>
 					<PlatformProvider>
 						{/* Before the children so its effects register first. */}

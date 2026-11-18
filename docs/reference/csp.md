@@ -82,8 +82,7 @@ the XSS protection comes from `script-src`.
 The browser collector listens for `securitypolicyviolation` once client
 instrumentation starts. It reports the allowlisted directive (or `other`),
 not the blocked URL, and applies the same deduplication and rate cap as other
-[browser reports](../observability.md#browser-reports). The relay validates
-these reports without forwarding them.
+[browser reports](../observability.md#browser-reports).
 
 ## Checking it
 

@@ -1,10 +1,10 @@
 import {
 	type Boundary,
-	type BrowserReport,
 	type ClickSelector,
 	type Crumb,
 	contains,
 	cspSelectors,
+	encodeBrowserReport,
 	type Issue,
 	MAX_BODY_BYTES,
 	MAX_BREADCRUMBS,
@@ -75,7 +75,8 @@ function install() {
 			const route = currentRoute()
 			const key = JSON.stringify([issue.type, messages[issue.type], route, issue.selector])
 			if (sent.size >= 5 || sent.has(key)) return false
-			const payload: BrowserReport = { ...issue, route, breadcrumbs: crumbs }
+			const payload = encodeBrowserReport(issue, route, crumbs)
+			if (!payload) return false
 			const body = new TextEncoder().encode(JSON.stringify(payload))
 			if (body.byteLength > MAX_BODY_BYTES) return false
 			sent.set(key, now)

@@ -69,7 +69,7 @@ export function routeTemplate(pathname: string): Route {
 	return staticRoutes.get(`/${parts.join('/')}`) ?? 'unknown'
 }
 
-export const clickSelectors = ['button', 'link', 'role=button', 'role=link', 'summary'] as const
+const clickSelectors = ['button', 'link', 'role=button', 'role=link', 'summary'] as const
 export type ClickSelector = (typeof clickSelectors)[number]
 export const mediaSelectors = ['img', 'audio', 'video'] as const
 export type MediaSelector = (typeof mediaSelectors)[number]
@@ -122,50 +122,29 @@ export type Crumb = { route: Route } & (
 	| { kind: 'click'; selector: ClickSelector }
 	| { kind: 'http'; status: number }
 )
-export type BrowserReport = Issue & { route: Route; breadcrumbs: Crumb[] }
 
 export function contains<T extends string>(values: readonly T[], value: unknown): value is T {
 	return values.some((item) => item === value)
 }
 
-function record(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function exact(value: Record<string, unknown>, keys: string[]): boolean {
-	return Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key))
-}
-
-function validCrumb(value: unknown): boolean {
-	if (!record(value) || !contains(routes, value.route)) return false
-	switch (value.kind) {
-		case 'navigation':
-			return exact(value, ['kind', 'route'])
-		case 'click':
-			return exact(value, ['kind', 'route', 'selector']) && contains(clickSelectors, value.selector)
-		case 'http':
-			return (
-				exact(value, ['kind', 'route', 'status']) &&
-				typeof value.status === 'number' &&
-				Number.isInteger(value.status) &&
-				value.status >= 100 &&
-				value.status <= 599
-			)
-		default:
-			return false
+/** Encode only collector-owned fields in the existing relay wire format. */
+export function encodeBrowserReport(issue: Issue, route: Route, crumbs: readonly Crumb[]) {
+	const { type, selector } = issue
+	if (!Object.hasOwn(selectors, type) || !contains(selectors[type] as readonly string[], selector))
+		return undefined
+	return {
+		type,
+		message: messages[type],
+		path: route,
+		tags: { selector },
+		breadcrumbs: crumbs.map((crumb) => ({
+			category: crumb.kind,
+			message:
+				crumb.kind === 'http'
+					? `${crumb.route} ${crumb.status}`
+					: crumb.kind === 'click'
+						? `${crumb.route} ${crumb.selector}`
+						: crumb.route,
+		})),
 	}
-}
-
-export function isBrowserReport(value: unknown): value is BrowserReport {
-	if (!record(value) || !exact(value, ['type', 'selector', 'route', 'breadcrumbs'])) return false
-	const { type, selector, route, breadcrumbs } = value
-	return (
-		typeof type === 'string' &&
-		Object.hasOwn(selectors, type) &&
-		selectors[type as IssueType].some((allowed) => allowed === selector) &&
-		contains(routes, route) &&
-		Array.isArray(breadcrumbs) &&
-		breadcrumbs.length <= MAX_BREADCRUMBS &&
-		breadcrumbs.every(validCrumb)
-	)
 }
