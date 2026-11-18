@@ -17,7 +17,9 @@ test('first-finish and reopened results share one fail-closed Plus decision', ()
 	}[]
 	expect(rows).toHaveLength(48)
 	for (const row of rows) {
-		const expected = ['guest', 'account'].includes(row.decision) && row.run === 'today' ? 1 : 0
+		// Any free daily finish today (the featured game or another pick) offers Plus.
+		const today = row.run === 'today' || row.run === 'otherGame'
+		const expected = ['guest', 'account'].includes(row.decision) && today ? 1 : 0
 		expect(row.cards, JSON.stringify(row)).toBe(expected)
 		expect(row.pricing, JSON.stringify(row)).toBe(expected)
 		expect(row.share, JSON.stringify(row)).toBe(true)

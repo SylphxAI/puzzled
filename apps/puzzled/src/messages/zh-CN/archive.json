@@ -1,17 +1,18 @@
 {
 	"metaTitle": "谜题存档",
-	"metaDescription": "重玩 Tryit 存档中过往的每日谜题。",
+	"metaDescription": "浏览过去 30 天全部 19 款谜题游戏。用 Tryit Plus 解锁往日题目。",
 	"eyebrow": "存档",
-	"title": "存档",
-	"body": "每个过往的每日谜题都还在这里。选一天，再玩一次。",
+	"title": "你的往日题库",
+	"body": "喜欢的游戏，还有更多。浏览过去 30 天的全部游戏，用 Plus 挑一道往日谜题慢慢玩。",
 	"playFreeToday": "玩今日免费谜题（{game}）",
-	"listTitle": "过往日期",
-	"listBody": "最近 {count} 个游戏日，最新在前。每一天都会开启当日运行的谜题。",
+	"listTitle": "过去 30 天 · 全部 19 款游戏",
+	"listBody": "过去 {count} 个谜题日，每天全部 {games} 款游戏，按从近到远排列。",
 	"playDayLabel": "玩 {date} 的 {game}",
-	"play": "开始",
+	"play": "开始玩",
 	"playToday": "玩今日的仪式（{game}）",
 	"backToGames": "返回所有游戏",
 	"emptyTitle": "存档还是空的",
 	"emptyBody": "随着游戏日一天天推进，过去的每日谜题都会出现在这里——今天的才是正题。玩一局，明天的新题就会接上。",
-	"emptyPlay": "玩今天的仪式谜题（{game}）"
+	"emptyPlay": "玩今天的仪式谜题（{game}）",
+	"locked": "Plus 解锁"
 }

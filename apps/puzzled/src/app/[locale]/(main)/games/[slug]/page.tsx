@@ -13,7 +13,7 @@ import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
 import { getServerPlusAccess } from '@/lib/api/server'
 import { isPlayLocked, OPEN_ACCESS } from '@/lib/billing/plus'
 import { getTodaysFreeGame } from '@/lib/free-rotation'
-import { canonicalizeGameSlug, playerTitle, slugToCamelCase } from '@/lib/game-slug'
+import { canonicalizeGameSlug, slugToCamelCase } from '@/lib/game-slug'
 import { difficultyLabelKey } from '@/lib/i18n/difficulty'
 import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
@@ -85,9 +85,10 @@ export async function generateMetadata({ params }: Props) {
  * today's ritual. The registry guard runs first, before any Suspense boundary,
  * so an unknown slug is a 404 with no rendered shell. Everything else is server-rendered for
  * every viewer — hero, rules, tips, FAQ and related modules — while the
- * interactive part streams behind a skeleton. Today's featured module is open
- * to every player, guests included; the rest need Tryit Plus once it is on
- * sale, and end in an honest unlock path instead of a dead end.
+ * interactive part streams behind a skeleton. Any module opens free on
+ * arrival, guests included, until the player's three free picks for the day
+ * are used; a further module and past days need Tryit Plus once it is on sale,
+ * and end in an honest unlock path instead of a dead end.
  */
 export default async function GamePage({ params, searchParams }: Props) {
 	const { locale, slug } = await params
@@ -155,15 +156,14 @@ export default async function GamePage({ params, searchParams }: Props) {
 		modules: getAllGameMetadata(),
 	})
 
+	// Today's featured game only leads the suggestions; any game opens free.
 	const todaysFreeGame = canonicalizeGameSlug(getTodaysFreeGame())
 	// Same cached read the play area makes: one lock decision for hero and panel.
+	// Only a past day is locked up front; a fourth game today is refused by the
+	// api when the board is read, and the play area shows the unlock path then.
 	const locked = isPlayLocked(
 		await withPresentationDeadline(getServerPlusAccess(Boolean(user)), OPEN_ACCESS),
-		{
-			slug: canonicalSlug,
-			freeSlug: todaysFreeGame,
-			archive: mode === 'archive' && Boolean(puzzleDate),
-		},
+		{ archive: mode === 'archive' && Boolean(puzzleDate) },
 	)
 
 	return (
@@ -210,12 +210,6 @@ export default async function GamePage({ params, searchParams }: Props) {
 						difficulty={difficulty}
 						supportsDifficulty={supportsDifficulty}
 						hasUser={Boolean(user)}
-						freeGameSlug={todaysFreeGame}
-						freeGameName={readMessage(
-							tGames,
-							`${slugToCamelCase(todaysFreeGame)}.name`,
-							playerTitle(todaysFreeGame),
-						)}
 						gameCount={getAllGameMetadata().length}
 						dateParam={puzzleDate}
 					/>

@@ -1,8 +1,8 @@
 {
 	"metaTitle": "所有遊戲",
-	"metaDescription": "瀏覽 Tryit 所有每日謎題 — 今日免費遊戲，以及文字、邏輯與數字遊戲的完整系列。",
+	"metaDescription": "瀏覽 Tryit 所有每日謎題 — 文字、邏輯與數字遊戲的完整系列，每日任揀 3 款免費玩。",
 	"title": "所有遊戲",
-	"subtitle": "每日 {count} 款遊戲，同一套玩法。每日有一款免費，所有人玩同一套題目，香港時間午夜更新。",
+	"subtitle": "每日 {count} 款遊戲，同一套玩法。每日任揀 3 款免費，所有人玩同一套題目，香港時間午夜更新。",
 	"heroEyebrow": "每日遊戲系列",
 	"searchLabel": "按名稱篩選遊戲",
 	"searchPlaceholder": "按名稱篩選遊戲…",
@@ -29,7 +29,7 @@
 		"title": "Tryit 的每日流程",
 		"body": "每個謎題日,一套共同題目,每位玩家都一樣。",
 		"step1Title": "選出今日遊戲",
-		"step1Body": "由今日精選開始,全部 {count} 款謎題都用同一套每日題目;今日精選人人免費,其餘遊戲由 Tryit Plus 開放。",
+		"step1Body": "由今日精選開始，全部 {count} 款謎題都用同一套每日題目；每日任揀 3 款人人免費，其餘遊戲由 Tryit Plus 開放。",
 		"step2Title": "按自己的節奏解題",
 		"step2Body": "大部分遊戲需時兩至十分鐘；設有難度選擇的遊戲可讓你熱身，或挑戰更難的題目。",
 		"step3Title": "養成每日習慣",
@@ -66,7 +66,7 @@
 		"relatedTitle": "更多遊戲",
 		"relatedAll": "查看所有遊戲",
 		"metaTitle": "{game}：每日{genre}謎題",
-		"metaDescription": "{game}是每日{genre}謎題。{rule}每日更新一道新題，當日精選謎題免費，毋須帳戶。",
+		"metaDescription": "{game}是每日{genre}謎題。{rule}每日更新一道新題，每日任揀 3 款遊戲免費，毋須帳戶。",
 		"genre": {
 			"word": "文字",
 			"logic": "邏輯",

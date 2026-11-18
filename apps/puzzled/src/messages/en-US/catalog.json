@@ -1,8 +1,8 @@
 {
 	"metaTitle": "All games",
-	"metaDescription": "Browse every daily puzzle on Tryit — today's free game plus the full suite of word, logic, and number rituals.",
+	"metaDescription": "Browse every daily puzzle on Tryit — play any 3 free each day from the full suite of word, logic, and number rituals.",
 	"title": "All games",
-	"subtitle": "{count} daily puzzles under one ritual. One is free every day, and everyone plays the same set — refreshed at midnight Hong Kong time.",
+	"subtitle": "{count} daily puzzles under one ritual. Pick any 3 free every day, and everyone plays the same set — refreshed at midnight Hong Kong time.",
 	"heroEyebrow": "Daily puzzle suite",
 	"searchLabel": "Filter games by title",
 	"searchPlaceholder": "Filter games by title…",
@@ -29,7 +29,7 @@
 		"title": "How a Tryit day works",
 		"body": "One puzzle day, one shared set, the same for every player.",
 		"step1Title": "Pick today's puzzle",
-		"step1Body": "Today's pick leads, and all {count} puzzles share the same daily set. Today's pick is free for everyone; the other games are open with Tryit Plus.",
+		"step1Body": "Today's pick leads, and all {count} puzzles share the same daily set. Any 3 are free for everyone each day; Tryit Plus opens the rest.",
 		"step2Title": "Solve at your own pace",
 		"step2Body": "Most puzzles take two to ten minutes, and the ones with difficulty levels let you warm up or push harder.",
 		"step3Title": "Keep the habit",
@@ -66,7 +66,7 @@
 		"relatedTitle": "More puzzles to try",
 		"relatedAll": "See all games",
 		"metaTitle": "{game}: daily {genre} puzzle",
-		"metaDescription": "{game} is a daily {genre} puzzle. {rule} A new puzzle every day; today's featured puzzle is free, no account needed.",
+		"metaDescription": "{game} is a daily {genre} puzzle. {rule} A new puzzle every day; play any 3 games free, no account needed.",
 		"genre": {
 			"word": "word",
 			"logic": "logic",

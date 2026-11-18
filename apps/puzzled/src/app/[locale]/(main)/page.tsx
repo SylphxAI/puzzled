@@ -226,10 +226,7 @@ async function HomeDayIsland({
 	const milestone = facts.user ? dueMilestone(playedDays, seen) : null
 	if (milestone !== null) {
 		const access = await getServerPlusOfferAccess(true)
-		milestoneOffer = plusOfferFor(access, {
-			gameCount: getAllGameMetadata().length,
-			freeSlug: freeGame.slug,
-		})
+		milestoneOffer = plusOfferFor(access, { gameCount: getAllGameMetadata().length })
 	}
 
 	const trialEndMs = facts.user ? await getServerTrialBannerEndMs() : null

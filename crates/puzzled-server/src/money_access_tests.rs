@@ -1,6 +1,7 @@
 //! The play gate through the router with Sylphx Money as the only source of
-//! access: a paid user plays a Plus-only game and the archive, an unpaid user
-//! is refused with `plus_required`, and Money being unreachable locks nothing.
+//! access: a paid user plays a fourth game and the archive, an unpaid user who
+//! has used today's three free picks is refused with `plus_required`, and
+//! Money being unreachable locks nothing.
 //! Needs `PUZZLED_TEST_DATABASE_URL` (CI sets it).
 
 use std::sync::{Arc, Mutex};
@@ -106,19 +107,30 @@ async fn get_daily(app: &Router, body: Value, bearer: &str) -> (StatusCode, Valu
     )
 }
 
-/// A game that is not today's free one.
+/// The game a player asks for after spending today's picks elsewhere.
 fn paid_game() -> &'static str {
-    let today = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
-    if puzzled_core::puzzle_play::game_slugs::todays_free_game(today) == "sudoku" {
-        "crossword"
-    } else {
-        "sudoku"
-    }
+    "sudoku"
 }
 
+/// One of the games [`spend_free_picks`] takes.
 fn free_game() -> &'static str {
+    "crossword"
+}
+
+/// Use all of today's free picks for `user` on games other than [`paid_game`].
+async fn spend_free_picks(pool: &sqlx::PgPool, user: &str) {
     let today = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
-    puzzled_core::puzzle_play::game_slugs::todays_free_game(today)
+    for slug in ["crossword", "word-guess", "word-groups"] {
+        sqlx::query(
+            "INSERT INTO daily_free_picks (user_id, day_key, game_slug) VALUES ($1::uuid, $2, $3)",
+        )
+        .bind(user)
+        .bind(today)
+        .bind(slug)
+        .execute(pool)
+        .await
+        .unwrap();
+    }
 }
 
 fn refused(body: &Value, code: &str) -> bool {
@@ -136,7 +148,7 @@ async fn money_alone_decides_who_plays_paid_games_and_the_archive() {
     let fake: Fake = Arc::default();
     fake.lock().unwrap().paid.push(PAID.to_string());
     let money = spawn_money(fake.clone()).await;
-    let app = router(AppState::new(Some(pool)).with_money(Some(money)));
+    let app = router(AppState::new(Some(pool.clone())).with_money(Some(money)));
     let archive = json!({"gameSlug": free_game(), "puzzleDate": "2026-01-01"});
 
     // Paid: a Plus-only game and the archive both open.
@@ -146,8 +158,12 @@ async fn money_alone_decides_who_plays_paid_games_and_the_archive() {
     let (status, body) = get_daily(&app, archive.clone(), &paid_token).await;
     assert_eq!(status, StatusCode::OK, "{body}");
 
-    // Unpaid: today's free game plays; another game and the archive are refused.
+    // Unpaid: any game opens while a pick is left, and a look spends none.
     let unpaid_token = token(UNPAID);
+    let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &unpaid_token).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    // Picks used: a picked game still plays; a fourth game and the archive are refused.
+    spend_free_picks(&pool, UNPAID).await;
     let (status, _) = get_daily(&app, json!({"gameSlug": free_game()}), &unpaid_token).await;
     assert_eq!(status, StatusCode::OK);
     let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &unpaid_token).await;
@@ -162,6 +178,7 @@ async fn money_alone_decides_who_plays_paid_games_and_the_archive() {
     // never reads billing and still plays.
     fake.lock().unwrap().down = true;
     let outage_token = token(OUTAGE);
+    spend_free_picks(&pool, OUTAGE).await;
     let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &outage_token).await;
     assert_eq!(status, StatusCode::OK, "{body}");
     let (status, _) = get_daily(&app, json!({"gameSlug": free_game()}), &outage_token).await;
@@ -220,7 +237,7 @@ async fn a_family_join_is_refused_and_retryable_when_money_cannot_answer_seats()
         .await
         .unwrap();
     let money = spawn_money(fake.clone()).await;
-    let app = router(AppState::new(Some(pool)).with_money(Some(money)));
+    let app = router(AppState::new(Some(pool.clone())).with_money(Some(money)));
     let join = json!({"inviteCode": "FAMILYCODE"});
 
     // Seats unanswered: no new member, and the error is the retryable one.
@@ -246,12 +263,13 @@ async fn a_family_join_is_refused_and_retryable_when_money_cannot_answer_seats()
     let member = token(UNPAID);
     let (status, body) = call(&app, "/puzzled.v1.BillingService/JoinFamily", join, &member).await;
     assert_eq!(status, StatusCode::OK, "{body}");
+    spend_free_picks(&pool, UNPAID).await;
     let (status, body) = get_daily(&app, json!({"gameSlug": paid_game()}), &member).await;
     assert_eq!(status, StatusCode::OK, "{body}");
 }
 
 /// No existing-player exemption: an account with old finished sessions but no
-/// Plus is refused a Plus game exactly like a new account.
+/// Plus is refused a fourth game exactly like a new account.
 #[tokio::test]
 async fn an_account_with_old_play_history_is_still_locked_without_plus() {
     let _key = crate::capabilities::identity_access::adapters::platform_jwt::test_key_lock()
@@ -276,6 +294,7 @@ async fn an_account_with_old_play_history_is_still_locked_without_plus() {
     .execute(&pool)
     .await
     .unwrap();
+    spend_free_picks(&pool, HISTORY).await;
     let money = spawn_money(Arc::default()).await;
     let app = router(AppState::new(Some(pool)).with_money(Some(money)));
 
@@ -293,6 +312,7 @@ async fn checkout_return_refresh_unlocks_paid_play_only_after_money_confirms() {
         return;
     };
     let fake: Fake = Arc::default();
+    spend_free_picks(&pool, UNPAID).await;
     let money = spawn_money(fake.clone()).await;
     let app = router(AppState::new(Some(pool)).with_money(Some(money)));
     let bearer = token(UNPAID);

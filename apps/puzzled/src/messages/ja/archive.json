@@ -1,17 +1,18 @@
 {
 	"metaTitle": "パズルアーカイブ",
-	"metaDescription": "Tryitのアーカイブで、過去のデイリーパズルをもう一度遊べます。",
+	"metaDescription": "過去30日分、全19種類のパズルを見てみよう。Tryit Plusで過去のパズルも遊べます。",
 	"eyebrow": "アーカイブ",
-	"title": "アーカイブ",
-	"body": "過去のデイリーパズルはすべてここに残っています。日付を選んで、もう一度遊びましょう。",
+	"title": "パズルアーカイブ",
+	"body": "お気に入りのゲームをもっと。過去30日分の全ゲームから、Plusで遊びたいパズルを選びましょう。",
 	"playFreeToday": "今日の無料パズルを遊ぶ({game})",
-	"listTitle": "過去の日付",
-	"listBody": "直近{count}日分のパズルを新しい順に表示しています。各日付から、その日に出題されたパズルを開けます。",
+	"listTitle": "過去30日分・全19ゲーム",
+	"listBody": "過去{count}日分、各日の全{games}ゲームを新しい順に表示しています。",
 	"playDayLabel": "{date}の{game}を遊ぶ",
-	"play": "遊ぶ",
+	"play": "プレイ",
 	"playToday": "今日の日課を遊ぶ({game})",
 	"backToGames": "すべてのゲームに戻る",
 	"emptyTitle": "アーカイブはまだ空です",
 	"emptyBody": "過去のデイリーパズルは、日付が変わるたびにここへ追加されます。今日のパズルを遊べば、明日にはここに並びます。",
-	"emptyPlay": "今日の日課を遊ぶ({game})"
+	"emptyPlay": "今日の日課を遊ぶ({game})",
+	"locked": "Plusでプレイ"
 }

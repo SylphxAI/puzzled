@@ -111,13 +111,18 @@ export type DailyLoadState =
 	| { status: 'loading' }
 	| { status: 'ready'; snapshot: DailySnapshot }
 	| { status: 'error' }
+	/** The api refused the read: Tryit Plus is needed (today's free picks are used). */
+	| { status: 'locked' }
 
 export type DailyLoadEvent =
 	/**
 	 * Client-side retry: returns to `loading`, which re-runs the fetch effect
 	 * without a hard navigation.
 	 */
-	{ type: 'retry' } | { type: 'load-succeeded'; snapshot: DailySnapshot } | { type: 'load-failed' }
+	| { type: 'retry' }
+	| { type: 'load-succeeded'; snapshot: DailySnapshot }
+	| { type: 'load-failed' }
+	| { type: 'load-refused' }
 
 export const initialDailyLoadState: DailyLoadState = { status: 'loading' }
 
@@ -130,5 +135,7 @@ export function dailyLoadReducer(state: DailyLoadState, event: DailyLoadEvent): 
 			return { status: 'ready', snapshot: event.snapshot }
 		case 'load-failed':
 			return { status: 'error' }
+		case 'load-refused':
+			return { status: 'locked' }
 	}
 }

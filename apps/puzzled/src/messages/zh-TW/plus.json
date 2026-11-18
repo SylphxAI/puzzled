@@ -1,8 +1,8 @@
 {
 	"pricing": {
-		"metaDescription": "今天精選謎題免費。Tryit Plus 開放全部遊戲、所有過往題目，並提供家庭方案。",
-		"lead": "今天精選謎題人人免費。Tryit Plus 開放全部 {count} 款遊戲、過往題庫，以及每款遊戲的統計。",
-		"freeBody": "每天一款精選謎題，不需註冊帳號。",
+		"metaDescription": "每天任選 3 款遊戲免費玩。Tryit Plus 開放全部遊戲、所有過往題目，並提供家庭方案。",
+		"lead": "每天任選 3 款遊戲免費玩。Tryit Plus 開放全部 {count} 款遊戲、過往題庫，以及每款遊戲的統計。",
+		"freeBody": "每天任選 3 款遊戲，不需註冊帳號。",
 		"playFree": "玩今天的免費謎題：{game}",
 		"legal": "價格已包含增值稅。由 Sylphx Limited（於英格蘭及威爾斯註冊）出售。訂閱會自動續訂，直至你在「設定」中取消。",
 		"weekendPass": "{days} 天通行證",
@@ -12,6 +12,7 @@
 		"signInToStartFamily": "登入以啟用家庭方案"
 	},
 	"unlock": {
+		"title": "今天的 3 款免費遊戲已玩完",
 		"body": "今天的免費謎題是 {game}。Tryit Plus 開放全部 {count} 款遊戲和所有過往題目。"
 	},
 	"offer": {
@@ -30,5 +31,8 @@
 		"resumed": "你的訂閱會如常續訂。",
 		"claimBody": "建立 Tryit 帳號或登入，即可將 Tryit Plus 與全部遊戲連結至你的帳號。",
 		"claimCreateAccount": "建立帳號並啟用 Plus"
+	},
+	"checkoutOffer": {
+		"unavailableTitle": "暫時無法載入方案"
 	}
 }

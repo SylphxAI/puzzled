@@ -1,6 +1,6 @@
 {
 	"metaTitle": "Jogos de raciocínio e quebra-cabeças diários grátis",
-	"metaDescription": "Jogue um jogo de raciocínio diário grátis — palavras, lógica, números e quebra-cabeças espaciais — e mantenha o hábito. Um desafio grátis por dia, sem precisar de conta.",
+	"metaDescription": "Jogue jogos de raciocínio diários grátis — palavras, lógica, números e quebra-cabeças espaciais — e mantenha o hábito. 3 desafios grátis por dia, sem precisar de conta.",
 	"greeting": {
 		"morning": "Bom dia",
 		"afternoon": "Boa tarde",
@@ -39,7 +39,7 @@
 		"viewStats": "Ver suas estatísticas"
 	},
 	"tomorrow": {
-		"title": "{game} é grátis amanhã.",
+		"title": "Destaque de amanhã: {game}.",
 		"body": "Mesmo ritual, seleção nova.",
 		"cta": "Ver o catálogo"
 	},
@@ -48,11 +48,11 @@
 		"subtitle": "A versão resumida de como o Tryit funciona.",
 		"free": {
 			"question": "O Tryit é grátis?",
-			"answer": "O desafio em destaque de hoje é grátis e não exige conta. O Plus dá acesso aos 19 jogos e ao arquivo completo."
+			"answer": "Sim: escolha 3 jogos grátis todos os dias, sem precisar de conta. O Plus dá acesso aos 19 jogos e ao arquivo completo."
 		},
 		"account": {
 			"question": "Preciso de uma conta para jogar?",
-			"answer": "Não. Você pode concluir o desafio grátis de hoje como visitante. Uma conta mantém sua sequência, seus resultados e suas estatísticas em todos os dispositivos."
+			"answer": "Não. Você pode concluir seus 3 desafios grátis como visitante. Uma conta mantém sua sequência, seus resultados e suas estatísticas em todos os dispositivos."
 		},
 		"schedule": {
 			"question": "Quando os novos desafios aparecem?",
@@ -81,7 +81,7 @@
 		"titleMemberStreak": "Sua sequência de {days} dias está esperando",
 		"titleMemberDone": "Tudo feito por hoje — muito bem",
 		"titleDone": "O {game} de hoje foi concluído",
-		"bodyGuest": "O Tryit é uma seleção diária de desafios de palavras, lógica e números. Um deles é grátis todos os dias, leva poucos minutos e não exige cadastro.",
+		"bodyGuest": "O Tryit é uma seleção diária de desafios de palavras, lógica e números. Escolha 3 grátis todos os dias; cada um leva poucos minutos e não exige cadastro.",
 		"bodyMember": "Sua sequência, suas estatísticas e a seleção de hoje estão a um toque de distância.",
 		"playToday": "Jogar o {game} de hoje",
 		"playAgain": "Jogar o de hoje de novo",

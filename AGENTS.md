@@ -1,6 +1,6 @@
 # Puzzled
 
-Daily light brain games: nineteen puzzles, one always free. Owner: SylphxAI
+Daily light brain games: nineteen puzzles, any three free every day. Owner: SylphxAI
 (Sylphx Apps). Start with [README.md](README.md), then [docs/vision.md](docs/vision.md)
 for the goal and what we will not do. Read [DESIGN.md](DESIGN.md) before any
 visual work: screens, images, social posts or marketing.
@@ -58,8 +58,9 @@ one test file into another. Keep `--isolate` in both test scripts.
   from a client clock or UTC; the shared daily puzzle and the finish rule depend on it.
 - **One finish per `(user, game, day_key)`.** Keep the already-played guard even
   when a deterministic generator gives no `puzzle_id`.
-- **The free daily puzzle never reads billing.** A failed entitlement read must
-  refuse paid play and leave the free floor open. Payments run only through
+- **The free daily picks never read billing.** A failed entitlement read must
+  refuse paid play and leave the free floor open (any three games a day,
+  claimed in `daily_free_picks` on the first graded write). Payments run only through
   Sylphx Money; Puzzled holds no Stripe code or keys
   ([docs/monetization.md](docs/monetization.md)).
 - **Migrations are forward-only in production.** Use expand then contract, run

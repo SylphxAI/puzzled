@@ -10,11 +10,9 @@ import { OPEN_ACCESS, type PlusAccess } from '@/lib/billing/plus'
 /** Distinct play days at which a returning member is offered Plus, once each. */
 export const PLUS_PROMPT_MILESTONES = [3, 7] as const
 
-/** What a result screen needs to offer Plus: the catalogue size and the free game. */
+/** What a result screen needs to offer Plus: the catalogue size. */
 export type PlusOffer = {
 	gameCount: number
-	/** Today's free featured game, the only one a free player can finish on a daily. */
-	freeSlug: string
 	/**
 	 * The individual yearly Plus price as the pricing page shows it (catalogue
 	 * amount, visitor's currency, formatted). Absent when it cannot be read.
@@ -35,17 +33,12 @@ export function plusOfferFor(access: PlusAccess, input: PlusOffer): PlusOffer | 
 	return plusOfferOpen(access) ? input : null
 }
 
-/** The result-screen card follows today's free game, never an archive run or a paid game. */
+/** The result-screen card follows a free daily finish (any game today), never an archive run. */
 export function showResultPlusCard(
 	offer: ResultPlusOffer | null,
 	run: { mode: 'daily' | 'archive'; gameSlug: string; puzzleDate?: string },
 ): boolean {
-	return (
-		offer !== null &&
-		run.mode === 'daily' &&
-		run.gameSlug === offer.freeSlug &&
-		run.puzzleDate === offer.dayKey
-	)
+	return offer !== null && run.mode === 'daily' && run.puzzleDate === offer.dayKey
 }
 
 /**

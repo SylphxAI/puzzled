@@ -2920,7 +2920,7 @@
 			},
 			{
 				"value": "檔案庫",
-				"keys": ["archive.eyebrow", "archive.title", "nav.archive"]
+				"keys": ["archive.eyebrow", "nav.archive"]
 			},
 			{
 				"value": "歡迎回來",
@@ -3271,12 +3271,8 @@
 				"keys": ["settings.account.centreCta", "settings.security.protectionCta"]
 			},
 			{
-				"value": "開始",
-				"keys": ["archive.play", "catalog.open"]
-			},
-			{
 				"value": "開始玩",
-				"keys": ["footer.playHeading", "home.lineup.play"]
+				"keys": ["archive.play", "footer.playHeading", "home.lineup.play"]
 			},
 			{
 				"value": "開始遊戲",
@@ -3659,7 +3655,7 @@
 			},
 			{
 				"value": "典藏",
-				"keys": ["archive.eyebrow", "archive.title", "nav.archive"]
+				"keys": ["archive.eyebrow", "nav.archive"]
 			},
 			{
 				"value": "再玩一次",
@@ -4400,12 +4396,8 @@
 				"keys": ["settings.account.centreCta", "settings.security.protectionCta"]
 			},
 			{
-				"value": "開始",
-				"keys": ["archive.play", "catalog.open"]
-			},
-			{
 				"value": "開始玩",
-				"keys": ["footer.playHeading", "home.lineup.play"]
+				"keys": ["archive.play", "footer.playHeading", "home.lineup.play"]
 			},
 			{
 				"value": "開始遊戲",
@@ -4928,7 +4920,7 @@
 			},
 			{
 				"value": "存档",
-				"keys": ["archive.eyebrow", "archive.title", "nav.archive"]
+				"keys": ["archive.eyebrow", "nav.archive"]
 			},
 			{
 				"value": "安全",
@@ -5043,10 +5035,6 @@
 				]
 			},
 			{
-				"value": "开始",
-				"keys": ["archive.play", "catalog.open"]
-			},
-			{
 				"value": "开始游戏",
 				"keys": [
 					"catalog.play",
@@ -5057,7 +5045,7 @@
 			},
 			{
 				"value": "开始玩",
-				"keys": ["footer.playHeading", "home.lineup.play"]
+				"keys": ["archive.play", "footer.playHeading", "home.lineup.play"]
 			},
 			{
 				"value": "当前密码",
@@ -5869,7 +5857,7 @@
 			},
 			{
 				"value": "アーカイブ",
-				"keys": ["archive.eyebrow", "archive.title", "modes.archive", "nav.archive"]
+				"keys": ["archive.eyebrow", "modes.archive", "nav.archive"]
 			},
 			{
 				"value": "キャンセル",
@@ -6097,6 +6085,10 @@
 				"keys": ["daily.puzzleNumber", "home.day.puzzleNumber"]
 			},
 			{
+				"value": "パズルアーカイブ",
+				"keys": ["archive.metaTitle", "archive.title"]
+			},
+			{
 				"value": "フィーチャーフラグ",
 				"keys": ["admin.featureFlags.title", "admin.sidebar.featureFlags"]
 			},
@@ -6133,6 +6125,10 @@
 			{
 				"value": "プランと料金",
 				"keys": ["admin.plans.title", "admin.sidebar.plansAndPricing"]
+			},
+			{
+				"value": "プレイ",
+				"keys": ["archive.play", "catalog.play"]
 			},
 			{
 				"value": "プレイを始める",
@@ -6912,7 +6908,7 @@
 			},
 			{
 				"value": "遊ぶ",
-				"keys": ["archive.play", "common.play", "footer.playHeading", "home.lineup.play"]
+				"keys": ["common.play", "footer.playHeading", "home.lineup.play"]
 			},
 			{
 				"value": "過去のパズルを遊ぶ",

@@ -1195,6 +1195,12 @@ async fn invalid_submit_rolls_back_allocation_and_adoption_until_valid_finish() 
         .await
         .unwrap();
     assert_eq!(count, 0);
+    // A refused finish spends no free pick either.
+    let picks: i64 = sqlx::query_scalar("SELECT count(*) FROM daily_free_picks")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(picks, 0);
     let (status, body) = puzzle_request(&app, "SubmitGuess", pair, None, valid.clone()).await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["valid"], true);
@@ -1208,6 +1214,15 @@ async fn invalid_submit_rolls_back_allocation_and_adoption_until_valid_finish() 
         .await
         .unwrap();
     assert_eq!(count, 1);
+    // The accepted finish took today's pick for the new guest player.
+    let picked: Vec<String> = sqlx::query_scalar(
+        "SELECT p.game_slug FROM daily_free_picks p JOIN guest_credentials g ON g.user_id = p.user_id WHERE p.day_key = $1",
+    )
+    .bind(day)
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+    assert_eq!(picked, vec!["word-guess".to_string()]);
 
     let cookie = guest_credentials::issue(&pool).await.unwrap();
     let pair = cookie.split(';').next().unwrap();
@@ -1240,6 +1255,23 @@ async fn invalid_submit_rolls_back_allocation_and_adoption_until_valid_finish() 
             .await
             .unwrap();
     assert_eq!(adopted, Some(account));
+    // The signed-in finish took the pick on the account, not the guest.
+    let account_picks: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM daily_free_picks WHERE user_id = $1 AND day_key = $2",
+    )
+    .bind(account)
+    .bind(day)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(account_picks, 1);
+    let guest_picks: i64 =
+        sqlx::query_scalar("SELECT count(*) FROM daily_free_picks WHERE user_id = $1")
+            .bind(guest)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(guest_picks, 0);
     pool.close().await;
 }
 

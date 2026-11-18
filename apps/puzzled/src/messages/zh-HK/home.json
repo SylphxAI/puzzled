@@ -1,6 +1,6 @@
 {
 	"metaTitle": "免費每日腦力遊戲與謎題",
-	"metaDescription": "每日一款免費腦力遊戲：文字、邏輯、數字與空間謎題，玩完仲想繼續。日日有免費謎題，毋須註冊。",
+	"metaDescription": "每日免費玩腦力遊戲：文字、邏輯、數字與空間謎題，玩完仲想繼續。每日任揀 3 款免費，毋須註冊。",
 	"greeting": {
 		"morning": "早晨",
 		"afternoon": "午安",
@@ -39,7 +39,7 @@
 		"viewStats": "睇你嘅統計"
 	},
 	"tomorrow": {
-		"title": "聽日 {game} 免費。",
+		"title": "聽日精選：{game}。",
 		"body": "同樣儀式，全新題目。",
 		"cta": "睇目錄"
 	},
@@ -48,11 +48,11 @@
 		"subtitle": "用最短篇幅講清楚 Tryit。",
 		"free": {
 			"question": "Tryit 免費嗎？",
-			"answer": "今日精選謎題免費，毋須帳戶。Plus 可玩齊全部 19 款遊戲和完整往日題庫。"
+			"answer": "係，每日任揀 3 款遊戲免費玩，毋須帳戶。Plus 可玩齊全部 19 款遊戲和完整往日題庫。"
 		},
 		"account": {
 			"question": "玩遊戲需要註冊帳戶嗎？",
-			"answer": "唔需要。你可以以訪客身分完成今日免費謎題。註冊帳戶就可以跨裝置保存連續紀錄、成績同統計。"
+			"answer": "唔需要。你可以以訪客身分完成今日 3 款免費謎題。註冊帳戶就可以跨裝置保存連續紀錄、成績同統計。"
 		},
 		"schedule": {
 			"question": "新謎題幾時更新？",
@@ -81,7 +81,7 @@
 		"titleMemberStreak": "你的 {days} 日連續紀錄等着你",
 		"titleMemberDone": "今日已完成 — 玩得漂亮",
 		"titleDone": "今日嘅{game}已完成",
-		"bodyGuest": "Tryit 每日有一組文字、邏輯同數字謎題。每日一個免費，幾分鐘玩得完，毋須註冊。",
+		"bodyGuest": "Tryit 每日有一組文字、邏輯同數字謎題。每日任揀 3 款免費，幾分鐘玩得完，毋須註冊。",
 		"bodyMember": "你的連續紀錄、統計和今日陣容，一按即到。",
 		"playToday": "玩今日的{game}",
 		"playAgain": "再玩一次",

@@ -11,7 +11,7 @@ Cite the ID column.
 | PUZ-MODULE | Game protocol: day key, finish, result card, entitlement ([game-protocol.md](game-protocol.md)) | supported | `crates/puzzled-core/src/capabilities/puzzle_play` | none |
 | PUZ-DAILY | Daily play across the catalog; any admitted game completes in about 5 to 15 minutes with a result card | supported | `apps/puzzled/src/games` | PUZ-MODULE |
 | PUZ-PROGRESS | Home shows today's saved finishes from ONE `GetTodayProgress` read (server-computed `Asia/Hong_Kong` product day, one row per user, game and day, no puzzle or answer in the payload); the "could not load" notice shows only when the free game's status is unknown; after sign-up a player returns to the game that asked (safe same-origin `callbackUrl` only) with a one-time "saved" note | supported | `crates/puzzled-server/src/bootstrap/connect_puzzle.rs`, `apps/puzzled/src/lib/api/server.ts`, `apps/puzzled/src/lib/identity/after-sign-up.ts` | PUZ-DAILY |
-| PUZ-FREE | Free daily finish: every product day a guest can finish at least one puzzle without payment or account, with a result card; the featured rotation flips at Hong Kong midnight; no billing read sits on the play path | supported | `crates/puzzled-server/src/capabilities/puzzle_play` | PUZ-MODULE |
+| PUZ-FREE | Free daily finish: every product day a guest can finish any three puzzles of their choice without payment or account, with a result card; the picks reset at Hong Kong midnight; no billing read sits on the free play path | supported | `crates/puzzled-server/src/capabilities/puzzle_play` | PUZ-MODULE |
 | PUZ-NSM | Daily puzzle completers ([metrics.md](metrics.md)): recomputable from finish records, excluding archive, practice, entertainment, admin, dry-run and duplicates | supported | `crates/puzzled-core/src/capabilities/puzzle_play/domain/ritual_completion.rs` | PUZ-MODULE |
 | PUZ-HABIT | Gentle return: a player can return the next day and find today's puzzle without push; streaks and milestones derive from accepted days; a missed day does not erase history, paid access or identity; every 7th played day of a run earns a streak freeze (at most 2 held, same for guests and accounts), and a held freeze automatically covers one missed day so the run continues; the Stats streak card shows freezes held and days to the next; a signed-in player can switch streak auto-freeze on or off in Settings > Preferences (`ToggleAutoFreeze`) | supported | `crates/puzzled-server/src/capabilities/gamification` | PUZ-FREE |
 | PUZ-SHARE | Non-spoiler share: text and card plus a game and `date=` link leak no solution; home does not dump the full catalog on cold users | supported | `apps/puzzled/src/features/daily/lib/share-text.ts` | PUZ-DAILY |
@@ -80,8 +80,8 @@ Cite the ID column.
   (server-side only) and the Google consent and email branding, until the
   same-origin Auth proxy ships.
 
-- **Live check:** on `https://puzzled.gg` a guest finishes today's featured
-  puzzle without payment or account through Connect `PuzzleService`, then
+- **Live check:** on `https://puzzled.gg` a guest finishes a puzzle of their
+  choice without payment or account through Connect `PuzzleService`, then
   shares a non-spoiler card with a `?date=` link. `bun run verify:live` runs the
   read-only subset ([reference/live-verification.md](reference/live-verification.md)).
   `/healthz` and `/` returning 200 only show reachability.

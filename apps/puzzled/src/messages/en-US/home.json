@@ -1,6 +1,6 @@
 {
 	"metaTitle": "Free Daily Brain Games & Puzzles",
-	"metaDescription": "Play a free daily brain game — word, logic, number and spatial puzzles — then keep the habit going. One free puzzle every day, no account needed.",
+	"metaDescription": "Play free daily brain games — word, logic, number and spatial puzzles — then keep the habit going. Any 3 puzzles free every day, no account needed.",
 	"greeting": {
 		"morning": "Good morning",
 		"afternoon": "Good afternoon",
@@ -39,7 +39,7 @@
 		"viewStats": "View your stats"
 	},
 	"tomorrow": {
-		"title": "{game} is free tomorrow.",
+		"title": "Tomorrow's pick: {game}.",
 		"body": "Same ritual, new set.",
 		"cta": "See the catalog"
 	},
@@ -48,11 +48,11 @@
 		"subtitle": "The short version of how Tryit works.",
 		"free": {
 			"question": "Is Tryit free?",
-			"answer": "Today's featured puzzle is free, with no account needed. Plus unlocks all 19 games and the full archive."
+			"answer": "Yes: pick any 3 games free every day, with no account needed. Plus unlocks all 19 games and the full archive."
 		},
 		"account": {
 			"question": "Do I need an account to play?",
-			"answer": "No. You can finish today's free puzzle as a guest. An account keeps your streak, results and stats across devices."
+			"answer": "No. You can finish your 3 free puzzles as a guest. An account keeps your streak, results and stats across devices."
 		},
 		"schedule": {
 			"question": "When do new puzzles appear?",
@@ -81,7 +81,7 @@
 		"titleMemberStreak": "Your {days}-day streak is waiting",
 		"titleMemberDone": "All done for today — nicely played",
 		"titleDone": "Today's {game} is done",
-		"bodyGuest": "Tryit is a daily set of word, logic and number puzzles. One is free every day, takes a few minutes, and needs no signup.",
+		"bodyGuest": "Tryit is a daily set of word, logic and number puzzles. Pick any 3 free every day; each takes a few minutes and needs no signup.",
 		"bodyMember": "Your streak, your stats and today's lineup are one tap away.",
 		"playToday": "Play today's {game}",
 		"playAgain": "Play today again",

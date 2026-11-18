@@ -23,8 +23,8 @@ dump the whole list on a new visitor.
 
 ## What it costs and earns
 
-Today's featured puzzle is free for everyone, always. Puzzled Plus, a
-subscription in the NYT Games class, opens every other game, every past day,
+Any three games a day, chosen by the player, are free for everyone, always.
+Puzzled Plus, a subscription in the NYT Games class, opens every other game, every past day,
 stats for every game and a family plan. The policy is in
 [monetization.md](monetization.md). Payments, subscription state and
 entitlements go through Sylphx Money, the platform's payments service; the
@@ -32,7 +32,7 @@ product builds no billing of its own.
 
 ## What we won't do
 
-- Charge for today's featured puzzle or sell the solution. The free finish is
+- Charge for the day's three free picks or sell the solution. The free finish is
   what creates daily habit, and habit is what a subscription is sold to.
 - Hardcore ranked ladders as the main social surface, gambling or loot boxes,
   and scientific, medical, IQ or destiny claims. They pull the tone away from

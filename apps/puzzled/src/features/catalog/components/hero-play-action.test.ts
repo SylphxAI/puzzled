@@ -24,9 +24,9 @@ describe('HeroPlayAction', () => {
 		expect(render(true)).toBe('')
 	})
 
-	test('a non-featured game is locked for a viewer without Plus, the featured one is not', () => {
+	test('every game today opens on arrival for a viewer without Plus; a past day is locked', () => {
 		const access = { salesOpen: true, entitled: false }
-		expect(isPlayLocked(access, { slug: 'sudoku', freeSlug: 'five', archive: false })).toBe(true)
-		expect(isPlayLocked(access, { slug: 'five', freeSlug: 'five', archive: false })).toBe(false)
+		expect(isPlayLocked(access, { archive: false })).toBe(false)
+		expect(isPlayLocked(access, { archive: true })).toBe(true)
 	})
 })

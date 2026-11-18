@@ -1,16 +1,26 @@
-//! Puzzled Plus access policy.
+//! Tryit Plus access policy.
 //!
-//! - Today's featured game ([`crate::puzzle_play::game_slugs::todays_free_game`])
-//!   is free to everyone, guests included.
-//! - Every other game, and every past day, needs Puzzled Plus: an own
-//!   subscription or a place in a family plan, as Sylphx Money answers.
+//! - Every player picks up to [`DAILY_FREE_PICKS`] games each product day and
+//!   plays them free, guests included. A picked game stays open all day.
+//! - A further game that day, and every past day, needs Tryit Plus: an own
+//!   subscription, a pass, or a place in a family plan, as Sylphx Money answers.
 //! - While sales are closed (Money not configured, or its catalogue sells no
 //!   plan) nothing can be bought, so nothing is locked.
+
+/// Games a player may choose to play free on one product day.
+pub const DAILY_FREE_PICKS: u32 = 3;
+
+/// May this game be played as one of today's free picks: already chosen
+/// today, or a pick is still left.
+#[must_use]
+pub fn free_pick_open(already_picked: bool, picked_today: u32) -> bool {
+    already_picked || picked_today < DAILY_FREE_PICKS
+}
 
 /// Why a play request was refused.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PlayDenied {
-    /// A game other than today's free one, on today's date.
+    /// Today's free picks are used and this game is not one of them.
     PlusRequiredForGame,
     /// Any game on a past day.
     PlusRequiredForArchive,
@@ -32,7 +42,7 @@ pub fn play_access(
     sales_open: bool,
     entitled: bool,
     is_today: bool,
-    game_free_today: bool,
+    free_pick: bool,
 ) -> Result<(), PlayDenied> {
     if !sales_open || entitled {
         return Ok(());
@@ -40,7 +50,7 @@ pub fn play_access(
     if !is_today {
         return Err(PlayDenied::PlusRequiredForArchive);
     }
-    if game_free_today {
+    if free_pick {
         Ok(())
     } else {
         Err(PlayDenied::PlusRequiredForGame)
@@ -52,12 +62,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn free_daily_stays_open_and_the_rest_needs_plus() {
+    fn three_picks_stay_open_and_the_rest_needs_plus() {
         // Sales closed: nothing is sold, so nothing is locked.
         assert_eq!(play_access(false, false, false, false), Ok(()));
         // Entitled: everything.
         assert_eq!(play_access(true, true, false, false), Ok(()));
-        // Not entitled: today's free game only.
+        // Not entitled: today's free picks only.
         assert_eq!(play_access(true, false, true, true), Ok(()));
         assert_eq!(
             play_access(true, false, true, false),
@@ -68,5 +78,16 @@ mod tests {
             Err(PlayDenied::PlusRequiredForArchive)
         );
         assert_eq!(PlayDenied::PlusRequiredForGame.code(), "plus_required");
+    }
+
+    #[test]
+    fn a_fourth_new_game_is_not_a_free_pick_but_a_chosen_one_stays() {
+        assert!(free_pick_open(false, 0));
+        assert!(free_pick_open(false, 2));
+        assert!(!free_pick_open(false, DAILY_FREE_PICKS));
+        assert!(free_pick_open(true, DAILY_FREE_PICKS));
+        // A guest and an account merged on sign-in can hold more than three.
+        assert!(free_pick_open(true, DAILY_FREE_PICKS + 2));
+        assert!(!free_pick_open(false, DAILY_FREE_PICKS + 2));
     }
 }

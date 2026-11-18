@@ -2,15 +2,15 @@
 	"name": "Tryit Plus",
 	"pricing": {
 		"metaTitle": "Tryit Plus：全部遊戲與完整往日題庫",
-		"metaDescription": "今日精選謎題免費。Tryit Plus 開放全部遊戲、所有往日題目，並設家庭方案。",
+		"metaDescription": "每日任揀 3 款遊戲免費玩。Tryit Plus 開放全部遊戲、所有往日題目，並設家庭方案。",
 		"title": "每一款遊戲，每一天",
-		"lead": "今日精選謎題人人免費。Tryit Plus 開放全部 {count} 款遊戲、往日題庫，以及每款遊戲的統計。",
+		"lead": "每日任揀 3 款遊戲免費玩。Tryit Plus 開放全部 {count} 款遊戲、往日題庫，以及每款遊戲的統計。",
 		"closedTitle": "現時全部免費",
 		"closedBody": "Tryit Plus 尚未開售，所以每款遊戲和每一天的題目都向所有人開放。",
 		"purchasesSoon": "即將開放購買。",
 		"checkoutFailed": "未能開啟付款頁面，請再試一次。",
 		"freeTitle": "免費",
-		"freeBody": "每天一題今日精選謎題，毋須登記帳戶。",
+		"freeBody": "每日任揀 3 款遊戲，毋須登記帳戶。",
 		"playFree": "玩今日免費謎題：{game}",
 		"individualBody": "供一位玩家使用。",
 		"family": "Tryit Plus 家庭方案",
@@ -56,13 +56,14 @@
 		"endingSoon": "你的 Tryit Plus 試用會在 {date} 結束，多謝你試用。結束前隨時可以取消。"
 	},
 	"unlock": {
-		"title": "這款遊戲屬於 Tryit Plus",
+		"title": "今日嘅 3 款免費遊戲已經玩完",
 		"archiveTitle": "往日題目屬於 Tryit Plus",
 		"body": "今日免費謎題是 {game}。Tryit Plus 開放全部 {count} 款遊戲和所有往日題目。",
 		"cta": "了解 Tryit Plus",
 		"signIn": "登入",
 		"playFree": "免費玩 {game}",
-		"keep": "你已完成的題目會一直保留在統計中。"
+		"keep": "你已完成的題目會一直保留在統計中。",
+		"backToToday": "返回今日遊戲"
 	},
 	"offer": {
 		"resultTitle": "暢玩全部 {count} 款遊戲和往日題庫",
@@ -133,5 +134,11 @@
 			"already_in_family": "你已在另一個家庭方案中，請先退出。",
 			"family_owner": "這是你自己的家庭方案。"
 		}
+	},
+	"checkoutOffer": {
+		"body": "全部 {count} 款遊戲，加上過去 30 天的題目。選擇通行證或訂閱，繼續玩下去。",
+		"comparePlans": "比較所有方案",
+		"unavailableTitle": "暫時未能載入方案",
+		"unavailableBody": "請稍後再試。你已完成的題目和進度會保留。"
 	}
 }

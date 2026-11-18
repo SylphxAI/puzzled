@@ -1,6 +1,6 @@
 {
 	"metaTitle": "免费每日脑力游戏与谜题",
-	"metaDescription": "每天一款免费脑力游戏：文字、逻辑、数字与空间谜题，玩完还想继续。天天有免费谜题，无需注册。",
+	"metaDescription": "每天免费玩脑力游戏：文字、逻辑、数字与空间谜题，玩完还想继续。每天任选 3 款免费，无需注册。",
 	"greeting": {
 		"morning": "早上好",
 		"afternoon": "下午好",
@@ -39,7 +39,7 @@
 		"viewStats": "查看统计"
 	},
 	"tomorrow": {
-		"title": "明天 {game} 免费。",
+		"title": "明天精选：{game}。",
 		"body": "同样的仪式，全新的题目。",
 		"cta": "查看目录"
 	},
@@ -48,11 +48,11 @@
 		"subtitle": "用最短篇幅说清楚 Tryit。",
 		"free": {
 			"question": "Tryit 免费吗？",
-			"answer": "今天的精选谜题免费，无需账户。Plus 可畅玩全部 19 款游戏和完整往日题库。"
+			"answer": "是的，每天任选 3 款游戏免费玩，无需账户。Plus 可畅玩全部 19 款游戏和完整往日题库。"
 		},
 		"account": {
 			"question": "玩游戏需要注册账号吗？",
-			"answer": "不需要。你可以用访客身份完成今天的免费谜题。注册账号可以跨设备保存连续纪录、成绩和统计。"
+			"answer": "不需要。你可以用访客身份完成今天的 3 款免费谜题。注册账号可以跨设备保存连续纪录、成绩和统计。"
 		},
 		"schedule": {
 			"question": "新谜题什么时候更新？",
@@ -81,7 +81,7 @@
 		"titleMemberStreak": "你的 {days} 天连胜在等你",
 		"titleMemberDone": "今天已完成 — 玩得漂亮",
 		"titleDone": "今天的{game}已完成",
-		"bodyGuest": "Tryit 每天提供一组文字、逻辑和数字谜题。每天一个免费，几分钟就能玩完，无需注册。",
+		"bodyGuest": "Tryit 每天提供一组文字、逻辑和数字谜题。每天任选 3 款免费，几分钟就能玩完，无需注册。",
 		"bodyMember": "你的连胜、统计和今日阵容，一点即到。",
 		"playToday": "玩今天的{game}",
 		"playAgain": "再玩一次",

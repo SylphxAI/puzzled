@@ -1,5 +1,6 @@
-import { Crown, Lock } from 'lucide-react'
+import { Lock } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
+import { CheckoutOffer } from '@/features/plus-offer/components/checkout-offer'
 import { Link } from '@/lib/i18n/routing'
 
 type GameUnlockPanelProps = {
@@ -11,15 +12,12 @@ type GameUnlockPanelProps = {
 	gameCount: number
 	/** No account on this request. */
 	isGuest: boolean
-	/** Today's free module, offered as the honest alternative. */
-	freeGameSlug: string
-	freeGameName: string
 }
 
 /**
- * The path for a game or day that needs Tryit Plus: what Plus opens, the
- * plans, sign-in for guests, and today's free game, so the page is never a
- * dead end. Finished results are never taken away.
+ * The path for a game or day that needs Tryit Plus (a fourth game today, once
+ * the three free picks are used, or a past day): direct checkout, guest
+ * sign-in, and a return path to today's games.
  */
 export async function GameUnlockPanel({
 	slug,
@@ -27,8 +25,6 @@ export async function GameUnlockPanel({
 	dateParam,
 	gameCount,
 	isGuest,
-	freeGameSlug,
-	freeGameName,
 }: GameUnlockPanelProps) {
 	const t = await getTranslations('plus.unlock')
 	const returnTo =
@@ -45,17 +41,10 @@ export async function GameUnlockPanel({
 				<h2 className="font-display text-xl md:text-2xl">
 					{archive ? t('archiveTitle') : t('title')}
 				</h2>
-				<p className="text-sm leading-relaxed text-muted-foreground">
-					{t('body', { game: freeGameName, count: gameCount })}
-				</p>
+				<div className="w-full text-left">
+					<CheckoutOffer signedIn={!isGuest} callbackUrl={returnTo} gameCount={gameCount} />
+				</div>
 				<div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
-					<Link
-						href={{ pathname: '/pricing', query: { callbackUrl: returnTo } }}
-						className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-6 font-semibold text-primary-foreground shadow-lg shadow-primary/25"
-					>
-						<Crown className="h-4 w-4" aria-hidden="true" />
-						{t('cta')}
-					</Link>
 					{isGuest ? (
 						<Link
 							href={{ pathname: '/login', query: { callbackUrl: returnTo } }}
@@ -64,14 +53,12 @@ export async function GameUnlockPanel({
 							{t('signIn')}
 						</Link>
 					) : null}
-					{slug !== freeGameSlug || archive ? (
-						<Link
-							href={`/games/${freeGameSlug}`}
-							className="inline-flex h-12 items-center justify-center rounded-2xl border border-border bg-background px-5 font-semibold hover:border-primary/30 hover:text-primary"
-						>
-							{t('playFree', { game: freeGameName })}
-						</Link>
-					) : null}
+					<Link
+						href="/games"
+						className="inline-flex h-12 items-center justify-center rounded-2xl border border-border bg-background px-5 font-semibold hover:border-foreground/30"
+					>
+						{t('backToToday')}
+					</Link>
 				</div>
 				<p className="text-xs text-muted-foreground">{t('keep')}</p>
 			</div>

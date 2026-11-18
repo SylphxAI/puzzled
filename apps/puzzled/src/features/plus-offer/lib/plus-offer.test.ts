@@ -12,7 +12,7 @@ import {
 	showResultPlusCard,
 } from './plus-offer'
 
-const offer = { gameCount: 19, freeSlug: 'sudoku', dayKey: '2026-10-29' }
+const offer = { gameCount: 19, dayKey: '2026-10-29' }
 const today = { puzzleDate: '2026-10-29' }
 
 describe('when a Plus prompt may show at all', () => {
@@ -30,10 +30,10 @@ describe('when a Plus prompt may show at all', () => {
 })
 
 describe('the result-screen card', () => {
-	test('shows after a daily finish of the free game only', () => {
+	test('shows after any free daily finish, never an archive run', () => {
 		expect(showResultPlusCard(offer, { ...today, mode: 'daily', gameSlug: 'sudoku' })).toBe(true)
+		expect(showResultPlusCard(offer, { ...today, mode: 'daily', gameSlug: 'nonogram' })).toBe(true)
 		expect(showResultPlusCard(offer, { ...today, mode: 'archive', gameSlug: 'sudoku' })).toBe(false)
-		expect(showResultPlusCard(offer, { ...today, mode: 'daily', gameSlug: 'wordle' })).toBe(false)
 	})
 	test('never promotes an earlier, future or unknown result day', () => {
 		for (const puzzleDate of ['2026-10-28', '2026-10-30', undefined]) {
