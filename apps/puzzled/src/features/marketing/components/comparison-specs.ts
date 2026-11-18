@@ -23,7 +23,7 @@ export type ComparisonPairing = {
 	why: string
 }
 
-export type ComparisonSlug = 'nyt-games' | 'lumosity' | 'linkedin-games'
+export type ComparisonSlug = 'nyt-games' | 'lumosity' | 'linkedin-games' | 'elevate' | 'puzzmo'
 
 export type ComparisonSpec = {
 	slug: ComparisonSlug
@@ -130,6 +130,15 @@ const SOFTWARE = {
  *   The purchase page needs a login, so no plan-by-plan price is quoted.
  * - LinkedIn Games: linkedin.com/games (nine games) and the LinkedIn Help
  *   article "Games on LinkedIn" (free for members and guests, midnight PT).
+ * - Elevate: The Mind Company's Elevate page (free = one three-game workout a
+ *   day with an account; Premium $39.99/year with a 7-day trial or $9.99/month,
+ *   US App Store), Elevate Support (no desktop version; iOS and Android) and
+ *   the US App Store listing (id875063456: Editors' Choice, 4.8, 547K ratings).
+ * - Puzzmo: puzzmo.com, the Puzzmo FAQ (what Plus adds, second family
+ *   profile), the US App Store listing (id6714482734: Plus $3.99 monthly,
+ *   $39.99 yearly; iPhone, iPad, Mac) and Hearst's 19 May 2025 iPhone launch
+ *   release (10,000+ puzzle archive for subscribers). Guests can play on
+ *   puzzmo.com, so the page draws no account contrast.
  */
 export const COMPARISON_SPECS = {
 	'nyt-games': {
@@ -598,6 +607,307 @@ export const COMPARISON_SPECS = {
 		},
 		disclaimer:
 			"Tryit is independent and not affiliated with, endorsed by or sponsored by LinkedIn Corporation. LinkedIn and the names of its games belong to LinkedIn Corporation and are named here only to compare. LinkedIn Games details were checked against LinkedIn's games page and Help Center on 18 November 2026.",
+		...SOFTWARE,
+	},
+	elevate: {
+		slug: 'elevate',
+		path: '/vs/elevate',
+		rival: 'Elevate',
+		metaTitle: `Tryit vs Elevate: A Free Alternative, ${TOTAL_GAMES} Daily Puzzles`,
+		metaDescription: `Looking for a free Elevate alternative? Tryit has ${TOTAL_GAMES} daily word, logic, number and spatial puzzles in any browser, on your phone or your computer. Pick any 3 free every day with no app and no account. Tryit Plus ${PLUS_MONTH}/month.`,
+		eyebrow: 'Tryit vs Elevate · An honest comparison',
+		h1: `Brain games in your browser, on any screen. Pick any 3 of ${TOTAL_GAMES}, free.`,
+		lead: `Elevate is a phone app for skill training: you sign up, and the free version gives you one three-game workout a day. Tryit runs in any browser, on your phone or your computer: ${TOTAL_GAMES} word, logic, number and spatial puzzles, and you choose any 3 to play free every day, with no account and no ads while you play.`,
+		facts: [
+			`${TOTAL_GAMES} daily games`,
+			'Any 3 free every day',
+			'Phone, tablet or computer',
+			`Tryit Plus ${PLUS_MONTH}/month`,
+		],
+		verdictTitle: 'The short answer',
+		verdict: [
+			'Choose Elevate for skill training in reading, writing, speaking, math and memory, with personalized workouts in a polished phone app.',
+			`Choose Tryit for ${TOTAL_GAMES} daily puzzles in any browser, your computer included, with any 3 free every day and no account.`,
+			'Tryit makes no brain-training claims. It is a fresh set of good puzzles every day, ready in one tap.',
+		],
+		primaryCta: { label: 'Pick your 3 free games', href: `/?${entry('elevate')}` },
+		secondaryCta: { label: 'See Tryit Plus plans', href: `/pricing?${entry('elevate')}` },
+		tableTitle: 'Tryit and Elevate side by side',
+		tableSubtitle:
+			'What each one offers a daily player today. Elevate details come from The Mind Company, Elevate Support and the US App Store.',
+		rows: [
+			{
+				feature: 'Daily games',
+				them: '40+ games for reading, writing, speaking, math and memory, served as daily workouts',
+				us: `${TOTAL_GAMES} games: ${LINEUP}, all with a new puzzle every day`,
+			},
+			{
+				feature: 'Free to play',
+				them: 'One three-game workout a day and a game of the week, with a free account',
+				us: `Any 3 of the ${TOTAL_GAMES} games, your choice, every day. A game you pick stays open all day`,
+			},
+			{
+				feature: 'Before your first game',
+				them: 'Install the app and sign up for an account',
+				us: 'Nothing. Tap a game and play; sign in later to keep streaks and stats across devices',
+			},
+			{
+				feature: 'Where you play',
+				them: 'The Elevate app for iPhone, iPad and Android; there is no desktop version',
+				us: 'Any browser on phone, tablet or desktop; nothing to install',
+			},
+			{
+				feature: 'Daily puzzles',
+				them: 'Daily puzzles such as crosswords, and past puzzles, come with Premium',
+				us: `${TOTAL_GAMES} daily puzzles, any 3 free; every past day with Tryit Plus or the 3-Day Pass`,
+			},
+			{
+				feature: 'Paid plans',
+				them: 'Premium $39.99/year with a 7-day free trial, or $9.99/month, on the US App Store',
+				us: `Plus ${PLUS_MONTH}/month or ${PLUS_YEAR}/year. Family for up to ${FAMILY_SEATS} people ${FAMILY_MONTH}/month or ${FAMILY_YEAR}/year. VAT included`,
+			},
+			{
+				feature: 'Try everything, no commitment',
+				them: 'A 7-day free trial of the yearly plan',
+				us: `3-Day Pass: ${PASS} once, no renewal. All ${TOTAL_GAMES} games and every past day`,
+			},
+		],
+		theirStrengthsTitle: 'Where Elevate shines',
+		theirStrengths: [
+			{
+				title: 'Skills for everyday life',
+				body: 'Games built around reading, writing, speaking, math and memory, such as calculating a tip or cutting extra words from an email.',
+			},
+			{
+				title: 'Workouts that adapt',
+				body: 'Premium personalizes your daily workout, adjusts difficulty as you improve and tracks your performance over time.',
+			},
+			{
+				title: 'A polished app',
+				body: 'An App Store Editors’ Choice, rated 4.8 from more than 500,000 US ratings.',
+			},
+		],
+		ourStrengthsTitle: 'Why players pick Tryit',
+		ourStrengths: [
+			{
+				title: 'Play on any screen',
+				body: 'Tryit runs in your browser on a phone, tablet or computer, so your lunch-break puzzle works on your work laptop too. Nothing to install.',
+			},
+			{
+				title: 'You choose your free 3',
+				body: `Pick any 3 from the full lineup of ${TOTAL_GAMES}, every day. No account, no card and no ads while you play.`,
+			},
+			{
+				title: 'Daily puzzles, free',
+				body: 'Every game is a daily puzzle with a fresh grid at midnight Hong Kong time (UTC+8), the same for everyone, so results compare fairly.',
+			},
+			PASS_STRENGTH,
+		],
+		pairingsTitle: 'If you like these, try these',
+		pairingsSubtitle:
+			'Tryit has its own puzzles, not copies of Elevate games. These are the closest matches by skill.',
+		pairings: [
+			{ theirs: 'Tipping', slug: 'arithmo', why: 'Find the hidden equation in 6 tries.' },
+			{
+				theirs: 'Estimation',
+				slug: 'killer-sudoku',
+				why: 'Sudoku where every cage has to add up to its total.',
+			},
+			{
+				theirs: 'Eloquence',
+				slug: 'word-hive',
+				why: 'Make as many words as you can from 7 letters.',
+			},
+			{ theirs: 'Detail', slug: 'cryptogram', why: 'Crack a famous quote, one letter at a time.' },
+			{
+				theirs: 'Connotation',
+				slug: 'word-groups',
+				why: 'Spot what links the words: sort 16 into 4 groups of 4.',
+			},
+			{
+				theirs: 'Elevate crosswords',
+				slug: 'crossword',
+				why: 'A quick 5×5 crossword, free as one of your 3 picks.',
+			},
+		],
+		faqTitle: 'Tryit vs Elevate: questions',
+		faqs: [
+			{
+				question: 'Is Tryit a free alternative to Elevate?',
+				answer: `If you want daily puzzles rather than a training program, yes. Pick any 3 of Tryit's ${TOTAL_GAMES} daily games every day for free, in any browser, with no app, no account and no ads while you play. Tryit Plus or a 3-Day Pass opens every game and the archive. Tryit is independent and not affiliated with Elevate Labs.`,
+			},
+			{
+				question: 'Can I play Tryit on my computer?',
+				answer:
+					'Yes. Tryit runs in any browser on a computer, tablet or phone, and nothing needs installing. Sign in if you want your streaks and stats to follow you between devices.',
+			},
+			{
+				question: 'How much does Tryit cost compared with Elevate?',
+				answer: `${TRYIT_PRICES} Elevate Premium is $39.99 a year with a 7-day free trial, or $9.99 a month, on the US App Store; prices vary by country.`,
+			},
+			{
+				question: 'Is Tryit brain training?',
+				answer:
+					'No. Tryit is a set of daily puzzles, made to be quick and fun, and it makes no claims about memory or cognition. If you want structured skill training with performance tracking, Elevate is built for that, and you can still add a few Tryit puzzles to your day.',
+			},
+			NEW_PUZZLES_FAQ,
+		],
+		closingCta: {
+			title: 'Pick your three for today',
+			body: `${TOTAL_GAMES} fresh puzzles every day. Any 3 free, on any screen, no ads while you play.`,
+		},
+		disclaimer:
+			'Tryit is independent and not affiliated with, endorsed by or sponsored by Elevate Labs, LLC or The Mind Company. Elevate and the Elevate game names on this page belong to their owners and are named here only to compare. Elevate details were checked against The Mind Company’s Elevate page, Elevate Support and the US App Store listing on 18 November 2026.',
+		...SOFTWARE,
+	},
+	puzzmo: {
+		slug: 'puzzmo',
+		path: '/vs/puzzmo',
+		rival: 'Puzzmo',
+		metaTitle: `Tryit vs Puzzmo: ${TOTAL_GAMES} Daily Puzzles, Any 3 Free`,
+		metaDescription: `Tryit vs Puzzmo, honestly compared. Tryit has ${TOTAL_GAMES} daily word, logic, number and spatial puzzles; pick any 3 free every day with no login and no ads while you play. Every past day with Tryit Plus or a ${PASS} 3-Day Pass.`,
+		eyebrow: 'Tryit vs Puzzmo · An honest comparison',
+		h1: `Finished today's Puzzmo? Here are ${TOTAL_GAMES} more daily puzzles, any 3 free.`,
+		lead: `Puzzmo is a daily puzzle page with original games like Cross|word, SpellTower, Typeshift and Flipart. Tryit is ${TOTAL_GAMES} word, logic, number and spatial puzzles in one daily set, and you pick any 3 to play free every day, with no login and no ads while you play.`,
+		facts: [
+			`${TOTAL_GAMES} daily games`,
+			'Any 3 free every day',
+			'No ads while you play',
+			`${PASS} 3-Day Pass, one time`,
+		],
+		verdictTitle: 'The short answer',
+		verdict: [
+			'Choose Puzzmo for its edited daily Cross|word, original games like SpellTower and Typeshift, and leaderboards with friends.',
+			`Choose Tryit for ${TOTAL_GAMES} daily puzzle types across word, logic, number and spatial, any 3 free every day with no ads while you play, and a ${PASS} pass with no renewal.`,
+			'Or do both: finish the Cross|word, then pick three Tryit games for something different.',
+		],
+		primaryCta: { label: 'Pick your 3 free games', href: `/?${entry('puzzmo')}` },
+		secondaryCta: { label: `See the ${PASS} 3-Day Pass`, href: `/pricing?${entry('puzzmo')}` },
+		tableTitle: 'Tryit and Puzzmo side by side',
+		tableSubtitle:
+			'What each one offers a daily puzzle player today. Puzzmo details come from puzzmo.com, its FAQ and the US App Store.',
+		rows: [
+			{
+				feature: 'Daily games',
+				them: 'Cross|word, Mini Cross|word, SpellTower, Typeshift, Flipart, Pile-Up Poker, Memoku, Really Bad Chess, Bongo, Circuits and more',
+				us: `${TOTAL_GAMES} games: ${LINEUP}, all with a new puzzle every day`,
+			},
+			{
+				feature: 'Free to play',
+				them: 'Daily games with ads; some games and puzzles are kept for Puzzmo Plus members',
+				us: `Any 3 of the ${TOTAL_GAMES} games, your choice, every day. A game you pick stays open all day`,
+			},
+			{
+				feature: 'Ads',
+				them: 'Display and video ads unless you have Puzzmo Plus',
+				us: 'No ads on a puzzle while you play it',
+			},
+			{
+				feature: 'Where you play',
+				them: 'puzzmo.com in a browser, plus an app for iPhone, iPad and Mac',
+				us: 'Any browser on phone, tablet or desktop; nothing to install',
+			},
+			{
+				feature: 'Past puzzles',
+				them: 'An archive of more than 10,000 puzzles with Puzzmo Plus',
+				us: `Every past day of all ${TOTAL_GAMES} games with Tryit Plus or the 3-Day Pass`,
+			},
+			{
+				feature: 'Paid plans',
+				them: 'Puzzmo Plus $3.99/month or $39.99/year on the US App Store, with a second profile for a family member',
+				us: `Plus ${PLUS_MONTH}/month or ${PLUS_YEAR}/year. Family for up to ${FAMILY_SEATS} people ${FAMILY_MONTH}/month or ${FAMILY_YEAR}/year. VAT included`,
+			},
+			{
+				feature: 'Try everything, no commitment',
+				them: 'Puzzmo Plus by the month or the year',
+				us: `3-Day Pass: ${PASS} once, no renewal. All ${TOTAL_GAMES} games and every past day`,
+			},
+		],
+		theirStrengthsTitle: 'Where Puzzmo shines',
+		theirStrengths: [
+			{
+				title: 'Original games',
+				body: 'SpellTower, Typeshift, Flipart and Really Bad Chess, many of them from the designer Zach Gage.',
+			},
+			{
+				title: 'A friendly crossword',
+				body: 'The daily midi Cross|word sits between a mini and a full-size grid, and every clue has an optional easier hint.',
+			},
+			{
+				title: 'A deep archive',
+				body: 'Puzzmo Plus opens an archive of more than 10,000 puzzles, with no ads.',
+			},
+		],
+		ourStrengthsTitle: 'Why puzzle fans pick Tryit',
+		ourStrengths: [
+			{
+				title: `${TOTAL_GAMES} daily games in one place`,
+				body: 'Word games, logic grids like Sudoku and Crowns, number puzzles and spatial challenges, all refreshed together at midnight Hong Kong time (UTC+8).',
+			},
+			{
+				title: 'Any 3 free, no ads mid-game',
+				body: 'Choose your own three from the full lineup. No account, no card and no ads on a puzzle while you play it.',
+			},
+			PASS_STRENGTH,
+			{
+				title: `One plan for up to ${FAMILY_SEATS} people`,
+				body: `Tryit Family covers up to ${FAMILY_SEATS} accounts, each with their own streaks and stats, for ${FAMILY_MONTH}/month or ${FAMILY_YEAR}/year.`,
+			},
+		],
+		pairingsTitle: 'If you like these, try these',
+		pairingsSubtitle:
+			'Tryit has its own games, not copies of Puzzmo puzzles. These are the closest matches by style.',
+		pairings: [
+			{ theirs: 'Cross|word', slug: 'crossword', why: 'A quick 5×5 crossword.' },
+			{
+				theirs: 'Memoku',
+				slug: 'sudoku',
+				why: 'Classic 9×9 Sudoku, with Cage Sudoku for a harder grid.',
+			},
+			{
+				theirs: 'Pile-Up Poker',
+				slug: 'pattern-match',
+				why: 'Spot sets of 3 cards that are all the same or all different.',
+			},
+			{
+				theirs: 'Flipart',
+				slug: 'pip-place',
+				why: 'Fit dominoes into the grid so every region follows its rule.',
+			},
+			{
+				theirs: 'Circuits',
+				slug: 'word-ladder',
+				why: 'Change one letter at a time to climb from word to word.',
+			},
+			{ theirs: 'SpellTower', slug: 'word-search', why: 'Find the hidden words in a themed grid.' },
+		],
+		faqTitle: 'Tryit vs Puzzmo: questions',
+		faqs: [
+			{
+				question: 'Is Tryit a free alternative to Puzzmo?',
+				answer: `Tryit is free to start: pick any 3 of its ${TOTAL_GAMES} daily games every day, with no account and no ads while you play. Tryit Plus or a 3-Day Pass opens every game and the archive. Tryit is independent and not affiliated with Puzzmo or Hearst.`,
+			},
+			{
+				question: 'Can I play SpellTower or Cross|word on Tryit?',
+				answer:
+					'No. Those games belong to Puzzmo. Tryit has its own daily games in similar styles: Mini Grid (a 5×5 crossword), Hunt (a word search), Rungs (a word ladder), Match (sets of 3 cards) and Sudoku.',
+			},
+			{
+				question: 'How much does Tryit cost compared with Puzzmo?',
+				answer: `${TRYIT_PRICES} Puzzmo Plus is $3.99 a month or $39.99 a year on the US App Store.`,
+			},
+			{
+				question: 'Can I play past Tryit puzzles?',
+				answer: `Yes. Tryit Plus and the 3-Day Pass open every past day of all ${TOTAL_GAMES} games, so a day you missed is still there to play.`,
+			},
+			NEW_PUZZLES_FAQ,
+		],
+		closingCta: {
+			title: 'Pick your three for today',
+			body: `${TOTAL_GAMES} fresh puzzles every day. Any 3 free, no login, no ads while you play.`,
+		},
+		disclaimer:
+			'Tryit is independent and not affiliated with, endorsed by or sponsored by Puzzmo Inc. or Hearst. Puzzmo and the Puzzmo game names on this page belong to their owners and are named here only to compare. Puzzmo details were checked against puzzmo.com, the Puzzmo FAQ, its US App Store listing and its iPhone launch announcement on 18 November 2026.',
 		...SOFTWARE,
 	},
 } as const satisfies Record<ComparisonSlug, ComparisonSpec>
