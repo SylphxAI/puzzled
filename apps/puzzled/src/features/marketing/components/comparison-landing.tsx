@@ -58,8 +58,9 @@ export function ComparisonLanding({ spec }: { spec: ComparisonSpec }) {
 				aside={
 					<aside
 						aria-labelledby="verdict-heading"
-						className="surface-card border-l-4 border-l-cta p-6 md:p-7"
+						className="surface-card relative overflow-hidden p-6 pl-8 md:p-7 md:pl-9"
 					>
+						<span className="absolute inset-y-0 left-0 w-1.5 bg-cta" aria-hidden="true" />
 						<h2 id="verdict-heading" className="font-display text-xl">
 							{spec.verdictTitle}
 						</h2>
@@ -141,7 +142,7 @@ export function ComparisonLanding({ spec }: { spec: ComparisonSpec }) {
 					</section>
 					<section
 						aria-labelledby="our-strengths"
-						className="surface-card border-2 border-foreground p-6 md:p-7"
+						className="rounded-2xl border-2 border-foreground bg-card p-6 shadow-card md:p-7"
 					>
 						<h2 id="our-strengths" className="font-display text-2xl text-balance">
 							{spec.ourStrengthsTitle}
