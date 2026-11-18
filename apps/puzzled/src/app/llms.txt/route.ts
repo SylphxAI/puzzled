@@ -51,6 +51,8 @@ ${games}
 
 ## Comparisons
 - [Tryit vs NYT Games](https://tryit.fun/vs/nyt-games): How Tryit's ${total} daily games and 3 free daily picks compare with NYT Games, and which Tryit games suit Wordle, Connections and Spelling Bee fans.
+- [Tryit vs Lumosity](https://tryit.fun/vs/lumosity): A free Lumosity alternative for daily puzzles: any 3 of ${total} games free in the browser with no app, account or test first, compared with Lumosity's brain-training program.
+- [Tryit vs LinkedIn Games](https://tryit.fun/vs/linkedin-games): Daily logic, word, number and spatial puzzles like LinkedIn's Queens, Tango and Zip, with no feed or login, and which Tryit games suit each LinkedIn game.
 
 ## Help and policies
 - [Support](https://tryit.fun/support): Product help and contact information.

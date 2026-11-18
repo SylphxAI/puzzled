@@ -63,6 +63,8 @@ describe('route truth table', () => {
 			'/use-cases/daily-word-and-logic-puzzles-online',
 			'/use-cases/family-brain-games-no-ads',
 			'/vs/nyt-games',
+			'/vs/lumosity',
+			'/vs/linkedin-games',
 			'/support',
 			'/privacy',
 			'/terms',
