@@ -26,6 +26,11 @@ const playableResponse = () =>
 		puzzleDataJson: JSON.stringify({ grid: [1, 2, 3] }),
 	})
 
+test('an unchosen daily is startable without exposing or mounting a board', () => {
+	const response = { ...playableResponse(), requiresStart: true, puzzleDataJson: '' }
+	expect(classifyDailyResponse(response)).toEqual({ kind: 'startable', puzzleDate: '2026-09-10' })
+})
+
 const connectJson = (body: unknown) =>
 	new Response(JSON.stringify(body), {
 		status: 200,

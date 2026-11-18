@@ -280,14 +280,16 @@ async function renderPlayArea(
 		// puzzle will remain null, showing error message
 	}
 
-	if (!puzzle?.puzzleData) {
-		// SSR Connect could not serve the board. The browser transport reaches
-		// the api through the public edge, so hand over to a client-side GetDaily
-		// instead of a retry link that repeats the same failing SSR request.
+	const startDate = puzzleStatus?.requiresStart ? puzzleStatus.puzzle.puzzleDate : undefined
+	const currentStreak = streakInfo?.currentStreak ?? 0
+	if (startDate || !puzzle?.puzzleData) {
+		// The client renders the explicit start action from SSR metadata, or
+		// falls back to a passive browser read when SSR could not serve a board.
 		return (
 			<PlusTrialProvider endsMs={access.trialEndsMs}>
 				<AdsProvider config={ads}>
 					<GameDailyFallback
+						key={`${slug}:${difficulty ?? ''}:${archiveDate ?? startDate ?? ''}`}
 						slug={slug}
 						gameName={gameName}
 						locale={locale}
@@ -296,6 +298,8 @@ async function renderPlayArea(
 						supportsDifficulty={supportsDifficulty}
 						puzzleDate={archiveDate}
 						unlock={unlockPanel}
+						startDate={startDate}
+						currentStreak={currentStreak}
 					/>
 				</AdsProvider>
 			</PlusTrialProvider>
@@ -304,7 +308,6 @@ async function renderPlayArea(
 
 	// Use puzzle data from server
 	const puzzleDate = puzzle.puzzleDate || productDayKey()
-	const currentStreak = streakInfo?.currentStreak ?? 0
 
 	// Check if user has already completed today's daily puzzle (only applies to
 	// daily mode)

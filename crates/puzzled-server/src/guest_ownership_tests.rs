@@ -1117,6 +1117,7 @@ async fn puzzle_request(
         .method("POST")
         .uri(format!("/puzzled.v1.PuzzleService/{method}"))
         .header("content-type", "application/json")
+        .header("origin", "https://tryit.fun")
         .header("cookie", cookie);
     if let Some(bearer) = bearer {
         request = request.header("authorization", format!("Bearer {bearer}"));
@@ -1132,7 +1133,100 @@ async fn puzzle_request(
 }
 
 #[tokio::test]
-async fn unregistered_guess_budget_uses_hash_without_allocating_player() {
+async fn passive_daily_reads_are_boardless_and_concurrent_starts_share_three_picks() {
+    use crate::capabilities::money::Money;
+    let Some(pool) = fresh_database().await else {
+        return;
+    };
+    let catalog = axum::Router::new().route(
+        "/v1/orgs/o/projects/p/envs/e/price_catalogs/default",
+        axum::routing::get(|| async {
+            axum::Json(json!({"spec": {"products": [{
+                "key": "solo", "display_name": "Plus", "features": {"plus": "true"},
+                "prices": [{"key": "solo_month", "recurring_interval": "month", "unit_amounts": {"USD": "499"}}]
+            }]}}))
+        }),
+    );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, catalog).await.unwrap() });
+    let money = Money::new(
+        &format!("http://{addr}/v1/orgs/o/projects/p/envs/e"),
+        "sk_test",
+        "https://tryit.fun",
+    );
+    let state = AppState::new(Some(pool.clone())).with_money(Some(money));
+    assert!(state.sales_open().await);
+    let app = router(state);
+    let day = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
+    let (status, _, cookies) = bootstrap(&app, "https://tryit.fun", None, json!({})).await;
+    assert_eq!(status, StatusCode::OK);
+    let pair = cookies[0].split(';').next().unwrap();
+    let request_for = |game| json!({"gameSlug":game,"puzzleDate":day.to_string()});
+    for game in ["sudoku", "word-guess", "word-groups", "duo"] {
+        let (status, body) = puzzle_request(&app, "GetDaily", pair, None, request_for(game)).await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(body["requiresStart"], true);
+        assert_eq!(body["puzzleDate"], day.to_string());
+        assert!(body.get("puzzleDataJson").is_none());
+    }
+    let (status, _) = puzzle_request(&app, "StartDaily", "", None, request_for("sudoku")).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let (status, body) = puzzle_request(
+        &app,
+        "StartDaily",
+        pair,
+        None,
+        json!({"gameSlug":"sudoku","puzzleDate":day.pred_opt().unwrap().to_string()}),
+    )
+    .await;
+    assert!(!status.is_success());
+    assert_eq!(body["message"], "daily_date_changed");
+    let count = |sql: &'static str| {
+        let pool = pool.clone();
+        async move {
+            sqlx::query_scalar::<_, i64>(sql)
+                .fetch_one(&pool)
+                .await
+                .unwrap()
+        }
+    };
+    assert_eq!(count("SELECT count(*) FROM guest_credentials").await, 0);
+    assert_eq!(count("SELECT count(*) FROM daily_free_picks").await, 0);
+    for game in ["sudoku", "sudoku", "word-guess"] {
+        let (status, body) =
+            puzzle_request(&app, "StartDaily", pair, None, request_for(game)).await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(body["daily"]["puzzleDataJson"]
+            .as_str()
+            .is_some_and(|data| !data.is_empty()));
+        assert_ne!(body["daily"]["requiresStart"], true);
+    }
+    let (a, b) = tokio::join!(
+        puzzle_request(&app, "StartDaily", pair, None, request_for("word-groups")),
+        puzzle_request(&app, "StartDaily", pair, None, request_for("duo")),
+    );
+    assert_ne!(a.0, b.0);
+    for (status, body) in [a, b] {
+        if status != StatusCode::OK {
+            assert_eq!(status, StatusCode::FORBIDDEN);
+            assert_eq!(body["message"], "plus_required");
+            assert!(body.get("daily").is_none());
+        }
+    }
+    let (status, body) = puzzle_request(&app, "GetDaily", pair, None, request_for("sudoku")).await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(body["puzzleDataJson"]
+        .as_str()
+        .is_some_and(|data| !data.is_empty()));
+    assert_eq!(count("SELECT count(*) FROM guest_credentials").await, 1);
+    assert_eq!(count("SELECT count(*) FROM daily_free_picks").await, 3);
+    assert_eq!(count("SELECT count(*) FROM game_sessions").await, 0);
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn first_graded_guess_claims_a_pick_and_keeps_one_guess_budget() {
     use crate::capabilities::identity_access::adapters::guest_credentials;
     let Some(pool) = fresh_database().await else {
         return;
@@ -1166,7 +1260,13 @@ async fn unregistered_guess_budget_uses_hash_without_allocating_player() {
         .fetch_one(&pool)
         .await
         .unwrap();
-    assert_eq!(count, 0);
+    assert_eq!(count, 1);
+    let picks: i64 =
+        sqlx::query_scalar("SELECT count(*) FROM daily_free_picks WHERE game_slug = 'word-guess'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(picks, 1);
     pool.close().await;
 }
 

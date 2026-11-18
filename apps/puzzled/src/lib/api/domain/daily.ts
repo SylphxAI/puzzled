@@ -34,6 +34,7 @@ export type DailyStatus = {
 		difficulty: string | null
 	}
 	canPlay: boolean
+	requiresStart: boolean
 	mode: 'daily'
 }
 
@@ -85,6 +86,7 @@ export function mapDailyStatus(res: GetDailyResponse, difficulty?: string): Dail
 			difficulty: res.difficulty || difficulty || null,
 		},
 		canPlay: res.canPlay,
+		requiresStart: res.requiresStart,
 		mode: 'daily',
 	}
 }

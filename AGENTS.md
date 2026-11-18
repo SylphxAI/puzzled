@@ -60,7 +60,7 @@ one test file into another. Keep `--isolate` in both test scripts.
   when a deterministic generator gives no `puzzle_id`.
 - **The free daily picks never read billing.** A failed entitlement read must
   refuse paid play and leave the free floor open (any three games a day,
-  claimed in `daily_free_picks` on the first graded write). Payments run only through
+  claimed in `daily_free_picks` when the player starts a game). Payments run only through
   Sylphx Money; Puzzled holds no Stripe code or keys
   ([docs/monetization.md](docs/monetization.md)).
 - **Migrations are forward-only in production.** Use expand then contract, run

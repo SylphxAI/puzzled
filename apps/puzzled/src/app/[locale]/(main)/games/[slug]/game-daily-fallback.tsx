@@ -4,9 +4,10 @@ import { ConnectError } from '@connectrpc/connect'
 import { Button } from '@sylphx/ui'
 import { RotateCw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { type ReactNode, useEffect, useReducer } from 'react'
+import { type ReactNode, useEffect, useReducer, useRef, useState } from 'react'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import {
+	classifyDailyResponse,
 	dailyLoadReducer,
 	initialDailyLoadState,
 	loadDailySnapshot,
@@ -15,6 +16,7 @@ import { completedViewLevel } from '@/features/daily/lib/difficulty-completion'
 import type { GameSlug } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { isPlusRequiredError } from '@/lib/billing/plus'
+import { startDaily } from '@/lib/connect/puzzle-client'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
@@ -31,6 +33,9 @@ type GameDailyFallbackProps = {
 	puzzleDate?: string
 	/** The server-rendered unlock path, shown when the api refuses the read. */
 	unlock?: ReactNode
+	/** Public metadata returned by SSR, without a playable payload. */
+	startDate?: string
+	currentStreak?: number
 }
 
 /**
@@ -51,10 +56,40 @@ export function GameDailyFallback({
 	supportsDifficulty,
 	puzzleDate,
 	unlock,
+	startDate,
+	currentStreak = 0,
 }: GameDailyFallbackProps) {
 	const t = useTranslations('daily')
 	const tCommon = useTranslations('common')
-	const [state, dispatch] = useReducer(dailyLoadReducer, initialDailyLoadState)
+	const tHome = useTranslations('home.day')
+	const [state, dispatch] = useReducer(
+		dailyLoadReducer,
+		startDate
+			? { status: 'ready', snapshot: { kind: 'startable', puzzleDate: startDate } }
+			: initialDailyLoadState,
+	)
+	const startPending = useRef(false)
+	const [starting, setStarting] = useState(false)
+
+	async function play(date: string) {
+		if (startPending.current) return
+		startPending.current = true
+		setStarting(true)
+		try {
+			const daily = await startDaily({ gameSlug: slug, puzzleDate: date, difficulty })
+			dispatch({ type: 'load-succeeded', snapshot: classifyDailyResponse(daily) })
+		} catch (error) {
+			if (isPlusRequiredError(ConnectError.from(error).rawMessage)) {
+				dispatch({ type: 'load-refused' })
+			} else {
+				logger.error('game-daily-fallback.start-failed', { error })
+				dispatch({ type: 'load-failed' })
+			}
+		} finally {
+			startPending.current = false
+			setStarting(false)
+		}
+	}
 
 	// `state.status` drives the fetch: retry moves error/unavailable back to
 	// `loading`, which re-runs this effect without a hard navigation.
@@ -100,6 +135,21 @@ export function GameDailyFallback({
 
 	const snapshot = state.status === 'ready' ? state.snapshot : null
 
+	if (snapshot?.kind === 'startable') {
+		return (
+			<div className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-3xl border border-border bg-card px-6 py-8 text-center shadow-card">
+				<Button
+					type="button"
+					className="min-h-11 rounded-full"
+					disabled={starting}
+					onClick={() => void play(snapshot.puzzleDate)}
+				>
+					{starting ? t('loadingPuzzle') : tHome('playToday', { game: gameName })}
+				</Button>
+			</div>
+		)
+	}
+
 	// Server-recorded finish: render the result, never a fresh board.
 	if (snapshot?.kind === 'completed') {
 		return (
@@ -109,7 +159,7 @@ export function GameDailyFallback({
 				gameName={gameName}
 				puzzleDate={snapshot.puzzleDate}
 				session={snapshot.session}
-				currentStreak={0}
+				currentStreak={currentStreak}
 				locale={locale}
 				difficulty={completedViewLevel(supportsDifficulty, snapshot.session.difficulty)}
 			/>
@@ -137,7 +187,7 @@ export function GameDailyFallback({
 				slug={slug}
 				gameName={gameName}
 				puzzleDate={snapshot.puzzleDate}
-				currentStreak={0}
+				currentStreak={currentStreak}
 				mode={mode}
 				locale={locale}
 				puzzleId={snapshot.puzzleId}

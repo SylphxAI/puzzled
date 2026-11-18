@@ -109,10 +109,10 @@ the solution.
 
 ## Entitlement
 
-At least one puzzle game is finishable every day without a subscription
-(the featured rotation). Plus covers past days, the other games and advanced
-stats, declared per game. Enforcement is on the server and fails closed to the
-free floor ([monetization.md](monetization.md)).
+Pick any three puzzle games each day without a subscription. A preview does
+not take a pick; explicitly starting an unpicked game takes one when the board
+is admitted. Plus covers past days, further games, and advanced stats.
+Enforcement is on the server and fails closed to the free floor ([monetization.md](monetization.md)).
 
 ## Content pipeline
 
