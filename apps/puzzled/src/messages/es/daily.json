@@ -28,5 +28,6 @@
 	"todaysFreeGame": "Juega el puzle gratuito de hoy",
 	"notReadyTitle": "El {game} de hoy aún no está listo",
 	"notReadyBody": "Todavía no hay un puzle de {game} para hoy. El puzle gratuito de hoy está listo para jugar.",
-	"notReadyCta": "Juega el puzle gratuito de hoy"
+	"notReadyCta": "Juega el puzle gratuito de hoy",
+	"startUsesPick": "Empezar usa una de tus 3 elecciones gratis de hoy. El juego que empieces queda abierto todo el día."
 }

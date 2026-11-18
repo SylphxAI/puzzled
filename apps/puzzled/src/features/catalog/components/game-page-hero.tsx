@@ -6,7 +6,7 @@ import { Link } from '@/lib/i18n/routing'
 import { localizedPath } from '@/lib/seo/metadata'
 import { getCanonicalSiteOrigin } from '@/lib/site-origin.server'
 import { cn } from '@/lib/utils'
-import { GameIcon } from '@/shared/components/ui/game-icons'
+import { GameMotif } from '@/shared/components/games/game-motif'
 import { HeroGuestNote } from './hero-guest-note'
 import { HeroPlayAction } from './hero-play-action'
 
@@ -32,6 +32,11 @@ type GamePageHeroProps = {
 	locked: boolean
 	/** Where the play button goes: today's started board, or `#play` on an archive day. */
 	playHref: string
+	/**
+	 * `stage`: the player pressed Play and the board leads, so the hero is a
+	 * slim title bar. `landing`: the game's own page, title and Play first.
+	 */
+	variant?: 'landing' | 'stage'
 }
 
 /**
@@ -53,6 +58,7 @@ export async function GamePageHero({
 	isGuest,
 	locked,
 	playHref,
+	variant = 'landing',
 }: GamePageHeroProps) {
 	const t = await getTranslations('catalog')
 	const tNav = await getTranslations('nav')
@@ -95,82 +101,122 @@ export async function GamePageHero({
 		],
 	}
 
-	return (
-		<section className={cn('relative text-[#1a1712]', colors.bg)}>
-			<div className="page-shell-wide pb-8 pt-4 md:pb-12 md:pt-6">
-				<nav aria-label={t('breadcrumbLabel')} className="text-[13px] text-[#1a1712]/70">
-					<ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-						<li>
-							<Link href="/" className="inline-flex min-h-11 items-center hover:text-[#1a1712]">
-								{tNav('home')}
-							</Link>
-						</li>
-						<li aria-hidden="true">/</li>
-						<li>
-							<Link
-								href="/games"
-								className="inline-flex min-h-11 items-center hover:text-[#1a1712]"
-							>
-								{t('title')}
-							</Link>
-						</li>
-						<li aria-hidden="true">/</li>
-						<li aria-current="page" className="font-semibold text-[#1a1712]">
-							{name}
-						</li>
-					</ol>
-				</nav>
+	const breadcrumb = (
+		<nav aria-label={t('breadcrumbLabel')} className="text-[13px] text-muted-foreground">
+			<ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+				<li>
+					<Link href="/" className="inline-flex min-h-11 items-center hover:text-foreground">
+						{tNav('home')}
+					</Link>
+				</li>
+				<li aria-hidden="true">/</li>
+				<li>
+					<Link href="/games" className="inline-flex min-h-11 items-center hover:text-foreground">
+						{t('title')}
+					</Link>
+				</li>
+				<li aria-hidden="true">/</li>
+				<li aria-current="page" className="font-semibold text-foreground">
+					{name}
+				</li>
+			</ol>
+		</nav>
+	)
+	const facts = (
+		<ul className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-foreground">
+			<li className="tag-chip numeral">
+				<Clock className="h-3 w-3" aria-hidden="true" />
+				{duration}
+			</li>
+			<li className="tag-chip">{t(`category.${category}`)}</li>
+			{highlight ? <li className="tag-chip">{highlight}</li> : null}
+			{difficultyLabels.length > 0 ? (
+				<li className="tag-chip">{difficultyLabels.join(' / ')}</li>
+			) : null}
+		</ul>
+	)
+	const jsonLd = (
+		<script
+			type="application/ld+json"
+			// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD with trusted registry and translation content
+			dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+		/>
+	)
 
-				<div className="mt-2 grid items-center gap-6 md:grid-cols-[1fr_auto] md:gap-12">
+	if (variant === 'stage') {
+		return (
+			<section className="game-hero game-hero-stage relative border-b border-[var(--tactile-soft-line)]">
+				<div className="page-shell flex items-center gap-3 pb-2 pt-1 md:gap-4">
+					<div
+						className={cn(
+							'tactile-card hidden h-14 w-[5.5rem] shrink-0 overflow-hidden rounded-xl p-1 sm:block',
+							colors.bg,
+						)}
+						aria-hidden="true"
+					>
+						<GameMotif slug={slug} zoom />
+					</div>
+					<div className="min-w-0 flex-1">
+						{breadcrumb}
+						<div className="-mt-1 flex flex-wrap items-center gap-x-3 gap-y-1.5 pb-1">
+							<h1 className="font-display text-2xl leading-tight md:text-[1.75rem]">{name}</h1>
+							{freeToday ? (
+								<span className="inline-flex rounded-full bg-foreground px-2.5 py-0.5 text-xs font-semibold text-background">
+									{t('freeToday')}
+								</span>
+							) : null}
+							<div className="hidden md:block">{facts}</div>
+						</div>
+					</div>
+				</div>
+				{jsonLd}
+			</section>
+		)
+	}
+
+	return (
+		<section className="game-hero relative border-b border-[var(--tactile-soft-line)]">
+			<div className="page-shell-wide pb-8 pt-2 md:pb-10">
+				{breadcrumb}
+				<div className="mt-1 grid items-center gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)]">
 					<div className="min-w-0">
 						{freeToday ? (
-							<span className="inline-flex rounded-full bg-[#1a1712] px-2.5 py-1 text-xs font-semibold text-[#fbf9f4]">
+							<span className="inline-flex rounded-full bg-foreground px-2.5 py-1 text-xs font-semibold text-background">
 								{t('freeToday')}
 							</span>
 						) : null}
-						<h1 className="mt-3 font-display text-[2.5rem] leading-[1.02] text-balance md:text-6xl">
-							{name}
-						</h1>
-						<p className="mt-3 max-w-xl text-[17px] leading-relaxed text-[#1a1712]/80">
+						<div className="mt-3 flex items-center justify-between gap-4">
+							<h1 className="font-display text-[2.5rem] leading-[1.02] text-balance md:text-6xl">
+								{name}
+							</h1>
+							{/* Phones: the board miniature beside the title (the large card is md+). */}
+							<div
+								className={cn(
+									'tactile-card h-16 w-[6.25rem] shrink-0 overflow-hidden rounded-xl p-1 md:hidden',
+									colors.bg,
+								)}
+								aria-hidden="true"
+							>
+								<GameMotif slug={slug} zoom />
+							</div>
+						</div>
+						<p className="mt-3 max-w-xl text-[17px] leading-relaxed text-muted-foreground">
 							{description}
 						</p>
+						<div className="mt-4">{facts}</div>
 
-						{/* Each item carries its own leading separator; the wrapper clips the
-						    separator of whichever item starts a line, so a wrapped row never
-						    opens with a stray bullet. */}
-						<div className="mt-4 overflow-hidden">
-							<ul className="-ms-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium text-[#1a1712]/75">
-								<li className="relative inline-flex items-center gap-1 ps-4">
-									<MetaSeparator />
-									<Clock className="h-3.5 w-3.5" aria-hidden="true" />
-									{duration}
-								</li>
-								{highlight ? (
-									<li className="relative ps-4">
-										<MetaSeparator />
-										{highlight}
-									</li>
-								) : null}
-								<li className="relative ps-4">
-									<MetaSeparator />
-									{t(`category.${category}`)}
-								</li>
-								{difficultyLabels.length > 0 ? (
-									<li className="relative ps-4">
-										<MetaSeparator />
-										{difficultyLabels.join(' / ')}
-									</li>
-								) : null}
-							</ul>
-						</div>
-
-						<HeroPlayAction locked={locked} label={t('gamePage.playCta')} href={playHref} />
+						<HeroPlayAction
+							locked={locked}
+							label={t('gamePage.playCta')}
+							href={playHref}
+							startIntent={slug}
+						/>
 
 						<HeroGuestNote isGuest={isGuest} locked={locked}>
 							{t('gamePage.guestNote')}{' '}
 							<Link
 								href={{ pathname: '/signup', query: { callbackUrl: `/games/${slug}` } }}
-								className="inline-flex min-h-11 items-center font-semibold text-[#1a1712] underline underline-offset-4"
+								className="inline-flex min-h-11 items-center font-semibold text-foreground underline underline-offset-4"
 							>
 								{t('gamePage.guestSignIn')}
 							</Link>
@@ -179,29 +225,16 @@ export async function GamePageHero({
 
 					<div
 						className={cn(
-							'hidden h-48 w-48 items-center justify-center rounded-[2.5rem] bg-white/35 md:flex lg:h-60 lg:w-60',
-							colors.onField,
+							'tactile-card hidden aspect-[16/10] overflow-hidden p-4 md:block',
+							colors.bg,
 						)}
 						aria-hidden="true"
 					>
-						<GameIcon slug={slug} size={112} />
+						<GameMotif slug={slug} />
 					</div>
 				</div>
 			</div>
-
-			<script
-				type="application/ld+json"
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD with trusted registry and translation content
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-			/>
+			{jsonLd}
 		</section>
-	)
-}
-
-function MetaSeparator() {
-	return (
-		<span aria-hidden="true" className="absolute start-1.5">
-			·
-		</span>
 	)
 }

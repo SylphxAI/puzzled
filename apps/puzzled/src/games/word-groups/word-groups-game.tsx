@@ -315,7 +315,8 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 						size="sm"
 						onClick={handleSubmit}
 						disabled={!canSubmit}
-						className="min-h-[44px] px-4 text-xs sm:px-6 sm:text-sm"
+						data-ready={canSubmit ? 'true' : undefined}
+						className="board-submit min-h-[44px] px-4 text-xs sm:px-6 sm:text-sm"
 					>
 						{t('submit')}
 					</Button>

@@ -14,5 +14,5 @@ type HeroGuestNoteProps = {
 /** The hero's "no account needed" line for guests, absent when the board is locked. */
 export function HeroGuestNote({ isGuest, locked, children }: HeroGuestNoteProps) {
 	if (!isGuest || locked) return null
-	return <p className="mt-3 text-sm text-[#1a1712]/75">{children}</p>
+	return <p className="mt-3 text-sm text-muted-foreground">{children}</p>
 }

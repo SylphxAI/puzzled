@@ -112,16 +112,16 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 						</div>
 					) : (
 						<ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
-							{visibleEntries.map((entry, index) => (
+							{visibleEntries.map((entry) => (
 								<li key={entry.slug} className="h-full">
 									<GameTile
 										slug={entry.slug}
 										name={entry.title}
 										tagline={entry.tagline}
-										meta={[entry.duration, entry.highlight].filter(Boolean).join(' • ')}
+										duration={entry.duration}
+										category={t(`category.${entry.category}`)}
 										theme={entry.theme}
 										status={entry.freeToday ? 'free' : 'play'}
-										index={index}
 										labels={{
 											play: t('play'),
 											seeResult: tResult('seeResult'),

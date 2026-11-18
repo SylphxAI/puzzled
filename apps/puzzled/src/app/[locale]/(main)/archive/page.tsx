@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic'
 
-import { CalendarDays } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { AdSlot } from '@/features/ads/components/ad-slot'
-import { ArchiveGrid } from '@/features/daily/components/archive-grid'
+import { CATALOG_CATEGORIES } from '@/features/catalog/lib/catalog'
+import { ArchiveAlmanac } from '@/features/daily/components/archive-almanac'
 import { ARCHIVE_WINDOW_DAYS, archiveDayKeys } from '@/features/daily/lib/archive-days'
 import { CheckoutOffer } from '@/features/plus-offer/components/checkout-offer'
 import { getAllGameMetadata } from '@/games/registry'
@@ -47,6 +47,7 @@ export default async function ArchivePage({ params }: Props) {
 	setRequestLocale(locale)
 	const t = await getTranslations('archive')
 	const tGames = await getTranslations('games')
+	const tCatalog = await getTranslations('catalog')
 	const user = await withPresentationDeadline(currentUser(), null)
 	const access = await withPresentationDeadline(getServerPlusAccess(Boolean(user?.id)), OPEN_ACCESS)
 	const locked = access.salesOpen && !access.entitled
@@ -55,54 +56,74 @@ export default async function ArchivePage({ params }: Props) {
 		slug: game.slug,
 		name: tGames(`${slugToCamelCase(game.slug)}.name`),
 		theme: game.display.theme,
+		category: game.category,
 	}))
+	const categories = CATALOG_CATEGORIES.filter((value) =>
+		games.some((game) => game.category === value),
+	).map((value) => ({ value, label: tCatalog(`category.${value}`) }))
 	const days = archiveDayKeys(productDayKey())
 
 	return (
 		<main className="flex-1">
-			<section className="page-shell py-10 md:py-14">
-				<div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_24rem]">
-					<header>
-						<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-							{t('eyebrow')}
-						</p>
-						<h1 className="mt-2 font-display text-3xl md:text-4xl">{t('title')}</h1>
-						<p className="mt-3 max-w-2xl text-muted-foreground">{t('body')}</p>
-						<Link
-							href="/games"
-							className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4"
-						>
-							{t('backToGames')}
-						</Link>
-					</header>
+			<section className="page-shell-wide py-6 md:py-10">
+				<div
+					className={
+						locked
+							? 'grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:gap-8'
+							: 'grid items-start gap-6'
+					}
+				>
+					<div className="min-w-0">
+						<div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+							<div className="min-w-0">
+								<p className="eyebrow">{t('eyebrow')}</p>
+								<h1 className="mt-1.5 font-display text-3xl leading-tight md:text-4xl">
+									{t('title')}
+								</h1>
+								<p className="mt-2 max-w-2xl text-[15px] text-muted-foreground">
+									{t('listBody', { count: ARCHIVE_WINDOW_DAYS, games: games.length })}
+								</p>
+							</div>
+							<Link
+								href="/games"
+								className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4"
+							>
+								{t('backToGames')}
+							</Link>
+						</div>
+						<section className="mt-5" aria-labelledby="archive-list-title">
+							<h2 id="archive-list-title" className="sr-only">
+								{t('listTitle')}
+							</h2>
+							<ArchiveAlmanac
+								days={days}
+								games={games}
+								locale={locale}
+								locked={locked}
+								categories={categories}
+								labels={{
+									dayPicker: t('dayPicker'),
+									filter: t('filterLabel'),
+									all: tCatalog('filterAll'),
+									yesterday: t('yesterday'),
+									dayCount: t.raw('dayCount') as string,
+									play: t('play'),
+									locked: t('locked'),
+								}}
+							/>
+						</section>
+					</div>
 					{locked ? (
-						<CheckoutOffer
-							locale={locale}
-							signedIn={Boolean(user?.id)}
-							callbackUrl="/archive"
-							gameCount={games.length}
-						/>
+						<aside className="lg:sticky lg:top-20">
+							<CheckoutOffer
+								locale={locale}
+								signedIn={Boolean(user?.id)}
+								callbackUrl="/archive"
+								gameCount={games.length}
+							/>
+						</aside>
 					) : null}
 				</div>
-				<section className="mt-8" aria-labelledby="archive-list-title">
-					<div className="flex items-center gap-3">
-						<CalendarDays className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-						<h2 id="archive-list-title" className="font-display text-xl">
-							{t('listTitle')}
-						</h2>
-					</div>
-					<p className="mb-6 mt-2 max-w-2xl text-sm text-muted-foreground">
-						{t('listBody', { count: ARCHIVE_WINDOW_DAYS, games: games.length })}
-					</p>
-					<ArchiveGrid
-						days={days}
-						games={games}
-						locale={locale}
-						locked={locked}
-						lockedLabel={t('locked')}
-						playLabel={t('play')}
-					/>
-				</section>
 				{ads ? (
 					<div className="mt-8 max-w-2xl">
 						<AdSlot config={ads} />

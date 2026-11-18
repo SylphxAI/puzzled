@@ -113,8 +113,8 @@ worth sending.
 clean board: tactile, cheerful, quick. Not cream paper and serifs, not a
 casino, not a brain-training lab.
 
-**The tile is the idea.** The mark is an ink tile with a question-mark hook
-and an amber dot; that amber dot is the moment the answer clicks. Games are
+**The tile is the idea.** The mark is a T built from five puzzle tiles on an
+ink ground, the last one amber; that amber tile is the moment the answer clicks. Games are
 tiles, buttons are tiles with a pressable edge, and the one amber thing on a
 screen is the thing to press next.
 
@@ -247,7 +247,7 @@ tiles or blobs. Icons: 2px rounded-stroke line icons, 24px grid.
 - Do give each game one tile colour and use it on its card, hero and share image.
 - Do put Ink text on every Amber and tile-colour fill; never white on them.
 - Do show the free daily puzzle first and let a guest finish it with no signup.
-- Don't use cream paper, newspaper serifs or rule lines; that is another brand.
+- Don't use newspaper serifs in the interface or decorative rule lines; the home masthead's one heavy ink rule is the only rule.
 - Don't put Sylphx next to the mark, in headlines or in any image.
 - Don't show today's answer in any post, preview or result card.
 - Don't rely on colour alone for tile states.

@@ -6,7 +6,10 @@ import type { NextRequest } from 'next/server'
 import { type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import {
 	MARK_AMBER,
-	MARK_HOOK_PATH,
+	MARK_KEYSTONE,
+	MARK_TILE,
+	MARK_TILE_RADIUS,
+	MARK_TILES,
 	WORDMARK_PATH,
 	WORDMARK_VIEWBOX,
 } from '@/shared/components/brand/mark'
@@ -151,16 +154,26 @@ export function GET(request: NextRequest) {
 					background: panel.field,
 				}}
 			>
-				<svg width="220" height="220" viewBox="0 0 64 64" aria-hidden="true">
-					<path
-						d={MARK_HOOK_PATH}
-						fill="none"
-						stroke={panel.glyph}
-						strokeWidth={8}
-						strokeLinecap="round"
-						strokeLinejoin="round"
+				<svg width="220" height="220" viewBox="8.5 8.5 47 47" aria-hidden="true">
+					{MARK_TILES.map(([x, y]) => (
+						<rect
+							key={`${x}-${y}`}
+							x={x}
+							y={y}
+							width={MARK_TILE}
+							height={MARK_TILE}
+							rx={MARK_TILE_RADIUS}
+							fill={panel.glyph}
+						/>
+					))}
+					<rect
+						x={MARK_KEYSTONE[0]}
+						y={MARK_KEYSTONE[1]}
+						width={MARK_TILE}
+						height={MARK_TILE}
+						rx={MARK_TILE_RADIUS}
+						fill={MARK_AMBER}
 					/>
-					<rect x="27" y="46" width="10" height="10" rx="2.6" fill={MARK_AMBER} />
 				</svg>
 			</div>
 		</div>,

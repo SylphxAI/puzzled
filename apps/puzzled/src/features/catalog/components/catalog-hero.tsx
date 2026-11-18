@@ -15,11 +15,10 @@ type CatalogHeroProps = {
 	category: CatalogCategoryFilter
 }
 
-const FILTER_CHIP =
-	'pressable inline-flex h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold transition-colors'
+const FILTER_CHIP = 'category-chip pressable min-h-11 shrink-0 px-4 text-sm'
 
-const FILTER_CHIP_ACTIVE = 'bg-primary text-primary-foreground'
-const FILTER_CHIP_IDLE = 'bg-muted text-foreground hover:bg-accent'
+const FILTER_CHIP_ACTIVE = 'category-chip-on'
+const FILTER_CHIP_IDLE = ''
 
 /**
  * Catalog hero: the suite promise, the title filter and the category filter.
@@ -47,47 +46,51 @@ export async function CatalogHero({ gameCount, visibleCount, query, category }: 
 
 	return (
 		<section className="relative">
-			<div className="page-shell-wide pb-4 pt-8 md:pt-12">
-				<p className="eyebrow">{t('heroEyebrow')}</p>
-				<h1 className="mt-2 font-display text-[2.125rem] leading-[1.06] text-balance sm:text-5xl">
-					{t('title')}
-				</h1>
-				<p className="mt-3 max-w-2xl text-[17px] leading-relaxed text-muted-foreground">
-					{t('subtitle', { count: gameCount })}
-				</p>
+			<div className="page-shell-wide pb-4 pt-6 md:pt-10">
+				<div className="grid items-end gap-x-10 gap-y-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+					<div className="min-w-0">
+						<p className="eyebrow">{t('heroEyebrow')}</p>
+						<h1 className="mt-2 font-display text-[2.125rem] leading-[1.06] text-balance sm:text-5xl">
+							{t('title')}
+						</h1>
+						<p className="mt-3 max-w-2xl text-[16px] leading-relaxed text-muted-foreground sm:text-[17px]">
+							{t('subtitle', { count: gameCount })}
+						</p>
+					</div>
 
-				<search className="mt-6 block">
-					<form className="relative w-full max-w-xl">
-						<label htmlFor="catalog-q" className="sr-only">
-							{t('searchLabel')}
-						</label>
-						<Search
-							className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-							aria-hidden="true"
-						/>
-						<input
-							id="catalog-q"
-							type="search"
-							name="q"
-							defaultValue={query}
-							placeholder={t('searchPlaceholder')}
-							enterKeyHint="search"
-							className="h-11 w-full rounded-xl border border-transparent bg-muted pl-10 pr-24 text-[16px] outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:bg-card"
-						/>
-						{category !== 'all' && <input type="hidden" name="category" value={category} />}
-						<button
-							type="submit"
-							className="absolute right-0 top-0 inline-flex h-11 min-w-11 items-center rounded-lg px-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
-						>
-							{t('searchSubmit')}
-						</button>
-					</form>
-				</search>
+					<search className="block">
+						<form className="relative w-full">
+							<label htmlFor="catalog-q" className="sr-only">
+								{t('searchLabel')}
+							</label>
+							<Search
+								className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+								aria-hidden="true"
+							/>
+							<input
+								id="catalog-q"
+								type="search"
+								name="q"
+								defaultValue={query}
+								placeholder={t('searchPlaceholder')}
+								enterKeyHint="search"
+								className="h-12 w-full rounded-xl border-[1.5px] border-[var(--tactile-soft-line)] bg-card pl-10 pr-24 text-[16px] outline-none transition-colors placeholder:text-muted-foreground focus:border-ring"
+							/>
+							{category !== 'all' && <input type="hidden" name="category" value={category} />}
+							<button
+								type="submit"
+								className="absolute right-0.5 top-0.5 inline-flex h-11 min-w-11 items-center rounded-lg px-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+							>
+								{t('searchSubmit')}
+							</button>
+						</form>
+					</search>
+				</div>
 
 				{/* On phones the chips scroll sideways; the trailing fade tells the eye the
 				    row continues, and the wider end padding lets the last chip scroll
 				    clear of the fade. */}
-				<fieldset className="no-scrollbar min-w-0 -mx-4 mt-3 flex items-center gap-2 overflow-x-auto border-0 py-1 ps-4 pe-10 [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] md:mx-0 md:px-0 md:[mask-image:none]">
+				<fieldset className="no-scrollbar min-w-0 -mx-4 mt-5 flex items-center gap-2 overflow-x-auto border-0 py-1 ps-4 pe-10 [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] md:mx-0 md:px-0 md:[mask-image:none]">
 					<legend className="sr-only">{t('filterLabel')}</legend>
 					{filterOptions.map((option) => (
 						<Link

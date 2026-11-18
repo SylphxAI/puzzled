@@ -2,8 +2,9 @@ import { cookies, headers } from 'next/headers'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { cache, Suspense } from 'react'
 import { DISMISSED_COOKIE } from '@/features/announcements/lib/dismissed'
+import { CATALOG_CATEGORIES } from '@/features/catalog/lib/catalog'
 import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
-import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from '@/features/daily/lib/home-exposure'
+import { deriveHomeExposure } from '@/features/daily/lib/home-exposure'
 import {
 	deriveHomePlayState,
 	isFreeGameDone,
@@ -11,14 +12,17 @@ import {
 } from '@/features/daily/lib/home-play-state'
 import { getPuzzleNumber } from '@/features/daily/lib/puzzle-utils'
 import { todayPlayPath, todayResultPath } from '@/features/daily/lib/today-play-path'
+import { DailyPicksPill } from '@/features/home/components/daily-picks-pill'
 import {
 	HomeDay,
 	HomeDayFallback,
 	type HomeDayGame,
 	HomeDaySkeleton,
 } from '@/features/home/components/home-day'
+import { HomeMasthead } from '@/features/home/components/home-masthead'
 import { MemberStatsBand, TomorrowBand, ValueStrip } from '@/features/home/components/home-sections'
 import {
+	type LineupCategory,
 	type LineupEntry,
 	TodayLineup,
 	TodayLineupSkeleton,
@@ -39,6 +43,7 @@ import { SeasonalBanner } from '@/features/seasons/components/seasonal-banner'
 import { getAllGameMetadata } from '@/games/registry'
 import {
 	getServerPersonalDailyResults,
+	getServerPlusAccess,
 	getServerPlusOfferAccess,
 	getServerStreakInfo,
 	getServerTodayOverview,
@@ -140,9 +145,8 @@ const readHomeFacts = cache(async (): Promise<HomeFacts> => {
 type GameCatalogEntry = ReturnType<typeof getAllGameMetadata>[number]
 
 /**
- * Home exposure stays small: today's free ritual leads, proved completions
- * follow, the remaining slots rotate per product day. Every other module stays
- * reachable on /games.
+ * Home shows the whole day at a glance: today's pick leads, proved completions
+ * follow, and the rest rotate per product day.
  *
  * Personal completion is best-effort: an unverified status never renders as a
  * completed state or a score, and the free ritual stays playable.
@@ -157,7 +161,7 @@ function deriveHomeView(input: {
 		freeGameSlug: input.freeGameSlug,
 		completions: input.personalResults,
 		dayKey: productDayKey(),
-		limit: HOME_EXPOSURE_LIMIT,
+		limit: input.gameMetadata.length,
 	})
 	const playState = deriveHomePlayState({
 		gameSlugs: input.gameMetadata.map((game) => game.slug),
@@ -190,9 +194,8 @@ function buildLineup(input: {
 				slug: game.slug,
 				name: input.t(`games.${camel}.name`),
 				tagline: input.t(`games.${camel}.tagline`),
-				meta: [metadata.display.duration, input.t(`games.${camel}.highlight`)]
-					.filter(Boolean)
-					.join(' • '),
+				duration: metadata.display.duration,
+				category: input.t(`catalog.category.${metadata.category}`),
 				theme: metadata.display.theme,
 				status: status as LineupEntry['status'],
 				score: game.score ?? null,
@@ -206,10 +209,14 @@ async function HomeDayIsland({
 	locale,
 	puzzleNumber,
 	freeGame,
+	gameCount,
+	categories,
 }: {
 	locale: string
 	puzzleNumber: number
 	freeGame: HomeDayGame
+	gameCount: number
+	categories: readonly string[]
 }) {
 	const facts = await readHomeFacts()
 	const view = deriveHomeView({
@@ -232,7 +239,7 @@ async function HomeDayIsland({
 	const trialEndMs = facts.user ? await getServerTrialBannerEndMs() : null
 
 	return (
-		<>
+		<div className="min-w-0">
 			{trialEndMs ? (
 				<TrialEndingBanner endMs={trialEndMs} manageHref="/settings/subscription" />
 			) : null}
@@ -240,6 +247,8 @@ async function HomeDayIsland({
 				locale={locale}
 				puzzleNumber={puzzleNumber}
 				freeGame={freeGame}
+				gameCount={gameCount}
+				categories={categories}
 				isMember={Boolean(facts.user)}
 				currentStreak={facts.streakInfo?.currentStreak ?? 0}
 				hasPlayedToday={facts.streakInfo?.hasPlayedToday ?? false}
@@ -254,17 +263,19 @@ async function HomeDayIsland({
 			{milestone !== null && milestoneOffer ? (
 				<PlusMilestonePrompt milestone={milestone} playedDays={playedDays} offer={milestoneOffer} />
 			) : null}
-		</>
+		</div>
 	)
 }
 
-/** Streamed lineup: proved finishes, scores and the member stats band. */
+/** Streamed lineup: proved finishes and scores on every game of the day. */
 async function HomeLineupIsland({
 	freeGameSlug,
 	metadataBySlug,
+	categories,
 }: {
 	freeGameSlug: string
 	metadataBySlug: Map<string, GameCatalogEntry>
+	categories: readonly LineupCategory[]
 }) {
 	const [t, facts] = await Promise.all([getTranslations(), readHomeFacts()])
 	const view = deriveHomeView({
@@ -278,20 +289,31 @@ async function HomeLineupIsland({
 		t: t as LineupTranslator,
 	})
 
-	return (
-		<>
-			<TodayLineup games={lineup} />
-			{facts.user ? (
-				<MemberStatsBand
-					currentStreak={facts.streakInfo?.currentStreak ?? 0}
-					bestStreak={facts.streakInfo?.maxStreak ?? 0}
-					totalGamesPlayed={facts.streakInfo?.totalGamesPlayed ?? 0}
-				/>
-			) : (
-				<ValueStrip />
-			)}
-		</>
+	return <TodayLineup games={lineup} categories={categories} />
+}
+
+/** Streamed band under the day: member numbers, or what a visitor gets. */
+async function HomeValueIsland() {
+	const facts = await readHomeFacts()
+	return facts.user ? (
+		<MemberStatsBand
+			currentStreak={facts.streakInfo?.currentStreak ?? 0}
+			bestStreak={facts.streakInfo?.maxStreak ?? 0}
+			totalGamesPlayed={facts.streakInfo?.totalGamesPlayed ?? 0}
+		/>
+	) : (
+		<ValueStrip />
 	)
+}
+
+/**
+ * The picks pill with the viewer's Plus state. Guests are never entitled, so
+ * only an account costs a read; an unreadable state shows the free picks.
+ */
+async function PicksIsland({ dayKey }: { dayKey: string }) {
+	const facts = await readHomeFacts()
+	const access = facts.user ? await withPresentationDeadline(getServerPlusAccess(true), null) : null
+	return <DailyPicksPill dayKey={dayKey} unlimited={Boolean(access?.entitled)} />
 }
 
 export default async function HomePage({ params }: Props) {
@@ -352,6 +374,19 @@ export default async function HomePage({ params }: Props) {
 		? t(`games.${slugToCamelCase(tomorrowsFreeGame)}.name`)
 		: tomorrowsFreeGame
 
+	const dayKey = productDayKey(now)
+	const gameCount = gameMetadata.length
+	const categoryCounts = new Map<string, number>()
+	for (const game of gameMetadata) {
+		categoryCounts.set(game.category, (categoryCounts.get(game.category) ?? 0) + 1)
+	}
+	const lineupCategories: LineupCategory[] = CATALOG_CATEGORIES.flatMap((value) => {
+		const count = categoryCounts.get(value) ?? 0
+		return count > 0 ? [{ value, label: t(`catalog.category.${value}`), count }] : []
+	})
+	const categoryNames = lineupCategories.map((category) => category.label)
+	const dayProps = { locale, puzzleNumber, freeGame, gameCount, categories: categoryNames }
+
 	return (
 		<main
 			className="flex-1"
@@ -359,38 +394,70 @@ export default async function HomePage({ params }: Props) {
 		>
 			<WebApplicationJsonLd locale={locale} />
 			<SeasonalBanner />
-			{sharedHome ? (
-				<HomeDayFallback locale={locale} puzzleNumber={puzzleNumber} freeGame={freeGame} />
-			) : (
-				<Suspense
-					fallback={
-						hasProgressIdentity ? (
-							// Personal numbers are owed but unread: claim nothing, keep the
-							// geometry (`HomeDaySkeleton`).
-							<HomeDaySkeleton />
+			<section className="day-surface relative">
+				<div className="home-day-shell page-shell-wide pt-3 md:pt-5">
+					<HomeMasthead
+						puzzleNumber={puzzleNumber}
+						gameCount={gameMetadata.length}
+						picks={
+							sharedHome ? (
+								<DailyPicksPill dayKey={dayKey} />
+							) : (
+								<Suspense fallback={<DailyPicksPill dayKey={dayKey} />}>
+									<PicksIsland dayKey={dayKey} />
+								</Suspense>
+							)
+						}
+					/>
+					<div className="home-day-grid grid items-start gap-8 pb-10 pt-5 md:pb-14 md:pt-7 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-10 xl:grid-cols-[minmax(0,4.6fr)_minmax(0,7.4fr)] xl:gap-12">
+						{sharedHome ? (
+							<HomeDayFallback {...dayProps} />
 						) : (
-							// A first-time visitor sees the real visitor day immediately —
-							// the same thing the island below renders, so nothing swaps.
-							<HomeDayFallback locale={locale} puzzleNumber={puzzleNumber} freeGame={freeGame} />
-						)
-					}
-				>
-					<HomeDayIsland locale={locale} puzzleNumber={puzzleNumber} freeGame={freeGame} />
-				</Suspense>
-			)}
+							<Suspense
+								fallback={
+									hasProgressIdentity ? (
+										// Personal numbers are owed but unread: claim nothing, keep the
+										// geometry (`HomeDaySkeleton`).
+										<HomeDaySkeleton />
+									) : (
+										// A first-time visitor sees the real visitor day immediately —
+										// the same thing the island below renders, so nothing swaps.
+										<HomeDayFallback {...dayProps} />
+									)
+								}
+							>
+								<HomeDayIsland {...dayProps} />
+							</Suspense>
+						)}
+
+						{sharedHome ? (
+							<TodayLineup games={rotationLineup} categories={lineupCategories} />
+						) : (
+							<Suspense
+								fallback={
+									hasProgressIdentity ? (
+										<TodayLineupSkeleton count={gameCount} />
+									) : (
+										<TodayLineup games={rotationLineup} categories={lineupCategories} />
+									)
+								}
+							>
+								<HomeLineupIsland
+									freeGameSlug={todaysFreeGame}
+									metadataBySlug={metadataBySlug}
+									categories={lineupCategories}
+								/>
+							</Suspense>
+						)}
+					</div>
+				</div>
+			</section>
 
 			{sharedHome ? (
-				<>
-					<TodayLineup games={rotationLineup} />
-					<ValueStrip />
-				</>
+				<ValueStrip />
 			) : (
-				<Suspense
-					fallback={
-						hasProgressIdentity ? <TodayLineupSkeleton /> : <TodayLineup games={rotationLineup} />
-					}
-				>
-					<HomeLineupIsland freeGameSlug={todaysFreeGame} metadataBySlug={metadataBySlug} />
+				<Suspense fallback={hasProgressIdentity ? null : <ValueStrip />}>
+					<HomeValueIsland />
 				</Suspense>
 			)}
 			<TomorrowBand gameName={tomorrowsFreeGameName} />

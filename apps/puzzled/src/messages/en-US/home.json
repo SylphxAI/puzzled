@@ -19,10 +19,11 @@
 	},
 	"lineup": {
 		"title": "Today's lineup",
-		"subtitle": "Find today's puzzles here, or explore every game.",
+		"subtitle": "All {count} games. Any three are free today.",
 		"seeAll": "See all games",
 		"play": "Play",
-		"freeToday": "Today's pick"
+		"freeToday": "Today's pick",
+		"subtitleShort": "{count} games today"
 	},
 	"value": {
 		"dailyTitle": "A fresh set every day",
@@ -76,12 +77,12 @@
 		"puzzleNumber": "Puzzle #{number}",
 		"resetsIn": "Resets in",
 		"resetsAt": "midnight in Hong Kong",
-		"guestTitle": "Play today's {game}, free",
+		"guestTitle": "{count} daily puzzles. Pick any 3, free.",
 		"titleMemberReady": "Today's {game} is ready",
 		"titleMemberStreak": "Your {days}-day streak is waiting",
 		"titleMemberDone": "All done for today — nicely played",
 		"titleDone": "Today's {game} is done",
-		"bodyGuest": "Tryit is a daily set of word, logic and number puzzles. Pick any 3 free every day; each takes a few minutes and needs no signup.",
+		"bodyGuest": "Word, logic and number puzzles that take a few minutes each. Start any three today with no signup, and everyone gets the same set.",
 		"bodyMember": "Your streak, your stats and today's lineup are one tap away.",
 		"playToday": "Play today's {game}",
 		"playAgain": "Play today again",
@@ -98,5 +99,11 @@
 		"midAutumn": "Happy Mid-Autumn Festival",
 		"halloween": "Happy Halloween",
 		"christmas": "Merry Christmas"
+	},
+	"picks": {
+		"fresh": "{count} free picks today",
+		"left": "{count, plural, one {# free pick left} other {# free picks left}}",
+		"none": "Free picks used · See Plus",
+		"unlimited": "Plus · every game open"
 	}
 }

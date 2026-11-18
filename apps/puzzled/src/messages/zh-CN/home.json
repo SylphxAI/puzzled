@@ -19,10 +19,11 @@
 	},
 	"lineup": {
 		"title": "今天的阵容",
-		"subtitle": "在这里找今天的谜题，或探索所有游戏。",
+		"subtitle": "全部 {count} 款游戏，今天任选三款免费。",
 		"seeAll": "查看全部游戏",
 		"play": "开始玩",
-		"freeToday": "今日精选"
+		"freeToday": "今日精选",
+		"subtitleShort": "今天 {count} 款游戏"
 	},
 	"value": {
 		"dailyTitle": "每天全新题目",
@@ -76,12 +77,12 @@
 		"puzzleNumber": "第 {number} 题",
 		"resetsIn": "距离重置",
 		"resetsAt": "香港时间午夜",
-		"guestTitle": "今天的{game}，免费玩",
+		"guestTitle": "每天 {count} 款谜题，任选 3 款免费",
 		"titleMemberReady": "今天的{game}已准备好",
 		"titleMemberStreak": "你的 {days} 天连胜在等你",
 		"titleMemberDone": "今天已完成 — 玩得漂亮",
 		"titleDone": "今天的{game}已完成",
-		"bodyGuest": "Tryit 每天提供一组文字、逻辑和数字谜题。每天任选 3 款免费，几分钟就能玩完，无需注册。",
+		"bodyGuest": "文字、逻辑和数字谜题，每款几分钟就能玩完。今天任选三款，无需注册即可开始，大家玩的是同一套题。",
 		"bodyMember": "你的连胜、统计和今日阵容，一点即到。",
 		"playToday": "玩今天的{game}",
 		"playAgain": "再玩一次",
@@ -98,5 +99,11 @@
 		"midAutumn": "中秋节快乐",
 		"halloween": "万圣节快乐",
 		"christmas": "圣诞快乐"
+	},
+	"picks": {
+		"fresh": "今天可免费选 {count} 款",
+		"left": "还可免费选 {count} 款",
+		"none": "今天的免费额度已用完 · 看看 Plus",
+		"unlimited": "Plus · 所有游戏随便玩"
 	}
 }

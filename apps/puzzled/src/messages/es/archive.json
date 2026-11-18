@@ -14,5 +14,9 @@
 	"emptyTitle": "El archivo aún está vacío",
 	"emptyBody": "Cada puzle diario pasado llega aquí al cambiar de día: hoy toca el ritual. Juégalo y el de mañana ocupará su lugar.",
 	"emptyPlay": "Juega el ritual de hoy ({game})",
-	"locked": "Jugar con Plus"
+	"locked": "Jugar con Plus",
+	"dayPicker": "Elige un día",
+	"filterLabel": "Filtrar por categoría",
+	"yesterday": "Ayer",
+	"dayCount": "{count} juegos"
 }

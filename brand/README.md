@@ -26,7 +26,7 @@ alone, and CI runs it.
 
 | Need | File |
 |---|---|
-| The mark: ink tile, question-mark hook, amber dot | `svg/puzzled-symbol.svg` |
+| The mark: ink tile, a T of five puzzle tiles, the last one amber | `svg/puzzled-symbol.svg` |
 | The mark in one colour, for any ink (`currentColor`) | `svg/puzzled-symbol-mono.svg` |
 | The mark all black / all white | `svg/puzzled-symbol-black.svg`, `svg/puzzled-symbol-white.svg` |
 | The word alone, `currentColor` / black / white | `svg/puzzled-wordmark.svg`, `svg/puzzled-wordmark-black.svg`, `svg/puzzled-wordmark-white.svg` |
@@ -180,7 +180,7 @@ product earns money. Use ™ at most, never ®.
 
 Checked 2026-09-28 (web and app-store search, US trademark listings).
 - **Name: close match, same category.** Netflix ships "Netflix Tryit", a daily word and logic puzzle app on iOS, Android and Tudum (launched 2025). No US trademark filing by Netflix for PUZZLED was found; "PUZZLED" is registered by Tryit, Inc. for physical puzzles and toys (class 28, reg. 3983811), which is outside software. This is the one real risk in the portfolio: a store listing or search result can be confused with Netflix's. Noted once, not blocking (owner#781).
-- **Mark:** a question-mark hook with an amber tile for its dot. No close match found among puzzle-app icons.
+- **Mark:** a T built from five tiles with an amber keystone (redrawn 2026-11-18; the earlier question-mark hook was checked 2026-09-28). Not yet searched against puzzle-app icons.
 
 The wordmark is outlined reproducibly from the bundled Fraunces 600 font and
 `wordmark` in `brand.json`. `build.py` writes the SVG variants and `wordmark.json`;

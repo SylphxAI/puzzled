@@ -33,6 +33,23 @@ export const SOUND_ENABLED_KEY = 'puzzled:sound:enabled'
 export const PWA_PROMPT_DISMISSED_KEY = 'puzzled:pwa:prompt-dismissed'
 
 // ==========================================
+// Daily free picks (display mirror)
+// ==========================================
+/**
+ * Prefix of the per-day list of games this browser opened today
+ * (`puzzled:picks:<dayKey>`). A display mirror only: the server owns the
+ * picks and the gate, and this list never admits or refuses play.
+ */
+export const DAILY_PICKS_KEY_PREFIX = 'puzzled:picks:'
+
+/**
+ * Same-tab, one-shot record of a pressed "Play" for one game
+ * (`{ slug, at }`), read once by that game's page to open the board without a
+ * second press. Session storage: a shared or crawled link never carries it.
+ */
+export const START_INTENT_KEY = 'puzzled:start:intent'
+
+// ==========================================
 // Share challenge
 // ==========================================
 /** The share a visitor opened ({ shareId, gameSlug, dayKey }); read by the result screen to show both results. */

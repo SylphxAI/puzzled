@@ -14,5 +14,9 @@
 	"emptyTitle": "存档还是空的",
 	"emptyBody": "随着游戏日一天天推进，过去的每日谜题都会出现在这里——今天的才是正题。玩一局，明天的新题就会接上。",
 	"emptyPlay": "玩今天的仪式谜题（{game}）",
-	"locked": "Plus 解锁"
+	"locked": "Plus 解锁",
+	"dayPicker": "选择日期",
+	"filterLabel": "按类别筛选",
+	"yesterday": "昨天",
+	"dayCount": "{count} 款谜题"
 }

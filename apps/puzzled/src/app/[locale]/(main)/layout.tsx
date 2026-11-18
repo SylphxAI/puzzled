@@ -12,6 +12,7 @@ import { AccountSavedNote } from '@/shared/components/layout/account-saved-note'
 import { ConsentBanner } from '@/shared/components/layout/consent-banner'
 import { Footer } from '@/shared/components/layout/footer'
 import type { InitialNavUser } from '@/shared/components/layout/user-menu'
+import { StartIntentListener } from '@/shared/components/start-intent-listener'
 import { SHARED_HOME_HEADER } from '../../../../shared-home-policy.cjs'
 import { LayoutTopNav } from './layout-nav'
 import { LayoutOverlays } from './layout-overlays'
@@ -106,6 +107,7 @@ export default async function MainLayout({ children }: Props) {
 	return (
 		<div className="relative flex min-h-screen flex-col">
 			<GuestIdentityBootstrap />
+			<StartIntentListener />
 			<SkipNavigation />
 
 			{/* Desktop: Top navigation */}
@@ -114,10 +116,6 @@ export default async function MainLayout({ children }: Props) {
 			<Suspense fallback={<TopNavSkeleton />}>
 				{sharedHome ? <LayoutTopNav currentStreak={null} initialUser={null} /> : <TopNavChrome />}
 			</Suspense>
-
-			{/* First-visit choice is in flow on phones: it cannot cover a puzzle or Play.
-			    Settled visitors remain hidden before paint by the locale layout script. */}
-			<ConsentBanner />
 
 			{/* Main scrollable content */}
 			{/* pb-nav on mobile only (bottom nav), md:pb-0 on desktop */}
@@ -129,6 +127,10 @@ export default async function MainLayout({ children }: Props) {
 				<AccountSavedNote />
 				{children}
 				<Footer />
+				{/* First-visit choice: a slim sticky bar at the end of the flow, pinned
+				    above the tab bar. It never pushes the hero or a board down, and
+				    settled visitors stay hidden before paint (locale layout script). */}
+				<ConsentBanner />
 			</div>
 
 			{/* Fixed overlays - proper z-index stacking */}

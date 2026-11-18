@@ -12,7 +12,7 @@ import {
 import { PlusTrialProvider } from '@/features/plus/components/trial-ends-line'
 import { PlusOfferProvider } from '@/features/plus-offer/components/plus-offer-context'
 import { plusOfferFor } from '@/features/plus-offer/lib/plus-offer'
-import type { GameSlug } from '@/games/registry'
+import { type GameSlug, getGameMetadata } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { adsConfig, adsFor } from '@/lib/ads'
 import {
@@ -64,6 +64,8 @@ type GamePlayAreaProps = {
 	 * or refuses the read for this day; the client never widens it.
 	 */
 	dateParam?: string
+	/** The player arrived by pressing Play (`?start=1`): the start card is the focus. */
+	started?: boolean
 }
 
 /**
@@ -127,6 +129,7 @@ async function renderPlayArea(
 		hasUser,
 		gameCount,
 		dateParam,
+		started = false,
 	}: GamePlayAreaProps,
 	access: PlusAccess,
 ) {
@@ -299,6 +302,8 @@ async function renderPlayArea(
 						puzzleDate={archiveDate}
 						unlock={unlockPanel}
 						startDate={startDate}
+						started={started}
+						theme={getGameMetadata(slug)?.display.theme ?? 'violet'}
 						currentStreak={currentStreak}
 					/>
 				</AdsProvider>

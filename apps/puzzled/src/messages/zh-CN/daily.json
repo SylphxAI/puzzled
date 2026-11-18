@@ -28,5 +28,6 @@
 	"todaysFreeGame": "玩今日免费谜题",
 	"notReadyTitle": "今天的{game}还没准备好",
 	"notReadyBody": "今天还没有{game}谜题。今天的免费谜题已经可以玩了。",
-	"notReadyCta": "玩今天的免费谜题"
+	"notReadyCta": "玩今天的免费谜题",
+	"startUsesPick": "开始后会用掉今天 3 个免费名额中的 1 个，开始过的游戏全天都能玩。"
 }

@@ -4,14 +4,27 @@ import wordmark from '../../../../../../brand/wordmark.json'
 /**
  * Tryit brand mark and wordmark.
  *
- * The mark is a question-mark hook whose dot is a single amber tile: the
- * piece you are looking for. It mirrors brand/svg/puzzled-symbol.svg (64-unit
- * canvas), so the app, the OG card and the raster icons stay one shape.
- * The ground and hook read the primary tokens, so the tile is ink on paper
- * and paper on charcoal without a second asset.
+ * The mark is a T built from five puzzle tiles: three across, two down, and
+ * the last one amber, the piece that clicks into place. It mirrors
+ * brand/svg/puzzled-symbol.svg (64-unit canvas), so the app, the OG card and
+ * the raster icons stay one shape. The ground and tiles read the primary
+ * tokens, so the mark is ink on paper and paper on charcoal without a second
+ * asset.
  */
 
-export const MARK_HOOK_PATH = 'M21 23a11 11 0 1 1 16.5 9.53Q32 35.6 32 39'
+/** Tile side on the 64-unit canvas. */
+export const MARK_TILE = 14
+/** Tile corner radius on the 64-unit canvas. */
+export const MARK_TILE_RADIUS = 3.2
+/** The paper tiles: the T's bar and the top of its stem. */
+export const MARK_TILES: ReadonlyArray<readonly [number, number]> = [
+	[8.5, 8.5],
+	[25, 8.5],
+	[41.5, 8.5],
+	[25, 25],
+]
+/** The amber keystone at the foot of the stem. */
+export const MARK_KEYSTONE: readonly [number, number] = [25, 41.5]
 export const MARK_AMBER = '#F4B42A'
 
 /** Fraunces 600 outline of "Tryit" (brand/svg/puzzled-wordmark.svg). */
@@ -29,8 +42,8 @@ type BrandMarkProps = {
 }
 
 /**
- * `tile` is the app icon (primary ground, contrasting hook), `inverse` swaps
- * ground and hook for ink bands, and `mono` is the bare glyph in currentColor.
+ * `tile` is the app icon (primary ground, contrasting tiles), `inverse` swaps
+ * ground and tiles for ink bands, and `mono` is the bare glyph in currentColor.
  */
 export function BrandMark({
 	size = 32,
@@ -44,7 +57,7 @@ export function BrandMark({
 			: tone === 'inverse'
 				? 'var(--color-ink-foreground, #f7f3ea)'
 				: 'none'
-	const hook =
+	const tile =
 		tone === 'tile'
 			? 'var(--color-primary-foreground, #fbf9f4)'
 			: tone === 'inverse'
@@ -52,7 +65,7 @@ export function BrandMark({
 				: 'currentColor'
 	return (
 		<svg
-			viewBox="0 0 64 64"
+			viewBox={tone === 'mono' ? '8.5 8.5 47 47' : '0 0 64 64'}
 			width={size}
 			height={size}
 			className={cn('shrink-0', className)}
@@ -61,15 +74,25 @@ export function BrandMark({
 			aria-label={decorative ? undefined : 'Tryit'}
 		>
 			{tone !== 'mono' && <rect width="64" height="64" rx="14" fill={ground} />}
-			<path
-				d={MARK_HOOK_PATH}
-				fill="none"
-				stroke={hook}
-				strokeWidth={8}
-				strokeLinecap="round"
-				strokeLinejoin="round"
+			{MARK_TILES.map(([x, y]) => (
+				<rect
+					key={`${x}-${y}`}
+					x={x}
+					y={y}
+					width={MARK_TILE}
+					height={MARK_TILE}
+					rx={MARK_TILE_RADIUS}
+					fill={tile}
+				/>
+			))}
+			<rect
+				x={MARK_KEYSTONE[0]}
+				y={MARK_KEYSTONE[1]}
+				width={MARK_TILE}
+				height={MARK_TILE}
+				rx={MARK_TILE_RADIUS}
+				fill={tone === 'mono' ? 'currentColor' : MARK_AMBER}
 			/>
-			<rect x="27" y="46" width="10" height="10" rx="2.6" fill={MARK_AMBER} />
 		</svg>
 	)
 }

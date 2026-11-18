@@ -7,9 +7,9 @@
  * stored decision, this wrapper mirrors a settled decision onto the keys
  * client-side scripts read (`puzzled:consent:cookie`).
  *
- * The (main) layout mounts this eagerly, not through the deferred shell: the
- * banner is the largest contentful paint on mobile, so the S5 budget requires
- * it in the first frame. Server rendering is safe - `useSafeConsent` starts
+ * The (main) layout mounts this eagerly, last in the page flow, not through
+ * the deferred shell: it renders in the first frame as a slim sticky bar at
+ * the bottom of the viewport, so it never pushes the hero or a board down. Server rendering is safe - `useSafeConsent` starts
  * from "no decision" on both sides of hydration, so the server output and the
  * first client render match; a visitor whose decision is already stored is
  * hidden before paint (see the settle script in `app/[locale]/layout.tsx` and

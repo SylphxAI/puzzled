@@ -19,10 +19,11 @@
 	},
 	"lineup": {
 		"title": "Selección de hoy",
-		"subtitle": "Encuentra aquí los puzzles de hoy o explora todos los juegos.",
+		"subtitle": "Los {count} juegos de hoy. Elige tres gratis.",
 		"seeAll": "Ver todos los juegos",
 		"play": "Jugar",
-		"freeToday": "Elegido de hoy"
+		"freeToday": "Elegido de hoy",
+		"subtitleShort": "{count} juegos hoy"
 	},
 	"value": {
 		"dailyTitle": "Un conjunto nuevo cada día",
@@ -76,12 +77,12 @@
 		"puzzleNumber": "Puzzle n.º {number}",
 		"resetsIn": "Se renueva en",
 		"resetsAt": "medianoche en Hong Kong",
-		"guestTitle": "Juega {game} de hoy, gratis",
+		"guestTitle": "{count} puzzles diarios. Elige 3 gratis.",
 		"titleMemberReady": "{game} de hoy está listo",
 		"titleMemberStreak": "Tu racha de {days} días te espera",
 		"titleMemberDone": "Todo hecho por hoy: bien jugado",
 		"titleDone": "{game} de hoy está completado",
-		"bodyGuest": "Tryit es un conjunto diario de puzzles de palabras, lógica y números. Elige 3 gratis cada día; cada uno lleva unos minutos y no requiere registro.",
+		"bodyGuest": "Puzzles de palabras, lógica y números de pocos minutos cada uno. Empieza tres hoy sin registrarte; todo el mundo juega la misma selección.",
 		"bodyMember": "Tu racha, tus estadísticas y la selección de hoy están a un toque.",
 		"playToday": "Juega {game} de hoy",
 		"playAgain": "Jugar hoy otra vez",
@@ -98,5 +99,11 @@
 		"midAutumn": "Feliz Festival del Medio Otoño",
 		"halloween": "Feliz Halloween",
 		"christmas": "Feliz Navidad"
+	},
+	"picks": {
+		"fresh": "{count} elecciones gratis hoy",
+		"left": "{count, plural, one {Te queda # gratis} other {Te quedan # gratis}}",
+		"none": "Elecciones gratis usadas · Ver Plus",
+		"unlimited": "Plus · todos los juegos abiertos"
 	}
 }
