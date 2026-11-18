@@ -98,11 +98,13 @@ pub fn module_class_for(slug: &str) -> Option<ModuleClass> {
     }
 }
 
-/// Premium-free daily rotation (canonical slugs; mirrors TS `FREE_GAME_ROTATION`).
+/// Featured daily rotation (canonical slugs; mirrors TS `FREE_GAME_ROTATION`).
+/// It only chooses which game is suggested first; access is the player's own
+/// free picks ([`crate::billing_access::policy::DAILY_FREE_PICKS`]).
 pub const FREE_GAME_ROTATION: [&str; 5] =
     ["word-guess", "word-groups", "crowns", "sudoku", "crossword"];
 
-/// Today's free game for a **product day-key** calendar date (day-of-year rotation).
+/// Today's featured game for a **product day-key** calendar date (day-of-year rotation).
 ///
 /// Callers must pass [`crate::puzzle_play::daily_time::product_day_key`], not a
 /// client-local date.
@@ -110,12 +112,6 @@ pub const FREE_GAME_ROTATION: [&str; 5] =
 pub fn todays_free_game(date: chrono::NaiveDate) -> &'static str {
     let day_of_year = date.ordinal0() as usize;
     FREE_GAME_ROTATION[day_of_year % FREE_GAME_ROTATION.len()]
-}
-
-/// True when a game is playable by free users on the given product day-key date.
-#[must_use]
-pub fn is_game_free_today(game_slug: &str, date: chrono::NaiveDate) -> bool {
-    canonicalize_game_slug(game_slug) == todays_free_game(date)
 }
 
 #[cfg(test)]
@@ -146,8 +142,6 @@ mod tests {
         let b = todays_free_game(date);
         assert_eq!(a, b);
         assert!(FREE_GAME_ROTATION.contains(&a));
-        assert!(is_game_free_today(a, date));
-        assert!(!is_game_free_today("arithmo", date));
     }
 
     #[test]

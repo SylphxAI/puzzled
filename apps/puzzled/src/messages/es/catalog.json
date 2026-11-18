@@ -1,8 +1,8 @@
 {
 	"metaTitle": "Todos los juegos",
-	"metaDescription": "Explora todos los puzzles diarios de Tryit: el juego gratis de hoy y la colección completa de rituales de palabras, lógica y números.",
+	"metaDescription": "Explora todos los puzzles diarios de Tryit: elige 3 gratis cada día entre la colección completa de rituales de palabras, lógica y números.",
 	"title": "Todos los juegos",
-	"subtitle": "{count} puzzles diarios en un solo ritual. Uno es gratis cada día y todo el mundo juega el mismo conjunto, que se renueva a medianoche, hora de Hong Kong.",
+	"subtitle": "{count} puzzles diarios en un solo ritual. Elige 3 gratis cada día y todo el mundo juega el mismo conjunto, que se renueva a medianoche, hora de Hong Kong.",
 	"heroEyebrow": "Colección de puzzles diarios",
 	"searchLabel": "Filtrar juegos por título",
 	"searchPlaceholder": "Filtrar juegos por título…",
@@ -29,7 +29,7 @@
 		"title": "Cómo es un día en Tryit",
 		"body": "Un día de puzzles, un conjunto compartido, igual para todos los jugadores.",
 		"step1Title": "Elige el puzzle de hoy",
-		"step1Body": "El juego del día va primero y los {count} puzzles comparten el mismo conjunto diario. El juego del día es gratis para todos; los demás se abren con Tryit Plus.",
+		"step1Body": "El juego del día va primero y los {count} puzzles comparten el mismo conjunto diario. Cada día, 3 juegos a tu elección son gratis para todos; Tryit Plus abre el resto.",
 		"step2Title": "Resuelve a tu ritmo",
 		"step2Body": "La mayoría de los puzzles duran entre dos y diez minutos, y los que tienen niveles de dificultad te permiten calentar o ir a por más reto.",
 		"step3Title": "Mantén el hábito",
@@ -66,7 +66,7 @@
 		"relatedTitle": "Más puzzles para probar",
 		"relatedAll": "Ver todos los juegos",
 		"metaTitle": "{game}: puzzle diario de {genre}",
-		"metaDescription": "{game} es un puzzle diario de {genre}. {rule} Un puzzle nuevo cada día; el puzzle destacado de hoy es gratis y no necesita cuenta.",
+		"metaDescription": "{game} es un puzzle diario de {genre}. {rule} Un puzzle nuevo cada día; juega 3 juegos gratis sin necesidad de cuenta.",
 		"genre": {
 			"word": "palabras",
 			"logic": "lógica",

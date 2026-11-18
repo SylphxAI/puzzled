@@ -25,16 +25,16 @@ import {
 
 describe('Tryit Plus presentation', () => {
 	test('nothing is locked while sales are closed or for a subscriber', () => {
-		const game = { slug: 'sudoku', freeSlug: 'crowns', archive: true }
+		const game = { archive: true }
 		expect(isPlayLocked({ salesOpen: false, entitled: false }, game)).toBe(false)
 		expect(isPlayLocked({ salesOpen: true, entitled: true }, game)).toBe(false)
 	})
 
-	test('only the free daily game stays open without Plus', () => {
+	test('without Plus only a past day is locked up front; the api counts the free picks', () => {
 		const access = { salesOpen: true, entitled: false }
-		expect(isPlayLocked(access, { slug: 'crowns', freeSlug: 'crowns', archive: false })).toBe(false)
-		expect(isPlayLocked(access, { slug: 'sudoku', freeSlug: 'crowns', archive: false })).toBe(true)
-		expect(isPlayLocked(access, { slug: 'crowns', freeSlug: 'crowns', archive: true })).toBe(true)
+		// Any game today opens on arrival; a fourth one is refused by GetDaily.
+		expect(isPlayLocked(access, { archive: false })).toBe(false)
+		expect(isPlayLocked(access, { archive: true })).toBe(true)
 	})
 
 	test('Connect refusal codes are recognised', () => {

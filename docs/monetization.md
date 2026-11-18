@@ -4,7 +4,7 @@ Commercial policy for the product, under the owner
 [commercial standard](https://github.com/SylphxAI/owner/blob/main/standards/commercial.md).
 Decided in [#235](https://github.com/SylphxAI/puzzled/issues/235): sell a paid tier.
 
-- **Model:** consumer subscription in the NYT Games class. Today's featured puzzle is free; Puzzled Plus opens everything else.
+- **Model:** consumer subscription in the NYT Games class. Any three games a day, chosen by the player, are free; Puzzled Plus opens everything else.
 - **Seller:** Sylphx Limited, England and Wales, company 16438428, registered office 128 City Road, London EC1V 2NX. VAT GB 502 7862 95.
 - **Billing system:** Sylphx Money, the platform's payments service: catalogue, hosted checkout, subscription state, entitlements API, portal, Stripe Tax and ledger. Puzzled builds no billing of its own.
 - **State:** the earlier direct-Stripe code was removed in [#292](https://github.com/SylphxAI/puzzled/pull/292) (Money cutover part 3), including the `/webhooks/stripe` handler. Billing is Sylphx Money only, and Puzzled polls Money for subscription state. Sections 3 to 5 describe the retired design; the prices and rules carry over to Money.
@@ -27,8 +27,8 @@ family.
 
 | | Free (everyone, guests included) | Puzzled Plus |
 |---|---|---|
-| Today's featured puzzle (the day's rotation game, `Asia/Hong_Kong` day key) | Yes | Yes |
-| Every other game, today | No | Yes, all of them |
+| Any three games today, chosen by the player (`DAILY_FREE_PICKS`, `Asia/Hong_Kong` day key) | Yes | Yes |
+| A fourth game, today | No | Yes, all of them |
 | Past days (archive) | No | Every past day |
 | Stats and streaks | For what you play | For every game |
 | Family plan | No | Family plan: up to 4 people, each with their own stats |
@@ -36,8 +36,16 @@ family.
 - The Rust api is the only admission point
   (`PuzzleConnectService::enforce_play_access`, rule in
   `puzzled-core` `billing_access::policy::play_access`). A refused request is
-  403 `plus_required` (another game) or `plus_required_archive` (a past day);
-  the web renders the unlock path from the same rule, never a dead end.
+  403 `plus_required` (a fourth game once the day's three picks are used) or
+  `plus_required_archive` (a past day); the web renders the unlock path from
+  the same refusal, never a dead end.
+- **Free picks:** every game page opens on arrival. Picks live in
+  `daily_free_picks` (player, day, game). Serving a board only reads them, so
+  a look spends nothing; the first checked guess or submitted finish claims
+  one under the player lock, so two tabs cannot both take the last pick. A
+  picked game stays open all day, and a guest's picks merge into the account
+  on sign-in (a set union, which may exceed three). The day's featured
+  rotation game only leads the suggestions.
 - **Reverse trial** (new players): after a player's third finished day (a daily
   ritual puzzle that ended won or lost; a day only started does not count) the
   api grants every game for 7 days, once per account (`plus_trials`, one row
@@ -54,7 +62,7 @@ family.
   cannot yet hide it from a new player who goes straight to the yearly plan, so
   one player can hold the reverse trial and later one card-up-front trial.
 - An entitlement read that fails refuses paid play (fail closed to the free
-  floor). The free daily puzzle never reads billing.
+  floor). The free picks never read billing.
 - While Stripe is not configured, nothing is sold, so nothing is locked.
 - Nothing a player has finished is ever taken away: results and stats stay
   whether or not they subscribe.
@@ -203,8 +211,8 @@ free game and keeps the query string.
 
 ## 6. Conversion moments (ethical)
 
-Allowed: the unlock panel on a paid game or past day (with today's free game
-beside it), the archive page, and the pricing page linked from the footer.
+Allowed: the unlock panel on a fourth game or a past day, the archive page,
+and the pricing page linked from the footer.
 
 Not allowed: false urgency (a countdown or stock claim that is not true; a real
 trial end date is fine), streak guilt, hiding the free daily puzzle behind a
@@ -272,8 +280,9 @@ There is no launch grace and no existing-player exemption. Puzzled was never
 promoted or launched before Plus sales opened, so no account has earlier
 standing. The paywall applies to everyone:
 
-- Today's featured puzzle is free for everyone, guests included.
-- Every other game and the archive need a Plus entitlement (Money's
+- Any three games a day, chosen by the player, are free for everyone, guests
+  included.
+- A fourth game that day and the archive need a Plus entitlement (Money's
   `entitlement_grants:check`) while sales are open. Guests and new accounts are
   locked out of them, and so is an account with old play history.
 - Any later free or discounted access is a Money entitlement grant (account,

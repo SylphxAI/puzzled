@@ -2,15 +2,15 @@
 	"name": "Tryit Plus",
 	"pricing": {
 		"metaTitle": "Tryit Plus：全ゲームと全アーカイブ",
-		"metaDescription": "今日のおすすめパズルは無料です。Tryit Plusなら、すべてのゲーム、過去のすべての日、ファミリープランをご利用いただけます。",
+		"metaDescription": "毎日、好きなゲームを3つ無料で。Tryit Plusなら、すべてのゲーム、過去のすべての日、ファミリープランをご利用いただけます。",
 		"title": "毎日、すべてのゲームを",
-		"lead": "今日のおすすめパズルは、どなたでも無料でプレイできます。Tryit Plusなら、全{count}ゲーム、過去の日のアーカイブ、すべてのゲームの統計をご利用いただけます。",
+		"lead": "毎日、好きなゲームを3つ無料で遊べます。Tryit Plusなら、全{count}ゲーム、過去の日のアーカイブ、すべてのゲームの統計をご利用いただけます。",
 		"closedTitle": "今のところ、すべて無料です",
 		"closedBody": "Tryit Plusはまだ販売前のため、すべてのゲームと過去のすべての日を、どなたでもご利用いただけます。",
 		"purchasesSoon": "まもなくご購入いただけるようになります。",
 		"checkoutFailed": "お支払い画面を開始できませんでした。もう一度お試しください。",
 		"freeTitle": "無料",
-		"freeBody": "毎日、今日のおすすめパズルをアカウントなしで遊べます。",
+		"freeBody": "毎日、好きなゲームを3つ、アカウントなしで遊べます。",
 		"playFree": "今日の無料パズルをプレイ：{game}",
 		"individualBody": "1人用です。",
 		"family": "Tryit Plus ファミリー",
@@ -56,7 +56,7 @@
 		"endingSoon": "Tryit Plusの無料体験は{date}に終了します。お試しいただきありがとうございます。それまでは、いつでも解約できます。"
 	},
 	"unlock": {
-		"title": "このゲームはTryit Plusの対象です",
+		"title": "今日の無料3ゲームはプレイ済みです",
 		"archiveTitle": "過去の日はTryit Plusの対象です",
 		"body": "今日の無料パズルは{game}です。Tryit Plusなら、全{count}ゲームと過去のすべての日を楽しめます。",
 		"cta": "Tryit Plusを見る",

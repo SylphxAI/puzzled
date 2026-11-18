@@ -62,8 +62,6 @@ describe('GameUnlockPanel', () => {
 			archive: false,
 			gameCount: 16,
 			isGuest: true,
-			freeGameSlug: 'sudoku',
-			freeGameName: 'Sudoku',
 		})
 		const html = renderToStaticMarkup(node)
 		expect(html).toContain('data-callback="/games/crossword"')
@@ -80,8 +78,6 @@ describe('GameUnlockPanel', () => {
 			dateParam: '2026-11-10',
 			gameCount: 16,
 			isGuest: false,
-			freeGameSlug: 'sudoku',
-			freeGameName: 'Sudoku',
 		})
 		const html = renderToStaticMarkup(node)
 		expect(html).toContain('data-callback="/games/crossword?mode=archive&amp;date=2026-11-10"')

@@ -1,6 +1,7 @@
 /**
  * Tryit Plus presentation rules. The Rust api decides access (Connect
- * `PuzzleService` refuses with `plus_required` / `plus_required_archive`);
+ * `PuzzleService` refuses with `plus_required` once a player's three free
+ * picks for the day are used, and `plus_required_archive` for a past day);
  * these helpers only choose what the page shows, from the same facts.
  */
 
@@ -21,14 +22,15 @@ export type PlusAccess = {
 
 export const OPEN_ACCESS: PlusAccess = { salesOpen: false, entitled: false }
 
-/** Is this game or day locked for the viewer? Mirrors `billing_access::policy::play_access`. */
-export function isPlayLocked(
-	access: PlusAccess,
-	input: { slug: string; freeSlug: string; archive: boolean },
-): boolean {
+/**
+ * Is this day locked for the viewer before any puzzle read? Only a past day is:
+ * today every game opens until the player's free picks are used, and only the
+ * api knows that count, so a fourth game is shown locked when GetDaily refuses
+ * it (`plus_required`). Mirrors `billing_access::policy::play_access`.
+ */
+export function isPlayLocked(access: PlusAccess, input: { archive: boolean }): boolean {
 	if (!access.salesOpen || access.entitled) return false
-	if (input.archive) return true
-	return input.slug !== input.freeSlug
+	return input.archive
 }
 
 /** Connect error messages that mean "Tryit Plus needed". */

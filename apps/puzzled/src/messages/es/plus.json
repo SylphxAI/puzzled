@@ -2,15 +2,15 @@
 	"name": "Tryit Plus",
 	"pricing": {
 		"metaTitle": "Tryit Plus: todos los juegos y el archivo completo",
-		"metaDescription": "El puzzle destacado de hoy es gratis. Tryit Plus desbloquea todos los juegos, todos los días anteriores y un plan familiar.",
+		"metaDescription": "Juega 3 juegos gratis cada día. Tryit Plus desbloquea todos los juegos, todos los días anteriores y un plan familiar.",
 		"title": "Todos los juegos, todos los días",
-		"lead": "El puzzle destacado de hoy es gratis para todos. Tryit Plus desbloquea los {count} juegos, el archivo de días anteriores y las estadísticas de cada juego.",
+		"lead": "Elige 3 juegos gratis cada día. Tryit Plus desbloquea los {count} juegos, el archivo de días anteriores y las estadísticas de cada juego.",
 		"closedTitle": "Por ahora todo es gratis",
 		"closedBody": "Tryit Plus todavía no está a la venta, así que todos los juegos y todos los días anteriores están abiertos para todo el mundo.",
 		"purchasesSoon": "Las compras se abrirán pronto.",
 		"checkoutFailed": "No se pudo iniciar el pago. Inténtalo de nuevo.",
 		"freeTitle": "Gratis",
-		"freeBody": "El puzzle destacado de hoy, todos los días, sin necesidad de cuenta.",
+		"freeBody": "3 juegos a tu elección, todos los días, sin necesidad de cuenta.",
 		"playFree": "Juega el puzzle gratis de hoy: {game}",
 		"individualBody": "Para un solo jugador.",
 		"family": "Tryit Plus Familia",
@@ -56,7 +56,7 @@
 		"endingSoon": "Tu prueba gratuita de Tryit Plus termina el {date}. Gracias por probarlo. Puedes cancelar cuando quieras antes de esa fecha."
 	},
 	"unlock": {
-		"title": "Este juego forma parte de Tryit Plus",
+		"title": "Ya jugaste tus 3 juegos gratis de hoy",
 		"archiveTitle": "Los días anteriores forman parte de Tryit Plus",
 		"body": "El puzzle gratis de hoy es {game}. Tryit Plus desbloquea los {count} juegos y todos los días anteriores.",
 		"cta": "Ver Tryit Plus",

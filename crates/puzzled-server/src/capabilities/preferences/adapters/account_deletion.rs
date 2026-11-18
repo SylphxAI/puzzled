@@ -23,6 +23,11 @@ use crate::capabilities::identity_access::adapters::{auth_subjects, guest_creden
 /// erased account.
 pub const USER_KEYED_COLUMNS: &[(&str, &str, &str)] = &[
     (
+        "daily_free_picks",
+        "user_id",
+        r#"DELETE FROM "daily_free_picks" WHERE "user_id" = $1"#,
+    ),
+    (
         "checkout_attempts",
         "user_id",
         r#"DELETE FROM "checkout_attempts" WHERE "user_id" = $1"#,

@@ -1,6 +1,6 @@
 {
 	"metaTitle": "Juegos de ingenio y puzzles diarios gratis",
-	"metaDescription": "Juega un juego de ingenio diario gratis —puzzles de palabras, lógica, números y espacio— y mantén el hábito. Un puzzle gratis cada día, sin necesidad de cuenta.",
+	"metaDescription": "Juega juegos de ingenio diarios gratis —puzzles de palabras, lógica, números y espacio— y mantén el hábito. 3 puzzles gratis cada día, sin necesidad de cuenta.",
 	"greeting": {
 		"morning": "Buenos días",
 		"afternoon": "Buenas tardes",
@@ -39,7 +39,7 @@
 		"viewStats": "Ver tus estadísticas"
 	},
 	"tomorrow": {
-		"title": "{game} será gratis mañana.",
+		"title": "El destacado de mañana: {game}.",
 		"body": "El mismo ritual, un conjunto nuevo.",
 		"cta": "Ver el catálogo"
 	},
@@ -48,11 +48,11 @@
 		"subtitle": "La versión corta de cómo funciona Tryit.",
 		"free": {
 			"question": "¿Tryit es gratis?",
-			"answer": "El puzzle destacado de hoy es gratis y no requiere cuenta. Plus da acceso a los 19 juegos y al archivo completo."
+			"answer": "Sí: elige 3 juegos gratis cada día, sin necesidad de cuenta. Plus da acceso a los 19 juegos y al archivo completo."
 		},
 		"account": {
 			"question": "¿Necesito una cuenta para jugar?",
-			"answer": "No. Puedes completar el puzzle gratis de hoy como invitado. Una cuenta conserva tu racha, tus resultados y tus estadísticas en todos tus dispositivos."
+			"answer": "No. Puedes completar tus 3 puzzles gratis como invitado. Una cuenta conserva tu racha, tus resultados y tus estadísticas en todos tus dispositivos."
 		},
 		"schedule": {
 			"question": "¿Cuándo aparecen los puzzles nuevos?",
@@ -81,7 +81,7 @@
 		"titleMemberStreak": "Tu racha de {days} días te espera",
 		"titleMemberDone": "Todo hecho por hoy: bien jugado",
 		"titleDone": "{game} de hoy está completado",
-		"bodyGuest": "Tryit es un conjunto diario de puzzles de palabras, lógica y números. Uno es gratis cada día, lleva unos minutos y no requiere registro.",
+		"bodyGuest": "Tryit es un conjunto diario de puzzles de palabras, lógica y números. Elige 3 gratis cada día; cada uno lleva unos minutos y no requiere registro.",
 		"bodyMember": "Tu racha, tus estadísticas y la selección de hoy están a un toque.",
 		"playToday": "Juega {game} de hoy",
 		"playAgain": "Jugar hoy otra vez",

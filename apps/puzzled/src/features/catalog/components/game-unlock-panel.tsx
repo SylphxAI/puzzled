@@ -12,13 +12,11 @@ type GameUnlockPanelProps = {
 	gameCount: number
 	/** No account on this request. */
 	isGuest: boolean
-	/** Legacy caller compatibility; no particular free game is promoted here. */
-	freeGameSlug?: string
-	freeGameName?: string
 }
 
 /**
- * The path for a game or day that needs Tryit Plus: direct checkout, guest
+ * The path for a game or day that needs Tryit Plus (a fourth game today, once
+ * the three free picks are used, or a past day): direct checkout, guest
  * sign-in, and a return path to today's games.
  */
 export async function GameUnlockPanel({

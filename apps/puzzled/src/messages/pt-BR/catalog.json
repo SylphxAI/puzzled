@@ -1,8 +1,8 @@
 {
 	"metaTitle": "Todos os jogos",
-	"metaDescription": "Veja todos os desafios diários do Tryit — o jogo grátis de hoje e toda a coleção de rituais de palavras, lógica e números.",
+	"metaDescription": "Veja todos os desafios diários do Tryit — escolha 3 grátis por dia em toda a coleção de rituais de palavras, lógica e números.",
 	"title": "Todos os jogos",
-	"subtitle": "{count} desafios diários em um só ritual. Um deles é grátis todos os dias, e todo mundo joga a mesma seleção — renovada à meia-noite, no horário de Hong Kong.",
+	"subtitle": "{count} desafios diários em um só ritual. Escolha 3 grátis todos os dias, e todo mundo joga a mesma seleção — renovada à meia-noite, no horário de Hong Kong.",
 	"heroEyebrow": "Coleção de desafios diários",
 	"searchLabel": "Filtrar jogos pelo título",
 	"searchPlaceholder": "Filtrar jogos pelo título…",
@@ -29,7 +29,7 @@
 		"title": "Como funciona um dia no Tryit",
 		"body": "Um dia de desafios, uma seleção compartilhada, igual para todos os jogadores.",
 		"step1Title": "Escolha o desafio de hoje",
-		"step1Body": "O destaque de hoje vem primeiro, e todos os {count} desafios compartilham a mesma seleção diária. O destaque de hoje é grátis para todos; os outros jogos são liberados com o Tryit Plus.",
+		"step1Body": "O destaque de hoje vem primeiro, e todos os {count} desafios compartilham a mesma seleção diária. Todo dia, 3 jogos à sua escolha são grátis para todos; o Tryit Plus libera o resto.",
 		"step2Title": "Resolva no seu ritmo",
 		"step2Body": "A maioria dos desafios leva de dois a dez minutos, e os que têm níveis de dificuldade permitem que você aqueça ou se desafie mais.",
 		"step3Title": "Mantenha o hábito",
@@ -66,7 +66,7 @@
 		"relatedTitle": "Mais desafios para experimentar",
 		"relatedAll": "Ver todos os jogos",
 		"metaTitle": "{game}: desafio diário de {genre}",
-		"metaDescription": "{game} é um desafio diário de {genre}. {rule} Um novo desafio por dia; o destaque de hoje é grátis, sem precisar de conta.",
+		"metaDescription": "{game} é um desafio diário de {genre}. {rule} Um novo desafio por dia; jogue 3 jogos grátis, sem precisar de conta.",
 		"genre": {
 			"word": "palavras",
 			"logic": "lógica",

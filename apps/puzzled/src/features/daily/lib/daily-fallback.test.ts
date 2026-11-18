@@ -183,6 +183,13 @@ describe('daily load fallback', () => {
 		expect(snapshot).toMatchObject({ kind: 'playable', puzzleDate: '2026-09-10' })
 	})
 
+	test('a refusal for Tryit Plus is a locked state, not a retry', () => {
+		let state = dailyLoadReducer(initialDailyLoadState, { type: 'load-refused' })
+		expect(state).toEqual({ status: 'locked' })
+		state = dailyLoadReducer(state, { type: 'retry' })
+		expect(state).toEqual({ status: 'loading' })
+	})
+
 	test('a failed client fetch is an honest retry state, not a fake board', async () => {
 		stubConnectFetch(() => {
 			throw new TypeError('Failed to fetch')

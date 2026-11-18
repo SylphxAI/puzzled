@@ -1,3 +1,4 @@
+import { ConnectError } from '@connectrpc/connect'
 import { cookies, headers } from 'next/headers'
 import { getTranslations } from 'next-intl/server'
 import { AdsProvider } from '@/features/ads/components/ad-context'
@@ -30,7 +31,13 @@ import {
 	CURRENCY_COOKIE,
 	chooseCurrency,
 } from '@/lib/billing/currency'
-import { formatPrice, isPlayLocked, type PlusAccess, planCards } from '@/lib/billing/plus'
+import {
+	formatPrice,
+	isPlayLocked,
+	isPlusRequiredError,
+	type PlusAccess,
+	planCards,
+} from '@/lib/billing/plus'
 import type { GameMode } from '@/lib/db/schema'
 import { env } from '@/lib/env'
 import { Link } from '@/lib/i18n/routing'
@@ -50,9 +57,6 @@ type GamePlayAreaProps = {
 	supportsDifficulty: boolean
 	/** A signed-in account made this request. */
 	hasUser: boolean
-	/** Today's free module and its name, for the unlock panel. */
-	freeGameSlug: string
-	freeGameName: string
 	/** Registered module count, for the unlock panel copy. */
 	gameCount: number
 	/**
@@ -67,8 +71,10 @@ type GamePlayAreaProps = {
  *
  * Renders the play flow (the difficulty chooser, the server board, the client
  * GetDaily fallback and the completed card) or, when Tryit Plus is on sale
- * and the viewer cannot open this game or day, the unlock panel. Connect
- * enforces the same rule (`plus_required`); this only picks what to show.
+ * and the viewer cannot open this game or day, the unlock panel: a past day is
+ * known up front, and a fourth game today when GetDaily refuses it
+ * (`plus_required`, the player's three free picks are used). Connect enforces
+ * the rule; this only picks what to show.
  *
  * It renders inside a Suspense boundary, so a slow Connect read streams behind
  * the skeleton instead of delaying the page's own content — and, because the
@@ -80,10 +86,7 @@ export async function GamePlayArea(props: GamePlayAreaProps) {
 	// One Plus card on the result screen. It uses the offer-only read, which
 	// hides the offer when Money cannot confirm (the lock rule above fails open).
 	const offerAccessFacts = await getServerPlusOfferAccess(props.hasUser)
-	const offer = plusOfferFor(offerAccessFacts, {
-		gameCount: props.gameCount,
-		freeSlug: props.freeGameSlug,
-	})
+	const offer = plusOfferFor(offerAccessFacts, { gameCount: props.gameCount })
 	const yearlyPrice = offer ? await plusYearlyPrice(props.locale) : undefined
 	return (
 		<PlusOfferProvider offer={offer && { ...offer, yearlyPrice }} dayKey={productDayKey()}>
@@ -122,8 +125,6 @@ async function renderPlayArea(
 		difficulty,
 		supportsDifficulty,
 		hasUser,
-		freeGameSlug,
-		freeGameName,
 		gameCount,
 		dateParam,
 	}: GamePlayAreaProps,
@@ -134,19 +135,16 @@ async function renderPlayArea(
 	// Result screens show one ad to free viewers; a puzzle in play never does.
 	const ads = adsFor(adsConfig(env), access.entitled)
 	const archive = mode === 'archive' && Boolean(dateParam)
-	if (isPlayLocked(access, { slug, freeSlug: freeGameSlug, archive })) {
-		return (
-			<GameUnlockPanel
-				slug={slug}
-				archive={archive}
-				dateParam={dateParam}
-				gameCount={gameCount}
-				isGuest={!hasUser}
-				freeGameSlug={freeGameSlug}
-				freeGameName={freeGameName}
-			/>
-		)
-	}
+	const unlockPanel = (
+		<GameUnlockPanel
+			slug={slug}
+			archive={archive}
+			dateParam={dateParam}
+			gameCount={gameCount}
+			isGuest={!hasUser}
+		/>
+	)
+	if (isPlayLocked(access, { archive })) return unlockPanel
 
 	if (supportsDifficulty && !difficulty && mode === 'daily') {
 		// GetDaily is identity-agnostic: session cookie or puzzled_guest_id.
@@ -158,6 +156,14 @@ async function renderPlayArea(
 			getServerDailyStatus({ gameSlug: slug, difficulty: 'medium' }),
 			getServerDailyStatus({ gameSlug: slug, difficulty: 'hard' }),
 		])
+		// The api refused the game: today's free picks are used on other games.
+		if (
+			[easyStatus, mediumStatus, hardStatus].some(
+				(result) => result.status === 'rejected' && plusRequired(result.reason),
+			)
+		) {
+			return unlockPanel
+		}
 		for (const [level, result] of [
 			['easy', easyStatus],
 			['medium', mediumStatus],
@@ -269,6 +275,7 @@ async function renderPlayArea(
 			streakInfo = streakResult.status === 'fulfilled' ? streakResult.value : null
 		}
 	} catch (error) {
+		if (plusRequired(error)) return unlockPanel
 		logger.error('game-page.puzzle-data-failed', { error })
 		// puzzle will remain null, showing error message
 	}
@@ -288,6 +295,7 @@ async function renderPlayArea(
 						difficulty={difficulty}
 						supportsDifficulty={supportsDifficulty}
 						puzzleDate={archiveDate}
+						unlock={unlockPanel}
 					/>
 				</AdsProvider>
 			</PlusTrialProvider>
@@ -359,4 +367,9 @@ async function renderPlayArea(
 			</AdsProvider>
 		</PlusTrialProvider>
 	)
+}
+
+/** A GetDaily refusal that means "Tryit Plus needed" (picks used, or a past day). */
+function plusRequired(error: unknown): boolean {
+	return isPlusRequiredError(ConnectError.from(error).rawMessage)
 }

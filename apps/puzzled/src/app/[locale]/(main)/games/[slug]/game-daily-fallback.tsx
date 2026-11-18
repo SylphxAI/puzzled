@@ -1,9 +1,10 @@
 'use client'
 
+import { ConnectError } from '@connectrpc/connect'
 import { Button } from '@sylphx/ui'
 import { RotateCw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useEffect, useReducer } from 'react'
+import { type ReactNode, useEffect, useReducer } from 'react'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import {
 	dailyLoadReducer,
@@ -13,6 +14,7 @@ import {
 import { completedViewLevel } from '@/features/daily/lib/difficulty-completion'
 import type { GameSlug } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
+import { isPlusRequiredError } from '@/lib/billing/plus'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
@@ -27,6 +29,8 @@ type GameDailyFallbackProps = {
 	supportsDifficulty: boolean
 	/** Archive day key; only passed when the server already admitted that read. */
 	puzzleDate?: string
+	/** The server-rendered unlock path, shown when the api refuses the read. */
+	unlock?: ReactNode
 }
 
 /**
@@ -46,6 +50,7 @@ export function GameDailyFallback({
 	difficulty,
 	supportsDifficulty,
 	puzzleDate,
+	unlock,
 }: GameDailyFallbackProps) {
 	const t = useTranslations('daily')
 	const tCommon = useTranslations('common')
@@ -66,6 +71,10 @@ export function GameDailyFallback({
 				})
 				if (!cancelled) dispatch({ type: 'load-succeeded', snapshot })
 			} catch (error) {
+				if (isPlusRequiredError(ConnectError.from(error).rawMessage)) {
+					if (!cancelled) dispatch({ type: 'load-refused' })
+					return
+				}
 				logger.error('game-daily-fallback.load-failed', { error })
 				if (!cancelled) dispatch({ type: 'load-failed' })
 			}
@@ -86,6 +95,8 @@ export function GameDailyFallback({
 			</div>
 		)
 	}
+
+	if (state.status === 'locked' && unlock) return unlock
 
 	const snapshot = state.status === 'ready' ? state.snapshot : null
 

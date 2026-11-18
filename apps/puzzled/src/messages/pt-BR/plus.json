@@ -2,15 +2,15 @@
 	"name": "Tryit Plus",
 	"pricing": {
 		"metaTitle": "Tryit Plus: todos os jogos e o arquivo completo",
-		"metaDescription": "O desafio em destaque de hoje é grátis. O Tryit Plus libera todos os jogos, todos os dias anteriores e um plano família.",
+		"metaDescription": "Jogue 3 jogos grátis todos os dias. O Tryit Plus libera todos os jogos, todos os dias anteriores e um plano família.",
 		"title": "Todos os jogos, todos os dias",
-		"lead": "O desafio em destaque de hoje é grátis para todos. O Tryit Plus libera os {count} jogos, o arquivo dos dias anteriores e as estatísticas de cada jogo.",
+		"lead": "Escolha 3 jogos grátis todos os dias. O Tryit Plus libera os {count} jogos, o arquivo dos dias anteriores e as estatísticas de cada jogo.",
 		"closedTitle": "Por enquanto, tudo é grátis",
 		"closedBody": "O Tryit Plus ainda não está à venda, então todos os jogos e todos os dias anteriores estão abertos para todos.",
 		"purchasesSoon": "As compras abrem em breve.",
 		"checkoutFailed": "Não foi possível iniciar o pagamento. Tente novamente.",
 		"freeTitle": "Grátis",
-		"freeBody": "O desafio em destaque de hoje, todos os dias, sem precisar de conta.",
+		"freeBody": "3 jogos à sua escolha, todos os dias, sem precisar de conta.",
 		"playFree": "Jogue o desafio grátis de hoje: {game}",
 		"individualBody": "Para um jogador.",
 		"family": "Tryit Plus Família",
@@ -56,7 +56,7 @@
 		"endingSoon": "Seu teste grátis do Tryit Plus termina em {date}. Agradecemos por experimentar. Você pode cancelar quando quiser antes dessa data."
 	},
 	"unlock": {
-		"title": "Este jogo faz parte do Tryit Plus",
+		"title": "Você já jogou seus 3 jogos grátis de hoje",
 		"archiveTitle": "Os dias anteriores fazem parte do Tryit Plus",
 		"body": "O desafio grátis de hoje é {game}. O Tryit Plus libera os {count} jogos e todos os dias anteriores.",
 		"cta": "Conhecer o Tryit Plus",

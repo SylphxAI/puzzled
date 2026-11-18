@@ -19,6 +19,7 @@ use serde_json::Value;
 use tracing::warn;
 
 use puzzled_core::billing_access::policy::play_access;
+use puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid;
 use puzzled_core::puzzle_play::application::guess_grading::{
     grade_guess, grades_guesses, guess_limit,
 };
@@ -29,15 +30,16 @@ use puzzled_core::puzzle_play::crossword_generate::client_safe_puzzle_data;
 use puzzled_core::puzzle_play::daily_time::product_day_key;
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
-use puzzled_core::puzzle_play::game_slugs::{
-    canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
-};
+use puzzled_core::puzzle_play::game_slugs::{canonicalize_game_slug, is_valid_game_slug};
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
+use crate::bootstrap::identity::RequestAccess;
 use crate::capabilities::billing::service::access as entitlement_access;
 use crate::capabilities::daily_pipeline;
 use crate::capabilities::gamification::adapters::streak_read::load_settled_streak_on_connection;
+use crate::capabilities::identity_access::adapters::guest_credentials;
+use crate::capabilities::puzzle_play::adapters::daily_free_picks::{self, Picks};
 use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::fetch_puzzle_by_id;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
     has_completed_session_on_connection, has_ritual_completion_on_connection,
@@ -58,6 +60,16 @@ use crate::proto::puzzled::v1::{
 const SLICE_PUZZLE: &str = "S2-puzzle-connect";
 const SLICE_DAILY: &str = "S2-daily-connect";
 const SLICE_SUBMIT: &str = "S2-puzzle-solution-connect";
+
+/// How a request for a puzzle was admitted.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Admission {
+    /// Open without spending a pick: Plus, sales closed, Money unanswerable,
+    /// or a game already picked today.
+    Open,
+    /// Today's game on a free pick not yet taken; the first write claims it.
+    FreePick,
+}
 
 #[derive(Clone)]
 pub struct PuzzleConnectService {
@@ -143,12 +155,10 @@ impl PuzzleConnectService {
         let now = Utc::now();
         let today = product_day_key(now);
         let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
-        self.enforce_play_access(
-            platform.as_ref().map(|identity| identity.user_id.as_str()),
-            game_slug,
-            date,
-        )
-        .await?;
+        let billing_user = platform.as_ref().map(|identity| identity.user_id.as_str());
+        let admission = self
+            .enforce_play_access(&ctx, billing_user, game_slug, date)
+            .await?;
         let difficulty = {
             let d = req.difficulty.trim();
             if d.is_empty() {
@@ -268,6 +278,10 @@ impl PuzzleConnectService {
                 ));
             }
         }
+        if admission == Admission::FreePick {
+            self.claim_free_pick(&mut access, billing_user, game_slug, today)
+                .await?;
+        }
 
         let envelope = SubmissionEnvelope {
             status,
@@ -378,19 +392,22 @@ impl PuzzleConnectService {
         .await
     }
 
-    /// Admit a served puzzle (Puzzled Plus gate, the one admission point).
+    /// Admit a request for a puzzle (the Tryit Plus gate, the one admission
+    /// point).
     ///
     /// A future day is refused so no one can read tomorrow's solution early.
-    /// Today's featured game is free to everyone; every other game and every
-    /// past day needs Puzzled Plus once it is on sale. While Money is not
-    /// configured nothing is sold, so nothing is locked. An entitlement read
-    /// that fails refuses (fail closed to the free floor).
+    /// Today, any game the player has picked, or could still pick, is free to
+    /// everyone, guests included, and that is decided without any billing
+    /// read. A further game and every past day need Tryit Plus once it is on
+    /// sale. While Money is not configured nothing is sold, so nothing is
+    /// locked. An entitlement read that fails refuses paid play only.
     async fn enforce_play_access(
         &self,
+        ctx: &RequestContext,
         user_id: Option<&str>,
         game_slug: &str,
         date: NaiveDate,
-    ) -> Result<(), ConnectError> {
+    ) -> Result<Admission, ConnectError> {
         let today = product_day_key(Utc::now());
         if date > today {
             return Err(ConnectError::new(
@@ -399,11 +416,78 @@ impl PuzzleConnectService {
             ));
         }
         let is_today = date == today;
-        let free_today = is_game_free_today(game_slug, today);
-        // The free daily puzzle is decided without any billing read.
-        if play_access(true, false, is_today, free_today).is_ok() {
-            return Ok(());
+        if is_today {
+            match self.read_picks(ctx, user_id, game_slug, today).await {
+                Ok(picks) if picks.chosen => return Ok(Admission::Open),
+                Ok(picks) if picks.open() => return Ok(Admission::FreePick),
+                Ok(_) => {}
+                Err(error) => {
+                    // Keep the free floor open: the claim on write, under the
+                    // player's lock, is the authority.
+                    warn!(%error, "free pick read failed; the write claim decides");
+                    return Ok(Admission::FreePick);
+                }
+            }
         }
+        self.paid_access(user_id, is_today)
+            .await
+            .map(|()| Admission::Open)
+    }
+
+    /// Today's picks for the request's players: the account and any guest
+    /// cookie it has not adopted yet count as one set.
+    async fn read_picks(
+        &self,
+        ctx: &RequestContext,
+        user_id: Option<&str>,
+        game_slug: &str,
+        today: NaiveDate,
+    ) -> Result<Picks, sqlx::Error> {
+        let Some(pool) = &self.state.pool else {
+            return Ok(Picks::default());
+        };
+        let mut players: Vec<uuid::Uuid> = user_id
+            .and_then(user_id_to_storage_uuid)
+            .into_iter()
+            .collect();
+        if let Some(hash) = crate::bootstrap::identity::guest_credential_hash(ctx) {
+            players.extend(guest_credentials::lookup_hash(pool, hash).await?);
+        }
+        daily_free_picks::read(pool, &players, today, game_slug).await
+    }
+
+    /// Take the pick a write was admitted on, inside the request's locked
+    /// transaction. When the last pick went meanwhile (another tab), the game
+    /// is open only through Tryit Plus.
+    async fn claim_free_pick(
+        &self,
+        access: &mut RequestAccess,
+        user_id: Option<&str>,
+        game_slug: &str,
+        today: NaiveDate,
+    ) -> Result<(), ConnectError> {
+        let player = access
+            .primary()
+            .and_then(|identity| user_id_to_storage_uuid(&identity.user_id));
+        let (Some(player), Some(connection)) = (player, access.connection()) else {
+            return Ok(());
+        };
+        match daily_free_picks::claim(connection, player, today, game_slug).await {
+            Ok(true) => Ok(()),
+            Ok(false) => self.paid_access(user_id, true).await,
+            Err(error) => {
+                warn!(%error, "free pick claim failed");
+                Err(ConnectError::new(
+                    ErrorCode::Internal,
+                    "free_pick_claim_failed",
+                ))
+            }
+        }
+    }
+
+    /// The paid part of the gate: sales, the Plus entitlement, and the Money
+    /// outage policy.
+    async fn paid_access(&self, user_id: Option<&str>, is_today: bool) -> Result<(), ConnectError> {
         let sales_open = self.state.sales_open().await;
         if !sales_open {
             return Ok(());
@@ -421,7 +505,7 @@ impl PuzzleConnectService {
             _ => false,
         };
         // Money unreachable: it cannot vouch for anyone, so nothing that is
-        // free today is locked behind it.
+        // open today is locked behind it.
         if !entitled {
             if let (Some(uid), Some(money)) = (user_id, self.state.money.as_ref()) {
                 if money
@@ -440,7 +524,7 @@ impl PuzzleConnectService {
                 }
             }
         }
-        play_access(sales_open, entitled, is_today, free_today)
+        play_access(sales_open, entitled, is_today, false)
             .map_err(|denied| ConnectError::new(ErrorCode::PermissionDenied, denied.code()))
     }
 }
@@ -653,7 +737,9 @@ impl PuzzleService for PuzzleConnectService {
         let puzzle_date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
         let is_archive = puzzle_date != today;
 
+        // Serving reads the picks only; a look at a board never spends one.
         self.enforce_play_access(
+            &ctx,
             platform.as_ref().map(|identity| identity.user_id.as_str()),
             game_slug,
             puzzle_date,
@@ -815,8 +901,8 @@ impl PuzzleService for PuzzleConnectService {
     ) -> ServiceResult<SubmitGuessResponse> {
         let input = request.to_owned_message();
         let today = product_day_key(Utc::now());
-        let free = date_from_string(input.puzzle_date.as_deref()).unwrap_or(today) == today
-            && is_game_free_today(canonicalize_game_slug(input.game_slug.trim()), today);
+        // Any game today can be one of a player's free picks.
+        let free = date_from_string(input.puzzle_date.as_deref()).unwrap_or(today) == today;
         let result = self.submit_guess_inner(ctx, request).await;
         if free {
             if let Some(pool) = self.state.pool.clone() {
@@ -867,12 +953,10 @@ impl PuzzleService for PuzzleConnectService {
         }
         let today = product_day_key(Utc::now());
         let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
-        self.enforce_play_access(
-            platform.as_ref().map(|identity| identity.user_id.as_str()),
-            game_slug,
-            date,
-        )
-        .await?;
+        let billing_user = platform.as_ref().map(|identity| identity.user_id.as_str());
+        let admission = self
+            .enforce_play_access(&ctx, billing_user, game_slug, date)
+            .await?;
         let difficulty = Some(req.difficulty.trim()).filter(|d| !d.is_empty());
         let guess: Value = serde_json::from_str(&req.guess_json)
             .map_err(|_| ConnectError::new(ErrorCode::InvalidArgument, "invalid_guess_json"))?;
@@ -889,7 +973,13 @@ impl PuzzleService for PuzzleConnectService {
         let Some(solution) = puzzle else {
             return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
         };
-        let access = self.adopt_guest_progress_if_needed(&ctx, false).await?;
+        // A checked guess never allocates a guest player: a known player takes
+        // the pick here, and a new guest takes it with its first finish.
+        let mut access = self.adopt_guest_progress_if_needed(&ctx, false).await?;
+        if admission == Admission::FreePick {
+            self.claim_free_pick(&mut access, billing_user, game_slug, today)
+                .await?;
+        }
         let uid = access
             .primary()
             .map(|identity| identity.user_id.clone())
