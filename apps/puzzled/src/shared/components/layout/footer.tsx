@@ -89,6 +89,11 @@ export async function Footer() {
 									{tNav('support')}
 								</Link>
 							</li>
+							<li>
+								<Link href="/vs/nyt-games" className={linkClass}>
+									{t('compareNytGames')}
+								</Link>
+							</li>
 						</ul>
 					</nav>
 

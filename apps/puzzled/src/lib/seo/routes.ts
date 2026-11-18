@@ -38,6 +38,7 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
 		priority: 0.8,
 	},
 	{ path: '/use-cases/family-brain-games-no-ads', changeFrequency: 'monthly', priority: 0.8 },
+	{ path: '/vs/nyt-games', changeFrequency: 'monthly', priority: 0.8 },
 	{ path: '/support', changeFrequency: 'monthly', priority: 0.6 },
 	{ path: '/privacy', changeFrequency: 'yearly', priority: 0.3 },
 	{ path: '/terms', changeFrequency: 'yearly', priority: 0.3 },

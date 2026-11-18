@@ -1,6 +1,13 @@
 import { getAllGameMetadata } from '@/games/registry'
 import { CONTACT_EMAIL } from '@/lib/config/app'
 import { locales } from '@/lib/i18n/config'
+import {
+	FAMILY_SEATS,
+	formatListPrice,
+	listPrice,
+	listPriceMinor,
+	offerPrice,
+} from './catalogue-prices'
 import type { MarketingFaqItem } from './marketing-faq'
 
 export type UseCaseCta = {
@@ -57,27 +64,44 @@ export type UseCaseSpec = {
 
 const TOTAL_GAMES = getAllGameMetadata().length
 
+const PASS = listPrice('puzzled_starter_unlock')
+const PASS_GBP = listPrice('puzzled_starter_unlock', 'gbp')
+const PLUS_MONTH = listPrice('plus_individual_monthly')
+const PLUS_YEAR = listPrice('plus_individual_yearly')
+const PLUS_MONTH_GBP = listPrice('plus_individual_monthly', 'gbp')
+const PLUS_YEAR_GBP = listPrice('plus_individual_yearly', 'gbp')
+const FAMILY_MONTH = listPrice('plus_family_monthly')
+const FAMILY_YEAR = listPrice('plus_family_yearly')
+const FAMILY_MONTH_GBP = listPrice('plus_family_monthly', 'gbp')
+const FAMILY_YEAR_GBP = listPrice('plus_family_yearly', 'gbp')
+const FAMILY_YEAR_PER_PERSON_MONTH = formatListPrice(
+	Math.round(listPriceMinor('plus_family_yearly') / 12 / FAMILY_SEATS),
+)
+const PLUS_MONTH_TIMES_SEATS = formatListPrice(
+	listPriceMinor('plus_individual_monthly') * FAMILY_SEATS,
+)
+
 export const USE_CASE_SPECS = {
 	'daily-word-and-logic-puzzles-online': {
 		slug: 'daily-word-and-logic-puzzles-online',
 		path: '/use-cases/daily-word-and-logic-puzzles-online',
 		metaTitle: `${TOTAL_GAMES} Daily Word, Logic, Number & Spatial Puzzles Online`,
-		metaDescription: `Play ${TOTAL_GAMES} daily word, logic, number, and spatial puzzles in one clean web suite. Today's featured puzzle is free with no account; unlock all ${TOTAL_GAMES} games and the full archive from $4.99/mo.`,
+		metaDescription: `Play ${TOTAL_GAMES} daily word, logic, number, and spatial puzzles in one clean web suite. Pick any 3 to play free every day with no account; unlock all ${TOTAL_GAMES} games and the full archive with a ${PASS} 3-Day Pass or from ${PLUS_MONTH}/mo.`,
 		eyebrow: `${TOTAL_GAMES} daily puzzles · Fresh set at midnight HKT`,
 		h1: 'One daily puzzle habit—word, logic, number, and spatial games under one roof.',
-		heroSubhead: `Instead of hopping across five cluttered puzzle sites, play ${TOTAL_GAMES} handcrafted daily games in one fast web app. Everyone gets the same daily puzzle set at midnight Hong Kong time, today's featured pick is free with no account, and every finished solve is server-verified so streaks and leaderboards stay honest.`,
+		heroSubhead: `Instead of hopping across five cluttered puzzle sites, play ${TOTAL_GAMES} handcrafted daily games in one fast web app. Everyone gets the same daily puzzle set at midnight Hong Kong time, you pick any 3 of today's ${TOTAL_GAMES} games to play free with no account, and every finished solve is server-verified so streaks and leaderboards stay honest.`,
 		facts: [
 			`${TOTAL_GAMES} handcrafted daily games`,
-			'1 free daily puzzle, no account needed',
+			'Any 3 games free every day, no account needed',
 			'Zero ads on puzzle boards',
 			'Midnight UTC+8 global reset',
 		],
 		primaryCta: {
-			label: "Play today's free puzzle",
+			label: 'Pick your 3 free games',
 			href: '/?entry_surface=seo_daily-word-and-logic-puzzles-online',
 		},
 		secondaryCta: {
-			label: `Unlock all ${TOTAL_GAMES} games + archive ($2.99 weekend pass or $4.99/mo)`,
+			label: `Unlock all ${TOTAL_GAMES} games + archive (${PASS} 3-Day Pass or ${PLUS_MONTH}/mo)`,
 			href: '/pricing?entry_surface=seo_daily-word-and-logic-puzzles-online',
 		},
 		workflowTitle: 'How the daily suite fits together',
@@ -85,8 +109,8 @@ export const USE_CASE_SPECS = {
 			'Start free in your browser, move cleanly between puzzle genres, and catch up on missed days anytime.',
 		workflows: [
 			{
-				title: "Open today's free featured puzzle in one tap—no login wall",
-				body: 'Every day features a free game from the 5-day rotation (Five, Threads, Crowns, Sudoku, or Mini Grid) ready to play straight in your browser. Ads are never rendered while playing any puzzle board, and finished solves produce a spoiler-free share card.',
+				title: 'Pick any 3 games to play free every day—no login wall',
+				body: `Choose any 3 of today's ${TOTAL_GAMES} games and play them straight in your browser, no account needed. A game you pick stays open all day. Ads are never rendered while playing any puzzle board, and finished solves produce a spoiler-free share card.`,
 			},
 			{
 				title: `Switch between ${TOTAL_GAMES} word, logic, number, and spatial challenges`,
@@ -112,7 +136,7 @@ export const USE_CASE_SPECS = {
 			},
 			{
 				title: 'Play any missed day in the archive and keep verified streaks',
-				body: `Grab a 3-Day Weekend Pass ($2.99 / £2.99 one-time, no auto-renewal) to test the whole suite, or join Tryit Plus ($4.99/mo or $39.99/yr | £3.99/mo or £29.99/yr) to unlock all ${TOTAL_GAMES} daily games, the complete past-day archive, detailed stats, and zero ads anywhere on the site.`,
+				body: `Grab a 3-Day Pass (${PASS} / ${PASS_GBP} one-time, no auto-renewal) to test the whole suite, or join Tryit Plus (${PLUS_MONTH}/mo or ${PLUS_YEAR}/yr | ${PLUS_MONTH_GBP}/mo or ${PLUS_YEAR_GBP}/yr) to unlock all ${TOTAL_GAMES} daily games, the complete past-day archive, detailed stats, and zero ads anywhere on the site.`,
 			},
 		],
 		comparisonTitle: 'How Tryit compares',
@@ -137,7 +161,7 @@ export const USE_CASE_SPECS = {
 				columns: [
 					'Aggressive pop-ups & redirects',
 					'Hard paywall after a few puzzles',
-					'1 featured game free every day, zero account needed, zero board ads',
+					`Any 3 of ${TOTAL_GAMES} games free every day, zero account needed, zero board ads`,
 				],
 			},
 			{
@@ -153,7 +177,7 @@ export const USE_CASE_SPECS = {
 				columns: [
 					'Cluttered ad trackers',
 					'$15–$25/mo bundles',
-					'Weekend Pass $2.99 (3 days) · Plus $4.99/mo or $39.99/yr · Family (4 seats) $7.99/mo',
+					`3-Day Pass ${PASS} · Plus ${PLUS_MONTH}/mo or ${PLUS_YEAR}/yr · Family (${FAMILY_SEATS} seats) ${FAMILY_MONTH}/mo`,
 				],
 			},
 		],
@@ -161,8 +185,7 @@ export const USE_CASE_SPECS = {
 		faqs: [
 			{
 				question: 'Which puzzles are free on Tryit?',
-				answer:
-					'One featured puzzle rotates free every day across Five, Threads, Crowns, Sudoku, and Mini Grid with no account required.',
+				answer: `Any 3 of today's ${TOTAL_GAMES} games, chosen by you, are free every day with no account required. A game you pick stays open all day; Tryit Plus or a 3-Day Pass opens the rest and the archive.`,
 			},
 			{
 				question: 'When do new daily puzzles reset?',
@@ -170,34 +193,40 @@ export const USE_CASE_SPECS = {
 			},
 			{
 				question: 'What does Tryit Plus unlock?',
-				answer: `Tryit Plus unlocks all ${TOTAL_GAMES} daily games, the full archive of past days, per-game stats and streaks, and ad-free play everywhere for $4.99/month or $39.99/year (£3.99/month or £29.99/year).`,
+				answer: `Tryit Plus unlocks all ${TOTAL_GAMES} daily games, the full archive of past days, per-game stats and streaks, and ad-free play everywhere for ${PLUS_MONTH}/month or ${PLUS_YEAR}/year (${PLUS_MONTH_GBP}/month or ${PLUS_YEAR_GBP}/year).`,
 			},
 			{
-				question: 'Can I try all 19 games without a recurring subscription?',
-				answer:
-					'Yes. The 3-Day Weekend Plus & Archive Pass gives 3 days of full access for a one-time payment of $2.99 USD or £2.99 GBP with no renewal.',
+				question: `Can I try all ${TOTAL_GAMES} games without a recurring subscription?`,
+				answer: `Yes. The 3-Day Pass gives 3 days of full Plus and archive access for a one-time payment of ${PASS} USD or ${PASS_GBP} GBP with no renewal.`,
 			},
 		],
 		closingCta: {
-			title: `Start with today's free puzzle, or unlock all ${TOTAL_GAMES} games`,
+			title: `Start with 3 free games today, or unlock all ${TOTAL_GAMES}`,
 			body: 'No pop-ups on the puzzle board, server-verified daily streaks, and transparent VAT-inclusive plans.',
 			note: `Questions? Email ${CONTACT_EMAIL}`,
 		},
 		softwareName: 'Tryit',
 		softwareDescription: `${TOTAL_GAMES} daily word, logic, number, and spatial puzzles in one web suite with midnight HKT daily resets, server-verified streaks, and full past-day archive access.`,
 		offers: [
-			{ name: "Free (Today's featured puzzle)", price: '0', priceCurrency: 'USD' },
-			{ name: '3-Day Weekend Plus & Archive Pass', price: '2.99', priceCurrency: 'USD' },
-			{ name: 'Tryit Plus (Monthly)', price: '4.99', priceCurrency: 'USD' },
-			{ name: 'Tryit Plus (Yearly)', price: '39.99', priceCurrency: 'USD' },
+			{ name: 'Free (any 3 games a day)', price: '0', priceCurrency: 'USD' },
+			{ name: '3-Day Pass', price: offerPrice('puzzled_starter_unlock'), priceCurrency: 'USD' },
+			{
+				name: 'Tryit Plus (Monthly)',
+				price: offerPrice('plus_individual_monthly'),
+				priceCurrency: 'USD',
+			},
+			{
+				name: 'Tryit Plus (Yearly)',
+				price: offerPrice('plus_individual_yearly'),
+				priceCurrency: 'USD',
+			},
 		],
 	},
 	'family-brain-games-no-ads': {
 		slug: 'family-brain-games-no-ads',
 		path: '/use-cases/family-brain-games-no-ads',
 		metaTitle: 'Ad-Free Daily Brain Games for Families (4 Seats)',
-		metaDescription:
-			'Clean, distraction-free daily word, math, and logic puzzles for up to 4 family members—each with separate streaks and stats. Zero in-game ads, 8 languages. Family plan from $7.99/mo or £5.99/mo.',
+		metaDescription: `Clean, distraction-free daily word, math, and logic puzzles for up to 4 family members—each with separate streaks and stats. Zero in-game ads, 8 languages. Family plan from ${FAMILY_MONTH}/mo or ${FAMILY_MONTH_GBP}/mo.`,
 		eyebrow: 'Up to 4 family seats · Zero in-game ads',
 		h1: 'Clean brain games the whole family can play—with separate streaks and zero distractions.',
 		heroSubhead: `Most puzzle apps interrupt every round with loud video ads and dark-pattern timers. Tryit never shows an ad while you are solving a puzzle—and Tryit Family gives up to four people full, 100% ad-free access to all ${TOTAL_GAMES} daily games and past archives, each with their own stats, streaks, and preferred language.`,
@@ -212,7 +241,7 @@ export const USE_CASE_SPECS = {
 			href: '/pricing?entry_surface=seo_family-brain-games-no-ads#family',
 		},
 		secondaryCta: {
-			label: "Try today's free puzzle first",
+			label: 'Play 3 free games first',
 			href: '/?entry_surface=seo_family-brain-games-no-ads',
 		},
 		workflowTitle: 'Built for multi-person households',
@@ -221,11 +250,11 @@ export const USE_CASE_SPECS = {
 		workflows: [
 			{
 				title: 'Zero interruptions while solving—for everyone',
-				body: 'Even on the free daily pick, Tryit never puts banners, pop-ups, or video ads on a puzzle board. Upgrade to Tryit Family and every screen—including the archive index and result cards—stays 100% ad-free.',
+				body: 'Even on the 3 free daily picks, Tryit never puts banners, pop-ups, or video ads on a puzzle board. Upgrade to Tryit Family and every screen—including the archive index and result cards—stays 100% ad-free.',
 			},
 			{
 				title: 'One family plan covers 4 individual accounts',
-				body: 'Subscribe once ($7.99/mo or $64.99/yr USD · £5.99/mo or £47.99/yr GBP—about $1.35/person/month on yearly) and invite up to 3 family members via an invite link. Everyone keeps their own login, streak, and solve history, and can compare spoiler-free result cards at the dinner table.',
+				body: `Subscribe once (${FAMILY_MONTH}/mo or ${FAMILY_YEAR}/yr USD · ${FAMILY_MONTH_GBP}/mo or ${FAMILY_YEAR_GBP}/yr GBP—about ${FAMILY_YEAR_PER_PERSON_MONTH}/person/month on yearly) and invite up to 3 family members via an invite link. Everyone keeps their own login, streak, and solve history, and can compare spoiler-free result cards at the dinner table.`,
 			},
 			{
 				title: 'Eight languages so grandparents, parents, and kids play comfortably',
@@ -269,8 +298,8 @@ export const USE_CASE_SPECS = {
 				feature: 'Family price (VAT incl.)',
 				columns: [
 					'Free with data/ad trackers',
-					'4 × $4.99 = $19.96/mo',
-					'$7.99/mo or $64.99/yr USD · £5.99/mo or £47.99/yr GBP',
+					`${FAMILY_SEATS} × ${PLUS_MONTH} = ${PLUS_MONTH_TIMES_SEATS}/mo`,
+					`${FAMILY_MONTH}/mo or ${FAMILY_YEAR}/yr USD · ${FAMILY_MONTH_GBP}/mo or ${FAMILY_YEAR_GBP}/yr GBP`,
 				],
 			},
 		],
@@ -293,8 +322,7 @@ export const USE_CASE_SPECS = {
 			},
 			{
 				question: 'How much does Tryit Family cost?',
-				answer:
-					'Tryit Family is $7.99/month or $64.99/year USD (£5.99/month or £47.99/year GBP), VAT inclusive.',
+				answer: `Tryit Family is ${FAMILY_MONTH}/month or ${FAMILY_YEAR}/year USD (${FAMILY_MONTH_GBP}/month or ${FAMILY_YEAR_GBP}/year GBP), VAT inclusive.`,
 			},
 		],
 		closingCta: {
@@ -306,16 +334,34 @@ export const USE_CASE_SPECS = {
 		softwareDescription:
 			'Ad-free daily word, logic, number, and spatial brain games for up to 4 family members, each with their own streaks, stats, and full archive access.',
 		offers: [
-			{ name: 'Tryit Family (Monthly, 4 seats)', price: '7.99', priceCurrency: 'USD' },
-			{ name: 'Tryit Family (Yearly, 4 seats)', price: '64.99', priceCurrency: 'USD' },
-			{ name: 'Tryit Family (Yearly GBP, 4 seats)', price: '47.99', priceCurrency: 'GBP' },
+			{
+				name: 'Tryit Family (Monthly, 4 seats)',
+				price: offerPrice('plus_family_monthly'),
+				priceCurrency: 'USD',
+			},
+			{
+				name: 'Tryit Family (Yearly, 4 seats)',
+				price: offerPrice('plus_family_yearly'),
+				priceCurrency: 'USD',
+			},
+			{
+				name: 'Tryit Family (Yearly GBP, 4 seats)',
+				price: offerPrice('plus_family_yearly', 'gbp'),
+				priceCurrency: 'GBP',
+			},
 		],
 	},
 } as const satisfies Record<string, UseCaseSpec>
 
 export type UseCaseSlug = keyof typeof USE_CASE_SPECS
 
-export function buildUseCaseJsonLd(spec: UseCaseSpec, origin = 'https://tryit.fun') {
+/** What the SoftwareApplication + FAQPage graph reads; use cases and comparisons share it. */
+export type LandingJsonLdSource = Pick<
+	UseCaseSpec,
+	'softwareName' | 'softwareDescription' | 'offers' | 'faqs'
+> & { path: string }
+
+export function buildUseCaseJsonLd(spec: LandingJsonLdSource, origin = 'https://tryit.fun') {
 	const baseOrigin = origin.replace(/\/+$/, '')
 	return {
 		'@context': 'https://schema.org',
