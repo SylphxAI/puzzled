@@ -28,6 +28,8 @@ describe('/llms.txt', () => {
 			'https://tryit.fun/use-cases/daily-word-and-logic-puzzles-online',
 			'https://tryit.fun/use-cases/family-brain-games-no-ads',
 			'https://tryit.fun/vs/nyt-games',
+			'https://tryit.fun/vs/lumosity',
+			'https://tryit.fun/vs/linkedin-games',
 			'https://tryit.fun/support',
 			'https://tryit.fun/privacy',
 			'https://tryit.fun/terms',
