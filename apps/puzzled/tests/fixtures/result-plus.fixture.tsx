@@ -18,7 +18,7 @@ const session = {
 	attempts: 4,
 	completedAt: new Date('2026-10-29T03:00:00Z'),
 }
-const input = { gameCount: 19, freeSlug: 'word-groups' }
+const input = { gameCount: 19 }
 const decisions = {
 	guest: offerAccess(false, 'failed', true),
 	account: offerAccess(true, { salesOpen: true, entitled: false }, 'failed'),

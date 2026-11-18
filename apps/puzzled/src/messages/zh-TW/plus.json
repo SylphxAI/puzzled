@@ -13,8 +13,7 @@
 	},
 	"unlock": {
 		"title": "今天的 3 款免費遊戲已玩完",
-		"body": "今天的免費謎題是 {game}。Tryit Plus 開放全部 {count} 款遊戲和所有過往題目。",
-		"backToToday": "返回今日遊戲"
+		"body": "今天的免費謎題是 {game}。Tryit Plus 開放全部 {count} 款遊戲和所有過往題目。"
 	},
 	"offer": {
 		"resultTitle": "暢玩全部 {count} 款遊戲和過往題庫",
@@ -34,9 +33,6 @@
 		"claimCreateAccount": "建立帳號並啟用 Plus"
 	},
 	"checkoutOffer": {
-		"body": "全部 {count} 款遊戲，加上過去 30 天的題目。選擇通行證或訂閱，繼續玩下去。",
-		"comparePlans": "比較所有方案",
-		"unavailableTitle": "暫時無法載入方案",
-		"unavailableBody": "請稍後再試。你已完成的題目和進度會保留。"
+		"unavailableTitle": "暫時無法載入方案"
 	}
 }

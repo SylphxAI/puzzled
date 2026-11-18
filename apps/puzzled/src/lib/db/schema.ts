@@ -1165,6 +1165,26 @@ export const checkoutAttempts = pgTable(
 	],
 )
 
+/**
+ * The games each player chose to play free on a product day (Asia/Hong_Kong).
+ * The Rust api reads them on serve and claims one on the first graded write.
+ */
+export const dailyFreePicks = pgTable(
+	'daily_free_picks',
+	{
+		userId: uuid('user_id').notNull(),
+		dayKey: date('day_key', { mode: 'string' }).notNull(),
+		gameSlug: text('game_slug').notNull(),
+		startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		primaryKey({
+			name: 'daily_free_picks_pkey',
+			columns: [table.userId, table.dayKey, table.gameSlug],
+		}),
+	],
+)
+
 /** Auth-attested synthetic buyers, registered before their first product sign-in. */
 export const syntheticFixtures = pgTable('synthetic_fixtures', {
 	userId: uuid('user_id').primaryKey(),
