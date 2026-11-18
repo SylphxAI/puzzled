@@ -15,7 +15,7 @@ type ErrorProps = {
 	reset: () => void
 }
 
-export default function GameError({ error, reset }: ErrorProps) {
+export default function GameError({ reset }: ErrorProps) {
 	const t = useTranslations('common')
 
 	return (

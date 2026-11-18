@@ -16,7 +16,7 @@ interface ErrorProps {
 	reset: () => void
 }
 
-export default function LocaleError({ error, reset }: ErrorProps) {
+export default function LocaleError({ reset }: ErrorProps) {
 	return (
 		<BoundaryErrorView
 			boundary="locale"

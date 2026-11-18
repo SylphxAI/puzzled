@@ -16,7 +16,7 @@ interface ErrorProps {
 	reset: () => void
 }
 
-export default function AdminError({ error, reset }: ErrorProps) {
+export default function AdminError({ reset }: ErrorProps) {
 	return (
 		<BoundaryErrorView
 			boundary="admin"

@@ -9,6 +9,7 @@ import { AttributionCapture } from '@/features/analytics/components/attribution-
 import { FunnelReporter } from '@/features/analytics/components/funnel-reporter'
 import { GoogleTag } from '@/features/analytics/components/google-tag'
 import { CONSENT_DEFAULT_SCRIPT, googleTagIds } from '@/features/analytics/lib/google-tag'
+import { ErrorCapture } from '@/features/monitoring/components/error-capture'
 import { ApiProvider } from '@/lib/api/provider'
 import { COMPANY_PHONE, CONTACT_EMAIL } from '@/lib/config/app'
 import { NONCE_HEADER } from '@/lib/csp'
@@ -276,6 +277,8 @@ export default async function LocaleLayout({ children, params }: Props) {
 				<JsonLd baseUrl={baseUrl} />
 			</head>
 			<body className="antialiased">
+				{/* At first paint, outside the providers, so early errors are captured too. */}
+				<ErrorCapture />
 				<ThemeProvider nonce={nonce}>
 					<PlatformProvider>
 						{/* Before the children so its effects register first. */}
