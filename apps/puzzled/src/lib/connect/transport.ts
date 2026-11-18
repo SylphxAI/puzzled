@@ -141,7 +141,11 @@ export function getConnectTransport(baseUrl?: string): Transport {
 		useBinaryFormat: false, // browserDefaultEncoding: protojson
 		interceptors: [
 			((next) => async (req) => {
-				await ensureGuestSession(base).catch(() => undefined)
+				// A passive daily read forwards cookies already present; it never
+				// bootstraps a new guest or claims legacy state on arrival.
+				if (req.method.name !== 'GetDaily') {
+					await ensureGuestSession(base).catch(() => undefined)
+				}
 				return next(req)
 			}) satisfies Interceptor,
 		],

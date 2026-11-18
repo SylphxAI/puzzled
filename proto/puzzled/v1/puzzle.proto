@@ -70,6 +70,9 @@ message GetDailyResponse {
   // Details are read from the same Rust-owned game_sessions row as the
   // completion guard; the client never reconstructs a result.
   DailyCompletion completed_session = 12;
+  // This game can be picked today, but the playable payload is withheld
+  // until StartDaily succeeds. A passive read never takes a pick.
+  bool requires_start = 13;
 }
 
 // One batched read of which games the caller has already finished today.
@@ -181,6 +184,17 @@ message RecordShareLandingRequest {
 }
 message RecordShareLandingResponse {}
 
+message StartDailyRequest {
+  string game_slug = 1;
+  string difficulty = 2;
+  // The displayed Asia/Hong_Kong product day, to avoid spending on rollover.
+  string puzzle_date = 3;
+}
+
+message StartDailyResponse {
+  GetDailyResponse daily = 1;
+}
+
 service PuzzleService {
   // Same-origin, credential-bound, deduplicated; never counts as a finish.
   rpc RecordShareLanding(RecordShareLandingRequest) returns (RecordShareLandingResponse);
@@ -191,4 +205,6 @@ service PuzzleService {
   rpc CheckGuess(CheckGuessRequest) returns (CheckGuessResponse);
   rpc ShareResult(ShareResultRequest) returns (ShareResultResponse);
   rpc GetSharedResult(GetSharedResultRequest) returns (GetSharedResultResponse);
+  // Explicit, credential-bound start. Takes at most one pick per game and day.
+  rpc StartDaily(StartDailyRequest) returns (StartDailyResponse);
 }

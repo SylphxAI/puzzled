@@ -40,9 +40,10 @@ family.
   `plus_required_archive` (a past day); the web renders the unlock path from
   the same refusal, never a dead end.
 - **Free picks:** every game page opens on arrival. Picks live in
-  `daily_free_picks` (player, day, game). Serving a board only reads them, so
-  a look spends nothing; the first checked guess or submitted finish claims
-  one under the player lock, so two tabs cannot both take the last pick. A
+  `daily_free_picks` (player, day, game). A passive read returns preview
+  metadata for unpicked games. Choosing to play admits the board and claims
+  one pick under the player lock, so two tabs cannot both take the last pick.
+  A direct graded guess or valid finish must also claim its pick. A
   picked game stays open all day, and a guest's picks merge into the account
   on sign-in (a set union, which may exceed three). The day's featured
   rotation game only leads the suggestions.

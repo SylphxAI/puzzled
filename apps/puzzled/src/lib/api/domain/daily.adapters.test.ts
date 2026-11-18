@@ -65,6 +65,7 @@ const EXPECTED_DAILY = {
 		difficulty: 'medium',
 	},
 	canPlay: false,
+	requiresStart: false,
 	mode: 'daily',
 } satisfies DailyStatus
 

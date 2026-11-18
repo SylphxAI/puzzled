@@ -59,8 +59,24 @@ describe('mapDailyStatus', () => {
 				difficulty: 'medium',
 			},
 			canPlay: false,
+			requiresStart: false,
 			mode: 'daily',
 		})
+	})
+
+	test('preserves explicit-start metadata without a board or a completion', () => {
+		const res = create(GetDailyResponseSchema, {
+			gameSlug: 'word-guess',
+			puzzleDate: '2026-09-21',
+			canPlay: true,
+			requiresStart: true,
+		})
+		const out = mapDailyStatus(res)
+		expect(out.requiresStart).toBe(true)
+		expect(out.canPlay).toBe(true)
+		expect(out.puzzle.puzzleDate).toBe('2026-09-21')
+		expect(out.puzzle.puzzleData).toBeNull()
+		expect(out.completedSession).toBeNull()
 	})
 
 	test('the completed session carries the level it was played at, else null', () => {

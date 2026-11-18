@@ -4,9 +4,11 @@ Re-runnable post-deploy checks of the **Live** layer from
 [live layer](https://github.com/SylphxAI/owner/blob/main/standards/docs.md#claims-stay-inside-their-layer)
 for the capability graph in [`docs/capabilities.md`](../capabilities.md):
 `PUZ-MODULE`, `PUZ-DAILY`, `PUZ-FREE`, `PUZ-SHARE`, `PUZ-MARKS`, and the
-anonymous half of `PUZ-PLUS`. The harness reads `BillingService.ListPlans`
-first: while Puzzled Plus is not on sale every module and past day is open;
-once it is, only today's pick is served to an anonymous caller.
+anonymous half of `PUZ-PLUS`. Every game offers today's daily to a fresh
+visitor. A passive read returns metadata, not the board, and does not spend a
+pick. An explicit start for a distinct game claims a pick. Once Plus is on
+sale, the fourth distinct start and past-day play require Plus. The featured
+rotation suggests a game; it does not decide which games are free.
 
 The harness is Bun + `fetch` only (no dependencies, no new packages) and it
 never infers success from a proxy: every check prints `pass` / `fail` /
@@ -46,26 +48,26 @@ reduced-motion popups must keep one transform throughout the measurement.
 ## Commands
 
 ```bash
-# Read-only (default). Live checks against https://puzzled.gg.
+# Read-only (default). Live checks against https://tryit.fun.
 bun scripts/verify-live.ts
 
 # Same, via the repo-root alias.
 bun run verify:live
 
 # Machine-readable report on stdout.
-bun scripts/verify-live.ts --base https://puzzled.gg --json
+bun scripts/verify-live.ts --base https://tryit.fun --json
 
 # Post-deploy: assert the deployed revision (prefix match either direction).
 bun run verify:live --expected-sha <commit-sha>
 
-# Write check: submits ONE genuine terminal (guest session row) plus the
-# one-finish-per-(user, module, product day) re-submit probe.
-bun scripts/verify-live.ts --play --guest <uuid>
+# Only against an approved target: bootstraps a guest, starts three games,
+# tests the cap if Plus is on sale, and writes one Sudoku finish.
+bun scripts/verify-live.ts --play
 
 # Failure demo against a deliberately wrong base.
 bun scripts/verify-live.ts --base https://example.com --json
 
-# Regression self-test: synthetic local stubs (no network target, no writes).
+# Regression self-test: loopback stub only, no production calls or writes.
 # Proves the reviewed failure classes stay non-green and that a healthy stub
 # can go green for the right reasons.
 bun scripts/verify-live.ts --self-test
@@ -74,62 +76,19 @@ bun run verify:live:selftest
 
 The script lives at the repo root because it has no app dependencies (root
 alias: `bun run verify:live`; it is not wired into any CI workflow).
-`--base <url>` overrides the target (default `https://puzzled.gg`),
-`--timeout <ms>` the per-request timeout (default 20000), `--guest <uuid>` a
-stable guest UUID (default: a fresh random UUID, printed in the output),
-`--json` the report format, `-h/--help` usage.
+`--base <url>` overrides the target (default `https://tryit.fun`),
+`--timeout <ms>` the per-request timeout (default 20000), `--json` the report
+format, and `-h/--help` usage. `--guest <uuid>` is an optional run label in
+the report's `guestId` field, not a credential; each play run uses a newly
+issued guest cookie. The cookie is not reported.
 
-`--self-test` starts throwaway local `node:http` stubs (127.0.0.1, random port)
-and runs the full check pipeline against them in-process: a healthy control
-stub must go green, and stub cases for the reviewed defects (health document
-absent, rotation 5xx on both attempts, deep link behind a login wall,
-grid-leak compare without a local solution, empty `puzzleDataJson`) must stay
-non-green. Stub and harness share a pinned clock (a `sudoku` day; a
-`word-guess` day for the no-local-solution case), so the self-test does not
-depend on the host date. It never touches the network target and never writes.
-
-`--expected-sha <sha>` asserts the `git_commit_sha` reported by `/healthz`
-(case-insensitive prefix match either direction, so a short SHA works). A
-mismatch fails the `healthz` check and prints both values; without the flag the
-expected revision is `unknown (not asserted: no --expected-sha)` and the check
-stays a pure read-only check. Use it for post-deploy live verification.
-
-Exit codes: `0` = no check failed and no indeterminate `unknown` remains;
-`1` = at least one required check failed, or any check other than the explicit
-read-only exemption reported `unknown`; `2` = invalid arguments.
-
-The finish loop reports `unknown / not_attempted` in read-only mode and does not
-fail the run for it. That is the only pass-exempt `unknown`: the run verdict is
-derived from check status, so a check that goes `unknown` because its evidence
-is missing is `indeterminate` and fails the run even if it forgot to label
-itself.
-
-## What it writes
-
-Without `--play` the harness only reads (`GET /`, `GET /healthz`, `GET /readyz`,
-`GET /games/...`, `GET /manifest.webmanifest`, and Connect
-`GetDaily` reads with a guest id — read-only requests; anonymous guest reads do
-not persist anything server-side).
-
-`--play` performs `POST /puzzled.v1.PuzzleService/SubmitGuess` twice for one
-guest UUID. Against production (`puzzled.gg`) the first accepted terminal is a
-real **guest session row** for that UUID, module, and product day; the second
-submission is the expected `already_played` refusal. Use a fresh `--guest` per
-run: a reused guest already has an accepted finish for the day, so the harness
-reports the finish loop as `unknown / indeterminate` instead of pretending a
-terminal was accepted.
-
-The guest UUID is `crypto.randomUUID()` by default and is printed in both the
-human and JSON output, so any run can be traced by the `guest_<uuid>` logical
-id in server records.
-
-Re-running with the same `--guest` is safe (and read-only for the finish
-loop): the daily serve then reports `hasCompleted=true` for that guest and the
-finish loop reports `unknown / indeterminate` ("already has an accepted finish
-for this module/product day") instead of submitting a second terminal.
-
-The report never republishes a solution: the submitted terminal payload and any
-locally solved grid appear as a byte count plus SHA-256, not as grid content.
+`--self-test` runs both modes against throwaway HTTP stubs on loopback. The
+stub checks that read-only sends no bootstrap, start, grading, or submit
+requests. The play cases check the write order, same-origin guest cookie,
+started board, fourth-pick refusal, and accepted and duplicate terminals.
+Missing evidence (for example, repeated 5xx responses or a missing solved
+signature in play mode) stays non-green. All dates are pinned. No external
+service is contacted.
 
 ## What each check proves
 
@@ -137,20 +96,20 @@ locally solved grid appear as a byte count plus SHA-256, not as grid content.
 | --- | --- | --- |
 | `healthz` | `GET /healthz` is 200 and reports `git_commit_sha` (the live revision identity); with `--expected-sha`, that SHA must match the expected value | status, timing, body, reported SHA, expected SHA + match/mismatch |
 | `readyz` | `GET /readyz` is 200, every dependency not explicitly marked `required: false` is `ok`, and its SHA matches `/healthz` | dependency array, `slice`, `stub`, SHA pair |
-| `web-document` | `GET /` is 200 `text/html`; the canonical URL is not a localhost origin when the target is a real domain; the served HTML has a same-origin anchor to `/games/<today's pick>` (one optional locale prefix; nested/off-site paths do not count) | canonical URL, matching and rejected hrefs, rendered-text excerpt |
-| `free-slug-discovery` | today's pick is computed locally from the product day key (ordinal0 mod 5 over `word-guess`, `word-groups`, `crowns`, `sudoku`, `crossword`, the same rule as `apps/puzzled/src/lib/free-rotation.ts`); every rotation slug's `GetDaily` is 200 while Plus is not on sale; once it is, today's pick is 200 and the other four are 403 `plus_required` (a paid module served free fails); today's pick's served `puzzleDate` equals the local `Asia/Hong_Kong` day key; a 5xx/transport failure is retried once per slug and stays `indeterminate` — never a pass | per-slug HTTP status, Connect `code`/`message`, timings, verdict classification, both attempts when retried, server vs local day key |
-| `daily-serve` | today's pick returns 200 with a `puzzleDataJson` object carrying at least one key, a boolean/absent `hasCompleted` (false for a fresh guest), and no answer/solution keys anywhere in the response | parsed keys, `puzzleDate`/`puzzleNumber`/`mode`/`stub`, recursive key-scan findings |
-| `finish-loop` (`--play`) | a genuine terminal is accepted server-side, `hasCompleted=true` + `completedSession` come back on re-read, and a second terminal for the same guest + module + product day is refused `already_played` | solver plan, both submit responses, re-read body |
-| `share-deep-link` | `/games/<free>?date=<product-day>` ends on the module path (`/games/<free>`, one optional locale prefix, same origin) with 200 HTML after a documented same-origin redirect; the landing carries no solution-shaped JSON keys and no locally solved solution signature. The harness *requests* the documented module+`?date=` shape, but the app-side `formatRitualShareText` output is not observed here — no format/non-spoiler claim is made. Without a local solution (modules the harness cannot solve) the signature compare is `unknown` | path, redirect chain, final path/origin, content type/bytes, leak-pattern hits, signature count + redacted SHA-256s |
-| `archive-open` | anonymous `GetDaily` for yesterday's `puzzle_date` on today's pick is 200 while Plus is not on sale and 403 `plus_required_archive` once it is; for a future `puzzle_date` (today + 2) it is 400 `future_puzzle_date`; a 5xx/transport failure is `unknown` | archive and future request bodies, Connect `code`/`message`, timings |
+| `web-document` | `GET /` is 200 HTML, does not point to a localhost canonical on a real domain, and links to the day's featured game (same origin, one optional locale prefix). This checks the homepage suggestion, not access. | canonical URL, matching and rejected hrefs, rendered-text excerpt |
+| `free-slug-discovery` | Anonymous `GetDaily` returns HTTP 200 for every catalog game, whether Plus is on sale or not. A 5xx or transport failure is retried once per game; a repeated failure is indeterminate. | per-game statuses, Connect errors, timings, both attempts when retried |
+| `daily-serve` | Each cold response identifies the requested game and today's Hong Kong date, has `requiresStart: true` and `canPlay: true`, and omits `puzzleDataJson`, completion, and solution keys. This does **not** establish playable board delivery. | flags, dates and board presence for each game, leak key paths |
+| `start-daily` (`--play`) | Bootstrap a fresh `__Host-puzzled_guest` cookie, then POST `StartDaily` with `{gameSlug,difficulty,puzzleDate}` for Sudoku, Word Guess, and Nonogram using the same cookie and browser origin. Each response must wrap a playable board as `{daily: <GetDailyResponse>}`, without answer keys. When `ListPlans` says Plus is on sale, a fourth distinct start (Crowns) must return 403 `plus_required` with no board. No fourth start is attempted when sales are closed. | bootstrap status, start requests, HTTP and Connect status, keys found, sales state |
+| `finish-loop` (`--play`) | Build a terminal from the Sudoku board returned by `StartDaily`; submit using that session and puzzle identity. Verify `hasCompleted=true` and `completedSession` on re-read and 409 `already_played` on a duplicate. | solver plan, response statuses and hashes, completion readback |
+| `share-deep-link` | `/games/<slug>?date=<product-day>` ends on a same-origin module path with 200 HTML and no solution-shaped JSON keys. The harness chooses the documented URL; it does not see the app generate share text. | path and redirect chain, content type, leak-pattern hits |
+| `share-solution-signature` (`--play`) | Compare a locally solved Sudoku grid from `StartDaily` against the anonymous share landing. Read-only explicitly skips this comparison; play without a unique solution is indeterminate. | signature count, fingerprints and hits, not solution contents |
+| `archive-open` | For yesterday, anonymous `GetDaily` is 200 (with yesterday's date) while Plus is not on sale and 403 `plus_required_archive` once it is. For today + 2 it is 400 `future_puzzle_date`. Unreadable sale state or a 5xx/transport failure is indeterminate. | ListPlans status, past and future responses, Connect errors, timings |
 | `marks-scan` | the [catalog](../catalog.md#names) marks do not appear in `title` / meta / `JSON-LD` / manifest `short_name`-class fields, and no `JSON-LD`/canonical URL is a localhost origin on a non-local host; marks anywhere else are reported as warnings with exact context; a manifest that cannot be observed makes the dimension `unknown`, not a silent pass | per-target SHA-256, hard failures with zone + context, warnings with context, manifest fields/URL/state |
 
-Product day key: `Asia/Hong_Kong` calendar date (fixed UTC+8, no DST — the same
-shift the Rust `product_day_key` applies). The harness prefers the
-`puzzleDate` the server serves on today's pick's `GetDaily` (recorded as
-`productDayKeySource: server GetDaily puzzleDate`), and *asserts* it equals the
-local HKT date (`product-day-key-matches-hkt`); it falls back to the local HKC
-date for the summary when discovery fails.
+The product day is the Asia/Hong_Kong calendar date (UTC+8, no DST). The
+harness checks every cold response against that date. The report attributes
+the day to the featured game's response only when it agrees with the local
+Hong Kong date; otherwise it shows the local expectation.
 
 ## Evidence-layer statement (what this does NOT prove)
 
@@ -170,21 +129,21 @@ reports. It does **not** establish:
   remains the
   [metric recompute](../metrics.md) — this harness does not
   query the warehouse.
-- **Coverage**: authenticated journeys (P4/P5), admin (P7), non-rotation
-  modules, puzzle content beyond today's pick, client-rendered DOM state (the harness reads
-  served HTML, not a browser), email/push, and the share text as rendered in the
-  product UI (`formatRitualShareText` output is **not** observed; only the
-  requested module+`?date=` link and the landing leak checks are).
+- **Coverage**: all catalog games are probed for cold metadata, not for board
+  quality or finish acceptance. Play samples three starts and one finish. It
+  does not cover signed-in or paid play, admin, the archive UI, client-rendered
+  DOM state, email or push, or the app's generated share text.
 - **Continuity**: a green run is a point-in-time observation of one product
   day, not a guarantee of the next day's rotation, content, or deploy.
 
 A check that cannot obtain its evidence never reports `pass`. A liveness or
 readiness probe that returns a non-200 **response** is a `fail`; a transport
-failure with no response is `unknown`. A rotation probe that only returns
-5xx/transport failures after its one retry is `unknown`/`indeterminate` (a 5xx
-is not evidence about serving). A non-product page makes the mark scan
-`unknown`. Every `unknown` except the explicit read-only finish-loop exemption
-(`not_attempted`) keeps the run non-green, exactly like a `fail`.
+failure with no response is `unknown`. A daily probe that only returns 5xx or
+transport failures after its one retry is indeterminate. A non-product page
+makes the mark scan unknown. Only the three checks deliberately skipped in
+read-only mode (starts, finishing, and solution-signature comparison) can be
+`not_attempted`. An indeterminate check keeps the run non-green, just like a
+failure.
 
 Response bodies are read with a hard 4 MiB cap (`bodyTruncated`,
 `bodySha256Scope`) so a hostile or misbehaving `--base` cannot force unbounded
@@ -193,12 +152,6 @@ assertions — the mark scan, the localhost-origin scan, the landing
 solution-key/signature scans — report `unknown` when the backing body was
 truncated, so a page cut off at the cap can never green a "no marks / no leak"
 claim.
-
-On days whose pick the harness cannot solve (`word-guess`,
-`word-groups`, `crossword`), the share signature compare has no local solution
-to check and reports `unknown`, so read-only runs are structurally non-green
-on those days. That is by design; run on a solvable day (`sudoku`,
-`crowns`) or accept the `unknown`.
 
 ### Daily percentile verification
 

@@ -27,6 +27,7 @@ export type DailySessionSnapshot = {
 }
 
 export type DailySnapshot =
+	| { kind: 'startable'; puzzleDate: string }
 	| { kind: 'playable'; puzzleId: string; puzzleData: unknown; puzzleDate: string }
 	| { kind: 'completed'; puzzleDate: string; session: DailySessionSnapshot }
 	/** Server-accepted finish without a result payload: non-playable, no invented result. */
@@ -73,6 +74,9 @@ export function classifyDailyResponse(res: GetDailyResponse): DailySnapshot {
 		return session ? { kind: 'completed', puzzleDate, session } : { kind: 'closed', puzzleDate }
 	}
 
+	if (res.requiresStart) {
+		return res.puzzleDate ? { kind: 'startable', puzzleDate } : { kind: 'unavailable' }
+	}
 	const puzzleData = parsePuzzleData(res.puzzleDataJson)
 	if (puzzleData === null) return { kind: 'unavailable' }
 

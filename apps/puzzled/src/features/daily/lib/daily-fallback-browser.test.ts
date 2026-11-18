@@ -1,4 +1,4 @@
-/** Browser fallback awaits server cookie admission before GetDaily, without local identity headers. */
+/** Passive browser fallback sends existing cookies without bootstrapping a guest or taking a pick. */
 import { afterEach, expect, test } from 'bun:test'
 import { create, toJson } from '@bufbuild/protobuf'
 import { GetDailyResponseSchema } from '@/gen/connect/puzzled/v1/puzzle_pb'
@@ -29,7 +29,7 @@ afterEach(() => {
 	resetConnectTransportCache()
 })
 
-test('fallback GetDaily awaits cookie bootstrap and leaves stored progress data unchanged', async () => {
+test('fallback GetDaily does not bootstrap a guest or mutate stored progress', async () => {
 	resetConnectTransportCache()
 	const legacyData = 'test-local-progress-reference'
 	const store = new Map<string, string>([[GUEST_DAY_ID_KEY, legacyData]])
@@ -42,18 +42,9 @@ test('fallback GetDaily awaits cookie bootstrap and leaves stored progress data 
 	}
 	globals.document = { cookie: 'puzzled_guest_id=legacy-data-only' }
 	const requests: Request[] = []
-	let admitted = false
 	globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
 		const request = new Request(input, init)
 		requests.push(request)
-		if (request.url.endsWith('/v1/guest/session')) {
-			expect(request.method).toBe('POST')
-			expect(request.credentials).toBe('include')
-			expect(await request.json()).toEqual({})
-			admitted = true
-			return new Response('{"issued":true}', { headers: { 'content-type': 'application/json' } })
-		}
-		expect(admitted).toBe(true)
 		return new Response(
 			JSON.stringify(
 				toJson(
@@ -62,7 +53,7 @@ test('fallback GetDaily awaits cookie bootstrap and leaves stored progress data 
 						gameSlug: 'sudoku',
 						puzzleDate: '2026-09-10',
 						canPlay: true,
-						puzzleDataJson: JSON.stringify({ grid: [1, 2, 3] }),
+						requiresStart: true,
 					}),
 				),
 			),
@@ -74,12 +65,11 @@ test('fallback GetDaily awaits cookie bootstrap and leaves stored progress data 
 		{ gameSlug: 'sudoku' },
 		createPuzzleServiceClient(CONNECT_BASE),
 	)
-	expect(requests).toHaveLength(2)
-	expect(requests[0]?.url).toBe(`${CONNECT_BASE}/v1/guest/session`)
-	expect(requests[1]?.url).toBe(`${CONNECT_BASE}/puzzled.v1.PuzzleService/GetDaily`)
-	expect(requests[1]?.credentials).toBe('include')
+	expect(requests).toHaveLength(1)
+	expect(requests[0]?.url).toBe(`${CONNECT_BASE}/puzzled.v1.PuzzleService/GetDaily`)
+	expect(requests[0]?.credentials).toBe('include')
 	expect(requests.every((request) => request.headers.get('x-puzzled-guest-id') === null)).toBe(true)
 	expect(store.get(GUEST_DAY_ID_KEY)).toBe(legacyData)
 	expect((globals.document as { cookie: string }).cookie).toBe('puzzled_guest_id=legacy-data-only')
-	expect(snapshot).toMatchObject({ kind: 'playable', puzzleDate: '2026-09-10' })
+	expect(snapshot).toMatchObject({ kind: 'startable', puzzleDate: '2026-09-10' })
 })

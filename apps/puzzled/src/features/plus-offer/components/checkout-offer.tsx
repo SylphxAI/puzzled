@@ -4,10 +4,10 @@ import { CurrencySwitcher } from '@/app/[locale]/(main)/pricing/currency-switche
 import { PlusOffer } from '@/app/[locale]/(main)/pricing/plus-offer'
 import { getServerPlans } from '@/lib/api/server'
 import {
-	availableCurrencies,
 	COUNTRY_HEADER,
 	CURRENCY_COOKIE,
 	chooseCurrency,
+	offeredCurrencies,
 } from '@/lib/billing/currency'
 import { planCards } from '@/lib/billing/plus'
 import { Link } from '@/lib/i18n/routing'
@@ -42,12 +42,13 @@ export async function CheckoutOffer({
 				(plan) =>
 					!plan.family &&
 					plan.prices.length > 0 &&
-					((plan.id === 'individual_once' && plan.interval === 'once' && plan.accessDays > 0) ||
+					((plan.id === 'individual_once' && plan.interval === '' && plan.accessDays > 0) ||
 						(plan.id === 'individual_yearly' && plan.interval === 'year') ||
 						(plan.id === 'individual_monthly' && plan.interval === 'month')),
 			)
 		: []
-	const currencies = availableCurrencies(individual)
+	// A pass missing a price must not hide the other plans in that currency.
+	const currencies = offeredCurrencies(individual)
 	const currency = chooseCurrency({
 		cookie: cookieStore.get(CURRENCY_COOKIE)?.value,
 		country: requestHeaders.get(COUNTRY_HEADER),
@@ -55,9 +56,7 @@ export async function CheckoutOffer({
 		available: currencies,
 	})
 	// Never silently switch an option to a different charge currency.
-	const cards = currencies.length
-		? planCards(individual, currency).filter((card) => card.currency === currency)
-		: []
+	const cards = planCards(individual, currency).filter((card) => card.currency === currency)
 	const once = cards.find((card) => card.id === 'individual_once' && card.accessDays > 0)
 	const yearly = cards.find((card) => card.id === 'individual_yearly')
 	const monthly = cards.find((card) => card.id === 'individual_monthly')

@@ -15,6 +15,7 @@ import {
 	type GetSharedResultResponse,
 	PuzzleService,
 	ShareResultRequestSchema,
+	StartDailyRequestSchema,
 	SubmitGuessRequestSchema,
 	type SubmitGuessResponse,
 } from '../../gen/connect/puzzled/v1/puzzle_pb'
@@ -27,7 +28,7 @@ import {
 	validateGetPuzzleInput,
 	validateSubmitGuessInput,
 } from './puzzle-domain'
-import { getConnectTransport } from './transport'
+import { ensureGuestSession, getConnectTransport } from './transport'
 
 export type PuzzleServiceClient = Client<typeof PuzzleService>
 
@@ -109,6 +110,20 @@ export async function submitGuess(
 		}),
 		idempotencyKey ? { headers: { [IDEMPOTENCY_KEY_HEADER]: idempotencyKey } } : undefined,
 	)
+}
+
+/** Only an explicit play action calls this; GetDaily never commits a pick. */
+export async function startDaily(input: {
+	gameSlug: string
+	puzzleDate: string
+	difficulty?: string
+}): Promise<GetDailyResponse> {
+	await ensureGuestSession()
+	const { daily } = await createPuzzleServiceClient().startDaily(
+		create(StartDailyRequestSchema, input),
+	)
+	if (!daily) throw new Error('missing_daily_snapshot')
+	return daily
 }
 
 /**
