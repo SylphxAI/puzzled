@@ -264,15 +264,18 @@ test('Chromium sends the legacy report through the app relay and SDK, without cr
 			SYLPHX_PUBLIC_URL: origin,
 			SYLPHX_API_KEY: 'fixture-credential',
 		}
-		globalThis.fetch = async (input, init) => {
-			const sdkRequest = new Request(input, init)
-			upstream.push({
-				url: sdkRequest.url,
-				method: sdkRequest.method,
-				body: await sdkRequest.json(),
-			})
-			return Response.json({ error_event: { name: 'fixture-occurrence' } })
-		}
+		// Replace only the call behavior so Bun's fetch members stay intact.
+		globalThis.fetch = new Proxy(fetch, {
+			async apply(_target, _thisArg, [input, init]: Parameters<typeof fetch>) {
+				const sdkRequest = new Request(input, init)
+				upstream.push({
+					url: sdkRequest.url,
+					method: sdkRequest.method,
+					body: await sdkRequest.json(),
+				})
+				return Response.json({ error_event: { name: 'fixture-occurrence' } })
+			},
+		})
 		try {
 			return await POST(request)
 		} finally {
@@ -346,11 +349,13 @@ test('the collector swallows an unavailable relay and leaves page fetch usable',
 	const pageErrors: Error[] = []
 	page.on('pageerror', (error) => pageErrors.push(error))
 	await page.addInitScript((relayPath) => {
-		const fetch = window.fetch.bind(window)
-		window.fetch = (input, init) =>
-			input === relayPath
-				? Promise.reject(new Error('Fixture relay unavailable'))
-				: fetch(input, init)
+		window.fetch = new Proxy(window.fetch, {
+			apply(target, _thisArg, [input, init]: Parameters<typeof window.fetch>) {
+				return input === relayPath
+					? Promise.reject(new Error('Fixture relay unavailable'))
+					: target.call(window, input, init)
+			},
+		})
 	}, RELAY_PATH)
 	const { posts, consoleMessages } = await installFixture(page, '<main>fixture</main>')
 	const status = await page.evaluate(async () => {
