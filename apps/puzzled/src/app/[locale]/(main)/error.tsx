@@ -8,7 +8,7 @@ type Props = {
 	reset: () => void
 }
 
-export default function ErrorPage({ reset }: Props) {
+export default function ErrorPage({ error, reset }: Props) {
 	const t = useTranslations('common')
 
 	return (
