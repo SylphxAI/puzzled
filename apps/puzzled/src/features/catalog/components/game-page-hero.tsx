@@ -185,9 +185,21 @@ export async function GamePageHero({
 								{t('freeToday')}
 							</span>
 						) : null}
-						<h1 className="mt-3 font-display text-[2.5rem] leading-[1.02] text-balance md:text-6xl">
-							{name}
-						</h1>
+						<div className="mt-3 flex items-center justify-between gap-4">
+							<h1 className="font-display text-[2.5rem] leading-[1.02] text-balance md:text-6xl">
+								{name}
+							</h1>
+							{/* Phones: the board miniature beside the title (the large card is md+). */}
+							<div
+								className={cn(
+									'tactile-card h-16 w-[6.25rem] shrink-0 overflow-hidden rounded-xl p-1 md:hidden',
+									colors.bg,
+								)}
+								aria-hidden="true"
+							>
+								<GameMotif slug={slug} zoom />
+							</div>
+						</div>
 						<p className="mt-3 max-w-xl text-[17px] leading-relaxed text-muted-foreground">
 							{description}
 						</p>

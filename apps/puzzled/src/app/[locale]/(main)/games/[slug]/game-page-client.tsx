@@ -85,8 +85,8 @@ export function GamePageClient({
 				changeDifficultyHref={difficulty && mode === 'daily' ? `/games/${slug}#play` : undefined}
 			/>
 
-			{/* Game Content - centered vertically */}
-			<div className="flex flex-1 flex-col items-center justify-center">
+			{/* Game content: top-aligned under the header; the stage reserves the height below. */}
+			<div className="flex flex-1 flex-col items-center justify-start">
 				<GameRenderer
 					slug={slug}
 					puzzleId={puzzleId}
