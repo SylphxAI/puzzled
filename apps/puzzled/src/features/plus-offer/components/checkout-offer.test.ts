@@ -2,7 +2,10 @@ import { describe, expect, mock, test } from 'bun:test'
 import { fromJson } from '@bufbuild/protobuf'
 import { createElement, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { type ListPlansResponse, ListPlansResponseSchema } from '@/gen/connect/puzzled/v1/billing_pb'
+import {
+	type ListPlansResponse,
+	ListPlansResponseSchema,
+} from '@/gen/connect/puzzled/v1/billing_pb'
 
 // Match the live Connect JSON: one-time plans omit the default interval field.
 const plans = fromJson(ListPlansResponseSchema, {
@@ -40,9 +43,11 @@ mock.module('next-intl/server', () => ({
 	getLocale: async () => 'en-US',
 	getTranslations: async () => (key: string) => key,
 }))
-mock.module('@/lib/i18n/routing', () => ({
-	Link: ({ children }: { children: ReactNode }) => createElement('a', null, children),
-}))
+function TestLink({ children }: { children: ReactNode }) {
+	return createElement('a', null, children)
+}
+
+mock.module('@/lib/i18n/routing', () => ({ Link: TestLink }))
 mock.module('@/lib/api/server', () => ({ getServerPlans: async () => response }))
 
 const { CheckoutOffer } = await import('./checkout-offer')
@@ -50,7 +55,12 @@ const { CheckoutOffer } = await import('./checkout-offer')
 async function renderOffer(catalogue: ListPlansResponse) {
 	response = catalogue
 	return renderToStaticMarkup(
-		await CheckoutOffer({ locale: 'en-US', signedIn: false, callbackUrl: '/archive', gameCount: 19 }),
+		await CheckoutOffer({
+			locale: 'en-US',
+			signedIn: false,
+			callbackUrl: '/archive',
+			gameCount: 19,
+		}),
 	)
 }
 
@@ -71,10 +81,13 @@ describe('CheckoutOffer', () => {
 
 	test.each([
 		['zero access days', { accessDays: 0 }],
-		['invalid interval', { interval: 'once' }],
+		['unsupported once interval', { interval: 'once' }],
 		['family starter', { family: true }],
 		['no price', { prices: [] }],
-		['no price in selected currency', { prices: [{ ...plans.plans[0].prices[0], currency: 'hkd' }] }],
+		[
+			'no price in selected currency',
+			{ prices: [{ ...plans.plans[0].prices[0], currency: 'hkd' }] },
+		],
 	] as const)('keeps recurring choices but omits the starter with %s', async (_, changes) => {
 		const [starter, ...recurring] = plans.plans
 		const html = await renderOffer({ ...plans, plans: [{ ...starter, ...changes }, ...recurring] })
