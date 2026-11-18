@@ -59,7 +59,10 @@ export function GamePageClient({
 	return (
 		// The game component loads client-side after this paints: the stage
 		// reserves a board's usual height so the rules below never jump.
-		<div className="game-stage flex min-h-[33rem] flex-1 flex-col" data-game-stage="board">
+		<div
+			className="game-stage flex min-h-[26rem] flex-1 flex-col md:min-h-[33rem]"
+			data-game-stage="board"
+		>
 			{/* Help Modal - managed at page level */}
 			{helpRequested ? (
 				<HowToPlayModal
