@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import {
 	type ListPlansResponse,
 	ListPlansResponseSchema,
+	type Plan,
 } from '@/gen/connect/puzzled/v1/billing_pb'
 
 // Match the live Connect JSON: one-time plans omit the default interval field.
@@ -88,14 +89,20 @@ describe('CheckoutOffer', () => {
 			'no price in selected currency',
 			{ prices: [{ ...plans.plans[0].prices[0], currency: 'hkd' }] },
 		],
-	] as const)('keeps recurring choices but omits the starter with %s', async (_, changes) => {
-		const [starter, ...recurring] = plans.plans
-		const html = await renderOffer({ ...plans, plans: [{ ...starter, ...changes }, ...recurring] })
-		const options = radios(html)
-		expect(options).toHaveLength(2)
-		expect(options[0]).toContain('value="year"')
-		expect(options[1]).toContain('value="month"')
-	})
+	] satisfies [string, Partial<Plan>][])(
+		'keeps recurring choices but omits the starter with %s',
+		async (_, changes) => {
+			const [starter, ...recurring] = plans.plans
+			const html = await renderOffer({
+				...plans,
+				plans: [{ ...starter, ...changes }, ...recurring],
+			})
+			const options = radios(html)
+			expect(options).toHaveLength(2)
+			expect(options[0]).toContain('value="year"')
+			expect(options[1]).toContain('value="month"')
+		},
+	)
 
 	test('does not render checkout when sales are closed', async () => {
 		expect(radios(await renderOffer({ ...plans, salesOpen: false }))).toHaveLength(0)
