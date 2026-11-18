@@ -1,3 +1,5 @@
+export { buildComparisonMetadata, ComparisonLanding } from './comparison-landing'
+export { COMPARISON_SPECS } from './comparison-specs'
 export { LegalDocument, type LegalSection } from './legal-document'
 export { MarketingCta } from './marketing-cta'
 export { MarketingFaq, type MarketingFaqItem } from './marketing-faq'

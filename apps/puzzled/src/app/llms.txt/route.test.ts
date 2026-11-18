@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { listPrice } from '@/features/marketing/components/catalogue-prices'
 import { getAllGameMetadata } from '@/games/registry'
 import { GET } from './route'
 
@@ -25,6 +26,7 @@ describe('/llms.txt', () => {
 			'https://tryit.fun/leaderboard',
 			'https://tryit.fun/use-cases/daily-word-and-logic-puzzles-online',
 			'https://tryit.fun/use-cases/family-brain-games-no-ads',
+			'https://tryit.fun/vs/nyt-games',
 			'https://tryit.fun/support',
 			'https://tryit.fun/privacy',
 			'https://tryit.fun/terms',
@@ -36,5 +38,22 @@ describe('/llms.txt', () => {
 			)
 		}
 		expect(body.trimEnd().endsWith('Contact: hi@tryit.fun.')).toBe(true)
+	})
+
+	test('states the free daily picks and the catalogue prices players are charged', async () => {
+		const body = await GET().text()
+		const total = getAllGameMetadata().length
+		expect(body).toContain(
+			`Pick any 3 of today's ${total} games to play free every day, no account needed.`,
+		)
+		expect(body).not.toMatch(/featured puzzle is free|one featured/i)
+		expect(body).toContain(`A one-time 3-Day Pass (${listPrice('puzzled_starter_unlock')} USD`)
+		expect(body).toContain(
+			`Tryit Plus (${listPrice('plus_individual_monthly')}/mo or ${listPrice('plus_individual_yearly')}/yr USD`,
+		)
+		expect(body).toContain(
+			`(${listPrice('plus_family_monthly')}/mo or ${listPrice('plus_family_yearly')}/yr USD`,
+		)
+		expect(body).not.toMatch(/Sylphx Money|Keel|Spiron/)
 	})
 })
