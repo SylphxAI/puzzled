@@ -79,10 +79,10 @@ the XSS protection comes from `script-src`.
 
 ## Violation reports
 
-The browser error capture (`src/lib/observability/browser.ts`) listens for
-`securitypolicyviolation` and posts each one to the error relay as a
-`CSPViolation` error group (tag `handler=csp`), one per directive and blocked
-origin. Violations before hydration are not captured.
+The browser collector listens for `securitypolicyviolation` once client
+instrumentation starts. It reports the allowlisted directive (or `other`),
+not the blocked URL, and applies the same deduplication and rate cap as other
+[browser reports](../observability.md#browser-reports).
 
 ## Checking it
 

@@ -1,118 +1,289 @@
-/**
- * Browser error capture: uncaught errors, unhandled rejections, and errors
- * reported by error boundaries are posted to this app's own relay route,
- * which captures them into Sylphx Observability with the server's key. The
- * browser holds no key and loads no third-party script.
- *
- * Reports carry the error, its stack, the page path (never the query string),
- * and the last navigation breadcrumbs. At most 10 reports leave one page load.
- *
- * Content Security Policy violations are reported the same way, one per
- * directive and blocked origin, so a policy regression shows up as an error
- * group (`CSPViolation`, tag handler=csp).
- */
+import {
+	type Boundary,
+	type ClickSelector,
+	type Crumb,
+	contains,
+	cspSelectors,
+	encodeBrowserReport,
+	type Issue,
+	MAX_BODY_BYTES,
+	MAX_BREADCRUMBS,
+	type MediaSelector,
+	mediaSelectors,
+	messages,
+	RELAY_PATH,
+	RELAY_TIMEOUT_MS,
+	routeTemplate,
+} from './browser-report'
 
-export const RELAY_PATH = '/api/observability/errors'
-const MAX_REPORTS = 10
-const MAX_CRUMBS = 20
+const WINDOW_MS = 60_000
+const CLICK_WINDOW_MS = 1200
+const SETTLE_MS = 350
+const MEDIA = 'img,audio,video,source'
+const CONTROLS = 'button,a[href],[role="button"],[role="link"],summary'
+const currentRoute = () => routeTemplate(location.pathname)
 
-type Crumb = { category: string; message: string; timestamp: string }
+let collector: ReturnType<typeof install> | undefined
 
-const state: { installed: boolean; sent: number; seen: Set<string>; crumbs: Crumb[] } = {
-	installed: false,
-	sent: 0,
-	seen: new Set(),
-	crumbs: [],
-}
-
-function path(): string {
-	return typeof location === 'undefined' ? '' : location.pathname
-}
-
-/** Adds a breadcrumb that the next report carries. */
-export function addBreadcrumb(category: string, message: string): void {
-	state.crumbs.push({
-		category,
-		message: message.slice(0, 300),
-		timestamp: new Date().toISOString(),
-	})
-	if (state.crumbs.length > MAX_CRUMBS) state.crumbs.shift()
-}
-
-/** Sends one error to the relay; safe to call anywhere, never throws. */
-export function reportError(error: unknown, tags: Record<string, string | undefined> = {}): void {
-	if (typeof window === 'undefined') return
+export function installBrowserErrorCapture(): void {
+	if (typeof window === 'undefined' || collector) return
 	try {
-		const err =
-			error instanceof Error ? error : new Error(typeof error === 'string' ? error : String(error))
-		const key = `${err.name}:${err.message}`
-		if (state.sent >= MAX_REPORTS || state.seen.has(key)) return
-		state.seen.add(key)
-		state.sent += 1
-		const cleanTags: Record<string, string> = {}
-		for (const [name, value] of Object.entries(tags)) if (value) cleanTags[name] = value
-		const body = JSON.stringify({
-			type: err.name,
-			message: err.message || err.name,
-			stack: err.stack?.slice(0, 16_000),
-			path: path(),
-			breadcrumbs: state.crumbs,
-			tags: cleanTags,
+		collector = install()
+	} catch {
+		// Optional instrumentation must not break startup.
+	}
+}
+
+export function reportBoundaryError(boundary: Boundary): void {
+	collector?.report({ type: 'BoundaryError', selector: boundary })
+}
+
+export function noteRouterTransition(): void {
+	collector?.effect()
+}
+
+function mediaTarget(target: unknown): { element: Element; selector: MediaSelector } | undefined {
+	if (!(target instanceof Element)) return
+	const element = target.localName === 'source' ? target.parentElement : target
+	if (element && contains(mediaSelectors, element.localName)) {
+		return { element, selector: element.localName }
+	}
+}
+
+function clickSelector(control: Element): ClickSelector {
+	if (control.localName === 'button') return 'button'
+	if (control.localName === 'a') return 'link'
+	if (control.localName === 'summary') return 'summary'
+	return control.getAttribute('role') === 'link' ? 'role=link' : 'role=button'
+}
+
+function install() {
+	const crumbs: Crumb[] = []
+	const sent = new Map<string, number>()
+	const reportedClicks = new Set<ClickSelector>()
+	const fetchFromPage = window.fetch.bind(window)
+
+	function add(crumb: Crumb) {
+		if (crumbs.length === MAX_BREADCRUMBS) crumbs.shift()
+		crumbs.push(crumb)
+	}
+
+	function report(issue: Issue): boolean {
+		try {
+			const now = performance.now()
+			for (const [key, at] of sent) if (now - at >= WINDOW_MS) sent.delete(key)
+			const route = currentRoute()
+			const key = JSON.stringify([issue.type, messages[issue.type], route, issue.selector])
+			if (sent.size >= 5 || sent.has(key)) return false
+			const payload = encodeBrowserReport(issue, route, crumbs)
+			if (!payload) return false
+			const body = new TextEncoder().encode(JSON.stringify(payload))
+			if (body.byteLength > MAX_BODY_BYTES) return false
+			sent.set(key, now)
+			const controller = new AbortController()
+			const timer = window.setTimeout(() => controller.abort(), RELAY_TIMEOUT_MS)
+			void fetchFromPage(RELAY_PATH, {
+				method: 'POST',
+				mode: 'same-origin',
+				credentials: 'omit',
+				redirect: 'error',
+				referrerPolicy: 'no-referrer',
+				headers: { 'content-type': 'application/json' },
+				keepalive: true,
+				signal: controller.signal,
+				body,
+			}).then(
+				() => window.clearTimeout(timer),
+				() => window.clearTimeout(timer),
+			)
+			return true
+		} catch {
+			return false
+		}
+	}
+
+	// Error events on media do not bubble. Never inspect error text or media URLs.
+	function inspectMedia(element: Element, startup = false) {
+		const target = mediaTarget(element)
+		if (!target) return
+		if (element.getAttribute('src') === '') {
+			report({ type: 'EmptyMediaSource', selector: target.selector })
+		} else if (
+			startup &&
+			((element instanceof HTMLImageElement &&
+				element.complete &&
+				!!element.currentSrc &&
+				!element.naturalWidth) ||
+				(element instanceof HTMLMediaElement && !!element.error))
+		) {
+			report({ type: 'MediaError', selector: target.selector })
+		}
+	}
+
+	window.addEventListener(
+		'error',
+		(event) => {
+			const target = mediaTarget(event.target)
+			if (target) {
+				const empty = event.target instanceof Element && event.target.getAttribute('src') === ''
+				report({ type: empty ? 'EmptyMediaSource' : 'MediaError', selector: target.selector })
+			} else if (event instanceof ErrorEvent) {
+				report({ type: 'UncaughtError', selector: 'window' })
+			}
+		},
+		true,
+	)
+	window.addEventListener('unhandledrejection', () =>
+		report({ type: 'UnhandledRejection', selector: 'window' }),
+	)
+	document.addEventListener('securitypolicyviolation', (event) => {
+		const directive = event.effectiveDirective
+		report({
+			type: 'CSPViolation',
+			selector: contains(cspSelectors, directive) ? directive : 'other',
 		})
-		void fetch(RELAY_PATH, {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			credentials: 'same-origin',
-			keepalive: true,
-			body,
-		}).catch(() => undefined)
-	} catch {
-		// Reporting must never break the page.
+	})
+	const scan = (root: ParentNode, startup = false) => {
+		for (const element of root.querySelectorAll(MEDIA)) inspectMedia(element, startup)
 	}
-}
+	new MutationObserver((records) => {
+		for (const record of records) {
+			if (record.type === 'attributes' && record.target instanceof Element)
+				inspectMedia(record.target)
+			for (const node of record.addedNodes) {
+				if (node instanceof Element) {
+					inspectMedia(node)
+					scan(node)
+				}
+			}
+		}
+	}).observe(document, {
+		subtree: true,
+		childList: true,
+		attributes: true,
+		attributeFilter: ['src'],
+	})
+	// Defer parsing the existing document; listeners above are already active.
+	window.setTimeout(() => scan(document, true), 0)
 
-/** Installs the global handlers once; returns an uninstall function. */
-export function installBrowserErrorCapture(): () => void {
-	if (typeof window === 'undefined' || state.installed) return () => undefined
-	state.installed = true
-	const onError = (event: ErrorEvent) =>
-		reportError(event.error ?? event.message, { handler: 'onerror' })
-	const onRejection = (event: PromiseRejectionEvent) =>
-		reportError(event.reason, { handler: 'unhandledrejection' })
-	const onNavigate = () => addBreadcrumb('navigation', path())
-	const onViolation = (event: SecurityPolicyViolationEvent) => {
-		const violation = new Error(cspViolationMessage(event))
-		violation.name = 'CSPViolation'
-		reportError(violation, { handler: 'csp', disposition: event.disposition })
+	// Only keep a click candidate while looking for effects. Any observed
+	// navigation, DOM mutation, native input, or network activity resets it.
+	let burst: { control: Element; started: number; count: number; timer: number } | undefined
+	const clickObserver = new MutationObserver(() => effect())
+	function effect() {
+		if (!burst) return
+		window.clearTimeout(burst.timer)
+		clickObserver.disconnect()
+		burst = undefined
 	}
-	window.addEventListener('error', onError)
-	window.addEventListener('unhandledrejection', onRejection)
-	document.addEventListener('securitypolicyviolation', onViolation)
-	window.addEventListener('popstate', onNavigate)
-	addBreadcrumb('navigation', path())
-	return () => {
-		window.removeEventListener('error', onError)
-		window.removeEventListener('unhandledrejection', onRejection)
-		document.removeEventListener('securitypolicyviolation', onViolation)
-		window.removeEventListener('popstate', onNavigate)
-		state.installed = false
-	}
-}
 
-/**
- * One stable message per directive and blocked source: the blocked URL keeps
- * only its origin (no path or query), and inline or eval blocks keep their
- * keyword, so the same fault always lands in the same error group.
- */
-export function cspViolationMessage(event: {
-	effectiveDirective: string
-	blockedURI: string
-}): string {
-	let blocked = event.blockedURI || 'unknown'
-	try {
-		blocked = new URL(blocked).origin
-	} catch {
-		// 'inline', 'eval', 'wasm-eval' and similar keywords are not URLs.
+	function navigate() {
+		effect()
+		add({ kind: 'navigation', route: currentRoute() })
 	}
-	return `CSP ${event.effectiveDirective} blocked ${blocked}`
+	navigate()
+	window.addEventListener('popstate', navigate)
+	window.addEventListener('hashchange', navigate)
+	window.addEventListener('pagehide', effect)
+	for (const method of ['pushState', 'replaceState'] as const) {
+		const original = history[method]
+		history[method] = function (...args) {
+			const before = location.href
+			original.apply(this, args)
+			if (before !== location.href) navigate()
+		}
+	}
+
+	function status(code: number) {
+		effect()
+		if (code >= 100 && code <= 599) add({ kind: 'http', route: currentRoute(), status: code })
+	}
+	// Keep this relay itself out of both the network effect detector and crumbs.
+	const browser: { fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> } =
+		window
+	browser.fetch = (...args) => {
+		effect()
+		return fetchFromPage(...args).then((response) => {
+			status(response.status)
+			return response
+		})
+	}
+	const xhrSend = XMLHttpRequest.prototype.send
+	XMLHttpRequest.prototype.send = function (this: XMLHttpRequest, ...args) {
+		effect()
+		const onEnd = () => status(this.status)
+		this.addEventListener('loadend', onEnd, { once: true })
+		try {
+			xhrSend.apply(this, args)
+		} catch (error) {
+			this.removeEventListener('loadend', onEnd)
+			throw error
+		}
+	}
+	document.addEventListener('input', effect, true)
+	document.addEventListener('submit', effect, true)
+	document.addEventListener('scroll', effect, true)
+	document.addEventListener(
+		'click',
+		(event) => {
+			const control = event.target instanceof Element ? event.target.closest(CONTROLS) : null
+			if (
+				!control ||
+				event.button !== 0 ||
+				event.ctrlKey ||
+				event.metaKey ||
+				event.shiftKey ||
+				event.altKey
+			) {
+				effect()
+				return
+			}
+			const selector = clickSelector(control)
+			add({ kind: 'click', route: currentRoute(), selector })
+			if (control.matches('a[href]')) {
+				// The default action can start navigation well before pagehide.
+				window.setTimeout(() => {
+					if (burst?.control === control && !event.defaultPrevented) effect()
+				}, 0)
+			}
+			if (
+				reportedClicks.has(selector) ||
+				control.matches('a[download],a[target]:not([target="_self"])')
+			) {
+				effect()
+				return
+			}
+			const now = performance.now()
+			if (burst?.count === 3) {
+				if (burst.control === control) return
+				effect()
+			}
+			if (!burst || burst.control !== control || now - burst.started > CLICK_WINDOW_MS) {
+				effect()
+				burst = {
+					control,
+					started: now,
+					count: 1,
+					timer: window.setTimeout(effect, CLICK_WINDOW_MS),
+				}
+				clickObserver.observe(document, {
+					subtree: true,
+					childList: true,
+					attributes: true,
+					characterData: true,
+				})
+				return
+			}
+			if (++burst.count === 3) {
+				window.clearTimeout(burst.timer)
+				burst.timer = window.setTimeout(() => {
+					effect()
+					if (report({ type: 'IneffectiveClick', selector })) reportedClicks.add(selector)
+				}, SETTLE_MS)
+			}
+		},
+		true,
+	)
+
+	return { report, effect }
 }

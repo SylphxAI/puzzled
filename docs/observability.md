@@ -8,7 +8,7 @@ script or host.
 | Source | Path | Code |
 | --- | --- | --- |
 | Next.js server (route handlers, server components, actions, proxy) | `onRequestError` in `apps/puzzled/src/instrumentation.ts` | `apps/puzzled/src/lib/observability/capture.ts` (`@sylphx/sdk`) |
-| Browser (uncaught errors, unhandled rejections, error boundaries, CSP violations: [csp.md](reference/csp.md)) | same-origin `POST /api/observability/errors`, captured server side | `lib/observability/browser.ts`, `lib/observability/relay.ts` |
+| Browser (uncaught errors, rejections, error boundaries, media failures, ineffective clicks and [CSP violations](reference/csp.md)) | same-origin `POST /api/observability/errors`; captured server side | `lib/observability/browser.ts`, `lib/observability/relay.ts` |
 | Rust api (every 5xx, every panic) | axum middleware and panic hook | `crates/puzzled-server/src/observability.rs` (`sylphx` crate) |
 
 ## Key and SDK route
@@ -21,8 +21,18 @@ script or host.
 - Capture is a soft dependency: it never throws, gives up after 3 s, and never
   fails a request. A refused capture logs `[observability] capture failed`
   (web) or `observability capture failed` (api).
-- The browser holds no key, so it posts to the same-origin relay. Direct
-  browser capture waits on a publishable key with ingest (SylphxAI/cloud#9401).
+
+## Browser reports
+
+The browser sends only a closed issue code, a fixed message, a route template,
+a structural selector, and up to 15 recent navigation, click and HTTP-status
+breadcrumbs. It keeps breadcrumbs in memory and attaches them only to an issue.
+Each page attempts at most five reports per rolling minute, each at most 32 KiB
+encoded. It sends no raw error messages, stacks, URLs, page content or user input.
+
+The browser holds no key and posts only to the same-origin relay, without
+cookies or a referrer. The existing relay attempts capture with the server key
+when available. Its 204 response does not confirm that an event was stored.
 
 ## Source maps
 
@@ -36,7 +46,8 @@ script or host.
   names it (Turbopack names maps by their own hash), with each path segment
   percent-encoded as browsers report it (`app/%5Blocale%5D/…`). The runtime
   image therefore carries both `.next/static` and `.next/source-maps`.
-  The service maps minified browser frames to source at ingest.
+  The service can map minified frames at ingest, but browser reports do not
+  include stacks.
 
 ## Api reporter
 
@@ -70,9 +81,8 @@ the `observability test error <nonce>` group with the new release.
 
 The service parses the raw stack and scrubs secrets, tokens, card numbers and
 email addresses before storing. No request or response body and no header is
-attached. The api reports the route template and status only. The relay
-accepts same-origin reports only, at most 32 KB each and 20 per client per
-minute; a page sends at most 10.
+attached. The api reports the route template and status only. The
+browser omits raw stacks and uses the fixed fields described above.
 
 ## Removed with the legacy host
 

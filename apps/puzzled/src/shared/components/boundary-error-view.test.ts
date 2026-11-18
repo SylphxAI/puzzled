@@ -8,8 +8,7 @@ const boom = Object.assign(new Error('crossword hydrate failed'), { digest: 'abc
 const render = (props: Partial<BoundaryErrorViewProps> = {}) =>
 	renderToStaticMarkup(
 		createElement(BoundaryErrorView, {
-			boundary: 'test',
-			error: boom,
+			boundary: 'main-layout',
 			reset: () => {},
 			title: 'Something went wrong',
 			description: 'Please try again.',

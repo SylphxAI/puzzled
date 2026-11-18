@@ -20,7 +20,6 @@ export default function AdminError({ error, reset }: ErrorProps) {
 	return (
 		<BoundaryErrorView
 			boundary="admin"
-			error={error}
 			reset={reset}
 			title="Admin Error"
 			description="Something went wrong in the admin panel. Try refreshing or return to the dashboard."
