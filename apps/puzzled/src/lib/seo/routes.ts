@@ -12,6 +12,10 @@
  */
 
 import type { MetadataRoute } from 'next'
+import {
+	COMPARISON_HUB_PATH,
+	COMPARISON_SLUGS,
+} from '@/features/marketing/components/comparison-slugs'
 import { defaultLocale, locales } from '@/lib/i18n/config'
 
 export type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]['changeFrequency']>
@@ -26,7 +30,8 @@ export type PublicRoute = {
 /**
  * Public, indexable surfaces: the marketing pages plus the game catalogue.
  * `/games/<slug>` is expanded from the game registry by the sitemap, because
- * the registry — not this file — owns the slug list.
+ * the registry — not this file — owns the slug list; `/vs/<slug>` likewise
+ * comes from `COMPARISON_SLUGS`.
  */
 export const PUBLIC_ROUTES: readonly PublicRoute[] = [
 	{ path: '/', changeFrequency: 'daily', priority: 1 },
@@ -38,11 +43,10 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
 		priority: 0.8,
 	},
 	{ path: '/use-cases/family-brain-games-no-ads', changeFrequency: 'monthly', priority: 0.8 },
-	{ path: '/vs/nyt-games', changeFrequency: 'monthly', priority: 0.8 },
-	{ path: '/vs/lumosity', changeFrequency: 'monthly', priority: 0.8 },
-	{ path: '/vs/linkedin-games', changeFrequency: 'monthly', priority: 0.8 },
-	{ path: '/vs/elevate', changeFrequency: 'monthly', priority: 0.8 },
-	{ path: '/vs/puzzmo', changeFrequency: 'monthly', priority: 0.8 },
+	{ path: COMPARISON_HUB_PATH, changeFrequency: 'monthly', priority: 0.8 },
+	...COMPARISON_SLUGS.map(
+		(slug): PublicRoute => ({ path: `/vs/${slug}`, changeFrequency: 'monthly', priority: 0.8 }),
+	),
 	{ path: '/support', changeFrequency: 'monthly', priority: 0.6 },
 	{ path: '/privacy', changeFrequency: 'yearly', priority: 0.3 },
 	{ path: '/terms', changeFrequency: 'yearly', priority: 0.3 },

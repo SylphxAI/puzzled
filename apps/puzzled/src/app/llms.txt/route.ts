@@ -1,4 +1,5 @@
 import { FAMILY_SEATS, listPrice } from '@/features/marketing/components/catalogue-prices'
+import { COMPARISON_HUB, COMPARISONS } from '@/features/marketing/components/comparison-specs'
 import { getAllGameMetadata } from '@/games/registry'
 import { CONTACT_EMAIL } from '@/lib/config/app'
 
@@ -9,6 +10,12 @@ const games = allGames
 	.map((game) => `- [${game.name}](https://tryit.fun/games/${game.slug}): ${game.description}.`)
 	.join('\n')
 const total = allGames.length
+const comparisons = [
+	`- [All comparisons](https://tryit.fun${COMPARISON_HUB.path}): ${COMPARISON_HUB.metaDescription}`,
+	...COMPARISONS.map(
+		(spec) => `- [Tryit vs ${spec.rival}](https://tryit.fun${spec.path}): ${spec.llmsSummary}`,
+	),
+].join('\n')
 const usd = {
 	pass: listPrice('puzzled_starter_unlock'),
 	month: listPrice('plus_individual_monthly'),
@@ -50,11 +57,7 @@ ${games}
 - [Ad-free family brain games](https://tryit.fun/use-cases/family-brain-games-no-ads): Zero-distraction daily puzzles for up to ${FAMILY_SEATS} family accounts in 8 locales.
 
 ## Comparisons
-- [Tryit vs NYT Games](https://tryit.fun/vs/nyt-games): How Tryit's ${total} daily games and 3 free daily picks compare with NYT Games, and which Tryit games suit Wordle, Connections and Spelling Bee fans.
-- [Tryit vs Lumosity](https://tryit.fun/vs/lumosity): A free Lumosity alternative for daily puzzles: any 3 of ${total} games free in the browser with no app, account or test first, compared with Lumosity's brain-training program.
-- [Tryit vs LinkedIn Games](https://tryit.fun/vs/linkedin-games): Daily logic, word, number and spatial puzzles like LinkedIn's Queens, Tango and Zip, with no feed or login, and which Tryit games suit each LinkedIn game.
-- [Tryit vs Elevate](https://tryit.fun/vs/elevate): A free Elevate alternative that runs in any browser, phone or computer: any 3 of ${total} daily games free with no app or account, compared with Elevate's skill-training app.
-- [Tryit vs Puzzmo](https://tryit.fun/vs/puzzmo): How Tryit's ${total} daily games, 3 free daily picks and archive compare with Puzzmo, and which Tryit games suit Cross|word, SpellTower and Pile-Up Poker fans.
+${comparisons}
 
 ## Help and policies
 - [Support](https://tryit.fun/support): Product help and contact information.

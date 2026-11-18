@@ -1,6 +1,11 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { ChangeCookieChoice } from '@/features/analytics/components/change-cookie-choice'
 import { googleTagIds } from '@/features/analytics/lib/google-tag'
+import {
+	COMPARISON_HUB_PATH,
+	COMPARISON_SLUGS,
+	type ComparisonSlug,
+} from '@/features/marketing/components/comparison-slugs'
 import { getAllGameMetadata } from '@/games/registry'
 import { COMPANY_PHONE, SUPPORT_EMAIL } from '@/lib/config/app'
 import { env } from '@/lib/env'
@@ -10,6 +15,16 @@ import { LanguageSwitcher } from './language-switcher'
 import { Logo } from './logo'
 
 const FOOTER_GAME_LIMIT = 8
+
+/** Footer label key for each comparison page; the compiler asks for every new one. */
+const COMPARE_LABEL_KEYS: Record<ComparisonSlug, string> = {
+	'nyt-games': 'compareNytGames',
+	lumosity: 'compareLumosity',
+	'linkedin-games': 'compareLinkedinGames',
+	elevate: 'compareElevate',
+	puzzmo: 'comparePuzzmo',
+	brilliant: 'compareBrilliant',
+}
 
 const linkClass =
 	'-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-muted-foreground transition-colors hover:text-foreground'
@@ -32,8 +47,8 @@ export async function Footer() {
 	return (
 		<footer className="mt-auto border-t border-border bg-background">
 			<div className="page-shell-wide py-10 md:py-14">
-				<div className="grid gap-8 sm:grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-					<div className="sm:col-span-2 md:col-span-1">
+				<div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-[1.3fr_1fr_1fr_1.15fr_1fr]">
+					<div className="sm:col-span-2 md:col-span-4 lg:col-span-1">
 						<Logo size="sm" />
 						<p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
 							{t('tagline')}
@@ -89,29 +104,25 @@ export async function Footer() {
 									{tNav('support')}
 								</Link>
 							</li>
+						</ul>
+					</nav>
+
+					<nav aria-label={t('compareHeading')} className="text-sm">
+						<h2 className="eyebrow">{t('compareHeading')}</h2>
+						<ul className="mt-2">
+							{COMPARISON_SLUGS.map((slug) => (
+								<li key={slug}>
+									<Link href={`/vs/${slug}`} className={linkClass}>
+										{t(COMPARE_LABEL_KEYS[slug])}
+									</Link>
+								</li>
+							))}
 							<li>
-								<Link href="/vs/nyt-games" className={linkClass}>
-									{t('compareNytGames')}
-								</Link>
-							</li>
-							<li>
-								<Link href="/vs/lumosity" className={linkClass}>
-									{t('compareLumosity')}
-								</Link>
-							</li>
-							<li>
-								<Link href="/vs/linkedin-games" className={linkClass}>
-									{t('compareLinkedinGames')}
-								</Link>
-							</li>
-							<li>
-								<Link href="/vs/elevate" className={linkClass}>
-									{t('compareElevate')}
-								</Link>
-							</li>
-							<li>
-								<Link href="/vs/puzzmo" className={linkClass}>
-									{t('comparePuzzmo')}
+								<Link
+									href={COMPARISON_HUB_PATH}
+									className={`${linkClass} font-semibold text-foreground`}
+								>
+									{t('allComparisons')} →
 								</Link>
 							</li>
 						</ul>

@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 type MarketingHeroProps = {
+	/** Optional breadcrumb trail above the eyebrow. */
+	breadcrumb?: ReactNode
 	/** Short factual label above the h1 (e.g. the surface name). */
 	eyebrow?: string
 	/** The single h1 of the page. */
@@ -25,6 +27,7 @@ type MarketingHeroProps = {
  * without a solid surface behind it.
  */
 export function MarketingHero({
+	breadcrumb,
 	eyebrow,
 	title,
 	lead,
@@ -43,6 +46,7 @@ export function MarketingHero({
 					)}
 				>
 					<div>
+						{breadcrumb}
 						{eyebrow && <p className="eyebrow">{eyebrow}</p>}
 						<h1 className="mt-2 font-display text-[2.125rem] leading-[1.06] text-balance sm:text-5xl lg:text-[3.5rem]">
 							{title}

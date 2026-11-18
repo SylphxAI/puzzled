@@ -1,6 +1,7 @@
 import { getAllGameMetadata } from '@/games/registry'
 import type { GameCategory } from '@/games/types'
 import { FAMILY_SEATS, listPrice, offerPrice } from './catalogue-prices'
+import { COMPARISON_HUB_PATH, COMPARISON_SLUGS, type ComparisonSlug } from './comparison-slugs'
 import type { MarketingFaqItem } from './marketing-faq'
 import type { UseCaseCta, UseCaseOffer } from './use-case-specs'
 
@@ -22,8 +23,6 @@ export type ComparisonPairing = {
 	slug: string
 	why: string
 }
-
-export type ComparisonSlug = 'nyt-games' | 'lumosity' | 'linkedin-games' | 'elevate' | 'puzzmo'
 
 export type ComparisonSpec = {
 	slug: ComparisonSlug
@@ -55,6 +54,8 @@ export type ComparisonSpec = {
 	closingCta: { title: string; body: string }
 	/** Independence and trademark notice, plus the date the rival's facts were read. */
 	disclaimer: string
+	/** One line for the comparison's entry in `/llms.txt`. */
+	llmsSummary: string
 	softwareName: string
 	softwareDescription: string
 	offers: readonly UseCaseOffer[]
@@ -139,6 +140,16 @@ const SOFTWARE = {
  *   $39.99 yearly; iPhone, iPad, Mac) and Hearst's 19 May 2025 iPhone launch
  *   release (10,000+ puzzle archive for subscribers). Guests can play on
  *   puzzmo.com, so the page draws no account contrast.
+ * - Brilliant: brilliant.org (Koji tutor, topics from grade 5 to college, ACS
+ *   WASC accreditation, kidSAFE COPPA seal, 5,000+ schools), brilliant.org/premium
+ *   and the Brilliant Help Center ("What's the difference between free and
+ *   Premium?": 2 concepts or practice sets a day, in order, occasional ads,
+ *   a limited Koji preview; "How do I get started?": a free account by email,
+ *   Google or Apple; "How much does Brilliant Premium cost?": monthly, annual
+ *   and a Family Plan for up to 6, priced on the subscription page with
+ *   occasional discounts; "Where can I use Brilliant?": web, iOS, Android).
+ *   Brilliant varies its price by plan and offer, so no Brilliant price is quoted.
+ *   Operator: Brilliant Worldwide, Inc. (Terms of Use, Privacy Policy).
  */
 export const COMPARISON_SPECS = {
 	'nyt-games': {
@@ -295,6 +306,7 @@ export const COMPARISON_SPECS = {
 		},
 		disclaimer:
 			'Tryit is independent and not affiliated with, endorsed by or sponsored by The New York Times Company. NYT Games, Wordle, Connections, Spelling Bee, Strands, Letter Boxed, Tiles, Pips, The Crossword, The Mini and The Midi are trademarks of The New York Times Company, named here only to compare. NYT Games details were checked against The New York Times Help Center on 18 November 2026.',
+		llmsSummary: `How Tryit's ${TOTAL_GAMES} daily games and 3 free daily picks compare with NYT Games, and which Tryit games suit Wordle, Connections and Spelling Bee fans.`,
 		...SOFTWARE,
 	},
 	lumosity: {
@@ -450,6 +462,7 @@ export const COMPARISON_SPECS = {
 		},
 		disclaimer:
 			'Tryit is independent and not affiliated with, endorsed by or sponsored by Lumos Labs, Inc. Lumosity, Fit Test and the Lumosity game names on this page belong to Lumos Labs, Inc. and are named here only to compare. Lumosity details were checked against the Lumosity Help Center, lumosity.com and its US App Store listing on 18 November 2026.',
+		llmsSummary: `A free Lumosity alternative for daily puzzles: any 3 of ${TOTAL_GAMES} games free in the browser with no app, account or test first, compared with Lumosity's brain-training program.`,
 		...SOFTWARE,
 	},
 	'linkedin-games': {
@@ -607,6 +620,7 @@ export const COMPARISON_SPECS = {
 		},
 		disclaimer:
 			"Tryit is independent and not affiliated with, endorsed by or sponsored by LinkedIn Corporation. LinkedIn and the names of its games belong to LinkedIn Corporation and are named here only to compare. LinkedIn Games details were checked against LinkedIn's games page and Help Center on 18 November 2026.",
+		llmsSummary: `Daily logic, word, number and spatial puzzles like LinkedIn's Queens, Tango and Zip, with no feed or login, and which Tryit games suit each LinkedIn game.`,
 		...SOFTWARE,
 	},
 	elevate: {
@@ -758,6 +772,7 @@ export const COMPARISON_SPECS = {
 		},
 		disclaimer:
 			'Tryit is independent and not affiliated with, endorsed by or sponsored by Elevate Labs, LLC or The Mind Company. Elevate and the Elevate game names on this page belong to their owners and are named here only to compare. Elevate details were checked against The Mind Company’s Elevate page, Elevate Support and the US App Store listing on 18 November 2026.',
+		llmsSummary: `A free Elevate alternative that runs in any browser, phone or computer: any 3 of ${TOTAL_GAMES} daily games free with no app or account, compared with Elevate's skill-training app.`,
 		...SOFTWARE,
 	},
 	puzzmo: {
@@ -908,6 +923,255 @@ export const COMPARISON_SPECS = {
 		},
 		disclaimer:
 			'Tryit is independent and not affiliated with, endorsed by or sponsored by Puzzmo Inc. or Hearst. Puzzmo and the Puzzmo game names on this page belong to their owners and are named here only to compare. Puzzmo details were checked against puzzmo.com, the Puzzmo FAQ, its US App Store listing and its iPhone launch announcement on 18 November 2026.',
+		llmsSummary: `How Tryit's ${TOTAL_GAMES} daily games, 3 free daily picks and archive compare with Puzzmo, and which Tryit games suit Cross|word, SpellTower and Pile-Up Poker fans.`,
+		...SOFTWARE,
+	},
+	brilliant: {
+		slug: 'brilliant',
+		path: '/vs/brilliant',
+		rival: 'Brilliant',
+		metaTitle: `Tryit vs Brilliant: ${TOTAL_GAMES} Daily Logic Puzzles, Any 3 Free`,
+		metaDescription: `Tryit vs Brilliant, honestly compared. Brilliant teaches math and coding; Tryit has ${TOTAL_GAMES} daily logic, number, word and spatial puzzles, any 3 free in your browser with no account or app. ${PASS} one-time 3-Day Pass.`,
+		eyebrow: 'Tryit vs Brilliant · An honest comparison',
+		h1: `Like Brilliant's logic problems? Play ${TOTAL_GAMES} daily puzzles, any 3 free.`,
+		lead: `Brilliant is a personal tutor for math and coding, with guided, interactive lessons from fractions to calculus and Python. Tryit is a daily puzzle habit: ${TOTAL_GAMES} word, logic, number and spatial puzzles on one page, and you pick any 3 to play free every day with no account, no app and no ads while you play.`,
+		facts: [
+			`${TOTAL_GAMES} daily games`,
+			'Any 3 free every day',
+			'No account or app',
+			`${PASS} 3-Day Pass, one time`,
+		],
+		verdictTitle: 'The short answer',
+		verdict: [
+			'Choose Brilliant for structured, tutor-guided lessons in math, data, science and coding, from fractions to calculus and Python.',
+			`Choose Tryit for ${TOTAL_GAMES} daily logic, number, word and spatial puzzles, any 3 free in your browser right now with no account, and a ${PASS} pass with no renewal.`,
+			'Or do both: a Brilliant lesson to learn something new, then three Tryit puzzles to put your reasoning to work.',
+		],
+		primaryCta: { label: 'Pick your 3 free games', href: `/?${entry('brilliant')}` },
+		secondaryCta: {
+			label: `See the ${PASS} 3-Day Pass`,
+			href: `/pricing?${entry('brilliant')}`,
+		},
+		tableTitle: 'Tryit and Brilliant side by side',
+		tableSubtitle:
+			'What each one offers today. Brilliant details come from brilliant.org and the Brilliant Help Center.',
+		rows: [
+			{
+				feature: 'What it is',
+				them: 'A personal tutor for math and coding: guided, interactive lessons from grade 5 to college, with Koji, a visual tutor',
+				us: 'A daily puzzle set: the same fresh puzzles for everyone, refreshed at midnight Hong Kong time',
+			},
+			{
+				feature: 'Daily games',
+				them: 'Interactive concepts and practice sets inside topics such as Algebra, Calculus, Logic and Python, with a daily streak to keep',
+				us: `${TOTAL_GAMES} games: ${LINEUP}, all with a new puzzle every day`,
+			},
+			{
+				feature: 'Free to play',
+				them: '2 concepts or practice sets a day, worked through in order, with occasional ads between concepts',
+				us: `Any 3 of the ${TOTAL_GAMES} games, your choice, every day. A game you pick stays open all day`,
+			},
+			{
+				feature: 'Account to start',
+				them: 'A free account (email, Google or Apple) before your first concept',
+				us: 'Not needed for the free picks; sign in to keep streaks and stats across devices',
+			},
+			{
+				feature: 'Try everything, no commitment',
+				them: 'Premium by the month or the year; free trials are sometimes offered and ask for payment details',
+				us: `3-Day Pass: ${PASS} once, no renewal. All ${TOTAL_GAMES} games and every past day`,
+			},
+			{
+				feature: 'Ongoing plans',
+				them: 'Premium monthly or annual, and a Family Plan for up to 6; current prices on brilliant.org',
+				us: `Plus ${PLUS_MONTH}/month or ${PLUS_YEAR}/year. Family for up to ${FAMILY_SEATS} people ${FAMILY_MONTH}/month or ${FAMILY_YEAR}/year. VAT included`,
+			},
+			{
+				feature: 'Where you play',
+				them: 'Web, plus apps for iOS and Android',
+				us: 'Any browser on phone, tablet or desktop; nothing to install',
+			},
+		],
+		theirStrengthsTitle: 'Where Brilliant shines',
+		theirStrengths: [
+			{
+				title: 'Structured courses, start to finish',
+				body: 'Topics build step by step from fractions through calculus, with probability, statistics, Python, computer science and AI alongside.',
+			},
+			{
+				title: 'A tutor when you get stuck',
+				body: 'Koji asks guiding questions and sketches on a shared canvas, working through each step with you without handing over the answer. Full access comes with Premium.',
+			},
+			{
+				title: 'Built for school',
+				body: 'Accredited by ACS WASC, kidSAFE COPPA certified and used in more than 5,000 schools, with homework help and test prep.',
+			},
+		],
+		ourStrengthsTitle: 'Why logic fans pick Tryit',
+		ourStrengths: [
+			{
+				title: `${TOTAL_GAMES} daily puzzles on one page`,
+				body: 'Logic grids like Crowns and Duo, number puzzles like Arithmo and Cage Sudoku, spatial puzzles like Slides and Path, plus word games. All refreshed together at midnight Hong Kong time (UTC+8).',
+			},
+			{
+				title: 'Any 3 free, right now',
+				body: 'No account, no app and no placement quiz. Open a puzzle in your browser and play, with no ads while you play.',
+			},
+			PASS_STRENGTH,
+			{
+				title: 'A puzzle, not homework',
+				body: 'Nothing to study and no lesson to finish first. Every game is a complete puzzle you can solve in one sitting, then share without spoiling the answer.',
+			},
+		],
+		pairingsTitle: 'If you like these, try these',
+		pairingsSubtitle:
+			'Brilliant teaches these ideas in lessons. Tryit turns them into a daily puzzle. These are the closest matches.',
+		pairings: [
+			{
+				theirs: 'contest math',
+				slug: 'killer-sudoku',
+				why: 'Sudoku where every cage has to add up to its total.',
+			},
+			{
+				theirs: 'logic',
+				slug: 'crowns',
+				why: 'Pure deduction: one crown per row, column and colored region.',
+			},
+			{
+				theirs: 'order of operations',
+				slug: 'arithmo',
+				why: 'Find the hidden equation in 6 tries.',
+			},
+			{
+				theirs: 'graph search',
+				slug: 'number-path',
+				why: 'Plan one route through every cell, in number order.',
+			},
+			{
+				theirs: 'geometric reasoning',
+				slug: 'block-slide',
+				why: 'Slide the blocks out of the way to free the target.',
+			},
+			{
+				theirs: 'cryptograms',
+				slug: 'cryptogram',
+				why: 'Crack a famous quote, one letter at a time.',
+			},
+		],
+		faqTitle: 'Tryit vs Brilliant: questions',
+		faqs: [
+			{
+				question: 'Is Tryit a free alternative to Brilliant?',
+				answer: `For daily puzzles, yes: pick any 3 of Tryit's ${TOTAL_GAMES} games every day, with no account and no ads while you play. Tryit does not teach courses the way Brilliant does. Tryit is independent and not affiliated with Brilliant.`,
+			},
+			{
+				question: 'Which Tryit games suit Brilliant fans?',
+				answer:
+					'Start with Crowns and Duo for pure logic, Arithmo and Cage Sudoku for numbers, and Slides, Path and Spots for spatial reasoning. Paint (picture logic) and Cipher (letter substitution) are good next picks.',
+			},
+			{
+				question: 'Do I need an account or an app to play Tryit?',
+				answer:
+					'No. Tryit runs in any browser on phone, tablet or computer, and the 3 free picks need no account. Sign in only if you want your streaks and stats on every device.',
+			},
+			{
+				question: 'How much does Tryit cost compared with Brilliant?',
+				answer: `${TRYIT_PRICES} Brilliant Premium is sold monthly, annually or as a Family Plan for up to 6 people, with current prices on Brilliant's subscription page.`,
+			},
+			{
+				question: 'Will Tryit teach me math or coding?',
+				answer:
+					'No. Tryit is a daily puzzle habit, not a course: no lessons, no tutor and nothing to study. For structured math or coding lessons, Brilliant is built for that. You can use both: a lesson there, then three puzzles here.',
+			},
+			NEW_PUZZLES_FAQ,
+		],
+		closingCta: {
+			title: 'Put your reasoning to work today',
+			body: `${TOTAL_GAMES} fresh puzzles every day. Any 3 free, no login, no ads while you play.`,
+		},
+		disclaimer:
+			'Tryit is independent and not affiliated with, endorsed by or sponsored by Brilliant Worldwide, Inc. Brilliant and Koji belong to their owner and are named here only to compare. Brilliant details were checked against brilliant.org, its Premium page and the Brilliant Help Center on 18 November 2026.',
+		llmsSummary: `A Brilliant alternative for daily logic and number puzzles: any 3 of ${TOTAL_GAMES} games free in the browser with no account or app, compared with Brilliant's tutor-led math and coding lessons, and which Tryit games suit Brilliant fans.`,
 		...SOFTWARE,
 	},
 } as const satisfies Record<ComparisonSlug, ComparisonSpec>
+
+/** Every comparison, in page order. */
+export const COMPARISONS: readonly ComparisonSpec[] = COMPARISON_SLUGS.map(
+	(slug) => COMPARISON_SPECS[slug],
+)
+
+/** "A, B and C" (or "A, B or C"), the list style of the rest of the copy. */
+function joinNames(names: readonly string[], conjunction: 'and' | 'or'): string {
+	return names.length < 2
+		? names.join('')
+		: `${names.slice(0, -1).join(', ')} ${conjunction} ${names.at(-1)}`
+}
+
+const RIVAL_NAMES = COMPARISONS.map((spec) => spec.rival)
+const HUB_ENTRY = 'entry_surface=seo_vs-hub'
+
+export type ComparisonHubSpec = {
+	path: typeof COMPARISON_HUB_PATH
+	metaTitle: string
+	metaDescription: string
+	eyebrow: string
+	h1: string
+	lead: string
+	facts: readonly string[]
+	primaryCta: UseCaseCta
+	secondaryCta: UseCaseCta
+	/** Short labels in the broadsheet rule above the cards. */
+	masthead: readonly string[]
+	listTitle: string
+	listSubtitle: string
+	cardCta: string
+	principlesTitle: string
+	principles: readonly ComparisonPoint[]
+	closingCta: { title: string; body: string }
+}
+
+/** The `/vs` hub: every comparison's short answer, one click from the full page. */
+export const COMPARISON_HUB = {
+	path: COMPARISON_HUB_PATH,
+	metaTitle: 'Tryit vs NYT Games, Brilliant & More: Honest Comparisons',
+	metaDescription: `How Tryit's ${TOTAL_GAMES} daily puzzles compare with ${joinNames(RIVAL_NAMES, 'and')}: short answers, fair credit and the Tryit games to try first.`,
+	eyebrow: 'Compare',
+	h1: 'Tryit, honestly compared',
+	lead: `Already play ${joinNames(RIVAL_NAMES, 'or')}? Each comparison gives the short answer first, credits what the other app does best, and names the Tryit games closest to the ones you love. Then pick any 3 of our ${TOTAL_GAMES} daily puzzles to play free, no account needed.`,
+	facts: [
+		`${COMPARISONS.length} comparisons`,
+		`${TOTAL_GAMES} daily games`,
+		'Any 3 free every day',
+		'No account needed',
+	],
+	primaryCta: { label: 'Pick your 3 free games', href: `/?${HUB_ENTRY}` },
+	secondaryCta: { label: `See the ${PASS} 3-Day Pass`, href: `/pricing?${HUB_ENTRY}` },
+	masthead: [
+		`${COMPARISONS.length} comparisons`,
+		'Facts from their own pages',
+		"Credit where it's due",
+	],
+	listTitle: 'Pick a comparison',
+	listSubtitle: 'The short answer from each page. Open one for the full side-by-side.',
+	cardCta: 'Read the comparison',
+	principlesTitle: 'How we compare',
+	principles: [
+		{
+			title: 'Their facts, from their own pages',
+			body: "We read each company's own site, help center or app store listing, and date the check at the foot of every page. No rumours and no guessed prices.",
+		},
+		{
+			title: "Credit where it's due",
+			body: 'Every page says what the other app does better, so you can choose the right one, even when that is not Tryit.',
+		},
+		{
+			title: 'Closest match, never a copy',
+			body: 'Tryit has its own games. Each page names the ones nearest in style to the games you already love, so you know where to start.',
+		},
+	],
+	closingCta: {
+		title: 'Pick your three for today',
+		body: `${TOTAL_GAMES} fresh puzzles every day. Any 3 free, no login, no ads while you play.`,
+	},
+} as const satisfies ComparisonHubSpec
