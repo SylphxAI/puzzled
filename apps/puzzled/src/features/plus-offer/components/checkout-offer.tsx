@@ -42,7 +42,7 @@ export async function CheckoutOffer({
 				(plan) =>
 					!plan.family &&
 					plan.prices.length > 0 &&
-					((plan.id === 'individual_once' && plan.interval === 'once' && plan.accessDays > 0) ||
+					((plan.id === 'individual_once' && plan.interval === '' && plan.accessDays > 0) ||
 						(plan.id === 'individual_yearly' && plan.interval === 'year') ||
 						(plan.id === 'individual_monthly' && plan.interval === 'month')),
 			)
