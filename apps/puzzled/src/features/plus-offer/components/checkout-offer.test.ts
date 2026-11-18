@@ -53,11 +53,11 @@ mock.module('@/lib/api/server', () => ({ getServerPlans: async () => response })
 
 const { CheckoutOffer } = await import('./checkout-offer')
 
-async function renderOffer(catalogue: ListPlansResponse) {
+async function renderOffer(catalogue: ListPlansResponse, locale = 'en-US') {
 	response = catalogue
 	return renderToStaticMarkup(
 		await CheckoutOffer({
-			locale: 'en-US',
+			locale,
 			signedIn: false,
 			callbackUrl: '/archive',
 			gameCount: 19,
@@ -103,6 +103,21 @@ describe('CheckoutOffer', () => {
 			expect(options[1]).toContain('value="month"')
 		},
 	)
+
+	test('preselects the starter in its currency without offering USD recurring prices', async () => {
+		const [starter, ...recurring] = plans.plans
+		const html = await renderOffer(
+			{
+				...plans,
+				plans: [{ ...starter, prices: [{ ...starter.prices[0], currency: 'hkd' }] }, ...recurring],
+			},
+			'zh-HK',
+		)
+		const options = radios(html)
+		expect(options).toHaveLength(1)
+		expect(options[0]).toContain('value="once"')
+		expect(options[0]).toContain('checked=""')
+	})
 
 	test('does not render checkout when sales are closed', async () => {
 		expect(radios(await renderOffer({ ...plans, salesOpen: false }))).toHaveLength(0)

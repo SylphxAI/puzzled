@@ -99,8 +99,19 @@ export function availableCurrencies(plans: ListPlansResponse['plans']): string[]
 	const common = plans
 		.map((plan) => new Set(plan.prices.map((p) => p.currency)))
 		.reduce((acc, set) => new Set([...acc].filter((code) => set.has(code))))
+	return sortCurrencies(common)
+}
+
+/** Currencies with at least one priced option, for offers that omit unpriced cards. */
+export function offeredCurrencies(plans: ListPlansResponse['plans']): string[] {
+	return sortCurrencies(
+		new Set(plans.flatMap((plan) => plan.prices.map((price) => price.currency))),
+	)
+}
+
+function sortCurrencies(codes: Set<string>): string[] {
 	const rank = (code: string) => (code === 'usd' ? 0 : code === 'gbp' ? 1 : code === 'eur' ? 2 : 3)
-	return [...common].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+	return [...codes].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
 }
 
 /** Localized select label for a currency code, e.g. `USD — US Dollar`. */
