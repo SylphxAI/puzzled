@@ -1,6 +1,6 @@
 {
 	"metaTitle": "Jogos de raciocínio e quebra-cabeças diários grátis",
-	"metaDescription": "Jogue jogos de raciocínio diários grátis — palavras, lógica, números e quebra-cabeças espaciais — e mantenha o hábito. 3 desafios grátis por dia, sem precisar de conta.",
+	"metaDescription": "Jogue jogos de raciocínio diários grátis — palavras, lógica, números e quebra-cabeças espaciais — e mantenha o hábito. 3 de 19 desafios grátis por dia, sem precisar de conta.",
 	"greeting": {
 		"morning": "Bom dia",
 		"afternoon": "Boa tarde",
@@ -9,13 +9,13 @@
 		"default": "Pronto para jogar"
 	},
 	"hero": {
-		"guestTitle": "Um desafio grátis, todos os dias",
+		"guestTitle": "3 de 19 desafios grátis por dia",
 		"streakChip": "Sequência de {days} dias",
 		"playersToday": "{count} jogadores concluíram hoje",
 		"progressRingLabel": "{done} de {total} desafios concluídos hoje",
 		"progressUnverified": "Não conseguimos carregar seu progresso salvo agora. Você ainda pode jogar — conferimos sua conclusão quando você enviar.",
-		"ogEyebrow": "Desafio diário grátis",
-		"ogBadge": "Desafio grátis todos os dias"
+		"ogEyebrow": "19 desafios diários",
+		"ogBadge": "3 de 19 grátis todo dia"
 	},
 	"lineup": {
 		"title": "Seleção de hoje",

@@ -83,20 +83,20 @@ describe('CookieBanner (mobile compact)', () => {
 		expect(link).not.toMatch(/\b(inline-block|inline-flex|block|relative|absolute|fixed)\b/)
 	})
 
-	test('is a slim sticky bottom bar: it never pushes the hero down or covers the footer', () => {
-		// Sticky at the end of the flow, not fixed: it keeps its own slot after
-		// the footer, and the bottom offset (above the tab bar) lives in CSS.
-		expect(html).toContain('consent-bar sticky z-toast')
-		expect(html).not.toMatch(/\bfixed\b/)
+	test('is a slim static in-flow bottom bar: it never pushes the hero down or covers page CTAs', () => {
+		// Static at the end of the flow, never sticky or fixed: it keeps its own
+		// slot after the footer so homepage CTAs, game cards, boards, and checkout
+		// controls are never covered on any viewport.
+		expect(html).toContain('consent-bar static')
+		expect(html).not.toMatch(/\b(fixed|sticky)\b/)
 		expect(html).toContain('text-xs')
 		expect(html).toContain('min-h-11')
 		expect(html).not.toContain('min-h-9')
 		expect(html).not.toContain('p-3')
 	})
 
-	test('falls back to static document flow on pricing and checkout surfaces so it never covers payment CTAs', async () => {
+	test('stays in static document flow site-wide so it never covers homepage CTAs, game cards, or checkout buttons', async () => {
 		const css = await Bun.file(new URL('../../app/globals.css', import.meta.url)).text()
-		expect(css).toContain('html:has([data-pricing-page], [data-checkout-surface]) .consent-bar')
-		expect(css).toContain('position: static;')
+		expect(css).toMatch(/\.consent-bar\s*\{[^}]*position:\s*static;/)
 	})
 })

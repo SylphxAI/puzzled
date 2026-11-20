@@ -670,14 +670,10 @@ export function CookieBanner(props: {
 			// in app/[locale]/layout.tsx marks <html> and globals.css hides this
 			// node, so a visitor who already decided never sees a flash.
 			data-consent-banner=""
-			// A slim bar pinned to the bottom of the viewport (above the phone tab
-			// bar). It is mounted last in the page flow and is sticky, not fixed: it
-			// never pushes the hero or a board down, it owns its own slot at the end
-			// of the document so the footer is never covered, and scroll padding
-			// keeps a focused control clear of it.
-			className={
-				props.position === 'bottom' ? 'consent-bar sticky z-toast px-2 sm:px-4 md:pb-3' : undefined
-			}
+			// A slim bar in normal document flow at the end of the page, below the
+			// footer. Static positioning ensures it never pushes the hero down and
+			// never covers homepage CTAs, game cards, boards, or checkout controls.
+			className={props.position === 'bottom' ? 'consent-bar static px-2 py-3 sm:px-4' : undefined}
 		>
 			<section
 				aria-label={t('title')}

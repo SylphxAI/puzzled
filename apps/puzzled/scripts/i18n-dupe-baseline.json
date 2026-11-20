@@ -7976,10 +7976,6 @@
 				]
 			},
 			{
-				"value": "Un puzzle gratis cada día",
-				"keys": ["auth.brandPanel.trustFree", "home.hero.ogBadge"]
-			},
-			{
 				"value": "Usa un diseño más denso con menos espacio",
 				"keys": [
 					"settings.compactModeDescription",

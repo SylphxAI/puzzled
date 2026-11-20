@@ -1,23 +1,23 @@
-![Puzzled](https://mark.sylphx.com/api/v1/mark/hero.svg?type=grid&color=0%3A9a3412%2C50%3Af97316%2C100%3Afb923c&text=Puzzled&desc=Short%20daily%20brain%20games)
+![Tryit](https://mark.sylphx.com/api/v1/mark/hero.svg?type=grid&color=0%3A9a3412%2C50%3Af97316%2C100%3Afb923c&text=Tryit&desc=Short%20daily%20brain%20games)
 
-# Puzzled: nineteen daily puzzles, any three free every day. [puzzled.gg](https://puzzled.gg/?utm_source=github&utm_medium=readme)
+# Tryit: nineteen daily puzzles, any three free every day. [tryit.fun](https://tryit.fun/?utm_source=github&utm_medium=readme)
 
-[![website](https://mark.sylphx.com/badge/play-puzzled.gg-f97316?style=flat-square&labelColor=1a1712)](https://puzzled.gg/?utm_source=github&utm_medium=readme)
-[![Puzzled Plus](https://mark.sylphx.com/badge/Puzzled%20Plus-%244.99%2Fmo-f97316?style=flat-square&labelColor=1a1712)](https://puzzled.gg/pricing?utm_source=github&utm_medium=readme)
-[![stars](https://mark.sylphx.com/github/stars/SylphxAI/puzzled?style=flat-square&labelColor=1a1712&color=f97316)](https://github.com/SylphxAI/puzzled/stargazers)
+[![website](https://mark.sylphx.com/badge/play-tryit.fun-f97316?style=flat-square&labelColor=1a1712)](https://tryit.fun/?utm_source=github&utm_medium=readme)
+[![Tryit Plus](https://mark.sylphx.com/badge/Tryit%20Plus-%244.99%2Fmo-f97316?style=flat-square&labelColor=1a1712)](https://tryit.fun/pricing?utm_source=github&utm_medium=readme)
+[![stars](https://mark.sylphx.com/github/stars/SylphxAI/tryit?style=flat-square&labelColor=1a1712&color=f97316)](https://github.com/SylphxAI/tryit/stargazers)
 [![license](https://mark.sylphx.com/badge/license-MIT-f97316?style=flat-square&labelColor=1a1712)](LICENSE)
 
 Short daily brain games for anyone with a few minutes: one shared puzzle for
 everyone each day, and a result card you can share without spoiling the answer.
-Any three games a day are free with no account. [Puzzled Plus](https://puzzled.gg/pricing?utm_source=github&utm_medium=readme)
+Any three games a day are free with no account. [Tryit Plus](https://tryit.fun/pricing?utm_source=github&utm_medium=readme)
 opens all 19 daily games, the full archive, and ad-free play (Individual, Family
 4 seats, and 3-Day Weekend Pass; [pricing and policy](docs/monetization.md)).
 
 A public product overview and curated page links are available at
-[`/llms.txt`](https://puzzled.gg/llms.txt), with every game drawn from the game
+[`/llms.txt`](https://tryit.fun/llms.txt), with every game drawn from the game
 registry and the public contact address. Homepage JSON-LD describes the web app
 and its free daily offer and Plus subscriptions using the commercial catalogue;
-the organization identifies the legal operator separately from the Puzzled brand.
+the organization identifies the legal operator separately from the Tryit brand.
 Browser coverage for discovery and statutory disclosures lives in
 `apps/puzzled/e2e-tests/discovery.e2e.ts` and `llms.e2e.ts`.
 
@@ -39,7 +39,7 @@ ops     -> /observability/test              -> api (Rust)
   decides game results and the only one that writes to the database. Its
   daily-puzzle pipeline generates and stores every game's puzzle 14 days
   ahead (19 games), on an hourly Compute schedule, and grades guesses on the
-  server, so the browser never holds an answer. Puzzled Plus entitlements,
+  server, so the browser never holds an answer. Tryit Plus entitlements,
   checkout sessions, and price lists are served by the payments integration,
   while the api keeps only the family membership list.
 - **core** ([crates/puzzled-core](crates/puzzled-core)): the game rules,
@@ -119,4 +119,4 @@ Only a retryable failure with no successful delivery releases the claim for the
 next tick. The keys are set on the production api. On 2026-10-05 a real
 browser (Firefox, Mozilla push service) on a test account received the 18:45
 UTC reminder and opened it: the click closed the notification and opened
-`https://puzzled.gg/`. The test account was then deleted in Settings.
+`https://tryit.fun/`. The test account was then deleted in Settings.

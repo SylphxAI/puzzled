@@ -34,6 +34,7 @@ describe('/llms.txt', () => {
 			'https://tryit.fun/vs/elevate',
 			'https://tryit.fun/vs/puzzmo',
 			'https://tryit.fun/vs/brilliant',
+			'https://tryit.fun/vs/wordle',
 			'https://tryit.fun/support',
 			'https://tryit.fun/privacy',
 			'https://tryit.fun/terms',

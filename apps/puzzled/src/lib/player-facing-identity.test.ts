@@ -143,6 +143,24 @@ const ALLOWED_INTERNAL: ReadonlyArray<{
 	},
 ]
 
+/**
+ * Explicit nominative-comparison allowances (surface suffix + mark + rationale).
+ * Comparison navigation links name a third-party product strictly to point to
+ * Tryit's honest `/vs/<rival>` comparison page, never as a Tryit game title or slug.
+ */
+const ALLOWED_NOMINATIVE_COMPARISON: ReadonlyArray<{
+	surfaceSuffix: string
+	mark: string
+	rationale: string
+}> = [
+	{
+		surfaceSuffix: '/footer.json.compareWordle',
+		mark: 'Wordle',
+		rationale:
+			'Nominative fair-use footer link to `/vs/wordle` ("Tryit vs Wordle" comparison page), never a Tryit game title or slug.',
+	},
+]
+
 type CorpusString = {
 	surface: string
 	value: string
@@ -337,7 +355,10 @@ function isAllowed(hit: MarkHit): boolean {
 	const internal = ALLOWED_INTERNAL.some(
 		(allowance) => allowance.file === relativeFile && allowance.value === hit.value,
 	)
-	return generic || internal
+	const nominative = ALLOWED_NOMINATIVE_COMPARISON.some(
+		(allowance) => allowance.mark === hit.mark && hit.surface.endsWith(allowance.surfaceSuffix),
+	)
+	return generic || internal || nominative
 }
 
 function scanCorpus(): MarkHit[] {

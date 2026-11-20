@@ -44,6 +44,20 @@ for (const viewport of [
 			}
 			const action = document.querySelector('[data-day-primary-action]')!
 			const r = action.getBoundingClientRect()
+			const consentRect = document.querySelector('[data-consent-banner]')!.getBoundingClientRect()
+			const lineupOverlap = Array.from(document.querySelectorAll('main a[href*="/games/"]')).some(
+				(el) => {
+					const b = el.getBoundingClientRect()
+					return (
+						b.width > 0 &&
+						b.height > 0 &&
+						consentRect.left < b.right &&
+						consentRect.right > b.left &&
+						consentRect.top < b.bottom &&
+						consentRect.bottom > b.top
+					)
+				},
+			)
 			return {
 				cardDocTop:
 					document.querySelector('[data-day-puzzle-card]')!.getBoundingClientRect().top +
@@ -51,22 +65,34 @@ for (const viewport of [
 				card: bounds('[data-day-puzzle-card]'),
 				play: bounds('[data-day-primary-action]'),
 				consent: bounds('[data-consent-banner]'),
-				nav: bounds('nav.fixed[aria-label="Main navigation"]'),
+				consentPosition: getComputedStyle(document.querySelector('[data-consent-banner]')!)
+					.position,
+				lineupOverlap,
 				hit: action.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)),
 			}
 		})
-		// The consent bar sits at the bottom, above the tab bar, and below the
-		// whole featured card: it never covers the puzzle or Play.
+		// The consent bar sits in normal static document flow at the bottom of the
+		// page: it never floats over the hero card, Play CTA, or any game card.
+		expect(geometry.consentPosition).toBe('static')
 		expect(geometry.card.bottom).toBeLessThanOrEqual(geometry.consent.top)
-		expect(geometry.consent.bottom).toBeLessThanOrEqual(geometry.nav.top + 1)
+		expect(geometry.lineupOverlap).toBe(false)
 		expect(geometry.play.height).toBeGreaterThanOrEqual(48)
 		expect(geometry.hit).toBe(true)
 		await expect(play).toHaveAttribute('href', /start=1#play$/)
+		// Scrolled to the end of the page, the bar remains above the phone tab bar.
+		await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+		const bottomGeometry = await page.evaluate(() => {
+			const consentRect = document.querySelector('[data-consent-banner]')!.getBoundingClientRect()
+			const navRect = document
+				.querySelector('nav.fixed[aria-label="Main navigation"]')!
+				.getBoundingClientRect()
+			return { consentBottom: consentRect.bottom, navTop: navRect.top }
+		})
+		expect(bottomGeometry.consentBottom).toBeLessThanOrEqual(bottomGeometry.navTop + 1)
 		await consent.getByRole('button', { name: 'Decline', exact: true }).click()
 		await expect(consent).toBeHidden()
 		await expect(play).toBeVisible()
 		// Deciding moves nothing in the layout: the bar never pushed the hero down.
-		// (Compared in document coordinates: pressing a sticky button may scroll.)
 		const after = await card.evaluate((el) => el.getBoundingClientRect().top + window.scrollY)
 		expect(after).toBeCloseTo(geometry.cardDocTop, 0)
 	})

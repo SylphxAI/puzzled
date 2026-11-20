@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import { settle } from './a11y-support'
 
 for (const viewport of [
+	{ width: 1440, height: 757 },
 	{ width: 1440, height: 900 },
 	{ width: 768, height: 1024 },
 	{ width: 390, height: 844 },
@@ -30,6 +31,27 @@ for (const viewport of [
 				viewport.width,
 			)
 			const action = page.locator('[data-day-primary-action]')
+			if (consentState === 'open') {
+				const unobstructed = await action.evaluate((el) => {
+					const r = el.getBoundingClientRect()
+					const banner = document.querySelector('[data-consent-banner] > section')
+					const b = banner?.getBoundingClientRect()
+					const overlapsBanner =
+						!!b &&
+						b.width > 0 &&
+						b.height > 0 &&
+						r.left < b.right &&
+						r.right > b.left &&
+						r.top < b.bottom &&
+						r.bottom > b.top
+					const inView = r.top >= 0 && r.bottom <= window.innerHeight
+					const hitCenter =
+						!inView || el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2))
+					return { overlapsBanner, hitCenter }
+				})
+				expect(unobstructed.overlapsBanner).toBe(false)
+				expect(unobstructed.hitCenter).toBe(true)
+			}
 			await action.evaluate((el) => el.scrollIntoView({ block: 'center' }))
 			await expect(action).toBeInViewport({ ratio: 1 })
 			await action.click({ trial: true })

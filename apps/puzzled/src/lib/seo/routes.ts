@@ -25,6 +25,13 @@ export type PublicRoute = {
 	path: string
 	changeFrequency: ChangeFrequency
 	priority: number
+	/**
+	 * English-only editorial surface: `/sitemap.xml` lists only the canonical
+	 * `en-US` URL without multi-locale hreflang alternates, and non-default
+	 * locale hits canonicalise to `en-US` instead of creating untranslated
+	 * duplicate index entries.
+	 */
+	englishOnly?: boolean
 }
 
 /**
@@ -41,17 +48,34 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
 		path: '/use-cases/daily-word-and-logic-puzzles-online',
 		changeFrequency: 'monthly',
 		priority: 0.8,
+		englishOnly: true,
 	},
-	{ path: '/use-cases/family-brain-games-no-ads', changeFrequency: 'monthly', priority: 0.8 },
-	{ path: COMPARISON_HUB_PATH, changeFrequency: 'monthly', priority: 0.8 },
+	{
+		path: '/use-cases/family-brain-games-no-ads',
+		changeFrequency: 'monthly',
+		priority: 0.8,
+		englishOnly: true,
+	},
+	{ path: COMPARISON_HUB_PATH, changeFrequency: 'monthly', priority: 0.8, englishOnly: true },
 	...COMPARISON_SLUGS.map(
-		(slug): PublicRoute => ({ path: `/vs/${slug}`, changeFrequency: 'monthly', priority: 0.8 }),
+		(slug): PublicRoute => ({
+			path: `/vs/${slug}`,
+			changeFrequency: 'monthly',
+			priority: 0.8,
+			englishOnly: true,
+		}),
 	),
 	{ path: '/support', changeFrequency: 'monthly', priority: 0.6 },
 	{ path: '/privacy', changeFrequency: 'yearly', priority: 0.3 },
 	{ path: '/terms', changeFrequency: 'yearly', priority: 0.3 },
 	{ path: '/delete-account', changeFrequency: 'yearly', priority: 0.3 },
 ]
+
+/** True when a public path (locale-prefixed or not) ships English-only copy. */
+export function isEnglishOnlyRoute(pathname: string): boolean {
+	const path = stripLocalePrefix(pathname)
+	return PUBLIC_ROUTES.some((route) => route.englishOnly === true && route.path === path)
+}
 
 /** Per-game pages: daily freshness, same weight class as the catalogue. */
 export const GAME_PAGE_ROUTE = {

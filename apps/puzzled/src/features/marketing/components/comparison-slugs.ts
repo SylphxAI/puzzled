@@ -14,6 +14,7 @@ export const COMPARISON_SLUGS = [
 	'elevate',
 	'puzzmo',
 	'brilliant',
+	'wordle',
 ] as const
 
 export type ComparisonSlug = (typeof COMPARISON_SLUGS)[number]

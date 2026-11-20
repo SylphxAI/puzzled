@@ -165,7 +165,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 
 	return (
 		<main data-pricing-page="" className={cn('flex-1', styles.page)}>
-			<section className={cn('page-shell-wide pb-8 pt-4 md:pb-12 md:pt-10', styles.shell)}>
+			<section className={cn('page-shell-wide pb-8 pt-4 md:pb-10 md:pt-6 lg:pt-5', styles.shell)}>
 				{checkout === 'cancelled' ? (
 					<output className="mb-3 block rounded-xl bg-muted px-4 py-3 text-sm">
 						{t('checkoutCancelled')}
@@ -178,12 +178,12 @@ export default async function PricingPage({ params, searchParams }: Props) {
 						className={cn(
 							styles.title,
 							'mt-1 font-display text-[1.75rem] leading-tight text-balance',
-							'lg:mt-2 lg:text-5xl',
+							'lg:mt-1.5 lg:text-4xl',
 						)}
 					>
 						{t('title')}
 					</h1>
-					<p className="mt-1.5 text-[15px] text-muted-foreground lg:mt-3 lg:text-lg">
+					<p className="mt-1.5 text-[15px] text-muted-foreground lg:mt-1.5 lg:text-base">
 						{t('offerLead', { count: gameCount })}
 					</p>
 				</div>

@@ -1,6 +1,6 @@
 {
 	"metaTitle": "Juegos de ingenio y puzzles diarios gratis",
-	"metaDescription": "Juega juegos de ingenio diarios gratis —puzzles de palabras, lógica, números y espacio— y mantén el hábito. 3 puzzles gratis cada día, sin necesidad de cuenta.",
+	"metaDescription": "Juega juegos de ingenio diarios gratis —puzzles de palabras, lógica, números y espacio— y mantén el hábito. 3 de 19 puzzles gratis cada día, sin necesidad de cuenta.",
 	"greeting": {
 		"morning": "Buenos días",
 		"afternoon": "Buenas tardes",
@@ -9,13 +9,13 @@
 		"default": "Listo para jugar"
 	},
 	"hero": {
-		"guestTitle": "Un puzzle gratis, todos los días",
+		"guestTitle": "3 de 19 puzzles gratis cada día",
 		"streakChip": "Racha de {days} días",
 		"playersToday": "{count} jugadores han terminado hoy",
 		"progressRingLabel": "{done} de {total} puzzles completados hoy",
 		"progressUnverified": "No pudimos cargar tu progreso guardado ahora mismo. Aun así puedes jugar: comprobamos tu resultado cuando lo envíes.",
-		"ogEyebrow": "Puzzle diario gratis",
-		"ogBadge": "Un puzzle gratis cada día"
+		"ogEyebrow": "19 puzzles diarios",
+		"ogBadge": "3 de 19 gratis cada día"
 	},
 	"lineup": {
 		"title": "Selección de hoy",

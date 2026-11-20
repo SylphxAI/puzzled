@@ -68,16 +68,16 @@
 	},
 	"offer": {
 		"resultTitle": "暢玩全部 {count} 款遊戲和往日題庫",
-		"resultBody": "今日精選謎題永遠免費。Tryit Plus 開放每款遊戲、往日題庫，以及每款遊戲的統計。",
+		"resultBody": "19 款謎題每日任揀 3 款免費。Tryit Plus 開放每款遊戲、往日題庫，以及每款遊戲的統計。",
 		"resultPrice": "{plan} · 每年 {price}",
 		"day3Title": "你已玩了 {days} 日，開局不錯！",
 		"day7Title": "你已玩了 {days} 日，是常客了！",
-		"milestoneBody": "Tryit Plus 開放全部 {count} 款遊戲、往日題庫以及每款遊戲的統計。今日精選謎題繼續免費。"
+		"milestoneBody": "Tryit Plus 開放全部 {count} 款遊戲、往日題庫以及每款遊戲的統計。每日任揀 3 款謎題繼續免費。"
 	},
 	"subscription": {
 		"title": "訂閱",
 		"description": "你的 Tryit Plus 方案、付款和家庭成員。",
-		"free": "你正使用免費方案：每天一題今日精選謎題。",
+		"free": "你正使用免費方案：19 款謎題每日任揀 3 款免費。",
 		"closed": "Tryit Plus 尚未開售，現時所有遊戲免費。",
 		"checkoutPending": "正在確認你的訂閱。此頁面將自動更新；如等候較久，請重新整理。",
 		"checkoutSuccess": "歡迎加入 Tryit Plus。全部遊戲和往日題庫已經開放。",

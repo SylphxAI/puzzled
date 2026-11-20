@@ -3,6 +3,7 @@ import { settle } from './a11y-support'
 
 /** Pricing choices, benefits and guest return paths stay available at every size. */
 const VIEWPORTS = [
+	{ name: 'laptop-1440x757', width: 1440, height: 757 },
 	{ name: 'desktop-1440x900', width: 1440, height: 900 },
 	{ name: 'tablet-768x1024', width: 768, height: 1024 },
 	{ name: 'mobile-390x844', width: 390, height: 844 },
@@ -81,6 +82,11 @@ for (const viewport of VIEWPORTS) {
 					})
 					expect(unobstructed.overlapsBanner).toBe(false)
 					expect(unobstructed.hitAllCorners).toBe(true)
+					if (viewport.width === 1440) {
+						// Flagship Continue to payment sits cleanly inside the initial laptop & desktop fold.
+						const bottom = await plusCta.evaluate((el) => el.getBoundingClientRect().bottom)
+						expect(bottom).toBeLessThanOrEqual(viewport.height)
+					}
 				}
 				for (const id of ['plus', 'family']) {
 					const offer = page.locator(`#${id}`)

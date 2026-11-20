@@ -64,6 +64,11 @@ export type BuildPageMetadataInput = {
 	noindex?: boolean
 	/** Set false for post-auth or utility routes that need no language cluster. */
 	withAlternates?: boolean
+	/**
+	 * Set true for English-only editorial routes (`/vs`, `/vs/*`, `/use-cases/*`):
+	 * canonicalises every locale hit to the `en-US` URL and omits hreflang alternates.
+	 */
+	englishOnly?: boolean
 	/** Override the request origin (tests, cron-built artifacts). */
 	baseUrl?: string
 }
@@ -82,10 +87,12 @@ export async function buildPageMetadata({
 	type = 'website',
 	noindex = false,
 	withAlternates = true,
+	englishOnly = false,
 	baseUrl: baseUrlOverride,
 }: BuildPageMetadataInput): Promise<Metadata> {
 	const baseUrl = baseUrlOverride ?? (await getCanonicalSiteOrigin())
-	const canonical = canonicalUrl(baseUrl, locale, path)
+	const canonicalLocale = englishOnly ? defaultLocale : locale
+	const canonical = canonicalUrl(baseUrl, canonicalLocale, path)
 	// Default to a card carrying this page's own title: a shared static banner
 	// makes every shared link look the same.
 	const image = imagePath?.startsWith('http')
@@ -93,21 +100,26 @@ export async function buildPageMetadata({
 		: `${baseUrl}${imagePath ?? ogImagePath({ title })}`
 	const alt = imageAlt ?? title
 
-	const languages = withAlternates ? hreflangLanguages(baseUrl, path) : undefined
+	const emitAlternates = withAlternates && !englishOnly
+	const languages = emitAlternates ? hreflangLanguages(baseUrl, path) : undefined
 
 	return {
 		title,
 		description,
 		...(noindex ? { robots: { index: false, follow: false } } : {}),
-		alternates: withAlternates ? { canonical, languages } : { canonical },
+		alternates: emitAlternates ? { canonical, languages } : { canonical },
 		openGraph: {
 			type,
 			siteName: 'Tryit',
 			url: canonical,
-			locale: OG_LOCALES[locale as Locale] ?? 'en_US',
-			alternateLocale: locales
-				.filter((entry) => entry !== locale)
-				.map((entry) => OG_LOCALES[entry]),
+			locale: OG_LOCALES[canonicalLocale as Locale] ?? 'en_US',
+			...(emitAlternates
+				? {
+						alternateLocale: locales
+							.filter((entry) => entry !== canonicalLocale)
+							.map((entry) => OG_LOCALES[entry]),
+					}
+				: {}),
 			title,
 			description,
 			images: [{ url: image, width: 1200, height: 630, alt }],

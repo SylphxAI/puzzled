@@ -18,13 +18,13 @@
 	},
 	"offer": {
 		"resultTitle": "暢玩全部 {count} 款遊戲和過往題庫",
-		"resultBody": "今天的精選謎題永遠免費。Tryit Plus 開放每款遊戲、過往題庫，以及每款遊戲的統計。",
+		"resultBody": "19 款謎題每天任選 3 款免費。Tryit Plus 開放每款遊戲、過往題庫，以及每款遊戲的統計。",
 		"day3Title": "你已玩了 {days} 天，開局不錯！",
 		"day7Title": "你已玩了 {days} 天，是常客了！",
-		"milestoneBody": "Tryit Plus 開放全部 {count} 款遊戲、過往題庫以及每款遊戲的統計。今天的精選謎題繼續免費。"
+		"milestoneBody": "Tryit Plus 開放全部 {count} 款遊戲、過往題庫以及每款遊戲的統計。每天任選 3 款謎題繼續免費。"
 	},
 	"subscription": {
-		"free": "你正在使用免費方案：每天一款精選謎題。",
+		"free": "你正在使用免費方案：19 款謎題每天任選 3 款免費。",
 		"plan": {
 			"individual_once": "Tryit Plus（3 天通行證）"
 		},
