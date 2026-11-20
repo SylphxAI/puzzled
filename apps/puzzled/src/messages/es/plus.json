@@ -68,16 +68,16 @@
 	},
 	"offer": {
 		"resultTitle": "Juega los {count} juegos y el archivo",
-		"resultBody": "El puzzle destacado de hoy es siempre gratis. Tryit Plus desbloquea todos los juegos, el archivo de días anteriores y tus estadísticas de cada uno.",
+		"resultBody": "3 de los 19 puzzles son gratis cada día. Tryit Plus desbloquea todos los juegos, el archivo de días anteriores y tus estadísticas de cada uno.",
 		"resultPrice": "{plan} · {price} al año",
 		"day3Title": "{days} días jugados. Buen comienzo.",
 		"day7Title": "{days} días jugados. Ya eres un habitual.",
-		"milestoneBody": "Tryit Plus desbloquea los {count} juegos, el archivo de días anteriores y las estadísticas de cada uno. El puzzle destacado de hoy sigue siendo gratis."
+		"milestoneBody": "Tryit Plus desbloquea los {count} juegos, el archivo de días anteriores y las estadísticas de cada uno. 3 puzzles siguen siendo gratis cada día."
 	},
 	"subscription": {
 		"title": "Suscripción",
 		"description": "Tu plan de Tryit Plus, pagos y familia.",
-		"free": "Estás en el plan gratuito: el puzzle destacado de hoy, todos los días.",
+		"free": "Estás en el plan gratuito: 3 de los 19 puzzles a tu elección, todos los días.",
 		"closed": "Tryit Plus todavía no está a la venta. Por ahora todos los juegos son gratis.",
 		"checkoutPending": "Estamos confirmando tu suscripción. Esta página se actualizará automáticamente. Si tarda más, actualiza la página.",
 		"checkoutSuccess": "Te damos la bienvenida a Tryit Plus. Todos los juegos y el archivo están abiertos.",

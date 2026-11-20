@@ -84,12 +84,12 @@ export function SubscribeButton({
 				</Link>
 			)}
 			{renewalNote ? (
-				<p className="mb-3 text-sm text-muted-foreground">
+				<p className="mb-2.5 text-sm text-muted-foreground">
 					{renewalNote}
 					{!requiresWaiver ? ` ${t('recurringSupplyTerms')}` : ''}
 				</p>
 			) : !requiresWaiver ? (
-				<p className="mb-3 text-sm text-muted-foreground">{t('recurringSupplyTerms')}</p>
+				<p className="mb-2.5 text-sm text-muted-foreground">{t('recurringSupplyTerms')}</p>
 			) : null}
 			<button
 				type="button"

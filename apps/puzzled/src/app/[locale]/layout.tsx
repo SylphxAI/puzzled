@@ -10,6 +10,7 @@ import { FunnelReporter } from '@/features/analytics/components/funnel-reporter'
 import { GoogleTag } from '@/features/analytics/components/google-tag'
 import { CONSENT_DEFAULT_SCRIPT, googleTagIds } from '@/features/analytics/lib/google-tag'
 import { ErrorCapture } from '@/features/monitoring/components/error-capture'
+import { getAllGameMetadata } from '@/games/registry'
 import { ApiProvider } from '@/lib/api/provider'
 import { COMPANY_PHONE, CONTACT_EMAIL } from '@/lib/config/app'
 import { NONCE_HEADER } from '@/lib/csp'
@@ -47,8 +48,7 @@ const figtree = localFont({
 	adjustFontFallback: 'Arial',
 })
 
-const SITE_DESCRIPTION =
-	'Daily word, logic and number puzzles. One free puzzle every day, no account needed.'
+const SITE_DESCRIPTION = `Daily word, logic and number puzzles. Any 3 of ${getAllGameMetadata().length} puzzles free every day, no account needed.`
 const SITE_KEYWORDS = [
 	'games',
 	'puzzles',

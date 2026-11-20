@@ -11,8 +11,12 @@ function MockLink({ href, children, ...rest }: { href: string; children: ReactNo
 mock.module('@/lib/i18n/routing', () => ({
 	Link: MockLink,
 }))
+mock.module('@/lib/site-origin.server', () => ({
+	getCanonicalSiteOrigin: async () => 'https://tryit.fun',
+	getRequestSiteOrigin: async () => 'https://tryit.fun',
+}))
 
-const { UseCaseLanding } = await import('./use-case-landing')
+const { buildUseCaseMetadata, UseCaseLanding } = await import('./use-case-landing')
 
 async function renderMarkup(element: ReactNode): Promise<string> {
 	const stream = await renderToReadableStream(element)
@@ -57,5 +61,17 @@ describe('Wave-2 BoFu use-case landing pages', () => {
 			'never puts banners, pop-ups, or video ads on a puzzle board',
 		)
 		expect(family.faqs[0]?.answer).toContain('never shows ads while a puzzle is being played')
+	})
+
+	test('canonicalises non-US locale hits to canonical EN without hreflang alternates', async () => {
+		for (const spec of Object.values(USE_CASE_SPECS)) {
+			for (const locale of ['en-US', 'en-GB', 'zh-HK', 'ja', 'es', 'pt-BR']) {
+				const metadata = await buildUseCaseMetadata(locale, spec)
+				expect(metadata.alternates?.canonical).toBe(`https://tryit.fun${spec.path}`)
+				expect(metadata.alternates?.languages).toBeUndefined()
+				expect(metadata.openGraph?.url).toBe(`https://tryit.fun${spec.path}`)
+				expect(metadata.openGraph?.locale).toBe('en_US')
+			}
+		}
 	})
 })

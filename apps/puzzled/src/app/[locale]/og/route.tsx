@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { ImageResponse } from 'next/og'
 import type { NextRequest } from 'next/server'
 
+import { getAllGameMetadata } from '@/games/registry'
 import { type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import {
 	MARK_AMBER,
@@ -63,15 +64,18 @@ function clamp(value: string | null, max: number): string {
 	return value.length > max ? `${value.slice(0, max - 1)}…` : value
 }
 
+const DEFAULT_OG_BADGE = `Any 3 of ${getAllGameMetadata().length} puzzles free every day`
+
 export function GET(request: NextRequest) {
 	const params = request.nextUrl.searchParams
 	const title = clamp(params.get('title'), 64) || 'Tryit'
 	const subtitle = clamp(params.get('subtitle'), 96)
-	const eyebrow = clamp(params.get('eyebrow'), 32)
-	const badge = clamp(params.get('badge'), 32) || 'Free puzzle every day'
+	const eyebrow = clamp(params.get('eyebrow'), 40)
+	const badge = clamp(params.get('badge'), 44) || DEFAULT_OG_BADGE
 	const panel = panelColors(params.get('theme'))
 	const font = displayFont()
 	const [, , wordW, wordH] = WORDMARK_VIEWBOX.split(' ').map(Number)
+	const badgeFontSize = badge.length > 26 ? 21 : 24
 
 	return new ImageResponse(
 		<div
@@ -127,10 +131,10 @@ export function GET(request: NextRequest) {
 					) : null}
 				</div>
 
-				<div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 24 }}>
+				<div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: badgeFontSize }}>
 					<span
 						style={{
-							padding: '10px 22px',
+							padding: '10px 20px',
 							borderRadius: 999,
 							background: INK,
 							color: PAPER,

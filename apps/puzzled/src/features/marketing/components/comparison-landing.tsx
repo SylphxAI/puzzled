@@ -23,6 +23,7 @@ export async function buildComparisonMetadata(locale: string, spec: ComparisonSp
 		title: spec.metaTitle,
 		description: spec.metaDescription,
 		type: 'article',
+		englishOnly: true,
 		imagePath: ogImagePath({
 			title: spec.metaTitle,
 			subtitle: spec.facts.join(' · '),

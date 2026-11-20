@@ -32,7 +32,12 @@
 
 import { getGameSlugs } from '@/games/registry'
 import { defaultLocale, locales } from '@/lib/i18n/config'
-import { NOINDEX_ROUTE_PREFIXES, PUBLIC_ROUTES, robotsDisallowPaths } from '@/lib/seo/routes'
+import {
+	isEnglishOnlyRoute,
+	NOINDEX_ROUTE_PREFIXES,
+	PUBLIC_ROUTES,
+	robotsDisallowPaths,
+} from '@/lib/seo/routes'
 
 const args = process.argv.slice(2)
 const baseFlag = args.indexOf('--base')
@@ -283,11 +288,23 @@ async function main(): Promise<void> {
 		const unexpected = [...servedPaths].filter((path) => !expectedPaths.includes(path))
 		assert(missing.length === 0, `routes missing from the sitemap: ${missing.join(', ')}`)
 		assert(unexpected.length === 0, `unexpected paths in the sitemap: ${unexpected.join(', ')}`)
+		const englishOnlyCount = expectedPaths.filter((path) => isEnglishOnlyRoute(path)).length
+		const localizedCount = expectedPaths.length - englishOnlyCount
+		const expectedTotal = localizedCount * locales.length + englishOnlyCount
 		assert(
-			locs.length === expectedPaths.length * locales.length,
-			`${locs.length} locs for ${expectedPaths.length} paths x ${locales.length} locales`,
+			locs.length === expectedTotal,
+			`${locs.length} locs for ${localizedCount} localized paths x ${locales.length} locales + ${englishOnlyCount} English-only paths (want ${expectedTotal})`,
 		)
-		return `${locs.length} URLs = ${expectedPaths.length} paths × ${locales.length} locales, exactly`
+		const leakedLocaleDuplicates = locs.filter((loc) => {
+			const parsed = new URL(loc)
+			const basePath = localeAgnosticPath(loc)
+			return isEnglishOnlyRoute(basePath) && parsed.pathname !== basePath
+		})
+		assert(
+			leakedLocaleDuplicates.length === 0,
+			`untranslated English-only locale URLs leaked into sitemap: ${leakedLocaleDuplicates.slice(0, 5).join(', ')}`,
+		)
+		return `${locs.length} URLs = ${localizedCount} localized × ${locales.length} locales + ${englishOnlyCount} English-only`
 	})
 
 	await check('sitemap lists no private or malformed surface', async () => {
@@ -327,34 +344,48 @@ async function main(): Promise<void> {
 		return 'no <lastmod> element'
 	})
 
-	await check('sitemap carries a reciprocal hreflang cluster per entry', async () => {
-		const expectedLanguages = [
-			'en-US',
-			'en-GB',
-			'zh-HK',
-			'zh-TW',
-			'zh-CN',
-			'ja',
-			'es',
-			'pt-BR',
-			'x-default',
-		]
-		for (const [loc, cluster] of clusters) {
-			assert(
-				Object.keys(cluster).length === expectedLanguages.length,
-				`${loc} declares ${Object.keys(cluster).length} alternates`,
-			)
-			for (const target of Object.values(cluster)) {
-				assert(locSet.has(target), `${loc} advertises ${target}, which is not in the sitemap`)
+	await check(
+		'sitemap carries a reciprocal hreflang cluster on localised entries only',
+		async () => {
+			const expectedLanguages = [
+				'en-US',
+				'en-GB',
+				'zh-HK',
+				'zh-TW',
+				'zh-CN',
+				'ja',
+				'es',
+				'pt-BR',
+				'x-default',
+			]
+			let localizedEntries = 0
+			let englishOnlyEntries = 0
+			for (const [loc, cluster] of clusters) {
+				if (isEnglishOnlyRoute(localeAgnosticPath(loc))) {
+					assert(
+						Object.keys(cluster).length === 0,
+						`${loc} is English-only and must not declare hreflang alternates`,
+					)
+					englishOnlyEntries += 1
+					continue
+				}
+				localizedEntries += 1
 				assert(
-					localeAgnosticPath(target) === localeAgnosticPath(loc),
-					`${loc} advertises ${target} for a different path`,
+					Object.keys(cluster).length === expectedLanguages.length,
+					`${loc} declares ${Object.keys(cluster).length} alternates`,
 				)
+				for (const target of Object.values(cluster)) {
+					assert(locSet.has(target), `${loc} advertises ${target}, which is not in the sitemap`)
+					assert(
+						localeAgnosticPath(target) === localeAgnosticPath(loc),
+						`${loc} advertises ${target} for a different path`,
+					)
+				}
+				assert(cluster['x-default'] === cluster['en-US'], `${loc} x-default is not the en-US URL`)
 			}
-			assert(cluster['x-default'] === cluster['en-US'], `${loc} x-default is not the en-US URL`)
-		}
-		return `${clusters.size} entries × ${expectedLanguages.length} languages`
-	})
+			return `${localizedEntries} localised × ${expectedLanguages.length} languages; ${englishOnlyEntries} English-only with no alternates`
+		},
+	)
 
 	// ── served pages ────────────────────────────────────────────────────────
 	const pages = await mapPool(locs, POOL, async (loc) => {
@@ -386,11 +417,17 @@ async function main(): Promise<void> {
 		return `${pages.length} canonicals equal the served URL`
 	})
 
-	await check('hreflang is reciprocal including x-default', async () => {
+	await check('hreflang is reciprocal including x-default on localised pages', async () => {
 		const failures: string[] = []
 		for (const page of pages) {
 			const served = hreflangOf(page.html)
 			const expected = clusters.get(page.loc) ?? {}
+			if (isEnglishOnlyRoute(localeAgnosticPath(page.loc))) {
+				if (Object.keys(served).length > 0) {
+					failures.push(`${localPath(page.loc)} is English-only but declares hreflang alternates`)
+				}
+				continue
+			}
 			if (Object.keys(served).length === 0) {
 				failures.push(`${localPath(page.loc)} declares no alternates`)
 				continue
@@ -406,8 +443,35 @@ async function main(): Promise<void> {
 			}
 		}
 		assert(failures.length === 0, failures.slice(0, 5).join('; '))
-		return `${pages.length} pages declare the cluster of their own path`
+		return `${pages.length} pages match their expected hreflang policy`
 	})
+
+	await check(
+		'non-US locale hits on English-only routes canonicalise to canonical EN',
+		async () => {
+			const samples = [
+				{ path: '/ja/vs', canonical: `${origin}/vs` },
+				{ path: '/zh-HK/vs/wordle', canonical: `${origin}/vs/wordle` },
+				{
+					path: '/es/use-cases/daily-word-and-logic-puzzles-online',
+					canonical: `${origin}/use-cases/daily-word-and-logic-puzzles-online`,
+				},
+			]
+			for (const sample of samples) {
+				const { status, html } = await fetchHtml(sample.path)
+				assert(status === 200, `${sample.path} answered ${status}`)
+				assert(
+					canonicalOf(html) === sample.canonical,
+					`${sample.path} canonical -> ${canonicalOf(html) ?? 'none'} (want ${sample.canonical})`,
+				)
+				assert(
+					Object.keys(hreflangOf(html)).length === 0,
+					`${sample.path} declared hreflang alternates on an English-only route`,
+				)
+			}
+			return `${samples.length} locale variants canonicalise cleanly to EN`
+		},
+	)
 
 	// ── private surfaces ────────────────────────────────────────────────────
 	const privatePaths = locales.flatMap((locale) =>
@@ -502,6 +566,18 @@ async function main(): Promise<void> {
 			const organization = blocks.find((block) => block['@type'] === 'Organization')
 			assert(organization !== undefined, `${path} is missing the Organization block`)
 			assert(organization.name === 'Tryit', `${path} Organization.name is not the product name`)
+			assert(
+				typeof organization.description === 'string' &&
+					organization.description.includes('Any 3 of 19') &&
+					!organization.description.includes('One free puzzle'),
+				`${path} Organization.description is stale: ${String(organization.description)}`,
+			)
+			assert(
+				typeof website.description === 'string' &&
+					website.description.includes('Any 3 of 19') &&
+					!website.description.includes('One free puzzle'),
+				`${path} WebSite.description is stale: ${String(website.description)}`,
+			)
 			assert(
 				typeof organization.logo === 'string' && organization.logo.startsWith(origin),
 				`${path} Organization.logo is not on this origin`,

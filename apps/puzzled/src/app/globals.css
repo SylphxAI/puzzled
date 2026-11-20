@@ -1412,41 +1412,19 @@ html[data-consent-decided] [data-consent-banner] {
 	display: none;
 }
 
-/* The undecided visitor's bar sticks to the viewport bottom, above the phone
-   tab bar. Scroll padding keeps a focused control from sliding under it. */
+/* The undecided visitor's bar sits in normal document flow at the end of the
+   page, below the footer, so it never covers hero CTAs, game cards, boards,
+   or checkout buttons on any viewport. */
 .consent-bar {
-	/* The gap above the tab bar is offset, not padding: the bar's box never
-	   reaches under the tab bar, whichever viewport the engine pins it to. */
-	bottom: calc(var(--spacing-bottom-nav-height) + var(--spacing-safe-bottom) + 0.5rem);
-	pointer-events: none;
-}
-.consent-bar > section {
-	pointer-events: auto;
-}
-html:not([data-consent-decided]):has([data-consent-banner]) {
-	scroll-padding-bottom: 12rem;
-}
-@media (min-width: 768px) {
-	.consent-bar {
-		bottom: 0;
-	}
-	html:not([data-consent-decided]):has([data-consent-banner]) {
-		scroll-padding-bottom: 5rem;
-	}
-}
-
-/* Pricing and checkout surfaces keep the cookie bar in normal flow at the end
-   of the document so it never covers Continue to payment on any viewport. */
-html:has([data-pricing-page], [data-checkout-surface]) .consent-bar {
 	position: static;
 	bottom: auto;
 	padding-block: 0.75rem;
 }
-html:not([data-consent-decided]):has([data-pricing-page], [data-checkout-surface]):has([data-consent-banner]) {
+html:not([data-consent-decided]):has([data-consent-banner]) {
 	scroll-padding-bottom: calc(var(--spacing-bottom-nav-height) + var(--spacing-safe-bottom) + 1rem);
 }
 @media (min-width: 768px) {
-	html:not([data-consent-decided]):has([data-pricing-page], [data-checkout-surface]):has([data-consent-banner]) {
+	html:not([data-consent-decided]):has([data-consent-banner]) {
 		scroll-padding-bottom: 0;
 	}
 }

@@ -180,7 +180,7 @@ export function PlusOffer({
 				{selected.interval === 'year' && effectiveTrialDays > 0 ? (
 					<TrialChargeLine days={effectiveTrialDays} price={price(selected)} />
 				) : null}
-				<div className="mt-4">
+				<div className="mt-3">
 					<SubscribeButton
 						key={selected.id}
 						checkoutTrigger="pricing_card"

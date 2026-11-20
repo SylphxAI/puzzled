@@ -32,7 +32,7 @@ mock.module('next/navigation', () => ({
 	},
 }))
 
-const { canonicalUrl, hreflangLanguages } = await import('@/lib/seo/metadata')
+const { canonicalUrl } = await import('@/lib/seo/metadata')
 const rivalRoute = (await import(
 	'@/app/[locale]/(main)/vs/[rival]/page'
 )) as typeof import('@/app/[locale]/(main)/vs/[rival]/page')
@@ -68,20 +68,23 @@ describe('/vs/[rival]', () => {
 			'elevate',
 			'puzzmo',
 			'brilliant',
+			'wordle',
 		])
 	})
 
 	for (const slug of COMPARISON_SLUGS) {
 		const spec = COMPARISON_SPECS[slug]
 		for (const locale of locales) {
-			test(`${locale} ${spec.path}: metadata and page come from the spec`, async () => {
+			test(`${locale} ${spec.path}: canonicalises to EN with no hreflang cluster and renders from spec`, async () => {
 				const metadata = await rivalRoute.generateMetadata(rivalParams(locale, slug))
-				const canonical = canonicalUrl(ORIGIN, locale, spec.path)
+				const canonical = canonicalUrl(ORIGIN, 'en-US', spec.path)
 				expect(metadata.title).toBe(spec.metaTitle)
 				expect(metadata.description).toBe(spec.metaDescription)
 				expect(metadata.alternates?.canonical).toBe(canonical)
-				expect(metadata.alternates?.languages).toEqual(hreflangLanguages(ORIGIN, spec.path))
+				expect(metadata.alternates?.languages).toBeUndefined()
 				expect(metadata.openGraph?.url).toBe(canonical)
+				expect(metadata.openGraph?.locale).toBe('en_US')
+				expect(metadata.openGraph?.alternateLocale).toBeUndefined()
 
 				const html = await renderMarkup(await rivalRoute.default(rivalParams(locale, slug)))
 				expect(html.match(/<h1[\s>]/g)).toHaveLength(1)
@@ -110,12 +113,15 @@ describe('/vs/[rival]', () => {
 
 describe('/vs hub', () => {
 	for (const locale of locales) {
-		test(`${locale} /vs: self-canonical metadata with the full hreflang cluster`, async () => {
+		test(`${locale} /vs: canonicalises to EN with no hreflang cluster`, async () => {
 			const metadata = await hubRoute.generateMetadata({ params: Promise.resolve({ locale }) })
+			const canonical = canonicalUrl(ORIGIN, 'en-US', '/vs')
 			expect(metadata.title).toBe(COMPARISON_HUB.metaTitle)
 			expect(metadata.description).toBe(COMPARISON_HUB.metaDescription)
-			expect(metadata.alternates?.canonical).toBe(canonicalUrl(ORIGIN, locale, '/vs'))
-			expect(metadata.alternates?.languages).toEqual(hreflangLanguages(ORIGIN, '/vs'))
+			expect(metadata.alternates?.canonical).toBe(canonical)
+			expect(metadata.alternates?.languages).toBeUndefined()
+			expect(metadata.openGraph?.url).toBe(canonical)
+			expect(metadata.openGraph?.locale).toBe('en_US')
 		})
 	}
 

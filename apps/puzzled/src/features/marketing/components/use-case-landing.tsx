@@ -22,6 +22,7 @@ export async function buildUseCaseMetadata(locale: string, spec: UseCaseSpec) {
 		path: spec.path,
 		title: spec.metaTitle,
 		description: spec.metaDescription,
+		englishOnly: true,
 		imagePath: ogImagePath({
 			title: spec.metaTitle,
 			subtitle: spec.metaDescription,

@@ -1,6 +1,6 @@
 {
 	"metaTitle": "免費每日腦力遊戲與謎題",
-	"metaDescription": "每日免費玩腦力遊戲：文字、邏輯、數字與空間謎題，玩完仲想繼續。每日任揀 3 款免費，毋須註冊。",
+	"metaDescription": "每日免費玩腦力遊戲：文字、邏輯、數字與空間謎題，玩完仲想繼續。19 款謎題每日任揀 3 款免費，毋須註冊。",
 	"greeting": {
 		"morning": "早晨",
 		"afternoon": "午安",
@@ -9,13 +9,13 @@
 		"default": "準備好未？"
 	},
 	"hero": {
-		"guestTitle": "每日一題，免費任玩",
+		"guestTitle": "19 款謎題，每日任揀 3 款免費",
 		"streakChip": "連續 {days} 日",
 		"playersToday": "今日已有 {count} 位玩家完成",
 		"progressRingLabel": "今日已完成 {done} / {total} 題",
 		"progressUnverified": "暫時讀取唔到你嘅進度。你仍然可以玩，提交時我哋會核對你嘅完成紀錄。",
-		"ogEyebrow": "每日免費謎題",
-		"ogBadge": "每日一題免費"
+		"ogEyebrow": "每日 19 款謎題",
+		"ogBadge": "每日任揀 3 款免費"
 	},
 	"lineup": {
 		"title": "今日陣容",

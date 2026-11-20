@@ -1,7 +1,7 @@
 {
 	"name": "Tryit",
 	"short_name": "Tryit",
-	"description": "Daily word, logic and number puzzles. One free puzzle every day, no account needed.",
+	"description": "Daily word, logic and number puzzles. Any 3 of 19 puzzles free every day, no account needed.",
 	"id": "/",
 	"scope": "/",
 	"start_url": "/",

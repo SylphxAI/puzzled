@@ -19,6 +19,7 @@ import {
 } from '@/lib/seo/metadata'
 import {
 	CRAWL_BLOCKED_ROUTE_PREFIXES,
+	isEnglishOnlyRoute,
 	isPrivateRoutePath,
 	NOINDEX_ROUTE_PREFIXES,
 	PRIVATE_ROUTE_PREFIXES,
@@ -69,6 +70,7 @@ describe('route truth table', () => {
 			'/vs/elevate',
 			'/vs/puzzmo',
 			'/vs/brilliant',
+			'/vs/wordle',
 			'/support',
 			'/privacy',
 			'/terms',
@@ -185,14 +187,28 @@ describe('route truth table', () => {
 
 describe('sitemap', () => {
 	const entries = sitemap()
-	const expectedRoutes = PUBLIC_ROUTES.length + getGameSlugs().length
+	const gameCount = getGameSlugs().length
+	const localizedPublicCount = PUBLIC_ROUTES.filter((route) => !route.englishOnly).length
+	const englishOnlyCount = PUBLIC_ROUTES.filter((route) => route.englishOnly).length
+	const expectedRoutes = PUBLIC_ROUTES.length + gameCount
+	const expectedUrls = (localizedPublicCount + gameCount) * locales.length + englishOnlyCount
 
-	test('lists every locale for every public route, once each', () => {
-		expect(entries.length).toBe(locales.length * expectedRoutes)
+	test('lists every locale for localised routes and only canonical EN for English-only routes', () => {
+		expect(entries.length).toBe(expectedUrls)
 		const urls = entries.map((entry) => entry.url)
 		expect(new Set(urls).size).toBe(urls.length)
 		const paths = new Set(entries.map((entry) => localeAgnosticPath(entry.url)))
 		expect(paths.size).toBe(expectedRoutes)
+
+		// English-only editorial routes (/vs, /vs/*, /use-cases/*) must never emit
+		// untranslated non-default locale URLs in the sitemap.
+		for (const route of PUBLIC_ROUTES.filter((candidate) => candidate.englishOnly)) {
+			expect(urls).toContain(`${BASE}${route.path}`)
+			for (const locale of locales) {
+				if (locale === defaultLocale) continue
+				expect(urls).not.toContain(`${BASE}/${locale}${route.path}`)
+			}
+		}
 	})
 
 	test('never lists a private surface', () => {
@@ -218,16 +234,21 @@ describe('sitemap', () => {
 		expect(entries.some((entry) => entry.url === `${BASE}/zh-HK`)).toBe(true)
 	})
 
-	test('carries the full reciprocal cluster on every entry', () => {
+	test('carries the full reciprocal cluster on localised entries and omits alternates on English-only entries', () => {
 		const languages = Object.keys(hreflangLanguages(BASE, '/games'))
 		for (const entry of entries) {
+			const path = localeAgnosticPath(entry.url)
+			if (isEnglishOnlyRoute(path)) {
+				expect(entry.alternates).toBeUndefined()
+				continue
+			}
 			const cluster = entry.alternates?.languages ?? {}
 			expect(entry.alternates?.languages).toBeDefined()
 			expect(Object.keys(cluster)).toEqual(languages)
 			expect(cluster['x-default']).toBe(cluster['en-US'])
 			for (const target of Object.values(cluster)) {
 				if (typeof target !== 'string') throw new Error(`${entry.url} has a non-string alternate`)
-				expect(localeAgnosticPath(target)).toBe(localeAgnosticPath(entry.url))
+				expect(localeAgnosticPath(target)).toBe(path)
 			}
 		}
 	})
@@ -356,6 +377,24 @@ describe('metadata helper', () => {
 		expect(metadata.robots).toEqual({ index: false, follow: false })
 		expect(metadata.alternates?.canonical).toBe(`${BASE}/unsubscribe`)
 		expect(metadata.alternates?.languages).toBeUndefined()
+	})
+
+	test('canonicalises English-only routes to en-US and drops hreflang alternates across locales', async () => {
+		for (const locale of locales) {
+			const metadata = await buildPageMetadata({
+				locale,
+				path: '/vs/wordle',
+				title: 'Tryit vs Wordle',
+				description: 'Honest comparison',
+				englishOnly: true,
+				baseUrl: BASE,
+			})
+			expect(metadata.alternates?.canonical).toBe(`${BASE}/vs/wordle`)
+			expect(metadata.alternates?.languages).toBeUndefined()
+			expect(metadata.openGraph?.url).toBe(`${BASE}/vs/wordle`)
+			expect(metadata.openGraph?.locale).toBe('en_US')
+			expect(metadata.openGraph?.alternateLocale).toBeUndefined()
+		}
 	})
 
 	test('honours an absolute image override', async () => {

@@ -1,6 +1,6 @@
 {
 	"metaTitle": "無料のデイリー脳トレゲーム&パズル",
-	"metaDescription": "言葉、ロジック、数字、空間パズルの脳トレゲームを毎日無料で。毎日好きな3つを無料で遊べて、アカウント登録は不要です。",
+	"metaDescription": "言葉、ロジック、数字、空間パズルの脳トレゲームを毎日無料で。19種から毎日好きな3つを無料で遊べて、アカウント登録は不要です。",
 	"greeting": {
 		"morning": "おはようございます",
 		"afternoon": "こんにちは",
@@ -9,13 +9,13 @@
 		"default": "さあ、遊びましょう"
 	},
 	"hero": {
-		"guestTitle": "毎日ひとつ、無料のパズル",
+		"guestTitle": "19種から毎日好きな3つが無料",
 		"streakChip": "{days}日連続",
 		"playersToday": "今日は{count}人がクリア",
 		"progressRingLabel": "今日は{total}問中{done}問をクリア",
 		"progressUnverified": "保存した進捗を読み込めませんでした。そのまま遊べます。クリアの確認は送信時に行います。",
-		"ogEyebrow": "無料のデイリーパズル",
-		"ogBadge": "毎日無料のパズル"
+		"ogEyebrow": "毎日19種のパズル",
+		"ogBadge": "19種中3つ毎日無料"
 	},
 	"lineup": {
 		"title": "今日のラインナップ",

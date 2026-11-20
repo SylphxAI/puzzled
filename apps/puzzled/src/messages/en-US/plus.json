@@ -68,16 +68,16 @@
 	},
 	"offer": {
 		"resultTitle": "Play all {count} games and the archive",
-		"resultBody": "Today's featured puzzle is always free. Tryit Plus opens every game, the archive of past days and your stats for each.",
+		"resultBody": "Any 3 of 19 puzzles are free every day. Tryit Plus opens every game, the archive of past days and your stats for each.",
 		"resultPrice": "{plan} · {price} a year",
 		"day3Title": "{days} days played. Nice start.",
 		"day7Title": "{days} days played. You are a regular.",
-		"milestoneBody": "Tryit Plus opens all {count} games, the archive of past days and stats for each. Today's featured puzzle stays free."
+		"milestoneBody": "Tryit Plus opens all {count} games, the archive of past days and stats for each. Any 3 puzzles stay free every day."
 	},
 	"subscription": {
 		"title": "Subscription",
 		"description": "Your Tryit Plus plan, payments and family.",
-		"free": "You are on the free plan: today's featured puzzle, every day.",
+		"free": "You are on the free plan: any 3 of 19 puzzles, every day.",
 		"closed": "Tryit Plus is not on sale yet. Every game is free for now.",
 		"checkoutPending": "Confirming your subscription. This page will update automatically. If it takes longer, refresh this page.",
 		"checkoutSuccess": "Welcome to Tryit Plus. Every game and the archive are open.",

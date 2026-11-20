@@ -150,6 +150,11 @@ const SOFTWARE = {
  *   occasional discounts; "Where can I use Brilliant?": web, iOS, Android).
  *   Brilliant varies its price by plan and offer, so no Brilliant price is quoted.
  *   Operator: Brilliant Worldwide, Inc. (Terms of Use, Privacy Policy).
+ * - Wordle: The New York Times Help Center ("Wordle" and "New York Times Games
+ *   Subscription" articles): one free daily 5-letter word puzzle in 6 tries on
+ *   web and in the NYT Games app; Wordle Bot and the Wordle archive (going back
+ *   to June 2021) come with an NYT Games subscription. Prices vary by country
+ *   and offer, so no NYT price is quoted.
  */
 export const COMPARISON_SPECS = {
 	'nyt-games': {
@@ -1092,6 +1097,172 @@ export const COMPARISON_SPECS = {
 		disclaimer:
 			'Tryit is independent and not affiliated with, endorsed by or sponsored by Brilliant Worldwide, Inc. Brilliant and Koji belong to their owner and are named here only to compare. Brilliant details were checked against brilliant.org, its Premium page and the Brilliant Help Center on 18 November 2026.',
 		llmsSummary: `A Brilliant alternative for daily logic and number puzzles: any 3 of ${TOTAL_GAMES} games free in the browser with no account or app, compared with Brilliant's tutor-led math and coding lessons, and which Tryit games suit Brilliant fans.`,
+		...SOFTWARE,
+	},
+	wordle: {
+		slug: 'wordle',
+		path: '/vs/wordle',
+		rival: 'Wordle',
+		metaTitle: `Tryit vs Wordle: ${TOTAL_GAMES} Daily Puzzles, Any 3 Free`,
+		metaDescription: `Finished today's Wordle? Tryit has Five plus ${TOTAL_GAMES - 1} more daily word, logic, number and spatial puzzles. Pick any 3 free every day with no login and no ads while you play. ${PASS} one-time 3-Day Pass.`,
+		eyebrow: 'Tryit vs Wordle · An honest comparison',
+		h1: `Finished today's Wordle? Play ${TOTAL_GAMES} more daily puzzles, any 3 free.`,
+		lead: `Wordle is the iconic once-a-day 5-letter word puzzle from The New York Times. Tryit gives your daily puzzle break room to grow: ${TOTAL_GAMES} word, logic, number and spatial puzzles in one place, and you pick any 3 to play free every day with no login and no ads while you play.`,
+		facts: [
+			`${TOTAL_GAMES} daily games`,
+			'Any 3 free every day',
+			'No account needed',
+			`${PASS} 3-Day Pass, one time`,
+		],
+		verdictTitle: 'The short answer',
+		verdict: [
+			'Choose Wordle for the original daily 5-letter word puzzle that millions of friends share every morning, plus Wordle Bot and the NYT archive with a Games subscription.',
+			`Choose Tryit for ${TOTAL_GAMES} daily puzzle formats in one clean web suite — including Five, Quad, Threads and Hive — with any 3 free every day and a ${PASS} pass with no renewal.`,
+			'Most Wordle fans play both: solve Wordle first, then pick three Tryit puzzles for the rest of your coffee.',
+		],
+		primaryCta: { label: 'Pick your 3 free games', href: `/?${entry('wordle')}` },
+		secondaryCta: {
+			label: `See the ${PASS} 3-Day Pass`,
+			href: `/pricing?${entry('wordle')}`,
+		},
+		tableTitle: 'Tryit and Wordle side by side',
+		tableSubtitle:
+			'What each one gives a daily word-puzzle player today. Wordle details come from The New York Times Help Center.',
+		rows: [
+			{
+				feature: 'Daily games',
+				them: 'One daily 5-letter word puzzle in 6 tries, part of the NYT Games lineup',
+				us: `${TOTAL_GAMES} games: ${LINEUP}, all with a new puzzle every day`,
+			},
+			{
+				feature: 'Free to play',
+				them: 'Today’s Wordle is free every day for everyone',
+				us: `Any 3 of the ${TOTAL_GAMES} games, your choice, every day. A game you pick stays open all day`,
+			},
+			{
+				feature: 'Past puzzles',
+				them: 'Wordle archive back to June 2021 and Wordle Bot require an NYT Games subscription',
+				us: `Every past day of all ${TOTAL_GAMES} games with Tryit Plus or the ${PASS} 3-Day Pass`,
+			},
+			{
+				feature: 'Account to start',
+				them: 'Free to play without signing in; an NYT account saves streaks and stats across devices',
+				us: 'Not needed for the free picks; sign in to keep streaks and stats across devices',
+			},
+			{
+				feature: 'Word-game variety',
+				them: 'One 5-letter word puzzle; other word formats live separately in NYT Games',
+				us: `${countIn('word')} daily word games (Five, Quad, Threads, Hive, Mini Grid, Rungs, Frame, Cipher and Hunt) plus logic, number and spatial puzzles`,
+			},
+			{
+				feature: 'Try everything, no commitment',
+				them: 'NYT Games subscription, billed every 4 weeks or yearly',
+				us: `3-Day Pass: ${PASS} once, no renewal. All ${TOTAL_GAMES} games and every past day`,
+			},
+			{
+				feature: 'Ongoing plans',
+				them: 'NYT Games prices vary by country and current offer; see nytimes.com',
+				us: `Plus ${PLUS_MONTH}/month or ${PLUS_YEAR}/year. Family for up to ${FAMILY_SEATS} people ${FAMILY_MONTH}/month or ${FAMILY_YEAR}/year. VAT included`,
+			},
+			{
+				feature: 'Sharing',
+				them: 'The classic spoiler-free 5-column emoji grid',
+				us: 'A spoiler-free result card for every game: your pattern and time, never the answer',
+			},
+		],
+		theirStrengthsTitle: 'Where Wordle shines',
+		theirStrengths: [
+			{
+				title: 'The shared cultural ritual',
+				body: 'Everyone in your group chat already knows the 5×6 grid and plays the exact same daily word.',
+			},
+			{
+				title: 'Wordle Bot and a deep archive',
+				body: 'NYT Games subscribers get turn-by-turn analysis from Wordle Bot and an archive stretching back to June 2021.',
+			},
+			{
+				title: 'Pure one-minute focus',
+				body: 'One puzzle, six guesses, done. Its restraint is why it became a daily habit for millions.',
+			},
+		],
+		ourStrengthsTitle: 'Why Wordle fans pick Tryit',
+		ourStrengths: [
+			{
+				title: 'More to play once Wordle is done',
+				body: `Keep the 5-letter deduction going with Five and Quad (four 5-letter words at once), then branch into ${TOTAL_GAMES - 2} other daily word, logic, number and spatial puzzles.`,
+			},
+			{
+				title: 'Any 3 free, every day',
+				body: 'Choose your own three from the full lineup. No account, no card and no ads while you play.',
+			},
+			PASS_STRENGTH,
+			{
+				title: `One plan for up to ${FAMILY_SEATS} people`,
+				body: `Tryit Family covers up to ${FAMILY_SEATS} accounts, each with their own streaks and stats, for ${FAMILY_MONTH}/month or ${FAMILY_YEAR}/year.`,
+			},
+		],
+		pairingsTitle: 'If you like Wordle, try these',
+		pairingsSubtitle:
+			'Tryit has its own daily games, not Wordle clones. Start here if 5-letter word deduction is your favourite part of the day.',
+		pairings: [
+			{
+				theirs: 'Wordle',
+				slug: 'word-guess',
+				why: 'Guess today’s 5-letter word in 6 tries with spoiler-free sharing.',
+			},
+			{
+				theirs: 'multi-board Wordle',
+				slug: 'quad-words',
+				why: 'Solve 4 five-letter words at the same time from shared guesses.',
+			},
+			{
+				theirs: 'word connections',
+				slug: 'word-groups',
+				why: 'Sort 16 words into 4 hidden groups of 4.',
+			},
+			{
+				theirs: 'letter-by-letter steps',
+				slug: 'word-ladder',
+				why: 'Change one letter at a time to climb from the start word to the target.',
+			},
+			{
+				theirs: '7-letter word building',
+				slug: 'word-hive',
+				why: 'Find as many words as you can from 7 letters.',
+			},
+			{
+				theirs: 'code-breaking words',
+				slug: 'cryptogram',
+				why: 'Crack a famous quote by deducing letter substitutions.',
+			},
+		],
+		faqTitle: 'Tryit vs Wordle: questions',
+		faqs: [
+			{
+				question: 'Is Tryit a free alternative to Wordle?',
+				answer: `Tryit is a daily puzzle companion to Wordle: pick any 3 of its ${TOTAL_GAMES} daily games every day for free, with no account and no ads while you play. Five is Tryit's 5-letter word game, and Quad lets you solve four 5-letter words at once. Tryit is independent and not affiliated with The New York Times.`,
+			},
+			{
+				question: 'Can I play more than one word game a day on Tryit?',
+				answer: `Yes. Tryit includes ${countIn('word')} daily word games — Five, Quad, Threads, Hive, Mini Grid, Rungs, Frame, Cipher and Hunt — and you can pick any 3 games free every day, or open all ${TOTAL_GAMES} games with Tryit Plus or the 3-Day Pass.`,
+			},
+			{
+				question: 'How does Tryit pricing compare with Wordle and NYT Games?',
+				answer: `Wordle's daily puzzle is free, while its archive and Wordle Bot sit inside an NYT Games subscription (prices vary by country on nytimes.com). ${TRYIT_PRICES}`,
+			},
+			{
+				question: 'Can I play past puzzles like the Wordle archive?',
+				answer: `Yes. Tryit Plus and the ${PASS} 3-Day Pass open every past day across all ${TOTAL_GAMES} games, including Five and Quad.`,
+			},
+			NEW_PUZZLES_FAQ,
+		],
+		closingCta: {
+			title: 'Keep your word-puzzle streak going',
+			body: `${TOTAL_GAMES} fresh puzzles every day. Any 3 free, no login, no ads while you play.`,
+		},
+		disclaimer:
+			'Tryit is independent and not affiliated with, endorsed by or sponsored by The New York Times Company. Wordle, Wordle Bot and NYT Games are trademarks of The New York Times Company, named here only to compare. Wordle details were checked against The New York Times Help Center on 20 November 2026.',
+		llmsSummary: `A Wordle companion and free daily word-puzzle alternative: Five, Quad and ${TOTAL_GAMES - 2} other daily word, logic, number and spatial puzzles, any 3 free every day with no login.`,
 		...SOFTWARE,
 	},
 } as const satisfies Record<ComparisonSlug, ComparisonSpec>

@@ -127,9 +127,9 @@ export default async function MainLayout({ children }: Props) {
 				<AccountSavedNote />
 				{children}
 				<Footer />
-				{/* First-visit choice: a slim sticky bar at the end of the flow, pinned
-				    above the tab bar. It never pushes the hero or a board down, and
-				    settled visitors stay hidden before paint (locale layout script). */}
+				{/* First-visit choice: a slim static bar in normal flow after the footer.
+				    It never pushes the hero or a board down and never covers page CTAs,
+				    and settled visitors stay hidden before paint (locale layout script). */}
 				<ConsentBanner />
 			</div>
 

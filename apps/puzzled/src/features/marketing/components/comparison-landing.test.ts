@@ -32,6 +32,7 @@ test('each comparison page has its own path, entry surface and rival', () => {
 		'/vs/elevate',
 		'/vs/puzzmo',
 		'/vs/brilliant',
+		'/vs/wordle',
 	])
 	expect(new Set(SPECS.map((spec) => spec.rival)).size).toBe(SPECS.length)
 	expect(new Set(SPECS.map((spec) => spec.primaryCta.href)).size).toBe(SPECS.length)
@@ -149,5 +150,20 @@ describe('/vs/brilliant specifics', () => {
 			expect(brilliantPart).not.toMatch(/[$£€¥]\s?\d/)
 		}
 		expect(visibleCopy).toContain('18 November 2026')
+	})
+})
+
+describe('/vs/wordle specifics', () => {
+	const spec = COMPARISON_SPECS.wordle
+	const visibleCopy = JSON.stringify({ ...spec, offers: undefined, softwareDescription: undefined })
+
+	test('leads with Five and Quad for Wordle fans and quotes no NYT price', () => {
+		expect(spec.pairings.slice(0, 2).map((pairing) => pairing.slug)).toEqual([
+			'word-guess',
+			'quad-words',
+		])
+		const wordleSide = JSON.stringify(spec.rows.map((row) => row.them))
+		expect(wordleSide).not.toMatch(/[$£€¥]\s?\d/)
+		expect(visibleCopy).toContain('20 November 2026')
 	})
 })

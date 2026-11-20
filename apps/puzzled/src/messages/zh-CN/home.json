@@ -1,6 +1,6 @@
 {
 	"metaTitle": "免费每日脑力游戏与谜题",
-	"metaDescription": "每天免费玩脑力游戏：文字、逻辑、数字与空间谜题，玩完还想继续。每天任选 3 款免费，无需注册。",
+	"metaDescription": "每天免费玩脑力游戏：文字、逻辑、数字与空间谜题，玩完还想继续。19 款谜题每天任选 3 款免费，无需注册。",
 	"greeting": {
 		"morning": "早上好",
 		"afternoon": "下午好",
@@ -9,13 +9,13 @@
 		"default": "准备好了吗？"
 	},
 	"hero": {
-		"guestTitle": "每天一题，免费开玩",
+		"guestTitle": "19 款谜题，每天任选 3 款免费",
 		"streakChip": "连续 {days} 天",
 		"playersToday": "今天已有 {count} 位玩家完成",
 		"progressRingLabel": "今天已完成 {done} / {total} 题",
 		"progressUnverified": "暂时读不到你的进度。你仍然可以玩，提交时我们会核对你的完成记录。",
-		"ogEyebrow": "每日免费谜题",
-		"ogBadge": "每天一题免费"
+		"ogEyebrow": "每日 19 款谜题",
+		"ogBadge": "每天任选 3 款免费"
 	},
 	"lineup": {
 		"title": "今天的阵容",

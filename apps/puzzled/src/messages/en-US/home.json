@@ -1,6 +1,6 @@
 {
 	"metaTitle": "Free Daily Brain Games & Puzzles",
-	"metaDescription": "Play free daily brain games — word, logic, number and spatial puzzles — then keep the habit going. Any 3 puzzles free every day, no account needed.",
+	"metaDescription": "Play free daily brain games — word, logic, number and spatial puzzles — then keep the habit going. Any 3 of 19 puzzles free every day, no account needed.",
 	"greeting": {
 		"morning": "Good morning",
 		"afternoon": "Good afternoon",
@@ -9,13 +9,13 @@
 		"default": "Ready to play"
 	},
 	"hero": {
-		"guestTitle": "A free puzzle, every single day",
+		"guestTitle": "Any 3 of 19 puzzles free every day",
 		"streakChip": "{days}-day streak",
 		"playersToday": "{count} players finished today",
 		"progressRingLabel": "{done} of {total} puzzles finished today",
 		"progressUnverified": "We could not load your saved progress just now. You can still play — we check your finish when you submit.",
-		"ogEyebrow": "Free daily puzzle",
-		"ogBadge": "Free puzzle every day"
+		"ogEyebrow": "19 daily puzzles",
+		"ogBadge": "Any 3 of 19 free every day"
 	},
 	"lineup": {
 		"title": "Today's lineup",

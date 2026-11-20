@@ -19,6 +19,7 @@ export async function buildComparisonHubMetadata(locale: string) {
 		path: COMPARISON_HUB.path,
 		title: COMPARISON_HUB.metaTitle,
 		description: COMPARISON_HUB.metaDescription,
+		englishOnly: true,
 		imagePath: ogImagePath({
 			title: COMPARISON_HUB.metaTitle,
 			subtitle: COMPARISON_HUB.facts.join(' · '),

@@ -1,3 +1,4 @@
+import { getAllGameMetadata } from '@/games/registry'
 import { currencyFractionDigits, minorUnitsToMajor } from '@/lib/billing/plus'
 import { getCanonicalSiteOrigin } from '@/lib/site-origin.server'
 import catalogue from '../../../../../../config/commercial/catalogue.json'
@@ -5,6 +6,7 @@ import catalogue from '../../../../../../config/commercial/catalogue.json'
 /** Discovery prices come from the declaration applied to Money, never a second price list. */
 export async function WebApplicationJsonLd({ locale }: { locale: string }) {
 	const baseUrl = await getCanonicalSiteOrigin()
+	const gameCount = getAllGameMetadata().length
 	const currency =
 		(catalogue.currency_display as { by_locale?: Record<string, string> }).by_locale?.[locale] ??
 		catalogue.base_currency
@@ -15,6 +17,7 @@ export async function WebApplicationJsonLd({ locale }: { locale: string }) {
 		'@type': 'WebApplication',
 		name: 'Tryit',
 		url: baseUrl,
+		description: `Daily word, logic, number and spatial puzzles. Any 3 of ${gameCount} puzzles free every day, no account needed.`,
 		applicationCategory: 'GameApplication',
 		operatingSystem: 'Any',
 		publisher: {

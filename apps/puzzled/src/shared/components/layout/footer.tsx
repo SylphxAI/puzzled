@@ -24,6 +24,7 @@ const COMPARE_LABEL_KEYS: Record<ComparisonSlug, string> = {
 	elevate: 'compareElevate',
 	puzzmo: 'comparePuzzmo',
 	brilliant: 'compareBrilliant',
+	wordle: 'compareWordle',
 }
 
 const linkClass =
