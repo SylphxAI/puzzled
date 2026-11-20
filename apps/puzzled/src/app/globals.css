@@ -1419,11 +1419,17 @@ html[data-consent-decided] [data-consent-banner] {
 	position: static;
 	bottom: auto;
 	padding-block: 0.75rem;
+	/* Reserve the extra mobile tab-bar clearance beyond pb-nav so the banner
+	   sits completely above the fixed bottom nav when scrolled to the foot. */
+	margin-bottom: 1rem;
 }
 html:not([data-consent-decided]):has([data-consent-banner]) {
 	scroll-padding-bottom: calc(var(--spacing-bottom-nav-height) + var(--spacing-safe-bottom) + 1rem);
 }
 @media (min-width: 768px) {
+	.consent-bar {
+		margin-bottom: 0;
+	}
 	html:not([data-consent-decided]):has([data-consent-banner]) {
 		scroll-padding-bottom: 0;
 	}
