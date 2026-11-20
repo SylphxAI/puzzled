@@ -38,6 +38,7 @@
 		"checkoutCancelled": "Se canceló el pago. No se te ha cobrado nada.",
 		"alreadySubscribed": "Ya tienes Tryit Plus.",
 		"immediateSupplyConsent": "Quiero acceder ahora y entiendo que pierdo el derecho de desistimiento de 14 días.",
+		"recurringSupplyTerms": "El acceso comienza de inmediato; si cancelas en un plazo de 14 días, solo pagas una parte proporcional al servicio prestado.",
 		"consentRequired": "Marca la casilla para continuar.",
 		"offerLead": "Juega a los {count} juegos, vuelve a cualquier día anterior y sigue tu progreso en cada uno.",
 		"planChoice": "Elige un plan",

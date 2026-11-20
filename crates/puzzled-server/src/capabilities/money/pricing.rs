@@ -29,6 +29,15 @@ pub struct PlanPrices {
     pub prices: Vec<(String, i64)>,
 }
 
+impl PlanPrices {
+    /// One-off non-renewing digital pass (UK CCR 2013 Reg 37), as opposed to a
+    /// recurring subscription (UK CCR 2013 Reg 36).
+    #[must_use]
+    pub fn is_one_time_pass(&self) -> bool {
+        self.interval.is_empty()
+    }
+}
+
 fn seats_of(product: &CatalogProduct) -> u32 {
     product
         .features

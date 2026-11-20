@@ -38,6 +38,7 @@
 		"checkoutCancelled": "已取消付款，你没有被扣费。",
 		"alreadySubscribed": "你已订阅 Tryit Plus。",
 		"immediateSupplyConsent": "我要立即使用，并明白我会失去 14 天取消权。",
+		"recurringSupplyTerms": "订阅后可立即使用；如在 14 天内取消，你只需按已提供的服务比例支付费用。",
 		"consentRequired": "请勾选方框以继续。",
 		"offerLead": "畅玩全部 {count} 款游戏，重玩任意一天的往日谜题，追踪自己在每款游戏中的进步。",
 		"planChoice": "选择方案",

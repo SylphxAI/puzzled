@@ -47,16 +47,34 @@ pub fn locale_prefix(locale: &str) -> &'static str {
     }
 }
 
-/// Proof the buyer gave the immediate-supply consent. It can only be made
-/// from a ticked box, so no session is created without one.
-#[derive(Debug, Clone, Copy)]
-pub struct Consent(());
+/// Proof the buyer satisfied the checkout statutory terms for the chosen plan:
+/// - One-off digital pass (3-Day Pass, UK CCR 2013 Reg 37): requires an
+///   explicit 14-day cancellation waiver tick (`immediate_supply_consent`).
+/// - Recurring subscription (Monthly/Yearly/Family, UK CCR 2013 Reg 36):
+///   governed by proportionate 14-day cancellation terms; never requires
+///   waiving the 14-day cancellation right.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Consent {
+    OneOffDigitalWaiver,
+    RecurringSubscription,
+}
 
 impl Consent {
-    pub fn require(given: bool) -> Result<Self, CheckoutError> {
-        given
-            .then_some(Self(()))
-            .ok_or(CheckoutError::ConsentRequired)
+    /// Validate checkout consent for a plan. Only one-time digital passes
+    /// require the 14-day cancellation waiver.
+    pub fn for_plan(one_time_pass: bool, waiver_given: bool) -> Result<Self, CheckoutError> {
+        if one_time_pass {
+            waiver_given
+                .then_some(Self::OneOffDigitalWaiver)
+                .ok_or(CheckoutError::ConsentRequired)
+        } else {
+            Ok(Self::RecurringSubscription)
+        }
+    }
+
+    #[must_use]
+    pub const fn is_one_time_pass(self) -> bool {
+        matches!(self, Self::OneOffDigitalWaiver)
     }
 }
 
@@ -121,6 +139,7 @@ fn build_session_body(
     currency: Option<&str>,
     attribution: Option<&Attribution>,
     return_to: Option<&str>,
+    consent: Consent,
 ) -> Value {
     let base = format!("{}{}", money.public_url(), locale_prefix(locale));
     let encoded_return = return_to
@@ -138,7 +157,22 @@ fn build_session_body(
     };
     let mut metadata = Map::new();
     metadata.insert("plan_id".into(), json!(plan_id));
-    metadata.insert("immediate_supply_consent".into(), json!("true"));
+    metadata.insert(
+        "immediate_supply_consent".into(),
+        json!(if consent.is_one_time_pass() {
+            "true"
+        } else {
+            "false"
+        }),
+    );
+    metadata.insert(
+        "cancellation_regime".into(),
+        json!(if consent.is_one_time_pass() {
+            "uk_ccr_reg_37"
+        } else {
+            "uk_ccr_reg_36"
+        }),
+    );
     if let Some(tags) = attribution {
         for (key, value) in tags
             .metadata_pairs()
@@ -178,6 +212,7 @@ pub fn session_body(
     currency: Option<&str>,
     attribution: Option<&Attribution>,
     return_to: Option<&str>,
+    consent: Consent,
 ) -> Value {
     build_session_body(
         money,
@@ -188,11 +223,13 @@ pub fn session_body(
         currency,
         attribution,
         return_to,
+        consent,
     )
 }
 
 /// The `checkout_sessions` request body for an unauthenticated cold guest (omits `subject`).
 #[must_use]
+#[allow(clippy::too_many_arguments)]
 pub fn guest_session_body(
     money: &Money,
     plan_id: &str,
@@ -201,6 +238,7 @@ pub fn guest_session_body(
     currency: Option<&str>,
     attribution: Option<&Attribution>,
     return_to: Option<&str>,
+    consent: Consent,
 ) -> Value {
     build_session_body(
         money,
@@ -211,6 +249,7 @@ pub fn guest_session_body(
         currency,
         attribution,
         return_to,
+        consent,
     )
 }
 
@@ -225,9 +264,11 @@ pub async fn create_guest_session(
     currency: &str,
     attribution: Option<&Attribution>,
     return_to: Option<&str>,
-    _consent: Consent,
+    consent: Consent,
 ) -> Result<GuestCheckoutSession, CheckoutError> {
     let found_plan = plan(catalog, plan_id).ok_or(CheckoutError::PlanNotOnSale)?;
+    let validated_consent =
+        Consent::for_plan(found_plan.is_one_time_pass(), consent.is_one_time_pass())?;
     let price = price_of(catalog, &found_plan).ok_or(CheckoutError::PlanNotOnSale)?;
     let upper = currency.trim().to_ascii_uppercase();
     let chosen_currency = price.unit_amounts.contains_key(&upper).then_some(upper);
@@ -239,6 +280,7 @@ pub async fn create_guest_session(
         chosen_currency.as_deref(),
         attribution,
         return_to,
+        validated_consent,
     );
     let created = money
         .create_checkout_session_full(&body)
@@ -252,8 +294,9 @@ pub async fn create_guest_session(
     })
 }
 
-/// Create the session and return the hosted page's URL. `_consent` is the
-/// proof the buyer consented (recorded by the caller before this call).
+/// Create the session and return the hosted page's URL. `consent` is the
+/// validated checkout disclosure/consent for the plan (recorded by the caller
+/// before this call).
 #[allow(clippy::too_many_arguments)]
 pub async fn create_session(
     money: &Money,
@@ -264,7 +307,7 @@ pub async fn create_session(
     currency: &str,
     attribution: Option<&Attribution>,
     return_to: Option<&str>,
-    _consent: Consent,
+    consent: Consent,
 ) -> Result<String, CheckoutError> {
     let body = prepare_session(
         money,
@@ -275,6 +318,7 @@ pub async fn create_session(
         currency,
         attribution,
         return_to,
+        consent,
     )
     .await?;
     money
@@ -295,7 +339,7 @@ pub async fn create_retained_session(
     currency: &str,
     attribution: Option<&Attribution>,
     return_to: Option<&str>,
-    _consent: Consent,
+    consent: Consent,
 ) -> Result<String, CheckoutError> {
     let body = prepare_session(
         money,
@@ -306,6 +350,7 @@ pub async fn create_retained_session(
         currency,
         attribution,
         return_to,
+        consent,
     )
     .await?;
     let session = super::attempts::create(pool, money, user_id, request_id, &body)
@@ -334,8 +379,10 @@ async fn prepare_session(
     currency: &str,
     attribution: Option<&Attribution>,
     return_to: Option<&str>,
+    consent: Consent,
 ) -> Result<Value, CheckoutError> {
     let plan = plan(catalog, plan_id).ok_or(CheckoutError::PlanNotOnSale)?;
+    let validated_consent = Consent::for_plan(plan.is_one_time_pass(), consent.is_one_time_pass())?;
     let price = price_of(catalog, &plan).ok_or(CheckoutError::PlanNotOnSale)?;
     let feature = if plan.family {
         FEATURE_FAMILY
@@ -359,5 +406,6 @@ async fn prepare_session(
         currency.as_deref(),
         attribution,
         return_to,
+        validated_consent,
     ))
 }

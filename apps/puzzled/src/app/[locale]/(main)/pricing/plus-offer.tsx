@@ -87,7 +87,7 @@ export function PlusOffer({
 	const effectiveTrialDays = signedIn ? selected.trialDays : 0
 
 	return (
-		<div id={id} className={cn('scroll-mt-24', styles.offer)}>
+		<div id={id} data-checkout-surface="" className={cn('scroll-mt-24', styles.offer)}>
 			{headerSlot}
 			<div
 				className={cn(

@@ -145,7 +145,7 @@ mock.module('@/lib/api/server', () => ({
 const { default: PricingPage } = await import('./page')
 
 describe('PricingPage SSR', () => {
-	test('renders cold-guest immediate-supply consent and direct checkout CTAs without /login gate', async () => {
+	test('renders cold-guest recurring plans without 14-day waiver checkbox and with direct enabled checkout CTAs', async () => {
 		mockSignedIn = false
 		mockSubscribed = false
 		const node = await PricingPage({
@@ -160,18 +160,30 @@ describe('PricingPage SSR', () => {
 		expect(html).not.toContain('Sign in to start Family')
 		expect(html).not.toContain('href="/login')
 
+		// Pricing/checkout flow markers keep the cookie banner out of the CTA layer
+		expect(html).toContain('data-pricing-page=""')
+		expect(html.match(/data-checkout-surface=""/g)?.length).toBe(2)
+
 		// Exact single render of #plus and #family hero cards, plus Free below
 		expect(html.match(/id="plus"/g)?.length).toBe(1)
 		expect(html.match(/id="family"/g)?.length).toBe(1)
 		expect(html.match(/name="plus-interval"/g)?.length).toBe(3)
 		expect(html.match(/name="family-interval"/g)?.length).toBe(2)
 
-		// Both hero cards render immediate-supply consent checkbox, renewal note, and primary checkout CTA
+		// Recurring subscriptions (Yearly default on Plus and Family) must NOT render or require
+		// the Reg 37 14-day cancellation waiver checkbox; they show Reg 36 renewal + proportionate terms
+		// and immediately enabled checkout buttons.
+		expect(html).not.toContain(
+			'I want access now and understand I lose the 14-day cancellation right.',
+		)
+		expect(html).not.toContain('type="checkbox"')
 		expect(
-			html.match(/I want access now and understand I lose the 14-day cancellation right\./g)
-				?.length,
+			html.match(
+				/Access starts immediately; if you cancel within 14 days, you pay only a proportionate amount for the service supplied\./g,
+			)?.length,
 		).toBe(2)
 		expect(html.match(/Continue to payment/g)?.length).toBe(2)
+		expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*>Continue to payment/)
 		expect(html).toContain('Renews every year at $39.99 until you cancel.')
 		expect(html).toContain('Renews every year at $64.99 until you cancel.')
 
@@ -183,6 +195,45 @@ describe('PricingPage SSR', () => {
 		expect(html).toContain('$0')
 		expect(html).not.toContain('$0.00')
 		expect(html.match(/Choose Tryit Plus/g)).toBeNull()
+	})
+
+	test('scopes the 14-day immediate-supply waiver checkbox strictly to the 3-Day Pass', async () => {
+		mockSignedIn = false
+		mockSubscribed = false
+		const passNode = await PricingPage({
+			params: Promise.resolve({ locale: 'en-US' }),
+			searchParams: Promise.resolve({ plan: 'individual_once' }),
+		})
+		const passHtml = renderToStaticMarkup(passNode)
+
+		// 3-Day Pass on #plus renders exactly one Reg 37 14-day waiver checkbox and disables its CTA
+		// until ticked, while recurring #family beside it has no waiver checkbox and stays enabled.
+		expect(
+			passHtml.match(/I want access now and understand I lose the 14-day cancellation right\./g)
+				?.length,
+		).toBe(1)
+		expect(passHtml.match(/type="checkbox"/g)?.length).toBe(1)
+		expect(passHtml.match(/<button[^>]*disabled=""[^>]*>Continue to payment/g)?.length).toBe(1)
+		expect(passHtml).toContain('One payment for 3 days of Tryit Plus. No renewal.')
+		expect(
+			passHtml.match(
+				/Access starts immediately; if you cancel within 14 days, you pay only a proportionate amount for the service supplied\./g,
+			)?.length,
+		).toBe(1)
+
+		// Monthly recurring plans (Individual and Family) never render the 14-day waiver checkbox.
+		for (const plan of ['individual_monthly', 'family_monthly']) {
+			const monthlyNode = await PricingPage({
+				params: Promise.resolve({ locale: 'en-US' }),
+				searchParams: Promise.resolve({ plan }),
+			})
+			const monthlyHtml = renderToStaticMarkup(monthlyNode)
+			expect(monthlyHtml).not.toContain(
+				'I want access now and understand I lose the 14-day cancellation right.',
+			)
+			expect(monthlyHtml).not.toContain('type="checkbox"')
+			expect(monthlyHtml).not.toMatch(/<button[^>]*disabled=""[^>]*>Continue to payment/)
+		}
 	})
 
 	test('preserves Japanese tokushoho disclosure link on cold-guest pricing', async () => {
