@@ -4,7 +4,7 @@
 	"eyebrow": "アーカイブ",
 	"title": "パズルアーカイブ",
 	"body": "お気に入りのゲームをもっと。過去30日分の全ゲームから、Plusで遊びたいパズルを選びましょう。",
-	"playFreeToday": "今日の無料パズルを遊ぶ({game})",
+	"playFreeToday": "{game}を遊ぶ（毎日19種から3つ無料）",
 	"listTitle": "過去30日分・全19ゲーム",
 	"listBody": "過去{count}日分、各日の全{games}ゲームを新しい順に表示しています。",
 	"playDayLabel": "{date}の{game}を遊ぶ",
@@ -18,5 +18,8 @@
 	"dayPicker": "日付を選ぶ",
 	"filterLabel": "カテゴリーで絞り込む",
 	"yesterday": "昨日",
-	"dayCount": "{count}問"
+	"dayCount": "{count}問",
+	"mobileUnlockTitle": "過去30日間のアーカイブを解放",
+	"mobileUnlockBody": "3日間パスまたはTryit Plusで、過去{count}日間の全{games}ゲームを遊べます。",
+	"mobileUnlockCta": "アーカイブを解放"
 }

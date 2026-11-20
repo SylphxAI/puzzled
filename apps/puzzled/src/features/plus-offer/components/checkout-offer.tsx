@@ -19,6 +19,10 @@ type Props = {
 	signedIn: boolean
 	callbackUrl: string
 	gameCount: number
+	/** Surface trigger attributed on GA4 `begin_checkout` (e.g. `game_unlock`, `archive_banner`). */
+	checkoutTrigger?: string
+	/** Compact vertical rhythm for above-the-fold unlock panels. */
+	compact?: boolean
 }
 
 /** Server-only catalogue loader. Pass its rendered node into client paywalls. */
@@ -27,6 +31,8 @@ export async function CheckoutOffer({
 	signedIn,
 	callbackUrl,
 	gameCount,
+	checkoutTrigger = 'game_unlock',
+	compact = false,
 }: Props) {
 	const locale = pageLocale ?? (await getLocale())
 	const t = await getTranslations({ locale, namespace: 'plus.checkoutOffer' })
@@ -62,8 +68,8 @@ export async function CheckoutOffer({
 	const monthly = cards.find((card) => card.id === 'individual_monthly')
 	const secondary = (
 		<Link
-			href={{ pathname: '/pricing', query: { callbackUrl: returnTo } }}
-			className="inline-flex min-h-12 items-center text-sm font-semibold underline underline-offset-4 hover:text-foreground"
+			href={{ pathname: '/pricing', query: { callbackUrl: returnTo, trigger: checkoutTrigger } }}
+			className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4 hover:text-foreground"
 		>
 			{t('comparePlans')}
 		</Link>
@@ -94,7 +100,9 @@ export async function CheckoutOffer({
 			signedIn={signedIn}
 			subscribed={false}
 			callbackUrl={returnTo}
-			headerSlot={<CurrencySwitcher currencies={currencies} current={currency} />}
+			checkoutTrigger={checkoutTrigger}
+			compact={compact}
+			headerSlot={<CurrencySwitcher currencies={currencies} current={currency} compact={compact} />}
 			footerSlot={secondary}
 		/>
 	)

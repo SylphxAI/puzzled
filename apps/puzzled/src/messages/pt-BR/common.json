@@ -6,8 +6,8 @@
 	"notFound": {
 		"eyebrow": "404",
 		"title": "Esta página sumiu — o desafio não",
-		"description": "A página que você procura não existe. O desafio grátis de hoje continua aberto, e todos os jogos diários estão a um toque de distância.",
-		"playCta": "Jogar {game} — o desafio grátis de hoje",
+		"description": "A página que você pediu não existe. Escolha 3 dos 19 desafios de hoje grátis; cada jogo diário está a um toque.",
+		"playCta": "Jogar {game} — grátis hoje (3 de 19)",
 		"browseCta": "Ver todos os jogos"
 	},
 	"retry": "Tentar novamente",

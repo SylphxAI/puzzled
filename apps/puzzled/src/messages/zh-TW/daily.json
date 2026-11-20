@@ -1,16 +1,16 @@
 {
 	"unavailableDescription": "無法載入今天的謎題，請檢查網路後再試。",
 	"notReadyTitle": "今天的{game}還沒準備好",
-	"notReadyBody": "今天還沒有{game}謎題。今天的免費謎題已經可以玩了。",
-	"notReadyCta": "玩今天的免費謎題",
+	"notReadyBody": "今天還沒有{game}謎題。今天其餘謎題仍可任選 3 款免費玩。",
+	"notReadyCta": "查看今天免費謎題",
 	"todaysProgress": "今天的進度",
 	"allCompleteMessage": "今天這題的所有難度你都完成了。",
 	"youSolvedTodays": "你已解開今天的 {game}",
 	"youTriedTodays": "你已嘗試過今天的 {game}",
-	"tomorrowsFreeGame": "明天免費玩：{game}",
+	"tomorrowsFreeGame": "明天 19 款新謎題任選 3 款免費玩（精選：{game}）",
 	"loadingPuzzle": "正在載入今天的謎題…",
 	"completedNoResult": "你已完成今天的謎題，暫時無法顯示結果詳情。",
 	"difficultyStatusUnverified": "無法確認你今天已完成哪些難度，系統會在你開始前核對。",
-	"todaysFreeGame": "玩今天的免費謎題",
+	"todaysFreeGame": "玩今天 3 款免費謎題",
 	"startUsesPick": "開始後會用掉今天 3 個免費名額中的 1 個，開始過的遊戲整天都能玩。"
 }

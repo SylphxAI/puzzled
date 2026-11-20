@@ -53,7 +53,6 @@
 			"thirdParty": {
 				"title": "Con quién compartimos datos",
 				"content": "Compartimos datos personales con proveedores de servicios que los tratan por encargo nuestro en virtud de un contrato, entre ellos:",
-
 				"stripe": "Procesamiento de pagos",
 				"google": "Autenticación",
 				"mail": "Envío de correo electrónico (correos de inicio de sesión y de verificación)",
@@ -156,7 +155,7 @@
 			},
 			"subscriptions": {
 				"title": "Suscripciones a Tryit Plus",
-				"content": "El puzle destacado de hoy es gratuito. Tryit Plus es una suscripción de pago opcional que abre todos los juegos, el archivo de días anteriores y las estadísticas de cada juego.",
+				"content": "3 de los 19 puzzles diarios son gratis cada día. Tryit Plus es una suscripción de pago opcional que abre todos los juegos, el archivo de días anteriores y las estadísticas de cada juego.",
 				"items": {
 					"billing": "Los precios se muestran antes de que pagues e incluyen el IVA cuando corresponda. Sylphx Limited cobra el pago cuando te suscribes y al comienzo de cada período mensual o anual.",
 					"renewal": "Tu suscripción se renueva automáticamente hasta que la canceles. Puedes cancelarla en cualquier momento en Ajustes > Suscripción; conservas el acceso hasta el final del período que has pagado y no se te vuelve a cobrar.",

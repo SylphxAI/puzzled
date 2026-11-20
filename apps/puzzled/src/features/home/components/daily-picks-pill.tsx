@@ -64,7 +64,7 @@ export function DailyPicksPill({ dayKey, unlimited = false, className }: DailyPi
 	if (left === 0) {
 		return (
 			<Link
-				href="/pricing"
+				href="/pricing?utm_source=tryit&utm_medium=picks_pill&entry_surface=picks_pill"
 				data-daily-picks={used}
 				className={cn('picks-pill picks-pill-link', className)}
 			>

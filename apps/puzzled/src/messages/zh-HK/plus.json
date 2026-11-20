@@ -11,7 +11,7 @@
 		"checkoutFailed": "未能開啟付款頁面，請再試一次。",
 		"freeTitle": "免費",
 		"freeBody": "每日任揀 3 款遊戲，毋須登記帳戶。",
-		"playFree": "玩今日免費謎題：{game}",
+		"playFree": "玩 {game}（每日 19 款任揀 3 款免費）",
 		"individualBody": "供一位玩家使用。",
 		"family": "Tryit Plus 家庭方案",
 		"familyBody": "最多 {count} 人使用，各自保留統計和連續紀錄。",
@@ -47,7 +47,7 @@
 		"renewsYearly": "每年以 {price} 自動續期，直至你取消。可隨時在「設定」中取消。",
 		"renewsMonthly": "每月以 {price} 自動續期，直至你取消。可隨時在「設定」中取消。",
 		"familyLink": "最多 {count} 人的家庭方案",
-		"notNowPlayFree": "暫時不訂閱，玩今日免費謎題",
+		"notNowPlayFree": "暫時唔訂，每日 19 款謎題任揀 3 款免費玩",
 		"choosePlus": "選擇 Tryit Plus",
 		"signInToGetPlus": "登入以購買 Plus",
 		"signInToStartFamily": "登入以開通家庭方案"
@@ -59,7 +59,7 @@
 	"unlock": {
 		"title": "今日嘅 3 款免費遊戲已經玩完",
 		"archiveTitle": "往日題目屬於 Tryit Plus",
-		"body": "今日免費謎題是 {game}。Tryit Plus 開放全部 {count} 款遊戲和所有往日題目。",
+		"body": "每日 {count} 款謎題可任揀 3 款免費玩（今日精選：{game}）。Tryit Plus 開放全部 {count} 款遊戲和所有往日題目。",
 		"cta": "了解 Tryit Plus",
 		"signIn": "登入",
 		"playFree": "免費玩 {game}",
@@ -72,7 +72,12 @@
 		"resultPrice": "{plan} · 每年 {price}",
 		"day3Title": "你已玩了 {days} 日，開局不錯！",
 		"day7Title": "你已玩了 {days} 日，是常客了！",
-		"milestoneBody": "Tryit Plus 開放全部 {count} 款遊戲、往日題庫以及每款遊戲的統計。每日任揀 3 款謎題繼續免費。"
+		"milestoneBody": "Tryit Plus 開放全部 {count} 款遊戲、往日題庫以及每款遊戲的統計。每日任揀 3 款謎題繼續免費。",
+		"resultPriceWithPass": "{days} 日通行證 {passPrice} · {plan} 每年 {price}",
+		"resultPassPrice": "{days} 日通行證 · {passPrice}",
+		"resultPicksUsedBadge": "今日免費額度已用 {used}/{total}",
+		"resultPicksUsedTitle": "今日 {total} 款免費遊戲已玩完 — 解鎖全部 {count} 款遊戲",
+		"resultPicksUsedBody": "你已完成今日 3 款免費謎題。選擇 3 日通行證或 Tryit Plus，暢玩全部 {count} 款每日遊戲與 30 日往日題庫。"
 	},
 	"subscription": {
 		"title": "訂閱",

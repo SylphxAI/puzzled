@@ -4,7 +4,7 @@
 	"eyebrow": "Archive",
 	"title": "Your puzzle archive",
 	"body": "Browse every game from the past 30 days, then pick a puzzle to play with Plus.",
-	"playFreeToday": "Play today's free puzzle ({game})",
+	"playFreeToday": "Play {game} (3 of 19 free daily)",
 	"listTitle": "Past 30 days · all 19 games",
 	"listBody": "All {games} games from each of the past {count} puzzle days, newest first.",
 	"playDayLabel": "Play {game} from {date}",
@@ -18,5 +18,8 @@
 	"dayPicker": "Pick a day",
 	"filterLabel": "Filter by category",
 	"yesterday": "Yesterday",
-	"dayCount": "{count} puzzles"
+	"dayCount": "{count} puzzles",
+	"mobileUnlockTitle": "Unlock all 30 past days",
+	"mobileUnlockBody": "Play all {games} games from the past {count} days with a 3-day pass or Tryit Plus.",
+	"mobileUnlockCta": "Unlock archive"
 }

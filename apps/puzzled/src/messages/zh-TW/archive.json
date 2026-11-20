@@ -5,9 +5,11 @@
 	"title": "你的過往題庫",
 	"body": "喜歡的遊戲，還有更多。瀏覽過去 30 天的全部遊戲，用 Plus 挑一道過往謎題慢慢玩。",
 	"listBody": "過去 {count} 個謎題日，每天全部 {games} 款遊戲，由近到遠排列。",
-	"playFreeToday": "玩今天的免費謎題（{game}）",
+	"playFreeToday": "玩 {game}（每天 19 款任選 3 款免費）",
 	"playToday": "玩今天的儀式（{game}）",
 	"dayPicker": "選擇日期",
 	"filterLabel": "依類別篩選",
-	"yesterday": "昨天"
+	"yesterday": "昨天",
+	"mobileUnlockTitle": "解鎖過去 30 天完整題庫",
+	"mobileUnlockBody": "使用 3 天通行證或 Tryit Plus，暢玩過去 {count} 天的全部 {games} 款遊戲。"
 }

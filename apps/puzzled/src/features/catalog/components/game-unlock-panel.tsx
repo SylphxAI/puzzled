@@ -38,31 +38,39 @@ export async function GameUnlockPanel({
 			className="mx-auto w-full max-w-xl text-center"
 			data-unlock-panel={archive ? 'archive' : 'picks'}
 		>
-			<div className="flex flex-col items-center gap-4">
-				{archive ? (
-					<span className="flex h-14 w-14 items-center justify-center rounded-2xl border-[1.5px] border-[var(--tactile-line)] bg-card shadow-[0_3px_0_0_var(--tactile-edge)]">
-						<Lock className="h-6 w-6" aria-hidden="true" />
-					</span>
-				) : (
-					// The masthead's three pick slots, all used: the same object, now full.
-					<span className="picks-pill" aria-hidden="true">
-						<span className="flex items-center gap-1">
-							{Array.from({ length: DAILY_FREE_PICKS }, (_, i) => (
-								<span key={i} className="picks-slot picks-slot-used" />
-							))}
+			<div className="flex flex-col items-center gap-2.5">
+				<div className="flex flex-wrap items-center justify-center gap-2">
+					{archive ? (
+						<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border-[1.5px] border-[var(--tactile-line)] bg-card shadow-[0_2px_0_0_var(--tactile-edge)]">
+							<Lock className="h-4 w-4" aria-hidden="true" />
 						</span>
-						<span className="numeral">
-							{DAILY_FREE_PICKS} / {DAILY_FREE_PICKS}
+					) : (
+						// The masthead's three pick slots, all used: the same object, now full.
+						<span className="picks-pill" aria-hidden="true">
+							<span className="flex items-center gap-1">
+								{Array.from({ length: DAILY_FREE_PICKS }, (_, i) => (
+									<span key={i} className="picks-slot picks-slot-used" />
+								))}
+							</span>
+							<span className="numeral">
+								{DAILY_FREE_PICKS} / {DAILY_FREE_PICKS}
+							</span>
 						</span>
-					</span>
-				)}
-				<h2 className="font-display text-2xl leading-tight text-balance md:text-[1.75rem]">
-					{archive ? t('archiveTitle') : t('title')}
-				</h2>
-				<div className="w-full text-left">
-					<CheckoutOffer signedIn={!isGuest} callbackUrl={returnTo} gameCount={gameCount} />
+					)}
+					<h2 className="font-display text-xl leading-tight text-balance md:text-2xl">
+						{archive ? t('archiveTitle') : t('title')}
+					</h2>
 				</div>
-				<div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
+				<div className="w-full text-left">
+					<CheckoutOffer
+						signedIn={!isGuest}
+						callbackUrl={returnTo}
+						gameCount={gameCount}
+						checkoutTrigger="game_unlock"
+						compact
+					/>
+				</div>
+				<div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:justify-center">
 					{isGuest ? (
 						<Link
 							href={{ pathname: '/login', query: { callbackUrl: returnTo } }}

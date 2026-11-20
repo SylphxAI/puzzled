@@ -23,7 +23,7 @@
 	"emptyTitle": "No puzzles match those filters",
 	"emptyDescription": "Try a different title, or clear the filters to see the whole suite.",
 	"featuredPlay": "Play {game}",
-	"featuredNote": "Open to everyone today — no account needed. Tomorrow another puzzle takes its place.",
+	"featuredNote": "Pick any 3 of 19 puzzles free every day — no account needed. A fresh set lands tomorrow.",
 	"suiteTitle": "The whole suite",
 	"ritual": {
 		"title": "How a Tryit day works",
@@ -40,15 +40,15 @@
 		"body": "The short version of how this catalog works.",
 		"start": {
 			"question": "Where should I start?",
-			"answer": "Open today's pick. It needs no account and no payment. The other puzzles are open with Tryit Plus."
+			"answer": "Pick any 3 of today's 19 puzzles to play free — no account or payment needed. Tryit Plus opens all 19 games and the 30-day archive."
 		},
 		"rotation": {
 			"question": "How does today's pick rotate?",
-			"answer": "One puzzle is featured each day and the rotation flips at midnight, Hong Kong time. Everyone gets the same pick on the same day."
+			"answer": "You can pick any 3 of 19 puzzles free every day, while one spotlight puzzle leads the page and rotates at midnight, Hong Kong time. Everyone plays the same daily set."
 		},
 		"account": {
 			"question": "Do I need an account?",
-			"answer": "No. Today's pick is playable as a guest; an account keeps your streak, results and stats across devices."
+			"answer": "No. Your 3 free puzzles of 19 every day are playable as a guest; an account keeps your streak, results and stats across devices."
 		},
 		"share": {
 			"question": "Can I share a result without spoiling it?",

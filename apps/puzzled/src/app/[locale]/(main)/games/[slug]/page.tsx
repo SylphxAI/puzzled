@@ -199,7 +199,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 						? localizedPath(locale, todayPlayPath(canonicalSlug, difficulty))
 						: '#play'
 				}
-				variant={started ? 'stage' : 'landing'}
+				variant={started || locked ? 'stage' : 'landing'}
 			/>
 
 			{/*
@@ -213,12 +213,18 @@ export default async function GamePage({ params, searchParams }: Props) {
 				<h2 className="sr-only">{tCatalog('gamePage.playCta')}</h2>
 				<Suspense
 					fallback={
-						<div className="page-shell py-4 md:py-6">
-							<GamePlaySkeleton variant={started ? 'stage' : 'landing'} />
+						<div className={cn('page-shell', locked ? 'py-2 md:py-3' : 'py-4 md:py-6')}>
+							<GamePlaySkeleton variant={started || locked ? 'stage' : 'landing'} />
 						</div>
 					}
 				>
-					<div className={cn('page-shell py-4 md:py-6', started && 'min-h-[25rem]')}>
+					<div
+						className={cn(
+							'page-shell',
+							locked ? 'py-2 md:py-3' : 'py-4 md:py-6',
+							started && 'min-h-[25rem]',
+						)}
+					>
 						<GamePlayArea
 							slug={canonicalSlug}
 							locale={locale}

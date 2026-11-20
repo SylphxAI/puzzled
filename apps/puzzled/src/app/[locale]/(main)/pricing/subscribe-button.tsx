@@ -26,6 +26,8 @@ type Props = {
 	renewalNote?: string
 	/** Surface trigger label for begin_checkout telemetry. */
 	checkoutTrigger?: string
+	/** Compact vertical rhythm for above-the-fold unlock panels (keeps Reg 36/37 intact). */
+	compact?: boolean
 }
 
 /**
@@ -46,6 +48,7 @@ export function SubscribeButton({
 	callbackUrl,
 	renewalNote,
 	checkoutTrigger = 'pricing_subscribe',
+	compact = false,
 }: Props) {
 	const t = useTranslations('plus.pricing')
 	const [busy, setBusy] = useState(false)
@@ -65,7 +68,13 @@ export function SubscribeButton({
 	return (
 		<div>
 			{requiresWaiver ? (
-				<label className="mb-3 flex min-h-11 cursor-pointer items-start gap-3 text-sm">
+				<label
+					className={
+						compact
+							? 'mb-2 flex min-h-11 cursor-pointer items-start gap-2.5 text-xs leading-snug'
+							: 'mb-3 flex min-h-11 cursor-pointer items-start gap-3 text-sm'
+					}
+				>
 					<input
 						type="checkbox"
 						className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
@@ -78,21 +87,40 @@ export function SubscribeButton({
 			{locale === 'ja' && (
 				<Link
 					href="/tokushoho"
-					className="mb-3 inline-flex min-h-11 items-center text-sm underline underline-offset-2"
+					className={
+						compact
+							? 'mb-1.5 inline-flex min-h-11 items-center text-xs underline underline-offset-2'
+							: 'mb-3 inline-flex min-h-11 items-center text-sm underline underline-offset-2'
+					}
 				>
 					特定商取引法に基づく表記
 				</Link>
 			)}
 			{renewalNote ? (
-				<p className="mb-2.5 text-sm text-muted-foreground">
+				<p
+					className={
+						compact
+							? 'mb-2 text-xs leading-snug text-muted-foreground'
+							: 'mb-2.5 text-sm text-muted-foreground'
+					}
+				>
 					{renewalNote}
 					{!requiresWaiver ? ` ${t('recurringSupplyTerms')}` : ''}
 				</p>
 			) : !requiresWaiver ? (
-				<p className="mb-2.5 text-sm text-muted-foreground">{t('recurringSupplyTerms')}</p>
+				<p
+					className={
+						compact
+							? 'mb-2 text-xs leading-snug text-muted-foreground'
+							: 'mb-2.5 text-sm text-muted-foreground'
+					}
+				>
+					{t('recurringSupplyTerms')}
+				</p>
 			) : null}
 			<button
 				type="button"
+				data-checkout-trigger={checkoutTrigger}
 				className={buttonClass}
 				disabled={busy || (requiresWaiver && !consent)}
 				onClick={async () => {

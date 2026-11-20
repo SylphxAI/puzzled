@@ -4,7 +4,7 @@
 	"eyebrow": "存档",
 	"title": "你的往日题库",
 	"body": "喜欢的游戏，还有更多。浏览过去 30 天的全部游戏，用 Plus 挑一道往日谜题慢慢玩。",
-	"playFreeToday": "玩今日免费谜题（{game}）",
+	"playFreeToday": "玩 {game}（每天 19 款任选 3 款免费）",
 	"listTitle": "过去 30 天 · 全部 19 款游戏",
 	"listBody": "过去 {count} 个谜题日，每天全部 {games} 款游戏，按从近到远排列。",
 	"playDayLabel": "玩 {date} 的 {game}",
@@ -18,5 +18,8 @@
 	"dayPicker": "选择日期",
 	"filterLabel": "按类别筛选",
 	"yesterday": "昨天",
-	"dayCount": "{count} 款谜题"
+	"dayCount": "{count} 款谜题",
+	"mobileUnlockTitle": "解锁过去 30 天完整题库",
+	"mobileUnlockBody": "使用 3 天通行证或 Tryit Plus，畅玩过去 {count} 天的全部 {games} 款游戏。",
+	"mobileUnlockCta": "解锁题库"
 }

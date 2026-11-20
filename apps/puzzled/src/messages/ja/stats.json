@@ -152,5 +152,10 @@
 		"time": "タイム",
 		"note": "スコアとタイムは、各回についてサーバーが受け付けた値です。"
 	},
-	"duration": "{minutes}分{seconds}秒"
+	"duration": "{minutes}分{seconds}秒",
+	"plusCard": {
+		"title": "Tryit Plusで全{count}ゲームをプレイ＆記録",
+		"body": "毎日{count}種類から3つは無料のまま。すべてのデイリーゲーム、過去30日間のアーカイブ、全ゲームの統計を解放できます。",
+		"cta": "Tryit Plusを見る"
+	}
 }

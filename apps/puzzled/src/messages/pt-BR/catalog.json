@@ -23,7 +23,7 @@
 	"emptyTitle": "Nenhum desafio corresponde a esses filtros",
 	"emptyDescription": "Tente outro título ou limpe os filtros para ver a coleção inteira.",
 	"featuredPlay": "Jogar {game}",
-	"featuredNote": "Aberto a todos hoje — sem precisar de conta. Amanhã outro desafio ocupa o lugar.",
+	"featuredNote": "Escolha 3 dos 19 desafios grátis todos os dias — sem precisar de conta. Amanhã chega um novo conjunto.",
 	"suiteTitle": "A coleção completa",
 	"ritual": {
 		"title": "Como funciona um dia no Tryit",
@@ -40,15 +40,15 @@
 		"body": "A versão resumida de como este catálogo funciona.",
 		"start": {
 			"question": "Por onde devo começar?",
-			"answer": "Abra o destaque de hoje. Ele não exige conta nem pagamento. Os outros desafios são liberados com o Tryit Plus."
+			"answer": "Escolha 3 dos 19 desafios de hoje para jogar grátis, sem conta e sem pagamento. O Tryit Plus libera todos os 19 jogos e o arquivo de 30 dias."
 		},
 		"rotation": {
 			"question": "Como o destaque de hoje muda?",
-			"answer": "Um desafio é destacado por dia, e o rodízio vira à meia-noite, no horário de Hong Kong. Todo mundo recebe o mesmo destaque no mesmo dia."
+			"answer": "Todo dia você pode escolher 3 dos 19 desafios grátis; além disso, um desafio em destaque lidera a página e muda à meia-noite, no horário de Hong Kong. Todos jogam o mesmo conjunto diário."
 		},
 		"account": {
 			"question": "Preciso de uma conta?",
-			"answer": "Não. O destaque de hoje pode ser jogado como visitante; uma conta mantém sua sequência, seus resultados e suas estatísticas em todos os dispositivos."
+			"answer": "Não. Seus 3 desafios grátis dos 19 por dia podem ser jogados como visitante; uma conta guarda sua sequência, seus resultados e suas estatísticas em vários dispositivos."
 		},
 		"share": {
 			"question": "Posso compartilhar um resultado sem dar spoiler?",

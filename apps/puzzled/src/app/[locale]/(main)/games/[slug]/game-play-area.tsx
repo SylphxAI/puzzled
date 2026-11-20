@@ -1,5 +1,4 @@
 import { ConnectError } from '@connectrpc/connect'
-import { cookies, headers } from 'next/headers'
 import { getTranslations } from 'next-intl/server'
 import { AdsProvider } from '@/features/ads/components/ad-context'
 import { GameUnlockPanel } from '@/features/catalog/components/game-unlock-panel'
@@ -12,37 +11,24 @@ import {
 import { PlusTrialProvider } from '@/features/plus/components/trial-ends-line'
 import { PlusOfferProvider } from '@/features/plus-offer/components/plus-offer-context'
 import { plusOfferFor } from '@/features/plus-offer/lib/plus-offer'
+import { getServerOfferPrices } from '@/features/plus-offer/lib/server-offer-prices'
 import { type GameSlug, getGameMetadata } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { adsConfig, adsFor } from '@/lib/ads'
 import {
 	type DailyStatus,
 	getServerDailyStatus,
-	getServerPlans,
 	getServerPlusAccess,
 	getServerPlusOfferAccess,
 	getServerStreakInfo,
 	hasServerProgressIdentity,
 	type StreakInfo,
 } from '@/lib/api/server'
-import {
-	availableCurrencies,
-	COUNTRY_HEADER,
-	CURRENCY_COOKIE,
-	chooseCurrency,
-} from '@/lib/billing/currency'
-import {
-	formatPrice,
-	isPlayLocked,
-	isPlusRequiredError,
-	type PlusAccess,
-	planCards,
-} from '@/lib/billing/plus'
+import { isPlayLocked, isPlusRequiredError, type PlusAccess } from '@/lib/billing/plus'
 import type { GameMode } from '@/lib/db/schema'
 import { env } from '@/lib/env'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
-import { withPresentationDeadline } from '@/lib/presentation-document'
 import { productDayKey } from '@/lib/product-day'
 import { DifficultySelectionView } from './difficulty-selection-view'
 import { GameDailyFallback } from './game-daily-fallback'
@@ -89,33 +75,12 @@ export async function GamePlayArea(props: GamePlayAreaProps) {
 	// hides the offer when Money cannot confirm (the lock rule above fails open).
 	const offerAccessFacts = await getServerPlusOfferAccess(props.hasUser)
 	const offer = plusOfferFor(offerAccessFacts, { gameCount: props.gameCount })
-	const yearlyPrice = offer ? await plusYearlyPrice(props.locale) : undefined
+	const prices = offer ? await getServerOfferPrices(props.locale) : {}
 	return (
-		<PlusOfferProvider offer={offer && { ...offer, yearlyPrice }} dayKey={productDayKey()}>
+		<PlusOfferProvider offer={offer && { ...offer, ...prices }} dayKey={productDayKey()}>
 			{await renderPlayArea(props, access)}
 		</PlusOfferProvider>
 	)
-}
-
-/**
- * The individual yearly Plus price in the visitor's currency, chosen and
- * formatted exactly as the pricing page does. Undefined when the catalogue is
- * unreadable, not on sale or has no yearly plan, so the card shows no price.
- */
-async function plusYearlyPrice(locale: string): Promise<string | undefined> {
-	const plans = await withPresentationDeadline(getServerPlans(), null)
-	if (!plans?.salesOpen) return undefined
-	const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()])
-	const currency = chooseCurrency({
-		cookie: cookieStore.get(CURRENCY_COOKIE)?.value,
-		country: requestHeaders.get(COUNTRY_HEADER),
-		locale,
-		available: availableCurrencies(plans.plans),
-	})
-	const year = planCards(plans.plans, currency).find(
-		(card) => !card.family && card.interval === 'year',
-	)
-	return year ? formatPrice(year.amountMinor, year.currency, locale) : undefined
 }
 
 async function renderPlayArea(

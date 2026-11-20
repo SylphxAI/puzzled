@@ -53,7 +53,6 @@
 			"thirdParty": {
 				"title": "Who we share data with",
 				"content": "We share personal data with service providers that process it for us under contract, including:",
-
 				"stripe": "Payment processing",
 				"google": "Authentication",
 				"mail": "Email delivery (sign-in and verification mail)",
@@ -156,7 +155,7 @@
 			},
 			"subscriptions": {
 				"title": "Tryit Plus subscriptions",
-				"content": "Today's featured puzzle is free. Tryit Plus is an optional paid subscription that opens every game, the archive of past days, and stats for every game.",
+				"content": "Any 3 of 19 daily puzzles are free every day. Tryit Plus is an optional paid subscription that opens every game, the archive of past days, and stats for every game.",
 				"items": {
 					"billing": "Prices are shown before you pay and include VAT where it applies. Sylphx Limited takes payment when you subscribe and at the start of each monthly or yearly period.",
 					"renewal": "Your subscription renews automatically until you cancel. You can cancel at any time in Settings > Subscription; you keep access until the end of the period you have paid for and are not charged again.",

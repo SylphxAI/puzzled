@@ -16,7 +16,7 @@
 	"wantMore": "Want to keep playing?",
 	"backToGames": "Back to all games",
 	"freeToday": "Free",
-	"tomorrowsFreeGame": "Tomorrow: {game} is free",
+	"tomorrowsFreeGame": "Tomorrow: 3 new free puzzles of 19 (featured: {game})",
 	"viewResult": "View Result",
 	"backToHome": "Back to Home",
 	"loadingPuzzle": "Loading today's puzzle…",
@@ -25,9 +25,9 @@
 	"completedNoResult": "You already finished today's puzzle. Result details aren't available right now.",
 	"statusUnknown": "Status unknown",
 	"difficultyStatusUnverified": "We couldn't verify which levels you've finished today. The server checks before you start.",
-	"todaysFreeGame": "Play today's free puzzle",
+	"todaysFreeGame": "Play today's 3 free puzzles",
 	"notReadyTitle": "Today's {game} isn't ready yet",
-	"notReadyBody": "There is no {game} puzzle for today yet. Today's free puzzle is ready to play.",
-	"notReadyCta": "Play today's free puzzle",
+	"notReadyBody": "There is no {game} puzzle for today yet. Pick any 3 of today's other 19 puzzles to play free.",
+	"notReadyCta": "Browse today's free puzzles",
 	"startUsesPick": "Starting uses one of today's 3 free picks. A game you start stays open all day."
 }

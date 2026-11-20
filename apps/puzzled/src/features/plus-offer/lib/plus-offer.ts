@@ -5,12 +5,76 @@
  */
 
 import { parseDismissed } from '@/features/announcements/lib/dismissed'
-import { OPEN_ACCESS, type PlusAccess } from '@/lib/billing/plus'
+import { formatPrice, OPEN_ACCESS, type PlanCard, type PlusAccess } from '@/lib/billing/plus'
 
 /** Distinct play days at which a returning member is offered Plus, once each. */
 export const PLUS_PROMPT_MILESTONES = [3, 7] as const
 
-/** What a result screen needs to offer Plus: the catalogue size. */
+/** Allowed in-app checkout triggers attributed in GA4 `begin_checkout`. */
+export const PAYWALL_CHECKOUT_TRIGGERS = new Set([
+	'pricing_card',
+	'pricing_family_card',
+	'game_unlock',
+	'game_unlock_archive',
+	'archive_banner',
+	'result_card',
+	'result_card_picks_exhausted',
+	'stats_banner',
+	'milestone_prompt',
+	'picks_pill',
+])
+
+/**
+ * Resolves a distinct GA4 `checkout_trigger` for `/pricing` from an inbound
+ * in-app paywall surface query (`trigger`, `entry_surface`, `utm_medium`),
+ * ignoring non-paywall campaign mediums (such as `cpc`) and falling back to
+ * the pricing card's own trigger.
+ */
+export function resolvePricingCheckoutTrigger({
+	trigger,
+	entrySurface,
+	utmMedium,
+	fallback,
+}: {
+	trigger?: string
+	entrySurface?: string
+	utmMedium?: string
+	fallback: string
+}): string {
+	for (const candidate of [trigger, entrySurface, utmMedium]) {
+		const clean = candidate?.trim().toLowerCase()
+		if (clean && PAYWALL_CHECKOUT_TRIGGERS.has(clean)) return clean
+	}
+	return fallback
+}
+
+/** Formatted live prices for in-app offer cards, pinned to one currency. */
+export type OfferPriceSummary = {
+	yearlyPrice?: string
+	passPrice?: string
+	passDays?: number
+}
+
+/**
+ * Selects the formatted Individual yearly Plus price and one-time Starter Pass
+ * price in one currency so result, archive, and stats surfaces never mix currencies.
+ */
+export function selectOfferPrices(
+	cards: readonly PlanCard[],
+	currency: string,
+	locale: string,
+): OfferPriceSummary {
+	const matching = cards.filter((card) => !card.family && card.currency === currency)
+	const year = matching.find((card) => card.interval === 'year')
+	const pass = matching.find((card) => card.interval === 'once' && card.accessDays > 0)
+	return {
+		yearlyPrice: year ? formatPrice(year.amountMinor, year.currency, locale) : undefined,
+		passPrice: pass ? formatPrice(pass.amountMinor, pass.currency, locale) : undefined,
+		passDays: pass?.accessDays,
+	}
+}
+
+/** What a result screen needs to offer Plus: the catalogue size and live prices. */
 export type PlusOffer = {
 	gameCount: number
 	/**
@@ -18,6 +82,12 @@ export type PlusOffer = {
 	 * amount, visitor's currency, formatted). Absent when it cannot be read.
 	 */
 	yearlyPrice?: string
+	/** The one-time Starter Pass price in the same currency, when on sale. */
+	passPrice?: string
+	/** Pass duration in days (e.g. 3), paired with `passPrice`. */
+	passDays?: number
+	/** Optional server/test override for today's used free picks count. */
+	picksUsed?: number
 }
 
 /** The server pins result offers to its Hong Kong product day, not the browser clock. */

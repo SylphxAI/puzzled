@@ -80,7 +80,7 @@ export function PlusMilestonePrompt({
 				{t('milestoneBody', { count: offer.gameCount })}
 			</p>
 			<Link
-				href="/pricing"
+				href="/pricing?utm_source=tryit&utm_medium=milestone_prompt&entry_surface=milestone_prompt"
 				onClick={() => setOpen(false)}
 				className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-primary px-5 font-semibold text-primary-foreground"
 			>

@@ -53,7 +53,6 @@
 			"thirdParty": {
 				"title": "Com quem compartilhamos dados",
 				"content": "Compartilhamos dados pessoais com prestadores de serviços que os processam para nós sob contrato, incluindo:",
-
 				"stripe": "Processamento de pagamentos",
 				"google": "Autenticação",
 				"mail": "Envio de e-mails (e-mails de login e verificação)",
@@ -156,7 +155,7 @@
 			},
 			"subscriptions": {
 				"title": "Assinaturas do Tryit Plus",
-				"content": "O desafio em destaque de hoje é grátis. O Tryit Plus é uma assinatura paga opcional que libera todos os jogos, o arquivo dos dias anteriores e as estatísticas de cada jogo.",
+				"content": "Qualquer 3 dos 19 desafios diários são gratuitos todos os dias. O Tryit Plus é uma assinatura paga opcional que libera todos os jogos, o arquivo de dias anteriores e as estatísticas de cada jogo.",
 				"items": {
 					"billing": "Os preços são exibidos antes do pagamento e incluem o VAT quando aplicável. A Sylphx Limited cobra quando você assina e no início de cada período mensal ou anual.",
 					"renewal": "Sua assinatura é renovada automaticamente até você cancelar. Você pode cancelar a qualquer momento em Configurações > Assinatura; o acesso continua até o fim do período que você pagou e você não é cobrado de novo.",

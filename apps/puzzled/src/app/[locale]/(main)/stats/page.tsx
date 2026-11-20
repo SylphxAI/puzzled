@@ -1,6 +1,16 @@
 export const dynamic = 'force-dynamic'
 
-import { BarChart3, Check, Flame, Play, RefreshCw, Snowflake, Trophy } from 'lucide-react'
+import {
+	ArrowRight,
+	BarChart3,
+	Check,
+	Crown,
+	Flame,
+	Play,
+	RefreshCw,
+	Snowflake,
+	Trophy,
+} from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
 	ConsoleCard,
@@ -17,11 +27,14 @@ import {
 	winRatePercent,
 } from '@/features/console/lib/finish-activity'
 import { getNextAchievements } from '@/features/gamification'
+import { plusOfferOpen } from '@/features/plus-offer/lib/plus-offer'
+import { getServerOfferPrices } from '@/features/plus-offer/lib/server-offer-prices'
 import { getAllGameMetadata } from '@/games/registry'
 import { isEmptyGuestRecord } from '@/lib/api/no-identity'
 import {
 	getServerHistory,
 	getServerPersonalDailyResults,
+	getServerPlusOfferAccess,
 	getServerStreakInfo,
 	getServerUserStats,
 	hasServerProgressIdentity,
@@ -29,6 +42,7 @@ import {
 	type StreakInfo,
 	type UserStats,
 } from '@/lib/api/server'
+import { OPEN_ACCESS } from '@/lib/billing/plus'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
 import { currentUser, sessionToken } from '@/lib/identity/server'
@@ -80,6 +94,8 @@ export default async function StatsPage({ params }: Props) {
 	const t = await getTranslations('stats')
 	const tGames = await getTranslations('games')
 	const tCommon = await getTranslations('common')
+	const tPlus = await getTranslations('plus')
+	const tOffer = await getTranslations('plus.offer')
 
 	const user = await withPresentationDeadline(currentUser(), null)
 	const hasProgressIdentity = Boolean(user) || (await hasServerProgressIdentity())
@@ -92,14 +108,43 @@ export default async function StatsPage({ params }: Props) {
 	}))
 	const moduleNames = Object.fromEntries(modules.map((module) => [module.slug, module.name]))
 
-	const [statsResult, historyResult, streakResult, personalResult] = await Promise.allSettled([
-		hasProgressIdentity ? getServerUserStats() : Promise.resolve(null as UserStats | null),
-		hasProgressIdentity ? getServerHistory({ limit: HISTORY_LIMIT }) : Promise.resolve(null),
-		hasProgressIdentity ? getServerStreakInfo() : Promise.resolve(null as StreakInfo | null),
-		getServerPersonalDailyResults({
-			gameSlugs: modules.map((module) => module.slug),
-		}),
-	])
+	const [statsResult, historyResult, streakResult, personalResult, offerAccess] = await Promise.all(
+		[
+			Promise.allSettled([
+				hasProgressIdentity ? getServerUserStats() : Promise.resolve(null as UserStats | null),
+			]).then(([res]) => res),
+			Promise.allSettled([
+				hasProgressIdentity ? getServerHistory({ limit: HISTORY_LIMIT }) : Promise.resolve(null),
+			]).then(([res]) => res),
+			Promise.allSettled([
+				hasProgressIdentity ? getServerStreakInfo() : Promise.resolve(null as StreakInfo | null),
+			]).then(([res]) => res),
+			Promise.allSettled([
+				getServerPersonalDailyResults({
+					gameSlugs: modules.map((module) => module.slug),
+				}),
+			]).then(([res]) => res),
+			withPresentationDeadline(getServerPlusOfferAccess(Boolean(user)), OPEN_ACCESS),
+		],
+	)
+	const showPlusCard = plusOfferOpen(offerAccess)
+	const offerPrices = showPlusCard ? await getServerOfferPrices(locale) : {}
+	const statsPriceLine =
+		offerPrices.passPrice && offerPrices.yearlyPrice
+			? tOffer('resultPriceWithPass', {
+					days: offerPrices.passDays ?? 3,
+					passPrice: offerPrices.passPrice,
+					plan: tPlus('name'),
+					price: offerPrices.yearlyPrice,
+				})
+			: offerPrices.passPrice
+				? tOffer('resultPassPrice', {
+						days: offerPrices.passDays ?? 3,
+						passPrice: offerPrices.passPrice,
+					})
+				: offerPrices.yearlyPrice
+					? tOffer('resultPrice', { plan: tPlus('name'), price: offerPrices.yearlyPrice })
+					: null
 
 	// A guest without a stored identity has written nothing yet (the api issues
 	// the player row on the first finished write), so the personal reads answer
@@ -416,6 +461,41 @@ export default async function StatsPage({ params }: Props) {
 						)}
 
 						<MilestoneRingsCard milestones={milestones} unavailable={!milestonesReadable} />
+
+						{showPlusCard ? (
+							<section
+								aria-labelledby="stats-plus-card-title"
+								data-stats-plus-card=""
+								className="rounded-2xl border border-border bg-card/80 p-4 sm:p-5"
+							>
+								<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+									<div className="min-w-0">
+										<h2
+											id="stats-plus-card-title"
+											className="flex items-center gap-2 font-display text-base sm:text-lg"
+										>
+											<Crown className="h-4 w-4 shrink-0 text-accent-warm" aria-hidden="true" />
+											{t('plusCard.title', { count: modules.length })}
+										</h2>
+										<p className="mt-1 text-sm text-muted-foreground">
+											{t('plusCard.body', { count: modules.length })}
+										</p>
+										{statsPriceLine ? (
+											<p className="mt-1 text-xs font-semibold text-foreground/85 tnum">
+												{statsPriceLine}
+											</p>
+										) : null}
+									</div>
+									<Link
+										href="/pricing?utm_source=tryit&utm_medium=stats_banner&entry_surface=stats_banner"
+										className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-4 text-sm font-semibold transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+									>
+										{t('plusCard.cta')}
+										<ArrowRight className="h-4 w-4" aria-hidden="true" />
+									</Link>
+								</div>
+							</section>
+						) : null}
 
 						{historyKnown ? (
 							<FinishHistoryCard

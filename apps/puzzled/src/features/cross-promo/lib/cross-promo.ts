@@ -6,7 +6,7 @@
  * done. At most one card a product day (Asia/Hong_Kong, the same day the
  * puzzles use), chosen from the day so every player sees the same one and a
  * refresh cannot show a second. The link is public and carries no player data:
- * `utm_source=puzzled` says where the click came from, and the destination
+ * `utm_source=tryit` says where the click came from, and the destination
  * keeps it only under its own recorded-consent rule.
  */
 
@@ -46,7 +46,7 @@ export function productForDay(
  */
 export function productLink(product: OwnProduct): string {
 	const url = new URL(product.url)
-	url.searchParams.set('utm_source', 'puzzled')
+	url.searchParams.set('utm_source', 'tryit')
 	url.searchParams.set('utm_medium', 'referral')
 	url.searchParams.set('utm_campaign', product.id)
 	return url.toString()

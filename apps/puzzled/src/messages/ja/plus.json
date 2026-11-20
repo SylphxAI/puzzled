@@ -11,7 +11,7 @@
 		"checkoutFailed": "お支払い画面を開始できませんでした。もう一度お試しください。",
 		"freeTitle": "無料",
 		"freeBody": "毎日、好きなゲームを3つ、アカウントなしで遊べます。",
-		"playFree": "今日の無料パズルをプレイ：{game}",
+		"playFree": "{game}を遊ぶ（毎日19種から3つ無料）",
 		"individualBody": "1人用です。",
 		"family": "Tryit Plus ファミリー",
 		"familyBody": "最大{count}人まで。それぞれ自分の統計と連続記録を持てます。",
@@ -47,7 +47,7 @@
 		"renewsYearly": "解約するまで、毎年{price}で自動更新されます。設定からいつでも解約できます。",
 		"renewsMonthly": "解約するまで、毎月{price}で自動更新されます。設定からいつでも解約できます。",
 		"familyLink": "最大{count}人のファミリープラン",
-		"notNowPlayFree": "今はやめて、今日の無料パズルをプレイ",
+		"notNowPlayFree": "今はやめて、毎日19種から3つ無料で遊ぶ",
 		"choosePlus": "Tryit Plusを選ぶ",
 		"signInToGetPlus": "ログインしてPlusを購入",
 		"signInToStartFamily": "ログインしてファミリープランを開始"
@@ -59,7 +59,7 @@
 	"unlock": {
 		"title": "今日の無料3ゲームはプレイ済みです",
 		"archiveTitle": "過去の日はTryit Plusの対象です",
-		"body": "今日の無料パズルは{game}です。Tryit Plusなら、全{count}ゲームと過去のすべての日を楽しめます。",
+		"body": "毎日{count}種類から3つのパズルを無料で遊べます（今日の注目：{game}）。Tryit Plusですべての{count}ゲームと過去の日が解放されます。",
 		"cta": "Tryit Plusを見る",
 		"signIn": "ログイン",
 		"playFree": "{game}を無料でプレイ",
@@ -72,7 +72,12 @@
 		"resultPrice": "{plan}・年額 {price}",
 		"day3Title": "{days}日プレイしました。いいスタートです。",
 		"day7Title": "{days}日プレイしました。すっかり常連ですね。",
-		"milestoneBody": "Tryit Plusなら、全{count}ゲーム、過去の日のアーカイブ、各ゲームの統計をご利用いただけます。毎日好きな3つのパズルは引き続き無料です。"
+		"milestoneBody": "Tryit Plusなら、全{count}ゲーム、過去の日のアーカイブ、各ゲームの統計をご利用いただけます。毎日好きな3つのパズルは引き続き無料です。",
+		"resultPriceWithPass": "{days}日間パス {passPrice}・{plan} 年額{price}",
+		"resultPassPrice": "{days}日間パス・{passPrice}",
+		"resultPicksUsedBadge": "今日の無料枠 {used}/{total} を使用済み",
+		"resultPicksUsedTitle": "今日の無料{total}枠をクリア — 全{count}ゲームを続けてプレイ",
+		"resultPicksUsedBody": "今日の無料パズル3つを完了しました。3日間パスまたはTryit Plusで、全{count}ゲームと過去30日間のアーカイブを遊べます。"
 	},
 	"subscription": {
 		"title": "サブスクリプション",

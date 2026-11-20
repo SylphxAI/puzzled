@@ -16,7 +16,7 @@
 	"wantMore": "もっと遊びますか?",
 	"backToGames": "すべてのゲームに戻る",
 	"freeToday": "無料",
-	"tomorrowsFreeGame": "明日は{game}が無料です",
+	"tomorrowsFreeGame": "明日は全19種から3つ無料プレイ（注目：{game}）",
 	"viewResult": "結果を見る",
 	"backToHome": "ホームに戻る",
 	"loadingPuzzle": "今日のパズルを読み込み中…",
@@ -25,9 +25,9 @@
 	"completedNoResult": "今日のパズルはクリア済みです。結果の詳細は現在表示できません。",
 	"statusUnknown": "ステータス不明",
 	"difficultyStatusUnverified": "今日クリアしたレベルを確認できませんでした。開始前にサーバーで確認します。",
-	"todaysFreeGame": "今日の無料パズルを遊ぶ",
+	"todaysFreeGame": "今日の無料パズル3つを遊ぶ",
 	"notReadyTitle": "今日の{game}はまだ準備中です",
-	"notReadyBody": "今日の{game}のパズルはまだありません。今日の無料パズルはすぐに遊べます。",
-	"notReadyCta": "今日の無料パズルを遊ぶ",
+	"notReadyBody": "今日の{game}のパズルはまだありません。今日の19種から他の無料パズル3つをすぐに遊べます。",
+	"notReadyCta": "今日の無料パズルを見る",
 	"startUsesPick": "始めると今日の無料枠（3つ）を1つ使います。始めたゲームは一日中遊べます。"
 }

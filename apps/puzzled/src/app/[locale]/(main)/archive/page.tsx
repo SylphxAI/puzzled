@@ -1,11 +1,13 @@
 export const dynamic = 'force-dynamic'
 
+import { ArrowDown, Crown } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { AdSlot } from '@/features/ads/components/ad-slot'
 import { CATALOG_CATEGORIES } from '@/features/catalog/lib/catalog'
 import { ArchiveAlmanac } from '@/features/daily/components/archive-almanac'
 import { ARCHIVE_WINDOW_DAYS, archiveDayKeys } from '@/features/daily/lib/archive-days'
 import { CheckoutOffer } from '@/features/plus-offer/components/checkout-offer'
+import { getServerOfferPrices } from '@/features/plus-offer/lib/server-offer-prices'
 import { getAllGameMetadata } from '@/games/registry'
 import { adsConfig, adsFor } from '@/lib/ads'
 import { getServerPlusAccess } from '@/lib/api/server'
@@ -48,9 +50,28 @@ export default async function ArchivePage({ params }: Props) {
 	const t = await getTranslations('archive')
 	const tGames = await getTranslations('games')
 	const tCatalog = await getTranslations('catalog')
+	const tPlus = await getTranslations('plus')
+	const tOffer = await getTranslations('plus.offer')
 	const user = await withPresentationDeadline(currentUser(), null)
 	const access = await withPresentationDeadline(getServerPlusAccess(Boolean(user?.id)), OPEN_ACCESS)
 	const locked = access.salesOpen && !access.entitled
+	const offerPrices = locked ? await getServerOfferPrices(locale) : {}
+	const mobilePriceLine =
+		offerPrices.passPrice && offerPrices.yearlyPrice
+			? tOffer('resultPriceWithPass', {
+					days: offerPrices.passDays ?? 3,
+					passPrice: offerPrices.passPrice,
+					plan: tPlus('name'),
+					price: offerPrices.yearlyPrice,
+				})
+			: offerPrices.passPrice
+				? tOffer('resultPassPrice', {
+						days: offerPrices.passDays ?? 3,
+						passPrice: offerPrices.passPrice,
+					})
+				: offerPrices.yearlyPrice
+					? tOffer('resultPrice', { plan: tPlus('name'), price: offerPrices.yearlyPrice })
+					: null
 	const ads = adsFor(adsConfig(env), access.entitled)
 	const games = getAllGameMetadata().map((game) => ({
 		slug: game.slug,
@@ -91,6 +112,37 @@ export default async function ArchivePage({ params }: Props) {
 								{t('backToGames')}
 							</Link>
 						</div>
+						{locked ? (
+							<div
+								data-archive-mobile-unlock=""
+								className="mt-4 rounded-2xl border-2 border-foreground bg-card p-3.5 shadow-[0_3px_0_0_var(--color-foreground)] lg:hidden"
+							>
+								<div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+									<div className="min-w-0">
+										<p className="flex items-center gap-1.5 font-display text-base leading-snug">
+											<Crown className="h-4 w-4 shrink-0 text-accent-warm" aria-hidden="true" />
+											{t('mobileUnlockTitle')}
+										</p>
+										{mobilePriceLine ? (
+											<p className="mt-0.5 text-xs font-semibold text-muted-foreground tnum">
+												{mobilePriceLine}
+											</p>
+										) : (
+											<p className="mt-0.5 text-xs text-muted-foreground">
+												{t('mobileUnlockBody', { count: ARCHIVE_WINDOW_DAYS, games: games.length })}
+											</p>
+										)}
+									</div>
+									<a
+										href="#archive-unlock"
+										className="pressable inline-flex min-h-12 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#f4b42a] px-4 text-sm font-bold text-[#1a1712] shadow-[0_3px_0_0_#c98a0b] transition-colors hover:bg-[#f7c24e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+									>
+										{t('mobileUnlockCta')}
+										<ArrowDown className="h-4 w-4" aria-hidden="true" />
+									</a>
+								</div>
+							</div>
+						) : null}
 						<section className="mt-5" aria-labelledby="archive-list-title">
 							<h2 id="archive-list-title" className="sr-only">
 								{t('listTitle')}
@@ -114,12 +166,13 @@ export default async function ArchivePage({ params }: Props) {
 						</section>
 					</div>
 					{locked ? (
-						<aside className="lg:sticky lg:top-20">
+						<aside id="archive-unlock" className="scroll-mt-20 lg:sticky lg:top-20">
 							<CheckoutOffer
 								locale={locale}
 								signedIn={Boolean(user?.id)}
 								callbackUrl="/archive"
 								gameCount={games.length}
+								checkoutTrigger="archive_banner"
 							/>
 						</aside>
 					) : null}

@@ -1,39 +1,84 @@
 {
 	"pricing": {
+		"metaTitle": "Tryit Plus：全部遊戲與完整過往題庫",
 		"metaDescription": "每天任選 3 款遊戲免費玩。Tryit Plus 開放全部遊戲、所有過往題目，並提供家庭方案。",
 		"lead": "每天任選 3 款遊戲免費玩。Tryit Plus 開放全部 {count} 款遊戲、過往題庫，以及每款遊戲的統計。",
+		"closedTitle": "目前全部免費",
+		"closedBody": "Tryit Plus 尚未開賣，因此每款遊戲和每一天的題目都向所有人開放。",
+		"checkoutFailed": "無法開啟付款頁面，請再試一次。",
 		"freeBody": "每天任選 3 款遊戲，不需註冊帳號。",
-		"playFree": "玩今天的免費謎題：{game}",
-		"legal": "價格已包含增值稅。由 Sylphx Limited（於英格蘭及威爾斯註冊）出售。訂閱會自動續訂，直至你在「設定」中取消。",
+		"playFree": "玩 {game}（每天 19 款任選 3 款免費）",
 		"weekendPass": "{days} 天通行證",
 		"oneTime": "單次付款",
 		"passTerms": "單次付款，可使用 Tryit Plus {days} 天，不會自動續約。",
+		"currencyLabel": "幣別",
+		"saving": "省下 {percent}%",
+		"includesArchive": "過往題庫中的每一天",
+		"trialLine": "免費試用 {days} 天，之後每年 {price}，首次扣款日為 {date}。可隨時在「設定」中一步取消。",
+		"startTrial": "開始 {days} 天免費試用",
+		"legal": "價格已包含增值稅。由 Sylphx Limited（於英格蘭及威爾斯註冊）出售。訂閱會自動續訂，直到你在「設定」中取消。",
+		"checkoutCancelled": "已取消付款，未向你扣款。",
+		"immediateSupplyConsent": "我同意立即開通使用，並了解將放棄 14 天取消權。",
 		"recurringSupplyTerms": "訂閱後可立即使用；如於 14 天內取消，你只需按已提供的服務比例支付費用。",
+		"consentRequired": "請勾選方格以繼續。",
 		"offerLead": "暢玩全部 {count} 款遊戲，重玩任何一天的過往謎題，追蹤自己在每款遊戲的進步。",
+		"renewsYearly": "每年以 {price} 自動續訂，直到你取消為止。可隨時在「設定」中取消。",
+		"renewsMonthly": "每月以 {price} 自動續訂，直到你取消為止。可隨時在「設定」中取消。",
+		"notNowPlayFree": "暫不訂閱，每天 19 款謎題任選 3 款免費玩",
+		"signInToGetPlus": "登入以訂閱 Plus",
 		"signInToStartFamily": "登入以啟用家庭方案"
+	},
+	"trial": {
+		"endsOn": "你的 Tryit Plus 免費一週試用將於 {date} 結束。不會收取任何費用，你已完成的內容會繼續保留在統計中。",
+		"endingSoon": "你的 Tryit Plus 試用將於 {date} 結束，感謝你的試用。結束前隨時可以取消。"
 	},
 	"unlock": {
 		"title": "今天的 3 款免費遊戲已玩完",
-		"body": "今天的免費謎題是 {game}。Tryit Plus 開放全部 {count} 款遊戲和所有過往題目。"
+		"archiveTitle": "過往題目屬於 Tryit Plus",
+		"body": "每天 {count} 款謎題可任選 3 款免費玩（今天精選：{game}）。Tryit Plus 開放全部 {count} 款遊戲和所有過往題目。",
+		"backToToday": "返回今天的遊戲"
 	},
 	"offer": {
 		"resultTitle": "暢玩全部 {count} 款遊戲和過往題庫",
 		"resultBody": "19 款謎題每天任選 3 款免費。Tryit Plus 開放每款遊戲、過往題庫，以及每款遊戲的統計。",
+		"resultPriceWithPass": "{days} 天通行證 {passPrice} · {plan} 每年 {price}",
+		"resultPassPrice": "{days} 天通行證 · {passPrice}",
+		"resultPicksUsedBadge": "今天免費額度已用 {used}/{total}",
+		"resultPicksUsedTitle": "今天 {total} 款免費遊戲已玩完 — 解鎖全部 {count} 款遊戲",
+		"resultPicksUsedBody": "你已完成今天的 3 款免費謎題。選擇 3 天通行證或 Tryit Plus，暢玩全部 {count} 款每日遊戲與 30 天過往題庫。",
 		"day3Title": "你已玩了 {days} 天，開局不錯！",
 		"day7Title": "你已玩了 {days} 天，是常客了！",
 		"milestoneBody": "Tryit Plus 開放全部 {count} 款遊戲、過往題庫以及每款遊戲的統計。每天任選 3 款謎題繼續免費。"
 	},
 	"subscription": {
 		"free": "你正在使用免費方案：19 款謎題每天任選 3 款免費。",
+		"closed": "Tryit Plus 尚未開賣，目前所有遊戲免費。",
+		"checkoutPending": "正在確認你的訂閱。此頁面將自動更新；如等候較久，請重新整理頁面。",
+		"checkoutSuccess": "歡迎加入 Tryit Plus。全部遊戲和過往題庫已經開放。",
 		"plan": {
 			"individual_once": "Tryit Plus（3 天通行證）"
 		},
 		"renews": "將於 {date} 續訂",
+		"ends": "將於 {date} 結束，之後不會再扣款。",
+		"manage": "付款方式與收據",
+		"cancelPeriodConfirm": "確定取消？你可繼續使用 Tryit Plus 至 {date}，之後不會再扣款。",
 		"resumed": "你的訂閱會如常續訂。",
+		"error": "操作無法完成，請再試一次。",
 		"claimBody": "建立 Tryit 帳號或登入，即可將 Tryit Plus 與全部遊戲連結至你的帳號。",
 		"claimCreateAccount": "建立帳號並啟用 Plus"
 	},
+	"family": {
+		"inviteBody": "將這個連結傳給你想共用的人。包含你在內，最多 {count} 人可使用這個方案。",
+		"newLinkHelp": "舊連結會立即失效。",
+		"leaveConfirm": "確定退出家庭方案？你會回到免費方案。",
+		"joinBody": "你受邀共用一個 Tryit Plus 家庭方案。加入後可暢玩全部遊戲和過往題庫，並保留自己的統計和連續紀錄。",
+		"errors": {
+			"invite_not_found": "這個邀請連結無效，請向對方索取新連結。"
+		}
+	},
 	"checkoutOffer": {
-		"unavailableTitle": "暫時無法載入方案"
+		"body": "全部 {count} 款遊戲，加上過去 30 天的題目。選擇通行證或訂閱，繼續暢玩。",
+		"unavailableTitle": "暫時無法載入方案",
+		"unavailableBody": "請稍後再試。你已完成的題目和進度都會保留。"
 	}
 }

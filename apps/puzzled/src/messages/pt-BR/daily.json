@@ -16,7 +16,7 @@
 	"wantMore": "Quer continuar jogando?",
 	"backToGames": "Voltar para todos os jogos",
 	"freeToday": "Grátis",
-	"tomorrowsFreeGame": "Amanhã: {game} é grátis",
+	"tomorrowsFreeGame": "Amanhã: 3 novos desafios grátis de 19 (destaque: {game})",
 	"viewResult": "Ver resultado",
 	"backToHome": "Voltar ao início",
 	"loadingPuzzle": "Carregando o desafio de hoje…",
@@ -25,9 +25,9 @@
 	"completedNoResult": "Você já concluiu o desafio de hoje. Os detalhes do resultado não estão disponíveis no momento.",
 	"statusUnknown": "Status desconhecido",
 	"difficultyStatusUnverified": "Não conseguimos verificar quais níveis você concluiu hoje. O servidor confere antes de você começar.",
-	"todaysFreeGame": "Jogue o desafio grátis de hoje",
+	"todaysFreeGame": "Jogue seus 3 desafios grátis de hoje",
 	"notReadyTitle": "O {game} de hoje ainda não está pronto",
-	"notReadyBody": "Ainda não há um desafio de {game} para hoje. O desafio grátis de hoje já está pronto para jogar.",
-	"notReadyCta": "Jogue o desafio grátis de hoje",
+	"notReadyBody": "Ainda não há um desafio de {game} para hoje. Escolha qualquer um dos seus 3 desafios grátis de hoje.",
+	"notReadyCta": "Ver desafios grátis de hoje",
 	"startUsesPick": "Começar usa uma das 3 escolhas grátis de hoje. O jogo que você começar fica liberado o dia todo."
 }

@@ -41,10 +41,26 @@ mock.module('@/lib/i18n/routing', () => ({
 	Link: MockLink,
 }))
 
-function MockCheckoutOffer({ callbackUrl, signedIn }: { callbackUrl: string; signedIn: boolean }) {
+function MockCheckoutOffer({
+	callbackUrl,
+	signedIn,
+	checkoutTrigger,
+	compact,
+}: {
+	callbackUrl: string
+	signedIn: boolean
+	checkoutTrigger?: string
+	compact?: boolean
+}) {
 	return createElement(
 		'button',
-		{ type: 'button', 'data-callback': callbackUrl, 'data-signed-in': signedIn },
+		{
+			type: 'button',
+			'data-callback': callbackUrl,
+			'data-signed-in': signedIn,
+			'data-checkout-trigger': checkoutTrigger,
+			'data-compact': compact,
+		},
 		'Checkout',
 	)
 }
@@ -66,6 +82,8 @@ describe('GameUnlockPanel', () => {
 		const html = renderToStaticMarkup(node)
 		expect(html).toContain('data-callback="/games/crossword"')
 		expect(html).toContain('data-signed-in="false"')
+		expect(html).toContain('data-checkout-trigger="game_unlock"')
+		expect(html).toContain('data-compact="true"')
 		expect(html).toContain('href="/login?callbackUrl=%2Fgames%2Fcrossword"')
 		expect(html).toContain('href="/games"')
 		expect(html).not.toContain('href="/games/sudoku"')
