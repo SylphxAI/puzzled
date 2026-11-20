@@ -148,7 +148,7 @@ jobs:
           exit 1
 
       - name: Workflow parse
-        uses: SylphxAI/.github/.github/actions/workflow-lint@f27e4105e2da7d681ecebe946634bdda7ba553ba # main
+        uses: SylphxAI/.github/.github/actions/workflow-lint@d123f464e4e76ec1fcb960e9a3d158dadbf2fdf0 # main
         with:
           contract-mode: enforce
 

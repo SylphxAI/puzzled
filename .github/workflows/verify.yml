@@ -446,7 +446,7 @@ jobs:
             apps/puzzled/playwright-report
             apps/puzzled/test-results
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 1
 
       - name: Stop the served build
         if: always()
@@ -628,7 +628,7 @@ jobs:
           name: web-vitals-report
           path: apps/puzzled/test-results/web-vitals
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 1
 
       - name: Upload the Lighthouse report
         if: always()
@@ -637,7 +637,7 @@ jobs:
           name: lighthouse-report
           path: apps/puzzled/.lighthouseci
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 1
 
   craft:
     permissions:
@@ -786,7 +786,7 @@ jobs:
             apps/puzzled/playwright-report
             apps/puzzled/test-results
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 1
 
   # The marker: named exactly `verified`; never a required check.
   verified:
