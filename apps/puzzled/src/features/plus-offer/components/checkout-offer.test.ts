@@ -78,6 +78,8 @@ describe('CheckoutOffer', () => {
 		expect(yearly).toContain('value="year"')
 		expect(monthly).toContain('value="month"')
 		expect(html).toContain('$2.99')
+		expect(html).toContain('type="checkbox"')
+		expect(html).toContain('immediateSupplyConsent')
 	})
 
 	test.each([
@@ -101,6 +103,9 @@ describe('CheckoutOffer', () => {
 			expect(options).toHaveLength(2)
 			expect(options[0]).toContain('value="year"')
 			expect(options[1]).toContain('value="month"')
+			expect(html).not.toContain('type="checkbox"')
+			expect(html).not.toContain('immediateSupplyConsent')
+			expect(html).toContain('recurringSupplyTerms')
 		},
 	)
 

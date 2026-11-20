@@ -111,7 +111,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 
 	if (cards.length === 0) {
 		return (
-			<main className={cn('flex-1', styles.page, styles.closed)}>
+			<main data-pricing-page="" className={cn('flex-1', styles.page, styles.closed)}>
 				<MarketingHero
 					eyebrow={tPlus('name')}
 					title={t('title')}
@@ -164,7 +164,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 	)
 
 	return (
-		<main className={cn('flex-1', styles.page)}>
+		<main data-pricing-page="" className={cn('flex-1', styles.page)}>
 			<section className={cn('page-shell-wide pb-8 pt-4 md:pb-12 md:pt-10', styles.shell)}>
 				{checkout === 'cancelled' ? (
 					<output className="mb-3 block rounded-xl bg-muted px-4 py-3 text-sm">

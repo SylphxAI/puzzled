@@ -282,7 +282,7 @@ async fn seats_is_a_limit_feature() {
 async fn checkout_creates_a_money_session_and_returns_its_url() {
     let (money, fake) = fake_money(200, json!({"entitled": false})).await;
     let catalog = parsed(catalog_fixture(&[]));
-    let consent = Consent::require(true).unwrap();
+    let consent = Consent::for_plan(false, false).unwrap();
     let url = create_session(
         &money,
         &catalog,
@@ -302,7 +302,8 @@ async fn checkout_creates_a_money_session_and_returns_its_url() {
     assert_eq!(body["line_items"][0]["price"], "k_solo_m");
     assert_eq!(body["currency_code"], "GBP");
     assert_eq!(body["metadata"]["plan_id"], "individual_monthly");
-    assert_eq!(body["metadata"]["immediate_supply_consent"], "true");
+    assert_eq!(body["metadata"]["immediate_supply_consent"], "false");
+    assert_eq!(body["metadata"]["cancellation_regime"], "uk_ccr_reg_36");
     assert_eq!(body["locale"], "en-GB");
     assert_eq!(
         body["success_url"],
@@ -315,10 +316,73 @@ async fn checkout_creates_a_money_session_and_returns_its_url() {
 }
 
 #[tokio::test]
+async fn one_time_pass_requires_reg37_waiver_while_recurring_uses_reg36() {
+    let mut value = catalog_fixture(&[]);
+    value["spec"]["products"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "key": "weekend",
+            "features": {"plus": "true", "seats": "1"},
+            "licence": {
+                "scheme": "sylphx-offline-ed25519-v1",
+                "plan": "plus",
+                "token_product": "puzzled",
+                "key": "plus-key",
+                "term": {"unit": "days", "count": 3}
+            },
+            "prices": [{"key": "weekend_once", "unit_amounts": {"USD": "299", "GBP": "299"}}]
+        }));
+    let catalog = parsed(value);
+    let (money, fake) = fake_money(200, json!({"entitled": false})).await;
+
+    // One-off 3-Day Pass refuses checkout without explicit Reg 37 waiver.
+    assert_eq!(
+        create_session(
+            &money,
+            &catalog,
+            USER,
+            "individual_once",
+            "en-GB",
+            "gbp",
+            None,
+            None,
+            Consent::RecurringSubscription,
+        )
+        .await,
+        Err(CheckoutError::ConsentRequired)
+    );
+    assert!(fake.lock().unwrap().sessions.is_empty());
+
+    // One-off 3-Day Pass succeeds with Reg 37 waiver and stamps reg_37 metadata.
+    let waiver = Consent::for_plan(true, true).unwrap();
+    create_session(
+        &money,
+        &catalog,
+        USER,
+        "individual_once",
+        "en-GB",
+        "gbp",
+        None,
+        None,
+        waiver,
+    )
+    .await
+    .unwrap();
+    let pass_body = fake.lock().unwrap().sessions[0].clone();
+    assert_eq!(pass_body["metadata"]["plan_id"], "individual_once");
+    assert_eq!(pass_body["metadata"]["immediate_supply_consent"], "true");
+    assert_eq!(
+        pass_body["metadata"]["cancellation_regime"],
+        "uk_ccr_reg_37"
+    );
+}
+
+#[tokio::test]
 async fn checkout_drops_a_currency_money_does_not_price() {
     let (money, fake) = fake_money(200, json!({"entitled": false})).await;
     let catalog = parsed(catalog_fixture(&[]));
-    let consent = Consent::require(true).unwrap();
+    let consent = Consent::for_plan(false, false).unwrap();
     create_session(
         &money,
         &catalog,
@@ -339,16 +403,29 @@ async fn checkout_drops_a_currency_money_does_not_price() {
 
 #[test]
 fn no_consent_no_checkout() {
+    // One-off pass (Reg 37) requires explicit 14-day waiver consent.
     assert_eq!(
-        Consent::require(false).unwrap_err(),
+        Consent::for_plan(true, false).unwrap_err(),
         CheckoutError::ConsentRequired
     );
-    assert!(Consent::require(true).is_ok());
+    assert_eq!(
+        Consent::for_plan(true, true).unwrap(),
+        Consent::OneOffDigitalWaiver
+    );
+    // Recurring subscriptions (Reg 36) never require the 14-day digital-content waiver.
+    assert_eq!(
+        Consent::for_plan(false, false).unwrap(),
+        Consent::RecurringSubscription
+    );
+    assert_eq!(
+        Consent::for_plan(false, true).unwrap(),
+        Consent::RecurringSubscription
+    );
 }
 
 #[tokio::test]
 async fn checkout_refuses_unknown_archived_and_already_subscribed() {
-    let consent = Consent::require(true).unwrap();
+    let consent = Consent::for_plan(false, false).unwrap();
     let (money, fake) = fake_money(200, json!({"entitled": false})).await;
     let catalog = parsed(catalog_fixture(&[]));
     assert_eq!(
@@ -407,6 +484,7 @@ fn session_body_carries_the_click_id_in_metadata() {
         None,
         Some(&tags),
         None,
+        Consent::RecurringSubscription,
     );
     assert_eq!(body["metadata"]["gclid"], "Cj0KCQ_abc-1");
     assert!(body.get("client_reference_id").is_none());
@@ -419,6 +497,7 @@ fn session_body_carries_the_click_id_in_metadata() {
         None,
         None,
         None,
+        Consent::RecurringSubscription,
     );
     assert!(none["metadata"].get("gclid").is_none());
 }
@@ -436,6 +515,7 @@ fn session_body_sends_only_locales_stripe_accepts() {
             None,
             None,
             None,
+            Consent::RecurringSubscription,
         )
         .get("locale")
         .and_then(|v| v.as_str().map(str::to_string))
@@ -467,6 +547,7 @@ fn session_body_carries_attribution() {
         None,
         Some(&tags),
         Some("/games/sudoku?mode=archive&date=2026-11-10"),
+        Consent::RecurringSubscription,
     );
     assert_eq!(body["metadata"]["utm_source"], "tryit");
     assert_eq!(body["metadata"]["ref"], "res_1");
@@ -582,18 +663,48 @@ async fn consent_is_recorded_once_per_checkout() {
     let Some(pool) = crate::test_support::fresh_database().await else {
         return;
     };
-    super::consent_db::record(&pool, USER, "individual_monthly", "k_solo_m", "en-US")
-        .await
-        .unwrap();
+    super::consent_db::record(
+        &pool,
+        USER,
+        "individual_monthly",
+        "k_solo_m",
+        "en-US",
+        false,
+    )
+    .await
+    .unwrap();
     let (n, statement): (i64, String) = sqlx::query_as(
-        r#"SELECT count(*), max("statement") FROM "checkout_consents" WHERE "user_id" = $1::uuid"#,
+        r#"SELECT count(*), max("statement") FROM "checkout_consents" WHERE "user_id" = $1::uuid AND "plan_id" = 'individual_monthly'"#,
     )
     .bind(USER)
     .fetch_one(&pool)
     .await
     .unwrap();
     assert_eq!(n, 1);
-    assert_eq!(statement, super::consent_db::IMMEDIATE_SUPPLY_STATEMENT);
+    assert_eq!(statement, super::consent_db::RECURRING_SUPPLY_STATEMENT);
+
+    super::consent_db::record(
+        &pool,
+        USER,
+        "individual_once",
+        "puzzled_starter_unlock",
+        "en-US",
+        true,
+    )
+    .await
+    .unwrap();
+    let (pass_n, pass_statement): (i64, String) = sqlx::query_as(
+        r#"SELECT count(*), max("statement") FROM "checkout_consents" WHERE "user_id" = $1::uuid AND "plan_id" = 'individual_once'"#,
+    )
+    .bind(USER)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(pass_n, 1);
+    assert_eq!(
+        pass_statement,
+        super::consent_db::IMMEDIATE_SUPPLY_STATEMENT
+    );
 }
 
 // ---- erasure guard ----------------------------------------------------------
@@ -985,6 +1096,7 @@ fn guest_session_body_omits_subject_and_preserves_consent_and_attribution() {
         Some("jpy"),
         attr.as_ref(),
         Some("/games/sudoku"),
+        Consent::RecurringSubscription,
     );
     assert!(
         body.get("subject").is_none(),
@@ -994,7 +1106,8 @@ fn guest_session_body_omits_subject_and_preserves_consent_and_attribution() {
     assert_eq!(body["locale"], "ja");
     assert_eq!(body["currency_code"], "JPY");
     assert_eq!(body["metadata"]["plan_id"], "individual_yearly");
-    assert_eq!(body["metadata"]["immediate_supply_consent"], "true");
+    assert_eq!(body["metadata"]["immediate_supply_consent"], "false");
+    assert_eq!(body["metadata"]["cancellation_regime"], "uk_ccr_reg_36");
     assert_eq!(body["metadata"]["utm_source"], "google");
     assert_eq!(body["metadata"]["gclid"], "Cj0_guest");
     let success = body["success_url"].as_str().unwrap();
@@ -1211,7 +1324,7 @@ async fn guest_checkout_and_claim_work_in_both_webhook_orderings_and_verified_em
         "usd",
         None,
         None,
-        Consent::require(true).unwrap(),
+        Consent::for_plan(false, false).unwrap(),
     )
     .await
     .unwrap();

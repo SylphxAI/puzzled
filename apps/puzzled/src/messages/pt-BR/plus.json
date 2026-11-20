@@ -38,6 +38,7 @@
 		"checkoutCancelled": "O pagamento foi cancelado. Você não foi cobrado.",
 		"alreadySubscribed": "Você já tem o Tryit Plus.",
 		"immediateSupplyConsent": "Quero acesso imediato e entendo que perco o direito de arrependimento de 14 dias.",
+		"recurringSupplyTerms": "O acesso começa imediatamente; se você cancelar em até 14 dias, paga apenas um valor proporcional ao serviço já prestado.",
 		"consentRequired": "Marque a caixa para continuar.",
 		"offerLead": "Jogue os {count} jogos, revisite qualquer dia anterior e acompanhe seu progresso em cada um.",
 		"planChoice": "Escolha um plano",

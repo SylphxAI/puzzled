@@ -38,6 +38,7 @@
 		"checkoutCancelled": "お支払いはキャンセルされました。料金は請求されていません。",
 		"alreadySubscribed": "すでにTryit Plusをご利用中です。",
 		"immediateSupplyConsent": "すぐに利用を開始したいため、14日間の解約権を失うことを理解しました。",
+		"recurringSupplyTerms": "ご登録後すぐにご利用いただけます。14日以内に解約された場合は、すでに提供されたサービス分に相当する金額のみをご負担いただきます。",
 		"consentRequired": "続けるには、チェックボックスにチェックを入れてください。",
 		"offerLead": "全{count}ゲームを楽しみ、過去の好きな日のパズルに挑戦し、ゲームごとの上達を確かめましょう。",
 		"planChoice": "プランを選ぶ",

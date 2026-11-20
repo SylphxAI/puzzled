@@ -186,7 +186,6 @@ impl BillingConnectService {
         return_to: Option<&str>,
         request_id: Option<&str>,
     ) -> Result<String, CheckoutError> {
-        let consent = money_checkout::Consent::require(req.immediate_supply_consent)?;
         let pool = self
             .state
             .pool
@@ -199,12 +198,23 @@ impl BillingConnectService {
             .await
             .map_err(|e| CheckoutError::Failed(e.to_string()))?;
         let plan = pricing::plan(&catalog, plan_id).ok_or(CheckoutError::PlanNotOnSale)?;
+        let consent = money_checkout::Consent::for_plan(
+            plan.is_one_time_pass(),
+            req.immediate_supply_consent,
+        )?;
         let stored = attribution_for_user(pool, &identity.user_id)
             .await
             .map_err(CheckoutError::Failed)?;
-        consent_db::record(pool, &identity.user_id, plan_id, &plan.price_key, locale)
-            .await
-            .map_err(CheckoutError::Failed)?;
+        consent_db::record(
+            pool,
+            &identity.user_id,
+            plan_id,
+            &plan.price_key,
+            locale,
+            plan.is_one_time_pass(),
+        )
+        .await
+        .map_err(CheckoutError::Failed)?;
         if let Some(request_id) = request_id {
             return money_checkout::create_retained_session(
                 pool,
@@ -321,17 +331,23 @@ impl BillingConnectService {
         let Some(pid) = plan_id.filter(|s| !s.is_empty()) else {
             return;
         };
-        let resolved_price = match price_key.filter(|s| !s.is_empty()) {
-            Some(pk) => Some(pk),
-            None => money
-                .catalog()
-                .await
-                .ok()
-                .and_then(|c| pricing::plan(&c, &pid).map(|p| p.price_key)),
-        };
+        let catalog_plan = money
+            .catalog()
+            .await
+            .ok()
+            .and_then(|c| pricing::plan(&c, &pid));
+        let one_time_pass = catalog_plan.as_ref().map_or_else(
+            || pid.ends_with("_once"),
+            pricing::PlanPrices::is_one_time_pass,
+        );
+        let resolved_price = price_key
+            .filter(|s| !s.is_empty())
+            .or_else(|| catalog_plan.map(|p| p.price_key));
         if let Some(pk) = resolved_price {
             let locale_val = if locale.is_empty() { "en-US" } else { locale };
-            if let Err(error) = consent_db::record(pool, user_id, &pid, &pk, locale_val).await {
+            if let Err(error) =
+                consent_db::record(pool, user_id, &pid, &pk, locale_val, one_time_pass).await
+            {
                 warn!(%error, "post-claim consent audit insert failed");
             }
         }
@@ -563,11 +579,11 @@ impl BillingService for BillingConnectService {
             });
         }
 
-        // Cold-guest checkout: record immediate-supply consent in Money's checkout
-        // metadata, omit `subject` so Money allocates `guest:{id}`, and keep the
-        // returned single-use `claim_secret` strictly in an HttpOnly cookie.
-        let consent = money_checkout::Consent::require(req.immediate_supply_consent)
-            .map_err(Self::map_checkout_error)?;
+        // Cold-guest checkout: validate plan-appropriate UK CCR disclosure
+        // (Reg 37 14-day waiver strictly for one-time passes; Reg 36 for
+        // recurring subscriptions), omit `subject` so Money allocates
+        // `guest:{id}`, and keep the returned single-use `claim_secret`
+        // strictly in an HttpOnly cookie.
         let (_, money) = self.store()?;
         let cookie_attr = ctx
             .headers()
@@ -591,10 +607,19 @@ impl BillingService for BillingConnectService {
             .catalog()
             .await
             .map_err(|e| internal("checkout_unavailable")(e.to_string()))?;
+        let plan_id = req.plan_id.trim();
+        let found_plan = pricing::plan(&catalog, plan_id)
+            .ok_or(CheckoutError::PlanNotOnSale)
+            .map_err(Self::map_checkout_error)?;
+        let consent = money_checkout::Consent::for_plan(
+            found_plan.is_one_time_pass(),
+            req.immediate_supply_consent,
+        )
+        .map_err(Self::map_checkout_error)?;
         let guest = money_checkout::create_guest_session(
             money,
             &catalog,
-            req.plan_id.trim(),
+            plan_id,
             req.locale.trim(),
             &req.currency,
             landing.as_ref(),

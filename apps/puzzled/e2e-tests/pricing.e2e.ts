@@ -53,6 +53,35 @@ for (const viewport of VIEWPORTS) {
 				expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
 					viewport.width,
 				)
+				if (viewport.width === 1440 || viewport.width === 390) {
+					// Before dismissing the cookie banner or scrolling, the flagship CTA
+					// must be 100% unobstructed and never overlap the cookie banner.
+					const plusCta = page.locator('#plus').getByRole('button', { name: 'Continue to payment' })
+					await expect(plusCta).toBeEnabled()
+					const unobstructed = await plusCta.evaluate((el) => {
+						const r = el.getBoundingClientRect()
+						const banner = document.querySelector('[data-consent-banner] > section')
+						const b = banner?.getBoundingClientRect()
+						const overlapsBanner =
+							!!b &&
+							b.width > 0 &&
+							b.height > 0 &&
+							r.left < b.right &&
+							r.right > b.left &&
+							r.top < b.bottom &&
+							r.bottom > b.top
+						const hitAllCorners = [
+							[r.x + 8, r.y + 8],
+							[r.right - 8, r.y + 8],
+							[r.x + 8, r.bottom - 8],
+							[r.right - 8, r.bottom - 8],
+							[r.x + r.width / 2, r.y + r.height / 2],
+						].every(([x, y]) => el.contains(document.elementFromPoint(x, y)))
+						return { overlapsBanner, hitAllCorners }
+					})
+					expect(unobstructed.overlapsBanner).toBe(false)
+					expect(unobstructed.hitAllCorners).toBe(true)
+				}
 				for (const id of ['plus', 'family']) {
 					const offer = page.locator(`#${id}`)
 					await expect(offer.getByText('All 19 games, every day', { exact: true })).toBeVisible()
@@ -62,13 +91,9 @@ for (const viewport of VIEWPORTS) {
 					await expect(
 						offer.getByText('Stats and streaks for every game', { exact: true }),
 					).toBeVisible()
-					const consent = offer.getByRole('checkbox')
-					await consent.evaluate((el) => el.scrollIntoView({ block: 'center' }))
-					await expect(consent).toBeInViewport({ ratio: 1 })
-					await expect(consent).not.toBeChecked()
+					// Recurring subscriptions (Yearly default) never render the Reg 37 14-day waiver checkbox.
+					await expect(offer.getByRole('checkbox')).toHaveCount(0)
 					const cta = offer.getByRole('button', { name: 'Continue to payment' })
-					await expect(cta).toBeDisabled()
-					await consent.check()
 					await expect(cta).toBeEnabled()
 					await cta.evaluate((el) => el.scrollIntoView({ block: 'center' }))
 					await expect(cta).toBeInViewport({ ratio: 1 })
@@ -82,7 +107,22 @@ for (const viewport of VIEWPORTS) {
 						contentType: 'image/png',
 					})
 					await expectReachable(cta)
-					await consent.uncheck()
+				}
+				// Selecting the one-off 3-Day Pass renders and requires the Reg 37 14-day waiver checkbox.
+				const plus = page.locator('#plus')
+				const passRadio = plus.locator('input[value="once"]')
+				if ((await passRadio.count()) > 0) {
+					await passRadio.check()
+					const waiver = plus.getByRole('checkbox')
+					await expect(waiver).toHaveCount(1)
+					await expect(waiver).not.toBeChecked()
+					const passCta = plus.getByRole('button', { name: 'Continue to payment' })
+					await expect(passCta).toBeDisabled()
+					await waiver.check()
+					await expect(passCta).toBeEnabled()
+					await expectReachable(passCta)
+					await plus.locator('input[value="year"]').check()
+					await expect(plus.getByRole('checkbox')).toHaveCount(0)
 				}
 				// Pricing is a page, with a free-play escape link rather than a modal close button.
 				const freePlay = page.getByRole('link', {
@@ -116,15 +156,12 @@ for (const viewport of VIEWPORTS) {
 			await expect(yearly).toBeChecked()
 			await expect(offer.getByRole('radio', { name: /^Monthly/ })).not.toBeChecked()
 
-			// Cold guests and signed-in non-members both get immediate-supply consent + payment CTA.
-			const consent = offer.getByRole('checkbox')
+			// Cold guests and signed-in non-members get compliant Reg 36 terms + enabled payment CTA on recurring plans.
+			await expect(offer.getByRole('checkbox')).toHaveCount(0)
 			const payment = offer.getByRole('button', { name: 'Continue to payment' })
-			await expect(consent).not.toBeChecked()
-			await consent.scrollIntoViewIfNeeded()
-			await expect(consent).toBeInViewport({ ratio: 1 })
 			await payment.scrollIntoViewIfNeeded()
 			await expect(payment).toBeInViewport({ ratio: 1 })
-			await expect(payment).toBeDisabled()
+			await expect(payment).toBeEnabled()
 
 			await testInfo.attach(`pricing-${viewport.name}`, {
 				body: await page.screenshot(),
@@ -174,7 +211,8 @@ for (const viewport of VIEWPORTS) {
 			await settle(page)
 			await expect(family).toContainText('$7.99')
 			await expect(family.locator('input[value="month"]')).toBeChecked()
-			await expect(family.getByRole('button', { name: 'Continue to payment' })).toBeDisabled()
+			await expect(family.getByRole('checkbox')).toHaveCount(0)
+			await expect(family.getByRole('button', { name: 'Continue to payment' })).toBeEnabled()
 		})
 
 		test('starts cold-guest checkout directly with consent, attribution and callbackUrl, and prompts cleanly on return', async ({
@@ -215,7 +253,7 @@ for (const viewport of VIEWPORTS) {
 
 			const offer = page.locator('#plus')
 			test.skip((await offer.getByRole('radio').count()) === 0, 'sales are closed')
-			await offer.getByRole('checkbox').check()
+			await expect(offer.getByRole('checkbox')).toHaveCount(0)
 			await offer.getByRole('button', { name: 'Continue to payment' }).click()
 
 			await page.waitForURL(/\/settings\/subscription\?checkout=success&s=cs_e2e_guest_1/)
@@ -224,8 +262,8 @@ for (const viewport of VIEWPORTS) {
 			expect(capturedBody).toMatchObject({
 				planId: 'individual_yearly',
 				locale: 'en-US',
-				immediateSupplyConsent: true,
 			})
+			expect(capturedBody).not.toMatchObject({ immediateSupplyConsent: true })
 			const attrHeader = decodeURIComponent(capturedHeaders['x-puzzled-attribution'] ?? '')
 			expect(attrHeader).toContain('g=Cj0_e2e_test')
 			expect(attrHeader).toContain('gb=gb_e2e')

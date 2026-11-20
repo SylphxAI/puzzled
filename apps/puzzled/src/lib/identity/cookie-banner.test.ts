@@ -93,4 +93,10 @@ describe('CookieBanner (mobile compact)', () => {
 		expect(html).not.toContain('min-h-9')
 		expect(html).not.toContain('p-3')
 	})
+
+	test('falls back to static document flow on pricing and checkout surfaces so it never covers payment CTAs', async () => {
+		const css = await Bun.file(new URL('../../app/globals.css', import.meta.url)).text()
+		expect(css).toContain('html:has([data-pricing-page], [data-checkout-surface]) .consent-bar')
+		expect(css).toContain('position: static;')
+	})
 })

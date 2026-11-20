@@ -8,6 +8,7 @@
 		"weekendPass": "{days} 天通行證",
 		"oneTime": "單次付款",
 		"passTerms": "單次付款，可使用 Tryit Plus {days} 天，不會自動續約。",
+		"recurringSupplyTerms": "訂閱後可立即使用；如於 14 天內取消，你只需按已提供的服務比例支付費用。",
 		"offerLead": "暢玩全部 {count} 款遊戲，重玩任何一天的過往謎題，追蹤自己在每款遊戲的進步。",
 		"signInToStartFamily": "登入以啟用家庭方案"
 	},

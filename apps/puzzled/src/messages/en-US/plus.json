@@ -38,6 +38,7 @@
 		"checkoutCancelled": "Checkout was cancelled. You have not been charged.",
 		"alreadySubscribed": "You already have Tryit Plus.",
 		"immediateSupplyConsent": "I want access now and understand I lose the 14-day cancellation right.",
+		"recurringSupplyTerms": "Access starts immediately; if you cancel within 14 days, you pay only a proportionate amount for the service supplied.",
 		"consentRequired": "Please tick the box to continue.",
 		"offerLead": "Play all {count} games, revisit any past day, and follow your progress in each.",
 		"planChoice": "Choose a plan",

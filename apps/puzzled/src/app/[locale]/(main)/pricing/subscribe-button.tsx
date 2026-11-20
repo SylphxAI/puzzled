@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { trackGa4KeyEvent } from '@/features/analytics/lib/ga4-key-events'
 import { rememberCheckoutQuote } from '@/features/analytics/lib/google-tag'
-import { minorUnitsToMajor } from '@/lib/billing/plus'
+import { isOneTimePassPlan, minorUnitsToMajor, type PlanId } from '@/lib/billing/plus'
 import { startCheckout } from '@/lib/connect/billing-client'
 import { Link } from '@/lib/i18n/routing'
 import { logger } from '@/lib/logger'
@@ -29,7 +29,10 @@ type Props = {
 }
 
 /**
- * Starts checkout for one plan once the buyer has consented to immediate supply.
+ * Starts checkout for one plan. One-off digital passes (3-Day Pass, UK CCR 2013
+ * Reg 37) require an explicit 14-day cancellation waiver checkbox; recurring
+ * subscriptions (UK CCR 2013 Reg 36) display compliant renewal and proportionate
+ * cancellation terms without forcing a 14-day waiver.
  * Cold guests proceed straight into Stripe Checkout and claim their subscription after payment.
  */
 export function SubscribeButton({
@@ -48,6 +51,7 @@ export function SubscribeButton({
 	const [busy, setBusy] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [consent, setConsent] = useState(false)
+	const requiresWaiver = isOneTimePassPlan(planId as PlanId)
 	const buttonClass = `${styles.checkout} pressable inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60`
 
 	if (signedIn && subscribed) {
@@ -60,15 +64,17 @@ export function SubscribeButton({
 
 	return (
 		<div>
-			<label className="mb-3 flex min-h-11 cursor-pointer items-start gap-3 text-sm">
-				<input
-					type="checkbox"
-					className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
-					checked={consent}
-					onChange={(event) => setConsent(event.target.checked)}
-				/>
-				<span>{t('immediateSupplyConsent')}</span>
-			</label>
+			{requiresWaiver ? (
+				<label className="mb-3 flex min-h-11 cursor-pointer items-start gap-3 text-sm">
+					<input
+						type="checkbox"
+						className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
+						checked={consent}
+						onChange={(event) => setConsent(event.target.checked)}
+					/>
+					<span>{t('immediateSupplyConsent')}</span>
+				</label>
+			) : null}
 			{locale === 'ja' && (
 				<Link
 					href="/tokushoho"
@@ -77,11 +83,18 @@ export function SubscribeButton({
 					特定商取引法に基づく表記
 				</Link>
 			)}
-			{renewalNote ? <p className="mb-3 text-sm text-muted-foreground">{renewalNote}</p> : null}
+			{renewalNote ? (
+				<p className="mb-3 text-sm text-muted-foreground">
+					{renewalNote}
+					{!requiresWaiver ? ` ${t('recurringSupplyTerms')}` : ''}
+				</p>
+			) : !requiresWaiver ? (
+				<p className="mb-3 text-sm text-muted-foreground">{t('recurringSupplyTerms')}</p>
+			) : null}
 			<button
 				type="button"
 				className={buttonClass}
-				disabled={busy || !consent}
+				disabled={busy || (requiresWaiver && !consent)}
 				onClick={async () => {
 					setBusy(true)
 					setError(null)
@@ -92,7 +105,7 @@ export function SubscribeButton({
 								? 'month'
 								: 'once'
 						const planTier = planId.startsWith('family_') ? 'family' : 'plus'
-						const option = planId === 'individual_once' ? 'pass' : 'subscription'
+						const option = requiresWaiver ? 'pass' : 'subscription'
 						trackGa4KeyEvent('begin_checkout', {
 							plan: planTier,
 							plan_sku: planId,
@@ -109,7 +122,13 @@ export function SubscribeButton({
 							currency: currency.toUpperCase(),
 						})
 						window.location.assign(
-							await startCheckout(planId, locale, currency, consent, callbackUrl),
+							await startCheckout(
+								planId,
+								locale,
+								currency,
+								requiresWaiver ? consent : false,
+								callbackUrl,
+							),
 						)
 					} catch (err) {
 						logger.error('plus.checkout-failed', { planId, error: err })
