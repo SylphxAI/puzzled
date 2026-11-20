@@ -26,5 +26,9 @@
 	},
 	"modules": {
 		"unavailableTitle": "遊戲數據無法載入"
+	},
+	"signInToSeeStats": "登入即可記錄你的成績，並與朋友比較。",
+	"plusCard": {
+		"body": "每天 {count} 款謎題中任選 3 款繼續免費。解鎖全部每日遊戲、30 天過往題庫與完整統計。"
 	}
 }

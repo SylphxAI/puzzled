@@ -6,8 +6,8 @@
 	"notFound": {
 		"eyebrow": "404",
 		"title": "Falta esta página, pero no el puzzle",
-		"description": "La página que buscas no existe. El puzzle gratis de hoy sigue abierto y todos los juegos diarios están a un toque.",
-		"playCta": "Jugar {game}: el puzzle gratis de hoy",
+		"description": "La página que buscas no existe. Elige 3 de los 19 puzzles de hoy gratis; cada juego diario está a un toque.",
+		"playCta": "Jugar {game} — gratis hoy (3 de 19)",
 		"browseCta": "Explorar todos los juegos"
 	},
 	"retry": "Reintentar",

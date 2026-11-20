@@ -590,8 +590,8 @@
 				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
 			},
 			{
-				"value": "Play today's free puzzle",
-				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
+				"value": "Play {game} (3 of 19 free daily)",
+				"keys": ["archive.playFreeToday", "plus.pricing.playFree"]
 			},
 			{
 				"value": "Played",
@@ -823,6 +823,10 @@
 					"settings.security.securityCheckup.securityScore",
 					"settings.securityScore.score"
 				]
+			},
+			{
+				"value": "See Tryit Plus",
+				"keys": ["plus.unlock.cta", "stats.plusCard.cta"]
 			},
 			{
 				"value": "See all games",
@@ -1700,8 +1704,8 @@
 				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
 			},
 			{
-				"value": "Play today's free puzzle",
-				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
+				"value": "Play {game} (3 of 19 free daily)",
+				"keys": ["archive.playFreeToday", "plus.pricing.playFree"]
 			},
 			{
 				"value": "Played",
@@ -1933,6 +1937,10 @@
 					"settings.security.securityCheckup.securityScore",
 					"settings.securityScore.score"
 				]
+			},
+			{
+				"value": "See Tryit Plus",
+				"keys": ["plus.unlock.cta", "stats.plusCard.cta"]
 			},
 			{
 				"value": "See all games",
@@ -2416,6 +2424,10 @@
 			{
 				"value": "主題",
 				"keys": ["settings.preferences.appearance.theme", "settings.theme"]
+			},
+			{
+				"value": "了解 Tryit Plus",
+				"keys": ["plus.unlock.cta", "stats.plusCard.cta"]
 			},
 			{
 				"value": "今日",
@@ -2987,8 +2999,8 @@
 				"keys": ["admin.dlq.table.status", "gameResult.status"]
 			},
 			{
-				"value": "玩今日免費謎題",
-				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
+				"value": "玩 {game}（每日 19 款任揀 3 款免費）",
+				"keys": ["archive.playFreeToday", "plus.pricing.playFree"]
 			},
 			{
 				"value": "玩家",
@@ -3551,6 +3563,10 @@
 			{
 				"value": "主題",
 				"keys": ["settings.preferences.appearance.theme", "settings.theme"]
+			},
+			{
+				"value": "了解 Tryit Plus",
+				"keys": ["plus.unlock.cta", "stats.plusCard.cta"]
 			},
 			{
 				"value": "今天",
@@ -4125,8 +4141,8 @@
 				"keys": ["admin.dlq.table.status", "gameResult.status"]
 			},
 			{
-				"value": "玩今天的免費謎題",
-				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
+				"value": "玩 {game}（每天 19 款任選 3 款免費）",
+				"keys": ["archive.playFreeToday", "plus.pricing.playFree"]
 			},
 			{
 				"value": "玩家",
@@ -4698,6 +4714,10 @@
 			{
 				"value": "主题",
 				"keys": ["settings.preferences.appearance.theme", "settings.theme"]
+			},
+			{
+				"value": "了解 Tryit Plus",
+				"keys": ["plus.unlock.cta", "stats.plusCard.cta"]
 			},
 			{
 				"value": "今天",
@@ -5719,6 +5739,10 @@
 				"keys": ["nav.plus", "plus.name"]
 			},
 			{
+				"value": "Tryit Plusを見る",
+				"keys": ["plus.unlock.cta", "stats.plusCard.cta"]
+			},
+			{
 				"value": "Tryitプレイヤー",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
@@ -5743,6 +5767,10 @@
 			{
 				"value": "{days}日連続",
 				"keys": ["home.hero.streakChip", "share.card.streakDays", "stats.identity.streakChip"]
+			},
+			{
+				"value": "{game}を遊ぶ（毎日19種から3つ無料）",
+				"keys": ["archive.playFreeToday", "plus.pricing.playFree"]
 			},
 			{
 				"value": "{min}文字以上",
@@ -6324,10 +6352,6 @@
 			{
 				"value": "今日の日課を遊ぶ({game})",
 				"keys": ["archive.emptyPlay", "archive.playToday"]
-			},
-			{
-				"value": "今日の無料パズルを遊ぶ",
-				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
 			},
 			{
 				"value": "今日はまだ終わっていません",
@@ -7479,10 +7503,6 @@
 				"keys": ["legal.privacy.cta.support", "legal.terms.cta.support"]
 			},
 			{
-				"value": "Juega el puzle gratuito de hoy",
-				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
-			},
-			{
 				"value": "Juega el ritual de hoy ({game})",
 				"keys": ["archive.emptyPlay", "archive.playToday"]
 			},
@@ -7523,6 +7543,10 @@
 			{
 				"value": "Jugar ahora",
 				"keys": ["auth.brandPanel.playFree", "streak.playNow"]
+			},
+			{
+				"value": "Jugar {game} (3 de 19 gratis al día)",
+				"keys": ["archive.playFreeToday", "plus.pricing.playFree"]
 			},
 			{
 				"value": "Legal",
@@ -8001,6 +8025,10 @@
 			{
 				"value": "Usuarios totales",
 				"keys": ["admin.dashboard.totalUsers", "admin.system.totalUsers", "admin.users.totalUsers"]
+			},
+			{
+				"value": "Ver Tryit Plus",
+				"keys": ["plus.unlock.cta", "stats.plusCard.cta"]
 			},
 			{
 				"value": "Ver todo",
@@ -8632,6 +8660,10 @@
 				"keys": ["catalog.gamePage.playCta", "onboarding.playNow"]
 			},
 			{
+				"value": "Jogar {game} (3 de 19 grátis por dia)",
+				"keys": ["archive.playFreeToday", "plus.pricing.playFree"]
+			},
+			{
 				"value": "Jogos",
 				"keys": ["admin.games.title", "admin.sidebar.games", "nav.games"]
 			},
@@ -8647,10 +8679,6 @@
 			{
 				"value": "Jogue desafios anteriores",
 				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
-			},
-			{
-				"value": "Jogue o desafio grátis de hoje",
-				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
 			},
 			{
 				"value": "Jogue o ritual de hoje ({game})",

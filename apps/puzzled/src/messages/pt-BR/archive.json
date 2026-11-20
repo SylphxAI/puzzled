@@ -4,7 +4,7 @@
 	"eyebrow": "Arquivo",
 	"title": "Seu arquivo de puzzles",
 	"body": "Mais dos seus jogos favoritos. Explore todos os jogos dos últimos 30 dias e escolha um puzzle para jogar com Plus.",
-	"playFreeToday": "Jogue o desafio grátis de hoje ({game})",
+	"playFreeToday": "Jogar {game} (3 de 19 grátis por dia)",
 	"listTitle": "Últimos 30 dias · todos os 19 jogos",
 	"listBody": "Todos os {games} jogos de cada um dos últimos {count} dias de puzzles, do mais recente ao mais antigo.",
 	"playDayLabel": "Jogar {game} de {date}",
@@ -18,5 +18,8 @@
 	"dayPicker": "Escolha um dia",
 	"filterLabel": "Filtrar por categoria",
 	"yesterday": "Ontem",
-	"dayCount": "{count} desafios"
+	"dayCount": "{count} desafios",
+	"mobileUnlockTitle": "Desbloqueie os últimos 30 dias",
+	"mobileUnlockBody": "Jogue todos os {games} jogos dos últimos {count} dias com um passe de 3 dias ou Tryit Plus.",
+	"mobileUnlockCta": "Desbloquear arquivo"
 }

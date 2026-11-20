@@ -152,5 +152,10 @@
 		"time": "Tempo",
 		"note": "Pontuações e tempos são os que o servidor aceitou em cada conclusão."
 	},
-	"duration": "{minutes}min {seconds}s"
+	"duration": "{minutes}min {seconds}s",
+	"plusCard": {
+		"title": "Jogue e acompanhe todos os {count} jogos com o Tryit Plus",
+		"body": "3 dos {count} desafios continuam grátis todos os dias. Libere todos os jogos diários, o arquivo de 30 dias e as estatísticas completas.",
+		"cta": "Ver Tryit Plus"
+	}
 }

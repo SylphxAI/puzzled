@@ -4,7 +4,7 @@
 	"eyebrow": "檔案庫",
 	"title": "你的往日題庫",
 	"body": "喜歡的遊戲，還有更多。瀏覽過去 30 天的全部遊戲，用 Plus 挑一道往日謎題慢慢玩。",
-	"playFreeToday": "玩今日免費謎題（{game}）",
+	"playFreeToday": "玩 {game}（每日 19 款任揀 3 款免費）",
 	"listTitle": "過去 30 天・全部 19 款遊戲",
 	"listBody": "過去 {count} 個謎題日，每日全部 {games} 款遊戲，由近至遠排列。",
 	"playDayLabel": "玩 {date} 的 {game}",
@@ -18,5 +18,8 @@
 	"dayPicker": "揀日子",
 	"filterLabel": "按類別篩選",
 	"yesterday": "琴日",
-	"dayCount": "{count} 款謎題"
+	"dayCount": "{count} 款謎題",
+	"mobileUnlockTitle": "解鎖過去 30 日完整題庫",
+	"mobileUnlockBody": "使用 3 日通行證或 Tryit Plus，暢玩過去 {count} 日嘅全部 {games} 款遊戲。",
+	"mobileUnlockCta": "解鎖題庫"
 }

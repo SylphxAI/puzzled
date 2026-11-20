@@ -9,6 +9,7 @@ import { resolveLocale } from '../../scripts/i18n-resolved-catalogue'
 import { AlreadyCompletedView } from '../../src/features/daily/components/already-completed-view'
 import { GameResultCard } from '../../src/features/daily/components/game-result'
 import { PlusOfferProvider } from '../../src/features/plus-offer/components/plus-offer-context'
+import { PlusResultCard } from '../../src/features/plus-offer/components/plus-result-card'
 import { offerAccess, plusOfferFor } from '../../src/features/plus-offer/lib/plus-offer'
 
 const dayKey = '2026-10-29'
@@ -76,6 +77,12 @@ for (const [decision, access] of Object.entries(decisions)) {
 			if (baselines.has(key)) assert.equal(rest, baselines.get(key))
 			else baselines.set(key, rest)
 
+			// Verify UTM attribution is utm_source=tryit (never legacy puzzled)
+			if (html.includes('aria-labelledby="plus-result-title"')) {
+				assert.ok(html.includes('utm_source=tryit'))
+				assert.ok(!html.includes('utm_source=puzzled'))
+			}
+
 			rows.push({
 				decision,
 				run,
@@ -87,4 +94,32 @@ for (const [decision, access] of Object.entries(decisions)) {
 		}
 	}
 }
+
+// Verify 3-Day Pass price + 3rd-game completion prompt (3/3 free picks used today)
+const thirdGameHtml = renderToStaticMarkup(
+	<NextIntlClientProvider
+		locale="en-US"
+		messages={resolveLocale('en-US')}
+		timeZone="Asia/Hong_Kong"
+	>
+		<PlusOfferProvider
+			offer={{
+				gameCount: 19,
+				yearlyPrice: '$39.99',
+				passPrice: '$2.99',
+				passDays: 3,
+				picksUsed: 3,
+			}}
+			dayKey={dayKey}
+		>
+			<PlusResultCard gameSlug="sudoku" mode="daily" puzzleDate={dayKey} />
+		</PlusOfferProvider>
+	</NextIntlClientProvider>,
+)
+assert.ok(thirdGameHtml.includes('data-result-picks-exhausted="true"'))
+assert.ok(thirdGameHtml.includes('3/3 free picks used today'))
+assert.ok(thirdGameHtml.includes('3-day pass $2.99 · Tryit Plus $39.99/yr'))
+assert.ok(thirdGameHtml.includes('utm_source=tryit'))
+assert.ok(thirdGameHtml.includes('plan=individual_once#plus'))
+
 console.log(JSON.stringify(rows))

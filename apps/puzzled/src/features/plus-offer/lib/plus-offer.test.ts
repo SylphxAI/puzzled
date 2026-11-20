@@ -8,7 +8,9 @@ import {
 	offerAccess,
 	plusOfferFor,
 	plusOfferOpen,
+	resolvePricingCheckoutTrigger,
 	seenMilestones,
+	selectOfferPrices,
 	showResultPlusCard,
 } from './plus-offer'
 
@@ -91,14 +93,32 @@ describe('offers fail closed when Money cannot confirm', () => {
 })
 
 describe('copy ships in every locale', () => {
-	test('each locale resolves every offer string', () => {
-		const keys = ['resultTitle', 'resultBody', 'day3Title', 'day7Title', 'milestoneBody']
+	test('each locale resolves every offer string including 3-day pass and 3/3 picks-used prompt', () => {
+		const keys = [
+			'resultTitle',
+			'resultBody',
+			'resultPrice',
+			'resultPriceWithPass',
+			'resultPassPrice',
+			'resultPicksUsedBadge',
+			'resultPicksUsedTitle',
+			'resultPicksUsedBody',
+			'day3Title',
+			'day7Title',
+			'milestoneBody',
+		]
 		for (const locale of locales) {
 			const plus = resolveLocale(locale).plus as { offer: Record<string, string> }
 			for (const key of keys) {
 				expect(plus.offer[key]?.length, `${locale} plus.offer.${key}`).toBeGreaterThan(0)
 			}
 			expect(plus.offer.resultTitle).toContain('{count}')
+			expect(plus.offer.resultPriceWithPass).toContain('{passPrice}')
+			expect(plus.offer.resultPriceWithPass).toContain('{price}')
+			expect(plus.offer.resultPicksUsedBadge).toContain('{used}')
+			expect(plus.offer.resultPicksUsedBadge).toContain('{total}')
+			expect(plus.offer.resultPicksUsedTitle).toContain('{total}')
+			expect(plus.offer.resultPicksUsedBody).toContain('{count}')
 			expect(plus.offer.milestoneBody).toContain('{count}')
 		}
 	})
@@ -111,5 +131,83 @@ describe('copy ships in every locale', () => {
 			expect(plus.offer.day3Title, locale).toContain('{days}')
 			expect(plus.offer.day7Title, locale).toContain('{days}')
 		}
+	})
+	test('no locale leaks stale "1 free puzzle", "midnight UTC", or Cantonese in zh-TW', () => {
+		const staleSingular =
+			/\b(1|one) free puzzle\b|\btoday's free puzzle\b|\btoday's featured puzzle\b|midnight utc/i
+		const cantoneseInTw = /[唔嘅啲喺咁咗嘢係佢冇揀]|聽日|玩齊|剔選|現時|續期|往日題庫|往日題目/
+		for (const locale of locales) {
+			const resolved = resolveLocale(locale)
+			expect(JSON.stringify(resolved), locale).not.toMatch(staleSingular)
+			const onboarding = resolved.onboarding as { dailyPuzzleDesc: string }
+			expect(onboarding.dailyPuzzleDesc, `${locale} onboarding.dailyPuzzleDesc`).toMatch(/UTC\+8/)
+		}
+		const zhTw = resolveLocale('zh-TW')
+		expect(JSON.stringify(zhTw.plus), 'zh-TW plus').not.toMatch(cantoneseInTw)
+		expect(JSON.stringify(zhTw.catalog), 'zh-TW catalog').not.toMatch(/[唔嘅啲喺咁咗嘢係佢冇揀]/)
+		expect(JSON.stringify(zhTw.stats), 'zh-TW stats').not.toMatch(/[唔嘅啲喺咁咗嘢係佢冇揀]/)
+	})
+})
+
+describe('offer price selection and paywall trigger attribution', () => {
+	test('selectOfferPrices formats both 3-Day Pass and Yearly Plus in one currency', () => {
+		const cards = [
+			{
+				id: 'individual_once' as const,
+				family: false,
+				interval: 'once' as const,
+				amountMinor: 299,
+				currency: 'usd',
+				trialDays: 0,
+				accessDays: 3,
+			},
+			{
+				id: 'individual_yearly' as const,
+				family: false,
+				interval: 'year' as const,
+				amountMinor: 3999,
+				currency: 'usd',
+				trialDays: 0,
+				accessDays: 0,
+			},
+		]
+		expect(selectOfferPrices(cards, 'usd', 'en-US')).toEqual({
+			yearlyPrice: '$39.99',
+			passPrice: '$2.99',
+			passDays: 3,
+		})
+	})
+
+	test('resolvePricingCheckoutTrigger attributes known paywall entries distinctly and ignores ad mediums', () => {
+		expect(
+			resolvePricingCheckoutTrigger({
+				trigger: 'game_unlock',
+				fallback: 'pricing_card',
+			}),
+		).toBe('game_unlock')
+		expect(
+			resolvePricingCheckoutTrigger({
+				utmMedium: 'result_card',
+				fallback: 'pricing_card',
+			}),
+		).toBe('result_card')
+		expect(
+			resolvePricingCheckoutTrigger({
+				entrySurface: 'stats_banner',
+				fallback: 'pricing_card',
+			}),
+		).toBe('stats_banner')
+		expect(
+			resolvePricingCheckoutTrigger({
+				utmMedium: 'cpc',
+				fallback: 'pricing_card',
+			}),
+		).toBe('pricing_card')
+		expect(
+			resolvePricingCheckoutTrigger({
+				utmMedium: 'cpc',
+				fallback: 'pricing_family_card',
+			}),
+		).toBe('pricing_family_card')
 	})
 })

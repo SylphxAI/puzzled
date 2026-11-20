@@ -2,6 +2,7 @@ import { Check, Play } from 'lucide-react'
 import { cookies, headers } from 'next/headers'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { MarketingHero, MarketingSection } from '@/features/marketing/components'
+import { resolvePricingCheckoutTrigger } from '@/features/plus-offer/lib/plus-offer'
 import { getAllGameMetadata } from '@/games/registry'
 import { getServerPlans, getServerPlusAccess } from '@/lib/api/server'
 import {
@@ -25,7 +26,14 @@ import styles from './pricing.module.css'
 
 type Props = {
 	params: Promise<{ locale: string }>
-	searchParams: Promise<{ checkout?: string; plan?: string; callbackUrl?: string }>
+	searchParams: Promise<{
+		checkout?: string
+		plan?: string
+		callbackUrl?: string
+		trigger?: string
+		utm_medium?: string
+		entry_surface?: string
+	}>
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -55,9 +63,28 @@ export async function generateMetadata({ params }: Props) {
  */
 export default async function PricingPage({ params, searchParams }: Props) {
 	const { locale } = await params
-	const { checkout, plan, callbackUrl: rawCallbackUrl } = await searchParams
+	const {
+		checkout,
+		plan,
+		callbackUrl: rawCallbackUrl,
+		trigger,
+		utm_medium,
+		entry_surface,
+	} = await searchParams
 	setRequestLocale(locale)
 	const callbackUrl = safeCallbackPath(rawCallbackUrl) ?? undefined
+	const plusCheckoutTrigger = resolvePricingCheckoutTrigger({
+		trigger,
+		entrySurface: entry_surface,
+		utmMedium: utm_medium,
+		fallback: 'pricing_card',
+	})
+	const familyCheckoutTrigger = resolvePricingCheckoutTrigger({
+		trigger,
+		entrySurface: entry_surface,
+		utmMedium: utm_medium,
+		fallback: 'pricing_family_card',
+	})
 
 	const t = await getTranslations('plus.pricing')
 	const tPlus = await getTranslations('plus')
@@ -210,6 +237,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 							returnAnchor="plus"
 							initialPlan={plan}
 							callbackUrl={callbackUrl}
+							checkoutTrigger={plusCheckoutTrigger}
 							once={plusOnce}
 							yearly={plusYear}
 							monthly={plusMonth}
@@ -229,6 +257,7 @@ export default async function PricingPage({ params, searchParams }: Props) {
 							returnAnchor="family"
 							initialPlan={plan}
 							callbackUrl={callbackUrl}
+							checkoutTrigger={familyCheckoutTrigger}
 							yearly={familyYear}
 							monthly={familyMonth}
 							locale={locale}

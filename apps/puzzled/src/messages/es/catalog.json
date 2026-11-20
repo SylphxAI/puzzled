@@ -23,7 +23,7 @@
 	"emptyTitle": "Ningún puzzle coincide con esos filtros",
 	"emptyDescription": "Prueba con otro título o quita los filtros para ver toda la colección.",
 	"featuredPlay": "Jugar a {game}",
-	"featuredNote": "Abierto para todos hoy, sin necesidad de cuenta. Mañana otro puzzle ocupará su lugar.",
+	"featuredNote": "Elige 3 de los 19 puzzles gratis cada día, sin necesidad de cuenta. Mañana llega un nuevo conjunto.",
 	"suiteTitle": "Toda la colección",
 	"ritual": {
 		"title": "Cómo es un día en Tryit",
@@ -40,15 +40,15 @@
 		"body": "Lo esencial sobre cómo funciona este catálogo.",
 		"start": {
 			"question": "¿Por dónde empiezo?",
-			"answer": "Abre el juego del día. No necesita cuenta ni pago. Los demás puzzles se abren con Tryit Plus."
+			"answer": "Elige 3 de los 19 puzzles de hoy para jugar gratis, sin cuenta ni pago. Tryit Plus abre los 19 juegos y el archivo de 30 días."
 		},
 		"rotation": {
 			"question": "¿Cómo cambia el juego del día?",
-			"answer": "Cada día se destaca un puzzle y la rotación cambia a medianoche, hora de Hong Kong. Todo el mundo tiene el mismo juego el mismo día."
+			"answer": "Cada día puedes elegir 3 de los 19 puzzles gratis; además, un puzzle destacado encabeza la página y rota a medianoche, hora de Hong Kong. Todos juegan el mismo conjunto diario."
 		},
 		"account": {
 			"question": "¿Necesito una cuenta?",
-			"answer": "No. Puedes jugar el juego del día como invitado; con una cuenta conservas tu racha, tus resultados y tus estadísticas en todos tus dispositivos."
+			"answer": "No. Tus 3 puzzles gratis de los 19 cada día se pueden jugar como invitado; una cuenta guarda tu racha, tus resultados y tus estadísticas en todos tus dispositivos."
 		},
 		"share": {
 			"question": "¿Puedo compartir un resultado sin destripar la solución?",

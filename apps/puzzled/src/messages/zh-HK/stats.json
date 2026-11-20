@@ -152,5 +152,10 @@
 		"time": "時間",
 		"note": "分數與時間為伺服器接受的每局成績。"
 	},
-	"duration": "{minutes}分{seconds}秒"
+	"duration": "{minutes}分{seconds}秒",
+	"plusCard": {
+		"title": "透過 Tryit Plus 暢玩並記錄全部 {count} 款遊戲",
+		"body": "每日 {count} 款謎題中任揀 3 款繼續免費。解鎖全部每日遊戲、30 日往日題庫與完整統計。",
+		"cta": "了解 Tryit Plus"
+	}
 }

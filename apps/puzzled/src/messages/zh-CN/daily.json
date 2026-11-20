@@ -16,7 +16,7 @@
 	"wantMore": "想继续玩？",
 	"backToGames": "返回游戏列表",
 	"freeToday": "免费",
-	"tomorrowsFreeGame": "明天免费玩：{game}",
+	"tomorrowsFreeGame": "明天 19 款新谜题任选 3 款免费玩（精选：{game}）",
 	"viewResult": "查看成绩",
 	"backToHome": "返回首页",
 	"loadingPuzzle": "正在加载今日谜题…",
@@ -25,9 +25,9 @@
 	"completedNoResult": "你已完成今日谜题，暂时无法显示结果详情。",
 	"statusUnknown": "状态未确认",
 	"difficultyStatusUnverified": "无法确认你今日已完成哪些难度，系统会在你开始前核对。",
-	"todaysFreeGame": "玩今日免费谜题",
+	"todaysFreeGame": "畅玩今日 3 款免费谜题",
 	"notReadyTitle": "今天的{game}还没准备好",
-	"notReadyBody": "今天还没有{game}谜题。今天的免费谜题已经可以玩了。",
-	"notReadyCta": "玩今天的免费谜题",
+	"notReadyBody": "今天还没有{game}谜题。今日其余谜题仍可任选 3 款免费玩。",
+	"notReadyCta": "查看今日免费谜题",
 	"startUsesPick": "开始后会用掉今天 3 个免费名额中的 1 个，开始过的游戏全天都能玩。"
 }

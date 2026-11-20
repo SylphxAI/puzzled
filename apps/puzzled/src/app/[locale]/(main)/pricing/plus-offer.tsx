@@ -42,6 +42,10 @@ type Props = {
 	initialPlan?: string
 	/** Safe post-checkout return destination (e.g. from GameUnlockPanel). */
 	callbackUrl?: string
+	/** Distinct surface trigger label attributed on GA4 `begin_checkout`. */
+	checkoutTrigger?: string
+	/** Compact spacing for locked-game unlock surfaces so checkout stays above the fold. */
+	compact?: boolean
 	/** Slot rendered at the top of the column above the card (e.g. currency switcher). */
 	headerSlot?: ReactNode
 	/** Slot rendered below the card (e.g. anchor & free-play links). */
@@ -69,6 +73,8 @@ export function PlusOffer({
 	subscribed,
 	initialPlan,
 	callbackUrl,
+	checkoutTrigger = 'pricing_card',
+	compact = false,
 	headerSlot,
 	footerSlot,
 }: Props) {
@@ -88,27 +94,33 @@ export function PlusOffer({
 
 	return (
 		<div id={id} data-checkout-surface="" className={cn('scroll-mt-24', styles.offer)}>
-			{headerSlot}
+			{!compact ? headerSlot : null}
 			<div
 				className={cn(
-					'surface-card flex flex-col p-4 sm:p-5',
+					'surface-card flex flex-col',
+					compact ? 'p-3 sm:p-4' : 'p-4 sm:p-5',
 					styles.card,
 					emphasized && styles.featured,
 				)}
 			>
-				<div className={styles.cardHeading}>
-					<h2 className="flex items-center gap-2 font-display text-lg sm:text-xl">
-						{accentDot ? (
-							<span
-								className="inline-block h-2.5 w-2.5 rounded-[3px] bg-accent-warm"
-								aria-hidden="true"
-							/>
-						) : null}
-						{title}
-					</h2>
-					<p className="text-xs text-muted-foreground sm:text-sm">{subtitle}</p>
+				<div className={cn(styles.cardHeading, compact && '!mb-2 !min-h-0 gap-1')}>
+					<div className={cn(compact && 'flex items-center justify-between gap-2')}>
+						<h2 className="flex items-center gap-2 font-display text-lg sm:text-xl">
+							{accentDot ? (
+								<span
+									className="inline-block h-2.5 w-2.5 rounded-[3px] bg-accent-warm"
+									aria-hidden="true"
+								/>
+							) : null}
+							{title}
+						</h2>
+						{compact ? headerSlot : null}
+					</div>
+					<p className={cn('text-xs text-muted-foreground', !compact && 'sm:text-sm')}>
+						{subtitle}
+					</p>
 				</div>
-				<fieldset className="grid gap-2 border-0 p-0">
+				<fieldset className={cn('grid border-0 p-0', compact ? 'gap-1.5' : 'gap-2')}>
 					<legend className="sr-only">{t('planChoice')}</legend>
 					{options.map((card) => {
 						const isOnce = card.interval === 'once'
@@ -119,7 +131,8 @@ export function PlusOffer({
 								key={card.id}
 								className={cn(
 									styles.option,
-									'flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2',
+									'flex cursor-pointer items-center gap-3 rounded-xl border px-3',
+									compact ? '!min-h-12 !py-1.5' : 'min-h-14 py-2',
 									'transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
 									checked ? styles.selected : 'border-border hover:bg-muted/40',
 								)}
@@ -146,7 +159,12 @@ export function PlusOffer({
 										) : null}
 									</span>
 									{isYear ? (
-										<span className="block text-sm text-muted-foreground tnum">
+										<span
+											className={cn(
+												'block text-muted-foreground tnum',
+												compact ? 'text-xs' : 'text-sm',
+											)}
+										>
 											{t('monthlyEquivalent', {
 												price: formatMonthlyEquivalentPrice(
 													card.amountMinor,
@@ -158,7 +176,9 @@ export function PlusOffer({
 									) : null}
 								</span>
 								<span className="text-right">
-									<span className="block font-display text-xl tnum">{price(card)}</span>
+									<span className={cn('block font-display tnum', compact ? 'text-lg' : 'text-xl')}>
+										{price(card)}
+									</span>
 									<span className="block text-xs text-muted-foreground">
 										{isOnce ? t('oneTime') : isYear ? t('perYear') : t('perMonth')}
 									</span>
@@ -180,10 +200,11 @@ export function PlusOffer({
 				{selected.interval === 'year' && effectiveTrialDays > 0 ? (
 					<TrialChargeLine days={effectiveTrialDays} price={price(selected)} />
 				) : null}
-				<div className="mt-3">
+				<div className={compact ? 'mt-2' : 'mt-3'}>
 					<SubscribeButton
 						key={selected.id}
-						checkoutTrigger="pricing_card"
+						checkoutTrigger={checkoutTrigger}
+						compact={compact}
 						callbackUrl={callbackUrl}
 						planId={selected.id}
 						currency={selected.currency}

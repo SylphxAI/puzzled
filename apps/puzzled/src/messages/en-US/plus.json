@@ -11,7 +11,7 @@
 		"checkoutFailed": "Checkout could not start. Please try again.",
 		"freeTitle": "Free",
 		"freeBody": "Any 3 games of your choice, every day, with no account needed.",
-		"playFree": "Play today's free puzzle: {game}",
+		"playFree": "Play {game} (3 of 19 free daily)",
 		"individualBody": "For one player.",
 		"family": "Tryit Family",
 		"familyBody": "Up to {count} people, each with their own stats and streaks.",
@@ -47,7 +47,7 @@
 		"renewsYearly": "Renews every year at {price} until you cancel. Cancel any time in Settings.",
 		"renewsMonthly": "Renews every month at {price} until you cancel. Cancel any time in Settings.",
 		"familyLink": "Family plan for up to {count} players",
-		"notNowPlayFree": "Not now, play today's free puzzle",
+		"notNowPlayFree": "Not now — play 3 free puzzles of 19 daily",
 		"choosePlus": "Choose Tryit Plus",
 		"signInToGetPlus": "Sign in to get Plus",
 		"signInToStartFamily": "Sign in to start Family"
@@ -59,7 +59,7 @@
 	"unlock": {
 		"title": "You've played today's 3 free games",
 		"archiveTitle": "Past days are part of Tryit Plus",
-		"body": "Today's free puzzle is {game}. Tryit Plus opens all {count} games and every past day.",
+		"body": "Any 3 of {count} puzzles are free every day (today's pick: {game}). Tryit Plus opens all {count} games and every past day.",
 		"cta": "See Tryit Plus",
 		"signIn": "Sign in",
 		"playFree": "Play {game} free",
@@ -72,7 +72,12 @@
 		"resultPrice": "{plan} · {price} a year",
 		"day3Title": "{days} days played. Nice start.",
 		"day7Title": "{days} days played. You are a regular.",
-		"milestoneBody": "Tryit Plus opens all {count} games, the archive of past days and stats for each. Any 3 puzzles stay free every day."
+		"milestoneBody": "Tryit Plus opens all {count} games, the archive of past days and stats for each. Any 3 puzzles stay free every day.",
+		"resultPriceWithPass": "{days}-day pass {passPrice} · {plan} {price}/yr",
+		"resultPassPrice": "{days}-day pass · {passPrice}",
+		"resultPicksUsedBadge": "{used}/{total} free picks used today",
+		"resultPicksUsedTitle": "All {total} free picks used today — keep playing all {count} games",
+		"resultPicksUsedBody": "You finished today's 3 free puzzles. Unlock all {count} daily games and the 30-day archive with a 3-day pass or Tryit Plus."
 	},
 	"subscription": {
 		"title": "Subscription",

@@ -132,7 +132,7 @@ for (const viewport of VIEWPORTS) {
 				}
 				// Pricing is a page, with a free-play escape link rather than a modal close button.
 				const freePlay = page.getByRole('link', {
-					name: "Not now, play today's free puzzle",
+					name: 'Not now — play 3 free puzzles of 19 daily',
 					exact: true,
 				})
 				await expect(freePlay).toHaveAttribute('href', /^\/games\/[^/?#]+$/)
@@ -180,7 +180,7 @@ for (const viewport of VIEWPORTS) {
 			const offer = page.locator('#plus')
 			test.skip((await offer.getByRole('radio').count()) === 0, 'sales are closed')
 
-			const freePlay = page.getByRole('link', { name: "Not now, play today's free puzzle" })
+			const freePlay = page.getByRole('link', { name: 'Not now — play 3 free puzzles of 19 daily' })
 			await expect(freePlay).toHaveCount(1)
 			await freePlay.evaluate((el) => el.scrollIntoView({ block: 'center' }))
 			await expect(freePlay).toBeInViewport({ ratio: 1 })

@@ -44,7 +44,7 @@ describe('the click is a public attributed link', () => {
 		for (const product of OWN_PRODUCTS) {
 			const url = new URL(productLink(product))
 			expect(url.origin + url.pathname).toBe(`${new URL(product.url).origin}/`)
-			expect(url.searchParams.get('utm_source')).toBe('puzzled')
+			expect(url.searchParams.get('utm_source')).toBe('tryit')
 			expect(url.searchParams.get('utm_medium')).toBe('referral')
 			expect(url.searchParams.get('utm_campaign')).toBe(product.id)
 			expect([...url.searchParams.keys()].sort()).toEqual([

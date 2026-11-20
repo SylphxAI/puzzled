@@ -152,5 +152,10 @@
 		"time": "Tiempo",
 		"note": "Las puntuaciones y los tiempos son los que el servidor aceptó en cada partida."
 	},
-	"duration": "{minutes} min {seconds} s"
+	"duration": "{minutes} min {seconds} s",
+	"plusCard": {
+		"title": "Juega y registra los {count} juegos con Tryit Plus",
+		"body": "3 de los {count} puzzles siguen siendo gratis cada día. Desbloquea todos los juegos diarios, el archivo de 30 días y las estadísticas completas.",
+		"cta": "Ver Tryit Plus"
+	}
 }

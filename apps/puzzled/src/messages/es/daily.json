@@ -16,7 +16,7 @@
 	"wantMore": "¿Quieres seguir jugando?",
 	"backToGames": "Volver a todos los juegos",
 	"freeToday": "Gratis",
-	"tomorrowsFreeGame": "Mañana: {game} es gratis",
+	"tomorrowsFreeGame": "Mañana: 3 nuevos puzzles gratis de 19 (destacado: {game})",
 	"viewResult": "Ver resultado",
 	"backToHome": "Volver al inicio",
 	"loadingPuzzle": "Cargando el puzle de hoy…",
@@ -25,9 +25,9 @@
 	"completedNoResult": "Ya terminaste el puzle de hoy. Los detalles del resultado no están disponibles ahora mismo.",
 	"statusUnknown": "Estado desconocido",
 	"difficultyStatusUnverified": "No pudimos verificar qué niveles has terminado hoy. El servidor lo comprueba antes de empezar.",
-	"todaysFreeGame": "Juega el puzle gratuito de hoy",
+	"todaysFreeGame": "Juega tus 3 puzzles gratis de hoy",
 	"notReadyTitle": "El {game} de hoy aún no está listo",
-	"notReadyBody": "Todavía no hay un puzle de {game} para hoy. El puzle gratuito de hoy está listo para jugar.",
-	"notReadyCta": "Juega el puzle gratuito de hoy",
+	"notReadyBody": "Todavía no hay un puzle de {game} para hoy. Elige cualquiera de los otros 3 puzzles gratis de hoy.",
+	"notReadyCta": "Ver los puzzles gratis de hoy",
 	"startUsesPick": "Empezar usa una de tus 3 elecciones gratis de hoy. El juego que empieces queda abierto todo el día."
 }

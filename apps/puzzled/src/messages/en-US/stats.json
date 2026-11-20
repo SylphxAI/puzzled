@@ -152,5 +152,10 @@
 		"time": "Time",
 		"note": "Scores and times are what the server accepted for each finish."
 	},
-	"duration": "{minutes}m {seconds}s"
+	"duration": "{minutes}m {seconds}s",
+	"plusCard": {
+		"title": "Play and track all {count} games with Tryit Plus",
+		"body": "Any 3 of {count} puzzles stay free every day. Unlock every daily game, the 30-day archive, and full stats across the suite.",
+		"cta": "See Tryit Plus"
+	}
 }

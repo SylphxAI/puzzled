@@ -11,7 +11,7 @@
 		"checkoutFailed": "No se pudo iniciar el pago. Inténtalo de nuevo.",
 		"freeTitle": "Gratis",
 		"freeBody": "3 juegos a tu elección, todos los días, sin necesidad de cuenta.",
-		"playFree": "Juega el puzzle gratis de hoy: {game}",
+		"playFree": "Jugar {game} (3 de 19 gratis al día)",
 		"individualBody": "Para un solo jugador.",
 		"family": "Tryit Plus Familia",
 		"familyBody": "Hasta {count} personas, cada una con sus propias estadísticas y rachas.",
@@ -47,7 +47,7 @@
 		"renewsYearly": "Se renueva cada año por {price} hasta que lo canceles. Cancela cuando quieras en Ajustes.",
 		"renewsMonthly": "Se renueva cada mes por {price} hasta que lo canceles. Cancela cuando quieras en Ajustes.",
 		"familyLink": "Plan familiar para hasta {count} jugadores",
-		"notNowPlayFree": "Ahora no, jugar el puzzle gratis de hoy",
+		"notNowPlayFree": "Ahora no, jugar 3 puzzles gratis de 19 al día",
 		"choosePlus": "Elegir Tryit Plus",
 		"signInToGetPlus": "Inicia sesión para conseguir Plus",
 		"signInToStartFamily": "Inicia sesión para empezar el plan Familiar"
@@ -59,7 +59,7 @@
 	"unlock": {
 		"title": "Ya jugaste tus 3 juegos gratis de hoy",
 		"archiveTitle": "Los días anteriores forman parte de Tryit Plus",
-		"body": "El puzzle gratis de hoy es {game}. Tryit Plus desbloquea los {count} juegos y todos los días anteriores.",
+		"body": "3 de los {count} puzzles son gratis cada día (destacado de hoy: {game}). Tryit Plus desbloquea los {count} juegos y todos los días anteriores.",
 		"cta": "Ver Tryit Plus",
 		"signIn": "Iniciar sesión",
 		"playFree": "Juega {game} gratis",
@@ -72,7 +72,12 @@
 		"resultPrice": "{plan} · {price} al año",
 		"day3Title": "{days} días jugados. Buen comienzo.",
 		"day7Title": "{days} días jugados. Ya eres un habitual.",
-		"milestoneBody": "Tryit Plus desbloquea los {count} juegos, el archivo de días anteriores y las estadísticas de cada uno. 3 puzzles siguen siendo gratis cada día."
+		"milestoneBody": "Tryit Plus desbloquea los {count} juegos, el archivo de días anteriores y las estadísticas de cada uno. 3 puzzles siguen siendo gratis cada día.",
+		"resultPriceWithPass": "Pase de {days} días {passPrice} · {plan} {price}/año",
+		"resultPassPrice": "Pase de {days} días · {passPrice}",
+		"resultPicksUsedBadge": "{used}/{total} elecciones gratis usadas hoy",
+		"resultPicksUsedTitle": "Usaste tus {total} elecciones gratis de hoy: sigue con los {count} juegos",
+		"resultPicksUsedBody": "Completaste tus 3 puzzles gratis de hoy. Desbloquea los {count} juegos diarios y el archivo de 30 días con un pase de 3 días o Tryit Plus."
 	},
 	"subscription": {
 		"title": "Suscripción",

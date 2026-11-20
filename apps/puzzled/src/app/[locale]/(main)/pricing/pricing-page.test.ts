@@ -186,6 +186,8 @@ describe('PricingPage SSR', () => {
 		expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*>Continue to payment/)
 		expect(html).toContain('Renews every year at $39.99 until you cancel.')
 		expect(html).toContain('Renews every year at $64.99 until you cancel.')
+		expect(html).toContain('data-checkout-trigger="pricing_card"')
+		expect(html).toContain('data-checkout-trigger="pricing_family_card"')
 
 		// Authorized $64.99/yr Family and $39.99/yr Individual prices in SSR HTML
 		expect(html).toContain('$39.99')
@@ -258,5 +260,17 @@ describe('PricingPage SSR', () => {
 		const html = renderToStaticMarkup(node)
 		expect(html).toContain('You have Tryit Plus')
 		expect(html).toContain('href="/settings/subscription"')
+	})
+
+	test('propagates distinct inbound paywall checkoutTrigger to SubscribeButton', async () => {
+		mockSignedIn = false
+		mockSubscribed = false
+		const node = await PricingPage({
+			params: Promise.resolve({ locale: 'en-US' }),
+			searchParams: Promise.resolve({ utm_medium: 'result_card', entry_surface: 'result_card' }),
+		})
+		const html = renderToStaticMarkup(node)
+		expect(html).toContain('data-checkout-trigger="result_card"')
+		expect(html).not.toContain('data-checkout-trigger="pricing_card"')
 	})
 })
