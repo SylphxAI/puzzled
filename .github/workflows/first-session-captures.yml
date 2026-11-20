@@ -50,4 +50,4 @@ jobs:
           name: first-session-${{ github.run_id }}
           path: artifacts/first-session
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 1
