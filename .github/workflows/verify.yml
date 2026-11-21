@@ -437,15 +437,24 @@ jobs:
           BASE_URL: http://localhost:3015
         run: bun run test:e2e e2e-tests/discovery.e2e.ts e2e-tests/llms.e2e.ts --workers=1 --retries=0
 
-      - name: Upload the Playwright report
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      - name: Stage the Playwright report
+        id: playwright-report
+        if: always() && hashFiles('apps/puzzled/playwright-report/**', 'apps/puzzled/test-results/**') != ''
+        run: |
+          set -euo pipefail
+          bundle="$(mktemp -d "$RUNNER_TEMP/playwright-report.XXXXXXXX")"
+          for dir in apps/puzzled/playwright-report apps/puzzled/test-results; do
+            if [ -d "$dir" ]; then cp -R -- "$dir" "$bundle/"; fi
+          done
+          echo "path=$bundle" >> "$GITHUB_OUTPUT"
+
+      - name: Store the Playwright report
+        if: always() && steps.playwright-report.outputs.path != ''
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
         with:
+          mode: put
           name: a11y-playwright-report
-          path: |
-            apps/puzzled/playwright-report
-            apps/puzzled/test-results
-          if-no-files-found: ignore
+          path: ${{ steps.playwright-report.outputs.path }}
           retention-days: 1
 
       - name: Stop the served build
@@ -621,22 +630,22 @@ jobs:
       # After the server is stopped, so a failed vitals run still publishes
       # the table. A missing report is not a failure: the test writes it only
       # when it reaches the assertion.
-      - name: Upload the web vitals report
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      - name: Store the web vitals report
+        if: always() && hashFiles('apps/puzzled/test-results/web-vitals/**') != ''
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
         with:
+          mode: put
           name: web-vitals-report
           path: apps/puzzled/test-results/web-vitals
-          if-no-files-found: ignore
           retention-days: 1
 
-      - name: Upload the Lighthouse report
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      - name: Store the Lighthouse report
+        if: always() && hashFiles('apps/puzzled/.lighthouseci/**') != ''
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
         with:
+          mode: put
           name: lighthouse-report
           path: apps/puzzled/.lighthouseci
-          if-no-files-found: ignore
           retention-days: 1
 
   craft:
@@ -777,15 +786,24 @@ jobs:
         run: |
           while read -r pid; do kill "$pid" 2>/dev/null || :; done < "$RUNNER_TEMP/craft.pids"
 
-      - name: Upload the Playwright report
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      - name: Stage the Playwright report
+        id: playwright-report
+        if: always() && hashFiles('apps/puzzled/playwright-report/**', 'apps/puzzled/test-results/**') != ''
+        run: |
+          set -euo pipefail
+          bundle="$(mktemp -d "$RUNNER_TEMP/playwright-report.XXXXXXXX")"
+          for dir in apps/puzzled/playwright-report apps/puzzled/test-results; do
+            if [ -d "$dir" ]; then cp -R -- "$dir" "$bundle/"; fi
+          done
+          echo "path=$bundle" >> "$GITHUB_OUTPUT"
+
+      - name: Store the Playwright report
+        if: always() && steps.playwright-report.outputs.path != ''
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
         with:
+          mode: put
           name: craft-playwright-report
-          path: |
-            apps/puzzled/playwright-report
-            apps/puzzled/test-results
-          if-no-files-found: ignore
+          path: ${{ steps.playwright-report.outputs.path }}
           retention-days: 1
 
   # The marker: named exactly `verified`; never a required check.

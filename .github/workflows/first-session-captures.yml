@@ -21,10 +21,11 @@ on:
 concurrency:
   group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || format('{0}-run-{1}', github.workflow, github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-permissions:
-  contents: read
 jobs:
   capture:
+    permissions:
+      contents: read
+      id-token: write
     # Reference captures are public-only; execution remains self-hosted.
     if: github.event.repository.private == false
     runs-on: sylphx-linux-standard
@@ -44,10 +45,11 @@ jobs:
           BASE_URL: ${{ inputs.base_url || 'https://puzzled.gg' }}
           PREVIEW_URL: ${{ inputs.preview_url }}
           CAPTURE_NYT: ${{ github.event_name == 'pull_request' || inputs.capture_nyt }}
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        if: always()
+      - name: Store first-session captures
+        if: always() && hashFiles('artifacts/first-session/**') != ''
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
         with:
+          mode: put
           name: first-session-${{ github.run_id }}
           path: artifacts/first-session
-          if-no-files-found: error
           retention-days: 1
